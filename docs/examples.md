@@ -425,7 +425,7 @@ That is the common shape Jini is designed for.
 If you adopt only one Jini habit, make it this:
 
 ```bash
-jini status-pack <path-to-work>
+jini outcome <path-to-work>
 ```
 
 Use it:

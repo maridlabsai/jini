@@ -16,7 +16,7 @@ light.
 <div class="section-card">
   <h3>The three commands that matter most</h3>
   <div class="on-this-page">
-    <a href="#status-pack"><code>jini status-pack</code>: see the truth of the work right now</a>
+    <a href="#outcome"><code>jini outcome</code>: see the truth of the work right now</a>
     <a href="#execution-checklist"><code>jini next</code>: see the next honest step toward the outcome</a>
     <a href="#compact-context"><code>jini resume</code>: hand the important context to the next person or agent</a>
   </div>
@@ -41,12 +41,12 @@ When Jini is doing its job, these surfaces stay visible:
   </div>
 </div>
 
-## `status-pack` {#status-pack}
+## `outcome` {#outcome}
 
 Run:
 
 ```bash
-jini status-pack /path/to/work
+jini outcome /path/to/work
 ```
 
 This is the everyday truth screen.
@@ -71,6 +71,9 @@ Read it like this:
 - `NEXT`: the next honest move
 - `MISSING-LATER`: future blockers already visible now
 - `TASKS`: whether the tasks are truly done or still unresolved
+
+Under the hood, this is the simpler public view over Jini's deeper `status-pack`
+surface.
 
 ## `execution-checklist` {#execution-checklist}
 

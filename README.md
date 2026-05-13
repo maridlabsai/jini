@@ -80,7 +80,7 @@ If you want the fastest install path, run this:
 ```bash
 pipx install --editable git+https://github.com/maridlabsai/jini.git
 jini example research-prd
-jini start --target codex
+jini start --harness codex
 ```
 
 That gives you a real `jini` command immediately, while keeping the runtime
@@ -91,6 +91,26 @@ For `v0.1.0`, that editable source-backed install is the supported public
 distribution path. Jini still expects public runtime assets such as packs,
 specs, manifests, and writable learning state to live together, so a
 conventional wheel-style install is not advertised as a stable path yet.
+
+## Bring Your Own Harness
+
+Jini does not ask you to bet on one coding agent.
+
+Use the harness you already trust to execute:
+- Codex
+- Claude Code
+- GitHub Copilot
+- Junie
+- Kiro CLI
+- Augment
+
+Jini sits above the harness. The harness executes. Jini keeps the work,
+state, artifacts, and next honest step coherent so the outcome survives
+handoffs and follow-through.
+
+```bash
+jini harnesses
+```
 
 ## What Gets Easier Right Away
 
@@ -145,7 +165,7 @@ In normal work, that means:
 The recurring Jini command is:
 
 ```bash
-jini status-pack <path-to-work>
+jini outcome <path-to-work>
 ```
 
 That one screen tells you the current state, next step, missing requirements,
@@ -1240,9 +1260,9 @@ Most people only need a small CLI surface:
 ```bash
 jini help
 jini example research-prd
-jini status-pack /path/to/work
+jini outcome /path/to/work
 jini next /path/to/work --repo /path/to/repo --intent verify
-jini execute-flow /path/to/work --repo /path/to/repo --runtime-target codex
+jini execute-flow /path/to/work --repo /path/to/repo --harness codex
 jini publish-readiness --format json
 ```
 

@@ -15,7 +15,7 @@ If you are not installed yet, start with [install](./install.md).
 
 <div class="section-card">
   <h3>Start with these three</h3>
-  <p>If you only want the smallest useful command set, begin with grouped help, one example, and one real pack status check.</p>
+  <p>If you only want the smallest useful command set, begin with grouped help, one example, and one real outcome check.</p>
 </div>
 
 ## Most People Start Here
@@ -23,7 +23,7 @@ If you are not installed yet, start with [install](./install.md).
 ```bash
 jini help
 jini example research-prd
-jini status-pack /path/to/work
+jini outcome /path/to/work
 ```
 
 Use those three commands to:
@@ -37,7 +37,7 @@ Use those three commands to:
 Use these when you are working on one pack or handoff:
 
 ```bash
-jini status-pack /path/to/work
+jini outcome /path/to/work
 jini next /path/to/work --repo /path/to/repo --intent verify
 jini resume /path/to/work --repo /path/to/repo --intent verify --max-chars 900
 jini advance-pack /path/to/work
@@ -59,19 +59,20 @@ Use these when you want Jini to stage or run the next workflow step:
 
 ```bash
 jini recommend-execution /path/to/work --repo /path/to/repo --intent wiki
-jini execute-flow /path/to/work --repo /path/to/repo --runtime-target codex
-jini run-pack /path/to/work --mode supervised --repo /path/to/repo --runtime-target codex
+jini execute-flow /path/to/work --repo /path/to/repo --harness codex
+jini run-pack /path/to/work --mode supervised --repo /path/to/repo --harness codex
 ```
 
-## Install And Targets
+## Install And Harnesses
 
 Use these when you are setting up Jini in a shell or agent environment:
 
 ```bash
-jini start --target codex
-jini plan-install --kit starter-kit --target codex
-jini install-bundles --kit starter-kit --target codex --prefix /tmp/jini-stage
-jini doctor-install --kit starter-kit --target codex --prefix /tmp/jini-stage
+jini start --harness codex
+jini plan-install --kit starter-kit --harness codex
+jini install-bundles --kit starter-kit --harness codex --prefix /tmp/jini-stage
+jini doctor-install --kit starter-kit --harness codex --prefix /tmp/jini-stage
+jini harnesses
 ```
 
 ## Publish And Handoffs

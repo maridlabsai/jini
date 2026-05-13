@@ -1509,7 +1509,7 @@ def build_install_catalog(
             "kit_id": beginner_kit_id,
             "target": selected_target,
             "commands": [
-                f"{cli} start --target {selected_target}",
+                f"{cli} start --harness {selected_target}",
                 *[item["command"] for item in build_install_trust_path(target_id=selected_target, kit_id=beginner_kit_id)],
             ],
         }
@@ -1520,7 +1520,7 @@ def build_install_catalog(
             "target": selected_target,
             "commands": [
                 f"{cli} catalog-bundles --target {selected_target} --format json",
-                f"{cli} plan-install --kit {power_kit_id} --target {selected_target}",
+                f"{cli} plan-install --kit {power_kit_id} --harness {selected_target}",
                 f"{cli} show-adapters",
             ],
         }
@@ -1575,6 +1575,49 @@ def print_install_catalog(catalog: dict[str, Any]) -> None:
         f"  {len(catalog.get('bundles', []))} bundle(s) available. "
         "Use `--format json` when you need bundle-level detail."
     )
+
+
+def build_harness_catalog() -> dict[str, Any]:
+    manifest = load_install_manifest()
+    cli = cli_invocation()
+    harnesses: list[dict[str, Any]] = []
+    for raw_target in manifest.get("targets", []):
+        if not isinstance(raw_target, dict):
+            continue
+        harness_id = str(raw_target.get("id", "")).strip()
+        if not harness_id:
+            continue
+        label = str(raw_target.get("label", harness_id)).strip() or harness_id
+        harnesses.append(
+            {
+                "id": harness_id,
+                "label": label,
+                "destination_root": str(raw_target.get("destination_root", "")).strip(),
+                "risk_notice": str(raw_target.get("risk_notice", "")).strip(),
+                "start_command": f"{cli} start --harness {harness_id}",
+                "run_command": f"{cli} execute-flow /path/to/work --repo /path/to/repo --harness {harness_id}",
+            }
+        )
+    return {
+        "schema_version": "0.1.0",
+        "catalog_type": "JiniHarnessCatalog",
+        "generated_at": now_utc(),
+        "summary": "Bring your own harness. Jini keeps state, artifacts, and next steps coherent above it.",
+        "harnesses": harnesses,
+    }
+
+
+def print_harness_catalog(report: dict[str, Any]) -> None:
+    print("Jini works above coding harnesses.")
+    print("Use any harness to execute. Jini keeps the work, state, and next steps coherent.")
+    print()
+    print("HARNESSES")
+    for item in report.get("harnesses", []):
+        print(f"  - {item.get('label', '')} ({item.get('id', '')})")
+        if item.get("risk_notice"):
+            print(f"    note:  {item.get('risk_notice', '')}")
+        print(f"    start: {item.get('start_command', '')}")
+        print(f"    run:   {item.get('run_command', '')}")
 
 
 def build_publish_readiness() -> dict[str, Any]:
@@ -1997,17 +2040,17 @@ def build_install_trust_path(
         {
             "id": "preview",
             "label": "Preview curated install",
-            "command": f"{cli} plan-install --kit {kit_id} --target {target_id}",
+            "command": f"{cli} plan-install --kit {kit_id} --harness {target_id}",
         },
         {
             "id": "install",
             "label": "Install curated bundle set",
-            "command": f"{cli} install-bundles --kit {kit_id} --target {target_id} --prefix {prefix}",
+            "command": f"{cli} install-bundles --kit {kit_id} --harness {target_id} --prefix {prefix}",
         },
         {
             "id": "verify",
             "label": "Verify trust and activation readiness",
-            "command": f"{cli} doctor-install --kit {kit_id} --target {target_id} --prefix {prefix}",
+            "command": f"{cli} doctor-install --kit {kit_id} --harness {target_id} --prefix {prefix}",
         },
     ]
 
@@ -2081,11 +2124,11 @@ def build_get_started_guide(
         "target": selected_target,
         "commands": [
             f"{cli} catalog-bundles --format json",
-            f"{cli} plan-install --kit {power_kit_id} --target {selected_target}",
+            f"{cli} plan-install --kit {power_kit_id} --harness {selected_target}",
             f"{cli} catalog-packs",
             f"{cli} show-adapters",
             f"{cli} review-framework --format json --limit 5",
-            f"{cli} execute-flow /tmp/my-pack --repo /path/to/repo --runtime-target codex --activate-runtime --consent write --consent publish",
+            f"{cli} execute-flow /tmp/my-pack --repo /path/to/repo --harness codex --activate-runtime --consent write --consent publish",
         ],
         "notes": [
             "Use JSON outputs when you want bundle-by-bundle or adapter-level detail.",
@@ -2110,7 +2153,7 @@ def build_get_started_guide(
 
 
 def print_get_started_guide(guide: dict[str, Any]) -> None:
-    print(f"TARGET   {guide.get('target', '')}")
+    print(f"HARNESS {guide.get('target', '')}")
     print(f"AUDIENCE {guide.get('audience', 'both')}")
     print("SHARED")
     for item in guide.get("shared_model", []):
@@ -2228,7 +2271,7 @@ def build_public_example_proof(
         "daily_value": list(spec.get("daily_value", [])),
         "try_command": f"{cli} example {example_id}",
         "continue_with": [
-            f"{cli} status-pack {display_path(pack_dir)}",
+            f"{cli} outcome {display_path(pack_dir)}",
             f"{cli} next {display_path(pack_dir)}",
         ],
         "warnings": [*validation_warnings, *compile_warnings],
@@ -4336,19 +4379,20 @@ def print_cli_overview() -> None:
     print()
     print("START HERE")
     print(f"  {cli} help")
-    print(f"  {cli} start --target codex")
     print(f"  {cli} example research-prd")
+    print(f"  {cli} start --harness codex")
+    print(f"  {cli} harnesses")
     print()
-    print("DAILY USE")
-    print(f"  {cli} status-pack /path/to/work")
+    print("OUTCOME LAYER")
+    print(f"  {cli} outcome /path/to/work")
     print(f"  {cli} next /path/to/work --repo /path/to/repo --intent verify")
     print(f"  {cli} resume /path/to/work --repo /path/to/repo --intent verify --max-chars 900")
-    print(f"  {cli} execute-flow /path/to/work --repo /path/to/repo --runtime-target codex")
+    print(f"  {cli} execute-flow /path/to/work --repo /path/to/repo --harness codex")
     print()
     print("INSTALL")
-    print(f"  {cli} plan-install --kit starter-kit --target codex")
-    print(f"  {cli} install-bundles --kit starter-kit --target codex --prefix /tmp/jini-stage")
-    print(f"  {cli} doctor-install --kit starter-kit --target codex --prefix /tmp/jini-stage")
+    print(f"  {cli} plan-install --kit starter-kit --harness codex")
+    print(f"  {cli} install-bundles --kit starter-kit --harness codex --prefix /tmp/jini-stage")
+    print(f"  {cli} doctor-install --kit starter-kit --harness codex --prefix /tmp/jini-stage")
     print()
     print("ALIASES")
     print(f"  {cli} start   -> {cli} get-started")
@@ -10301,6 +10345,104 @@ def print_pack_status(summary: dict[str, Any]) -> None:
         for warning in summary["validation_warnings"]:
             print(f"  - {warning}")
 
+
+def build_outcome_view(
+    pack_dir: Path,
+    registry: dict[str, Any],
+    *,
+    repo_path: Path | None = None,
+) -> dict[str, Any]:
+    summary = summarise_pack(pack_dir, registry)
+    work_unit = summary["work_unit"]
+    task_summary = summary["task_summary"]
+    missing_now = list(summary["missing_stage_required"])
+    missing_later = [
+        artifact_type
+        for artifact_type in summary["missing_full_required"]
+        if artifact_type not in summary["missing_stage_required"]
+    ]
+    next_command = f"{cli_invocation()} next {display_path(pack_dir)}"
+    resume_command = f"{cli_invocation()} resume {display_path(pack_dir)}"
+    if repo_path is not None:
+        repo_display = display_path(repo_path)
+        next_command = f"{next_command} --repo {repo_display}"
+        resume_command = f"{resume_command} --repo {repo_display}"
+    next_command = f"{next_command} --intent {summary['next_operation'].lower()}"
+    resume_command = f"{resume_command} --intent {summary['next_operation'].lower()} --max-chars 900"
+    return {
+        "schema_version": "0.1.0",
+        "view_type": "JiniOutcomeView",
+        "pack_id": summary["pack_id"],
+        "pack_dir": display_path(pack_dir),
+        "work_unit_id": str(work_unit.get("work_unit_id", "")),
+        "title": str(work_unit.get("title", "")),
+        "health": summary["health"],
+        "state": str(work_unit.get("current_state", "")),
+        "next_operation": summary["next_operation"],
+        "task_summary": {
+            "done": int(task_summary.get("done", 0) or 0),
+            "total": int(task_summary.get("total", 0) or 0),
+            "unresolved": int(task_summary.get("unresolved", 0) or 0),
+        },
+        "questions": {
+            "what_is_done": (
+                f"{task_summary.get('done', 0)}/{task_summary.get('total', 0)} tasks completed"
+                if task_summary.get("total", 0)
+                else "No task list has been captured yet"
+            ),
+            "what_happens_next": summary["next_operation"],
+            "what_is_still_missing_now": missing_now,
+            "what_is_still_missing_later": missing_later,
+        },
+        "continue_with": [next_command, resume_command],
+        "validation_errors": list(summary["validation_errors"]),
+        "validation_warnings": list(summary["validation_warnings"]),
+    }
+
+
+def print_outcome_view(report: dict[str, Any]) -> None:
+    print(f"WORK   {report.get('work_unit_id', '')}")
+    print(f"TITLE  {report.get('title', '')}")
+    print(f"HEALTH {report.get('health', '')}")
+    print(f"STATE  {report.get('state', '')}")
+    print()
+    print("WHAT IS DONE?")
+    print(f"  {report.get('questions', {}).get('what_is_done', '')}")
+    print()
+    print("WHAT HAPPENS NEXT?")
+    print(f"  {report.get('questions', {}).get('what_happens_next', '')}")
+    missing_now = report.get("questions", {}).get("what_is_still_missing_now", [])
+    missing_later = report.get("questions", {}).get("what_is_still_missing_later", [])
+    print()
+    print("WHAT IS STILL MISSING NOW?")
+    if missing_now:
+        for item in missing_now:
+            print(f"  - {item}")
+    else:
+        print("  Nothing stage-critical is missing right now.")
+    print()
+    print("WHAT IS STILL MISSING LATER?")
+    if missing_later:
+        for item in missing_later:
+            print(f"  - {item}")
+    else:
+        print("  No future-required artifact gaps are visible right now.")
+    if report.get("validation_errors"):
+        print()
+        print("FIX FIRST")
+        for item in report.get("validation_errors", []):
+            print(f"  - {item}")
+    print()
+    print("CONTINUE")
+    for command in report.get("continue_with", []):
+        print(f"  {command}")
+
+
+def format_pack_surface_error(pack_path: Path, exc: Exception) -> str:
+    if isinstance(exc, FileNotFoundError):
+        return f"Pack path is missing required Jini files: {display_path(pack_path)}"
+    return str(exc)
+
     if summary["blockers"]:
         print("BLOCKERS")
         for blocker in summary["blockers"]:
@@ -13200,6 +13342,19 @@ def main() -> int:
     )
     status_parser.add_argument("path", type=Path)
 
+    outcome_parser = subparsers.add_parser(
+        "outcome",
+        help="Answer what is done, what happens next, and what is still missing before the work is truly across the line",
+    )
+    outcome_parser.add_argument("path", type=Path)
+    outcome_parser.add_argument("--repo", type=Path, help="Optional repo or worktree path for follow-on commands")
+    outcome_parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for the outcome view",
+    )
+
     recommend_execution_parser = subparsers.add_parser(
         "recommend-execution",
         help="Recommend the execution class, context posture, and rate-limit strategy for a pack",
@@ -13222,7 +13377,12 @@ def main() -> int:
         help="Optional repo or worktree path for repo-aware guidance",
     )
     recommend_execution_parser.add_argument("--home", type=Path, help="Optional personal home path")
-    recommend_execution_parser.add_argument("--runtime-target", help="Optional preferred runtime target")
+    recommend_execution_parser.add_argument(
+        "--runtime-target",
+        "--harness",
+        dest="runtime_target",
+        help="Optional preferred harness",
+    )
 
     kpi_parser = subparsers.add_parser(
         "show-kpis",
@@ -13271,7 +13431,12 @@ def main() -> int:
         "get-started",
         help="Show the beginner and power-user paths through the same Jini system",
     )
-    get_started_parser.add_argument("--target", help="Optional preferred runtime target for onboarding commands")
+    get_started_parser.add_argument(
+        "--target",
+        "--harness",
+        dest="target",
+        help="Optional preferred harness for onboarding commands",
+    )
     get_started_parser.add_argument(
         "--audience",
         choices=["beginner", "power-user", "both"],
@@ -13375,7 +13540,12 @@ def main() -> int:
     checklist_parser.add_argument("--intent", help="Optional intent override; defaults to the pack's next operation")
     checklist_parser.add_argument("--repo", type=Path, help="Optional repo or worktree path for repo-aware targeting")
     checklist_parser.add_argument("--home", type=Path, help="Optional personal home path")
-    checklist_parser.add_argument("--runtime-target", help="Optional preferred runtime target")
+    checklist_parser.add_argument(
+        "--runtime-target",
+        "--harness",
+        dest="runtime_target",
+        help="Optional preferred harness",
+    )
     checklist_parser.add_argument(
         "--format",
         choices=["text", "json"],
@@ -13391,7 +13561,12 @@ def main() -> int:
     compact_context_parser.add_argument("--intent", help="Optional intent override; defaults to the pack's next operation")
     compact_context_parser.add_argument("--repo", type=Path, help="Optional repo or worktree path for repo-aware targeting")
     compact_context_parser.add_argument("--home", type=Path, help="Optional personal home path")
-    compact_context_parser.add_argument("--runtime-target", help="Optional preferred runtime target")
+    compact_context_parser.add_argument(
+        "--runtime-target",
+        "--harness",
+        dest="runtime_target",
+        help="Optional preferred harness",
+    )
     compact_context_parser.add_argument(
         "--max-items",
         type=int,
@@ -13459,6 +13634,17 @@ def main() -> int:
         help="Output format for the adapter matrix",
     )
 
+    harness_parser = subparsers.add_parser(
+        "harnesses",
+        help="Show the coding harnesses Jini can work above",
+    )
+    harness_parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for the harness catalog",
+    )
+
     events_parser = subparsers.add_parser(
         "show-learning-events",
         help="Show recent learning/runtime events for RL instrumentation and policy review",
@@ -13509,7 +13695,12 @@ def main() -> int:
     handoff_parser.add_argument("--intent", help="Optional intent override; defaults to the pack's next operation")
     handoff_parser.add_argument("--repo", type=Path, help="Optional repo or worktree path for repo-aware targeting")
     handoff_parser.add_argument("--home", type=Path, help="Optional personal home path")
-    handoff_parser.add_argument("--runtime-target", help="Optional preferred runtime target")
+    handoff_parser.add_argument(
+        "--runtime-target",
+        "--harness",
+        dest="runtime_target",
+        help="Optional preferred harness",
+    )
     handoff_parser.add_argument(
         "--max-items",
         type=int,
@@ -13538,7 +13729,12 @@ def main() -> int:
     activate_runtime_parser.add_argument("--intent", help="Optional intent override when building a handoff on demand")
     activate_runtime_parser.add_argument("--repo", type=Path, help="Optional repo or worktree path for repo-aware activation")
     activate_runtime_parser.add_argument("--home", type=Path, help="Optional personal home path")
-    activate_runtime_parser.add_argument("--runtime-target", help="Optional preferred runtime target")
+    activate_runtime_parser.add_argument(
+        "--runtime-target",
+        "--harness",
+        dest="runtime_target",
+        help="Optional preferred harness",
+    )
     activate_runtime_parser.add_argument("--prefix", type=Path, help="Optional prefix for safe local activation testing")
     activate_runtime_parser.add_argument(
         "--max-items",
@@ -13573,7 +13769,12 @@ def main() -> int:
     execute_flow_parser.add_argument("--intent", help="Optional runtime intent override")
     execute_flow_parser.add_argument("--repo", type=Path, help="Optional repo or worktree path for repo-aware execution")
     execute_flow_parser.add_argument("--home", type=Path, help="Optional personal home path")
-    execute_flow_parser.add_argument("--runtime-target", help="Optional preferred runtime target")
+    execute_flow_parser.add_argument(
+        "--runtime-target",
+        "--harness",
+        dest="runtime_target",
+        help="Optional preferred harness",
+    )
     execute_flow_parser.add_argument(
         "--consent",
         action="append",
@@ -13681,7 +13882,7 @@ def main() -> int:
         "catalog-bundles",
         help="Show installable Jini bundles and curated kits from the install manifest",
     )
-    catalog_install_parser.add_argument("--target", help="Optional target filter")
+    catalog_install_parser.add_argument("--target", "--harness", dest="target", help="Optional harness filter")
     catalog_install_parser.add_argument("--kind", help="Optional bundle kind filter")
     catalog_install_parser.add_argument(
         "--format",
@@ -13736,7 +13937,14 @@ def main() -> int:
     )
     install_exec_parser.add_argument("--kit", action="append", default=[], help="Install kit id to include; may be repeated")
     install_exec_parser.add_argument("--bundle", action="append", default=[], help="Bundle id to install; may be repeated")
-    install_exec_parser.add_argument("--target", action="append", default=[], help="Target id to install for; may be repeated")
+    install_exec_parser.add_argument(
+        "--target",
+        "--harness",
+        dest="target",
+        action="append",
+        default=[],
+        help="Harness id to install for; may be repeated",
+    )
     install_exec_parser.add_argument(
         "--link-mode",
         choices=["auto", "copy", "symlink"],
@@ -13761,7 +13969,14 @@ def main() -> int:
     )
     update_parser.add_argument("--kit", action="append", default=[], help="Install kit id to update; may be repeated")
     update_parser.add_argument("--bundle", action="append", default=[], help="Bundle id to update; may be repeated")
-    update_parser.add_argument("--target", action="append", default=[], help="Target id to update; may be repeated")
+    update_parser.add_argument(
+        "--target",
+        "--harness",
+        dest="target",
+        action="append",
+        default=[],
+        help="Harness id to update; may be repeated",
+    )
     update_parser.add_argument(
         "--link-mode",
         choices=["auto", "copy", "symlink"],
@@ -13786,7 +14001,14 @@ def main() -> int:
     )
     uninstall_parser.add_argument("--kit", action="append", default=[], help="Install kit id to remove; may be repeated")
     uninstall_parser.add_argument("--bundle", action="append", default=[], help="Bundle id to remove; may be repeated")
-    uninstall_parser.add_argument("--target", action="append", default=[], help="Target id to remove; may be repeated")
+    uninstall_parser.add_argument(
+        "--target",
+        "--harness",
+        dest="target",
+        action="append",
+        default=[],
+        help="Harness id to remove; may be repeated",
+    )
     uninstall_parser.add_argument(
         "--prefix",
         type=Path,
@@ -13805,7 +14027,14 @@ def main() -> int:
     )
     doctor_parser.add_argument("--kit", action="append", default=[], help="Install kit id to inspect; may be repeated")
     doctor_parser.add_argument("--bundle", action="append", default=[], help="Bundle id to inspect; may be repeated")
-    doctor_parser.add_argument("--target", action="append", default=[], help="Target id to inspect; may be repeated")
+    doctor_parser.add_argument(
+        "--target",
+        "--harness",
+        dest="target",
+        action="append",
+        default=[],
+        help="Harness id to inspect; may be repeated",
+    )
     doctor_parser.add_argument(
         "--prefix",
         type=Path,
@@ -13866,7 +14095,12 @@ def main() -> int:
         help="Optional repo or worktree path for repo-aware guidance",
     )
     run_pack_parser.add_argument("--home", type=Path, help="Optional personal home path")
-    run_pack_parser.add_argument("--runtime-target", help="Optional preferred runtime target")
+    run_pack_parser.add_argument(
+        "--runtime-target",
+        "--harness",
+        dest="runtime_target",
+        help="Optional preferred harness",
+    )
 
     bind_atlassian_parser = subparsers.add_parser(
         "bind-atlassian",
@@ -14571,9 +14805,25 @@ def main() -> int:
         return 0
 
     if args.command == "status-pack":
-        summary = summarise_pack(args.path, registry)
+        try:
+            summary = summarise_pack(args.path, registry)
+        except (FileNotFoundError, TypeError, ValueError) as exc:
+            print(f"ERROR {format_pack_surface_error(args.path, exc)}")
+            return 1
         print_pack_status(summary)
         return 1 if summary["validation_errors"] else 0
+
+    if args.command == "outcome":
+        try:
+            report = build_outcome_view(args.path, registry, repo_path=args.repo)
+        except (FileNotFoundError, TypeError, ValueError) as exc:
+            print(f"ERROR {format_pack_surface_error(args.path, exc)}")
+            return 1
+        if args.format == "json":
+            print(json.dumps(report, indent=2))
+        else:
+            print_outcome_view(report)
+        return 1 if report["validation_errors"] else 0
 
     if args.command == "recommend-execution":
         recommendation = recommend_execution(
@@ -14893,6 +15143,14 @@ def main() -> int:
             print(json.dumps(matrix, indent=2))
         else:
             print_adapter_matrix(matrix)
+        return 0
+
+    if args.command == "harnesses":
+        report = build_harness_catalog()
+        if args.format == "json":
+            print(json.dumps(report, indent=2))
+        else:
+            print_harness_catalog(report)
         return 0
 
     if args.command == "show-learning-events":

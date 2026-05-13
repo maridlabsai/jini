@@ -117,7 +117,7 @@ jini example incident-response
 Use this after important work:
 
 ```bash
-jini status-pack <path-to-work>
+jini outcome <path-to-work>
 ```
 
 It helps you see:

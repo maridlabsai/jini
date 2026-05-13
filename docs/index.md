@@ -154,7 +154,7 @@ Here is the practical payoff in day-to-day flows:
 The recurring Jini move is simple:
 
 ```bash
-jini status-pack <path-to-work>
+jini outcome <path-to-work>
 ```
 
 That one screen answers the questions teams ask every day:
@@ -168,6 +168,15 @@ If you want to feel that payoff before you have your own work pack, start with:
 
 ```bash
 jini example meeting-followup
+```
+
+## Bring Your Own Harness
+
+Use the coding harness you already prefer to execute the work. Jini sits above
+that harness and keeps the state, artifacts, and next honest step coherent.
+
+```bash
+jini harnesses
 ```
 
 ## Explore More
