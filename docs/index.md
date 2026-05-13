@@ -37,8 +37,8 @@ verified, approved, publishable work.
 - [See the install path](./install.md)
 - [See the commercial boundary](./commercial.md)
 - [See support and contact paths](./contact.md)
-- [See release notes](../CHANGELOG.md)
-- [Read the full README](../README.md)
+- [See release notes](https://github.com/maridlabsai/jini/releases/tag/v0.1.0)
+- [Read the full README](https://github.com/maridlabsai/jini#readme)
 
 ## Common Examples
 

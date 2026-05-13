@@ -27,4 +27,4 @@ The rule is simple:
 **charge for acceleration, customization, and trust. Do not charge for basic
 access to the framework.**
 
-For the full commercial plan, see [COMMERCIAL.md](../COMMERCIAL.md).
+For the full commercial plan, see [COMMERCIAL.md](https://github.com/maridlabsai/jini/blob/main/COMMERCIAL.md).

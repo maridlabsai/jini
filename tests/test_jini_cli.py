@@ -1651,7 +1651,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("codex", activation["runtime_target"])
         self.assertTrue(Path(activation["activation_root"]).exists())
         self.assertTrue(Path(activation["install_receipt_path"]).exists())
-        self.assertTrue(any(path.endswith("JINI-RUNTIME.md") for path in activation["activation_files"]))
+        self.assertTrue(any(path.endswith("Jini-RUNTIME.md") for path in activation["activation_files"]))
         self.assertTrue(activation["home_observation"]["appended"])
         handoff_copy = Path(activation["activation_root"]) / "handoff.json"
         self.assertTrue(handoff_copy.exists())

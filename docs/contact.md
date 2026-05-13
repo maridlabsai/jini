@@ -10,7 +10,7 @@ Use the public repo for community interaction:
 ## Commercial
 
 Commercial implementation and onboarding support are described in
-[COMMERCIAL.md](../COMMERCIAL.md).
+[COMMERCIAL.md](https://github.com/maridlabsai/jini/blob/main/COMMERCIAL.md).
 
 Commercial contact:
 

@@ -26,3 +26,9 @@ Fastest install:
 pipx install --editable git+https://github.com/maridlabsai/jini.git
 jini get-started --target codex
 ```
+
+Distribution note:
+
+- `v0.1.0` officially supports the editable source-backed install path above
+- conventional wheel-style distribution is intentionally deferred until the
+  packaged runtime boundary is separated cleanly from writable operator state

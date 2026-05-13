@@ -68,6 +68,11 @@ That gives you a real `jini` command immediately, while keeping the runtime
 packs and specs in the editable source checkout. It also gives beginners the
 smallest safe path and power users the deeper surface through the same kernel.
 
+For `v0.1.0`, that editable source-backed install is the supported public
+distribution path. Jini still expects public runtime assets such as packs,
+specs, manifests, and writable learning state to live together, so a
+conventional wheel-style install is not advertised as a stable path yet.
+
 ## Common Examples
 
 The public core should feel familiar, not theoretical. Jini currently includes

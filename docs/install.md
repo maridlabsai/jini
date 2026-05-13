@@ -20,6 +20,14 @@ What this does:
 - materializes the selected bundles
 - checks trust, receipts, and activation readiness
 
+Current distribution boundary:
+
+- `v0.1.0` supports source-backed installs
+- the supported public path is editable install from GitHub or a local checkout
+- a conventional wheel-only install is not documented yet because Jini still
+  couples public runtime assets and writable state to the source-backed runtime
+  layout
+
 If you prefer a local source checkout instead of `pipx`, the equivalent smoke path is:
 
 ```bash
@@ -27,4 +35,4 @@ python3 -m pip install -e .
 jini get-started --target codex
 ```
 
-For deeper install details, see [specs/install-packaging.md](../specs/install-packaging.md).
+For deeper install details, see [specs/install-packaging.md](https://github.com/maridlabsai/jini/blob/main/specs/install-packaging.md).

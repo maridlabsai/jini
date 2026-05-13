@@ -697,7 +697,7 @@ def print_golden_benchmark_report(report: dict[str, Any]) -> None:
     if report.get("last_verified_at"):
         print(f"VERIFY  {report.get('last_verified_at', '')}")
     print(f"STATUS  {report.get('overall', {}).get('status', '')}")
-    print(f"JINI   {report.get('overall', {}).get('jini_score', 0.0):.2f}")
+    print(f"Jini   {report.get('overall', {}).get('jini_score', 0.0):.2f}")
     strongest_competitor = report.get("overall", {}).get("strongest_competitor", "")
     if strongest_competitor:
         strongest_score = report.get("overall", {}).get("strongest_competitor_score", 0.0)
@@ -2670,7 +2670,7 @@ def doctor_install(
                             candidate / "handoff.json",
                             candidate / "compact-context.json",
                             candidate / "execution-checklist.json",
-                            candidate / "JINI-RUNTIME.md",
+                            candidate / "Jini-RUNTIME.md",
                         ]
                         if all(path.exists() for path in required):
                             healthy_activation_roots.append(str(candidate))
@@ -6034,7 +6034,7 @@ def activate_runtime_target(
         repo_map_path.write_text(json.dumps(handoff.get("repo_map", {}), indent=2) + "\n", encoding="utf-8")
     else:
         repo_map_path = None
-    activation_markdown_path = activation_root / "JINI-RUNTIME.md"
+    activation_markdown_path = activation_root / "Jini-RUNTIME.md"
     activation_markdown_path.write_text(render_runtime_activation_markdown(handoff), encoding="utf-8")
 
     home_binding = resolve_home_binding(pack_dir, explicit_home=home_path)

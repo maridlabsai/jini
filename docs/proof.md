@@ -32,4 +32,4 @@ This is the difference Jini is trying to preserve:
 That is not a UI choice. It is the protocol core refusing to collapse
 governance into a green checklist.
 
-For the longer walkthrough, see [PROOF_OF_DIFFERENCE.md](../PROOF_OF_DIFFERENCE.md).
+For the longer walkthrough, see [PROOF_OF_DIFFERENCE.md](https://github.com/maridlabsai/jini/blob/main/PROOF_OF_DIFFERENCE.md).
