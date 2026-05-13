@@ -68,6 +68,39 @@ audits.
 If you want the full examples breakdown with commands and output, [see the
 detailed examples page](./examples.md).
 
+## Day-To-Day Value
+
+Jini should earn its keep in normal work, not only in edge cases.
+
+Here is the practical payoff in day-to-day flows:
+
+- **After a meeting:** you can turn loose notes into explicit decisions,
+  owners, tasks, and missing requirements instead of hoping the follow-up stays
+  coherent.
+- **Before engineering starts:** you can check whether a research-backed spec
+  is actually verified, or whether the team is about to build from an
+  unverified draft.
+- **Before asking for approval:** you can show the current state, missing
+  evidence, and rationale in one place instead of assembling it from docs,
+  chat, and memory.
+- **During handoffs:** the next person can run one command and see what is
+  done, what is missing, and what happens next.
+- **After an incident:** you can tell the difference between "the service is
+  back" and "the work is actually ready for closure."
+
+The recurring Jini move is simple:
+
+```bash
+jini status-pack <path-to-work>
+```
+
+That one screen answers the questions teams ask every day:
+
+- What state is this in?
+- What happens next?
+- What is still missing?
+- Are the tasks merely done, or is the work actually verified?
+
 ## Public Core Boundary
 
 Free and public:

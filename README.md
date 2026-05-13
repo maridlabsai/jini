@@ -100,6 +100,30 @@ audits.
 For a fuller walkthrough with runnable commands and sample output, see
 [docs/examples.md](docs/examples.md).
 
+## Day-To-Day Value
+
+Jini is not supposed to be impressive only in theory. It should remove daily
+workflow ambiguity.
+
+In normal work, that means:
+
+- after a meeting, you know what was decided and what is still missing
+- before a handoff, you know whether the work is actually ready
+- before asking for approval, you can show the rationale and missing evidence
+- after tasks are marked done, you can still see whether the pack is waiting on
+  verification or approval
+- after an incident, you can tell whether the system is merely stable or truly
+  ready for closure
+
+The recurring Jini command is:
+
+```bash
+jini status-pack <path-to-work>
+```
+
+That one screen tells you the current state, next step, missing requirements,
+and whether "done" really means done.
+
 ## Public Core Boundary
 
 Jini uses an open-core boundary that should stay easy to understand.

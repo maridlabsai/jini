@@ -51,6 +51,13 @@ exist. Jini turns the follow-up into explicit artifacts, visible task load, and
 an honest statement of what is still missing before the work is truly
 execution-ready.
 
+**What changes day to day:**
+
+- the meeting owner stops guessing what people heard
+- action items stop living only in chat threads
+- approvers can see what is still missing before work starts
+- the next person inherits state, not just notes
+
 ## 2. Research To PRD Handoff
 
 **Situation:** research exists, opinions exist, and the team agrees something
@@ -86,6 +93,13 @@ EVIDENCE
 are done, but the work is not pretending to be finished. Jini preserves the gap
 between completion, verification, and approval, while keeping the evidence
 trail attached to the current revision.
+
+**What changes day to day:**
+
+- product and engineering stop arguing from different versions of the rationale
+- people can see whether the spec is ready or merely drafted
+- verification becomes a visible stage instead of an implied one
+- the handoff keeps its source trail attached to the work
 
 ## 3. Vendor Selection
 
@@ -124,6 +138,13 @@ MISSING-LATER
 not a slide deck. The recommendation has control surfaces, a visible approval
 path, and an explicit reminder that evidence still has to be bound before the
 decision should be treated as durable.
+
+**What changes day to day:**
+
+- the recommendation survives beyond the meeting where it was made
+- tradeoffs stay attached to the final answer
+- finance or leadership can see the approval path without re-asking for context
+- the team can revisit the decision later without reconstructing it from memory
 
 ## 4. Incident Response
 
@@ -164,6 +185,13 @@ not the same thing as "the incident is closed." The workflow still has explicit
 rollback, proof, and approval requirements before anyone can claim the work is
 done.
 
+**What changes day to day:**
+
+- responders stop treating recovery as closure
+- rollback context stays visible while pressure is high
+- verification evidence gets attached before the story drifts
+- closure becomes a real state, not an assumption
+
 ## Breadth, After The Core Story
 
 Once those four examples make sense, the broader public packs are easier to
@@ -188,3 +216,23 @@ patterns is already painful in your environment:
 - the next person loses the rationale behind the current state
 
 That is the common shape Jini is designed for.
+
+## The Smallest Useful Habit
+
+If you adopt only one Jini habit, make it this:
+
+```bash
+jini status-pack <path-to-work>
+```
+
+Use it:
+
+- after a meeting
+- before a handoff
+- before asking for approval
+- after a major task set is marked done
+- before declaring an incident closed
+
+That is where Jini starts feeling useful in daily work. It gives one truthful
+state surface for consequential work instead of making you infer status from
+documents, tickets, and chat.
