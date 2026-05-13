@@ -46,7 +46,9 @@ When Jini is doing its job, these surfaces stay visible:
 Run:
 
 ```bash
-jini outcome /path/to/work
+jini outcome
+jini artifacts
+jini show prd
 ```
 
 This is the everyday truth screen.
@@ -80,7 +82,7 @@ surface.
 Run:
 
 ```bash
-jini next /path/to/work --repo /path/to/repo --intent verify
+jini next --repo /path/to/repo --intent verify
 ```
 
 Use this when you want the next step turned into an explicit checklist instead
@@ -93,7 +95,7 @@ This is the bridge between state and action.
 Run:
 
 ```bash
-jini resume /path/to/work --repo /path/to/repo --intent verify --max-chars 900
+jini resume --repo /path/to/repo --intent verify --max-chars 900
 ```
 
 Use this when the next person or agent needs the essential context without a

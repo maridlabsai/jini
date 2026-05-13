@@ -2109,7 +2109,7 @@ def build_get_started_guide(
         "commands": [
             f"{cli} start --harness {selected_target}",
             f"{cli} example research-prd",
-            f"{cli} outcome /path/to/work",
+            f"{cli} outcome",
         ],
         "trust_path": beginner_trust_path,
         "notes": [
@@ -2126,8 +2126,8 @@ def build_get_started_guide(
         "commands": [
             f"{cli} harnesses",
             f"{cli} plan /path/to/work --repo /path/to/repo --intent verify",
-            f"{cli} handoff /path/to/work --repo /path/to/repo --harness {selected_target}",
-            f"{cli} run /path/to/work --repo /path/to/repo --harness {selected_target} --activate-runtime --consent write --consent publish",
+            f"{cli} handoff --repo /path/to/repo --harness {selected_target}",
+            f"{cli} run --repo /path/to/repo --harness {selected_target} --activate-runtime --consent write --consent publish",
         ],
         "notes": [
             "Use `jini help --all` when you need the deeper command inventory.",
@@ -2185,6 +2185,7 @@ def build_public_example_proof(
     selected_registry = registry or load_registry()
     source_kind = str(spec.get("source_kind", "compiled")).strip()
     generated = False
+    materialized = False
     compile_warnings: list[str] = []
     validation_warnings: list[str] = []
     validation_errors: list[str] = []
@@ -2193,7 +2194,62 @@ def build_public_example_proof(
         source_path = ROOT / str(spec.get("source_path", "")).strip()
         if not source_path.exists():
             raise FileNotFoundError(f"Bundled example path not found: {source_path}")
-        pack_dir = source_path
+        if output_path is None:
+            pack_dir = source_path
+        else:
+            target_output = output_path.expanduser()
+            target_output.parent.mkdir(parents=True, exist_ok=True)
+            if target_output.exists() and not target_output.is_dir():
+                raise ValueError(f"Example output path must be a directory: {display_path(target_output)}")
+            if target_output.exists() and any(target_output.iterdir()):
+                raise ValueError(f"Example output directory must be empty: {display_path(target_output)}")
+            shutil.copytree(source_path, target_output, dirs_exist_ok=True)
+            pack_dir = target_output
+            work_unit_path = pack_dir / "work-unit.yaml"
+            rebound_work_unit_id = f"example-{slugify(example_id)}"
+            previous_work_unit_id = ""
+            if work_unit_path.exists():
+                work_unit = load_document(work_unit_path)
+                if isinstance(work_unit, dict):
+                    previous_work_unit_id = str(work_unit.get("work_unit_id", "")).strip()
+                    work_unit["work_unit_id"] = rebound_work_unit_id
+                    dump_document(work_unit_path, work_unit)
+            if previous_work_unit_id and previous_work_unit_id != rebound_work_unit_id:
+                def rebind_work_unit_refs(value: Any) -> bool:
+                    changed = False
+                    if isinstance(value, dict):
+                        for key, item in value.items():
+                            if key in {"work_unit_id", "source_work_unit_id"} and str(item).strip() == previous_work_unit_id:
+                                value[key] = rebound_work_unit_id
+                                changed = True
+                            else:
+                                changed = rebind_work_unit_refs(item) or changed
+                    elif isinstance(value, list):
+                        for item in value:
+                            changed = rebind_work_unit_refs(item) or changed
+                    return changed
+
+                for doc_path in sorted(pack_dir.rglob("*")):
+                    if doc_path == work_unit_path or not doc_path.is_file():
+                        continue
+                    if doc_path.suffix.lower() not in {".yaml", ".yml", ".json"}:
+                        continue
+                    document = load_document(doc_path)
+                    if rebind_work_unit_refs(document):
+                        dump_document(doc_path, document)
+                for text_path in sorted(pack_dir.rglob("*")):
+                    if not text_path.is_file():
+                        continue
+                    if text_path.suffix.lower() not in {".yaml", ".yml", ".json", ".md"}:
+                        continue
+                    raw_text = text_path.read_text(encoding="utf-8")
+                    rewritten_text = raw_text.replace(previous_work_unit_id, rebound_work_unit_id)
+                    if rewritten_text != raw_text:
+                        text_path.write_text(rewritten_text, encoding="utf-8")
+            materialized = True
+            validation_errors, validation_warnings = validate_pack(pack_dir, selected_registry)
+            if validation_errors:
+                raise ValueError("Materialized public example failed validation:\n- " + "\n- ".join(validation_errors))
     else:
         temp_root: Path | None = None
         if output_path is None:
@@ -2246,9 +2302,10 @@ def build_public_example_proof(
         "label": str(spec.get("label", example_id)),
         "pack_id": summary.get("pack_id", ""),
         "scenario": str(spec.get("scenario", "")).strip(),
-        "source_kind": "generated" if generated else "bundled",
+        "source_kind": "materialized" if materialized else ("generated" if generated else "bundled"),
         "generated": generated,
         "path": display_path(pack_dir),
+        "resolved_path": str(pack_dir.resolve()),
         "health": summary.get("health", ""),
         "state": summary.get("work_unit", {}).get("current_state", ""),
         "next_operation": summary.get("next_operation", ""),
@@ -2270,8 +2327,10 @@ def build_public_example_proof(
         "daily_value": list(spec.get("daily_value", [])),
         "try_command": f"{cli} example {example_id}",
         "continue_with": [
-            f"{cli} outcome {display_path(pack_dir)}",
-            f"{cli} next {display_path(pack_dir)}",
+            f"{cli} outcome",
+            f"{cli} artifacts",
+            f"{cli} show {next((path.stem for path in sorted((pack_dir / 'views').glob('*.md'))), 'tasks')}",
+            f"{cli} next --intent {str(summary.get('next_operation', 'Verify')).lower()}",
         ],
         "warnings": [*validation_warnings, *compile_warnings],
     }
@@ -3212,8 +3271,9 @@ def setup_harness(
         "doctor_report": doctor_report,
         "next_commands": [
             f"{cli} example research-prd",
-            f"{cli} outcome /path/to/work",
-            f"{cli} harnesses",
+            f"{cli} outcome",
+            f"{cli} artifacts",
+            f"{cli} show prd",
         ],
     }
 
@@ -4402,6 +4462,251 @@ def display_path(path: Path) -> str:
         return str(path)
 
 
+def session_state_root() -> Path:
+    override = os.environ.get("JINI_STATE_DIR", "").strip()
+    if override:
+        root = Path(override).expanduser()
+    else:
+        root = Path.cwd() / ".jini"
+    root.mkdir(parents=True, exist_ok=True)
+    return root
+
+
+def current_work_context_path() -> Path:
+    return session_state_root() / "current-work.json"
+
+
+def load_current_work_context() -> dict[str, Any] | None:
+    path = current_work_context_path()
+    if not path.exists():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+    if not isinstance(payload, dict):
+        return None
+    pack_dir = str(payload.get("pack_dir", "")).strip()
+    if not pack_dir:
+        return None
+    return payload
+
+
+def remember_current_work(pack_dir: Path, registry: dict[str, Any], *, source: str) -> dict[str, Any]:
+    resolved = pack_dir.expanduser().resolve()
+    summary = summarise_pack(resolved, registry)
+    payload = {
+        "schema_version": "0.1.0",
+        "context_type": "JiniCurrentWork",
+        "updated_at": now_utc(),
+        "source": source,
+        "pack_dir": str(resolved),
+        "pack_id": str(summary.get("pack_id", "")),
+        "work_unit_id": str(summary.get("work_unit", {}).get("work_unit_id", "")),
+        "title": str(summary.get("work_unit", {}).get("title", "")),
+        "state": str(summary.get("work_unit", {}).get("current_state", "")),
+        "health": str(summary.get("health", "")),
+    }
+    current_work_context_path().write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    return payload
+
+
+def resolve_context_pack_dir(
+    pack_path: Path | None,
+    registry: dict[str, Any],
+    *,
+    command_label: str,
+) -> Path:
+    if pack_path is not None:
+        resolved = pack_path.expanduser().resolve()
+        remember_current_work(resolved, registry, source=command_label)
+        return resolved
+
+    context = load_current_work_context()
+    if context is None:
+        raise ValueError(
+            "No current Jini work is active yet. Run `jini example ...`, `jini compile-pack ...`, or pass a path once."
+        )
+
+    resolved = Path(str(context.get("pack_dir", ""))).expanduser().resolve()
+    if not resolved.exists():
+        raise ValueError(
+            f"Saved current work no longer exists: {display_path(resolved)}. Run `jini example ...` or pass a path again."
+        )
+    remember_current_work(resolved, registry, source=command_label)
+    return resolved
+
+
+def artifact_label_from_stem(stem: str) -> str:
+    words = stem.replace("_", "-").split("-")
+    return " ".join(word.capitalize() for word in words if word)
+
+
+def build_artifact_catalog(pack_dir: Path, registry: dict[str, Any]) -> dict[str, Any]:
+    summary = summarise_pack(pack_dir, registry)
+    work_unit = summary["work_unit"]
+    cli = cli_invocation()
+
+    def item(
+        artifact_id: str,
+        *,
+        label: str,
+        kind: str,
+        category: str,
+        path: Path,
+        aliases: list[str] | None = None,
+    ) -> dict[str, Any]:
+        resolved = path.resolve()
+        return {
+            "id": artifact_id,
+            "label": label,
+            "kind": kind,
+            "category": category,
+            "path": display_path(resolved),
+            "resolved_path": str(resolved),
+            "aliases": aliases or [],
+            "show_command": f"{cli} show {artifact_id}",
+            "open_command": f"{cli} open {artifact_id}",
+        }
+
+    ready_now: list[dict[str, Any]] = []
+    view_dir = pack_dir / "views"
+    if view_dir.exists():
+        for path in sorted(view_dir.glob("*.md")):
+            stem = path.stem
+            ready_now.append(
+                item(
+                    stem,
+                    label=artifact_label_from_stem(stem),
+                    kind="view",
+                    category="ready-now",
+                    path=path,
+                )
+            )
+
+    source_records: list[dict[str, Any]] = []
+    preferred_order = ["Brief", "Assumptions", "Spec", "Decision", "Plan", "Tasks", "Evidence", "Approval", "Publication"]
+    ordered_types = [item_type for item_type in preferred_order if item_type in summary["latest_by_type"]]
+    for artifact_type in summary["present_types"]:
+        if artifact_type not in ordered_types:
+            ordered_types.append(artifact_type)
+    for artifact_type in ordered_types:
+        artifact_path, _artifact_doc = summary["latest_by_type"][artifact_type]
+        source_id = slugify(artifact_type)
+        aliases = [source_id]
+        if artifact_type == "Tasks":
+            source_id = "tasks-record"
+            aliases.extend(["tasks-artifact", "tasks-source"])
+        source_records.append(
+            item(
+                source_id,
+                label=artifact_type if artifact_type != "Tasks" else "Tasks record",
+                kind="source",
+                category="source-records",
+                path=artifact_path,
+                aliases=aliases,
+            )
+        )
+
+    exports: list[dict[str, Any]] = []
+    export_candidates = [
+        ("github", "GitHub issues", pack_dir / "exports" / "issues" / "github" / "README.md", ["github-issues", "issues-github"]),
+        ("jira", "Jira issues", pack_dir / "exports" / "issues" / "jira" / "README.md", ["jira-issues", "issues-jira"]),
+        ("markdown", "Markdown wiki", pack_dir / "exports" / "wiki" / "markdown" / "overview.md", ["markdown-wiki", "wiki-markdown"]),
+        ("confluence", "Confluence wiki", pack_dir / "exports" / "wiki" / "confluence" / "overview.md", ["confluence-wiki", "wiki-confluence"]),
+    ]
+    for export_id, label, path, aliases in export_candidates:
+        if path.exists():
+            exports.append(
+                item(
+                    export_id,
+                    label=label,
+                    kind="export",
+                    category="shareable-exports",
+                    path=path,
+                    aliases=aliases,
+                )
+            )
+
+    return {
+        "schema_version": "0.1.0",
+        "catalog_type": "JiniArtifactCatalog",
+        "generated_at": now_utc(),
+        "pack_dir": display_path(pack_dir),
+        "pack_id": str(summary.get("pack_id", "")),
+        "work_unit_id": str(work_unit.get("work_unit_id", "")),
+        "title": str(work_unit.get("title", "")),
+        "ready_now": ready_now,
+        "source_records": source_records,
+        "shareable_exports": exports,
+    }
+
+
+def resolve_artifact_item(pack_dir: Path, registry: dict[str, Any], artifact_name: str) -> dict[str, Any]:
+    catalog = build_artifact_catalog(pack_dir, registry)
+    normalized = slugify(artifact_name)
+    for bucket in ("ready_now", "source_records", "shareable_exports"):
+        for item in catalog.get(bucket, []):
+            aliases = {slugify(item.get("id", "")), *(slugify(alias) for alias in item.get("aliases", []))}
+            if normalized in aliases:
+                return item
+    available = [
+        item["id"]
+        for bucket in ("ready_now", "source_records", "shareable_exports")
+        for item in catalog.get(bucket, [])
+    ]
+    raise ValueError(
+        "Unknown artifact "
+        f"{artifact_name!r}. Try `jini artifacts` to see what is available: {', '.join(sorted(available))}"
+    )
+
+
+def print_artifact_catalog(catalog: dict[str, Any]) -> None:
+    print(f"WORK   {catalog.get('work_unit_id', '')}")
+    print(f"TITLE  {catalog.get('title', '')}")
+    print()
+    print("READY NOW")
+    ready = catalog.get("ready_now", [])
+    if ready:
+        for item in ready:
+            print(f"  - {item['id']:<14} {item['label']}")
+    else:
+        print("  No human-facing views are ready yet.")
+    print()
+    print("SOURCE RECORDS")
+    source = catalog.get("source_records", [])
+    if source:
+        for item in source:
+            print(f"  - {item['id']:<14} {item['label']}")
+    else:
+        print("  No canonical source records are available yet.")
+    print()
+    print("SHAREABLE EXPORTS")
+    exports = catalog.get("shareable_exports", [])
+    if exports:
+        for item in exports:
+            print(f"  - {item['id']:<14} {item['label']}")
+    else:
+        print("  No shareable exports are ready yet.")
+    print()
+    print("USE")
+    print(f"  {cli_invocation()} show <name>")
+    print(f"  {cli_invocation()} open <name>")
+
+
+def launch_open_path(path: Path) -> None:
+    if sys.platform == "darwin":
+        subprocess.run(["open", str(path)], check=True)
+        return
+    if sys.platform.startswith("linux"):
+        subprocess.run(["xdg-open", str(path)], check=True)
+        return
+    if os.name == "nt":
+        os.startfile(str(path))  # type: ignore[attr-defined]
+        return
+    raise RuntimeError("This platform does not support automatic open")
+
+
 def cli_invocation() -> str:
     override = os.environ.get("JINI_CLI_COMMAND", "").strip()
     if override:
@@ -4442,17 +4747,18 @@ def print_cli_overview() -> None:
     print("START HERE")
     print(f"  {cli} start --harness codex")
     print(f"  {cli} example research-prd")
-    print(f"  {cli} outcome /path/to/work")
+    print(f"  {cli} outcome")
     print()
     print("HARNESS ORCHESTRATION")
     print(f"  {cli} harnesses")
-    print(f"  {cli} plan /path/to/work --repo /path/to/repo --intent verify")
-    print(f"  {cli} run /path/to/work --repo /path/to/repo --harness codex")
+    print(f"  {cli} run --repo /path/to/repo --harness codex")
     print()
     print("OUTCOME LAYER")
-    print(f"  {cli} outcome /path/to/work")
-    print(f"  {cli} next /path/to/work --repo /path/to/repo --intent verify")
-    print(f"  {cli} resume /path/to/work --repo /path/to/repo --intent verify --max-chars 900")
+    print(f"  {cli} outcome")
+    print(f"  {cli} artifacts")
+    print(f"  {cli} show prd")
+    print(f"  {cli} next --repo /path/to/repo --intent verify")
+    print(f"  {cli} resume --repo /path/to/repo --intent verify --max-chars 900")
     print()
     print("MORE")
     print(f"  {cli} guide --harness codex")
@@ -10408,6 +10714,7 @@ def build_outcome_view(
     repo_path: Path | None = None,
 ) -> dict[str, Any]:
     summary = summarise_pack(pack_dir, registry)
+    remember_current_work(pack_dir, registry, source="outcome")
     work_unit = summary["work_unit"]
     task_summary = summary["task_summary"]
     missing_now = list(summary["missing_stage_required"])
@@ -10416,14 +10723,23 @@ def build_outcome_view(
         for artifact_type in summary["missing_full_required"]
         if artifact_type not in summary["missing_stage_required"]
     ]
-    next_command = f"{cli_invocation()} next {display_path(pack_dir)}"
-    resume_command = f"{cli_invocation()} resume {display_path(pack_dir)}"
+    next_command = f"{cli_invocation()} next"
+    resume_command = f"{cli_invocation()} resume"
     if repo_path is not None:
         repo_display = display_path(repo_path)
         next_command = f"{next_command} --repo {repo_display}"
         resume_command = f"{resume_command} --repo {repo_display}"
     next_command = f"{next_command} --intent {summary['next_operation'].lower()}"
     resume_command = f"{resume_command} --intent {summary['next_operation'].lower()} --max-chars 900"
+    artifact_catalog = build_artifact_catalog(pack_dir, registry)
+    ready_now = [
+        {
+            "id": item["id"],
+            "label": item["label"],
+            "show_command": item["show_command"],
+        }
+        for item in artifact_catalog.get("ready_now", [])
+    ]
     return {
         "schema_version": "0.1.0",
         "view_type": "JiniOutcomeView",
@@ -10449,6 +10765,7 @@ def build_outcome_view(
             "what_is_still_missing_now": missing_now,
             "what_is_still_missing_later": missing_later,
         },
+        "ready_now": ready_now,
         "continue_with": [next_command, resume_command],
         "validation_errors": list(summary["validation_errors"]),
         "validation_warnings": list(summary["validation_warnings"]),
@@ -10482,6 +10799,12 @@ def print_outcome_view(report: dict[str, Any]) -> None:
             print(f"  - {item}")
     else:
         print("  No future-required artifact gaps are visible right now.")
+    ready_now = report.get("ready_now", [])
+    if ready_now:
+        print()
+        print("READY NOW")
+        for item in ready_now:
+            print(f"  {item.get('id', ''):<14} -> {item.get('show_command', '')}")
     if report.get("validation_errors"):
         print()
         print("FIX FIRST")
@@ -13395,19 +13718,50 @@ def main() -> int:
         "status-pack",
         help="Summarize pack readiness, required artifacts, and next protocol step",
     )
-    status_parser.add_argument("path", type=Path)
+    status_parser.add_argument("path", nargs="?", type=Path)
 
     outcome_parser = subparsers.add_parser(
         "outcome",
         help="Answer what is done, what happens next, and what is still missing before the work is truly across the line",
     )
-    outcome_parser.add_argument("path", type=Path)
+    outcome_parser.add_argument("path", nargs="?", type=Path)
     outcome_parser.add_argument("--repo", type=Path, help="Optional repo or worktree path for follow-on commands")
     outcome_parser.add_argument(
         "--format",
         choices=["text", "json"],
         default="text",
         help="Output format for the outcome view",
+    )
+
+    artifacts_parser = subparsers.add_parser(
+        "artifacts",
+        help="Show the ready-now views, source records, and export surfaces for the current work",
+    )
+    artifacts_parser.add_argument("path", nargs="?", type=Path, help="Optional pack path; defaults to the current Jini work")
+    artifacts_parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for the artifact catalog",
+    )
+
+    show_parser = subparsers.add_parser(
+        "show",
+        help="Print one artifact or human-facing view from the current work",
+    )
+    show_parser.add_argument("artifact", help="Artifact or view id, for example prd, tasks, itinerary, github, or plan")
+    show_parser.add_argument("--from", dest="path", type=Path, help="Optional pack path; defaults to the current Jini work")
+
+    open_parser = subparsers.add_parser(
+        "open",
+        help="Open one artifact or human-facing view from the current work",
+    )
+    open_parser.add_argument("artifact", help="Artifact or view id, for example prd, tasks, itinerary, github, or plan")
+    open_parser.add_argument("--from", dest="path", type=Path, help="Optional pack path; defaults to the current Jini work")
+    open_parser.add_argument(
+        "--print-path",
+        action="store_true",
+        help="Print the resolved artifact path instead of launching it",
     )
 
     recommend_execution_parser = subparsers.add_parser(
@@ -13610,7 +13964,7 @@ def main() -> int:
         "execution-checklist",
         help="Build a concrete next-step checklist from pack state, repo context, and evidence posture",
     )
-    checklist_parser.add_argument("path", type=Path)
+    checklist_parser.add_argument("path", nargs="?", type=Path)
     checklist_parser.add_argument("--intent", help="Optional intent override; defaults to the pack's next operation")
     checklist_parser.add_argument("--repo", type=Path, help="Optional repo or worktree path for repo-aware targeting")
     checklist_parser.add_argument("--home", type=Path, help="Optional personal home path")
@@ -13631,7 +13985,7 @@ def main() -> int:
         "compact-context",
         help="Emit a compact resume context slice for low-token reloads and memory-aware resumptions",
     )
-    compact_context_parser.add_argument("path", type=Path)
+    compact_context_parser.add_argument("path", nargs="?", type=Path)
     compact_context_parser.add_argument("--intent", help="Optional intent override; defaults to the pack's next operation")
     compact_context_parser.add_argument("--repo", type=Path, help="Optional repo or worktree path for repo-aware targeting")
     compact_context_parser.add_argument("--home", type=Path, help="Optional personal home path")
@@ -13765,7 +14119,7 @@ def main() -> int:
         "stage-runtime-handoff",
         help="Persist a runtime-ready handoff bundle with compact context, checklist, adapter target, and install preview",
     )
-    handoff_parser.add_argument("path", type=Path)
+    handoff_parser.add_argument("path", nargs="?", type=Path)
     handoff_parser.add_argument("--intent", help="Optional intent override; defaults to the pack's next operation")
     handoff_parser.add_argument("--repo", type=Path, help="Optional repo or worktree path for repo-aware targeting")
     handoff_parser.add_argument("--home", type=Path, help="Optional personal home path")
@@ -13798,7 +14152,7 @@ def main() -> int:
         "activate-runtime-target",
         help="Install the selected runtime shim and materialize a real local activation bundle from a runtime handoff",
     )
-    activate_runtime_parser.add_argument("path", type=Path)
+    activate_runtime_parser.add_argument("path", nargs="?", type=Path)
     activate_runtime_parser.add_argument("--handoff", type=Path, help="Optional existing handoff bundle to activate")
     activate_runtime_parser.add_argument("--intent", help="Optional intent override when building a handoff on demand")
     activate_runtime_parser.add_argument("--repo", type=Path, help="Optional repo or worktree path for repo-aware activation")
@@ -13833,7 +14187,7 @@ def main() -> int:
         "execute-flow",
         help="Run the guided Jini execution loop with compact context reuse, optional runtime activation, and local adapter apply",
     )
-    execute_flow_parser.add_argument("path", type=Path)
+    execute_flow_parser.add_argument("path", nargs="?", type=Path)
     execute_flow_parser.add_argument(
         "--mode",
         choices=["supervised", "autonomous"],
@@ -14773,6 +15127,7 @@ def main() -> int:
             for error in errors:
                 print(f"ERROR {error}")
             return 1
+        remember_current_work(target_dir, registry, source="init-pack")
         print(f"OK    initialized {args.pack_id} at {target_dir}")
         return 0
 
@@ -14809,6 +15164,7 @@ def main() -> int:
             return 1
         for warning in materialize_compile_outputs(target_dir, registry):
             print(f"WARN  {warning}")
+        remember_current_work(target_dir, registry, source="compile-pack")
         print(f"OK    compiled {args.pack_id} at {target_dir}")
         return 0
 
@@ -14872,6 +15228,7 @@ def main() -> int:
         if selected_mode == "compile-pack":
             for warning in materialize_compile_outputs(target_dir, registry):
                 print(f"WARN  {warning}")
+        remember_current_work(target_dir, registry, source="bootstrap-pack")
         print(f"MODE  {selected_mode}")
         for reason in rationale:
             print(f"WHY   {reason}")
@@ -14880,24 +15237,69 @@ def main() -> int:
 
     if args.command == "status-pack":
         try:
-            summary = summarise_pack(args.path, registry)
+            pack_dir = resolve_context_pack_dir(args.path, registry, command_label="status-pack")
+            summary = summarise_pack(pack_dir, registry)
         except (FileNotFoundError, TypeError, ValueError) as exc:
-            print(f"ERROR {format_pack_surface_error(args.path, exc)}")
+            failing_path = args.path if args.path is not None else Path("<current-work>")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
             return 1
         print_pack_status(summary)
         return 1 if summary["validation_errors"] else 0
 
     if args.command == "outcome":
         try:
-            report = build_outcome_view(args.path, registry, repo_path=args.repo)
+            pack_dir = resolve_context_pack_dir(args.path, registry, command_label="outcome")
+            report = build_outcome_view(pack_dir, registry, repo_path=args.repo)
         except (FileNotFoundError, TypeError, ValueError) as exc:
-            print(f"ERROR {format_pack_surface_error(args.path, exc)}")
+            failing_path = args.path if args.path is not None else Path("<current-work>")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
             return 1
         if args.format == "json":
             print(json.dumps(report, indent=2))
         else:
             print_outcome_view(report)
         return 1 if report["validation_errors"] else 0
+
+    if args.command == "artifacts":
+        try:
+            pack_dir = resolve_context_pack_dir(args.path, registry, command_label="artifacts")
+            catalog = build_artifact_catalog(pack_dir, registry)
+        except (FileNotFoundError, TypeError, ValueError) as exc:
+            failing_path = args.path if args.path is not None else Path("<current-work>")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
+            return 1
+        if args.format == "json":
+            print(json.dumps(catalog, indent=2))
+        else:
+            print_artifact_catalog(catalog)
+        return 0
+
+    if args.command == "show":
+        try:
+            pack_dir = resolve_context_pack_dir(args.path, registry, command_label="show")
+            artifact = resolve_artifact_item(pack_dir, registry, args.artifact)
+            print(Path(str(artifact["resolved_path"])).read_text(encoding="utf-8"))
+        except (FileNotFoundError, OSError, TypeError, ValueError) as exc:
+            failing_path = args.path if args.path is not None else Path("<current-work>")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
+            return 1
+        return 0
+
+    if args.command == "open":
+        try:
+            pack_dir = resolve_context_pack_dir(args.path, registry, command_label="open")
+            artifact = resolve_artifact_item(pack_dir, registry, args.artifact)
+            artifact_path = Path(str(artifact["resolved_path"]))
+            if args.print_path:
+                print(display_path(artifact_path))
+            else:
+                launch_open_path(artifact_path)
+                print(f"OPENED {display_path(artifact_path)}")
+        except (FileNotFoundError, OSError, RuntimeError, TypeError, ValueError, subprocess.CalledProcessError) as exc:
+            failing_path = args.path if args.path is not None else Path("<current-work>")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
+            return 1
+        return 0
 
     if args.command == "recommend-execution":
         recommendation = recommend_execution(
@@ -15057,6 +15459,7 @@ def main() -> int:
             print(json.dumps(report, indent=2))
         else:
             print_public_example_proof(report)
+        remember_current_work(Path(str(report["resolved_path"])).expanduser(), registry, source=f"example:{args.example_id}")
         return 0
 
     if args.command == "review-framework":
@@ -15122,14 +15525,20 @@ def main() -> int:
         return 0
 
     if args.command == "execution-checklist":
-        checklist = build_execution_checklist(
-            args.path,
-            registry,
-            intent=args.intent,
-            repo_path=args.repo,
-            home_path=args.home,
-            runtime_target=args.runtime_target,
-        )
+        try:
+            pack_dir = resolve_context_pack_dir(args.path, registry, command_label="execution-checklist")
+            checklist = build_execution_checklist(
+                pack_dir,
+                registry,
+                intent=args.intent,
+                repo_path=args.repo,
+                home_path=args.home,
+                runtime_target=args.runtime_target,
+            )
+        except (FileNotFoundError, TypeError, ValueError) as exc:
+            failing_path = args.path if args.path is not None else Path("<current-work>")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
+            return 1
         if args.format == "json":
             print(json.dumps(checklist, indent=2))
         else:
@@ -15145,21 +15554,27 @@ def main() -> int:
                 "item_count": len(checklist["items"]),
                 "runtime_target": checklist.get("runtime_target", {}).get("selected", ""),
             },
-            pack_dir=args.path,
+            pack_dir=pack_dir,
         )
         return 0
 
     if args.command == "compact-context":
-        compact = build_compact_context(
-            args.path,
-            registry,
-            intent=args.intent,
-            repo_path=args.repo,
-            home_path=args.home,
-            runtime_target=args.runtime_target,
-            max_items=args.max_items,
-            max_chars=args.max_chars,
-        )
+        try:
+            pack_dir = resolve_context_pack_dir(args.path, registry, command_label="compact-context")
+            compact = build_compact_context(
+                pack_dir,
+                registry,
+                intent=args.intent,
+                repo_path=args.repo,
+                home_path=args.home,
+                runtime_target=args.runtime_target,
+                max_items=args.max_items,
+                max_chars=args.max_chars,
+            )
+        except (FileNotFoundError, TypeError, ValueError) as exc:
+            failing_path = args.path if args.path is not None else Path("<current-work>")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
+            return 1
         if args.format == "json":
             print(json.dumps(compact, indent=2))
         else:
@@ -15179,7 +15594,7 @@ def main() -> int:
                 "home_bound": bool(compact.get("home_memory")),
                 "runtime_target": compact.get("runtime_target", {}).get("selected", ""),
             },
-            pack_dir=args.path,
+            pack_dir=pack_dir,
         )
         return 0
 
@@ -15282,8 +15697,9 @@ def main() -> int:
 
     if args.command == "stage-runtime-handoff":
         try:
+            pack_dir = resolve_context_pack_dir(args.path, registry, command_label="stage-runtime-handoff")
             handoff, handoff_path = build_runtime_handoff(
-                args.path,
+                pack_dir,
                 registry,
                 intent=args.intent,
                 repo_path=args.repo,
@@ -15293,7 +15709,8 @@ def main() -> int:
                 max_chars=args.max_chars,
             )
         except (FileNotFoundError, TypeError, ValueError, KeyError) as exc:
-            print(f"ERROR {exc}")
+            failing_path = args.path if args.path is not None else Path("<current-work>")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
             return 1
         if args.format == "json":
             print(json.dumps(handoff, indent=2))
@@ -15303,8 +15720,9 @@ def main() -> int:
 
     if args.command == "activate-runtime-target":
         try:
+            pack_dir = resolve_context_pack_dir(args.path, registry, command_label="activate-runtime-target")
             activation, _receipt_path = activate_runtime_target(
-                args.path,
+                pack_dir,
                 registry,
                 handoff_path=args.handoff,
                 intent=args.intent,
@@ -15316,7 +15734,8 @@ def main() -> int:
                 max_chars=args.max_chars,
             )
         except (FileNotFoundError, TypeError, ValueError, KeyError) as exc:
-            print(f"ERROR {exc}")
+            failing_path = args.path if args.path is not None else Path("<current-work>")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
             return 1
         if args.format == "json":
             print(json.dumps(activation, indent=2))
@@ -15326,8 +15745,9 @@ def main() -> int:
 
     if args.command == "execute-flow":
         try:
+            pack_dir = resolve_context_pack_dir(args.path, registry, command_label="execute-flow")
             report, _flow_path = execute_flow(
-                args.path,
+                pack_dir,
                 registry,
                 mode=args.mode,
                 intent=args.intent,
@@ -15346,7 +15766,8 @@ def main() -> int:
                 max_chars=args.max_chars,
             )
         except (FileNotFoundError, TypeError, ValueError, KeyError) as exc:
-            print(f"ERROR {exc}")
+            failing_path = args.path if args.path is not None else Path("<current-work>")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
             return 1
         if args.format == "json":
             print(json.dumps(report, indent=2))

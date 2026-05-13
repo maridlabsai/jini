@@ -1,4 +1,5 @@
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -35,11 +36,14 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.temp_dir.cleanup()
 
     def run_cli(self, *args: object) -> subprocess.CompletedProcess[str]:
+        env = dict(os.environ)
+        env["JINI_STATE_DIR"] = str((self.tmp / ".jini").resolve())
         return subprocess.run(
             [*CLI, *[str(arg) for arg in args]],
             cwd=REPO_ROOT,
             text=True,
             capture_output=True,
+            env=env,
         )
 
     def assert_ok(self, result: subprocess.CompletedProcess[str]) -> None:
@@ -349,11 +353,12 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("START HERE", result.stdout)
         self.assertIn("jini start --harness codex", result.stdout)
         self.assertIn("jini example research-prd", result.stdout)
-        self.assertIn("jini outcome /path/to/work", result.stdout)
+        self.assertIn("jini outcome", result.stdout)
         self.assertIn("HARNESS ORCHESTRATION", result.stdout)
         self.assertIn("jini harnesses", result.stdout)
-        self.assertIn("jini plan /path/to/work", result.stdout)
-        self.assertIn("jini run /path/to/work", result.stdout)
+        self.assertIn("jini run --repo /path/to/repo --harness codex", result.stdout)
+        self.assertIn("jini artifacts", result.stdout)
+        self.assertIn("jini show prd", result.stdout)
         self.assertNotIn("usage: jini", result.stdout)
 
     def test_help_all_shows_full_parser_surface(self) -> None:
@@ -372,7 +377,8 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn(f"PREFIX  {prefix.resolve()}", result.stdout)
         self.assertIn("READY", result.stdout)
         self.assertIn("jini example research-prd", result.stdout)
-        self.assertIn("jini outcome /path/to/work", result.stdout)
+        self.assertIn("jini outcome", result.stdout)
+        self.assertIn("jini artifacts", result.stdout)
 
     def test_guide_alias_resolves_to_get_started(self) -> None:
         result = self.run_cli("guide", "--harness", "codex")
@@ -386,7 +392,8 @@ class JiniCliConformanceTests(unittest.TestCase):
         report = json.loads(result.stdout)
         self.assertEqual("research-prd", report["example_id"])
         self.assertTrue(any("next " in item for item in report["continue_with"]))
-        self.assertTrue(any("outcome " in item for item in report["continue_with"]))
+        self.assertTrue(any(item == "jini outcome" for item in report["continue_with"]))
+        self.assertTrue(any(item == "jini artifacts" for item in report["continue_with"]))
 
     def test_next_and_resume_aliases_resolve(self) -> None:
         pack_dir = self.compile_research_pack()
@@ -407,9 +414,45 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(result)
         self.assertIn("WHAT IS DONE?", result.stdout)
         self.assertIn("WHAT HAPPENS NEXT?", result.stdout)
+        self.assertIn("READY NOW", result.stdout)
         self.assertIn("CONTINUE", result.stdout)
         self.assertIn("jini next ", result.stdout)
         self.assertIn("jini resume ", result.stdout)
+
+    def test_example_sets_current_work_for_pathless_outcome_and_artifacts(self) -> None:
+        example_output = self.tmp / "research-example"
+        result = self.run_cli("example", "research-prd", "--output", example_output)
+        self.assert_ok(result)
+
+        outcome = self.run_cli("outcome")
+        self.assert_ok(outcome)
+        self.assertIn("WORK   example-research-prd", outcome.stdout)
+        self.assertIn("READY NOW", outcome.stdout)
+
+        artifacts = self.run_cli("artifacts")
+        self.assert_ok(artifacts)
+        self.assertIn("READY NOW", artifacts.stdout)
+        self.assertIn("prd", artifacts.stdout)
+        self.assertIn("tasks", artifacts.stdout)
+
+    def test_show_artifact_uses_current_work_without_path(self) -> None:
+        pack_dir = self.compile_travel_pack()
+
+        outcome = self.run_cli("outcome", pack_dir)
+        self.assert_ok(outcome)
+
+        show = self.run_cli("show", "itinerary")
+        self.assert_ok(show)
+        self.assertIn("# Itinerary: Test Travel Pack", show.stdout)
+
+        open_result = self.run_cli("open", "itinerary", "--print-path")
+        self.assert_ok(open_result)
+        self.assertIn(str((pack_dir / "views" / "itinerary.md").resolve()), open_result.stdout.strip())
+
+    def test_outcome_without_current_work_fails_cleanly(self) -> None:
+        result = self.run_cli("outcome")
+        self.assert_error(result)
+        self.assertIn("No current Jini work is active yet", result.stdout)
 
     def test_outcome_missing_path_returns_friendly_error(self) -> None:
         result = self.run_cli("outcome", self.tmp / "missing-pack")
@@ -2056,10 +2099,11 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue(all(item.startswith("jini ") for item in guide["beginner_path"]["commands"]))
         self.assertTrue(any("start --harness codex" in item for item in guide["beginner_path"]["commands"]))
         self.assertTrue(any("example research-prd" in item for item in guide["beginner_path"]["commands"]))
+        self.assertTrue(any(item == "jini outcome" for item in guide["beginner_path"]["commands"]))
         self.assertFalse(any("catalog-bundles" in item for item in guide["beginner_path"]["commands"]))
         self.assertFalse(any("show-kpis" in item for item in guide["beginner_path"]["commands"]))
         self.assertTrue(any("harnesses" in item for item in guide["power_user_path"]["commands"]))
-        self.assertTrue(any("plan /path/to/work" in item for item in guide["power_user_path"]["commands"]))
+        self.assertTrue(any("handoff --repo /path/to/repo" in item for item in guide["power_user_path"]["commands"]))
         self.assertTrue(guide["shared_model"])
 
     def test_try_example_reports_bundled_research_prd_value(self) -> None:
@@ -2078,6 +2122,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue(report["evidence_summary"]["present"])
         self.assertTrue(any("verification becomes a visible stage" in item.lower() for item in report["daily_value"]))
         self.assertTrue(any("jini next " in item for item in report["continue_with"]))
+        self.assertTrue(any(item == "jini artifacts" for item in report["continue_with"]))
 
     def test_try_example_generates_meeting_followup_into_requested_output(self) -> None:
         output = self.tmp / "example-meeting-followup"

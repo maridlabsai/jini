@@ -35,6 +35,7 @@ Run this:
 
 ```bash
 jini example research-prd
+jini outcome
 ```
 
 You will see lines like:
@@ -117,7 +118,7 @@ jini example incident-response
 Use this after important work:
 
 ```bash
-jini outcome <path-to-work>
+jini outcome
 ```
 
 It helps you see:
@@ -125,6 +126,13 @@ It helps you see:
 - what state the work is in
 - what happens next
 - what is missing
+
+If you want to see what Jini already made for you, run:
+
+```bash
+jini artifacts
+jini show prd
+```
 
 If you want the non-technical explanation of how Jini keeps those things
 visible, read [State And Artifacts](./state-and-artifacts.md).

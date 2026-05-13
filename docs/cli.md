@@ -23,7 +23,7 @@ If you are not installed yet, start with [install](./install.md).
 ```bash
 jini start --harness codex
 jini example research-prd
-jini outcome /path/to/work
+jini outcome
 ```
 
 Use those three commands to:
@@ -38,9 +38,9 @@ Use these when you are working on one pack or handoff:
 
 ```bash
 jini plan /path/to/work --repo /path/to/repo --intent wiki
-jini handoff /path/to/work --repo /path/to/repo --harness codex
-jini activate /path/to/work --repo /path/to/repo --harness codex
-jini run /path/to/work --repo /path/to/repo --harness codex
+jini handoff --repo /path/to/repo --harness codex
+jini activate --repo /path/to/repo --harness codex
+jini run --repo /path/to/repo --harness codex
 ```
 
 Those commands let Jini act like a harness orchestration CLI:
@@ -55,9 +55,11 @@ Those commands let Jini act like a harness orchestration CLI:
 Use these when you want to keep the work itself coherent:
 
 ```bash
-jini outcome /path/to/work
-jini next /path/to/work --repo /path/to/repo --intent verify
-jini resume /path/to/work --repo /path/to/repo --intent verify --max-chars 900
+jini outcome
+jini artifacts
+jini show prd
+jini next --repo /path/to/repo --intent verify
+jini resume --repo /path/to/repo --intent verify --max-chars 900
 jini advance-pack /path/to/work
 ```
 

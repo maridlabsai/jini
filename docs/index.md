@@ -49,6 +49,7 @@ If you want the fastest proof that Jini is different, run this:
 
 ```bash
 jini example research-prd
+jini outcome
 ```
 
 The important lines are:
@@ -154,7 +155,9 @@ Here is the practical payoff in day-to-day flows:
 The recurring Jini move is simple:
 
 ```bash
-jini outcome <path-to-work>
+jini outcome
+jini artifacts
+jini show prd
 ```
 
 That one screen answers the questions teams ask every day:

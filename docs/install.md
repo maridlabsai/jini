@@ -16,6 +16,7 @@ For the smallest guided path from GitHub:
 pipx install --editable git+https://github.com/maridlabsai/jini.git
 jini start --harness codex
 jini example research-prd
+jini outcome
 ```
 
 What this does:

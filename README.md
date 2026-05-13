@@ -83,6 +83,7 @@ If you want the fastest install path, run this:
 pipx install --editable git+https://github.com/maridlabsai/jini.git
 jini start --harness codex
 jini example research-prd
+jini outcome
 ```
 
 That gives you a real `jini` command immediately, while keeping the runtime
@@ -167,7 +168,7 @@ In normal work, that means:
 The recurring Jini command is:
 
 ```bash
-jini outcome <path-to-work>
+jini outcome
 ```
 
 That one screen tells you the current state, next step, missing requirements,
@@ -1262,13 +1263,15 @@ Most people only need a small CLI surface:
 ```bash
 jini start --harness codex
 jini example research-prd
-jini outcome /path/to/work
+jini outcome
+jini artifacts
+jini show prd
 ```
 
 When you are ready to automate through a harness:
 
 ```bash
-jini run /path/to/work --repo /path/to/repo --harness codex
+jini run --repo /path/to/repo --harness codex
 ```
 
 If you want the grouped command reference, see [docs/cli.md](./docs/cli.md).
