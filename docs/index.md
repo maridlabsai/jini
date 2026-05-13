@@ -46,17 +46,39 @@ verified, approved, publishable work.
 
 ## Pick Your Workflow
 
-Start with the workflow that already feels familiar:
+Start with the workflow you already ran this week. Jini is easiest to judge
+when it is making ordinary work more truthful.
 
-| Workflow | Use it when | Run | Open |
-| --- | --- | --- | --- |
-| **Meeting follow-up** | one meeting needs decisions, owners, and honest next steps | `jini try-example meeting-followup` | [See the walkthrough](./examples.md#meeting-followup) |
-| **Research to PRD handoff** | research exists and you need a truthful build handoff | `jini try-example research-prd` | [See the walkthrough](./examples.md#research-prd) |
-| **Vendor selection** | several options look plausible and you need an approval-ready recommendation | `jini try-example vendor-selection` | [See the walkthrough](./examples.md#vendor-selection) |
-| **Incident response** | the outage is over but rollback, proof, and closure still matter | `jini try-example incident-response` | [See the walkthrough](./examples.md#incident-response) |
+<div class="workflow-grid">
+  <a class="workflow-card" href="./examples.md#meeting-followup">
+    <span class="workflow-meta">Meeting Follow-up</span>
+    <h3>Turn notes into decisions, owners, and missing approvals.</h3>
+    <p>Use this when one meeting ended with vague next steps and everyone is pretending the follow-up is obvious.</p>
+    <code>jini try-example meeting-followup</code>
+  </a>
+  <a class="workflow-card" href="./examples.md#research-prd">
+    <span class="workflow-meta">Research To PRD</span>
+    <h3>Show whether a spec is ready, or only drafted.</h3>
+    <p>Use this when research exists, tasks are done, and you need to know whether the handoff is actually verified.</p>
+    <code>jini try-example research-prd</code>
+  </a>
+  <a class="workflow-card" href="./examples.md#vendor-selection">
+    <span class="workflow-meta">Vendor Selection</span>
+    <h3>Keep the rationale attached to the recommendation.</h3>
+    <p>Use this when several options look plausible and the team needs an approval-ready answer instead of a meeting recap.</p>
+    <code>jini try-example vendor-selection</code>
+  </a>
+  <a class="workflow-card" href="./examples.md#incident-response">
+    <span class="workflow-meta">Incident Response</span>
+    <h3>Separate service recovery from real closure.</h3>
+    <p>Use this when the outage is over but rollback, proof, and closure work still need to be made explicit.</p>
+    <code>jini try-example incident-response</code>
+  </a>
+</div>
 
-If you only try one, start with the workflow you already ran this week. Jini
-is easiest to judge when it is helping on work you already understand.
+<div class="value-strip">
+  <p><strong>What changes in one run:</strong> Jini does not just say the workflow exists. It tells you the current state, the next action, and what is still missing before the work should be treated as durable.</p>
+</div>
 
 ## Common Examples
 

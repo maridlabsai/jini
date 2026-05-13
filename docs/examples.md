@@ -11,6 +11,35 @@ the product:
 That is the difference between "another workflow idea" and a framework you can
 actually operate.
 
+<div class="workflow-jump">
+  <div class="workflow-grid">
+    <a class="workflow-card" href="#meeting-followup">
+      <span class="workflow-meta">Meeting Follow-up</span>
+      <h3>See how Jini turns a meeting into explicit execution state.</h3>
+      <p>Best for teams losing decisions, owners, and missing approvals in notes and chat.</p>
+      <code>jini try-example meeting-followup</code>
+    </a>
+    <a class="workflow-card" href="#research-prd">
+      <span class="workflow-meta">Research To PRD</span>
+      <h3>See the difference between tasks being done and work being verified.</h3>
+      <p>Best for product and engineering handoffs where the rationale thins out as the work moves forward.</p>
+      <code>jini try-example research-prd</code>
+    </a>
+    <a class="workflow-card" href="#vendor-selection">
+      <span class="workflow-meta">Vendor Selection</span>
+      <h3>See how recommendations keep their tradeoffs and approval path attached.</h3>
+      <p>Best for teams making expensive decisions that should survive beyond the meeting where they were made.</p>
+      <code>jini try-example vendor-selection</code>
+    </a>
+    <a class="workflow-card" href="#incident-response">
+      <span class="workflow-meta">Incident Response</span>
+      <h3>See how Jini keeps proof, rollback, and closure visible after the firefight.</h3>
+      <p>Best for operational work where “service is back” is not the same thing as “the work is actually closed.”</p>
+      <code>jini try-example incident-response</code>
+    </a>
+  </div>
+</div>
+
 <a id="meeting-followup"></a>
 
 ## 1. Meeting Follow-up
