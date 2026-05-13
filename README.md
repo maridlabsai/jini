@@ -1,14 +1,19 @@
 # Jini
 
-Jini is a framework for humans and machines doing consequential work, built on
-a typed, event-sourced coordination protocol core.
+**In plain words:** Jini helps you answer three questions about work:
 
-If the current generation of AI tools feels powerful but brittle, Jini is the
-missing layer.
+- What is done?
+- What happens next?
+- What is still missing?
 
-Jini is designed for teams building AI agents, agentic workflows, workflow
-automation, developer tools, and human-in-the-loop systems that need durable
-state, explicit approvals, evidence, memory, and cross-runtime portability.
+If AI tools feel helpful at first but messy later, Jini is built for that
+messy part.
+
+Jini helps when work moves between people, chats, docs, tickets, and tools,
+and nobody can cleanly say whether the work is really ready.
+
+For technical readers: Jini is a framework with a small protocol core for AI
+work that needs durable state, approvals, evidence, memory, and portability.
 
 It turns work from a pile of prompts, chats, docs, tickets, and tribal memory
 into a governed system with:

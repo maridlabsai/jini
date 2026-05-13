@@ -8,11 +8,15 @@
 
 # Jini
 
-**Jini is a framework with a strict protocol core for governed, stateful AI work.**
+**In plain words:** Jini helps you see if work is really done, what comes
+next, and what is still missing.
 
-Most AI systems are good at first drafts. Jini is built for what happens after
-that: revisions, handoffs, verification, approvals, and memory that survives
-tool changes.
+Most AI tools are good at starting work. Jini is for the harder part after
+that: handoffs, checking, sign-off, and keeping the truth clear as work moves
+between people and tools.
+
+For technical readers: Jini is a framework with a small protocol core for AI
+work that needs durable state, approvals, evidence, memory, and portability.
 
 ## Start Here
 

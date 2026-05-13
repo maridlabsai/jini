@@ -1693,6 +1693,16 @@ def build_publish_readiness() -> dict[str, Any]:
             "present": "You do not need to know Python to use Jini." in ((ROOT / "docs" / "cli.md").read_text(encoding="utf-8") if (ROOT / "docs" / "cli.md").exists() else ""),
             "status": "ok" if "You do not need to know Python to use Jini." in ((ROOT / "docs" / "cli.md").read_text(encoding="utf-8") if (ROOT / "docs" / "cli.md").exists() else "") else "warning",
         },
+        {
+            "id": "readme-plain-words-entry",
+            "present": "**In plain words:**" in ((ROOT / "README.md").read_text(encoding="utf-8") if (ROOT / "README.md").exists() else ""),
+            "status": "ok" if "**In plain words:**" in ((ROOT / "README.md").read_text(encoding="utf-8") if (ROOT / "README.md").exists() else "") else "warning",
+        },
+        {
+            "id": "homepage-plain-words-entry",
+            "present": "**In plain words:**" in ((ROOT / "docs" / "index.md").read_text(encoding="utf-8") if (ROOT / "docs" / "index.md").exists() else ""),
+            "status": "ok" if "**In plain words:**" in ((ROOT / "docs" / "index.md").read_text(encoding="utf-8") if (ROOT / "docs" / "index.md").exists() else "") else "warning",
+        },
     ]
 
     required_dimensions = {
