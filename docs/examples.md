@@ -1,13 +1,13 @@
 ---
 title: Common Examples
-description: Start with a workflow that already hurts, run one command, and see how Jini helps turn it into an outcome.
+description: Start with work that already slows you down, run one command, and see what becomes easier right away.
 ---
 
 These examples should answer one practical question:
 
-**What pain does Jini remove in work I already do?**
+**What gets easier in work I already do?**
 
-Do not start by trying to learn the framework. Start by finding the example
+Do not start by trying to learn terminology. Start by finding the example
 that feels uncomfortably familiar.
 
 <div class="section-card">
@@ -33,8 +33,8 @@ Use the example that matches the question you already ask in real work:
 
 Every example follows the same pattern:
 
-1. **The question**: the thing you are trying to know
-2. **What usually goes wrong**: where teams bluff past missing truth
+1. **The question**: the thing you need answered fast
+2. **What wastes time**: where teams lose time or create rework
 3. **Run one command**
 4. **Read the output in plain English**
 5. **Use the next step instead of guessing**
@@ -54,26 +54,26 @@ If that translation still feels abstract, use the examples below.
   <div class="workflow-grid">
     <a class="workflow-card" href="#meeting-followup">
       <span class="workflow-meta">Meeting Follow-up</span>
-      <h3>Your meeting ended, but the real follow-up is still fuzzy.</h3>
-      <p>Best when follow-up, owners, and missing approvals are about to get lost in notes and chat.</p>
+      <h3>Leave the meeting with clear owners and real follow-through.</h3>
+      <p>Best when you want less cleanup after the meeting and fewer dropped next steps.</p>
       <code>jini try-example meeting-followup</code>
     </a>
     <a class="workflow-card" href="#research-prd">
       <span class="workflow-meta">Research To PRD</span>
-      <h3>Your spec looks done, but the team still does not know if it is safe to build from.</h3>
-      <p>Best for product and engineering handoffs where a polished draft is hiding missing verification.</p>
+      <h3>Hand off a spec people can build from without second-guessing it.</h3>
+      <p>Best when you want fewer build-start surprises and less handoff churn.</p>
       <code>jini try-example research-prd</code>
     </a>
     <a class="workflow-card" href="#vendor-selection">
       <span class="workflow-meta">Vendor Selection</span>
-      <h3>You need to recommend one option without losing the reasoning behind it.</h3>
-      <p>Best for expensive choices where the team will need to defend the choice later and still move it forward.</p>
+      <h3>Move from comparison to approval without losing the reasoning.</h3>
+      <p>Best when you want fewer repeat debates and less time rebuilding tradeoffs later.</p>
       <code>jini try-example vendor-selection</code>
     </a>
     <a class="workflow-card" href="#incident-response">
       <span class="workflow-meta">Incident Response</span>
-      <h3>The outage is over, but the closure work is still easy to skip.</h3>
-      <p>Best for operational work where service recovery is being mistaken for true closure.</p>
+      <h3>Recover fast and still close the incident cleanly.</h3>
+      <p>Best when you want fewer post-incident misses after service comes back.</p>
       <code>jini try-example incident-response</code>
     </a>
   </div>
@@ -90,12 +90,12 @@ what is still fuzzy?”
     <p><code>jini try-example meeting-followup</code></p>
   </div>
   <div class="snapshot-card">
-    <span class="snapshot-label">Jini shows</span>
+    <span class="snapshot-label">You learn</span>
     <p>The meeting happened, but follow-through is still unresolved.</p>
   </div>
   <div class="snapshot-card">
-    <span class="snapshot-label">Why it helps</span>
-    <p>You stop treating notes as if they were settled follow-through.</p>
+    <span class="snapshot-label">Time you save</span>
+    <p>You stop losing time to ambiguous notes and implied follow-through.</p>
   </div>
   <div class="snapshot-card">
     <span class="snapshot-label">Outcome</span>
@@ -107,16 +107,16 @@ what is still fuzzy?”
 notes in one place, action items in another place, and several things that
 everyone assumes are obvious.
 
-**What usually goes wrong:** nobody can tell the difference between:
+**What wastes time:** nobody can tell the difference between:
 
 - a direction everyone truly agreed to
 - an action someone actually owns
 - a follow-up that still needs approval
 - a question that is still unresolved
 
-**Without Jini:** the team forwards notes, people remember different versions
-of the meeting, and the missing follow-up work stays invisible until it causes
-delay.
+**What wastes time next:** the team forwards notes, people remember different
+versions of the meeting, and the missing follow-up work stays invisible until
+it causes delay.
 
 **Run:**
 
@@ -170,11 +170,11 @@ look ready?”
     <p><code>jini try-example research-prd</code></p>
   </div>
   <div class="snapshot-card">
-    <span class="snapshot-label">Jini shows</span>
+    <span class="snapshot-label">You learn</span>
     <p>The draft looks complete, but it is still waiting for verification and approval.</p>
   </div>
   <div class="snapshot-card">
-    <span class="snapshot-label">Why it helps</span>
+    <span class="snapshot-label">Time you save</span>
     <p>You catch false confidence before engineering starts from an unverified spec.</p>
   </div>
   <div class="snapshot-card">
@@ -187,14 +187,14 @@ look ready?”
 and the PRD or spec looks polished enough that people are tempted to call it
 ready.
 
-**What usually goes wrong:** the visible artifacts look done, but the team
+**What wastes time:** the visible artifacts look done, but the team
 still does not know whether:
 
 - the reasoning has really been checked
 - the handoff is actually safe to build from
 - approval is still pending
 
-**Without Jini:** a polished document and completed tasks create false
+**What wastes time next:** a polished document and completed tasks create false
 confidence, so engineering starts from a draft that has not really been
 verified.
 
@@ -253,11 +253,11 @@ meeting is over?”
     <p><code>jini try-example vendor-selection</code></p>
   </div>
   <div class="snapshot-card">
-    <span class="snapshot-label">Jini shows</span>
+    <span class="snapshot-label">You learn</span>
     <p>The recommendation, tradeoffs, and approval path stay attached to the choice.</p>
   </div>
   <div class="snapshot-card">
-    <span class="snapshot-label">Why it helps</span>
+    <span class="snapshot-label">Time you save</span>
     <p>You can explain the choice later without rebuilding the reasoning from memory.</p>
   </div>
   <div class="snapshot-card">
@@ -269,15 +269,15 @@ meeting is over?”
 **The situation:** several tools or vendors look reasonable and you need to
 recommend one to a manager, procurement lead, or finance stakeholder.
 
-**What usually goes wrong:** the recommendation gets separated from the tradeoffs.
+**What wastes time:** the recommendation gets separated from the tradeoffs.
 Weeks later, the team remembers the conclusion but not:
 
 - why this choice won
 - what concerns were accepted
 - who actually approved it
 
-**Without Jini:** the conclusion survives, but the reasoning, accepted risks,
-and approval path fade into slides, inboxes, and memory.
+**What wastes time next:** the conclusion survives, but the reasoning,
+accepted risks, and approval path fade into slides, inboxes, and memory.
 
 **Run:**
 
@@ -328,11 +328,11 @@ done talking about it?”
     <p><code>jini try-example incident-response</code></p>
   </div>
   <div class="snapshot-card">
-    <span class="snapshot-label">Jini shows</span>
+    <span class="snapshot-label">You learn</span>
     <p>Service recovery is not the same thing as rollback proof, review, and closure.</p>
   </div>
   <div class="snapshot-card">
-    <span class="snapshot-label">Why it helps</span>
+    <span class="snapshot-label">Time you save</span>
     <p>You stop calling incidents “done” before the risky follow-up work is actually finished.</p>
   </div>
   <div class="snapshot-card">
@@ -344,16 +344,16 @@ done talking about it?”
 **The situation:** the service is back, the immediate pressure is lower, and
 everyone wants to move on.
 
-**What usually goes wrong:** “recovered” gets confused with “closed.” The team
+**What wastes time:** “recovered” gets confused with “closed.” The team
 forgets to keep visible:
 
 - rollback context
 - evidence of what happened
 - the work needed before true closure
 
-**Without Jini:** recovery ends the conversation early, and the team quietly
-skips the proof, rollback, and closure work that would matter in the next
-incident review.
+**What wastes time next:** recovery ends the conversation early, and the team
+quietly skips the proof, rollback, and closure work that would matter in the
+next incident review.
 
 **Run:**
 
@@ -390,7 +390,7 @@ MISSING-LATER
 
 **Why this helps in daily work:**
 
-Many teams are good at firefighting and weak at closure. Jini helps keep the
+Many teams are good at firefighting and weak at closure. The value here is
 uncomfortable but necessary work visible: what still needs to be proven,
 whether rollback is still relevant, and whether someone can honestly say the
 incident is complete.

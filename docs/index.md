@@ -4,9 +4,9 @@ description: See what is done, what happens next, and what is still missing befo
 ---
 
 <div class="hero-panel">
-  <p class="hero-kicker">Truthful AI Workflows</p>
-  <h1 class="hero-title">See what is done, what happens next, and what is still missing.</h1>
-  <p class="hero-summary">Jini is for the part after the exciting first draft: handoffs, checking, sign-off, and the quiet missing work that turns “done” into a real outcome instead of rework later.</p>
+  <p class="hero-kicker">Less Friction In Daily Work</p>
+  <h1 class="hero-title">Finish work without status hunting or late surprises.</h1>
+  <p class="hero-summary">Spend less time chasing status, rebuilding context, and discovering missing work late. Jini keeps the next step, blockers, and proof visible while work is still moving.</p>
   <div class="cta-row">
     <a class="cta-button" href="{{ '/proof.html' | relative_url }}">See the 30-second proof</a>
     <a class="cta-button cta-button-secondary" href="{{ '/simple.html' | relative_url }}">Start with the simple guide</a>
@@ -28,14 +28,14 @@ description: See what is done, what happens next, and what is still missing befo
   </div>
 </div>
 
-**In plain words:** Jini helps you get work across the line by showing what is
-done, what comes next, and what is still missing.
+**In plain words:** Jini helps you finish work with less rework by showing what
+is done, what comes next, and what is still missing.
 
 If you want the simplest version first, read the [Simple Guide](./simple.md).
 
-Most AI tools are good at starting work. Jini is for the harder part after
-that: handoffs, checking, sign-off, and keeping the truth clear as work moves
-between people and tools.
+Most AI tools are good at starting work. The harder part is finishing without
+confusion, repeated explanation, or late surprises. That is the problem this
+site is trying to solve.
 
 For technical readers: Jini is a framework with a small protocol core for AI
 work that needs durable state, approvals, evidence, memory, and portability.
@@ -79,52 +79,52 @@ a usable outcome.
   </ul>
 </div>
 
-## Pick Your Workflow
+## What Gets Easier Right Away
 
-Start with the workflow you already ran this week. Jini is easiest to judge
-when it is making ordinary work more truthful.
+Start with the kind of work that already costs you time. Judge Jini by whether
+it reduces status hunting, follow-up drift, and cleanup work.
 
-Each example answers a user question, not a framework question.
+Each example is framed around a productivity gain, not a product claim.
 
 <div class="workflow-grid">
   <a class="workflow-card" href="{{ '/examples.html#meeting-followup' | relative_url }}">
     <span class="workflow-meta">Meeting Follow-up</span>
-    <h3>Your meeting ended, but the follow-through still is not real.</h3>
-    <p>Use this when notes, owners, and approvals are about to get scattered before any actual follow-up happens.</p>
+    <h3>Leave the meeting with clear owners and real follow-through.</h3>
+    <p>Spend less time cleaning up scattered notes, implied owners, and missing approvals.</p>
     <code>jini try-example meeting-followup</code>
   </a>
   <a class="workflow-card" href="{{ '/examples.html#research-prd' | relative_url }}">
     <span class="workflow-meta">Research To PRD</span>
-    <h3>Your spec looks done, but the team still does not have a safe build handoff.</h3>
-    <p>Use this when research exists, tasks are complete, and the handoff is starting to look more finished than it really is.</p>
+    <h3>Hand off a spec people can build from without second-guessing it.</h3>
+    <p>Reduce rework caused by polished drafts that still hide missing verification or approval.</p>
     <code>jini try-example research-prd</code>
   </a>
   <a class="workflow-card" href="{{ '/examples.html#vendor-selection' | relative_url }}">
     <span class="workflow-meta">Vendor Selection</span>
-    <h3>You need a vendor choice that can actually move into approval and action.</h3>
-    <p>Use this when several vendors look plausible and you need a choice that survives beyond the meeting where it was made.</p>
+    <h3>Move from comparison to approval without losing the reasoning.</h3>
+    <p>Spend less time rebuilding tradeoffs and rationale when someone asks why this option won.</p>
     <code>jini try-example vendor-selection</code>
   </a>
   <a class="workflow-card" href="{{ '/examples.html#incident-response' | relative_url }}">
     <span class="workflow-meta">Incident Response</span>
-    <h3>The outage is over, but the work still is not ready for true closure.</h3>
-    <p>Use this when rollback, proof, and final signoff still matter after service recovery.</p>
+    <h3>Recover fast and still close the incident cleanly.</h3>
+    <p>Avoid the second wave of work that comes from skipping proof, rollback checks, or final closure steps.</p>
     <code>jini try-example incident-response</code>
   </a>
 </div>
 
 <div class="value-strip">
-  <p><strong>What changes in one run:</strong> Jini gives you one truthful path from draft to outcome. You can see what happened, what comes next, and what is still missing before the work should be treated as durable.</p>
+  <p><strong>What changes in one run:</strong> you spend less time guessing, re-explaining, and fixing preventable misses because the next step and missing work are visible early.</p>
 </div>
 
-## Why These Four
+## What Users Get Back
 
-Those four workflows are the shortest honest explanation of Jini:
+Those four examples show the same payoff in different kinds of work:
 
-- work happened
-- a draft or tentative answer exists
-- people are tempted to call it done
-- Jini shows what is still missing before the work becomes a real outcome
+- less time chasing status
+- less rework from false “done”
+- cleaner handoffs between people
+- fewer surprises at approval or closure time
 
 The public repo also proves the same kernel can stretch into personal planning,
 such as travel and budgeting, and into more formal workflows such as compliance

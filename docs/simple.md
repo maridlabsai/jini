@@ -1,6 +1,6 @@
 ---
 title: Simple Guide
-description: The plain-language path for understanding what Jini does without learning framework terms first.
+description: The plain-language path for understanding how Jini reduces rework and confusion without technical terms first.
 ---
 
 Jini helps you answer three questions:
@@ -16,11 +16,11 @@ That is all.
   <p>Jini is a way to slow down just enough to get to a real outcome instead of stopping at “looks done.”</p>
 </div>
 
-You do not need to learn the whole framework first.
+You do not need to learn the whole system first.
 
 ## When Jini Helps
 
-Jini helps when work gets messy.
+Jini helps when work gets messy and starts wasting time.
 
 For example:
 
@@ -56,7 +56,7 @@ Read them like this:
 
 Many teams stop at “good enough” too early.
 
-Jini helps you slow down just enough to see:
+Jini helps you slow down just enough to avoid preventable cleanup:
 
 - what is really done
 - what still needs checking

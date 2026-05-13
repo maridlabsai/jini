@@ -1,6 +1,6 @@
 # Jini
 
-**In plain words:** Jini helps you get work across the line by answering three questions:
+**In plain words:** Jini helps you finish work with less rework by answering three questions:
 
 - What is done?
 - What happens next?
@@ -12,7 +12,7 @@ If AI tools feel helpful at first but messy later, Jini is built for that
 messy part.
 
 Jini helps when work moves between people, chats, docs, tickets, and tools,
-and nobody can cleanly say whether the work is really ready to become an outcome.
+and too much time gets lost to status chasing, repeated explanation, and late surprises.
 
 For technical readers: Jini is a framework with a small protocol core for AI
 work that needs durable state, approvals, evidence, memory, and portability.
@@ -86,29 +86,22 @@ distribution path. Jini still expects public runtime assets such as packs,
 specs, manifests, and writable learning state to live together, so a
 conventional wheel-style install is not advertised as a stable path yet.
 
-## Common Examples
+## What Gets Easier Right Away
 
-The public core should feel familiar, not theoretical. The clearest way to
-evaluate Jini is through four scenarios that most teams already recognize, and
-the exact state Jini makes visible in each one:
+The public core should feel useful fast. The clearest way to evaluate Jini is
+through four familiar situations and the time they usually waste:
 
-- **Meeting follow-up.** Jini turns one meeting into an explicit follow-up pack
-  and immediately shows whether the team has real follow-through or only notes
-  and implied next steps with `jini try-example meeting-followup`.
-- **Research to PRD handoff.** Jini shows the central proof scene in one
-  screen: tasks can be complete while the work is still not safe to build from
-  because verification and approval are still missing with
-  `jini try-example research-prd`.
-- **Vendor selection.** Jini turns a plausible choice into something that can
-  actually move into approval and action instead of leaving the reasoning trapped in slides, meetings, or email with
-  `jini try-example vendor-selection`.
-- **Incident response.** Jini keeps rollback, evidence, and closure state
-  explicit after the urgent firefight is over, so recovery is not mistaken for
-  closure, with
-  `jini try-example incident-response`.
+- **Meeting follow-up.** Spend less time turning scattered notes into real
+  owners, follow-up, and next steps with `jini try-example meeting-followup`.
+- **Research to PRD handoff.** Catch false “done” states before the team
+  builds from an unverified draft with `jini try-example research-prd`.
+- **Vendor selection.** Keep the rationale attached so approval does not turn
+  into another debate with `jini try-example vendor-selection`.
+- **Incident response.** Avoid a second wave of cleanup by keeping closure work
+  visible after recovery with `jini try-example incident-response`.
 
-Those four cover the common Jini pattern: the draft exists, but the real work
-still needs ownership, verification, approval, and continuity before it becomes an outcome.
+Those four cover the same pattern: work looks done, but hidden follow-up still
+creates delay, rework, or avoidable risk later.
 
 The public repo also proves the same kernel can stretch into personal planning,
 such as travel and budgeting, and into more formal workflows such as compliance
@@ -117,9 +110,9 @@ audits.
 For a fuller walkthrough with runnable commands and sample output, see
 [docs/examples.md](docs/examples.md).
 
-## Pick Your Workflow
+## Pick The Problem That Is Costing You Time
 
-Start with the workflow that already feels familiar:
+Start with the problem that already feels familiar:
 
 | Workflow | Use it when | Run |
 | --- | --- | --- |
@@ -131,7 +124,7 @@ Start with the workflow that already feels familiar:
 ## Day-To-Day Value
 
 Jini is not supposed to be impressive only in theory. It should remove daily
-workflow ambiguity.
+friction.
 
 In normal work, that means:
 
