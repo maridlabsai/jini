@@ -15,6 +15,11 @@ Use GitHub Discussions for:
 - pack ideas
 - adoption feedback
 
+Direct links:
+
+- issues: [github.com/maridlabsai/jini/issues](https://github.com/maridlabsai/jini/issues)
+- discussions: [github.com/maridlabsai/jini/discussions](https://github.com/maridlabsai/jini/discussions)
+
 Community support covers the public framework:
 
 - bugs in the public repo
@@ -46,3 +51,4 @@ Commercial implementation and onboarding support are described in
 Commercial contact:
 
 - `maridlabsai@gmail.com`
+- commercial overview: [github.com/maridlabsai/jini/blob/main/COMMERCIAL.md](https://github.com/maridlabsai/jini/blob/main/COMMERCIAL.md)

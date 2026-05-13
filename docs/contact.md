@@ -4,8 +4,12 @@
 
 Use the public repo for community interaction:
 
-- GitHub Issues for bugs, documentation gaps, and clear feature requests
-- GitHub Discussions for questions, workflow design discussion, pack ideas, and adoption feedback
+- [GitHub Issues](https://github.com/maridlabsai/jini/issues) for bugs, documentation gaps, and clear feature requests
+- [GitHub Discussions](https://github.com/maridlabsai/jini/discussions) for questions, workflow design discussion, pack ideas, and adoption feedback
+
+If you are not sure whether something is a bug or a design question, start in
+Discussions. That keeps the bug tracker focused and still gives you a clear
+public place to ask for help.
 
 ## Commercial
 

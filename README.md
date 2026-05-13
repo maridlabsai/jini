@@ -140,6 +140,16 @@ jini status-pack <path-to-work>
 That one screen tells you the current state, next step, missing requirements,
 and whether "done" really means done.
 
+## Support And Feedback
+
+Use:
+
+- [GitHub Issues](https://github.com/maridlabsai/jini/issues) for reproducible bugs, documentation gaps, and clear feature requests
+- [GitHub Discussions](https://github.com/maridlabsai/jini/discussions) for questions, workflow design discussion, pack ideas, and adoption feedback
+
+If you are not sure whether something is a bug or a design question, start in
+Discussions.
+
 ## Public Core Boundary
 
 Jini uses an open-core boundary that should stay easy to understand.
