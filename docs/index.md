@@ -35,6 +35,7 @@ verified, approved, publishable work.
 - install Jini with `pipx install --editable git+https://github.com/maridlabsai/jini.git`
 - [See the proof path](./proof.md)
 - [See the install path](./install.md)
+- [See detailed examples](./examples.md)
 - [See the commercial boundary](./commercial.md)
 - [See support and contact paths](./contact.md)
 - [See release notes](https://github.com/maridlabsai/jini/releases/tag/v0.1.0)
@@ -42,28 +43,30 @@ verified, approved, publishable work.
 
 ## Common Examples
 
-Jini’s public core is easier to understand when you map it to workflows people
-already recognize:
+The best way to understand Jini is through a small set of scenarios that most
+teams already run:
 
-- meeting follow-up: turn notes into decisions, owners, open questions, and
-  approval needs
-- research to PRD handoff: move from reading and synthesis into a scoped
-  product spec and task set
-- travel planning: compare options, confirm constraints, and turn an itinerary
-  into a usable plan
-- budget planning: capture recurring costs, tradeoffs, and monthly review
-  checkpoints
+- **Meeting follow-up.** One meeting produces notes, decisions, owners, open
+  questions, and action items, but those usually end up split across docs,
+  chat, and memory.
+- **Research to PRD handoff.** A team knows what it wants to build, but still
+  needs a clean path from sources and synthesis into a scoped spec, plan, and
+  task set.
+- **Vendor selection.** Several options look plausible, stakeholders have
+  opinions, and someone still has to preserve the rationale behind the final
+  recommendation.
+- **Incident response.** The service may be back up, but the operational work
+  is not over until owners, evidence, rollback context, and closure state are
+  explicit.
 
-The public repo also includes more structured team workflows:
+Those four examples cover the most common Jini shape: the draft exists, but the
+real work still needs ownership, verification, approval, and continuity.
 
-- vendor selection: compare options, record rationale, and preserve the review
-  trail
-- compliance audit: gather evidence, identify gaps, and track sign-off
-- incident response: move from facts and timelines into actions, ownership, and
-  follow-through
+The public repo also proves the same kernel can stretch into personal planning,
+such as travel and budgeting, and into more formal workflows such as compliance
+audits.
 
-That makes Jini easier to evaluate in layers: start with a workflow you already
-know, then decide whether you need the more operational or regulated surfaces.
+If you want the full examples breakdown, [see the detailed examples page](./examples.md).
 
 ## Public Core Boundary
 

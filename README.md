@@ -75,29 +75,28 @@ conventional wheel-style install is not advertised as a stable path yet.
 
 ## Common Examples
 
-The public core should feel familiar, not theoretical. Jini currently includes
-examples that most people can associate with:
+The public core should feel familiar, not theoretical. The clearest way to
+evaluate Jini is through four scenarios that most teams already recognize:
 
-- meeting follow-up: turn notes into decisions, owners, open questions, and
-  approval needs
-- research to PRD handoff: move from reading and synthesis into a scoped
-  product spec and task set
-- travel planning: compare options, confirm constraints, and turn an itinerary
-  into a usable plan
-- budget planning: capture recurring costs, tradeoffs, and monthly review
-  checkpoints
+- **Meeting follow-up.** One meeting creates notes, decisions, owners, open
+  questions, and action items, but those usually end up spread across docs,
+  chat, and memory.
+- **Research to PRD handoff.** A team has sources, synthesis, and a strong
+  product instinct, but still needs a clean path into a scoped spec, plan, and
+  task set.
+- **Vendor selection.** Several options look plausible, stakeholders disagree,
+  and someone has to preserve the rationale behind the final recommendation.
+- **Incident response.** The service may be back up, but the work is not done
+  until owners, evidence, rollback context, and closure state are explicit.
 
-The public repo also includes more structured team workflows:
+Those four cover the common Jini pattern: the draft exists, but the real work
+still needs ownership, verification, approval, and continuity.
 
-- vendor selection: compare options, record rationale, and preserve the review
-  trail
-- compliance audit: gather evidence, identify gaps, and track sign-off
-- incident response: move from facts and timelines into actions, ownership, and
-  follow-through
+The public repo also proves the same kernel can stretch into personal planning,
+such as travel and budgeting, and into more formal workflows such as compliance
+audits.
 
-The point is to make Jini easy to evaluate in layers: start with something
-familiar, then move to the more operational or regulated surfaces only if they
-match your work.
+For a fuller walkthrough, see [docs/examples.md](docs/examples.md).
 
 ## Public Core Boundary
 
