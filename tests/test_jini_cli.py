@@ -343,6 +343,48 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(result)
         self.assertEqual("jini 0.1.0", result.stdout.strip())
 
+    def test_help_shows_curated_beginner_surface(self) -> None:
+        result = self.run_cli("help")
+        self.assert_ok(result)
+        self.assertIn("START HERE", result.stdout)
+        self.assertIn("jini start --target codex", result.stdout)
+        self.assertIn("jini example research-prd", result.stdout)
+        self.assertIn("jini next /path/to/work", result.stdout)
+        self.assertNotIn("usage: jini", result.stdout)
+
+    def test_help_all_shows_full_parser_surface(self) -> None:
+        result = self.run_cli("help", "--all")
+        self.assert_ok(result)
+        self.assertIn("usage: jini", result.stdout)
+        self.assertIn("clearer next steps", result.stdout)
+        self.assertIn("stage-framework-experiment", result.stdout)
+
+    def test_start_alias_resolves_to_get_started(self) -> None:
+        result = self.run_cli("start", "--target", "codex")
+        self.assert_ok(result)
+        self.assertIn("BEGINNER", result.stdout)
+        self.assertIn("jini example research-prd", result.stdout)
+
+    def test_example_alias_resolves_to_try_example(self) -> None:
+        result = self.run_cli("example", "research-prd", "--format", "json")
+        self.assert_ok(result)
+        report = json.loads(result.stdout)
+        self.assertEqual("research-prd", report["example_id"])
+        self.assertTrue(any("next " in item for item in report["continue_with"]))
+
+    def test_next_and_resume_aliases_resolve(self) -> None:
+        pack_dir = self.compile_research_pack()
+
+        next_result = self.run_cli("next", pack_dir, "--format", "json")
+        self.assert_ok(next_result)
+        checklist = json.loads(next_result.stdout)
+        self.assertEqual("research-prd", checklist["pack_id"])
+
+        resume_result = self.run_cli("resume", pack_dir, "--format", "json")
+        self.assert_ok(resume_result)
+        compact = json.loads(resume_result.stdout)
+        self.assertEqual("research-prd", compact["pack_id"])
+
     def test_bootstrap_home_materializes_personal_os_scaffold(self) -> None:
         home = self.personal_home()
         result = self.run_cli(
@@ -1964,7 +2006,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual(4, len(guide["beginner_path"]["commands"]))
         self.assertTrue(all(item.startswith("jini ") for item in guide["beginner_path"]["commands"]))
         self.assertTrue(any("plan-install --kit starter-kit" in item for item in guide["beginner_path"]["commands"]))
-        self.assertTrue(any("try-example research-prd" in item for item in guide["beginner_path"]["commands"]))
+        self.assertTrue(any("example research-prd" in item for item in guide["beginner_path"]["commands"]))
         self.assertFalse(any("catalog-bundles" in item for item in guide["beginner_path"]["commands"]))
         self.assertFalse(any("show-kpis" in item for item in guide["beginner_path"]["commands"]))
         self.assertTrue(any("show-adapters" in item for item in guide["power_user_path"]["commands"]))
@@ -1985,7 +2027,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual(0, report["task_summary"]["unresolved"])
         self.assertTrue(report["evidence_summary"]["present"])
         self.assertTrue(any("verification becomes a visible stage" in item.lower() for item in report["daily_value"]))
-        self.assertTrue(any("execution-checklist" in item for item in report["continue_with"]))
+        self.assertTrue(any("jini next " in item for item in report["continue_with"]))
 
     def test_try_example_generates_meeting_followup_into_requested_output(self) -> None:
         output = self.tmp / "example-meeting-followup"
@@ -2146,7 +2188,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("regulated-readiness-kit", kit_ids)
         self.assertIn("vendor-decision-kit", kit_ids)
         self.assertEqual("starter-kit", catalog["recommended_paths"]["beginner"]["kit_id"])
-        self.assertTrue(any("get-started --target" in item for item in catalog["recommended_paths"]["beginner"]["commands"]))
+        self.assertTrue(any("start --target" in item for item in catalog["recommended_paths"]["beginner"]["commands"]))
         self.assertTrue(any("doctor-install --kit starter-kit" in item for item in catalog["recommended_paths"]["beginner"]["commands"]))
         self.assertEqual("benchmark-delivery-kit", catalog["recommended_paths"]["power_user"]["kit_id"])
         starter_kit = next(item for item in catalog["kits"] if item["id"] == "starter-kit")

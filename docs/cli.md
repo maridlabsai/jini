@@ -15,21 +15,21 @@ If you are not installed yet, start with [install](./install.md).
 
 <div class="section-card">
   <h3>Start with these three</h3>
-  <p>If you only want the smallest useful command set, begin with the proof command, the install guide, and one real pack status check.</p>
+  <p>If you only want the smallest useful command set, begin with grouped help, one example, and one real pack status check.</p>
 </div>
 
 ## Most People Start Here
 
 ```bash
-jini try-example research-prd
-jini get-started --target codex
+jini help
+jini example research-prd
 jini status-pack /path/to/work
 ```
 
 Use those three commands to:
 
+- see the grouped command surface
 - feel the product on a familiar workflow
-- see the smallest install and target path
 - inspect the current state of real work before pushing toward an outcome
 
 ## Daily Workflow Commands
@@ -38,8 +38,8 @@ Use these when you are working on one pack or handoff:
 
 ```bash
 jini status-pack /path/to/work
-jini execution-checklist /path/to/work --repo /path/to/repo --intent verify
-jini compact-context /path/to/work --repo /path/to/repo --intent verify --max-chars 900
+jini next /path/to/work --repo /path/to/repo --intent verify
+jini resume /path/to/work --repo /path/to/repo --intent verify --max-chars 900
 jini advance-pack /path/to/work
 ```
 
@@ -68,7 +68,7 @@ jini run-pack /path/to/work --mode supervised --repo /path/to/repo --runtime-tar
 Use these when you are setting up Jini in a shell or agent environment:
 
 ```bash
-jini get-started --target codex
+jini start --target codex
 jini plan-install --kit starter-kit --target codex
 jini install-bundles --kit starter-kit --target codex --prefix /tmp/jini-stage
 jini doctor-install --kit starter-kit --target codex --prefix /tmp/jini-stage
@@ -101,10 +101,10 @@ jini catalog-bundles
 Run:
 
 ```bash
-jini --help
+jini help
 ```
 
-That is the authoritative source for every installed command.
+Use `jini help --all` when you need the full command inventory.
 
 <div class="section-card">
   <h3>What most people do next</h3>

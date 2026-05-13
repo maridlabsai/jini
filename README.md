@@ -8,6 +8,12 @@
 
 If you want the simplest version first, read the [Simple Guide](./docs/simple.md).
 
+If you want the smallest grouped command surface first, run:
+
+```bash
+jini help
+```
+
 If AI tools feel helpful at first but messy later, Jini is built for that
 messy part.
 
@@ -47,7 +53,7 @@ It is an operating substrate for work.
 If you want the fastest proof that Jini is different, run this:
 
 ```bash
-jini try-example research-prd
+jini example research-prd
 ```
 
 The important lines are:
@@ -73,8 +79,8 @@ If you want the fastest install path, run this:
 
 ```bash
 pipx install --editable git+https://github.com/maridlabsai/jini.git
-jini try-example research-prd
-jini get-started --target codex
+jini example research-prd
+jini start --target codex
 ```
 
 That gives you a real `jini` command immediately, while keeping the runtime
@@ -92,13 +98,13 @@ The public core should feel useful fast. The clearest way to evaluate Jini is
 through four familiar situations and the time they usually waste:
 
 - **Meeting follow-up.** Spend less time turning scattered notes into real
-  owners, follow-up, and next steps with `jini try-example meeting-followup`.
+  owners, follow-up, and next steps with `jini example meeting-followup`.
 - **Research to PRD handoff.** Catch false “done” states before the team
-  builds from an unverified draft with `jini try-example research-prd`.
+  builds from an unverified draft with `jini example research-prd`.
 - **Vendor selection.** Keep the rationale attached so approval does not turn
-  into another debate with `jini try-example vendor-selection`.
+  into another debate with `jini example vendor-selection`.
 - **Incident response.** Avoid a second wave of cleanup by keeping closure work
-  visible after recovery with `jini try-example incident-response`.
+  visible after recovery with `jini example incident-response`.
 
 Those four cover the same pattern: work looks done, but hidden follow-up still
 creates delay, rework, or avoidable risk later.
@@ -116,10 +122,10 @@ Start with the problem that already feels familiar:
 
 | Workflow | Use it when | Run |
 | --- | --- | --- |
-| **Meeting follow-up** | one meeting needs real follow-up, owners, and honest next steps | `jini try-example meeting-followup` |
-| **Research to PRD handoff** | research exists and you need a safe build handoff | `jini try-example research-prd` |
-| **Vendor selection** | several options look plausible and you need a choice that can move into approval and action | `jini try-example vendor-selection` |
-| **Incident response** | the outage is over but rollback, proof, and closure still matter | `jini try-example incident-response` |
+| **Meeting follow-up** | one meeting needs real follow-up, owners, and honest next steps | `jini example meeting-followup` |
+| **Research to PRD handoff** | research exists and you need a safe build handoff | `jini example research-prd` |
+| **Vendor selection** | several options look plausible and you need a choice that can move into approval and action | `jini example vendor-selection` |
+| **Incident response** | the outage is over but rollback, proof, and closure still matter | `jini example incident-response` |
 
 ## Day-To-Day Value
 
@@ -1232,10 +1238,10 @@ bootstrapping packs and adapters, or exploring a design-partner engagement, see
 Most people only need a small CLI surface:
 
 ```bash
-jini try-example research-prd
-jini get-started --target codex
+jini help
+jini example research-prd
 jini status-pack /path/to/work
-jini execution-checklist /path/to/work --repo /path/to/repo --intent verify
+jini next /path/to/work --repo /path/to/repo --intent verify
 jini execute-flow /path/to/work --repo /path/to/repo --runtime-target codex
 jini publish-readiness --format json
 ```
@@ -1244,7 +1250,7 @@ If you want the grouped command reference, see [docs/cli.md](./docs/cli.md).
 If you want the complete surface, run:
 
 ```bash
-jini --help
+jini help --all
 ```
 
 ## Current Status

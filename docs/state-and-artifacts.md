@@ -17,8 +17,8 @@ light.
   <h3>The three commands that matter most</h3>
   <div class="on-this-page">
     <a href="#status-pack"><code>jini status-pack</code>: see the truth of the work right now</a>
-    <a href="#execution-checklist"><code>jini execution-checklist</code>: see the next honest step toward the outcome</a>
-    <a href="#compact-context"><code>jini compact-context</code>: hand the important context to the next person or agent</a>
+    <a href="#execution-checklist"><code>jini next</code>: see the next honest step toward the outcome</a>
+    <a href="#compact-context"><code>jini resume</code>: hand the important context to the next person or agent</a>
   </div>
 </div>
 
@@ -77,7 +77,7 @@ Read it like this:
 Run:
 
 ```bash
-jini execution-checklist /path/to/work --repo /path/to/repo --intent verify
+jini next /path/to/work --repo /path/to/repo --intent verify
 ```
 
 Use this when you want the next step turned into an explicit checklist instead
@@ -90,7 +90,7 @@ This is the bridge between state and action.
 Run:
 
 ```bash
-jini compact-context /path/to/work --repo /path/to/repo --intent verify --max-chars 900
+jini resume /path/to/work --repo /path/to/repo --intent verify --max-chars 900
 ```
 
 Use this when the next person or agent needs the essential context without a

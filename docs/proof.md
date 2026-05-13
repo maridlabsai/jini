@@ -10,7 +10,7 @@ Jini’s public proof is simple:
 Run:
 
 ```bash
-jini try-example research-prd
+jini example research-prd
 ```
 
 The important lines are:
@@ -41,7 +41,7 @@ with outcome.
 If you want the same proof shape on a more ordinary workflow, run:
 
 ```bash
-jini try-example meeting-followup
+jini example meeting-followup
 ```
 
 For the longer walkthrough, see [PROOF_OF_DIFFERENCE.md](https://github.com/maridlabsai/jini/blob/main/PROOF_OF_DIFFERENCE.md).

@@ -1509,7 +1509,7 @@ def build_install_catalog(
             "kit_id": beginner_kit_id,
             "target": selected_target,
             "commands": [
-                f"{cli} get-started --target {selected_target}",
+                f"{cli} start --target {selected_target}",
                 *[item["command"] for item in build_install_trust_path(target_id=selected_target, kit_id=beginner_kit_id)],
             ],
         }
@@ -1681,8 +1681,18 @@ def build_publish_readiness() -> dict[str, Any]:
         },
         {
             "id": "beginner-proof-command",
-            "present": any("try-example research-prd" in str(command) for command in novice_commands),
-            "status": "ok" if any("try-example research-prd" in str(command) for command in novice_commands) else "warning",
+            "present": any(
+                token in str(command)
+                for command in novice_commands
+                for token in ("try-example research-prd", "example research-prd")
+            ),
+            "status": "ok"
+            if any(
+                token in str(command)
+                for command in novice_commands
+                for token in ("try-example research-prd", "example research-prd")
+            )
+            else "warning",
         },
         {
             "id": "beginner-no-bundle-catalog",
@@ -2055,7 +2065,7 @@ def build_get_started_guide(
         "target": selected_target,
         "commands": [
             *[item["command"] for item in beginner_trust_path],
-            f"{cli} try-example research-prd",
+            f"{cli} example research-prd",
         ],
         "trust_path": beginner_trust_path,
         "notes": [
@@ -2216,10 +2226,10 @@ def build_public_example_proof(
             "target": str(evidence_doc.get("target_artifact_id", "")) if isinstance(evidence_doc, dict) else "",
         },
         "daily_value": list(spec.get("daily_value", [])),
-        "try_command": f"{cli} try-example {example_id}",
+        "try_command": f"{cli} example {example_id}",
         "continue_with": [
             f"{cli} status-pack {display_path(pack_dir)}",
-            f"{cli} execution-checklist {display_path(pack_dir)}",
+            f"{cli} next {display_path(pack_dir)}",
         ],
         "warnings": [*validation_warnings, *compile_warnings],
     }
@@ -4301,6 +4311,54 @@ def cli_invocation() -> str:
     if executable == "jini":
         return "jini"
     return "jini"
+
+
+CLI_ALIAS_MAP: dict[str, str] = {
+    "start": "get-started",
+    "example": "try-example",
+    "next": "execution-checklist",
+    "resume": "compact-context",
+}
+
+
+def normalize_cli_argv(argv: list[str]) -> list[str]:
+    if not argv:
+        return []
+    normalized = list(argv)
+    normalized[0] = CLI_ALIAS_MAP.get(normalized[0], normalized[0])
+    return normalized
+
+
+def print_cli_overview() -> None:
+    cli = cli_invocation()
+    print(f"Jini CLI {load_version()}")
+    print("Finish work with less rework, faster handoffs, and clearer next steps.")
+    print()
+    print("START HERE")
+    print(f"  {cli} help")
+    print(f"  {cli} start --target codex")
+    print(f"  {cli} example research-prd")
+    print()
+    print("DAILY USE")
+    print(f"  {cli} status-pack /path/to/work")
+    print(f"  {cli} next /path/to/work --repo /path/to/repo --intent verify")
+    print(f"  {cli} resume /path/to/work --repo /path/to/repo --intent verify --max-chars 900")
+    print(f"  {cli} execute-flow /path/to/work --repo /path/to/repo --runtime-target codex")
+    print()
+    print("INSTALL")
+    print(f"  {cli} plan-install --kit starter-kit --target codex")
+    print(f"  {cli} install-bundles --kit starter-kit --target codex --prefix /tmp/jini-stage")
+    print(f"  {cli} doctor-install --kit starter-kit --target codex --prefix /tmp/jini-stage")
+    print()
+    print("ALIASES")
+    print(f"  {cli} start   -> {cli} get-started")
+    print(f"  {cli} example -> {cli} try-example")
+    print(f"  {cli} next    -> {cli} execution-checklist")
+    print(f"  {cli} resume  -> {cli} compact-context")
+    print()
+    print("MORE")
+    print(f"  {cli} help --all")
+    print(f"  {cli} <command> --help")
 
 
 def resolve_display_path(path_text: str) -> Path:
@@ -12962,7 +13020,10 @@ def write_compiled_pack(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Jini validation and pack utility CLI")
+    parser = argparse.ArgumentParser(
+        prog=cli_invocation(),
+        description="Jini CLI for clearer next steps, less rework, and stronger handoffs",
+    )
     parser.add_argument("--version", action="version", version=f"jini {load_version()}")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -14156,7 +14217,24 @@ def main() -> int:
     )
     bootstrap_parser.add_argument("--output", type=Path, required=True, help="Target output directory")
 
-    args = parser.parse_args()
+    argv = sys.argv[1:]
+    if not argv:
+        print_cli_overview()
+        return 0
+    if argv[0] in {"-h", "--help"}:
+        if "--all" in argv[1:]:
+            parser.print_help()
+        else:
+            print_cli_overview()
+        return 0
+    if argv[0] == "help":
+        if "--all" in argv[1:]:
+            parser.print_help()
+        else:
+            print_cli_overview()
+        return 0
+
+    args = parser.parse_args(normalize_cli_argv(argv))
     registry = load_registry()
 
     def merged_stakeholders(owner: str, stakeholders: list[str]) -> list[str]:

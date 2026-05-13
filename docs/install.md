@@ -14,7 +14,7 @@ For the smallest guided path from GitHub:
 
 ```bash
 pipx install --editable git+https://github.com/maridlabsai/jini.git
-jini get-started --target codex
+jini start --target codex
 jini plan-install --kit starter-kit --target codex
 jini install-bundles --kit starter-kit --target codex --prefix /tmp/jini-stage
 jini doctor-install --kit starter-kit --target codex --prefix /tmp/jini-stage
@@ -40,7 +40,7 @@ If you prefer a local source checkout instead of `pipx`, the equivalent smoke pa
 
 ```bash
 python3 -m pip install -e .
-jini get-started --target codex
+jini start --target codex
 ```
 
 Once Jini is installed, the normal user surface is just `jini ...`. For the

@@ -34,7 +34,7 @@ For example:
 Run this:
 
 ```bash
-jini try-example research-prd
+jini example research-prd
 ```
 
 You will see lines like:
@@ -73,7 +73,7 @@ Question:
 Run:
 
 ```bash
-jini try-example meeting-followup
+jini example meeting-followup
 ```
 
 ### Research To PRD
@@ -85,7 +85,7 @@ Question:
 Run:
 
 ```bash
-jini try-example research-prd
+jini example research-prd
 ```
 
 ### Vendor Selection
@@ -97,7 +97,7 @@ Question:
 Run:
 
 ```bash
-jini try-example vendor-selection
+jini example vendor-selection
 ```
 
 ### Incident Response
@@ -109,7 +109,7 @@ Question:
 Run:
 
 ```bash
-jini try-example incident-response
+jini example incident-response
 ```
 
 ## Smallest Useful Habit

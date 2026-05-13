@@ -56,25 +56,25 @@ If that translation still feels abstract, use the examples below.
       <span class="workflow-meta">Meeting Follow-up</span>
       <h3>Leave the meeting with clear owners and real follow-through.</h3>
       <p>Best when you want less cleanup after the meeting and fewer dropped next steps.</p>
-      <code>jini try-example meeting-followup</code>
+      <code>jini example meeting-followup</code>
     </a>
     <a class="workflow-card" href="#research-prd">
       <span class="workflow-meta">Research To PRD</span>
       <h3>Hand off a spec people can build from without second-guessing it.</h3>
       <p>Best when you want fewer build-start surprises and less handoff churn.</p>
-      <code>jini try-example research-prd</code>
+      <code>jini example research-prd</code>
     </a>
     <a class="workflow-card" href="#vendor-selection">
       <span class="workflow-meta">Vendor Selection</span>
       <h3>Move from comparison to approval without losing the reasoning.</h3>
       <p>Best when you want fewer repeat debates and less time rebuilding tradeoffs later.</p>
-      <code>jini try-example vendor-selection</code>
+      <code>jini example vendor-selection</code>
     </a>
     <a class="workflow-card" href="#incident-response">
       <span class="workflow-meta">Incident Response</span>
       <h3>Recover fast and still close the incident cleanly.</h3>
       <p>Best when you want fewer post-incident misses after service comes back.</p>
-      <code>jini try-example incident-response</code>
+      <code>jini example incident-response</code>
     </a>
   </div>
 </div>
@@ -87,7 +87,7 @@ what is still fuzzy?”
 <div class="example-snapshot">
   <div class="snapshot-card">
     <span class="snapshot-label">Run</span>
-    <p><code>jini try-example meeting-followup</code></p>
+    <p><code>jini example meeting-followup</code></p>
   </div>
   <div class="snapshot-card">
     <span class="snapshot-label">You learn</span>
@@ -121,7 +121,7 @@ it causes delay.
 **Run:**
 
 ```bash
-jini try-example meeting-followup
+jini example meeting-followup
 ```
 
 ![Jini meeting follow-up demo](./assets/examples/meeting-followup.gif)
@@ -167,7 +167,7 @@ look ready?”
 <div class="example-snapshot">
   <div class="snapshot-card">
     <span class="snapshot-label">Run</span>
-    <p><code>jini try-example research-prd</code></p>
+    <p><code>jini example research-prd</code></p>
   </div>
   <div class="snapshot-card">
     <span class="snapshot-label">You learn</span>
@@ -201,7 +201,7 @@ verified.
 **Run:**
 
 ```bash
-jini try-example research-prd
+jini example research-prd
 ```
 
 ![Jini research to PRD demo](./assets/examples/research-prd.gif)
@@ -250,7 +250,7 @@ meeting is over?”
 <div class="example-snapshot">
   <div class="snapshot-card">
     <span class="snapshot-label">Run</span>
-    <p><code>jini try-example vendor-selection</code></p>
+    <p><code>jini example vendor-selection</code></p>
   </div>
   <div class="snapshot-card">
     <span class="snapshot-label">You learn</span>
@@ -282,7 +282,7 @@ accepted risks, and approval path fade into slides, inboxes, and memory.
 **Run:**
 
 ```bash
-jini try-example vendor-selection
+jini example vendor-selection
 ```
 
 ![Jini vendor selection demo](./assets/examples/vendor-selection.gif)
@@ -325,7 +325,7 @@ done talking about it?”
 <div class="example-snapshot">
   <div class="snapshot-card">
     <span class="snapshot-label">Run</span>
-    <p><code>jini try-example incident-response</code></p>
+    <p><code>jini example incident-response</code></p>
   </div>
   <div class="snapshot-card">
     <span class="snapshot-label">You learn</span>
@@ -358,7 +358,7 @@ next incident review.
 **Run:**
 
 ```bash
-jini try-example incident-response
+jini example incident-response
 ```
 
 ![Jini incident response demo](./assets/examples/incident-response.gif)

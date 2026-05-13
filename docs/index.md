@@ -48,7 +48,7 @@ artifacts visible, read [State And Artifacts](./state-and-artifacts.md).
 If you want the fastest proof that Jini is different, run this:
 
 ```bash
-jini try-example research-prd
+jini example research-prd
 ```
 
 The important lines are:
@@ -91,25 +91,25 @@ Each example is framed around a productivity gain, not a product claim.
     <span class="workflow-meta">Meeting Follow-up</span>
     <h3>Leave the meeting with clear owners and real follow-through.</h3>
     <p>Spend less time cleaning up scattered notes, implied owners, and missing approvals.</p>
-    <code>jini try-example meeting-followup</code>
+    <code>jini example meeting-followup</code>
   </a>
   <a class="workflow-card" href="{{ '/examples.html#research-prd' | relative_url }}">
     <span class="workflow-meta">Research To PRD</span>
     <h3>Hand off a spec people can build from without second-guessing it.</h3>
     <p>Reduce rework caused by polished drafts that still hide missing verification or approval.</p>
-    <code>jini try-example research-prd</code>
+    <code>jini example research-prd</code>
   </a>
   <a class="workflow-card" href="{{ '/examples.html#vendor-selection' | relative_url }}">
     <span class="workflow-meta">Vendor Selection</span>
     <h3>Move from comparison to approval without losing the reasoning.</h3>
     <p>Spend less time rebuilding tradeoffs and rationale when someone asks why this option won.</p>
-    <code>jini try-example vendor-selection</code>
+    <code>jini example vendor-selection</code>
   </a>
   <a class="workflow-card" href="{{ '/examples.html#incident-response' | relative_url }}">
     <span class="workflow-meta">Incident Response</span>
     <h3>Recover fast and still close the incident cleanly.</h3>
     <p>Avoid the second wave of work that comes from skipping proof, rollback checks, or final closure steps.</p>
-    <code>jini try-example incident-response</code>
+    <code>jini example incident-response</code>
   </a>
 </div>
 
@@ -167,7 +167,7 @@ That one screen answers the questions teams ask every day:
 If you want to feel that payoff before you have your own work pack, start with:
 
 ```bash
-jini try-example meeting-followup
+jini example meeting-followup
 ```
 
 ## Explore More
