@@ -1,8 +1,12 @@
-# Jini
+<div class="site-brand">
+  <img class="site-brand-mark" src="{{ '/assets/brand/jini-mark-512.png' | relative_url }}" alt="Jini mark">
+  <div class="site-brand-copy">
+    <span class="site-brand-label">Jini</span>
+    <p class="site-brand-tagline">The framework for week two of work.</p>
+  </div>
+</div>
 
-<p class="hero-mark-wrap">
-  <img class="hero-mark" src="{{ '/assets/brand/jini-mark-512.png' | relative_url }}" alt="Jini mark">
-</p>
+# Jini
 
 **Jini is a framework with a strict protocol core for governed, stateful AI work.**
 
