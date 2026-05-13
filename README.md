@@ -78,13 +78,26 @@ conventional wheel-style install is not advertised as a stable path yet.
 The public core should feel familiar, not theoretical. Jini currently includes
 examples that most people can associate with:
 
-- meeting follow-up
-- research to PRD handoff
-- travel planning
-- budget planning
+- meeting follow-up: turn notes into decisions, owners, open questions, and
+  approval needs
+- research to PRD handoff: move from reading and synthesis into a scoped
+  product spec and task set
+- travel planning: compare options, confirm constraints, and turn an itinerary
+  into a usable plan
+- budget planning: capture recurring costs, tradeoffs, and monthly review
+  checkpoints
 
-More specialized packs exist too, but the public examples should start with
-problems people already recognize.
+The public repo also includes more structured team workflows:
+
+- vendor selection: compare options, record rationale, and preserve the review
+  trail
+- compliance audit: gather evidence, identify gaps, and track sign-off
+- incident response: move from facts and timelines into actions, ownership, and
+  follow-through
+
+The point is to make Jini easy to evaluate in layers: start with something
+familiar, then move to the more operational or regulated surfaces only if they
+match your work.
 
 ## Public Core Boundary
 

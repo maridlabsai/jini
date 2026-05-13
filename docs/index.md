@@ -42,15 +42,28 @@ verified, approved, publishable work.
 
 ## Common Examples
 
-Jini’s public core includes examples people already understand:
+Jini’s public core is easier to understand when you map it to workflows people
+already recognize:
 
-- meeting follow-up
-- research to PRD
-- travel planning
-- budget planning
+- meeting follow-up: turn notes into decisions, owners, open questions, and
+  approval needs
+- research to PRD handoff: move from reading and synthesis into a scoped
+  product spec and task set
+- travel planning: compare options, confirm constraints, and turn an itinerary
+  into a usable plan
+- budget planning: capture recurring costs, tradeoffs, and monthly review
+  checkpoints
 
-That makes the framework easier to evaluate before you ever reach the more
-specialized operational or regulated surfaces.
+The public repo also includes more structured team workflows:
+
+- vendor selection: compare options, record rationale, and preserve the review
+  trail
+- compliance audit: gather evidence, identify gaps, and track sign-off
+- incident response: move from facts and timelines into actions, ownership, and
+  follow-through
+
+That makes Jini easier to evaluate in layers: start with a workflow you already
+know, then decide whether you need the more operational or regulated surfaces.
 
 ## Public Core Boundary
 
