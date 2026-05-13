@@ -30,6 +30,8 @@ This is the difference Jini is trying to preserve:
 - evidence can be attached
 - the work can still be blocked from advancing
 
+![Jini research to PRD proof demo](./assets/examples/research-prd.gif)
+
 That is not a UI choice. It is the protocol core refusing to collapse
 governance into a green checklist.
 

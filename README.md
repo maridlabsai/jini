@@ -57,6 +57,8 @@ TASKS
 That is the core idea in one screen: completed tasks are not the same thing as
 verified, approved, publishable work.
 
+![Jini research to PRD proof demo](docs/assets/examples/research-prd.gif)
+
 If you want the fastest install path, run this:
 
 ```bash

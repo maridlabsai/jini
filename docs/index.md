@@ -31,6 +31,8 @@ TASKS
 That is the core idea in one screen: completed tasks are not the same thing as
 verified, approved, publishable work.
 
+![Jini research to PRD proof demo](./assets/examples/research-prd.gif)
+
 ## What You Can Do Next
 
 - install Jini with `pipx install --editable git+https://github.com/maridlabsai/jini.git`

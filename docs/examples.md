@@ -26,6 +26,8 @@ anything needs approval before execution.
 jini try-example meeting-followup
 ```
 
+![Jini meeting follow-up demo](./assets/examples/meeting-followup.gif)
+
 **What Jini shows back:**
 
 ```text
@@ -65,6 +67,8 @@ from source material into a product spec, then into a plan, then into tasks.
 ```bash
 jini try-example research-prd
 ```
+
+![Jini research to PRD demo](./assets/examples/research-prd.gif)
 
 **What Jini shows back:**
 
@@ -109,6 +113,8 @@ tradeoffs, objections, and approval path disappear into meetings or email.
 jini try-example vendor-selection
 ```
 
+![Jini vendor selection demo](./assets/examples/vendor-selection.gif)
+
 **What Jini shows back:**
 
 ```text
@@ -146,6 +152,8 @@ the fact instead of preserved as the work happens.
 ```bash
 jini try-example incident-response
 ```
+
+![Jini incident response demo](./assets/examples/incident-response.gif)
 
 **What Jini shows back:**
 
