@@ -7,15 +7,24 @@ These examples should answer one practical question:
 Do not start by trying to learn the framework. Start by finding the example
 that feels uncomfortably familiar.
 
+## Start With The Question That Already Hurts
+
+Use the example that matches the question you already ask in real work:
+
+- **Meeting follow-up:** “Did that meeting produce real follow-through, or just notes?”
+- **Research to PRD:** “Is this spec actually safe to build from?”
+- **Vendor selection:** “If someone challenges this choice later, can we still explain it?”
+- **Incident response:** “Is the incident actually closed, or are we just relieved it stopped burning?”
+
 ## How To Read One Example
 
 Every example follows the same pattern:
 
-1. **The situation**: a normal workflow you probably already have
-2. **What usually goes wrong**: where people lose truth, ownership, or timing
+1. **The question**: the thing you are trying to know
+2. **What usually goes wrong**: where teams bluff past missing truth
 3. **Run one command**
-4. **Translate the output** into plain English
-5. **Decide whether that missing truth would have saved you time or confusion**
+4. **Read the output in plain English**
+5. **Use the next step instead of guessing**
 
 ## Quick Translation
 
@@ -59,6 +68,9 @@ If that translation still feels abstract, use the examples below.
 
 ## 1. Meeting Follow-up {#meeting-followup}
 
+**The question Jini answers:** “What really came out of this meeting, and
+what is still fuzzy?”
+
 **The situation:** you leave a weekly product, staff, or project meeting with
 notes in one place, action items in another place, and several things that
 everyone assumes are obvious.
@@ -69,6 +81,10 @@ everyone assumes are obvious.
 - an action someone actually owns
 - a follow-up that still needs approval
 - a question that is still unresolved
+
+**Without Jini:** the team forwards notes, people remember different versions
+of the meeting, and the missing follow-up work stays invisible until it causes
+delay.
 
 **Run:**
 
@@ -98,16 +114,23 @@ TASKS
 - there are still 3 unresolved work items
 - if this work later needs signoff or proof, that gap is already visible now
 
+**What you do next:**
+
+- make the unresolved items real work instead of vague follow-up
+- assign owners before the meeting memory fades
+- capture the missing approval or evidence path before it becomes a blocker
+
 **Why this helps in daily work:**
 
 Instead of forwarding notes and hoping everyone interprets them the same way,
-you get one truthful follow-up surface:
-
-- what is actually decided
-- what still needs to be made concrete
-- what will become a blocker later if nobody captures it now
+you get one truthful follow-up surface: what is actually decided, what still
+needs to be made concrete, and what will become a blocker later if nobody
+captures it now.
 
 ## 2. Research To PRD Handoff {#research-prd}
+
+**The question Jini answers:** “Is this handoff really ready, or does it only
+look ready?”
 
 **The situation:** research is done, the team agrees something should be built,
 and the PRD or spec looks polished enough that people are tempted to call it
@@ -119,6 +142,10 @@ still does not know whether:
 - the reasoning has really been checked
 - the handoff is actually safe to build from
 - approval is still pending
+
+**Without Jini:** a polished document and completed tasks create false
+confidence, so engineering starts from a draft that has not really been
+verified.
 
 **Run:**
 
@@ -151,19 +178,23 @@ EVIDENCE
 - approval is still missing
 - the evidence trail is attached, so the next person is not forced to trust the document blindly
 
+**What you do next:**
+
+- verify the claims behind the handoff
+- resolve the visible risk before build starts
+- capture approval before treating the work as ready
+
 **Why this helps in daily work:**
 
-This is the most common Jini failure pattern:
-
-- tasks are complete
-- the document exists
-- everyone wants to move on
-- nobody can cleanly answer whether the work is actually verified
-
-Jini makes that mismatch visible before the team starts building from a draft
-that only looks finished.
+This is the most common Jini failure pattern: tasks are complete, the document
+exists, everyone wants to move on, and nobody can cleanly answer whether the
+work is actually verified. Jini makes that mismatch visible before the team
+starts building from a draft that only looks finished.
 
 ## 3. Vendor Selection {#vendor-selection}
+
+**The question Jini answers:** “Can we still defend this choice after the
+meeting is over?”
 
 **The situation:** several tools or vendors look reasonable and you need to
 recommend one to a manager, procurement lead, or finance stakeholder.
@@ -174,6 +205,9 @@ Weeks later, the team remembers the conclusion but not:
 - why this choice won
 - what concerns were accepted
 - who actually approved it
+
+**Without Jini:** the conclusion survives, but the reasoning, accepted risks,
+and approval path fade into slides, inboxes, and memory.
 
 **Run:**
 
@@ -201,14 +235,22 @@ MISSING-LATER
 - approval is part of the work, not something hidden in email or a meeting
 - the reasoning is expected to stay attached to the recommendation
 
+**What you do next:**
+
+- attach the proof behind the recommendation
+- make the approval path explicit
+- keep the tradeoffs with the decision instead of losing them in presentation artifacts
+
 **Why this helps in daily work:**
 
 When someone asks later, “Why did we choose this vendor?”, you want the answer
-to be in the work itself, not in somebody’s memory.
-
-Jini makes the recommendation, proof, and approval path part of the same flow.
+to be in the work itself, not in somebody’s memory. Jini makes the
+recommendation, proof, and approval path part of the same flow.
 
 ## 4. Incident Response {#incident-response}
+
+**The question Jini answers:** “Is this incident truly closed, or are we just
+done talking about it?”
 
 **The situation:** the service is back, the immediate pressure is lower, and
 everyone wants to move on.
@@ -219,6 +261,10 @@ forgets to keep visible:
 - rollback context
 - evidence of what happened
 - the work needed before true closure
+
+**Without Jini:** recovery ends the conversation early, and the team quietly
+skips the proof, rollback, and closure work that would matter in the next
+incident review.
 
 **Run:**
 
@@ -247,15 +293,18 @@ MISSING-LATER
 - rollback is still a first-class concern
 - proof and signoff still matter after service recovery
 
+**What you do next:**
+
+- keep rollback context visible while risk is still real
+- capture the missing proof before calling it finished
+- require honest closure instead of letting recovery masquerade as completion
+
 **Why this helps in daily work:**
 
-Many teams are good at firefighting and weak at closure.
-
-Jini helps keep the uncomfortable but necessary work visible:
-
-- what still needs to be proven
-- whether rollback is still relevant
-- whether someone can honestly say the incident is complete
+Many teams are good at firefighting and weak at closure. Jini helps keep the
+uncomfortable but necessary work visible: what still needs to be proven,
+whether rollback is still relevant, and whether someone can honestly say the
+incident is complete.
 
 ## Breadth, After The Core Story
 

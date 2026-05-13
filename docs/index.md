@@ -46,6 +46,8 @@ verified, approved, publishable work.
 Start with the workflow you already ran this week. Jini is easiest to judge
 when it is making ordinary work more truthful.
 
+Each example answers a user question, not a framework question.
+
 <div class="workflow-grid">
   <a class="workflow-card" href="{{ '/examples.html#meeting-followup' | relative_url }}">
     <span class="workflow-meta">Meeting Follow-up</span>
