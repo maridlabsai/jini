@@ -3,6 +3,17 @@
 
 @import "{{ site.theme }}";
 
+.hero-mark-wrap {
+  margin: 0 0 1rem;
+  text-align: center;
+}
+
+.hero-mark {
+  width: min(144px, 36vw);
+  border-radius: 28px;
+  box-shadow: 0 10px 30px rgba(8, 17, 40, 0.18);
+}
+
 .value-strip {
   margin: 1.5rem 0 2rem;
   padding: 1rem 1.25rem;

@@ -1,5 +1,9 @@
 # Jini
 
+<p class="hero-mark-wrap">
+  <img class="hero-mark" src="./assets/brand/jini-mark-512.png" alt="Jini mark">
+</p>
+
 **Jini is a framework with a strict protocol core for governed, stateful AI work.**
 
 Most AI systems are good at first drafts. Jini is built for what happens after
