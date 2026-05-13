@@ -1944,9 +1944,45 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("preview", guide["beginner_path"]["trust_path"][0]["id"])
         self.assertIn("Bundle-level detail is intentionally demoted", guide["beginner_path"]["notes"][0])
         self.assertTrue(any("plan-install --kit starter-kit" in item for item in guide["beginner_path"]["commands"]))
+        self.assertTrue(any("try-example research-prd" in item for item in guide["beginner_path"]["commands"]))
         self.assertFalse(any("catalog-bundles" in item for item in guide["beginner_path"]["commands"]))
         self.assertTrue(any("show-adapters" in item for item in guide["power_user_path"]["commands"]))
         self.assertTrue(guide["shared_model"])
+
+    def test_try_example_reports_bundled_research_prd_value(self) -> None:
+        result = self.run_cli("try-example", "research-prd", "--format", "json")
+        self.assert_ok(result)
+
+        report = json.loads(result.stdout)
+        self.assertEqual("JiniPublicExampleProof", report["example_type"])
+        self.assertEqual("research-prd", report["example_id"])
+        self.assertFalse(report["generated"])
+        self.assertEqual("awaiting_verification", report["state"])
+        self.assertEqual("ready-to-verify", report["health"])
+        self.assertIn("Approval", report["missing_later"])
+        self.assertEqual(3, report["task_summary"]["done"])
+        self.assertEqual(0, report["task_summary"]["unresolved"])
+        self.assertTrue(report["evidence_summary"]["present"])
+        self.assertTrue(any("verification becomes a visible stage" in item.lower() for item in report["daily_value"]))
+        self.assertTrue(any("execution-checklist" in item for item in report["continue_with"]))
+
+    def test_try_example_generates_meeting_followup_into_requested_output(self) -> None:
+        output = self.tmp / "example-meeting-followup"
+        result = self.run_cli("try-example", "meeting-followup", "--output", output, "--format", "json")
+        self.assert_ok(result)
+
+        report = json.loads(result.stdout)
+        self.assertEqual("meeting-followup", report["example_id"])
+        self.assertTrue(report["generated"])
+        self.assertEqual(str(output), report["path"])
+        self.assertTrue(output.exists())
+        self.assertEqual("decided", report["state"])
+        self.assertEqual("ready-to-make", report["health"])
+        self.assertIn("Approval", report["missing_later"])
+        self.assertIn("Evidence", report["missing_later"])
+        self.assertEqual(0, report["task_summary"]["done"])
+        self.assertEqual(3, report["task_summary"]["unresolved"])
+        self.assertTrue(any("action items stop living only in chat threads" in item.lower() for item in report["daily_value"]))
 
     def test_review_framework_persists_prioritized_adoption_report(self) -> None:
         result = self.run_cli("review-framework", "--format", "json", "--limit", "3")

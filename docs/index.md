@@ -11,12 +11,13 @@ tool changes.
 If you want the fastest proof that Jini is different, run this:
 
 ```bash
-python3 tools/jini.py status-pack packs/research-prd/examples/research-prd-v1
+jini try-example research-prd
 ```
 
 The important lines are:
 
 ```text
+EXAMPLE Research To PRD Handoff
 HEALTH ready-to-verify
 STATE  awaiting_verification
 NEXT   Verify
@@ -48,15 +49,17 @@ teams already run, plus the exact state Jini makes visible.
 
 - **Meeting follow-up.** Jini turns one meeting into a tracked follow-up pack
   with explicit decisions, tasks, and missing execution requirements like
-  `Approval` and `Evidence`.
+  `Approval` and `Evidence` with `jini try-example meeting-followup`.
 - **Research to PRD handoff.** Jini shows the most important proof scene in one
   screen: tasks can be `done: 3/3` while the pack is still
-  `awaiting_verification` and still missing `Approval`.
+  `awaiting_verification` and still missing `Approval` with
+  `jini try-example research-prd`.
 - **Vendor selection.** Jini compiles a recommendation into an approval-ready
   workflow with visible control packs for `Proof`, `Guard`, `Cost`, and
-  `Approval`.
+  `Approval` with `jini try-example vendor-selection`.
 - **Incident response.** Jini keeps the response honest by preserving rollback,
-  evidence, and closure state after the immediate firefight is over.
+  evidence, and closure state after the immediate firefight is over with
+  `jini try-example incident-response`.
 
 Those four examples cover the most common Jini shape: the draft exists, but the
 real work still needs ownership, verification, approval, and continuity.
@@ -100,6 +103,12 @@ That one screen answers the questions teams ask every day:
 - What happens next?
 - What is still missing?
 - Are the tasks merely done, or is the work actually verified?
+
+If you want to feel that payoff before you have your own work pack, start with:
+
+```bash
+jini try-example meeting-followup
+```
 
 ## Public Core Boundary
 

@@ -37,12 +37,13 @@ It is an operating substrate for work.
 If you want the fastest proof that Jini is different, run this:
 
 ```bash
-python3 tools/jini.py status-pack packs/research-prd/examples/research-prd-v1
+python3 tools/jini.py try-example research-prd
 ```
 
 The important lines are:
 
 ```text
+EXAMPLE Research To PRD Handoff
 HEALTH ready-to-verify
 STATE  awaiting_verification
 NEXT   Verify
@@ -60,8 +61,8 @@ If you want the fastest install path, run this:
 
 ```bash
 pipx install --editable git+https://github.com/maridlabsai/jini.git
+jini try-example research-prd
 jini get-started --target codex
-jini plan-install --kit starter-kit --target codex
 ```
 
 That gives you a real `jini` command immediately, while keeping the runtime
@@ -81,14 +82,16 @@ the exact state Jini makes visible in each one:
 
 - **Meeting follow-up.** Jini turns one meeting into an explicit follow-up pack
   and immediately shows whether the work is only decided or actually ready for
-  execution.
+  execution with `jini try-example meeting-followup`.
 - **Research to PRD handoff.** Jini shows the central proof scene in one
   screen: tasks can be complete while the work is still waiting on
-  verification and approval.
+  verification and approval with `jini try-example research-prd`.
 - **Vendor selection.** Jini makes the recommendation approval-ready instead of
-  leaving the rationale trapped in slides, meetings, or email.
+  leaving the rationale trapped in slides, meetings, or email with
+  `jini try-example vendor-selection`.
 - **Incident response.** Jini keeps rollback, evidence, and closure state
-  explicit after the urgent firefight is over.
+  explicit after the urgent firefight is over with
+  `jini try-example incident-response`.
 
 Those four cover the common Jini pattern: the draft exists, but the real work
 still needs ownership, verification, approval, and continuity.

@@ -23,13 +23,7 @@ anything needs approval before execution.
 **Try it with Jini:**
 
 ```bash
-python3 tools/jini.py compile-pack meeting-followup \
-  --work-unit-id my-meeting-followup \
-  --title "Weekly Product Review Follow-up" \
-  --purpose "Turn one meeting into decisions owners and next steps" \
-  --owner meeting-owner \
-  --output /tmp/my-meeting-followup
-python3 tools/jini.py status-pack /tmp/my-meeting-followup
+jini try-example meeting-followup
 ```
 
 **What Jini shows back:**
@@ -69,7 +63,7 @@ from source material into a product spec, then into a plan, then into tasks.
 **Try it with Jini:**
 
 ```bash
-python3 tools/jini.py status-pack packs/research-prd/examples/research-prd-v1
+jini try-example research-prd
 ```
 
 **What Jini shows back:**
@@ -112,14 +106,7 @@ tradeoffs, objections, and approval path disappear into meetings or email.
 **Try it with Jini:**
 
 ```bash
-python3 tools/jini.py compile-pack vendor-selection \
-  --work-unit-id my-vendor-selection \
-  --title "Vendor Evaluation" \
-  --purpose "Compare shortlisted vendors and prepare an approval-ready recommendation" \
-  --owner procurement-lead \
-  --approver finance-approver \
-  --output /tmp/my-vendor-selection
-python3 tools/jini.py status-pack /tmp/my-vendor-selection
+jini try-example vendor-selection
 ```
 
 **What Jini shows back:**
@@ -157,14 +144,7 @@ the fact instead of preserved as the work happens.
 **Try it with Jini:**
 
 ```bash
-python3 tools/jini.py compile-pack incident-response \
-  --work-unit-id my-incident-response \
-  --title "Checkout Latency Incident" \
-  --purpose "Stabilize the checkout path with explicit rollback and verification" \
-  --owner incident-commander \
-  --approver service-owner \
-  --output /tmp/my-incident-response
-python3 tools/jini.py status-pack /tmp/my-incident-response
+jini try-example incident-response
 ```
 
 **What Jini shows back:**

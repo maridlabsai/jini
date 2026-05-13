@@ -64,6 +64,84 @@ VERIFY_STATES = {"awaiting_verification", "operational"}
 HIGH_CONTROL_PROFILES = {"Critical", "Regulated"}
 RUNTIME_CONSENT_CATEGORIES = ("write", "command", "publish")
 HARVEST_CATEGORY_ORDER = ("test", "verify", "startup", "demo", "docs")
+PUBLIC_EXAMPLE_SPECS: dict[str, dict[str, Any]] = {
+    "meeting-followup": {
+        "label": "Meeting Follow-up",
+        "pack_id": "meeting-followup",
+        "source_kind": "compiled",
+        "scenario": (
+            "A normal weekly meeting ends with notes, action items, and implied commitments "
+            "that usually get split across docs, chat, and memory."
+        ),
+        "title": "Weekly Product Review Follow-up",
+        "purpose": "Turn one meeting into decisions owners and next steps",
+        "owner": "meeting-owner",
+        "approvers": ["team-lead"],
+        "stakeholders": [],
+        "daily_value": [
+            "The meeting owner stops guessing what people heard.",
+            "Action items stop living only in chat threads.",
+            "Approvers can see what is still missing before work starts.",
+            "The next person inherits state, not just notes.",
+        ],
+    },
+    "research-prd": {
+        "label": "Research To PRD Handoff",
+        "pack_id": "research-prd",
+        "source_kind": "bundled",
+        "source_path": "packs/research-prd/examples/research-prd-v1",
+        "scenario": (
+            "Research exists and the team agrees something should be built, but the handoff "
+            "still needs a truthful boundary between drafted, verified, and approved work."
+        ),
+        "daily_value": [
+            "Product and engineering stop arguing from different versions of the rationale.",
+            "People can see whether the spec is ready or merely drafted.",
+            "Verification becomes a visible stage instead of an implied one.",
+            "The handoff keeps its source trail attached to the work.",
+        ],
+    },
+    "vendor-selection": {
+        "label": "Vendor Selection",
+        "pack_id": "vendor-selection",
+        "source_kind": "compiled",
+        "scenario": (
+            "Several vendors look plausible and the team needs an approval-ready recommendation "
+            "without losing tradeoffs, scoring, and objections."
+        ),
+        "title": "Vendor Evaluation",
+        "purpose": "Compare shortlisted vendors and prepare an approval-ready recommendation",
+        "owner": "procurement-lead",
+        "approvers": ["finance-approver"],
+        "stakeholders": [],
+        "daily_value": [
+            "The recommendation survives beyond the meeting where it was made.",
+            "Tradeoffs stay attached to the final answer.",
+            "Finance or leadership can see the approval path without re-asking for context.",
+            "The team can revisit the decision later without reconstructing it from memory.",
+        ],
+    },
+    "incident-response": {
+        "label": "Incident Response",
+        "pack_id": "incident-response",
+        "source_kind": "compiled",
+        "scenario": (
+            "The immediate outage is over, but the operational work still needs rollback, "
+            "verification evidence, and honest closure state."
+        ),
+        "title": "Checkout Latency Incident",
+        "purpose": "Stabilize the checkout path with explicit rollback and verification",
+        "owner": "incident-commander",
+        "approvers": ["service-owner"],
+        "stakeholders": [],
+        "daily_value": [
+            "Responders stop treating recovery as closure.",
+            "Rollback context stays visible while pressure is high.",
+            "Verification evidence gets attached before the story drifts.",
+            "Closure becomes a real state, not an assumption.",
+        ],
+    },
+}
 LINEAR_STATE_ORDER = [
     "intake",
     "scoped",
@@ -1849,11 +1927,15 @@ def build_get_started_guide(
         "goal": "Reach a safe first success with the smallest guided surface.",
         "kit_id": beginner_kit_id,
         "target": selected_target,
-        "commands": [item["command"] for item in beginner_trust_path] + [f"{cli} show-kpis --limit 3"],
+        "commands": [
+            *[item["command"] for item in beginner_trust_path],
+            f"{cli} try-example research-prd",
+            f"{cli} show-kpis --limit 3",
+        ],
         "trust_path": beginner_trust_path,
         "notes": [
             "Bundle-level detail is intentionally demoted from the beginner path.",
-            "The trust path is preview, install, verify.",
+            "The trust path is preview, install, verify, then prove value on one common example.",
         ],
     }
     power_path = {
@@ -1912,6 +1994,158 @@ def print_get_started_guide(guide: dict[str, Any]) -> None:
         print(f"  goal: {power.get('goal', '')}")
         for command in power.get("commands", []):
             print(f"    {command}")
+
+
+def build_public_example_proof(
+    example_id: str,
+    *,
+    output_path: Path | None = None,
+    registry: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    spec = PUBLIC_EXAMPLE_SPECS.get(example_id)
+    if spec is None:
+        raise ValueError(f"Unknown public example {example_id!r}")
+    selected_registry = registry or load_registry()
+    source_kind = str(spec.get("source_kind", "compiled")).strip()
+    generated = False
+    compile_warnings: list[str] = []
+    validation_warnings: list[str] = []
+    validation_errors: list[str] = []
+
+    if source_kind == "bundled":
+        source_path = ROOT / str(spec.get("source_path", "")).strip()
+        if not source_path.exists():
+            raise FileNotFoundError(f"Bundled example path not found: {source_path}")
+        pack_dir = source_path
+    else:
+        temp_root: Path | None = None
+        if output_path is None:
+            temp_root = Path(tempfile.mkdtemp(prefix=f"jini-example-{slugify(example_id)}-"))
+            target_output = temp_root / slugify(example_id)
+        else:
+            target_output = output_path.expanduser()
+        owner = str(spec.get("owner", "")).strip()
+        approvers = [str(item).strip() for item in spec.get("approvers", []) if str(item).strip()]
+        raw_stakeholders = [str(item).strip() for item in spec.get("stakeholders", []) if str(item).strip()]
+        stakeholders = list(dict.fromkeys([owner, *raw_stakeholders]))
+        operator = owner
+        rollback_authority = approvers[0] if approvers else owner
+        service_owner = owner
+        pack_dir = write_compiled_pack(
+            pack_id=str(spec.get("pack_id", "")).strip(),
+            output_dir=target_output,
+            work_unit_id=f"example-{slugify(example_id)}",
+            title=str(spec.get("title", spec.get("label", example_id))).strip(),
+            purpose=str(spec.get("purpose", spec.get("scenario", ""))).strip(),
+            owner_actor_id=owner,
+            approver_actor_ids=approvers,
+            stakeholder_actor_ids=stakeholders,
+            branch_id="main",
+            operator_actor_id=operator,
+            rollback_authority_actor_id=rollback_authority,
+            service_owner_actor_id=service_owner,
+            context_path=None,
+        )
+        generated = True
+        validation_errors, validation_warnings = validate_pack(pack_dir, selected_registry)
+        if validation_errors:
+            raise ValueError("Public example failed validation:\n- " + "\n- ".join(validation_errors))
+        compile_warnings = materialize_compile_outputs(pack_dir, selected_registry)
+
+    summary = summarise_pack(pack_dir, selected_registry)
+    tasks = summary.get("task_summary", {})
+    evidence_doc = summary.get("evidence_doc") or {}
+    future_missing = [
+        artifact_type
+        for artifact_type in summary.get("missing_full_required", [])
+        if artifact_type not in summary.get("missing_stage_required", [])
+    ]
+    cli = cli_invocation()
+    report = {
+        "schema_version": "0.1.0",
+        "example_type": "JiniPublicExampleProof",
+        "generated_at": now_utc(),
+        "example_id": example_id,
+        "label": str(spec.get("label", example_id)),
+        "pack_id": summary.get("pack_id", ""),
+        "scenario": str(spec.get("scenario", "")).strip(),
+        "source_kind": "generated" if generated else "bundled",
+        "generated": generated,
+        "path": display_path(pack_dir),
+        "health": summary.get("health", ""),
+        "state": summary.get("work_unit", {}).get("current_state", ""),
+        "next_operation": summary.get("next_operation", ""),
+        "control_packs": summary.get("control_packs", []),
+        "missing_now": summary.get("missing_stage_required", []),
+        "missing_later": future_missing,
+        "task_summary": {
+            "total": int(tasks.get("total", 0) or 0),
+            "done": int(tasks.get("done", 0) or 0),
+            "unresolved": int(tasks.get("unresolved", 0) or 0),
+            "statuses": {str(key): int(value) for key, value in dict(tasks.get("counts", {})).items()},
+        },
+        "evidence_summary": {
+            "present": bool(evidence_doc),
+            "claims": len(evidence_doc.get("claims", [])) if isinstance(evidence_doc, dict) else 0,
+            "risks": len(evidence_doc.get("risks", [])) if isinstance(evidence_doc, dict) else 0,
+            "target": str(evidence_doc.get("target_artifact_id", "")) if isinstance(evidence_doc, dict) else "",
+        },
+        "daily_value": list(spec.get("daily_value", [])),
+        "try_command": f"{cli} try-example {example_id}",
+        "continue_with": [
+            f"{cli} status-pack {display_path(pack_dir)}",
+            f"{cli} execution-checklist {display_path(pack_dir)}",
+        ],
+        "warnings": [*validation_warnings, *compile_warnings],
+    }
+    return report
+
+
+def print_public_example_proof(report: dict[str, Any]) -> None:
+    print(f"EXAMPLE {report.get('label', '')}")
+    print(f"PACK    {report.get('pack_id', '')}")
+    print(f"PATH    {report.get('path', '')}")
+    print(f"SOURCE  {report.get('source_kind', '')}")
+    print(f"STATE   {report.get('state', '')}")
+    print(f"HEALTH  {report.get('health', '')}")
+    print(f"NEXT    {report.get('next_operation', '')}")
+    scenario = str(report.get("scenario", "")).strip()
+    if scenario:
+        print(f"WHY     {scenario}")
+    control_packs = report.get("control_packs", [])
+    if control_packs:
+        print(f"CTRL    {', '.join(control_packs)}")
+    if report.get("missing_now"):
+        print("MISSING-NOW")
+        for item in report["missing_now"]:
+            print(f"  - {item}")
+    if report.get("missing_later"):
+        print("MISSING-LATER")
+        for item in report["missing_later"]:
+            print(f"  - {item}")
+    task_summary = report.get("task_summary", {})
+    total = int(task_summary.get("total", 0) or 0)
+    if total:
+        print("TASKS")
+        print(f"  done:       {task_summary.get('done', 0)}/{total}")
+        print(f"  unresolved: {task_summary.get('unresolved', 0)}/{total}")
+    evidence_summary = report.get("evidence_summary", {})
+    if evidence_summary.get("present"):
+        print("EVIDENCE")
+        if evidence_summary.get("target"):
+            print(f"  target: {evidence_summary['target']}")
+        print(f"  claims: {evidence_summary.get('claims', 0)}")
+        print(f"  risks:  {evidence_summary.get('risks', 0)}")
+    if report.get("daily_value"):
+        print("VALUE")
+        for item in report["daily_value"]:
+            print(f"  - {item}")
+    if report.get("continue_with"):
+        print("CONTINUE")
+        for item in report["continue_with"]:
+            print(f"  - {item}")
+    for warning in report.get("warnings", []):
+        print(f"WARN   {warning}")
 
 
 def resolve_install_root(raw_root: str, prefix: Path | None = None) -> Path:
@@ -12867,6 +13101,27 @@ def main() -> int:
         help="Output format for the getting-started guide",
     )
 
+    try_example_parser = subparsers.add_parser(
+        "try-example",
+        help="Show Jini on a common workflow without requiring pack assembly first",
+    )
+    try_example_parser.add_argument(
+        "example_id",
+        choices=sorted(PUBLIC_EXAMPLE_SPECS.keys()),
+        help="Public example to materialize or inspect",
+    )
+    try_example_parser.add_argument(
+        "--output",
+        type=Path,
+        help="Optional output directory for generated examples; bundled examples ignore this",
+    )
+    try_example_parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for the example proof",
+    )
+
     framework_review_parser = subparsers.add_parser(
         "review-framework",
         help="Critique the Jini framework against adoption constraints and competitor gaps",
@@ -14245,6 +14500,22 @@ def main() -> int:
             print(json.dumps(guide, indent=2))
         else:
             print_get_started_guide(guide)
+        return 0
+
+    if args.command == "try-example":
+        try:
+            report = build_public_example_proof(
+                args.example_id,
+                output_path=args.output,
+                registry=registry,
+            )
+        except (FileExistsError, FileNotFoundError, KeyError, TypeError, ValueError) as exc:
+            print(f"ERROR {exc}")
+            return 1
+        if args.format == "json":
+            print(json.dumps(report, indent=2))
+        else:
+            print_public_example_proof(report)
         return 0
 
     if args.command == "review-framework":
