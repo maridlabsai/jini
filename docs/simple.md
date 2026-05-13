@@ -126,12 +126,16 @@ It helps you see:
 - what happens next
 - what is missing
 
+If you want the non-technical explanation of how Jini keeps those things
+visible, read [State And Artifacts](./state-and-artifacts.md).
+
 ## If You Want More
 
 <div class="section-card">
   <h3>Go next</h3>
   <div class="on-this-page">
     <a href="./index.md">Home</a>
+    <a href="./state-and-artifacts.md">State and Artifacts</a>
     <a href="./examples.md">Examples</a>
     <a href="./cli.md">CLI Guide</a>
     <a href="./install.md">Install</a>

@@ -136,6 +136,45 @@
   color: #344054;
 }
 
+.orientation-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.8rem;
+  margin: 0 0 1.6rem;
+}
+
+.orientation-card {
+  padding: 0.95rem 1rem;
+  border: 1px solid #d8dee4;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.orientation-card p {
+  margin: 0.28rem 0 0.7rem;
+  font-size: 0.94rem;
+  line-height: 1.5;
+  color: #344054;
+}
+
+.orientation-card code {
+  display: inline-block;
+  padding: 0.26rem 0.52rem;
+  border-radius: 999px;
+  background: #eef4ff;
+  color: #1d4ed8;
+  white-space: normal;
+}
+
+.orientation-label {
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #667085;
+}
+
 .hero-panel {
   margin: 0 0 1.9rem;
   padding: 1.6rem 1.45rem;

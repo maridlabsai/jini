@@ -24,6 +24,7 @@
         <nav class="site-nav" aria-label="Primary">
           <a class="{% if page.url == '/' %}is-active{% endif %}" href="{{ '/' | relative_url }}">Home</a>
           <a class="{% if page.url == '/simple.html' %}is-active{% endif %}" href="{{ '/simple.html' | relative_url }}">Simple Guide</a>
+          <a class="{% if page.url == '/state-and-artifacts.html' %}is-active{% endif %}" href="{{ '/state-and-artifacts.html' | relative_url }}">State &amp; Artifacts</a>
           <a class="{% if page.url == '/examples.html' %}is-active{% endif %}" href="{{ '/examples.html' | relative_url }}">Examples</a>
           <a class="{% if page.url == '/install.html' %}is-active{% endif %}" href="{{ '/install.html' | relative_url }}">Install</a>
           <a class="{% if page.url == '/proof.html' %}is-active{% endif %}" href="{{ '/proof.html' | relative_url }}">Proof</a>
@@ -39,6 +40,24 @@
         <p class="site-page-description">{{ page.description }}</p>
         {% endif %}
         {% endunless %}
+
+        <aside class="orientation-bar" aria-label="Jini orientation">
+          <div class="orientation-card">
+            <span class="orientation-label">Interaction</span>
+            <p>Run one command to inspect work, see the next step, or hand context to the next person.</p>
+            <code>jini status-pack</code>
+          </div>
+          <div class="orientation-card">
+            <span class="orientation-label">State</span>
+            <p>Jini keeps the current state, health, next move, and missing blockers visible.</p>
+            <code>STATE · NEXT · MISSING-LATER</code>
+          </div>
+          <div class="orientation-card">
+            <span class="orientation-label">Artifacts</span>
+            <p>Jini stores work in durable artifacts instead of hiding it in chat memory.</p>
+            <code>Tasks · Evidence · Approval</code>
+          </div>
+        </aside>
 
         {{ content }}
       </main>

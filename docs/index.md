@@ -40,6 +40,9 @@ between people and tools.
 For technical readers: Jini is a framework with a small protocol core for AI
 work that needs durable state, approvals, evidence, memory, and portability.
 
+If you want the shortest explanation of how Jini keeps interaction, state, and
+artifacts visible, read [State And Artifacts](./state-and-artifacts.md).
+
 ## Start Here
 
 If you want the fastest proof that Jini is different, run this:
@@ -173,6 +176,7 @@ jini try-example meeting-followup
   <h3>Go next</h3>
   <div class="on-this-page">
     <a href="./simple.md">Read the Simple Guide</a>
+    <a href="./state-and-artifacts.md">See state and artifacts clearly</a>
     <a href="./cli.md">See the short CLI guide</a>
     <a href="./proof.md">See the proof path</a>
     <a href="./install.md">See the install path</a>

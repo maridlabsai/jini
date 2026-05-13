@@ -50,6 +50,9 @@ They answer:
 - what is still missing
 - what context to hand to the next agent or person
 
+If you want the plain-language explanation of why those surfaces matter, read
+[State And Artifacts](./state-and-artifacts.md).
+
 ## Guided Execution
 
 Use these when you want Jini to stage or run the next workflow step:
