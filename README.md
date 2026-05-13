@@ -27,6 +27,9 @@ The operating rule is strict:
 - simple default loops beat rich but heavy operator surfaces
 - capability should grow at the edges, not by making the core fatter
 
+The litmus test is simple: if a novice cannot reach useful output without
+learning Python or internal framework jargon first, Jini is failing.
+
 Jini is not a prompt pack. It is not a persona zoo. It is not another
 engineering-only workflow library.
 

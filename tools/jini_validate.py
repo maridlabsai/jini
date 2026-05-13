@@ -830,6 +830,7 @@ def next_framework_outcome_path(dimension_id: str) -> Path:
 
 def framework_adoption_constraints() -> list[str]:
     return [
+        "Any novice should be able to reach first value without knowing Python, internal jargon, or bundle-level architecture first.",
         "Time to first useful output must be short enough that a new user reaches value before reading deep docs.",
         "Install, activation, and first-run trust must be visible and low-risk across supported targets.",
         "The cheapest adequate path must feel like the default path, not an expert mode.",
@@ -1637,6 +1638,63 @@ def build_publish_readiness() -> dict[str, Any]:
             }
         )
 
+    front_door_doc_paths = [
+        ROOT / "README.md",
+        ROOT / "docs" / "index.md",
+        ROOT / "docs" / "install.md",
+        ROOT / "docs" / "cli.md",
+    ]
+    forbidden_novice_patterns = [
+        "python3 tools/jini.py",
+        "python3 tools/jini_validate.py",
+    ]
+    front_door_checks: list[dict[str, Any]] = []
+    for path in front_door_doc_paths:
+        text = path.read_text(encoding="utf-8") if path.exists() else ""
+        limited_text = "\n".join(text.splitlines()[:220])
+        matches = [pattern for pattern in forbidden_novice_patterns if pattern in limited_text]
+        front_door_checks.append(
+            {
+                "path": display_path(path),
+                "exists": path.exists(),
+                "forbidden_matches": matches,
+                "status": "ok" if path.exists() and not matches else "warning",
+            }
+        )
+
+    novice_guide = build_get_started_guide(target="codex", audience="beginner")
+    novice_commands = novice_guide.get("beginner_path", {}).get("commands", [])
+    if not isinstance(novice_commands, list):
+        novice_commands = []
+    novice_checks = [
+        {
+            "id": "beginner-command-count",
+            "command_count": len(novice_commands),
+            "max_allowed": 4,
+            "status": "ok" if 0 < len(novice_commands) <= 4 else "warning",
+        },
+        {
+            "id": "beginner-command-prefix",
+            "all_jini_commands": all(str(command).startswith("jini ") for command in novice_commands),
+            "status": "ok" if novice_commands and all(str(command).startswith("jini ") for command in novice_commands) else "warning",
+        },
+        {
+            "id": "beginner-proof-command",
+            "present": any("try-example research-prd" in str(command) for command in novice_commands),
+            "status": "ok" if any("try-example research-prd" in str(command) for command in novice_commands) else "warning",
+        },
+        {
+            "id": "beginner-no-bundle-catalog",
+            "present": any("catalog-bundles" in str(command) for command in novice_commands),
+            "status": "ok" if not any("catalog-bundles" in str(command) for command in novice_commands) else "warning",
+        },
+        {
+            "id": "cli-guide-no-python-requirement",
+            "present": "You do not need to know Python to use Jini." in ((ROOT / "docs" / "cli.md").read_text(encoding="utf-8") if (ROOT / "docs" / "cli.md").exists() else ""),
+            "status": "ok" if "You do not need to know Python to use Jini." in ((ROOT / "docs" / "cli.md").read_text(encoding="utf-8") if (ROOT / "docs" / "cli.md").exists() else "") else "warning",
+        },
+    ]
+
     required_dimensions = {
         "workflow-rigor": 9.0,
         "delivery-maturity": 8.8,
@@ -1712,6 +1770,17 @@ def build_publish_readiness() -> dict[str, Any]:
             "label": "Install surface",
             "status": "ok" if all(item["status"] == "ok" for item in target_checks) else "warning",
             "checks": target_checks,
+        },
+        {
+            "id": "novice",
+            "label": "Novice usability",
+            "status": "ok"
+            if all(item["status"] == "ok" for item in front_door_checks) and all(item["status"] == "ok" for item in novice_checks)
+            else "warning",
+            "checks": [
+                *front_door_checks,
+                *novice_checks,
+            ],
         },
         {
             "id": "breadth",
@@ -1958,7 +2027,6 @@ def build_get_started_guide(
         "commands": [
             *[item["command"] for item in beginner_trust_path],
             f"{cli} try-example research-prd",
-            f"{cli} show-kpis --limit 3",
         ],
         "trust_path": beginner_trust_path,
         "notes": [
@@ -4203,7 +4271,7 @@ def cli_invocation() -> str:
     executable = Path(sys.argv[0]).name
     if executable == "jini":
         return "jini"
-    return "python3 tools/jini.py"
+    return "jini"
 
 
 def resolve_display_path(path_text: str) -> Path:
@@ -5493,6 +5561,7 @@ def build_execution_checklist(
     home_path: Path | None = None,
     runtime_target: str | None = None,
 ) -> dict[str, Any]:
+    cli = cli_invocation()
     summary = summarise_pack(pack_dir, registry)
     recommendation = recommend_execution(
         pack_dir,
@@ -5552,9 +5621,7 @@ def build_execution_checklist(
                 "status": "recommended" if repo_context.get("discovered") else "blocked",
                 "kind": "command",
                 "description": "Refresh canonical evidence from local verification surfaces before approval or promotion.",
-                "command": (
-                    f"python3 tools/jini.py harvest-evidence {pack_path} --author <actor> --repo <repo>"
-                ),
+                "command": f"{cli} harvest-evidence {pack_path} --author <actor> --repo <repo>",
             }
         )
 
@@ -5581,7 +5648,7 @@ def build_execution_checklist(
                 "status": "recommended",
                 "kind": "runtime-target",
                 "description": f"Preferred runtime target for portable guidance is `{runtime_id}`.",
-                "command": f"python3 tools/jini.py plan-install --bundle jini-core --target {runtime_id}",
+                "command": f"{cli} plan-install --bundle jini-core --target {runtime_id}",
             }
         )
 
@@ -5632,10 +5699,7 @@ def build_execution_checklist(
                 "status": "recommended",
                 "kind": "approval",
                 "description": "Capture Approval after evidence is fresh and ready.",
-                "command": (
-                    f"python3 tools/jini.py capture-approval {pack_path} --author <actor> "
-                    f"--approver-actor <approver> --scope operational-readiness"
-                ),
+                "command": f"{cli} capture-approval {pack_path} --author <actor> --approver-actor <approver> --scope operational-readiness",
             }
         )
 
@@ -8626,6 +8690,7 @@ def publish_issues(
     cloud_id: str | None = None,
     site_url: str | None = None,
 ) -> Path:
+    cli = cli_invocation()
     if adapter not in {"jira", "github"}:
         raise ValueError("publish-issues supports only 'jira' and 'github'")
     export_dir = export_issues(pack_dir, registry, adapter=adapter)
@@ -8741,7 +8806,7 @@ def publish_issues(
         readme_lines.extend(
             [
                 "## Local Apply",
-                "- Use `python3 tools/jini.py apply-publish-plan <publish-dir>` to materialize a local markdown issue set.",
+                f"- Use `{cli} apply-publish-plan <publish-dir>` to materialize a local markdown issue set.",
                 "",
             ]
         )
@@ -8759,6 +8824,7 @@ def publish_wiki(
     site_url: str | None = None,
     space_id: str | None = None,
 ) -> Path:
+    cli = cli_invocation()
     if adapter not in {"confluence", "markdown"}:
         raise ValueError("publish-wiki supports only 'confluence' and 'markdown'")
 
@@ -8877,7 +8943,7 @@ def publish_wiki(
         readme_lines.extend(
             [
                 "## Local Apply",
-                "- Use `python3 tools/jini.py apply-publish-plan <publish-dir>` to materialize local markdown pages.",
+                f"- Use `{cli} apply-publish-plan <publish-dir>` to materialize local markdown pages.",
                 "",
             ]
         )
