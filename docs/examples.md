@@ -40,9 +40,7 @@ actually operate.
   </div>
 </div>
 
-<a id="meeting-followup"></a>
-
-## 1. Meeting Follow-up
+## 1. Meeting Follow-up {#meeting-followup}
 
 **Situation:** a weekly product, staff, or project meeting ends with notes
 scattered across docs, chat, and memory.
@@ -85,9 +83,7 @@ execution-ready.
 - approvers can see what is still missing before work starts
 - the next person inherits state, not just notes
 
-<a id="research-prd"></a>
-
-## 2. Research To PRD Handoff
+## 2. Research To PRD Handoff {#research-prd}
 
 **Situation:** research exists, opinions exist, and the team agrees something
 should be built.
@@ -132,9 +128,7 @@ trail attached to the current revision.
 - verification becomes a visible stage instead of an implied one
 - the handoff keeps its source trail attached to the work
 
-<a id="vendor-selection"></a>
-
-## 3. Vendor Selection
+## 3. Vendor Selection {#vendor-selection}
 
 **Situation:** several vendors or tools look plausible and the team needs to
 justify a recommendation.
@@ -174,9 +168,7 @@ decision should be treated as durable.
 - finance or leadership can see the approval path without re-asking for context
 - the team can revisit the decision later without reconstructing it from memory
 
-<a id="incident-response"></a>
-
-## 4. Incident Response
+## 4. Incident Response {#incident-response}
 
 **Situation:** the immediate outage is over, but the operational work is not.
 
