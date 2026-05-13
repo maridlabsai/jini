@@ -13,6 +13,11 @@ jini ...
 
 If you are not installed yet, start with [install](./install.md).
 
+<div class="section-card">
+  <h3>Start with these three</h3>
+  <p>If you only want the smallest useful command set, begin with the proof command, the install guide, and one real pack status check.</p>
+</div>
+
 ## Most People Start Here
 
 ```bash
@@ -97,3 +102,12 @@ jini --help
 ```
 
 That is the authoritative source for every installed command.
+
+<div class="section-card">
+  <h3>What most people do next</h3>
+  <div class="on-this-page">
+    <a href="./examples.md">Try another example</a>
+    <a href="./proof.md">Re-read the proof screen</a>
+    <a href="./contact.md">Ask a question or report a gap</a>
+  </div>
+</div>

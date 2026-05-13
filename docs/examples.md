@@ -10,6 +10,16 @@ These examples should answer one practical question:
 Do not start by trying to learn the framework. Start by finding the example
 that feels uncomfortably familiar.
 
+<div class="section-card">
+  <h3>Pick the pain you have right now</h3>
+  <div class="on-this-page">
+    <a href="#meeting-followup">Meeting follow-up: did anything real come out of that meeting?</a>
+    <a href="#research-prd">Research to PRD: is this safe to build from?</a>
+    <a href="#vendor-selection">Vendor selection: can we still defend the choice later?</a>
+    <a href="#incident-response">Incident response: is the incident truly closed?</a>
+  </div>
+</div>
+
 ## Start With The Question That Already Hurts
 
 Use the example that matches the question you already ask in real work:
@@ -74,6 +84,21 @@ If that translation still feels abstract, use the examples below.
 **The question Jini answers:** “What really came out of this meeting, and
 what is still fuzzy?”
 
+<div class="example-snapshot">
+  <div class="snapshot-card">
+    <span class="snapshot-label">Run</span>
+    <p><code>jini try-example meeting-followup</code></p>
+  </div>
+  <div class="snapshot-card">
+    <span class="snapshot-label">Jini shows</span>
+    <p>The meeting happened, but follow-through is still unresolved.</p>
+  </div>
+  <div class="snapshot-card">
+    <span class="snapshot-label">Why it helps</span>
+    <p>You stop treating notes as if they were real decisions and owned work.</p>
+  </div>
+</div>
+
 **The situation:** you leave a weekly product, staff, or project meeting with
 notes in one place, action items in another place, and several things that
 everyone assumes are obvious.
@@ -134,6 +159,21 @@ captures it now.
 
 **The question Jini answers:** “Is this handoff really ready, or does it only
 look ready?”
+
+<div class="example-snapshot">
+  <div class="snapshot-card">
+    <span class="snapshot-label">Run</span>
+    <p><code>jini try-example research-prd</code></p>
+  </div>
+  <div class="snapshot-card">
+    <span class="snapshot-label">Jini shows</span>
+    <p>The draft looks complete, but it is still waiting for verification and approval.</p>
+  </div>
+  <div class="snapshot-card">
+    <span class="snapshot-label">Why it helps</span>
+    <p>You catch false confidence before engineering starts from an unverified spec.</p>
+  </div>
+</div>
 
 **The situation:** research is done, the team agrees something should be built,
 and the PRD or spec looks polished enough that people are tempted to call it
@@ -199,6 +239,21 @@ starts building from a draft that only looks finished.
 **The question Jini answers:** “Can we still defend this choice after the
 meeting is over?”
 
+<div class="example-snapshot">
+  <div class="snapshot-card">
+    <span class="snapshot-label">Run</span>
+    <p><code>jini try-example vendor-selection</code></p>
+  </div>
+  <div class="snapshot-card">
+    <span class="snapshot-label">Jini shows</span>
+    <p>The recommendation, tradeoffs, and approval path stay attached to the choice.</p>
+  </div>
+  <div class="snapshot-card">
+    <span class="snapshot-label">Why it helps</span>
+    <p>You can explain the decision later without rebuilding the reasoning from memory.</p>
+  </div>
+</div>
+
 **The situation:** several tools or vendors look reasonable and you need to
 recommend one to a manager, procurement lead, or finance stakeholder.
 
@@ -254,6 +309,21 @@ recommendation, proof, and approval path part of the same flow.
 
 **The question Jini answers:** “Is this incident truly closed, or are we just
 done talking about it?”
+
+<div class="example-snapshot">
+  <div class="snapshot-card">
+    <span class="snapshot-label">Run</span>
+    <p><code>jini try-example incident-response</code></p>
+  </div>
+  <div class="snapshot-card">
+    <span class="snapshot-label">Jini shows</span>
+    <p>Service recovery is not the same thing as rollback proof, review, and closure.</p>
+  </div>
+  <div class="snapshot-card">
+    <span class="snapshot-label">Why it helps</span>
+    <p>You stop calling incidents “done” before the risky follow-up work is actually finished.</p>
+  </div>
+</div>
 
 **The situation:** the service is back, the immediate pressure is lower, and
 everyone wants to move on.

@@ -3,6 +3,31 @@ title: Jini
 description: See what is done, what happens next, and what is still missing before work should be treated as durable.
 ---
 
+<div class="hero-panel">
+  <p class="hero-kicker">Truthful AI Workflows</p>
+  <h1 class="hero-title">See what is done, what happens next, and what is still missing.</h1>
+  <p class="hero-summary">Jini is for the part after the exciting first draft: handoffs, checking, sign-off, and the quiet missing work that turns “done” into rework later.</p>
+  <div class="cta-row">
+    <a class="cta-button" href="{{ '/proof.html' | relative_url }}">See the 30-second proof</a>
+    <a class="cta-button cta-button-secondary" href="{{ '/simple.html' | relative_url }}">Start with the simple guide</a>
+    <a class="cta-button cta-button-secondary" href="{{ '/install.html' | relative_url }}">Install Jini</a>
+  </div>
+  <div class="fact-strip">
+    <div class="fact-pill">
+      <strong>Question 1</strong>
+      <p>What is actually done?</p>
+    </div>
+    <div class="fact-pill">
+      <strong>Question 2</strong>
+      <p>What happens next?</p>
+    </div>
+    <div class="fact-pill">
+      <strong>Question 3</strong>
+      <p>What is still missing?</p>
+    </div>
+  </div>
+</div>
+
 **In plain words:** Jini helps you see if work is really done, what comes
 next, and what is still missing.
 
@@ -41,6 +66,15 @@ That is the core idea in one screen: completed tasks are not the same thing as
 verified, approved, publishable work.
 
 ![Jini research to PRD proof demo](./assets/examples/research-prd.gif)
+
+<div class="section-card">
+  <strong>Read this screen in plain English:</strong>
+  <ul>
+    <li><code>done: 3/3</code> means the tasks were completed</li>
+    <li><code>STATE awaiting_verification</code> means the work is still not trustworthy enough to advance</li>
+    <li><code>MISSING-LATER Approval</code> means a later blocker is already visible now</li>
+  </ul>
+</div>
 
 ## Pick Your Workflow
 
@@ -135,16 +169,18 @@ jini try-example meeting-followup
 
 ## Explore More
 
-- [Read the Simple Guide](./simple.md)
-- install Jini with `pipx install --editable git+https://github.com/maridlabsai/jini.git`
-- [See the short CLI guide](./cli.md)
-- [See the proof path](./proof.md)
-- [See the install path](./install.md)
-- [See detailed examples](./examples.md)
-- [See the commercial boundary](./commercial.md)
-- [See support and contact paths](./contact.md)
-- [See release notes](https://github.com/maridlabsai/jini/releases/tag/v0.1.0)
-- [Read the full README](https://github.com/maridlabsai/jini#readme)
+<div class="section-card">
+  <h3>Go next</h3>
+  <div class="on-this-page">
+    <a href="./simple.md">Read the Simple Guide</a>
+    <a href="./cli.md">See the short CLI guide</a>
+    <a href="./proof.md">See the proof path</a>
+    <a href="./install.md">See the install path</a>
+    <a href="./examples.md">See detailed examples</a>
+    <a href="./contact.md">See support and contact paths</a>
+    <a href="https://github.com/maridlabsai/jini/releases/tag/v0.1.0">See release notes</a>
+  </div>
+</div>
 
 ## Public Core Boundary
 

@@ -5,6 +5,11 @@ description: Use the smallest supported path to get Jini running as a normal CLI
 
 Jini should have one obvious install path.
 
+<div class="section-card">
+  <h3>The shortest safe path</h3>
+  <p>Install Jini, let it show you the beginner path, then verify the target before you do anything more advanced.</p>
+</div>
+
 For the smallest guided path from GitHub:
 
 ```bash
@@ -41,4 +46,12 @@ jini get-started --target codex
 Once Jini is installed, the normal user surface is just `jini ...`. For the
 small grouped command set, see [the CLI guide](./cli.md).
 
-For deeper install details, see [specs/install-packaging.md](https://github.com/maridlabsai/jini/blob/main/specs/install-packaging.md).
+<div class="section-card">
+  <h3>After install</h3>
+  <div class="on-this-page">
+    <a href="./proof.md">Run the proof command</a>
+    <a href="./examples.md">Try a common workflow</a>
+    <a href="./cli.md">See the grouped CLI guide</a>
+    <a href="https://github.com/maridlabsai/jini/blob/main/specs/install-packaging.md">Read deeper install details</a>
+  </div>
+</div>

@@ -11,6 +11,11 @@ Jini helps you answer three questions:
 
 That is all.
 
+<div class="section-card">
+  <strong>If you only remember one thing:</strong>
+  <p>Jini is a way to slow down just enough to tell the truth about work before you call it finished.</p>
+</div>
+
 You do not need to learn the whole framework first.
 
 ## When Jini Helps
@@ -123,7 +128,12 @@ It helps you see:
 
 ## If You Want More
 
-- [Home](./index.md)
-- [Examples](./examples.md)
-- [CLI Guide](./cli.md)
-- [Install](./install.md)
+<div class="section-card">
+  <h3>Go next</h3>
+  <div class="on-this-page">
+    <a href="./index.md">Home</a>
+    <a href="./examples.md">Examples</a>
+    <a href="./cli.md">CLI Guide</a>
+    <a href="./install.md">Install</a>
+  </div>
+</div>

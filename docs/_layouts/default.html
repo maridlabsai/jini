@@ -9,7 +9,8 @@
     <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
     {% include head-custom.html %}
   </head>
-  <body>
+  <body class="site-shell-body">
+    <a class="skip-link" href="#main-content">Skip to content</a>
     <div class="container-lg px-3 my-5 markdown-body">
       <header class="site-shell-header">
         <a class="site-brand site-brand-link" href="{{ '/' | relative_url }}" aria-label="Jini home">
@@ -21,24 +22,39 @@
         </a>
 
         <nav class="site-nav" aria-label="Primary">
-          <a href="{{ '/' | relative_url }}">Home</a>
-          <a href="{{ '/simple.html' | relative_url }}">Simple Guide</a>
-          <a href="{{ '/examples.html' | relative_url }}">Examples</a>
-          <a href="{{ '/install.html' | relative_url }}">Install</a>
-          <a href="{{ '/proof.html' | relative_url }}">Proof</a>
-          <a href="{{ '/contact.html' | relative_url }}">Contact</a>
+          <a class="{% if page.url == '/' %}is-active{% endif %}" href="{{ '/' | relative_url }}">Home</a>
+          <a class="{% if page.url == '/simple.html' %}is-active{% endif %}" href="{{ '/simple.html' | relative_url }}">Simple Guide</a>
+          <a class="{% if page.url == '/examples.html' %}is-active{% endif %}" href="{{ '/examples.html' | relative_url }}">Examples</a>
+          <a class="{% if page.url == '/install.html' %}is-active{% endif %}" href="{{ '/install.html' | relative_url }}">Install</a>
+          <a class="{% if page.url == '/proof.html' %}is-active{% endif %}" href="{{ '/proof.html' | relative_url }}">Proof</a>
+          <a class="{% if page.url == '/contact.html' %}is-active{% endif %}" href="{{ '/contact.html' | relative_url }}">Contact</a>
         </nav>
       </header>
 
-      {% unless page.url == '/' %}
-      <p class="site-section-label">Jini</p>
-      <h1 class="site-page-title">{{ page.title }}</h1>
-      {% if page.description %}
-      <p class="site-page-description">{{ page.description }}</p>
-      {% endif %}
-      {% endunless %}
+      <main id="main-content">
+        {% unless page.url == '/' %}
+        <p class="site-section-label">Jini</p>
+        <h1 class="site-page-title">{{ page.title }}</h1>
+        {% if page.description %}
+        <p class="site-page-description">{{ page.description }}</p>
+        {% endif %}
+        {% endunless %}
 
-      {{ content }}
+        {{ content }}
+      </main>
+
+      <footer class="site-footer">
+        <div>
+          <strong>Jini</strong>
+          <p>The framework for week two of work.</p>
+        </div>
+        <div class="site-footer-links">
+          <a href="{{ '/examples.html' | relative_url }}">Examples</a>
+          <a href="{{ '/install.html' | relative_url }}">Install</a>
+          <a href="https://github.com/maridlabsai/jini">GitHub</a>
+          <a href="https://github.com/maridlabsai/jini/releases/tag/v0.1.0">v0.1.0</a>
+        </div>
+      </footer>
     </div>
   </body>
 </html>
