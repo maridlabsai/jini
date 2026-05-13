@@ -6,6 +6,8 @@
 - What happens next?
 - What is still missing?
 
+If you want the simplest version first, read the [Simple Guide](./docs/simple.md).
+
 If AI tools feel helpful at first but messy later, Jini is built for that
 messy part.
 

@@ -1882,6 +1882,8 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue(any(item.get("id") == "beginner-proof-command" and item["present"] for item in novice["checks"]))
         self.assertTrue(any(item.get("id") == "readme-plain-words-entry" and item["present"] for item in novice["checks"]))
         self.assertTrue(any(item.get("id") == "homepage-plain-words-entry" and item["present"] for item in novice["checks"]))
+        self.assertTrue(any(item.get("id") == "simple-guide-exists" and item["present"] for item in novice["checks"]))
+        self.assertTrue(any(item.get("id") == "simple-guide-core-questions" and item["present"] for item in novice["checks"]))
         self.assertTrue(any(section["id"] == "breadth" and section["status"] == "ok" for section in report["sections"]))
         leadership = next(section for section in report["sections"] if section["id"] == "leadership")
         self.assertEqual("ok", leadership["status"])

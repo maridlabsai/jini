@@ -11,6 +11,8 @@
 **In plain words:** Jini helps you see if work is really done, what comes
 next, and what is still missing.
 
+If you want the simplest version first, read the [Simple Guide](./simple.md).
+
 Most AI tools are good at starting work. Jini is for the harder part after
 that: handoffs, checking, sign-off, and keeping the truth clear as work moves
 between people and tools.
@@ -138,6 +140,7 @@ jini try-example meeting-followup
 
 ## Explore More
 
+- [Read the Simple Guide](./simple.md)
 - install Jini with `pipx install --editable git+https://github.com/maridlabsai/jini.git`
 - [See the short CLI guide](./cli.md)
 - [See the proof path](./proof.md)

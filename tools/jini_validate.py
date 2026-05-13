@@ -1643,6 +1643,7 @@ def build_publish_readiness() -> dict[str, Any]:
         ROOT / "docs" / "index.md",
         ROOT / "docs" / "install.md",
         ROOT / "docs" / "cli.md",
+        ROOT / "docs" / "simple.md",
     ]
     forbidden_novice_patterns = [
         "python3 tools/jini.py",
@@ -1702,6 +1703,24 @@ def build_publish_readiness() -> dict[str, Any]:
             "id": "homepage-plain-words-entry",
             "present": "**In plain words:**" in ((ROOT / "docs" / "index.md").read_text(encoding="utf-8") if (ROOT / "docs" / "index.md").exists() else ""),
             "status": "ok" if "**In plain words:**" in ((ROOT / "docs" / "index.md").read_text(encoding="utf-8") if (ROOT / "docs" / "index.md").exists() else "") else "warning",
+        },
+        {
+            "id": "simple-guide-exists",
+            "present": (ROOT / "docs" / "simple.md").exists(),
+            "status": "ok" if (ROOT / "docs" / "simple.md").exists() else "warning",
+        },
+        {
+            "id": "simple-guide-core-questions",
+            "present": all(
+                phrase in ((ROOT / "docs" / "simple.md").read_text(encoding="utf-8") if (ROOT / "docs" / "simple.md").exists() else "")
+                for phrase in ("What is done?", "What happens next?", "What is still missing?")
+            ),
+            "status": "ok"
+            if all(
+                phrase in ((ROOT / "docs" / "simple.md").read_text(encoding="utf-8") if (ROOT / "docs" / "simple.md").exists() else "")
+                for phrase in ("What is done?", "What happens next?", "What is still missing?")
+            )
+            else "warning",
         },
     ]
 
