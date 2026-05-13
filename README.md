@@ -76,18 +76,19 @@ conventional wheel-style install is not advertised as a stable path yet.
 ## Common Examples
 
 The public core should feel familiar, not theoretical. The clearest way to
-evaluate Jini is through four scenarios that most teams already recognize:
+evaluate Jini is through four scenarios that most teams already recognize, and
+the exact state Jini makes visible in each one:
 
-- **Meeting follow-up.** One meeting creates notes, decisions, owners, open
-  questions, and action items, but those usually end up spread across docs,
-  chat, and memory.
-- **Research to PRD handoff.** A team has sources, synthesis, and a strong
-  product instinct, but still needs a clean path into a scoped spec, plan, and
-  task set.
-- **Vendor selection.** Several options look plausible, stakeholders disagree,
-  and someone has to preserve the rationale behind the final recommendation.
-- **Incident response.** The service may be back up, but the work is not done
-  until owners, evidence, rollback context, and closure state are explicit.
+- **Meeting follow-up.** Jini turns one meeting into an explicit follow-up pack
+  and immediately shows whether the work is only decided or actually ready for
+  execution.
+- **Research to PRD handoff.** Jini shows the central proof scene in one
+  screen: tasks can be complete while the work is still waiting on
+  verification and approval.
+- **Vendor selection.** Jini makes the recommendation approval-ready instead of
+  leaving the rationale trapped in slides, meetings, or email.
+- **Incident response.** Jini keeps rollback, evidence, and closure state
+  explicit after the urgent firefight is over.
 
 Those four cover the common Jini pattern: the draft exists, but the real work
 still needs ownership, verification, approval, and continuity.
@@ -96,7 +97,8 @@ The public repo also proves the same kernel can stretch into personal planning,
 such as travel and budgeting, and into more formal workflows such as compliance
 audits.
 
-For a fuller walkthrough, see [docs/examples.md](docs/examples.md).
+For a fuller walkthrough with runnable commands and sample output, see
+[docs/examples.md](docs/examples.md).
 
 ## Public Core Boundary
 

@@ -44,20 +44,19 @@ verified, approved, publishable work.
 ## Common Examples
 
 The best way to understand Jini is through a small set of scenarios that most
-teams already run:
+teams already run, plus the exact state Jini makes visible.
 
-- **Meeting follow-up.** One meeting produces notes, decisions, owners, open
-  questions, and action items, but those usually end up split across docs,
-  chat, and memory.
-- **Research to PRD handoff.** A team knows what it wants to build, but still
-  needs a clean path from sources and synthesis into a scoped spec, plan, and
-  task set.
-- **Vendor selection.** Several options look plausible, stakeholders have
-  opinions, and someone still has to preserve the rationale behind the final
-  recommendation.
-- **Incident response.** The service may be back up, but the operational work
-  is not over until owners, evidence, rollback context, and closure state are
-  explicit.
+- **Meeting follow-up.** Jini turns one meeting into a tracked follow-up pack
+  with explicit decisions, tasks, and missing execution requirements like
+  `Approval` and `Evidence`.
+- **Research to PRD handoff.** Jini shows the most important proof scene in one
+  screen: tasks can be `done: 3/3` while the pack is still
+  `awaiting_verification` and still missing `Approval`.
+- **Vendor selection.** Jini compiles a recommendation into an approval-ready
+  workflow with visible control packs for `Proof`, `Guard`, `Cost`, and
+  `Approval`.
+- **Incident response.** Jini keeps the response honest by preserving rollback,
+  evidence, and closure state after the immediate firefight is over.
 
 Those four examples cover the most common Jini shape: the draft exists, but the
 real work still needs ownership, verification, approval, and continuity.
@@ -66,7 +65,8 @@ The public repo also proves the same kernel can stretch into personal planning,
 such as travel and budgeting, and into more formal workflows such as compliance
 audits.
 
-If you want the full examples breakdown, [see the detailed examples page](./examples.md).
+If you want the full examples breakdown with commands and output, [see the
+detailed examples page](./examples.md).
 
 ## Public Core Boundary
 
