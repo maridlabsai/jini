@@ -105,6 +105,17 @@ audits.
 For a fuller walkthrough with runnable commands and sample output, see
 [docs/examples.md](docs/examples.md).
 
+## Pick Your Workflow
+
+Start with the workflow that already feels familiar:
+
+| Workflow | Use it when | Run |
+| --- | --- | --- |
+| **Meeting follow-up** | one meeting needs decisions, owners, and honest next steps | `jini try-example meeting-followup` |
+| **Research to PRD handoff** | research exists and you need a truthful build handoff | `jini try-example research-prd` |
+| **Vendor selection** | several options look plausible and you need an approval-ready recommendation | `jini try-example vendor-selection` |
+| **Incident response** | the outage is over but rollback, proof, and closure still matter | `jini try-example incident-response` |
+
 ## Day-To-Day Value
 
 Jini is not supposed to be impressive only in theory. It should remove daily

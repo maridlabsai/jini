@@ -44,6 +44,20 @@ verified, approved, publishable work.
 - [See release notes](https://github.com/maridlabsai/jini/releases/tag/v0.1.0)
 - [Read the full README](https://github.com/maridlabsai/jini#readme)
 
+## Pick Your Workflow
+
+Start with the workflow that already feels familiar:
+
+| Workflow | Use it when | Run | Open |
+| --- | --- | --- | --- |
+| **Meeting follow-up** | one meeting needs decisions, owners, and honest next steps | `jini try-example meeting-followup` | [See the walkthrough](./examples.md#meeting-followup) |
+| **Research to PRD handoff** | research exists and you need a truthful build handoff | `jini try-example research-prd` | [See the walkthrough](./examples.md#research-prd) |
+| **Vendor selection** | several options look plausible and you need an approval-ready recommendation | `jini try-example vendor-selection` | [See the walkthrough](./examples.md#vendor-selection) |
+| **Incident response** | the outage is over but rollback, proof, and closure still matter | `jini try-example incident-response` | [See the walkthrough](./examples.md#incident-response) |
+
+If you only try one, start with the workflow you already ran this week. Jini
+is easiest to judge when it is helping on work you already understand.
+
 ## Common Examples
 
 The best way to understand Jini is through a small set of scenarios that most
