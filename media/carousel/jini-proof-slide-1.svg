@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" role="img" aria-labelledby="title desc">
+  <title id="title">Jini proof carousel slide 1</title>
+  <desc id="desc">Hook slide about AI frameworks being built for the first impressive answer, while Jini is built for week two.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f7f2e8; }
+      .ink { fill: #141414; font-family: Helvetica, Arial, sans-serif; }
+      .muted { fill: #6b6258; font-family: Helvetica, Arial, sans-serif; }
+      .accent { fill: #d84f2a; }
+      .rule { fill: #1e6d74; }
+      .kicker { font-size: 30px; font-weight: 700; letter-spacing: 2px; }
+      .headline { font-size: 86px; font-weight: 800; }
+      .subhead { font-size: 46px; font-weight: 600; }
+      .body { font-size: 34px; font-weight: 500; }
+      .footer { font-size: 24px; font-weight: 700; letter-spacing: 1.5px; }
+    </style>
+  </defs>
+  <rect class="bg" width="1080" height="1350" rx="32"/>
+  <rect class="accent" x="84" y="92" width="150" height="12" rx="6"/>
+  <text class="muted kicker" x="84" y="152">THE PROBLEM</text>
+  <text class="ink headline" x="84" y="320">
+    <tspan x="84" dy="0">Most AI</tspan>
+    <tspan x="84" dy="98">frameworks</tspan>
+    <tspan x="84" dy="98">are built</tspan>
+    <tspan x="84" dy="98">for the first</tspan>
+    <tspan x="84" dy="98">impressive</tspan>
+    <tspan x="84" dy="98">answer.</tspan>
+  </text>
+  <rect class="rule" x="84" y="922" width="912" height="4" rx="2"/>
+  <text class="accent subhead" x="84" y="1038">
+    <tspan x="84" dy="0">Jini is built for</tspan>
+    <tspan x="84" dy="64">week two.</tspan>
+  </text>
+  <text class="muted body" x="84" y="1186">
+    <tspan x="84" dy="0">Not the moment the model looks smart.</tspan>
+    <tspan x="84" dy="48">The moment the work has to survive revisions,</tspan>
+    <tspan x="84" dy="48">handoffs, proof, and time.</tspan>
+  </text>
+  <text class="muted footer" x="84" y="1294">JINI / PROOF CAROUSEL / 01</text>
+</svg>

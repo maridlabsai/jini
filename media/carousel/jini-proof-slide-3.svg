@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" role="img" aria-labelledby="title desc">
+  <title id="title">Jini proof carousel slide 3</title>
+  <desc id="desc">Slide showing the exact status-pack proof output from the repo.</desc>
+  <defs>
+    <style>
+      .bg { fill: #efe9dd; }
+      .ink { fill: #121212; font-family: Helvetica, Arial, sans-serif; }
+      .muted { fill: #665e54; font-family: Helvetica, Arial, sans-serif; }
+      .terminal { fill: #141718; }
+      .terminalText { fill: #f3efe7; font-family: Menlo, Monaco, Consolas, monospace; font-size: 38px; font-weight: 700; }
+      .accent { fill: #d84f2a; }
+      .kicker { font-size: 30px; font-weight: 700; letter-spacing: 2px; }
+      .headline { font-size: 66px; font-weight: 800; }
+      .body { font-size: 34px; font-weight: 600; }
+      .footer { font-size: 24px; font-weight: 700; letter-spacing: 1.5px; }
+    </style>
+  </defs>
+  <rect class="bg" width="1080" height="1350" rx="32"/>
+  <text class="muted kicker" x="84" y="130">THE PROOF MOMENT</text>
+  <text class="ink headline" x="84" y="250">
+    <tspan x="84" dy="0">The repo says</tspan>
+    <tspan x="84" dy="76">the work is not</tspan>
+    <tspan x="84" dy="76">ready yet.</tspan>
+  </text>
+  <rect class="terminal" x="84" y="388" width="912" height="520" rx="28"/>
+  <text class="terminalText" x="136" y="500">HEALTH ready-to-verify</text>
+  <text class="terminalText" x="136" y="566">STATE  awaiting_verification</text>
+  <text class="terminalText" x="136" y="632">NEXT   Verify</text>
+  <text class="terminalText" x="136" y="698">MISSING-LATER</text>
+  <text class="terminalText" x="190" y="764">- Approval</text>
+  <text class="terminalText" x="136" y="830">TASKS</text>
+  <text class="terminalText" x="190" y="896">done:       3/3</text>
+  <text class="terminalText" x="190" y="962">unresolved: 0/3</text>
+  <text class="accent body" x="84" y="1048">
+    <tspan x="84" dy="0">The checklist is green.</tspan>
+    <tspan x="84" dy="48">The work still cannot advance.</tspan>
+  </text>
+  <text class="muted body" x="84" y="1170">
+    <tspan x="84" dy="0">That is the difference between a generator</tspan>
+    <tspan x="84" dy="46">and a governed workflow.</tspan>
+  </text>
+  <text class="muted footer" x="84" y="1294">JINI / PROOF CAROUSEL / 03</text>
+</svg>

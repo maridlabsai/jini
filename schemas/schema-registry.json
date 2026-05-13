@@ -1,0 +1,65 @@
+{
+  "version": "0.1.0",
+  "work_unit": {
+    "schema": "work-unit.schema.json"
+  },
+  "artifacts": {
+    "Brief": {
+      "schema": "artifacts/brief.schema.json"
+    },
+    "Assumptions": {
+      "schema": "artifacts/assumptions.schema.json"
+    },
+    "Decision": {
+      "schema": "artifacts/decision.schema.json"
+    },
+    "Spec": {
+      "schema": "artifacts/spec.schema.json"
+    },
+    "Plan": {
+      "schema": "artifacts/plan.schema.json"
+    },
+    "Tasks": {
+      "schema": "artifacts/tasks.schema.json"
+    },
+    "Evidence": {
+      "schema": "artifacts/evidence.schema.json"
+    },
+    "Approval": {
+      "schema": "artifacts/approval.schema.json"
+    },
+    "Publication": {
+      "schema": "artifacts/publication.schema.json"
+    },
+    "Runbook": {
+      "schema": "artifacts/runbook.schema.json"
+    },
+    "Sources": {
+      "schema": "artifacts/sources.schema.json"
+    },
+    "Literature": {
+      "schema": "artifacts/literature.schema.json"
+    },
+    "Method": {
+      "schema": "artifacts/method.schema.json"
+    },
+    "Signals": {
+      "schema": "artifacts/signals.schema.json"
+    },
+    "Rollback": {
+      "schema": "artifacts/rollback.schema.json"
+    },
+    "Policy": {
+      "schema": "artifacts/policy.schema.json"
+    },
+    "Outcome": {
+      "schema": "artifacts/outcome.schema.json"
+    },
+    "Experiment": {
+      "schema": "artifacts/experiment.schema.json"
+    },
+    "Clearance": {
+      "schema": "artifacts/clearance.schema.json"
+    }
+  }
+}

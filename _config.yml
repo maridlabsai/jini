@@ -1,0 +1,5 @@
+title: Jini
+description: The framework for week two of work.
+theme: minima
+markdown: kramdown
+collections_dir: .

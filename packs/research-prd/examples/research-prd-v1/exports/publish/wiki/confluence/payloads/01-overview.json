@@ -1,0 +1,8 @@
+{
+  "idempotency_key": "016b73cadb5d1079",
+  "space_key": "",
+  "title": "Jini Research To PRD",
+  "slug": "overview",
+  "role": "overview",
+  "body_markdown": "# Jini Research To PRD\n\n## Jini WorkUnit\n- WorkUnit: `research-prd-v1`\n- Pack: `research-prd`\n- Profile: `Delivery`\n- State: `decided`\n- Health: `ready-to-make`\n- Next: `Make`\n\n## Purpose\nTurn validated research into a PRD and build-ready handoff\n\n## Scope Summary\nTurn validated research into a product-ready brief, a rendered PRD, and a build-ready spec/plan/task handoff.\n\n## Success Criteria\n- Source set is explicit and reviewable\n- Synthesized findings justify the product direction\n- The PRD view is derived from canonical artifacts\n- Spec, plan, and tasks align to validated findings\n\n## Milestones\n- Research synthesis complete\n- PRD reviewed\n- Build handoff accepted\n\n## Acceptance Gates\n- Sources and findings are explicit\n- PRD sections trace to canonical artifacts\n- Tasks trace to validated requirements\n\n## Evidence Snapshot\n- Target: `spec-research-prd-v1` revision `1`\n- Claim: The workflow problem is repeated across multiple source types\n- Claim: A PRD bridge is the highest-value next surface\n- Claim: The proposed requirements map back to validated findings\n"
+}

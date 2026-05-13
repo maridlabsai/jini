@@ -1,0 +1,39 @@
+artifact_id: literature-research-prd-v1
+artifact_type: Literature
+schema_version: 0.1.0
+work_unit_id: research-prd-v1
+branch_id: main
+revision: 1
+status: reviewed
+author_actor_id: research-lead
+approver_actor_ids:
+- eng-manager
+created_at: 2026-05-10T20:19:17Z
+updated_at: 2026-05-10T20:19:17Z
+supersedes: ''
+references:
+- sources-research-prd-v1
+change_class: semantic
+research_question: Which workflow should Jini prioritize so research reliably turns
+  into product direction and build-ready execution?
+sources:
+- 12 semi-structured customer interviews
+- Quarterly support ticket review
+- Usage analytics export
+- Competitive notes across 4 adjacent products
+key_findings:
+- Teams lose momentum when research, PRD, and engineering planning live in separate
+  systems
+- Buyers want traceability from claims to supporting evidence before committing engineering
+  time
+- A compact, opinionated default flow is preferred over a large menu of optional process
+  steps
+- The highest-value bridge is research synthesis into a build-ready PRD and spec handoff
+gaps:
+- No strong evidence yet on the best packaging for non-software teams
+- Limited signal on how much customization enterprises need at launch
+relevance_map:
+- Finding 1 -> product needs a single spine from research to execution
+- Finding 2 -> evidence must be first-class
+- Finding 3 -> Jini should keep the surface minimal
+- Finding 4 -> research-prd is the right flagship pack

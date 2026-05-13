@@ -1,0 +1,33 @@
+pack_id: incident-response
+version: 0.1.0
+summary: Compile an incident-response workflow into a canonical stabilization, communication, verification, and closure surface.
+target_profile: Critical
+extensions:
+  - Business:operations
+  - Modality:incident-response
+  - Environment:repo-local
+  - Risk:service-outage
+control_packs:
+  - Proof
+  - Guard
+  - Rollback
+emits:
+  - Brief
+  - Assumptions
+  - Spec
+  - Decision
+  - Plan
+  - Tasks
+  - Evidence
+  - Approval
+success_checks:
+  - Incident scope, severity, and owner are explicit
+  - Stabilization and communication steps are derived from canonical artifacts
+  - Verification and rollback paths are visible before closure
+compiled_flow:
+  - Scope
+  - Probe
+  - Model
+  - Decide
+  - Make
+  - Verify

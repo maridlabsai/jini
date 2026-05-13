@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" role="img" aria-labelledby="title desc">
+  <title id="title">Jini proof carousel slide 5</title>
+  <desc id="desc">Closing slide with a strong take about done versus verified.</desc>
+  <defs>
+    <style>
+      .bg { fill: #141414; }
+      .ink { fill: #f7f2e8; font-family: Helvetica, Arial, sans-serif; }
+      .muted { fill: #d2cabf; font-family: Helvetica, Arial, sans-serif; }
+      .accent { fill: #ff8a5b; }
+      .rule { fill: #f7f2e8; }
+      .kicker { font-size: 30px; font-weight: 700; letter-spacing: 2px; }
+      .headline { font-size: 82px; font-weight: 800; }
+      .subhead { font-size: 52px; font-weight: 700; }
+      .body { font-size: 34px; font-weight: 600; }
+      .footer { font-size: 24px; font-weight: 700; letter-spacing: 1.5px; }
+    </style>
+  </defs>
+  <rect class="bg" width="1080" height="1350" rx="32"/>
+  <text class="muted kicker" x="84" y="130">HOT TAKE</text>
+  <text class="ink headline" x="84" y="308">
+    <tspan x="84" dy="0">If your AI</tspan>
+    <tspan x="84" dy="92">workflow</tspan>
+    <tspan x="84" dy="92">cannot tell</tspan>
+    <tspan class="accent" x="84" dy="92">done</tspan>
+    <tspan x="252" dy="0">from</tspan>
+    <tspan class="accent" dx="18">verified</tspan>
+  </text>
+  <rect class="rule" x="84" y="774" width="912" height="4" rx="2"/>
+  <text class="ink subhead" x="84" y="902">
+    <tspan x="84" dy="0">you do not really</tspan>
+    <tspan x="84" dy="64">have a workflow yet.</tspan>
+  </text>
+  <text class="muted body" x="84" y="1086">
+    <tspan x="84" dy="0">You have a smart generator</tspan>
+    <tspan x="84" dy="46">plus human memory.</tspan>
+  </text>
+  <text class="muted body" x="84" y="1198">
+    <tspan x="84" dy="0">That is the argument.</tspan>
+    <tspan x="84" dy="46">That is Jini.</tspan>
+  </text>
+  <text class="muted footer" x="84" y="1294">JINI / PROOF CAROUSEL / 05</text>
+</svg>

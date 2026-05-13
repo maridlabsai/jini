@@ -1,0 +1,82 @@
+{
+  "system_name": "Jini",
+  "version": "0.1.0",
+  "operations": [
+    "Scope",
+    "Probe",
+    "Model",
+    "Decide",
+    "Make",
+    "Verify"
+  ],
+  "artifacts": {
+    "core": [
+      "Brief",
+      "Assumptions",
+      "Decision",
+      "Spec",
+      "Plan",
+      "Tasks",
+      "Evidence",
+      "Approval",
+      "Retro"
+    ],
+    "conditional": [
+      "Runbook",
+      "Dependency",
+      "Signals",
+      "Rollback",
+      "Incident",
+      "Budget",
+      "Filing",
+      "Submission",
+      "Literature",
+      "Method",
+      "Sources",
+      "Itinerary",
+      "Scenarios",
+      "Inventory"
+    ],
+    "learning": [
+      "Policy",
+      "Outcome",
+      "Experiment",
+      "Clearance"
+    ]
+  },
+  "control_packs": [
+    "Proof",
+    "Guard",
+    "Cost",
+    "Authority",
+    "Resilience",
+    "Safeguard"
+  ],
+  "profiles": [
+    "Explore",
+    "Delivery",
+    "Critical",
+    "Regulated",
+    "Incident"
+  ],
+  "extension_classes": [
+    "Business",
+    "Modality",
+    "Risk",
+    "Environment",
+    "Regulation"
+  ],
+  "work_states": [
+    "intake",
+    "scoped",
+    "probed",
+    "modeled",
+    "decided",
+    "in_make",
+    "awaiting_verification",
+    "operational",
+    "reopened",
+    "incident",
+    "retired"
+  ]
+}

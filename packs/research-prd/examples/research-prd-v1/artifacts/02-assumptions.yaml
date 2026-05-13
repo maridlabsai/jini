@@ -1,0 +1,29 @@
+artifact_id: assumptions-research-prd-v1
+artifact_type: Assumptions
+schema_version: 0.1.0
+work_unit_id: research-prd-v1
+branch_id: main
+revision: 1
+status: reviewed
+author_actor_id: product-lead
+approver_actor_ids:
+- eng-manager
+created_at: 2026-05-10T20:19:17Z
+updated_at: 2026-05-10T20:19:17Z
+supersedes: ''
+references:
+- brief-research-prd-v1
+change_class: semantic
+assumptions:
+- The target buyer prefers a guided workflow over raw flexibility
+- Research findings are strong enough to justify a first product slice
+- The initial PRD should optimize for clarity and execution speed, not full market
+  coverage
+known_unknowns:
+- What level of configurability buyers will demand after the first release
+- Which proof point most strongly drives internal adoption
+validation_plan:
+- Cross-check source consistency before finalizing the PRD view
+- Verify that each build task traces back to a research-backed requirement
+deferred_questions:
+- Whether a regulated profile should be the default in later iterations

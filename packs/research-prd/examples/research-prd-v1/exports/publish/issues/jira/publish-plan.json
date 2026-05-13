@@ -1,0 +1,68 @@
+{
+  "schema_version": "0.1.0",
+  "publish_type": "JiniIssuePublishPlan",
+  "generated_at": "2026-05-11T02:15:15Z",
+  "adapter": "jira",
+  "execution_mode": "staged-only",
+  "target": {
+    "project_key": "DEMO",
+    "configured": true
+  },
+  "work_unit": {
+    "work_unit_id": "research-prd-v1",
+    "title": "Jini Research To PRD",
+    "purpose": "Turn validated research into a PRD and build-ready handoff",
+    "state": "decided",
+    "profile_id": "Delivery",
+    "health": "ready-to-make",
+    "next_operation": "Make",
+    "owner_actor_id": "product-lead",
+    "approver_actor_ids": [
+      "eng-manager"
+    ],
+    "stakeholder_actor_ids": [
+      "product-lead",
+      "research-lead",
+      "design-lead"
+    ]
+  },
+  "source_bundle": "packs/research-prd/examples/research-prd-v1/exports/issues/jira/issues.json",
+  "rate_limit_policy": {
+    "adapter": "jira",
+    "dispatch_mode": "serialized",
+    "max_parallel": 1,
+    "retry_strategy": "exponential-backoff",
+    "initial_delay_seconds": 2,
+    "max_delay_seconds": 60,
+    "max_attempts": 5,
+    "on_quota_uncertainty": "fallback-to-file-exports",
+    "on_rate_limit": "stop-and-preserve-remaining-items"
+  },
+  "items": [
+    {
+      "sequence": 1,
+      "task_id": "research-prd-v1-task-1",
+      "summary": "Validate source coverage and finalize research synthesis",
+      "idempotency_key": "902c07f84786401a",
+      "payload_path": "packs/research-prd/examples/research-prd-v1/exports/publish/issues/jira/payloads/01-validate-source-coverage-and-finalize-research-synthesis.json"
+    },
+    {
+      "sequence": 2,
+      "task_id": "research-prd-v1-task-2",
+      "summary": "Review and approve the rendered PRD",
+      "idempotency_key": "57c8df92bded4418",
+      "payload_path": "packs/research-prd/examples/research-prd-v1/exports/publish/issues/jira/payloads/02-review-and-approve-the-rendered-prd.json"
+    },
+    {
+      "sequence": 3,
+      "task_id": "research-prd-v1-task-3",
+      "summary": "Confirm build-ready requirements and task ownership",
+      "idempotency_key": "afe1286b98c4abe7",
+      "payload_path": "packs/research-prd/examples/research-prd-v1/exports/publish/issues/jira/payloads/03-confirm-build-ready-requirements-and-task-ownership.json"
+    }
+  ],
+  "notes": [
+    "This plan is staged only; live Jira publish is not implemented in the local CLI.",
+    "Payloads are serialized and idempotent so a future publisher can replay safely."
+  ]
+}

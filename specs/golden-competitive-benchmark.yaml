@@ -1,0 +1,403 @@
+schema_version: "0.1.0"
+benchmark_id: jini-product-golden-benchmark
+label: Jini Golden Product Benchmark
+updated_at: "2026-05-12"
+last_verified_at: "2026-05-12"
+purpose: >
+  Validate Jini against a rerunnable golden dataset and compare it against two
+  major product competitors using weighted user-journey scenarios.
+methodology:
+  baseline_type: fixed-competitor-baselines-grounded-in-official-docs
+  scoring_rule: >
+    Each scenario starts from the current KPI-backed Jini score for its listed
+    dimensions, then multiplies that base by a validation factor derived from
+    real CLI check pass rate. Competitor scores stay fixed inside the golden
+    dataset so repeated runs measure Jini drift instead of moving the goalposts.
+  comparison_rule: >
+    Kiro is the productized workflow and delivery baseline. Hermes is the
+    memory, breadth, and autonomy baseline. The benchmark favors rerunnable
+    product behaviors over README-only claims.
+competitors:
+  - id: kiro
+    label: Kiro
+    rationale: Strongest benchmark for workflow productization and default delivery loop quality.
+    source_urls:
+      - https://kiro.dev/docs/specs/
+      - https://kiro.dev/docs/steering/
+      - https://kiro.dev/docs/cli/hooks/
+    validated_strengths:
+      - Structured spec-first workflow and task execution
+      - Persistent workspace steering
+      - Lifecycle hooks for operator automation
+  - id: hermes
+    label: Hermes
+    rationale: Strongest benchmark for memory, autonomy, and breadth-as-product feel.
+    source_urls:
+      - https://hermes-agent.nousresearch.com/docs/user-guide/features/overview/
+      - https://hermes-agent.nousresearch.com/docs/user-guide/features/memory/
+      - https://hermes-agent.nousresearch.com/docs/guides/work-with-skills/
+    validated_strengths:
+      - Persistent bounded memory across sessions
+      - Bundled skills with progressive disclosure
+      - Breadth and automation as a daily product surface
+scenarios:
+  - id: install-trust
+    label: Beginner install trust path
+    purpose: A new user should see one obvious trust path before bundle-level detail.
+    weight: 1.7
+    dimensions:
+      - packaging-install
+      - delivery-maturity
+    competitor_scores:
+      kiro: 8.5
+      hermes: 7.2
+    setup:
+      - id: install-starter-kit
+        command:
+          [
+            "install-bundles",
+            "--kit",
+            "starter-kit",
+            "--target",
+            "codex",
+            "--prefix",
+            "{scenario_root}/prefix",
+          ]
+    checks:
+      - id: beginner-trust-preview
+        command: ["get-started", "--target", "codex", "--format", "json"]
+        path: "beginner_path.trust_path.0.id"
+        equals: "preview"
+      - id: beginner-notes-demote-bundle-overload
+        command: ["get-started", "--target", "codex", "--format", "json"]
+        path: "beginner_path.notes.0"
+        contains: "Bundle-level detail"
+      - id: catalog-beginner-kit
+        command: ["catalog-bundles", "--format", "json"]
+        path: "recommended_paths.beginner.kit_id"
+        equals: "starter-kit"
+      - id: plan-install-next-step-verify
+        command: ["plan-install", "--target", "codex", "--format", "json"]
+        path: "recommended_next_steps.1.id"
+        equals: "verify"
+      - id: doctor-install-runs-plan-probe
+        command:
+          ["doctor-install", "--kit", "starter-kit", "--target", "codex", "--prefix", "{scenario_root}/prefix", "--format", "json"]
+        path: "checks.0.health_checks"
+        contains: "smoke-plan-install"
+      - id: doctor-install-runs-resolve-adapter-probe
+        command:
+          ["doctor-install", "--kit", "starter-kit", "--target", "codex", "--prefix", "{scenario_root}/prefix", "--format", "json"]
+        path: "checks.0.health_checks"
+        contains: "smoke-resolve-adapter"
+
+  - id: cheap-default-loop
+    label: Cheap default resume loop
+    purpose: Low-cost execution should be the obvious path when the intent allows it.
+    weight: 1.6
+    dimensions:
+      - token-efficiency
+      - delivery-maturity
+    competitor_scores:
+      kiro: 7.8
+      hermes: 7.1
+    setup:
+      - id: compile-research-pack
+        command:
+          [
+            "compile-pack",
+            "research-prd",
+            "--work-unit-id",
+            "golden-research",
+            "--title",
+            "Golden Research",
+            "--purpose",
+            "Golden benchmark research pack",
+            "--owner",
+            "benchmark-owner",
+            "--approver",
+            "benchmark-approver",
+            "--output",
+            "{scenario_root}/research-pack",
+          ]
+    checks:
+      - id: recommend-export-is-cheap
+        command: ["recommend-execution", "{scenario_root}/research-pack", "--intent", "export", "--format", "json"]
+        path: "execution_class"
+        equals: "cheap"
+      - id: compact-context-stays-bounded
+        command:
+          [
+            "compact-context",
+            "{scenario_root}/research-pack",
+            "--intent",
+            "export",
+            "--max-chars",
+            "900",
+            "--format",
+            "json",
+          ]
+        path: "token_budget.estimated_chars"
+        maximum: 900
+
+  - id: portable-edges
+    label: Portable execution edges
+    purpose: Runtime, issue, and wiki edges should be visible through one canonical contract.
+    weight: 1.7
+    dimensions:
+      - adapter-portability
+      - delivery-maturity
+    competitor_scores:
+      kiro: 6.8
+      hermes: 7.4
+    checks:
+      - id: adapter-conformance-clean
+        command: ["adapter-conformance", "--format", "json"]
+        path: "status"
+        equals: "ok"
+      - id: runtime-activate-capability
+        command: ["adapter-matrix", "--format", "json"]
+        path: "capabilities.runtime-activate"
+        contains: "codex"
+      - id: issue-bridge-capability
+        command: ["adapter-matrix", "--format", "json"]
+        path: "capabilities.issues-execute-bridge"
+        contains: "jira"
+      - id: wiki-local-apply-capability
+        command: ["adapter-matrix", "--format", "json"]
+        path: "capabilities.wiki-apply-local"
+        contains: "markdown"
+
+  - id: guided-product-loop
+    label: Guided publish loop
+    purpose: The default guided loop should collapse activation, execution, and local publish into one operator path.
+    weight: 1.8
+    dimensions:
+      - delivery-maturity
+      - token-efficiency
+      - adapter-portability
+    competitor_scores:
+      kiro: 8.4
+      hermes: 7.6
+    setup:
+      - id: compile-research-pack
+        command:
+          [
+            "compile-pack",
+            "research-prd",
+            "--work-unit-id",
+            "golden-guided-loop",
+            "--title",
+            "Golden Guided Loop",
+            "--purpose",
+            "Golden benchmark guided publish loop",
+            "--owner",
+            "benchmark-owner",
+            "--approver",
+            "benchmark-approver",
+            "--output",
+            "{scenario_root}/research-pack",
+          ]
+      - id: bootstrap-home
+        command: ["bootstrap-home", "{scenario_root}/home", "--owner-name", "Golden User"]
+    checks:
+      - id: guided-loop-activates-runtime
+        command:
+          [
+            "execute-flow",
+            "{scenario_root}/research-pack",
+            "--mode",
+            "supervised",
+            "--intent",
+            "publish",
+            "--home",
+            "{scenario_root}/home",
+            "--runtime-target",
+            "codex",
+            "--activate-runtime",
+            "--prefix",
+            "{scenario_root}/prefix",
+            "--consent",
+            "write",
+            "--consent",
+            "publish",
+            "--issue-adapter",
+            "github",
+            "--wiki-adapter",
+            "markdown",
+            "--format",
+            "json",
+          ]
+        path: "flow_steps"
+        contains: "activate-runtime-target"
+      - id: guided-loop-applies-local-publish
+        command:
+          [
+            "execute-flow",
+            "{scenario_root}/research-pack",
+            "--mode",
+            "supervised",
+            "--intent",
+            "publish",
+            "--home",
+            "{scenario_root}/home",
+            "--runtime-target",
+            "codex",
+            "--activate-runtime",
+            "--prefix",
+            "{scenario_root}/prefix",
+            "--consent",
+            "write",
+            "--consent",
+            "publish",
+            "--issue-adapter",
+            "github",
+            "--wiki-adapter",
+            "markdown",
+            "--format",
+            "json",
+          ]
+        path: "flow_steps"
+        contains: "apply-publish-plan"
+      - id: guided-loop-selects-codex-runtime
+        command:
+          [
+            "execute-flow",
+            "{scenario_root}/research-pack",
+            "--mode",
+            "supervised",
+            "--intent",
+            "publish",
+            "--home",
+            "{scenario_root}/home",
+            "--runtime-target",
+            "codex",
+            "--activate-runtime",
+            "--prefix",
+            "{scenario_root}/prefix",
+            "--consent",
+            "write",
+            "--consent",
+            "publish",
+            "--issue-adapter",
+            "github",
+            "--wiki-adapter",
+            "markdown",
+            "--format",
+            "json",
+          ]
+        path: "runtime_activation.runtime_target"
+        equals: "codex"
+      - id: guided-loop-produces-local-receipts
+        command:
+          [
+            "execute-flow",
+            "{scenario_root}/research-pack",
+            "--mode",
+            "supervised",
+            "--intent",
+            "publish",
+            "--home",
+            "{scenario_root}/home",
+            "--runtime-target",
+            "codex",
+            "--activate-runtime",
+            "--prefix",
+            "{scenario_root}/prefix",
+            "--consent",
+            "write",
+            "--consent",
+            "publish",
+            "--issue-adapter",
+            "github",
+            "--wiki-adapter",
+            "markdown",
+            "--format",
+            "json",
+          ]
+        path: "local_publish_receipts"
+        contains: "applied-local"
+      - id: guided-loop-reuses-handoff-context
+        command:
+          [
+            "execute-flow",
+            "{scenario_root}/research-pack",
+            "--mode",
+            "supervised",
+            "--intent",
+            "publish",
+            "--home",
+            "{scenario_root}/home",
+            "--runtime-target",
+            "codex",
+            "--activate-runtime",
+            "--prefix",
+            "{scenario_root}/prefix",
+            "--consent",
+            "write",
+            "--consent",
+            "publish",
+            "--issue-adapter",
+            "github",
+            "--wiki-adapter",
+            "markdown",
+            "--format",
+            "json",
+          ]
+        path: "token_strategy.reused_context_surfaces"
+        contains: "runtime-handoff"
+
+  - id: operational-breadth
+    label: Operational advanced-set breadth
+    purpose: Breadth should be operational through packs and routines, not just claimed in docs.
+    weight: 1.5
+    dimensions:
+      - advanced-set-breadth
+      - flexibility
+    competitor_scores:
+      kiro: 7.2
+      hermes: 8.9
+    setup:
+      - id: bootstrap-home
+        command: ["bootstrap-home", "{scenario_root}/home", "--owner-name", "Golden User"]
+    checks:
+      - id: pack-catalog-count
+        command: ["catalog-packs", "--format", "json"]
+        path: "pack_count"
+        minimum: 7
+      - id: vendor-pack-present
+        command: ["catalog-packs", "--format", "json"]
+        path: "packs"
+        contains: "vendor-selection"
+      - id: publish-readiness-routine-present
+        command: ["list-routines", "{scenario_root}/home", "--format", "json"]
+        path: "routines"
+        contains: "publish-readiness"
+      - id: golden-benchmark-routine-executes
+        command: ["run-routine", "{scenario_root}/home", "golden-benchmark", "--mode", "local", "--format", "json"]
+        path: "status"
+        equals: "executed"
+      - id: framework-review-routine-executes
+        command: ["run-routine", "{scenario_root}/home", "framework-review", "--mode", "local", "--format", "json"]
+        path: "status"
+        equals: "executed"
+
+  - id: governed-learning
+    label: Governed framework learning loop
+    purpose: Framework evolution should be staged, measured, and replay-safe.
+    weight: 1.3
+    dimensions:
+      - learning-maturity
+      - workflow-rigor
+    competitor_scores:
+      kiro: 7.1
+      hermes: 7.8
+    checks:
+      - id: framework-review-prefers-subtractive-experiment
+        command: ["review-framework", "--format", "json", "--limit", "3"]
+        path: "best_next_experiment.change_type"
+        equals: "subtractive"
+      - id: framework-experiment-is-stageable
+        command: ["stage-framework-experiment", "--dimension", "packaging-install", "--format", "json"]
+        path: "status"
+        equals: "proposed"

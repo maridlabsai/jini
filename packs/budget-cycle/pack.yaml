@@ -1,0 +1,33 @@
+pack_id: budget-cycle
+version: 0.1.0
+summary: Compile a monthly budgeting workflow into a canonical budget plan, tasks, and verification surface.
+target_profile: Explore
+extensions:
+  - Business:personal-planning
+  - Modality:finance
+  - Environment:docs-local
+  - Risk:consumer
+control_packs:
+  - Proof
+  - Guard
+  - Cost
+emits:
+  - Brief
+  - Assumptions
+  - Spec
+  - Decision
+  - Plan
+  - Tasks
+  - Evidence
+  - Approval
+success_checks:
+  - Income, obligations, and savings targets are explicit
+  - The budget is derived from canonical artifacts
+  - Fallback cuts and verification steps are visible before execution
+compiled_flow:
+  - Scope
+  - Probe
+  - Model
+  - Decide
+  - Make
+  - Verify

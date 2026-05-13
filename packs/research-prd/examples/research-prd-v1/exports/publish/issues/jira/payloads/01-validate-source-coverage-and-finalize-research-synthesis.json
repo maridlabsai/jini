@@ -1,0 +1,17 @@
+{
+  "idempotency_key": "902c07f84786401a",
+  "project_key": "DEMO",
+  "summary": "Validate source coverage and finalize research synthesis",
+  "description_markdown": "# Validate source coverage and finalize research synthesis\n\n## Jini Context\n- WorkUnit: `research-prd-v1`\n- Pack: `research-prd`\n- Purpose: Turn validated research into a PRD and build-ready handoff\n- Profile: `Delivery`\n- State: `decided`\n- Health: `ready-to-make`\n\n## Jira Mapping\n- Issue Type Hint: `Task`\n- Assignee Hint: `research-lead`\n- Status Hint: `pending`\n\n## Deliverable\nReviewed research artifacts\n\n## Milestones\n- Research synthesis complete\n- PRD reviewed\n- Build handoff accepted\n\n## Acceptance Gates\n- Sources and findings are explicit\n- PRD sections trace to canonical artifacts\n- Tasks trace to validated requirements\n\n## Evidence Context\n- Target: `spec-research-prd-v1` revision `1`\n- Claim: The workflow problem is repeated across multiple source types\n- Claim: A PRD bridge is the highest-value next surface\n- Claim: The proposed requirements map back to validated findings\n",
+  "labels": [
+    "jini",
+    "pack-research-prd",
+    "profile-delivery",
+    "state-decided",
+    "task-status-pending"
+  ],
+  "issue_type_hint": "Task",
+  "assignee_hint": "research-lead",
+  "status_hint": "pending",
+  "source_task_id": "research-prd-v1-task-1"
+}

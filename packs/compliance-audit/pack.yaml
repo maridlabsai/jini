@@ -1,0 +1,33 @@
+pack_id: compliance-audit
+version: 0.1.0
+summary: Compile a regulated audit workflow into a canonical review, evidence, approval, and closure surface.
+target_profile: Regulated
+extensions:
+  - Business:governance
+  - Modality:compliance
+  - Environment:docs-local
+  - Risk:regulated
+control_packs:
+  - Proof
+  - Guard
+  - Approval
+emits:
+  - Brief
+  - Assumptions
+  - Spec
+  - Decision
+  - Plan
+  - Tasks
+  - Evidence
+  - Approval
+success_checks:
+  - Control scope, reviewers, and approval boundaries are explicit
+  - Evidence and remediation paths are derived from canonical artifacts
+  - Closure readiness and residual risks are visible before signoff
+compiled_flow:
+  - Scope
+  - Probe
+  - Model
+  - Decide
+  - Make
+  - Verify

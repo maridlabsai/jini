@@ -1,0 +1,72 @@
+{
+  "title": "Jini Outcome",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_id",
+    "artifact_type",
+    "schema_version",
+    "work_unit_id",
+    "branch_id",
+    "revision",
+    "status",
+    "author_actor_id",
+    "approver_actor_ids",
+    "created_at",
+    "updated_at",
+    "supersedes",
+    "references",
+    "change_class",
+    "target_work_unit_id",
+    "target_policy_id",
+    "observed_metrics",
+    "incidents_or_failures",
+    "support_impact",
+    "cost_impact",
+    "delayed_reward_window"
+  ],
+  "properties": {
+    "artifact_id": { "type": "string" },
+    "artifact_type": { "type": "string", "enum": ["Outcome"] },
+    "schema_version": { "type": "string" },
+    "work_unit_id": { "type": "string" },
+    "branch_id": { "type": "string" },
+    "revision": { "type": "integer", "minimum": 1 },
+    "status": { "type": "string", "enum": ["draft", "reviewed", "approved", "superseded", "invalidated", "merged", "archived"] },
+    "author_actor_id": { "type": "string" },
+    "approver_actor_ids": { "type": "array", "items": { "type": "string" } },
+    "created_at": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$" },
+    "updated_at": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$" },
+    "supersedes": { "type": "string" },
+    "references": { "type": "array", "items": { "type": "string" } },
+    "change_class": { "type": "string", "enum": ["editorial", "semantic", "breaking"] },
+    "target_work_unit_id": { "type": "string" },
+    "target_policy_id": { "type": "string" },
+    "observed_metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "efficiency_score",
+        "correctness_score",
+        "completeness_score",
+        "delivery_maturity_score",
+        "validation_error_count",
+        "stage_ready_ratio",
+        "full_pack_coverage_ratio"
+      ],
+      "properties": {
+        "efficiency_score": { "type": "number", "minimum": 0 },
+        "correctness_score": { "type": "number", "minimum": 0 },
+        "completeness_score": { "type": "number", "minimum": 0 },
+        "delivery_maturity_score": { "type": "number", "minimum": 0 },
+        "validation_error_count": { "type": "integer", "minimum": 0 },
+        "stage_ready_ratio": { "type": "number", "minimum": 0 },
+        "full_pack_coverage_ratio": { "type": "number", "minimum": 0 }
+      }
+    },
+    "incidents_or_failures": { "type": "array", "items": { "type": "string" } },
+    "support_impact": { "type": "array", "items": { "type": "string" } },
+    "cost_impact": { "type": "array", "items": { "type": "string" } },
+    "delayed_reward_window": { "type": "string" }
+  }
+}

@@ -1,0 +1,34 @@
+pack_id: vendor-selection
+version: 0.1.0
+summary: Compile a vendor-selection workflow into a canonical evaluation, decision, approval, and follow-through surface.
+target_profile: Delivery
+extensions:
+  - Business:commercial-evaluation
+  - Modality:vendor-selection
+  - Environment:docs-local
+  - Risk:commercial
+control_packs:
+  - Proof
+  - Guard
+  - Cost
+  - Approval
+emits:
+  - Brief
+  - Assumptions
+  - Spec
+  - Decision
+  - Plan
+  - Tasks
+  - Evidence
+  - Approval
+success_checks:
+  - Evaluation criteria, budget guardrails, and approvers are explicit
+  - Tradeoffs and recommendation are derived from canonical artifacts
+  - Negotiation, implementation, and fallback actions are visible before commitment
+compiled_flow:
+  - Scope
+  - Probe
+  - Model
+  - Decide
+  - Make
+  - Verify

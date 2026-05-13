@@ -1,0 +1,549 @@
+version: 0.1.0
+default_kit_id: starter-kit
+source:
+  name: Jini
+  revision: workspace
+  trust_notice: Review bundles before activation; target shims may influence agent behavior and should be treated as trusted code.
+kits:
+  - id: starter-kit
+    label: Starter Kit
+    audience: beginner
+    summary: Smallest guided install for learning Jini, reviewing the framework, and operating the core CLI safely.
+    bundle_ids:
+      - jini-core
+      - competitive-playbook
+      - framework-evolution-surface
+    recommended_targets:
+      - codex
+      - kiro-cli
+      - claude-code
+  - id: benchmark-delivery-kit
+    label: Benchmark Delivery Kit
+    audience: power-user
+    summary: Delivery-focused bundle set for public workflow packs, adapter review, and governed framework improvement.
+    bundle_ids:
+      - jini-core
+      - research-prd-pack
+      - meeting-followup-pack
+      - competitive-playbook
+      - runtime-portability-surface
+      - framework-evolution-surface
+    recommended_targets:
+      - codex
+      - kiro-cli
+      - github-copilot
+  - id: personal-os-kit
+    label: Personal OS Kit
+    audience: hybrid
+    summary: Personal planning and durable-memory bundle set for daily routines, travel, and budgeting flows.
+    bundle_ids:
+      - jini-core
+      - personal-os-surface
+      - travel-plan-pack
+      - budget-cycle-pack
+    recommended_targets:
+      - codex
+      - claude-code
+      - augment
+  - id: operations-response-kit
+    label: Operations Response Kit
+    audience: power-user
+    summary: Incident response bundle set for runtime handoff, portable local publish, and governed verification.
+    bundle_ids:
+      - jini-core
+      - incident-response-pack
+      - runtime-portability-surface
+      - competitive-playbook
+    recommended_targets:
+      - codex
+      - kiro-cli
+      - claude-code
+  - id: regulated-readiness-kit
+    label: Regulated Readiness Kit
+    audience: power-user
+    summary: Compliance-oriented bundle set for governed audit, evidence review, and portable documentation handoff.
+    bundle_ids:
+      - jini-core
+      - compliance-audit-pack
+      - runtime-portability-surface
+      - competitive-playbook
+    recommended_targets:
+      - codex
+      - kiro-cli
+      - claude-code
+  - id: vendor-decision-kit
+    label: Vendor Decision Kit
+    audience: power-user
+    summary: Commercial evaluation bundle set for vendor scoring, approval, and portable decision handoff.
+    bundle_ids:
+      - jini-core
+      - vendor-selection-pack
+      - runtime-portability-surface
+      - competitive-playbook
+    recommended_targets:
+      - codex
+      - kiro-cli
+      - claude-code
+targets:
+  - id: codex
+    label: Codex
+    destination_root: ~/.codex/jini
+    shim_root: ~/.codex/jini/targets/codex
+    default_link_mode: symlink
+    risk_notice: Codex shims can affect local agent behavior.
+    activation_steps:
+      - Review the Codex shim README before activation.
+      - Run `python3 tools/jini.py doctor-install --bundle jini-core --target codex` after installation.
+    doctor_expectations:
+      readme_markers:
+        - bind Codex-specific instructions or pointers separately
+      smoke_commands:
+        - id: catalog-bundles
+          args: ["catalog-bundles", "--target", "{target_id}", "--format", "json"]
+          json_expectations:
+            default_kit_id: starter-kit
+        - id: get-started
+          args: ["get-started", "--target", "{target_id}", "--format", "json"]
+          json_expectations:
+            target: "{target_id}"
+        - id: plan-install
+          args: ["plan-install", "--target", "{target_id}", "--format", "json"]
+          json_expectations:
+            selected_targets.0.id: "{target_id}"
+            recommended_next_steps.1.id: verify
+        - id: resolve-adapter
+          args: ["resolve-adapter", "--capability", "runtime-activate", "--preferred", "{target_id}", "--format", "json"]
+          json_expectations:
+            selected.id: "{target_id}"
+  - id: claude-code
+    label: Claude Code
+    destination_root: ~/.claude/jini
+    shim_root: ~/.claude/jini/targets/claude-code
+    default_link_mode: symlink
+    risk_notice: Claude Code shims can affect local agent behavior.
+    activation_steps:
+      - Review the Claude Code shim README before activation.
+      - Run `python3 tools/jini.py doctor-install --bundle jini-core --target claude-code` after installation.
+    doctor_expectations:
+      readme_markers:
+        - isolate Claude Code-specific bindings in a thin shim
+      smoke_commands:
+        - id: catalog-bundles
+          args: ["catalog-bundles", "--target", "{target_id}", "--format", "json"]
+          json_expectations:
+            default_kit_id: starter-kit
+        - id: get-started
+          args: ["get-started", "--target", "{target_id}", "--format", "json"]
+          json_expectations:
+            target: "{target_id}"
+        - id: plan-install
+          args: ["plan-install", "--target", "{target_id}", "--format", "json"]
+          json_expectations:
+            selected_targets.0.id: "{target_id}"
+            recommended_next_steps.1.id: verify
+        - id: resolve-adapter
+          args: ["resolve-adapter", "--capability", "runtime-activate", "--preferred", "{target_id}", "--format", "json"]
+          json_expectations:
+            selected.id: "{target_id}"
+  - id: github-copilot
+    label: GitHub Copilot
+    destination_root: ~/.copilot/jini
+    shim_root: ~/.copilot/jini/targets/github-copilot
+    default_link_mode: copy
+    risk_notice: GitHub Copilot integration may require manual review of workspace instructions.
+    activation_steps:
+      - Review the GitHub Copilot shim README before activation.
+      - Run `python3 tools/jini.py doctor-install --bundle jini-core --target github-copilot` after installation.
+    doctor_expectations:
+      readme_markers:
+        - bind Copilot-specific instructions separately
+      smoke_commands:
+        - id: catalog-bundles
+          args: ["catalog-bundles", "--target", "{target_id}", "--format", "json"]
+          json_expectations:
+            default_kit_id: starter-kit
+        - id: get-started
+          args: ["get-started", "--target", "{target_id}", "--format", "json"]
+          json_expectations:
+            target: "{target_id}"
+        - id: plan-install
+          args: ["plan-install", "--target", "{target_id}", "--format", "json"]
+          json_expectations:
+            selected_targets.0.id: "{target_id}"
+            recommended_next_steps.1.id: verify
+        - id: resolve-adapter
+          args: ["resolve-adapter", "--capability", "runtime-activate", "--preferred", "{target_id}", "--format", "json"]
+          json_expectations:
+            selected.id: "{target_id}"
+  - id: junie
+    label: Junie
+    destination_root: ~/.junie/jini
+    shim_root: ~/.junie/jini/targets/junie
+    default_link_mode: copy
+    risk_notice: Junie shims should be reviewed before enabling autonomous execution.
+    activation_steps:
+      - Review the Junie shim README before activation.
+      - Run `python3 tools/jini.py doctor-install --bundle jini-core --target junie` after installation.
+    doctor_expectations:
+      readme_markers:
+        - expose Junie-specific bindings through a minimal shim
+      smoke_commands:
+        - id: catalog-bundles
+          args: ["catalog-bundles", "--target", "{target_id}", "--format", "json"]
+          json_expectations:
+            default_kit_id: starter-kit
+        - id: get-started
+          args: ["get-started", "--target", "{target_id}", "--format", "json"]
+          json_expectations:
+            target: "{target_id}"
+        - id: plan-install
+          args: ["plan-install", "--target", "{target_id}", "--format", "json"]
+          json_expectations:
+            selected_targets.0.id: "{target_id}"
+            recommended_next_steps.1.id: verify
+        - id: resolve-adapter
+          args: ["resolve-adapter", "--capability", "runtime-activate", "--preferred", "{target_id}", "--format", "json"]
+          json_expectations:
+            selected.id: "{target_id}"
+  - id: kiro-cli
+    label: Kiro CLI
+    destination_root: ~/.kiro/jini
+    shim_root: ~/.kiro/jini/targets/kiro-cli
+    default_link_mode: symlink
+    risk_notice: Kiro CLI shims can affect local workflow defaults and permissions.
+    activation_steps:
+      - Review the Kiro CLI shim README before activation.
+      - Run `python3 tools/jini.py doctor-install --bundle jini-core --target kiro-cli` after installation.
+    doctor_expectations:
+      readme_markers:
+        - bind Kiro CLI-specific behavior through a thin shim
+      smoke_commands:
+        - id: catalog-bundles
+          args: ["catalog-bundles", "--target", "{target_id}", "--format", "json"]
+          json_expectations:
+            default_kit_id: starter-kit
+        - id: get-started
+          args: ["get-started", "--target", "{target_id}", "--format", "json"]
+          json_expectations:
+            target: "{target_id}"
+        - id: plan-install
+          args: ["plan-install", "--target", "{target_id}", "--format", "json"]
+          json_expectations:
+            selected_targets.0.id: "{target_id}"
+            recommended_next_steps.1.id: verify
+        - id: resolve-adapter
+          args: ["resolve-adapter", "--capability", "runtime-activate", "--preferred", "{target_id}", "--format", "json"]
+          json_expectations:
+            selected.id: "{target_id}"
+  - id: augment
+    label: Augment
+    destination_root: ~/.augment/jini
+    shim_root: ~/.augment/jini/targets/augment
+    default_link_mode: symlink
+    risk_notice: Augment shims should be reviewed before activation.
+    activation_steps:
+      - Review the Augment shim README before activation.
+      - Run `python3 tools/jini.py doctor-install --bundle jini-core --target augment` after installation.
+    doctor_expectations:
+      readme_markers:
+        - use a minimal shim for Augment-specific activation
+      smoke_commands:
+        - id: catalog-bundles
+          args: ["catalog-bundles", "--target", "{target_id}", "--format", "json"]
+          json_expectations:
+            default_kit_id: starter-kit
+        - id: get-started
+          args: ["get-started", "--target", "{target_id}", "--format", "json"]
+          json_expectations:
+            target: "{target_id}"
+        - id: plan-install
+          args: ["plan-install", "--target", "{target_id}", "--format", "json"]
+          json_expectations:
+            selected_targets.0.id: "{target_id}"
+            recommended_next_steps.1.id: verify
+        - id: resolve-adapter
+          args: ["resolve-adapter", "--capability", "runtime-activate", "--preferred", "{target_id}", "--format", "json"]
+          json_expectations:
+            selected.id: "{target_id}"
+bundles:
+  - id: jini-core
+    label: Jini Core
+    kind: runtime
+    version: 0.1.0
+    summary: Core CLI, schemas, and protocol references needed to operate Jini.
+    permission_risk: medium
+    review_before_use: true
+    activation_steps:
+      - Run `python3 tools/jini.py show-kpis` to confirm the local core surface is usable.
+      - Run `python3 tools/jini.py doctor-install --bundle jini-core --target <target>` before first activation.
+    migration_notes:
+      - Re-run `update-bundles` whenever the local repo revision changes materially.
+    compatible_targets:
+      - codex
+      - claude-code
+      - github-copilot
+      - junie
+      - kiro-cli
+      - augment
+    universal_paths:
+      - tools/jini.py
+      - tools/jini_validate.py
+      - schemas
+      - specs/protocol-core.md
+      - specs/work-state-machine.md
+      - specs/execution-routing-policy.md
+      - specs/runtime-execution-modes.md
+    target_shims:
+      codex:
+        - distribution/targets/codex/README.md
+      claude-code:
+        - distribution/targets/claude-code/README.md
+      github-copilot:
+        - distribution/targets/github-copilot/README.md
+      junie:
+        - distribution/targets/junie/README.md
+      kiro-cli:
+        - distribution/targets/kiro-cli/README.md
+      augment:
+        - distribution/targets/augment/README.md
+
+  - id: research-prd-pack
+    label: Research PRD Pack
+    kind: pack
+    version: 0.1.0
+    summary: Research-to-PRD benchmark pack with canonical artifacts and rendered views.
+    permission_risk: low
+    review_before_use: false
+    depends_on:
+      - jini-core
+    activation_steps:
+      - Run `python3 tools/jini.py status-pack <pack>` after compiling or copying a pack instance.
+    compatible_targets:
+      - codex
+      - claude-code
+      - github-copilot
+      - junie
+      - kiro-cli
+      - augment
+    universal_paths:
+      - packs/research-prd
+
+  - id: meeting-followup-pack
+    label: Meeting Follow-up Pack
+    kind: pack
+    version: 0.1.0
+    summary: Common workplace pack for turning one meeting into decisions, owners, follow-up tasks, and approval-ready handoff.
+    permission_risk: low
+    review_before_use: false
+    depends_on:
+      - jini-core
+    activation_steps:
+      - Run `python3 tools/jini.py compile-pack meeting-followup ...` to generate a local follow-up workflow instance.
+    compatible_targets:
+      - codex
+      - claude-code
+      - github-copilot
+      - junie
+      - kiro-cli
+      - augment
+    universal_paths:
+      - packs/meeting-followup
+
+  - id: competitive-playbook
+    label: Competitive Playbook
+    kind: docs
+    version: 0.1.0
+    summary: White paper, KPI scorecard, and golden benchmark surfaces for guided Jini validation and improvement.
+    permission_risk: low
+    review_before_use: false
+    depends_on:
+      - jini-core
+    activation_steps:
+      - Run `python3 tools/jini.py show-kpis` to inspect the current competitive gaps.
+    compatible_targets:
+      - codex
+      - claude-code
+      - github-copilot
+      - junie
+      - kiro-cli
+      - augment
+    universal_paths:
+      - WHITEPAPER.md
+      - specs/competitive-kpis.yaml
+      - specs/golden-competitive-benchmark.yaml
+
+  - id: travel-plan-pack
+    label: Travel Plan Pack
+    kind: pack
+    version: 0.1.0
+    summary: Non-software benchmark pack for itinerary, logistics, and travel readiness planning.
+    permission_risk: low
+    review_before_use: false
+    depends_on:
+      - jini-core
+    activation_steps:
+      - Run `python3 tools/jini.py compile-pack travel-plan ...` to generate a local travel workflow instance.
+    compatible_targets:
+      - codex
+      - claude-code
+      - github-copilot
+      - junie
+      - kiro-cli
+      - augment
+    universal_paths:
+      - packs/travel-plan
+
+  - id: budget-cycle-pack
+    label: Budget Cycle Pack
+    kind: pack
+    version: 0.1.0
+    summary: Non-software benchmark pack for monthly budget planning, verification, and fallback cuts.
+    permission_risk: low
+    review_before_use: false
+    depends_on:
+      - jini-core
+    activation_steps:
+      - Run `python3 tools/jini.py compile-pack budget-cycle ...` to generate a local budget workflow instance.
+    compatible_targets:
+      - codex
+      - claude-code
+      - github-copilot
+      - junie
+      - kiro-cli
+      - augment
+    universal_paths:
+      - packs/budget-cycle
+
+  - id: incident-response-pack
+    label: Incident Response Pack
+    kind: pack
+    version: 0.1.0
+    summary: Operations-focused pack for scoped incident response, rollback-aware mitigation, and closure verification.
+    permission_risk: medium
+    review_before_use: true
+    depends_on:
+      - jini-core
+    activation_steps:
+      - Run `python3 tools/jini.py compile-pack incident-response ...` to generate a local response workflow instance.
+      - Run `python3 tools/jini.py publish-issues <pack> --adapter github --apply-local` when a portable issue ledger is the fastest handoff path.
+    compatible_targets:
+      - codex
+      - claude-code
+      - github-copilot
+      - junie
+      - kiro-cli
+      - augment
+    universal_paths:
+      - packs/incident-response
+
+  - id: compliance-audit-pack
+    label: Compliance Audit Pack
+    kind: pack
+    version: 0.1.0
+    summary: Regulated-workflow pack for audit scope, evidence review, approval readiness, and closure tracking.
+    permission_risk: medium
+    review_before_use: true
+    depends_on:
+      - jini-core
+    activation_steps:
+      - Run `python3 tools/jini.py compile-pack compliance-audit ...` to generate a local audit workflow instance.
+      - Run `python3 tools/jini.py publish-wiki <pack> --adapter markdown --apply-local` when a portable audit packet is the fastest review path.
+    compatible_targets:
+      - codex
+      - claude-code
+      - github-copilot
+      - junie
+      - kiro-cli
+      - augment
+    universal_paths:
+      - packs/compliance-audit
+
+  - id: vendor-selection-pack
+    label: Vendor Selection Pack
+    kind: pack
+    version: 0.1.0
+    summary: Commercial workflow pack for vendor scoring, decision rationale, approval, and follow-through.
+    permission_risk: medium
+    review_before_use: true
+    compatible_targets:
+      - codex
+      - claude-code
+      - github-copilot
+      - junie
+      - kiro-cli
+      - augment
+    depends_on:
+      - jini-core
+    activation_steps:
+      - Run `python3 tools/jini.py compile-pack vendor-selection ...` to generate a local vendor-evaluation workflow instance.
+      - Run `python3 tools/jini.py publish-wiki <pack> --adapter markdown --apply-local` when a portable selection packet is the fastest review path.
+    migration_notes: []
+    universal_paths:
+      - packs/vendor-selection
+
+  - id: personal-os-surface
+    label: Personal OS Surface
+    kind: docs
+    version: 0.1.0
+    summary: Personal home, durable memory, and routine semantics for daily Jini use.
+    permission_risk: low
+    review_before_use: false
+    depends_on:
+      - jini-core
+    activation_steps:
+      - Run `python3 tools/jini.py bootstrap-home <home>` to create the personal surface.
+      - Run `python3 tools/jini.py list-routines <home>` to inspect local and remote routines.
+    compatible_targets:
+      - codex
+      - claude-code
+      - github-copilot
+      - junie
+      - kiro-cli
+      - augment
+    universal_paths:
+      - specs/personal-os.md
+      - specs/learning-system.md
+
+  - id: framework-evolution-surface
+    label: Framework Evolution Surface
+    kind: docs
+    version: 0.1.0
+    summary: Governed self-improvement loop for reviewing Jini, staging experiments, and backtesting adoption gains.
+    permission_risk: low
+    review_before_use: true
+    depends_on:
+      - jini-core
+      - competitive-playbook
+    activation_steps:
+      - Run `python3 tools/jini.py review-framework --format json --limit 5`.
+      - Run `python3 tools/jini.py stage-framework-experiment --dimension <dimension>` before changing scorecard-driven priorities.
+    universal_paths:
+      - WHITEPAPER.md
+      - specs/learning-system.md
+      - specs/competitive-kpis.yaml
+      - specs/golden-competitive-benchmark.yaml
+
+  - id: runtime-portability-surface
+    label: Runtime Portability Surface
+    kind: docs
+    version: 0.1.0
+    summary: Adapter registry, install packaging, and target shim metadata for portable runtime execution.
+    permission_risk: medium
+    review_before_use: true
+    depends_on:
+      - jini-core
+    activation_steps:
+      - Run `python3 tools/jini.py show-adapters` to inspect portable edges.
+      - Run `python3 tools/jini.py plan-install --bundle jini-core --target <target>` before runtime activation.
+    compatible_targets:
+      - codex
+      - claude-code
+      - github-copilot
+      - junie
+      - kiro-cli
+      - augment
+    universal_paths:
+      - distribution/adapter-registry.yaml
+      - distribution/install-manifest.yaml
+      - distribution/targets
+      - specs/install-packaging.md

@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" role="img" aria-labelledby="title desc">
+  <title id="title">Jini proof carousel slide 4</title>
+  <desc id="desc">Slide explaining what survives across the work trail in Jini.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f7f2e8; }
+      .ink { fill: #151515; font-family: Helvetica, Arial, sans-serif; }
+      .muted { fill: #675f55; font-family: Helvetica, Arial, sans-serif; }
+      .accentA { fill: #d84f2a; }
+      .accentB { fill: #1e6d74; }
+      .accentC { fill: #2f8c6a; }
+      .accentD { fill: #b5662a; }
+      .boxText { fill: #ffffff; font-family: Helvetica, Arial, sans-serif; }
+      .kicker { font-size: 30px; font-weight: 700; letter-spacing: 2px; }
+      .headline { font-size: 70px; font-weight: 800; }
+      .body { font-size: 32px; font-weight: 600; }
+      .boxTitle { font-size: 34px; font-weight: 800; }
+      .boxBody { font-size: 24px; font-weight: 600; }
+      .footer { font-size: 24px; font-weight: 700; letter-spacing: 1.5px; }
+    </style>
+  </defs>
+  <rect class="bg" width="1080" height="1350" rx="32"/>
+  <text class="muted kicker" x="84" y="130">WHY THIS MATTERS</text>
+  <text class="ink headline" x="84" y="250">
+    <tspan x="84" dy="0">What survives</tspan>
+    <tspan x="84" dy="78">the trip?</tspan>
+  </text>
+  <rect class="accentA" x="84" y="364" width="430" height="260" rx="28"/>
+  <text class="boxText boxTitle" x="124" y="444">State</text>
+  <text class="boxText boxBody" x="124" y="500">
+    <tspan x="124" dy="0">The work still knows</tspan>
+    <tspan x="124" dy="36">where it is and</tspan>
+    <tspan x="124" dy="36">what can happen next.</tspan>
+  </text>
+  <rect class="accentB" x="566" y="364" width="430" height="260" rx="28"/>
+  <text class="boxText boxTitle" x="606" y="444">Evidence</text>
+  <text class="boxText boxBody" x="606" y="500">
+    <tspan x="606" dy="0">Claims and risks stay</tspan>
+    <tspan x="606" dy="36">attached to the work,</tspan>
+    <tspan x="606" dy="36">not to memory alone.</tspan>
+  </text>
+  <rect class="accentC" x="84" y="682" width="430" height="260" rx="28"/>
+  <text class="boxText boxTitle" x="124" y="762">Handoff</text>
+  <text class="boxText boxBody" x="124" y="818">
+    <tspan x="124" dy="0">Tasks, PRD, and issue</tspan>
+    <tspan x="124" dy="36">exports still point</tspan>
+    <tspan x="124" dy="36">to the same work unit.</tspan>
+  </text>
+  <rect class="accentD" x="566" y="682" width="430" height="260" rx="28"/>
+  <text class="boxText boxTitle" x="606" y="762">Discipline</text>
+  <text class="boxText boxBody" x="606" y="818">
+    <tspan x="606" dy="0">“Looks done” does not</tspan>
+    <tspan x="606" dy="36">override “not yet</tspan>
+    <tspan x="606" dy="36">verified or approved.”</tspan>
+  </text>
+  <text class="muted body" x="84" y="1060">
+    <tspan x="84" dy="0">This is not a big-demo trick.</tspan>
+    <tspan x="84" dy="46">It is small, durable workflow honesty.</tspan>
+  </text>
+  <text class="muted footer" x="84" y="1294">JINI / PROOF CAROUSEL / 04</text>
+</svg>

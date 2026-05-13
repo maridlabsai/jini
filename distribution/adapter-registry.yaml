@@ -1,0 +1,119 @@
+schema_version: "0.1.0"
+updated_at: "2026-05-11"
+adapters:
+  - id: jira
+    label: Jira
+    layer: issue-system
+    maturity: bridge-execute
+    priority: 90
+    capabilities:
+      - issues-export
+      - issues-publish-plan
+      - issues-execute-bridge
+    contract: Canonical Tasks -> sync payload -> Jira issue bundle -> serialized publish plan
+
+  - id: github
+    label: GitHub Issues
+    layer: issue-system
+    maturity: local-apply
+    priority: 60
+    capabilities:
+      - issues-export
+      - issues-publish-plan
+      - issues-apply-local
+    contract: Canonical Tasks -> sync payload -> GitHub issue bundle
+
+  - id: confluence
+    label: Confluence
+    layer: wiki-system
+    maturity: bridge-execute
+    priority: 90
+    capabilities:
+      - wiki-export
+      - wiki-publish-plan
+      - wiki-execute-bridge
+    contract: Canonical artifacts and rendered views -> wiki bundle -> serialized publish plan
+
+  - id: markdown
+    label: Markdown
+    layer: wiki-system
+    maturity: local-apply
+    priority: 70
+    capabilities:
+      - wiki-export
+      - wiki-fallback
+      - wiki-publish-plan
+      - wiki-apply-local
+    contract: Canonical artifacts and rendered views -> local markdown wiki bundle
+
+  - id: codex
+    label: Codex
+    layer: runtime-target
+    maturity: local-activation
+    priority: 80
+    capabilities:
+      - bundle-install
+      - pack-guidance
+      - runtime-handoff
+      - runtime-activate
+    contract: Install manifest bundle -> target shim -> Jini CLI, pack surfaces, and runtime handoff bundle
+
+  - id: kiro-cli
+    label: Kiro CLI
+    layer: runtime-target
+    maturity: local-activation
+    priority: 75
+    capabilities:
+      - bundle-install
+      - pack-guidance
+      - runtime-handoff
+      - runtime-activate
+    contract: Install manifest bundle -> target shim -> Jini CLI, pack surfaces, and runtime handoff bundle
+
+  - id: claude-code
+    label: Claude Code
+    layer: runtime-target
+    maturity: local-activation
+    priority: 78
+    capabilities:
+      - bundle-install
+      - pack-guidance
+      - runtime-handoff
+      - runtime-activate
+    contract: Install manifest bundle -> target shim -> Jini CLI, pack surfaces, and runtime handoff bundle
+
+  - id: augment
+    label: Augment
+    layer: runtime-target
+    maturity: local-activation
+    priority: 72
+    capabilities:
+      - bundle-install
+      - pack-guidance
+      - runtime-handoff
+      - runtime-activate
+    contract: Install manifest bundle -> target shim -> Jini CLI, pack surfaces, and runtime handoff bundle
+
+  - id: github-copilot
+    label: GitHub Copilot
+    layer: runtime-target
+    maturity: local-activation
+    priority: 68
+    capabilities:
+      - bundle-install
+      - pack-guidance
+      - runtime-handoff
+      - runtime-activate
+    contract: Install manifest bundle -> target shim -> Jini CLI, pack surfaces, and runtime handoff bundle
+
+  - id: junie
+    label: Junie
+    layer: runtime-target
+    maturity: local-activation
+    priority: 65
+    capabilities:
+      - bundle-install
+      - pack-guidance
+      - runtime-handoff
+      - runtime-activate
+    contract: Install manifest bundle -> target shim -> Jini CLI, pack surfaces, and runtime handoff bundle

@@ -1,0 +1,305 @@
+updated_at: "2026-05-11"
+target_score: 9.0
+comparison_set:
+  - Kiro
+  - Spec Kit
+  - Windsurf
+  - Cline
+  - Aider
+  - Hermes
+  - AI Hero Studio
+  - Matt Pocock Skills Installer
+notes:
+  - AI Hero Studio is tracked as a focused agent platform, not as a full protocol peer.
+  - Matt Pocock's multi-target skills installer is treated as a packaging and distribution benchmark.
+dimensions:
+  - id: workflow-rigor
+    label: Workflow rigor
+    execution_order: 1
+    current_score: 9.0
+    target_score: 9.0
+    strongest_competitor:
+      name: Kiro
+      score: 9.0
+      advantage: Spec-first execution is already productized into a tighter operator loop.
+    weakness: Jini now has an executable handoff and policy-governance loop, but compiler depth and benchmark-default compilation still lag the cleaner product experience.
+    conversion_strategy: Turn protocol rigor into a product surface through compiler-backed packs, plan-to-act execution surfaces, hook-style lifecycle automation, generated views, golden lifecycle tests, and auditable runtime handoff and policy-review artifacts.
+    kpi: A new operator can compile and advance a benchmark pack without ad hoc YAML surgery.
+    next_build_steps:
+      - Deepen `compile-pack` for public flagship packs so context produces a usable work unit by default.
+      - Add a clearer plan-to-act execution surface on top of recommendation, checklist, activation, and run-pack.
+      - Expand the CLI conformance suite to cover more compiler edge cases, wave execution, and activation-policy interactions.
+      - Add hook-style post-step automation so lifecycle status, next step, steering context, runtime handoff, active policy, and verification gates stay legible without manual refresh.
+    exit_criteria:
+      - Benchmark packs compile cleanly from context with no manual artifact repair.
+      - Lifecycle and export regressions are blocked by one-command tests.
+      - Protocol flow is understandable without reading internal YAML first.
+    implemented_assets:
+      - tests/test_jini_cli.py
+      - tools/jini_validate.py
+      - README.md
+
+  - id: delivery-maturity
+    label: Delivery maturity
+    execution_order: 2
+    current_score: 8.8
+    target_score: 9.0
+    strongest_competitor:
+      name: Kiro
+      score: 8.0
+      advantage: Day-to-day execution is faster because repo-aware assistance and the default operator loop are already productized.
+    weakness: Jini now has a guided `execute-flow` that collapses recommendation, compact reload, handoff, activation, run, harvest, and local publish apply, but broader repo-family defaults and live remote edges still need less human interpretation.
+    conversion_strategy: Preserve governance, but compress operator friction through repo-aware orchestration, workspace steering, compact repo maps, target-ready handoff bundles, guided execution flows, hook-style post-step automation, and benchmark-ready defaults.
+    kpi: The benchmark pack can be driven from idea to verification with fewer than five manual control decisions.
+    next_build_steps:
+      - Extend `execute-flow` with stronger benchmark defaults so fewer flags are needed for common repo families.
+      - Extend steering-aware startup, resume, runtime activation, local publish apply, and memory capture across more commands by default.
+      - Turn repo-aware detection into stronger default flows for more repo families, especially Python app/server, Rust, Go, and CI-first repos.
+      - Expand `harvest-evidence` from bounded local checks into richer stale-evidence detection and promotion gating.
+      - Add stop-hook style post-step refresh so status, memory hints, and verification guidance update automatically after major execution steps.
+    exit_criteria:
+      - The benchmark can be advanced end to end through one guided loop without bespoke human interpretation at every step.
+      - CLI guidance points to concrete files or commands instead of generic next states.
+      - Time to first useful output is materially closer to Kiro and Aider.
+    implemented_assets:
+      - tools/jini_validate.py
+      - tests/test_jini_cli.py
+      - packs/budget-cycle
+      - specs/personal-os.md
+      - README.md
+
+  - id: packaging-install
+    label: Packaging and install ergonomics
+    execution_order: 3
+    current_score: 9.0
+    target_score: 9.0
+    strongest_competitor:
+      name: Matt Pocock Skills Installer
+      score: 9.0
+      advantage: Multi-target installation is productized with source provenance, compatibility mapping, security posture, symlink strategy, and a clean install receipt.
+    weakness: Jini now has the right trust shape, but installer-grade polish still depends on keeping target-specific behavior probes and upgrade semantics honest as the surface expands.
+    conversion_strategy: Keep the manifest-driven lifecycle, then sustain bundle coverage, behavioral verification, migration guidance, and target-specific health semantics so install trust scales with real usage.
+    kpi: An operator can discover, preview, install, verify, and update Jini capability bundles across supported targets without manual file surgery.
+    next_build_steps:
+      - Keep target-specific smoke probes aligned with real target behavior as install and activation surfaces evolve.
+      - Expand curated kits and bundle coverage only when they improve discovery more than they increase install choice overload.
+      - Deepen provenance, manifest digest, and migration metadata so upgrades remain auditable as bundle coverage grows.
+    exit_criteria:
+      - A single command can preview and install selected Jini bundles for one or more targets.
+      - Curated install kits make common adoption paths obvious without requiring bundle-level repo knowledge.
+      - The install surface shows provenance, compatibility, and permission risk before activation.
+      - Universal assets and target-specific shims are clearly separated in the resulting layout.
+      - Install, update, uninstall, and verify flows are symmetric and auditable, with receipt and activation state visible in doctor output.
+    implemented_assets:
+      - distribution/install-manifest.yaml
+      - specs/install-packaging.md
+      - specs/golden-competitive-benchmark.yaml
+      - tools/jini_validate.py
+      - tests/test_jini_cli.py
+
+  - id: memory-reliability
+    label: Memory reliability
+    execution_order: 4
+    current_score: 8.9
+    target_score: 9.0
+    strongest_competitor:
+      name: Hermes
+      score: 9.0
+      advantage: Persistent autonomous memory is already treated as an operational primitive, not just a document layer.
+    weakness: Jini now has bounded durable memory plus runtime-activation capture, but timely resurfacing still needs broader automatic triggers outside the current pack and activation loop.
+    conversion_strategy: Treat memory as executable retrieval over canonical state, people, projects, evidence, workspace steering, runtime handoff state, and actor preference layers, not just stored artifacts.
+    kpi: The system resurfaces the right prior decision, preference, or proof at the exact step where it changes behavior.
+    next_build_steps:
+      - Attach stale-memory and stale-evidence detection to more artifact relationships, not just verification surfaces.
+      - Feed repo-aware findings, personal-home long-term memory, and prior outcomes into `recommend-execution` and verification prompts.
+      - Promote home-memory capture from selected runtime and policy flows into a broader default behavior, including more pack, stop, and verification commands.
+      - Trigger or recommend `dream-memory` automatically when bound home memory is stale or over budget.
+      - Carry actor, project, and preference memory into the same compact reload path and runtime handoff path as canonical pack state.
+    exit_criteria:
+      - Operators do not need to restate recent project context on normal resumptions.
+      - Retrieval surfaces are precise enough to affect execution and verification automatically.
+      - Memory lookups are grounded in canonical state instead of free-form chat history.
+    implemented_assets:
+      - tools/jini_validate.py
+      - tests/test_jini_cli.py
+      - specs/learning-system.md
+      - specs/personal-os.md
+      - README.md
+
+  - id: adapter-portability
+    label: Adapter portability
+    execution_order: 5
+    current_score: 8.9
+    target_score: 9.0
+    strongest_competitor:
+      name: Cline
+      score: 9.0
+      advantage: Real tool edges and MCP-style portability are already part of the daily product experience.
+    weakness: Jini now has one real local runtime edge, first-class one-command local-apply issue and wiki edges, and a bridge-execute surface for staged publish plans, but out-of-box live SaaS adapters and richer remote execution are still not first-class.
+    conversion_strategy: Keep protocol semantics fixed while making adapters first-class, testable, replay-safe product surfaces, starting with explicit runtime handoff contracts, activation receipts, local-apply publish contracts, and transport-aware edge contracts that carry the same bounded context everywhere.
+    kpi: One coding runtime, one issue system, and one wiki system can be driven through the same canonical contract.
+    next_build_steps:
+      - Ship one out-of-box live issue or wiki adapter with idempotent publish semantics to complement runtime activation, local-apply edges, and the bridge-execute surface.
+      - Add adapter conformance tests for provenance, rollback, deterministic replay, activation health, local-apply receipts, multi-install safety, and resolution fallback order.
+      - Deepen the adapter registry into a stricter contract with activation checks, runtime-target selection signals, transport type, and clearer local-activation vs local-apply vs staged semantics.
+    exit_criteria:
+      - The same WorkUnit can be executed through multiple tool edges without semantic drift.
+      - Adapter behavior is covered by conformance tests, not only by staged payloads.
+      - Runtime provenance and rollback survive adapter boundaries.
+    implemented_assets:
+      - distribution/adapter-registry.yaml
+      - tools/jini_validate.py
+      - tests/test_jini_cli.py
+      - distribution/install-manifest.yaml
+      - README.md
+
+  - id: token-efficiency
+    label: Token efficiency
+    execution_order: 6
+    current_score: 8.8
+    target_score: 9.0
+    strongest_competitor:
+      name: Aider
+      score: 9.0
+      advantage: Context discipline, caching, and chat minimization are already tuned for daily low-cost execution.
+    weakness: Jini now reuses recommendation, compact context, checklist, repo map, and handoff inside a guided flow, but token budgeting is still not enforced uniformly across every major command and adapter path.
+    conversion_strategy: Save tokens on transport, orchestration, bounded memory, progressive disclosure, ranked compact repo maps, compact local-apply loops, and reloads while keeping reasoning depth where state or profile demands it.
+    kpi: The cheapest adequate path is the default path, and expensive reasoning is visibly justified.
+    next_build_steps:
+      - Prefer deterministic exports and cached local artifacts before external model or connector calls.
+      - Feed compact-context compression ratios, repo-map size, and execute-flow reuse metrics into routing policy and future learning evaluation instead of only recording them.
+      - Expand compact context generation so more intents use low-token reloads by default.
+      - Push the same budgeting discipline into recommendation, publish, activation, guided execution, and resume surfaces beyond `compact-context`.
+    exit_criteria:
+      - Operators can see why a deeper class was chosen instead of assuming hidden cost.
+      - Normal resumptions avoid full-context reloads.
+      - Cost reductions come from architecture rather than weaker guardrails.
+    implemented_assets:
+      - tools/jini_validate.py
+      - tests/test_jini_cli.py
+      - README.md
+
+  - id: advanced-set-breadth
+    label: Advanced-set breadth
+    execution_order: 7
+    current_score: 9.0
+    target_score: 9.0
+    strongest_competitor:
+      name: Hermes
+      score: 9.0
+      advantage: Breadth of autonomous behaviors, memory, and tool edges is already broad enough to feel like a general agent platform.
+    weakness: Jini now spans research, software delivery, travel, budgeting, incident response, regulated audit, and vendor selection on one kernel, but the next breadth frontier is richer remote/live control surfaces rather than more pack-only examples.
+    conversion_strategy: Expand capability in packs, control layers, harvesters, routines, and adapters rather than expanding the kernel, and keep proving breadth through executable routines instead of architecture claims.
+    kpi: Jini supports materially different workflows through the same core without requiring bespoke protocol changes.
+    next_build_steps:
+      - Add richer remote or live control surfaces before adding more pack-only breadth.
+      - Expand the personal-OS surface with reusable benchmark, review, release, and domain routines before promoting any new universal concepts.
+      - Widen artifact harvesting, compact-context, and checklist flows across more packs and repo shapes.
+      - Treat each new capability as a pack, routine, or adapter by default unless kernel promotion is justified.
+    exit_criteria:
+      - At least seven materially different workflow categories run on the same core semantics.
+      - New capability ships mostly in advanced surfaces, not in kernel growth.
+      - The advanced set is broad enough to feel universal while the kernel remains small.
+    implemented_assets:
+      - tools/jini_validate.py
+      - tests/test_jini_cli.py
+      - packs/travel-plan
+      - packs/budget-cycle
+      - packs/incident-response
+      - packs/compliance-audit
+      - packs/vendor-selection
+      - specs/personal-os.md
+      - specs/golden-competitive-benchmark.yaml
+      - WHITEPAPER.md
+
+  - id: learning-maturity
+    label: Learning and RL maturity
+    execution_order: 8
+    current_score: 9.0
+    target_score: 9.0
+    strongest_competitor:
+      name: Hermes
+      score: 7.0
+      advantage: Adaptive behavior is already tied to persistent operation and multi-agent execution.
+    weakness: Jini now has both pack-local rollout control and a framework-level review, experiment, outcome, and backtest loop, but drift detection and broader policy surfaces still need deeper real-world signal volume.
+    conversion_strategy: Make RL a governed optimization layer over protocol policy and framework evolution, with offline validation, explicit review and experiment artifacts, richer telemetry, candidate rollout monitoring, and deterministic rollback.
+    kpi: Policy and framework changes can be evaluated, staged, measured, and either reinforced or reversed without violating profile constraints.
+    next_build_steps:
+      - Add contextual-bandit and offline-RL surfaces for bounded routing, escalation, and framework-improvement decisions.
+      - Implement safeguard controls for drift detection, rollout monitoring, reward approval, and canary rollback beyond the current candidate and experiment lifecycle.
+      - Expand the event stream so policy evaluation covers more commands, adapters, verification outcomes, compaction ratios, memory writes, runtime-target handoffs, and framework experiment outcomes.
+      - Broaden activation from runtime routing into other bounded decision surfaces without mutating canonical semantics.
+    exit_criteria:
+      - Learning and framework changes are evaluated on historical traces before rollout.
+      - Reward or policy drift cannot silently change operator behavior.
+      - Learning improves routing and framework evolution without mutating canonical semantics.
+    implemented_assets:
+      - specs/learning-system.md
+      - tools/jini_validate.py
+      - tests/test_jini_cli.py
+      - distribution/adapter-registry.yaml
+      - specs/learning-system.md
+      - README.md
+
+  - id: flexibility
+    label: Flexibility across use cases
+    execution_order: 9
+    current_score: 9.0
+    target_score: 10.0
+    strongest_competitor:
+      name: Hermes
+      score: 9.0
+      advantage: Broad agent behaviors already make it feel general-purpose in daily use.
+    weakness: Jini has a strong universality story, but needs more implemented workflow examples to make the claim feel real.
+    conversion_strategy: Prove universality through a shared kernel plus domain-specific packs, not by adding generic core abstractions.
+    kpi: A new domain can be expressed as a pack and adapter choice instead of a protocol rewrite.
+    next_build_steps:
+      - Extend the pack catalog with at least one additional non-engineering workflow.
+      - Reuse control packs and memory surfaces across research, delivery, and regulated-style flows.
+      - Capture domain deltas in pack manifests and artifacts rather than core semantics.
+    exit_criteria:
+      - Multiple domains run through the same kernel with obvious pack-level variation.
+      - Adding a new domain does not require new linear states or new universal artifact semantics.
+      - The repo demonstrates universality with implemented examples, not only README claims.
+
+  - id: governance
+    label: Governance, evidence, and approval
+    execution_order: 10
+    current_score: 9.0
+    target_score: 9.0
+    strongest_competitor:
+      name: Kiro
+      score: 7.0
+      advantage: Governance is less explicit, but it is embedded into a smoother operator flow.
+    weakness: Jini leads here conceptually, but the product still needs to make governance feel lightweight instead of ceremonial.
+    conversion_strategy: Keep strict semantics while automating evidence capture, approval surfacing, and publish provenance wherever possible.
+    kpi: Governance remains strong even when the operator chooses the cheap and fast path.
+    next_build_steps:
+      - Turn verification hooks and publication capture into default product behaviors.
+      - Surface evidence freshness and approval gaps directly in status and execution reports.
+      - Ensure adapters preserve provenance, authority, and rollback metadata.
+    exit_criteria:
+      - Governance is visible in the operator loop without demanding extra manual prose.
+      - Evidence and approval gaps are obvious before promotion attempts.
+      - External system publishes can be replayed and audited from canonical state.
+
+  - id: core-simplicity
+    label: Core simplicity
+    execution_order: 11
+    current_score: 9.0
+    target_score: 9.0
+    strongest_competitor:
+      name: Spec Kit
+      score: 8.0
+      advantage: Scope is intentionally narrow, which keeps the mental model light.
+    weakness: The main risk is not current complexity; it is future kernel creep as advanced capabilities land.
+    conversion_strategy: Use strict kernel admission rules so breadth accumulates in packs and adapters instead of in universal semantics.
+    kpi: No new kernel concept is added unless it fails clean representation in packs, control layers, and adapters first.
+    next_build_steps:
+      - Add an explicit kernel-admission test to architecture review and roadmap updates.
+      - Push new capabilities into packs, harvesters, and adapters by default.
+      - Review future specs against the small-core rule before they are treated as canonical.
+    exit_criteria:
+      - The kernel stays small while the advanced set grows.
+      - New domains and adapters do not force semantic inflation.
+      - Repo docs continue to describe a stable, teachable core.

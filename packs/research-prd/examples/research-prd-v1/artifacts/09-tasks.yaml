@@ -1,0 +1,44 @@
+artifact_id: tasks-research-prd-v1
+artifact_type: Tasks
+schema_version: 0.1.0
+work_unit_id: research-prd-v1
+branch_id: main
+revision: 4
+status: reviewed
+author_actor_id: engineering-lead
+approver_actor_ids:
+- eng-manager
+created_at: 2026-05-10T20:19:17Z
+updated_at: 2026-05-11T04:35:52Z
+supersedes: ''
+references:
+- plan-research-prd-v1
+change_class: semantic
+tasks:
+- Validate source coverage and finalize research synthesis
+- Review and approve the rendered PRD
+- Confirm build-ready requirements and task ownership
+ownership:
+- research-lead
+- product-lead
+- engineering-lead
+status_per_task:
+- done
+- done
+- done
+blocked_by: []
+deliverables:
+- Reviewed research artifacts
+- Approved PRD view
+- Accepted build handoff
+output_notes:
+- Validated source coverage and finalized the research synthesis across the canonical
+  source and literature artifacts.
+- Rendered and reviewed the PRD view from canonical research artifacts for downstream
+  handoff.
+- Confirmed the build-ready handoff across the spec, plan, task board, and issue export
+  surfaces.
+output_refs:
+- artifacts/03-sources.yaml, artifacts/04-literature.yaml, views/prd.md
+- views/prd.md, exports/wiki/markdown/prd.md, exports/wiki/confluence/prd.md
+- artifacts/06-spec.yaml, artifacts/08-plan.yaml, artifacts/09-tasks.yaml, exports/issues/jira/issues.json
