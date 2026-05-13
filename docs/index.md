@@ -37,17 +37,6 @@ verified, approved, publishable work.
 
 ![Jini research to PRD proof demo](./assets/examples/research-prd.gif)
 
-## What You Can Do Next
-
-- install Jini with `pipx install --editable git+https://github.com/maridlabsai/jini.git`
-- [See the proof path](./proof.md)
-- [See the install path](./install.md)
-- [See detailed examples](./examples.md)
-- [See the commercial boundary](./commercial.md)
-- [See support and contact paths](./contact.md)
-- [See release notes](https://github.com/maridlabsai/jini/releases/tag/v0.1.0)
-- [Read the full README](https://github.com/maridlabsai/jini#readme)
-
 ## Pick Your Workflow
 
 Start with the workflow you already ran this week. Jini is easiest to judge
@@ -81,7 +70,7 @@ when it is making ordinary work more truthful.
 </div>
 
 <div class="value-strip">
-  <p><strong>What changes in one run:</strong> Jini does not just say the workflow exists. It tells you the current state, the next action, and what is still missing before the work should be treated as durable.</p>
+  <p><strong>What changes in one run:</strong> Jini gives you one truthful state surface. You can see what happened, what comes next, and what is still missing before the work should be treated as durable.</p>
 </div>
 
 ## Why These Four
@@ -136,6 +125,17 @@ If you want to feel that payoff before you have your own work pack, start with:
 ```bash
 jini try-example meeting-followup
 ```
+
+## Explore More
+
+- install Jini with `pipx install --editable git+https://github.com/maridlabsai/jini.git`
+- [See the proof path](./proof.md)
+- [See the install path](./install.md)
+- [See detailed examples](./examples.md)
+- [See the commercial boundary](./commercial.md)
+- [See support and contact paths](./contact.md)
+- [See release notes](https://github.com/maridlabsai/jini/releases/tag/v0.1.0)
+- [Read the full README](https://github.com/maridlabsai/jini#readme)
 
 ## Public Core Boundary
 

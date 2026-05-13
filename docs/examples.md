@@ -1,15 +1,13 @@
 # Common Examples
 
-Jini is easiest to understand when it is doing work you already recognize.
+These examples are the fastest way to judge whether Jini is useful for your
+kind of work.
 
-These four examples are the best public story because they show both sides of
-the product:
+Use the same reading pattern each time:
 
-- the command you run
-- the state Jini makes explicit
-
-That is the difference between "another workflow idea" and a framework you can
-actually operate.
+1. run one command
+2. look at `STATE`, `NEXT`, and `MISSING-LATER`
+3. decide whether that missing truth would have mattered in your last real workflow
 
 <div class="workflow-jump">
   <div class="workflow-grid">
@@ -42,14 +40,10 @@ actually operate.
 
 ## 1. Meeting Follow-up {#meeting-followup}
 
-**Situation:** a weekly product, staff, or project meeting ends with notes
-scattered across docs, chat, and memory.
+**When this matters:** a weekly product, staff, or project meeting ends with
+notes scattered across docs, chat, and memory.
 
-**What usually goes wrong:** nobody can later say with confidence what was
-actually decided, who owns the next step, what is still open, or whether
-anything needs approval before execution.
-
-**Try it with Jini:**
+**Run:**
 
 ```bash
 jini try-example meeting-followup
@@ -57,7 +51,7 @@ jini try-example meeting-followup
 
 ![Jini meeting follow-up demo](./assets/examples/meeting-followup.gif)
 
-**What Jini shows back:**
+**Look for these lines:**
 
 ```text
 HEALTH ready-to-make
@@ -71,27 +65,18 @@ TASKS
   unresolved: 3/3
 ```
 
-**Why that helps:** the meeting is no longer "captured" just because notes
-exist. Jini turns the follow-up into explicit artifacts, visible task load, and
-an honest statement of what is still missing before the work is truly
-execution-ready.
+**What Jini makes obvious:**
 
-**What changes day to day:**
-
-- the meeting owner stops guessing what people heard
-- action items stop living only in chat threads
-- approvers can see what is still missing before work starts
+- the meeting exists, but the work is not ready
+- approval and evidence are still missing
 - the next person inherits state, not just notes
 
 ## 2. Research To PRD Handoff {#research-prd}
 
-**Situation:** research exists, opinions exist, and the team agrees something
-should be built.
+**When this matters:** research exists, the team agrees something should be
+built, and the handoff is starting to look more finished than it really is.
 
-**What usually goes wrong:** the rationale gets thinned out as the work moves
-from source material into a product spec, then into a plan, then into tasks.
-
-**Try it with Jini:**
+**Run:**
 
 ```bash
 jini try-example research-prd
@@ -99,7 +84,7 @@ jini try-example research-prd
 
 ![Jini research to PRD demo](./assets/examples/research-prd.gif)
 
-**What Jini shows back:**
+**Look for these lines:**
 
 ```text
 HEALTH ready-to-verify
@@ -116,27 +101,18 @@ EVIDENCE
   risks:  1
 ```
 
-**Why that helps:** this is the proof scene at the center of Jini. The tasks
-are done, but the work is not pretending to be finished. Jini preserves the gap
-between completion, verification, and approval, while keeping the evidence
-trail attached to the current revision.
+**What Jini makes obvious:**
 
-**What changes day to day:**
-
-- product and engineering stop arguing from different versions of the rationale
-- people can see whether the spec is ready or merely drafted
-- verification becomes a visible stage instead of an implied one
+- tasks can be done while the work is still waiting on verification
+- approval is still missing even though the draft looks complete
 - the handoff keeps its source trail attached to the work
 
 ## 3. Vendor Selection {#vendor-selection}
 
-**Situation:** several vendors or tools look plausible and the team needs to
-justify a recommendation.
+**When this matters:** several vendors look plausible and the team needs an
+approval-ready recommendation instead of another meeting recap.
 
-**What usually goes wrong:** the final answer survives, but the scoring,
-tradeoffs, objections, and approval path disappear into meetings or email.
-
-**Try it with Jini:**
+**Run:**
 
 ```bash
 jini try-example vendor-selection
@@ -144,7 +120,7 @@ jini try-example vendor-selection
 
 ![Jini vendor selection demo](./assets/examples/vendor-selection.gif)
 
-**What Jini shows back:**
+**Look for these lines:**
 
 ```text
 HEALTH ready-to-make
@@ -156,27 +132,18 @@ MISSING-LATER
   - Evidence
 ```
 
-**Why that helps:** Jini makes vendor selection look like consequential work,
-not a slide deck. The recommendation has control surfaces, a visible approval
-path, and an explicit reminder that evidence still has to be bound before the
-decision should be treated as durable.
+**What Jini makes obvious:**
 
-**What changes day to day:**
-
-- the recommendation survives beyond the meeting where it was made
-- tradeoffs stay attached to the final answer
-- finance or leadership can see the approval path without re-asking for context
-- the team can revisit the decision later without reconstructing it from memory
+- the recommendation exists, but the proof trail is still incomplete
+- approval is a visible part of the workflow, not a side conversation
+- tradeoffs stay attached to the decision instead of disappearing into slides
 
 ## 4. Incident Response {#incident-response}
 
-**Situation:** the immediate outage is over, but the operational work is not.
+**When this matters:** the immediate outage is over, but the operational work
+still needs rollback, proof, and honest closure.
 
-**What usually goes wrong:** timeline clarity, rollback context, customer
-impact, verification evidence, and closure requirements get reconstructed after
-the fact instead of preserved as the work happens.
-
-**Try it with Jini:**
+**Run:**
 
 ```bash
 jini try-example incident-response
@@ -184,7 +151,7 @@ jini try-example incident-response
 
 ![Jini incident response demo](./assets/examples/incident-response.gif)
 
-**What Jini shows back:**
+**Look for these lines:**
 
 ```text
 HEALTH ready-to-make
@@ -197,17 +164,11 @@ MISSING-LATER
   - Evidence
 ```
 
-**Why that helps:** Jini keeps the response honest. "The service is back" is
-not the same thing as "the incident is closed." The workflow still has explicit
-rollback, proof, and approval requirements before anyone can claim the work is
-done.
+**What Jini makes obvious:**
 
-**What changes day to day:**
-
-- responders stop treating recovery as closure
-- rollback context stays visible while pressure is high
-- verification evidence gets attached before the story drifts
-- closure becomes a real state, not an assumption
+- recovery is not the same thing as closure
+- rollback context stays visible while pressure is still high
+- proof and approval are still part of the work even after the service is back
 
 ## Breadth, After The Core Story
 
