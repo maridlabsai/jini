@@ -1510,7 +1510,7 @@ def build_install_catalog(
             "target": selected_target,
             "commands": [
                 f"{cli} start --harness {selected_target}",
-                *[item["command"] for item in build_install_trust_path(target_id=selected_target, kit_id=beginner_kit_id)],
+                f"{cli} example research-prd",
             ],
         }
     if power_kit is not None:
@@ -1595,7 +1595,7 @@ def build_harness_catalog() -> dict[str, Any]:
                 "destination_root": str(raw_target.get("destination_root", "")).strip(),
                 "risk_notice": str(raw_target.get("risk_notice", "")).strip(),
                 "start_command": f"{cli} start --harness {harness_id}",
-                "run_command": f"{cli} execute-flow /path/to/work --repo /path/to/repo --harness {harness_id}",
+                "run_command": f"{cli} run /path/to/work --repo /path/to/repo --harness {harness_id}",
             }
         )
     return {
@@ -1714,8 +1714,8 @@ def build_publish_readiness() -> dict[str, Any]:
         {
             "id": "beginner-command-count",
             "command_count": len(novice_commands),
-            "max_allowed": 4,
-            "status": "ok" if 0 < len(novice_commands) <= 4 else "warning",
+            "max_allowed": 3,
+            "status": "ok" if 0 < len(novice_commands) <= 3 else "warning",
         },
         {
             "id": "beginner-command-prefix",
@@ -2103,35 +2103,34 @@ def build_get_started_guide(
     beginner_path = {
         "audience": "beginner",
         "label": "Beginner Path",
-        "goal": "Reach a safe first success with the smallest guided surface.",
+        "goal": "Reach a safe first success with one setup command and one proof command.",
         "kit_id": beginner_kit_id,
         "target": selected_target,
         "commands": [
-            *[item["command"] for item in beginner_trust_path],
+            f"{cli} start --harness {selected_target}",
             f"{cli} example research-prd",
+            f"{cli} outcome /path/to/work",
         ],
         "trust_path": beginner_trust_path,
         "notes": [
-            "Bundle-level detail is intentionally demoted from the beginner path.",
-            "The trust path is preview, install, verify, then prove value on one common example.",
+            "Bundle-level detail is intentionally hidden from the beginner path.",
+            "If you want the manual trust path, use `jini guide --harness ...` or `jini plan-install ...`.",
         ],
     }
     power_path = {
         "audience": "power-user",
         "label": "Power-User Path",
-        "goal": "Open the same system up for inspection, composition, and deeper execution control.",
+        "goal": "Orchestrate harness execution while keeping outcome state and artifacts coherent.",
         "kit_id": power_kit_id,
         "target": selected_target,
         "commands": [
-            f"{cli} catalog-bundles --format json",
-            f"{cli} plan-install --kit {power_kit_id} --harness {selected_target}",
-            f"{cli} catalog-packs",
-            f"{cli} show-adapters",
-            f"{cli} review-framework --format json --limit 5",
-            f"{cli} execute-flow /tmp/my-pack --repo /path/to/repo --harness codex --activate-runtime --consent write --consent publish",
+            f"{cli} harnesses",
+            f"{cli} plan /path/to/work --repo /path/to/repo --intent verify",
+            f"{cli} handoff /path/to/work --repo /path/to/repo --harness {selected_target}",
+            f"{cli} run /path/to/work --repo /path/to/repo --harness {selected_target} --activate-runtime --consent write --consent publish",
         ],
         "notes": [
-            "Use JSON outputs when you want bundle-by-bundle or adapter-level detail.",
+            "Use `jini help --all` when you need the deeper command inventory.",
         ],
     }
     guide = {
@@ -3171,6 +3170,63 @@ def doctor_install(
         "status": "missing" if overall_missing else "warning" if overall_warning else "ok",
         "checks": checks,
     }
+
+
+def setup_harness(
+    *,
+    harness_id: str | None = None,
+    kit_id: str | None = None,
+    prefix: Path | None = None,
+) -> dict[str, Any]:
+    manifest = load_install_manifest()
+    selected_harness = infer_get_started_target(manifest, preferred_target=harness_id)
+    selected_kit = (kit_id or str(manifest.get("default_kit_id", "")).strip() or "starter-kit").strip()
+    plan = plan_install(
+        kit_ids=[selected_kit],
+        target_ids=[selected_harness],
+        link_mode="auto",
+        prefix=prefix,
+    )
+    install_result = install_bundles(
+        kit_ids=[selected_kit],
+        target_ids=[selected_harness],
+        link_mode="auto",
+        prefix=prefix,
+    )
+    doctor_report = doctor_install(
+        kit_ids=[selected_kit],
+        target_ids=[selected_harness],
+        prefix=prefix,
+    )
+    cli = cli_invocation()
+    return {
+        "schema_version": "0.1.0",
+        "result_type": "JiniSetupResult",
+        "generated_at": now_utc(),
+        "status": doctor_report["status"],
+        "harness": selected_harness,
+        "kit_id": selected_kit,
+        "prefix": str(prefix.resolve()) if prefix is not None else "",
+        "plan": plan,
+        "install_result": install_result,
+        "doctor_report": doctor_report,
+        "next_commands": [
+            f"{cli} example research-prd",
+            f"{cli} outcome /path/to/work",
+            f"{cli} harnesses",
+        ],
+    }
+
+
+def print_setup_result(result: dict[str, Any]) -> None:
+    print(f"HARNESS {result.get('harness', '')}")
+    print(f"STATUS  {result.get('status', '')}")
+    print(f"KIT     {result.get('kit_id', '')}")
+    if result.get("prefix"):
+        print(f"PREFIX  {result.get('prefix', '')}")
+    print("READY")
+    for command in result.get("next_commands", []):
+        print(f"  {command}")
 
 
 def list_packs() -> list[tuple[str, Path, dict[str, Any]]]:
@@ -4357,8 +4413,14 @@ def cli_invocation() -> str:
 
 
 CLI_ALIAS_MAP: dict[str, str] = {
-    "start": "get-started",
+    "start": "setup",
+    "guide": "get-started",
+    "check": "outcome",
     "example": "try-example",
+    "plan": "recommend-execution",
+    "handoff": "stage-runtime-handoff",
+    "activate": "activate-runtime-target",
+    "run": "execute-flow",
     "next": "execution-checklist",
     "resume": "compact-context",
 }
@@ -4378,29 +4440,22 @@ def print_cli_overview() -> None:
     print("Finish work with less rework, faster handoffs, and clearer next steps.")
     print()
     print("START HERE")
-    print(f"  {cli} help")
-    print(f"  {cli} example research-prd")
     print(f"  {cli} start --harness codex")
+    print(f"  {cli} example research-prd")
+    print(f"  {cli} outcome /path/to/work")
+    print()
+    print("HARNESS ORCHESTRATION")
     print(f"  {cli} harnesses")
+    print(f"  {cli} plan /path/to/work --repo /path/to/repo --intent verify")
+    print(f"  {cli} run /path/to/work --repo /path/to/repo --harness codex")
     print()
     print("OUTCOME LAYER")
     print(f"  {cli} outcome /path/to/work")
     print(f"  {cli} next /path/to/work --repo /path/to/repo --intent verify")
     print(f"  {cli} resume /path/to/work --repo /path/to/repo --intent verify --max-chars 900")
-    print(f"  {cli} execute-flow /path/to/work --repo /path/to/repo --harness codex")
-    print()
-    print("INSTALL")
-    print(f"  {cli} plan-install --kit starter-kit --harness codex")
-    print(f"  {cli} install-bundles --kit starter-kit --harness codex --prefix /tmp/jini-stage")
-    print(f"  {cli} doctor-install --kit starter-kit --harness codex --prefix /tmp/jini-stage")
-    print()
-    print("ALIASES")
-    print(f"  {cli} start   -> {cli} get-started")
-    print(f"  {cli} example -> {cli} try-example")
-    print(f"  {cli} next    -> {cli} execution-checklist")
-    print(f"  {cli} resume  -> {cli} compact-context")
     print()
     print("MORE")
+    print(f"  {cli} guide --harness codex")
     print(f"  {cli} help --all")
     print(f"  {cli} <command> --help")
 
@@ -13427,9 +13482,28 @@ def main() -> int:
         help="Output format for the golden benchmark report",
     )
 
+    setup_parser = subparsers.add_parser(
+        "setup",
+        help="Install the starter kit for one harness and verify that Jini is ready to use",
+    )
+    setup_parser.add_argument(
+        "--harness",
+        "--target",
+        dest="harness",
+        help="Optional preferred harness; defaults to Codex when available",
+    )
+    setup_parser.add_argument("--kit", default="starter-kit", help="Install kit to materialize")
+    setup_parser.add_argument("--prefix", type=Path, help="Optional safe prefix for local setup testing")
+    setup_parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for the setup result",
+    )
+
     get_started_parser = subparsers.add_parser(
         "get-started",
-        help="Show the beginner and power-user paths through the same Jini system",
+        help="Show the longer beginner and power-user guide behind the one-command start path",
     )
     get_started_parser.add_argument(
         "--target",
@@ -14940,6 +15014,22 @@ def main() -> int:
         else:
             print_golden_benchmark_report(report)
         return 0
+
+    if args.command == "setup":
+        try:
+            result = setup_harness(
+                harness_id=args.harness,
+                kit_id=args.kit,
+                prefix=args.prefix,
+            )
+        except (FileNotFoundError, KeyError, TypeError, ValueError) as exc:
+            print(f"ERROR {exc}")
+            return 1
+        if args.format == "json":
+            print(json.dumps(result, indent=2))
+        else:
+            print_setup_result(result)
+        return 0 if result.get("status") == "ok" else 1
 
     if args.command == "get-started":
         try:

@@ -21,20 +21,38 @@ If you are not installed yet, start with [install](./install.md).
 ## Most People Start Here
 
 ```bash
-jini help
+jini start --harness codex
 jini example research-prd
 jini outcome /path/to/work
 ```
 
 Use those three commands to:
 
-- see the grouped command surface
+- install the starter harness path
 - feel the product on a familiar workflow
 - inspect the current state of real work before pushing toward an outcome
 
 ## Daily Workflow Commands
 
 Use these when you are working on one pack or handoff:
+
+```bash
+jini plan /path/to/work --repo /path/to/repo --intent wiki
+jini handoff /path/to/work --repo /path/to/repo --harness codex
+jini activate /path/to/work --repo /path/to/repo --harness codex
+jini run /path/to/work --repo /path/to/repo --harness codex
+```
+
+Those commands let Jini act like a harness orchestration CLI:
+
+- `plan`: choose the right execution posture
+- `handoff`: stage a harness-ready bundle
+- `activate`: materialize the selected harness surface
+- `run`: execute the flow through the chosen harness
+
+## Outcome Commands
+
+Use these when you want to keep the work itself coherent:
 
 ```bash
 jini outcome /path/to/work
@@ -53,26 +71,14 @@ They answer:
 If you want the plain-language explanation of why those surfaces matter, read
 [State And Artifacts](./state-and-artifacts.md).
 
-## Guided Execution
-
-Use these when you want Jini to stage or run the next workflow step:
-
-```bash
-jini recommend-execution /path/to/work --repo /path/to/repo --intent wiki
-jini execute-flow /path/to/work --repo /path/to/repo --harness codex
-jini run-pack /path/to/work --mode supervised --repo /path/to/repo --harness codex
-```
-
 ## Install And Harnesses
 
 Use these when you are setting up Jini in a shell or agent environment:
 
 ```bash
 jini start --harness codex
-jini plan-install --kit starter-kit --harness codex
-jini install-bundles --kit starter-kit --harness codex --prefix /tmp/jini-stage
-jini doctor-install --kit starter-kit --harness codex --prefix /tmp/jini-stage
 jini harnesses
+jini guide --harness codex
 ```
 
 ## Publish And Handoffs

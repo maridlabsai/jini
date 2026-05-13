@@ -349,9 +349,11 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("START HERE", result.stdout)
         self.assertIn("jini start --harness codex", result.stdout)
         self.assertIn("jini example research-prd", result.stdout)
-        self.assertIn("jini harnesses", result.stdout)
         self.assertIn("jini outcome /path/to/work", result.stdout)
-        self.assertIn("jini next /path/to/work", result.stdout)
+        self.assertIn("HARNESS ORCHESTRATION", result.stdout)
+        self.assertIn("jini harnesses", result.stdout)
+        self.assertIn("jini plan /path/to/work", result.stdout)
+        self.assertIn("jini run /path/to/work", result.stdout)
         self.assertNotIn("usage: jini", result.stdout)
 
     def test_help_all_shows_full_parser_surface(self) -> None:
@@ -361,13 +363,22 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("clearer next steps", result.stdout)
         self.assertIn("stage-framework-experiment", result.stdout)
 
-    def test_start_alias_resolves_to_get_started(self) -> None:
-        result = self.run_cli("start", "--harness", "codex")
+    def test_start_alias_runs_setup_surface(self) -> None:
+        prefix = self.tmp / "setup-codex"
+        result = self.run_cli("start", "--harness", "codex", "--prefix", prefix)
         self.assert_ok(result)
         self.assertIn("HARNESS codex", result.stdout)
-        self.assertIn("BEGINNER", result.stdout)
+        self.assertIn("STATUS  ok", result.stdout)
+        self.assertIn(f"PREFIX  {prefix.resolve()}", result.stdout)
+        self.assertIn("READY", result.stdout)
         self.assertIn("jini example research-prd", result.stdout)
-        self.assertIn("jini plan-install --kit starter-kit --harness codex", result.stdout)
+        self.assertIn("jini outcome /path/to/work", result.stdout)
+
+    def test_guide_alias_resolves_to_get_started(self) -> None:
+        result = self.run_cli("guide", "--harness", "codex")
+        self.assert_ok(result)
+        self.assertIn("BEGINNER", result.stdout)
+        self.assertIn("jini start --harness codex", result.stdout)
 
     def test_example_alias_resolves_to_try_example(self) -> None:
         result = self.run_cli("example", "research-prd", "--format", "json")
@@ -415,6 +426,13 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("claude-code", harness_ids)
         codex = next(item for item in report["harnesses"] if item["id"] == "codex")
         self.assertIn("start --harness codex", codex["start_command"])
+
+    def test_plan_alias_resolves_to_recommend_execution(self) -> None:
+        pack_dir = self.compile_research_pack()
+        result = self.run_cli("plan", pack_dir, "--format", "json")
+        self.assert_ok(result)
+        report = json.loads(result.stdout)
+        self.assertEqual("research-prd", report["pack_id"])
 
     def test_bootstrap_home_materializes_personal_os_scaffold(self) -> None:
         home = self.personal_home()
@@ -2024,7 +2042,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         )
 
     def test_get_started_reports_beginner_and_power_paths(self) -> None:
-        result = self.run_cli("get-started", "--target", "codex", "--format", "json")
+        result = self.run_cli("get-started", "--harness", "codex", "--format", "json")
         self.assert_ok(result)
 
         guide = json.loads(result.stdout)
@@ -2033,14 +2051,15 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("starter-kit", guide["beginner_path"]["kit_id"])
         self.assertEqual("benchmark-delivery-kit", guide["power_user_path"]["kit_id"])
         self.assertEqual("preview", guide["beginner_path"]["trust_path"][0]["id"])
-        self.assertIn("Bundle-level detail is intentionally demoted", guide["beginner_path"]["notes"][0])
-        self.assertEqual(4, len(guide["beginner_path"]["commands"]))
+        self.assertIn("Bundle-level detail is intentionally hidden", guide["beginner_path"]["notes"][0])
+        self.assertEqual(3, len(guide["beginner_path"]["commands"]))
         self.assertTrue(all(item.startswith("jini ") for item in guide["beginner_path"]["commands"]))
-        self.assertTrue(any("plan-install --kit starter-kit" in item for item in guide["beginner_path"]["commands"]))
+        self.assertTrue(any("start --harness codex" in item for item in guide["beginner_path"]["commands"]))
         self.assertTrue(any("example research-prd" in item for item in guide["beginner_path"]["commands"]))
         self.assertFalse(any("catalog-bundles" in item for item in guide["beginner_path"]["commands"]))
         self.assertFalse(any("show-kpis" in item for item in guide["beginner_path"]["commands"]))
-        self.assertTrue(any("show-adapters" in item for item in guide["power_user_path"]["commands"]))
+        self.assertTrue(any("harnesses" in item for item in guide["power_user_path"]["commands"]))
+        self.assertTrue(any("plan /path/to/work" in item for item in guide["power_user_path"]["commands"]))
         self.assertTrue(guide["shared_model"])
 
     def test_try_example_reports_bundled_research_prd_value(self) -> None:
@@ -2220,7 +2239,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("vendor-decision-kit", kit_ids)
         self.assertEqual("starter-kit", catalog["recommended_paths"]["beginner"]["kit_id"])
         self.assertTrue(any("start --harness" in item for item in catalog["recommended_paths"]["beginner"]["commands"]))
-        self.assertTrue(any("doctor-install --kit starter-kit" in item for item in catalog["recommended_paths"]["beginner"]["commands"]))
+        self.assertTrue(any("example research-prd" in item for item in catalog["recommended_paths"]["beginner"]["commands"]))
         self.assertEqual("benchmark-delivery-kit", catalog["recommended_paths"]["power_user"]["kit_id"])
         starter_kit = next(item for item in catalog["kits"] if item["id"] == "starter-kit")
         self.assertEqual("beginner", starter_kit["audience"])

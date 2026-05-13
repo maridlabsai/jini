@@ -17,6 +17,8 @@ jini help
 If AI tools feel helpful at first but messy later, Jini is built for that
 messy part.
 
+Jini is a harness orchestration CLI with an outcome layer above coding agents.
+
 Jini helps when work moves between people, chats, docs, tickets, and tools,
 and too much time gets lost to status chasing, repeated explanation, and late surprises.
 
@@ -79,8 +81,8 @@ If you want the fastest install path, run this:
 
 ```bash
 pipx install --editable git+https://github.com/maridlabsai/jini.git
-jini example research-prd
 jini start --harness codex
+jini example research-prd
 ```
 
 That gives you a real `jini` command immediately, while keeping the runtime
@@ -1258,12 +1260,15 @@ bootstrapping packs and adapters, or exploring a design-partner engagement, see
 Most people only need a small CLI surface:
 
 ```bash
-jini help
+jini start --harness codex
 jini example research-prd
 jini outcome /path/to/work
-jini next /path/to/work --repo /path/to/repo --intent verify
-jini execute-flow /path/to/work --repo /path/to/repo --harness codex
-jini publish-readiness --format json
+```
+
+When you are ready to automate through a harness:
+
+```bash
+jini run /path/to/work --repo /path/to/repo --harness codex
 ```
 
 If you want the grouped command reference, see [docs/cli.md](./docs/cli.md).

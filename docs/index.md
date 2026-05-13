@@ -6,7 +6,7 @@ description: See what is done, what happens next, and what is still missing befo
 <div class="hero-panel">
   <p class="hero-kicker">Less Friction In Daily Work</p>
   <h1 class="hero-title">Finish work without status hunting or late surprises.</h1>
-  <p class="hero-summary">Spend less time chasing status, rebuilding context, and discovering missing work late. Jini keeps the next step, blockers, and proof visible while work is still moving.</p>
+  <p class="hero-summary">Spend less time chasing status, rebuilding context, and discovering missing work late. Jini is a harness orchestration CLI that keeps the next step, blockers, and proof visible while work is still moving.</p>
   <div class="cta-row">
     <a class="cta-button" href="{{ '/proof.html' | relative_url }}">See the 30-second proof</a>
     <a class="cta-button cta-button-secondary" href="{{ '/simple.html' | relative_url }}">Start with the simple guide</a>
