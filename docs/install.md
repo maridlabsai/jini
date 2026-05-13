@@ -1,4 +1,7 @@
-# Install
+---
+title: Install
+description: Use the smallest supported path to get Jini running as a normal CLI.
+---
 
 Jini should have one obvious install path.
 

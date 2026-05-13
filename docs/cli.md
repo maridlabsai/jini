@@ -1,4 +1,7 @@
-# CLI Guide
+---
+title: CLI Guide
+description: The small grouped command surface most people need once Jini is installed.
+---
 
 You do not need to know Python to use Jini.
 

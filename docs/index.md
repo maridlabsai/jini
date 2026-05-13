@@ -1,12 +1,7 @@
-<div class="site-brand">
-  <img class="site-brand-mark" src="{{ '/assets/brand/jini-mark-512.png' | relative_url }}" alt="Jini mark">
-  <div class="site-brand-copy">
-    <span class="site-brand-label">Jini</span>
-    <p class="site-brand-tagline">The framework for week two of work.</p>
-  </div>
-</div>
-
-# Jini
+---
+title: Jini
+description: See what is done, what happens next, and what is still missing before work should be treated as durable.
+---
 
 **In plain words:** Jini helps you see if work is really done, what comes
 next, and what is still missing.

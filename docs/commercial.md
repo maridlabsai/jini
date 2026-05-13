@@ -1,4 +1,7 @@
-# Commercial
+---
+title: Commercial
+description: The free core stays public. Paid work is for acceleration, customization, and trust.
+---
 
 Jini’s commercial boundary is explicit.
 

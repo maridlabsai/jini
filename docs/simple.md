@@ -1,4 +1,7 @@
-# Simple Guide
+---
+title: Simple Guide
+description: The plain-language path for understanding what Jini does without learning framework terms first.
+---
 
 Jini helps you answer three questions:
 

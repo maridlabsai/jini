@@ -3,3 +3,9 @@ description: The framework for week two of work.
 theme: jekyll-theme-primer
 url: https://maridlabsai.github.io
 baseurl: /jini
+defaults:
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: default

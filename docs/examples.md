@@ -1,4 +1,7 @@
-# Common Examples
+---
+title: Common Examples
+description: Start with a workflow that already hurts, run one command, and see what Jini makes explicit.
+---
 
 These examples should answer one practical question:
 

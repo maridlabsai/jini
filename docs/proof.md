@@ -1,4 +1,7 @@
-# Proof
+---
+title: Proof
+description: One command shows the difference between finished tasks and truly verified work.
+---
 
 Jini’s public proof is simple:
 

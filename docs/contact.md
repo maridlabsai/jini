@@ -1,4 +1,7 @@
-# Contact
+---
+title: Contact
+description: Use Issues, Discussions, or commercial contact depending on the kind of help you need.
+---
 
 ## Community
 
