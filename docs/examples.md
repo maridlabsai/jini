@@ -1,6 +1,6 @@
 ---
 title: Common Examples
-description: Start with a workflow that already hurts, run one command, and see what Jini makes explicit.
+description: Start with a workflow that already hurts, run one command, and see how Jini helps turn it into an outcome.
 ---
 
 These examples should answer one practical question:
@@ -55,7 +55,7 @@ If that translation still feels abstract, use the examples below.
     <a class="workflow-card" href="#meeting-followup">
       <span class="workflow-meta">Meeting Follow-up</span>
       <h3>Your meeting ended, but the real follow-up is still fuzzy.</h3>
-      <p>Best when decisions, owners, and missing approvals are about to get lost in notes and chat.</p>
+      <p>Best when follow-up, owners, and missing approvals are about to get lost in notes and chat.</p>
       <code>jini try-example meeting-followup</code>
     </a>
     <a class="workflow-card" href="#research-prd">
@@ -67,7 +67,7 @@ If that translation still feels abstract, use the examples below.
     <a class="workflow-card" href="#vendor-selection">
       <span class="workflow-meta">Vendor Selection</span>
       <h3>You need to recommend one option without losing the reasoning behind it.</h3>
-      <p>Best for expensive decisions where the team will need to defend the choice later.</p>
+      <p>Best for expensive choices where the team will need to defend the choice later and still move it forward.</p>
       <code>jini try-example vendor-selection</code>
     </a>
     <a class="workflow-card" href="#incident-response">
@@ -95,7 +95,11 @@ what is still fuzzy?”
   </div>
   <div class="snapshot-card">
     <span class="snapshot-label">Why it helps</span>
-    <p>You stop treating notes as if they were real decisions and owned work.</p>
+    <p>You stop treating notes as if they were settled follow-through.</p>
+  </div>
+  <div class="snapshot-card">
+    <span class="snapshot-label">Outcome</span>
+    <p>The meeting turns into real follow-up instead of a note pile.</p>
   </div>
 </div>
 
@@ -105,7 +109,7 @@ everyone assumes are obvious.
 
 **What usually goes wrong:** nobody can tell the difference between:
 
-- a decision that was really made
+- a direction everyone truly agreed to
 - an action someone actually owns
 - a follow-up that still needs approval
 - a question that is still unresolved
@@ -172,6 +176,10 @@ look ready?”
   <div class="snapshot-card">
     <span class="snapshot-label">Why it helps</span>
     <p>You catch false confidence before engineering starts from an unverified spec.</p>
+  </div>
+  <div class="snapshot-card">
+    <span class="snapshot-label">Outcome</span>
+    <p>The team gets a safer handoff instead of a polished but risky draft.</p>
   </div>
 </div>
 
@@ -250,7 +258,11 @@ meeting is over?”
   </div>
   <div class="snapshot-card">
     <span class="snapshot-label">Why it helps</span>
-    <p>You can explain the decision later without rebuilding the reasoning from memory.</p>
+    <p>You can explain the choice later without rebuilding the reasoning from memory.</p>
+  </div>
+  <div class="snapshot-card">
+    <span class="snapshot-label">Outcome</span>
+    <p>The choice can move into approval and execution without losing its reasoning.</p>
   </div>
 </div>
 
@@ -297,7 +309,7 @@ MISSING-LATER
 
 - attach the proof behind the recommendation
 - make the approval path explicit
-- keep the tradeoffs with the decision instead of losing them in presentation artifacts
+- keep the tradeoffs with the choice instead of losing them in presentation artifacts
 
 **Why this helps in daily work:**
 
@@ -322,6 +334,10 @@ done talking about it?”
   <div class="snapshot-card">
     <span class="snapshot-label">Why it helps</span>
     <p>You stop calling incidents “done” before the risky follow-up work is actually finished.</p>
+  </div>
+  <div class="snapshot-card">
+    <span class="snapshot-label">Outcome</span>
+    <p>Recovery turns into real closure instead of relief followed by forgotten follow-up.</p>
   </div>
 </div>
 

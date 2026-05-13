@@ -30,7 +30,7 @@ Use those three commands to:
 
 - feel the product on a familiar workflow
 - see the smallest install and target path
-- inspect the current state of real work
+- inspect the current state of real work before pushing toward an outcome
 
 ## Daily Workflow Commands
 

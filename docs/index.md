@@ -6,7 +6,7 @@ description: See what is done, what happens next, and what is still missing befo
 <div class="hero-panel">
   <p class="hero-kicker">Truthful AI Workflows</p>
   <h1 class="hero-title">See what is done, what happens next, and what is still missing.</h1>
-  <p class="hero-summary">Jini is for the part after the exciting first draft: handoffs, checking, sign-off, and the quiet missing work that turns “done” into rework later.</p>
+  <p class="hero-summary">Jini is for the part after the exciting first draft: handoffs, checking, sign-off, and the quiet missing work that turns “done” into a real outcome instead of rework later.</p>
   <div class="cta-row">
     <a class="cta-button" href="{{ '/proof.html' | relative_url }}">See the 30-second proof</a>
     <a class="cta-button cta-button-secondary" href="{{ '/simple.html' | relative_url }}">Start with the simple guide</a>
@@ -28,8 +28,8 @@ description: See what is done, what happens next, and what is still missing befo
   </div>
 </div>
 
-**In plain words:** Jini helps you see if work is really done, what comes
-next, and what is still missing.
+**In plain words:** Jini helps you get work across the line by showing what is
+done, what comes next, and what is still missing.
 
 If you want the simplest version first, read the [Simple Guide](./simple.md).
 
@@ -66,7 +66,7 @@ TASKS
 ```
 
 That is the core idea in one screen: completed tasks are not the same thing as
-verified, approved, publishable work.
+a usable outcome.
 
 ![Jini research to PRD proof demo](./assets/examples/research-prd.gif)
 
@@ -74,7 +74,7 @@ verified, approved, publishable work.
   <strong>Read this screen in plain English:</strong>
   <ul>
     <li><code>done: 3/3</code> means the tasks were completed</li>
-    <li><code>STATE awaiting_verification</code> means the work is still not trustworthy enough to advance</li>
+    <li><code>STATE awaiting_verification</code> means the work still needs one more step before it becomes a safe outcome</li>
     <li><code>MISSING-LATER Approval</code> means a later blocker is already visible now</li>
   </ul>
 </div>
@@ -89,32 +89,32 @@ Each example answers a user question, not a framework question.
 <div class="workflow-grid">
   <a class="workflow-card" href="{{ '/examples.html#meeting-followup' | relative_url }}">
     <span class="workflow-meta">Meeting Follow-up</span>
-    <h3>Your meeting ended, but nobody can tell what is actually decided.</h3>
-    <p>Use this when notes, owners, and approvals are about to get scattered across docs, chat, and memory.</p>
+    <h3>Your meeting ended, but the follow-through still is not real.</h3>
+    <p>Use this when notes, owners, and approvals are about to get scattered before any actual follow-up happens.</p>
     <code>jini try-example meeting-followup</code>
   </a>
   <a class="workflow-card" href="{{ '/examples.html#research-prd' | relative_url }}">
     <span class="workflow-meta">Research To PRD</span>
-    <h3>Your spec looks done, but nobody knows if it is actually safe to build from.</h3>
-    <p>Use this when research exists, tasks are complete, and the handoff is starting to look more trustworthy than it really is.</p>
+    <h3>Your spec looks done, but the team still does not have a safe build handoff.</h3>
+    <p>Use this when research exists, tasks are complete, and the handoff is starting to look more finished than it really is.</p>
     <code>jini try-example research-prd</code>
   </a>
   <a class="workflow-card" href="{{ '/examples.html#vendor-selection' | relative_url }}">
     <span class="workflow-meta">Vendor Selection</span>
-    <h3>You need to recommend one option without losing the reasoning behind it.</h3>
-    <p>Use this when several vendors look plausible and you need a decision that survives beyond the meeting where it was made.</p>
+    <h3>You need a vendor choice that can actually move into approval and action.</h3>
+    <p>Use this when several vendors look plausible and you need a choice that survives beyond the meeting where it was made.</p>
     <code>jini try-example vendor-selection</code>
   </a>
   <a class="workflow-card" href="{{ '/examples.html#incident-response' | relative_url }}">
     <span class="workflow-meta">Incident Response</span>
-    <h3>The outage is over, but the real closure work is still easy to skip.</h3>
+    <h3>The outage is over, but the work still is not ready for true closure.</h3>
     <p>Use this when rollback, proof, and final signoff still matter after service recovery.</p>
     <code>jini try-example incident-response</code>
   </a>
 </div>
 
 <div class="value-strip">
-  <p><strong>What changes in one run:</strong> Jini gives you one truthful state surface. You can see what happened, what comes next, and what is still missing before the work should be treated as durable.</p>
+  <p><strong>What changes in one run:</strong> Jini gives you one truthful path from draft to outcome. You can see what happened, what comes next, and what is still missing before the work should be treated as durable.</p>
 </div>
 
 ## Why These Four
@@ -122,9 +122,9 @@ Each example answers a user question, not a framework question.
 Those four workflows are the shortest honest explanation of Jini:
 
 - work happened
-- a draft or decision exists
+- a draft or tentative answer exists
 - people are tempted to call it done
-- Jini shows what is still missing before the work should be treated as durable
+- Jini shows what is still missing before the work becomes a real outcome
 
 The public repo also proves the same kernel can stretch into personal planning,
 such as travel and budgeting, and into more formal workflows such as compliance
@@ -137,17 +137,17 @@ Jini should earn its keep in normal work, not only in edge cases.
 
 Here is the practical payoff in day-to-day flows:
 
-- **After a meeting:** you can turn loose notes into explicit decisions,
+- **After a meeting:** you can turn loose notes into explicit follow-up,
   owners, tasks, and missing requirements instead of hoping the follow-up stays
   coherent.
 - **Before engineering starts:** you can check whether a research-backed spec
-  is actually verified, or whether the team is about to build from an
-  unverified draft.
+  can become a safe handoff, or whether the team is about to build from an
+  unfinished draft.
 - **Before asking for approval:** you can show the current state, missing
-  evidence, and rationale in one place instead of assembling it from docs,
+  evidence, and rationale in one place instead of assembling the outcome story from docs,
   chat, and memory.
 - **During handoffs:** the next person can run one command and see what is
-  done, what is missing, and what happens next.
+  done, what is missing, and what happens next to move the work forward.
 - **After an incident:** you can tell the difference between "the service is
   back" and "the work is actually ready for closure."
 
@@ -162,7 +162,7 @@ That one screen answers the questions teams ask every day:
 - What state is this in?
 - What happens next?
 - What is still missing?
-- Are the tasks merely done, or is the work actually verified?
+- Are the tasks merely done, or do we have a real outcome yet?
 
 If you want to feel that payoff before you have your own work pack, start with:
 

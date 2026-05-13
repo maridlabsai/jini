@@ -1,6 +1,6 @@
 # Jini
 
-**In plain words:** Jini helps you answer three questions about work:
+**In plain words:** Jini helps you get work across the line by answering three questions:
 
 - What is done?
 - What happens next?
@@ -12,7 +12,7 @@ If AI tools feel helpful at first but messy later, Jini is built for that
 messy part.
 
 Jini helps when work moves between people, chats, docs, tickets, and tools,
-and nobody can cleanly say whether the work is really ready.
+and nobody can cleanly say whether the work is really ready to become an outcome.
 
 For technical readers: Jini is a framework with a small protocol core for AI
 work that needs durable state, approvals, evidence, memory, and portability.
@@ -65,7 +65,7 @@ TASKS
 ```
 
 That is the core idea in one screen: completed tasks are not the same thing as
-verified, approved, publishable work.
+a usable outcome.
 
 ![Jini research to PRD proof demo](docs/assets/examples/research-prd.gif)
 
@@ -99,8 +99,8 @@ the exact state Jini makes visible in each one:
   screen: tasks can be complete while the work is still not safe to build from
   because verification and approval are still missing with
   `jini try-example research-prd`.
-- **Vendor selection.** Jini makes the recommendation approval-ready instead of
-  leaving the reasoning trapped in slides, meetings, or email with
+- **Vendor selection.** Jini turns a plausible choice into something that can
+  actually move into approval and action instead of leaving the reasoning trapped in slides, meetings, or email with
   `jini try-example vendor-selection`.
 - **Incident response.** Jini keeps rollback, evidence, and closure state
   explicit after the urgent firefight is over, so recovery is not mistaken for
@@ -108,7 +108,7 @@ the exact state Jini makes visible in each one:
   `jini try-example incident-response`.
 
 Those four cover the common Jini pattern: the draft exists, but the real work
-still needs ownership, verification, approval, and continuity.
+still needs ownership, verification, approval, and continuity before it becomes an outcome.
 
 The public repo also proves the same kernel can stretch into personal planning,
 such as travel and budgeting, and into more formal workflows such as compliance
@@ -123,9 +123,9 @@ Start with the workflow that already feels familiar:
 
 | Workflow | Use it when | Run |
 | --- | --- | --- |
-| **Meeting follow-up** | one meeting needs decisions, owners, and honest next steps | `jini try-example meeting-followup` |
-| **Research to PRD handoff** | research exists and you need a truthful build handoff | `jini try-example research-prd` |
-| **Vendor selection** | several options look plausible and you need an approval-ready recommendation | `jini try-example vendor-selection` |
+| **Meeting follow-up** | one meeting needs real follow-up, owners, and honest next steps | `jini try-example meeting-followup` |
+| **Research to PRD handoff** | research exists and you need a safe build handoff | `jini try-example research-prd` |
+| **Vendor selection** | several options look plausible and you need a choice that can move into approval and action | `jini try-example vendor-selection` |
 | **Incident response** | the outage is over but rollback, proof, and closure still matter | `jini try-example incident-response` |
 
 ## Day-To-Day Value
@@ -135,8 +135,8 @@ workflow ambiguity.
 
 In normal work, that means:
 
-- after a meeting, you know what was decided and what is still missing
-- before a handoff, you know whether the work is actually ready
+- after a meeting, you know what follow-up is real and what is still missing
+- before a handoff, you know whether the work can become a safe outcome
 - before asking for approval, you can show the rationale and missing evidence
 - after tasks are marked done, you can still see whether the pack is waiting on
   verification or approval
@@ -150,7 +150,7 @@ jini status-pack <path-to-work>
 ```
 
 That one screen tells you the current state, next step, missing requirements,
-and whether "done" really means done.
+and whether "done" has actually become an outcome.
 
 ## Support And Feedback
 
@@ -227,7 +227,7 @@ They often fail in predictable ways:
 
 - context gets lost between sessions
 - plans drift from execution
-- decisions are made but not recorded
+- work moves forward but the reasoning is not recorded
 - approvals are implicit instead of explicit
 - verification is weak or ad hoc
 - operations are treated as an afterthought
@@ -492,7 +492,7 @@ Each artifact is versioned, typed, revision-bound, and traceable.
 
 That means the platform can answer questions like:
 
-- Which decision justified this release?
+- Which evidence and workflow path justified this release?
 - Which evidence validated this exact revision?
 - Who approved this filing?
 - Which rollback conditions were in force?
@@ -1268,7 +1268,7 @@ This repo currently contains:
 - a third compiled workflow pack for `budget-cycle`, proving the same kernel can handle personal finance planning without semantic changes
 - a fourth compiled workflow pack for `incident-response`, proving the same kernel can handle operations and outage-response workflows without semantic changes
 - a fifth compiled workflow pack for `compliance-audit`, proving the same kernel can handle regulated review and approval-heavy workflows without semantic changes
-- a sixth compiled workflow pack for `vendor-selection`, proving the same kernel can handle commercial evaluation and approval-heavy decision workflows without semantic changes
+- a sixth compiled workflow pack for `vendor-selection`, proving the same kernel can handle commercial evaluation and approval-heavy workflows without semantic changes
 - compiled pack flows that now materialize task, issue, and wiki execution
   surfaces immediately after successful compilation
 - a minimal Memory layer with `knowledge/`, `projects/`, and `people/`

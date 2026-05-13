@@ -13,7 +13,7 @@ That is all.
 
 <div class="section-card">
   <strong>If you only remember one thing:</strong>
-  <p>Jini is a way to slow down just enough to tell the truth about work before you call it finished.</p>
+  <p>Jini is a way to slow down just enough to get to a real outcome instead of stopping at “looks done.”</p>
 </div>
 
 You do not need to learn the whole framework first.
@@ -26,7 +26,7 @@ For example:
 
 - a meeting ends and nobody is sure what to do next
 - a plan looks finished, but nobody knows if it is really ready
-- a decision was made, but the reason is getting lost
+- a choice was made, but the reason is getting lost
 - a problem is fixed, but nobody knows if the work is truly closed
 
 ## First Try
@@ -54,7 +54,7 @@ Read them like this:
 
 ## Why This Matters
 
-Many teams say work is done too early.
+Many teams stop at “good enough” too early.
 
 Jini helps you slow down just enough to see:
 

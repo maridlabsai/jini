@@ -1,11 +1,11 @@
 ---
 title: Proof
-description: One command shows the difference between finished tasks and truly verified work.
+description: One command shows the difference between finished tasks and a real usable outcome.
 ---
 
 Jini’s public proof is simple:
 
-**done does not mean verified**
+**done does not mean outcome**
 
 Run:
 
@@ -31,12 +31,12 @@ This is the difference Jini is trying to preserve:
 
 - tasks can be complete
 - evidence can be attached
-- the work can still be blocked from advancing
+- the work can still fall short of a safe outcome
 
 ![Jini research to PRD proof demo](./assets/examples/research-prd.gif)
 
-That is not a UI choice. It is the protocol core refusing to collapse
-governance into a green checklist.
+That is not a UI choice. It is the protocol core refusing to confuse activity
+with outcome.
 
 If you want the same proof shape on a more ordinary workflow, run:
 

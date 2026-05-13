@@ -9,11 +9,15 @@ Jini should never leave you guessing about three things:
 - what state the work is in
 - what artifacts back that state up
 
+Those are not there for ceremony. They are there so the user can get to an
+outcome instead of stopping at a draft, a recommendation, or a false green
+light.
+
 <div class="section-card">
   <h3>The three commands that matter most</h3>
   <div class="on-this-page">
     <a href="#status-pack"><code>jini status-pack</code>: see the truth of the work right now</a>
-    <a href="#execution-checklist"><code>jini execution-checklist</code>: see the next honest step</a>
+    <a href="#execution-checklist"><code>jini execution-checklist</code>: see the next honest step toward the outcome</a>
     <a href="#compact-context"><code>jini compact-context</code>: hand the important context to the next person or agent</a>
   </div>
 </div>
@@ -63,7 +67,7 @@ TASKS
 Read it like this:
 
 - `STATE`: where the work really is now
-- `HEALTH`: whether the current stage is healthy enough to advance
+- `HEALTH`: whether the current stage is healthy enough to advance toward an outcome
 - `NEXT`: the next honest move
 - `MISSING-LATER`: future blockers already visible now
 - `TASKS`: whether the tasks are truly done or still unresolved
@@ -108,7 +112,8 @@ It keeps durable artifacts such as:
 - `Publication`
 
 You do not need to memorize all of them on day one. The important point is
-that state should be backed by artifacts, not by wishful thinking.
+that state should be backed by artifacts, so the team can reach an outcome
+without reconstructing the truth from memory.
 
 ## The Practical Rule
 
