@@ -37,7 +37,7 @@ It is an operating substrate for work.
 If you want the fastest proof that Jini is different, run this:
 
 ```bash
-python3 tools/jini.py try-example research-prd
+jini try-example research-prd
 ```
 
 The important lines are:
@@ -1213,7 +1213,7 @@ Then read:
 First runnable validation command:
 
 ```bash
-python3 tools/jini_validate.py validate-pack packs/research-prd/examples/research-prd-v1
+jini validate-pack packs/research-prd/examples/research-prd-v1
 ```
 
 ## Commercial
@@ -1224,159 +1224,22 @@ If you want help adopting it in a real repo, designing your workflow,
 bootstrapping packs and adapters, or exploring a design-partner engagement, see
 [COMMERCIAL.md](./COMMERCIAL.md).
 
-Primary CLI commands now available:
+Most people only need a small CLI surface:
 
 ```bash
-python3 tools/jini.py list-packs
-python3 tools/jini.py compile-pack research-prd \
-  --work-unit-id my-research-prd \
-  --title "Jini Research To PRD" \
-  --purpose "Turn validated research into a PRD and build-ready handoff" \
-  --owner product-lead \
-  --approver eng-manager \
-  --stakeholder research-lead \
-  --stakeholder design-lead \
-  --output /tmp/my-research-prd
-python3 tools/jini.py status-pack /tmp/my-research-prd
-python3 tools/jini.py validate-pack /tmp/my-research-prd
-python3 tools/jini.py recommend-execution /tmp/my-research-prd --intent wiki --repo /path/to/repo
-pipx install --editable git+https://github.com/maridlabsai/jini.git
+jini try-example research-prd
 jini get-started --target codex
-jini plan-install --kit starter-kit --target codex
-jini install-bundles --kit starter-kit --target codex --prefix /tmp/jini-stage
-jini doctor-install --kit starter-kit --target codex --prefix /tmp/jini-stage
-python3 tools/jini.py catalog-bundles
-python3 tools/jini.py catalog-bundles --target codex --format json
-jini plan-install --kit operations-response-kit --target codex
-jini plan-install --kit regulated-readiness-kit --target codex
-jini plan-install --kit vendor-decision-kit --target codex
-jini update-bundles --kit starter-kit --target codex --prefix /tmp/jini-stage
-jini uninstall-bundles --kit starter-kit --target codex --prefix /tmp/jini-stage
-jini plan-install --bundle jini-core --target codex --target kiro-cli
-python3 tools/jini.py show-kpis
-python3 tools/jini.py publish-readiness
-python3 tools/jini.py validate-golden-benchmark --format json
-python3 tools/jini.py show-kpis --dimension memory
-python3 tools/jini.py catalog-packs
-python3 tools/jini.py execution-checklist /tmp/my-research-prd --repo /path/to/repo --intent verify
-python3 tools/jini.py compact-context /tmp/my-research-prd --repo /path/to/repo --intent verify --max-chars 900
-python3 tools/jini.py show-adapters
-python3 tools/jini.py adapter-conformance
-python3 tools/jini.py resolve-adapter --capability issues-export --layer issue-system
-python3 tools/jini.py adapter-matrix
-python3 tools/jini.py show-learning-events /tmp/my-research-prd
-python3 tools/jini.py learning-snapshot /tmp/my-research-prd
-python3 tools/jini.py routing-backtest /tmp/my-research-prd
-python3 tools/jini.py bootstrap-home /tmp/jini-home --owner-name "Example Owner"
-python3 tools/jini.py bootstrap-steering /path/to/repo
-python3 tools/jini.py show-steering /path/to/repo
-python3 tools/jini.py append-memory /tmp/jini-home --line "Prefer local-first verification"
-python3 tools/jini.py memory-status /tmp/jini-home
-python3 tools/jini.py dream-memory /tmp/jini-home
-python3 tools/jini.py list-tools /tmp/jini-home
-python3 tools/jini.py list-routines /tmp/jini-home
-python3 tools/jini.py run-routine /tmp/jini-home daily-brief --mode local
-python3 tools/jini.py run-routine /tmp/jini-home golden-benchmark --mode local
-python3 tools/jini.py run-routine /tmp/jini-home framework-review --mode local
-python3 tools/jini.py run-routine /tmp/jini-home weekly-planning --mode remote
-python3 tools/jini.py repo-map /path/to/repo
-python3 tools/jini.py bind-home /tmp/my-research-prd --home /tmp/jini-home
-python3 tools/jini.py recommend-execution /tmp/my-research-prd --home /tmp/jini-home --runtime-target kiro-cli
-python3 tools/jini.py compact-context /tmp/my-research-prd --repo /path/to/repo --home /tmp/jini-home --runtime-target codex --max-chars 900
-python3 tools/jini.py stage-runtime-handoff /tmp/my-research-prd --repo /path/to/repo --home /tmp/jini-home --runtime-target kiro-cli
-python3 tools/jini.py activate-runtime-target /tmp/my-research-prd --repo /path/to/repo --home /tmp/jini-home --runtime-target codex --prefix /tmp/jini-stage
-python3 tools/jini.py execute-flow /tmp/my-research-prd --repo /path/to/repo --home /tmp/jini-home --runtime-target codex --activate-runtime --prefix /tmp/jini-stage --consent write --consent publish --issue-adapter github --wiki-adapter markdown
-python3 tools/jini.py compile-pack incident-response \
-  --work-unit-id checkout-incident \
-  --title "Checkout Incident" \
-  --purpose "Stabilize checkout with explicit rollback and verification" \
-  --owner incident-commander \
-  --approver service-owner \
-  --output /tmp/checkout-incident
-python3 tools/jini.py compile-pack compliance-audit \
-  --work-unit-id quarterly-controls-audit \
-  --title "Quarterly Controls Audit" \
-  --purpose "Review controls, evidence, and signoff readiness for a regulated surface" \
-  --owner compliance-lead \
-  --approver risk-officer \
-  --output /tmp/quarterly-controls-audit
-python3 tools/jini.py compile-pack vendor-selection \
-  --work-unit-id finance-platform-vendor \
-  --title "Finance Platform Vendor Evaluation" \
-  --purpose "Compare shortlisted vendors and prepare an approval-ready recommendation" \
-  --owner procurement-lead \
-  --approver finance-approver \
-  --output /tmp/finance-platform-vendor
-python3 tools/jini.py publish-issues /tmp/checkout-incident --adapter github --apply-local --format json
-python3 tools/jini.py publish-wiki /tmp/checkout-incident --adapter markdown --apply-local --format json
-python3 tools/jini.py publish-issues /tmp/checkout-incident --adapter jira --bridge-runner /path/to/bridge --format json
-python3 tools/jini.py execute-publish-plan /tmp/checkout-incident/exports/publish/issues/jira --runner /path/to/bridge --format json
-python3 tools/jini.py review-policy /tmp/my-research-prd
-python3 tools/jini.py stage-policy-candidate /tmp/my-research-prd
-python3 tools/jini.py approve-policy-candidate /tmp/my-research-prd /tmp/my-research-prd/runtime/policy-candidates/runtime-routing-candidate.json --approver platform-lead
-python3 tools/jini.py rollback-policy-candidate /tmp/my-research-prd /tmp/my-research-prd/runtime/policy-candidates/runtime-routing-candidate.json --actor platform-lead --reason "Restore baseline routing"
-python3 tools/jini.py compile-pack travel-plan \
-  --work-unit-id my-travel-plan \
-  --title "Spring Travel Plan" \
-  --purpose "Plan a constrained trip with explicit itinerary and contingencies" \
-  --owner traveler \
-  --output /tmp/my-travel-plan
-python3 tools/jini.py compile-pack budget-cycle \
-  --work-unit-id monthly-budget-v1 \
-  --title "Monthly Budget" \
-  --purpose "Build a monthly budget with explicit savings, obligations, and fallback cuts" \
-  --owner finance-owner \
-  --output /tmp/monthly-budget
-python3 tools/jini.py bind-atlassian /tmp/my-research-prd \
-  --cloud-id 11111111-2222-3333-4444-555555555555 \
-  --site-url https://example.atlassian.net \
-  --project-key DEMO \
-  --space-key DEMO \
-  --space-id 123456
-python3 tools/jini.py show-atlassian /tmp/my-research-prd
-python3 tools/jini.py run-pack /tmp/my-research-prd --mode supervised --consent write --repo /path/to/repo --home /tmp/jini-home --runtime-target codex
-python3 tools/jini.py run-pack /tmp/my-research-prd --mode autonomous --consent command --consent publish --project-key DEMO --wiki-adapter confluence
-python3 tools/jini.py export-tasks /tmp/my-research-prd
-python3 tools/jini.py sync-tasks /tmp/my-research-prd
-python3 tools/jini.py export-issues /tmp/my-research-prd --adapter jira
-python3 tools/jini.py export-wiki /tmp/my-research-prd --adapter confluence
-python3 tools/jini.py export-wiki /tmp/my-research-prd --adapter markdown
-python3 tools/jini.py publish-issues /tmp/my-research-prd --adapter jira --project-key DEMO
-python3 tools/jini.py publish-issues /tmp/my-research-prd --adapter github
-python3 tools/jini.py apply-publish-plan /tmp/my-research-prd/exports/publish/issues/github
-python3 tools/jini.py publish-wiki /tmp/my-research-prd --adapter confluence --space-key DEMO
-python3 tools/jini.py publish-wiki /tmp/my-research-prd --adapter markdown
-python3 tools/jini.py apply-publish-plan /tmp/my-research-prd/exports/publish/wiki/markdown
-python3 tools/jini.py capture-publication /tmp/my-research-prd \
-  --author release-coordinator \
-  --input /tmp/my-research-prd/runtime/publication-result.json \
-  --scope atlassian-publish
-python3 tools/jini.py capture-output /tmp/my-research-prd \
-  --author product-lead \
-  --task-index 1 \
-  --status done \
-  --note "Validated source coverage and finalized the research synthesis" \
-  --reference docs/research-notes.md
-python3 tools/jini.py advance-pack /tmp/my-research-prd
-python3 tools/jini.py harvest-evidence /tmp/my-research-prd \
-  --author validator \
-  --repo /path/to/repo \
-  --home /tmp/jini-home \
-  --category verify \
-  --category demo \
-  --category startup
-python3 tools/jini.py capture-evidence /tmp/my-research-prd \
-  --author validator \
-  --claim "Research coverage is reproducible" \
-  --test-result "Validation checks passed on the active revision" \
-  --review-result "PRD and task views match the current evidence set" \
-  --operational-result "Handoff bundle is ready for verification" \
-  --risk "Research freshness can still drift after approval"
-python3 tools/jini.py capture-approval /tmp/my-research-prd \
-  --author release-coordinator \
-  --approver-actor eng-manager \
-  --scope operational-readiness
-python3 tools/jini.py advance-pack /tmp/my-research-prd --to operational
+jini status-pack /path/to/work
+jini execution-checklist /path/to/work --repo /path/to/repo --intent verify
+jini execute-flow /path/to/work --repo /path/to/repo --runtime-target codex
+jini publish-readiness --format json
+```
+
+If you want the grouped command reference, see [docs/cli.md](./docs/cli.md).
+If you want the complete surface, run:
+
+```bash
+jini --help
 ```
 
 ## Current Status

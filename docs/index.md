@@ -129,6 +129,7 @@ jini try-example meeting-followup
 ## Explore More
 
 - install Jini with `pipx install --editable git+https://github.com/maridlabsai/jini.git`
+- [See the short CLI guide](./cli.md)
 - [See the proof path](./proof.md)
 - [See the install path](./install.md)
 - [See detailed examples](./examples.md)

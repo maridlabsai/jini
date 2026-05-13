@@ -35,4 +35,7 @@ python3 -m pip install -e .
 jini get-started --target codex
 ```
 
+Once Jini is installed, the normal user surface is just `jini ...`. For the
+small grouped command set, see [the CLI guide](./cli.md).
+
 For deeper install details, see [specs/install-packaging.md](https://github.com/maridlabsai/jini/blob/main/specs/install-packaging.md).
