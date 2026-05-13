@@ -1876,6 +1876,15 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertGreaterEqual(report["kit_count"], 6)
         self.assertTrue(any(section["id"] == "install" and section["status"] == "ok" for section in report["sections"]))
         self.assertTrue(any(section["id"] == "breadth" and section["status"] == "ok" for section in report["sections"]))
+        leadership = next(section for section in report["sections"] if section["id"] == "leadership")
+        self.assertEqual("ok", leadership["status"])
+        guarded_dimensions = {item["dimension_id"] for item in leadership["checks"]}
+        self.assertIn("workflow-rigor", guarded_dimensions)
+        self.assertIn("governance", guarded_dimensions)
+        self.assertTrue(all(item["status"] == "ok" for item in leadership["checks"]))
+        self.assertTrue(
+            any(item["dimension_id"] == "learning-maturity" and item["position"] == "ahead" for item in leadership["checks"])
+        )
 
     def test_validate_golden_benchmark_reports_jini_against_kiro_and_hermes(self) -> None:
         result = self.run_cli("validate-golden-benchmark", "--format", "json")

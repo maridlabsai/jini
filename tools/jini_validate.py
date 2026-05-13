@@ -1661,6 +1661,28 @@ def build_publish_readiness() -> dict[str, Any]:
             }
         )
 
+    leadership_checks: list[dict[str, Any]] = []
+    for item in scorecard.get("dimensions", []):
+        if not isinstance(item, dict) or not item.get("leadership_guard"):
+            continue
+        dimension_id = str(item.get("id", "")).strip()
+        competitor = item.get("strongest_competitor", {}) if isinstance(item.get("strongest_competitor", {}), dict) else {}
+        competitor_name = str(competitor.get("name", "")).strip()
+        competitor_score = float(competitor.get("score", 0.0)) if competitor else 0.0
+        current_score = float(item.get("current_score", 0.0))
+        margin = round(current_score - competitor_score, 2)
+        leadership_checks.append(
+            {
+                "dimension_id": dimension_id,
+                "current_score": current_score,
+                "competitor": competitor_name,
+                "competitor_score": competitor_score,
+                "margin": margin,
+                "position": "ahead" if margin > 0 else "tied" if margin == 0 else "behind",
+                "status": "ok" if current_score >= competitor_score else "warning",
+            }
+        )
+
     commercial_kit = next((kit for kit in install_catalog.get("kits", []) if kit.get("id") == "vendor-decision-kit"), None)
     breadth_summary = {
         "pack_count": int(pack_catalog.get("pack_count", 0)),
@@ -1702,6 +1724,12 @@ def build_publish_readiness() -> dict[str, Any]:
             "label": "Publishing score gates",
             "status": "ok" if all(item["status"] == "ok" for item in score_checks) else "warning",
             "checks": score_checks,
+        },
+        {
+            "id": "leadership",
+            "label": "Lead preservation gates",
+            "status": "ok" if all(item["status"] == "ok" for item in leadership_checks) else "warning",
+            "checks": leadership_checks,
         },
     ]
     overall_status = "ok" if all(section["status"] == "ok" for section in sections) else "warning"

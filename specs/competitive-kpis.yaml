@@ -18,6 +18,7 @@ dimensions:
     execution_order: 1
     current_score: 9.0
     target_score: 9.0
+    leadership_guard: true
     strongest_competitor:
       name: Kiro
       score: 9.0
@@ -73,6 +74,7 @@ dimensions:
     execution_order: 3
     current_score: 9.0
     target_score: 9.0
+    leadership_guard: true
     strongest_competitor:
       name: Matt Pocock Skills Installer
       score: 9.0
@@ -184,6 +186,7 @@ dimensions:
     execution_order: 7
     current_score: 9.0
     target_score: 9.0
+    leadership_guard: true
     strongest_competitor:
       name: Hermes
       score: 9.0
@@ -217,6 +220,7 @@ dimensions:
     execution_order: 8
     current_score: 9.0
     target_score: 9.0
+    leadership_guard: true
     strongest_competitor:
       name: Hermes
       score: 7.0
@@ -267,6 +271,7 @@ dimensions:
     execution_order: 10
     current_score: 9.0
     target_score: 9.0
+    leadership_guard: true
     strongest_competitor:
       name: Kiro
       score: 7.0
@@ -288,6 +293,7 @@ dimensions:
     execution_order: 11
     current_score: 9.0
     target_score: 9.0
+    leadership_guard: true
     strongest_competitor:
       name: Spec Kit
       score: 8.0

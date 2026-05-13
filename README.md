@@ -1264,7 +1264,7 @@ This repo currently contains:
 - an initial CLI conformance and lifecycle test suite covering compilation,
   runtime execution, guided flow execution, local publish apply, publish-plan staging, and guarded transitions
 - a `show-kpis` command that exposes the machine-readable competitive scorecard and next build actions
-- a `publish-readiness` command that gives a lean public-release gate across docs, install trust, breadth, and score thresholds
+- a `publish-readiness` command that gives a lean public-release gate across docs, install trust, breadth, score thresholds, and lead-preservation checks on the dimensions Jini already leads
 - a `validate-golden-benchmark` command that reruns a weighted golden dataset, includes a dataset digest plus current official competitor source metadata, and compares Jini against two fixed external baselines using real CLI checks instead of README-only claims
 - a `get-started` command that shows one obvious trust path for beginners and a deeper inspection path for power users through the same system
 - a `review-framework` command that critiques Jini itself against adoption constraints and competitor gaps instead of relying on ad hoc architectural intuition
