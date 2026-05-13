@@ -49,26 +49,26 @@ when it is making ordinary work more truthful.
 <div class="workflow-grid">
   <a class="workflow-card" href="{{ '/examples.html#meeting-followup' | relative_url }}">
     <span class="workflow-meta">Meeting Follow-up</span>
-    <h3>Turn notes into decisions, owners, and missing approvals.</h3>
-    <p>Use this when one meeting ended with vague next steps and everyone is pretending the follow-up is obvious.</p>
+    <h3>Your meeting ended, but nobody can tell what is actually decided.</h3>
+    <p>Use this when notes, owners, and approvals are about to get scattered across docs, chat, and memory.</p>
     <code>jini try-example meeting-followup</code>
   </a>
   <a class="workflow-card" href="{{ '/examples.html#research-prd' | relative_url }}">
     <span class="workflow-meta">Research To PRD</span>
-    <h3>Show whether a spec is ready, or only drafted.</h3>
-    <p>Use this when research exists, tasks are done, and you need to know whether the handoff is actually verified.</p>
+    <h3>Your spec looks done, but nobody knows if it is actually safe to build from.</h3>
+    <p>Use this when research exists, tasks are complete, and the handoff is starting to look more trustworthy than it really is.</p>
     <code>jini try-example research-prd</code>
   </a>
   <a class="workflow-card" href="{{ '/examples.html#vendor-selection' | relative_url }}">
     <span class="workflow-meta">Vendor Selection</span>
-    <h3>Keep the rationale attached to the recommendation.</h3>
-    <p>Use this when several options look plausible and the team needs an approval-ready answer instead of a meeting recap.</p>
+    <h3>You need to recommend one option without losing the reasoning behind it.</h3>
+    <p>Use this when several vendors look plausible and you need a decision that survives beyond the meeting where it was made.</p>
     <code>jini try-example vendor-selection</code>
   </a>
   <a class="workflow-card" href="{{ '/examples.html#incident-response' | relative_url }}">
     <span class="workflow-meta">Incident Response</span>
-    <h3>Separate service recovery from real closure.</h3>
-    <p>Use this when the outage is over but rollback, proof, and closure work still need to be made explicit.</p>
+    <h3>The outage is over, but the real closure work is still easy to skip.</h3>
+    <p>Use this when rollback, proof, and final signoff still matter after service recovery.</p>
     <code>jini try-example incident-response</code>
   </a>
 </div>

@@ -86,16 +86,18 @@ evaluate Jini is through four scenarios that most teams already recognize, and
 the exact state Jini makes visible in each one:
 
 - **Meeting follow-up.** Jini turns one meeting into an explicit follow-up pack
-  and immediately shows whether the work is only decided or actually ready for
-  execution with `jini try-example meeting-followup`.
+  and immediately shows whether the team has real follow-through or only notes
+  and implied next steps with `jini try-example meeting-followup`.
 - **Research to PRD handoff.** Jini shows the central proof scene in one
-  screen: tasks can be complete while the work is still waiting on
-  verification and approval with `jini try-example research-prd`.
+  screen: tasks can be complete while the work is still not safe to build from
+  because verification and approval are still missing with
+  `jini try-example research-prd`.
 - **Vendor selection.** Jini makes the recommendation approval-ready instead of
-  leaving the rationale trapped in slides, meetings, or email with
+  leaving the reasoning trapped in slides, meetings, or email with
   `jini try-example vendor-selection`.
 - **Incident response.** Jini keeps rollback, evidence, and closure state
-  explicit after the urgent firefight is over with
+  explicit after the urgent firefight is over, so recovery is not mistaken for
+  closure, with
   `jini try-example incident-response`.
 
 Those four cover the common Jini pattern: the draft exists, but the real work

@@ -1,38 +1,57 @@
 # Common Examples
 
-These examples are the fastest way to judge whether Jini is useful for your
-kind of work.
+These examples should answer one practical question:
 
-Use the same reading pattern each time:
+**What pain does Jini remove in work I already do?**
 
-1. run one command
-2. look at `STATE`, `NEXT`, and `MISSING-LATER`
-3. decide whether that missing truth would have mattered in your last real workflow
+Do not start by trying to learn the framework. Start by finding the example
+that feels uncomfortably familiar.
+
+## How To Read One Example
+
+Every example follows the same pattern:
+
+1. **The situation**: a normal workflow you probably already have
+2. **What usually goes wrong**: where people lose truth, ownership, or timing
+3. **Run one command**
+4. **Translate the output** into plain English
+5. **Decide whether that missing truth would have saved you time or confusion**
+
+## Quick Translation
+
+When Jini prints these fields, read them like this:
+
+- `STATE`: what stage the work is actually in right now
+- `NEXT`: the next honest move, not the next wish
+- `MISSING-LATER`: what will block or weaken the work if you ignore it now
+- `TASKS done/unresolved`: whether work items are actually finished, not just discussed
+
+If that translation still feels abstract, use the examples below.
 
 <div class="workflow-jump">
   <div class="workflow-grid">
     <a class="workflow-card" href="#meeting-followup">
       <span class="workflow-meta">Meeting Follow-up</span>
-      <h3>See how Jini turns a meeting into explicit execution state.</h3>
-      <p>Best for teams losing decisions, owners, and missing approvals in notes and chat.</p>
+      <h3>Your meeting ended, but the real follow-up is still fuzzy.</h3>
+      <p>Best when decisions, owners, and missing approvals are about to get lost in notes and chat.</p>
       <code>jini try-example meeting-followup</code>
     </a>
     <a class="workflow-card" href="#research-prd">
       <span class="workflow-meta">Research To PRD</span>
-      <h3>See the difference between tasks being done and work being verified.</h3>
-      <p>Best for product and engineering handoffs where the rationale thins out as the work moves forward.</p>
+      <h3>Your spec looks done, but the team still does not know if it is safe to build from.</h3>
+      <p>Best for product and engineering handoffs where a polished draft is hiding missing verification.</p>
       <code>jini try-example research-prd</code>
     </a>
     <a class="workflow-card" href="#vendor-selection">
       <span class="workflow-meta">Vendor Selection</span>
-      <h3>See how recommendations keep their tradeoffs and approval path attached.</h3>
-      <p>Best for teams making expensive decisions that should survive beyond the meeting where they were made.</p>
+      <h3>You need to recommend one option without losing the reasoning behind it.</h3>
+      <p>Best for expensive decisions where the team will need to defend the choice later.</p>
       <code>jini try-example vendor-selection</code>
     </a>
     <a class="workflow-card" href="#incident-response">
       <span class="workflow-meta">Incident Response</span>
-      <h3>See how Jini keeps proof, rollback, and closure visible after the firefight.</h3>
-      <p>Best for operational work where “service is back” is not the same thing as “the work is actually closed.”</p>
+      <h3>The outage is over, but the closure work is still easy to skip.</h3>
+      <p>Best for operational work where service recovery is being mistaken for true closure.</p>
       <code>jini try-example incident-response</code>
     </a>
   </div>
@@ -40,8 +59,16 @@ Use the same reading pattern each time:
 
 ## 1. Meeting Follow-up {#meeting-followup}
 
-**When this matters:** a weekly product, staff, or project meeting ends with
-notes scattered across docs, chat, and memory.
+**The situation:** you leave a weekly product, staff, or project meeting with
+notes in one place, action items in another place, and several things that
+everyone assumes are obvious.
+
+**What usually goes wrong:** nobody can tell the difference between:
+
+- a decision that was really made
+- an action someone actually owns
+- a follow-up that still needs approval
+- a question that is still unresolved
 
 **Run:**
 
@@ -51,7 +78,7 @@ jini try-example meeting-followup
 
 ![Jini meeting follow-up demo](./assets/examples/meeting-followup.gif)
 
-**Look for these lines:**
+**The lines that matter are:**
 
 ```text
 HEALTH ready-to-make
@@ -65,16 +92,33 @@ TASKS
   unresolved: 3/3
 ```
 
-**What Jini makes obvious:**
+**Plain-English translation:**
 
-- the meeting exists, but the work is not ready
-- approval and evidence are still missing
-- the next person inherits state, not just notes
+- the meeting happened, but real follow-through has not started yet
+- there are still 3 unresolved work items
+- if this work later needs signoff or proof, that gap is already visible now
+
+**Why this helps in daily work:**
+
+Instead of forwarding notes and hoping everyone interprets them the same way,
+you get one truthful follow-up surface:
+
+- what is actually decided
+- what still needs to be made concrete
+- what will become a blocker later if nobody captures it now
 
 ## 2. Research To PRD Handoff {#research-prd}
 
-**When this matters:** research exists, the team agrees something should be
-built, and the handoff is starting to look more finished than it really is.
+**The situation:** research is done, the team agrees something should be built,
+and the PRD or spec looks polished enough that people are tempted to call it
+ready.
+
+**What usually goes wrong:** the visible artifacts look done, but the team
+still does not know whether:
+
+- the reasoning has really been checked
+- the handoff is actually safe to build from
+- approval is still pending
 
 **Run:**
 
@@ -84,7 +128,7 @@ jini try-example research-prd
 
 ![Jini research to PRD demo](./assets/examples/research-prd.gif)
 
-**Look for these lines:**
+**The lines that matter are:**
 
 ```text
 HEALTH ready-to-verify
@@ -101,16 +145,35 @@ EVIDENCE
   risks:  1
 ```
 
-**What Jini makes obvious:**
+**Plain-English translation:**
 
-- tasks can be done while the work is still waiting on verification
-- approval is still missing even though the draft looks complete
-- the handoff keeps its source trail attached to the work
+- the draft looks complete, but it still needs verification
+- approval is still missing
+- the evidence trail is attached, so the next person is not forced to trust the document blindly
+
+**Why this helps in daily work:**
+
+This is the most common Jini failure pattern:
+
+- tasks are complete
+- the document exists
+- everyone wants to move on
+- nobody can cleanly answer whether the work is actually verified
+
+Jini makes that mismatch visible before the team starts building from a draft
+that only looks finished.
 
 ## 3. Vendor Selection {#vendor-selection}
 
-**When this matters:** several vendors look plausible and the team needs an
-approval-ready recommendation instead of another meeting recap.
+**The situation:** several tools or vendors look reasonable and you need to
+recommend one to a manager, procurement lead, or finance stakeholder.
+
+**What usually goes wrong:** the recommendation gets separated from the tradeoffs.
+Weeks later, the team remembers the conclusion but not:
+
+- why this choice won
+- what concerns were accepted
+- who actually approved it
 
 **Run:**
 
@@ -120,7 +183,7 @@ jini try-example vendor-selection
 
 ![Jini vendor selection demo](./assets/examples/vendor-selection.gif)
 
-**Look for these lines:**
+**The lines that matter are:**
 
 ```text
 HEALTH ready-to-make
@@ -132,16 +195,30 @@ MISSING-LATER
   - Evidence
 ```
 
-**What Jini makes obvious:**
+**Plain-English translation:**
 
-- the recommendation exists, but the proof trail is still incomplete
-- approval is a visible part of the workflow, not a side conversation
-- tradeoffs stay attached to the decision instead of disappearing into slides
+- you have a direction, but not yet enough proof to treat it as settled
+- approval is part of the work, not something hidden in email or a meeting
+- the reasoning is expected to stay attached to the recommendation
+
+**Why this helps in daily work:**
+
+When someone asks later, “Why did we choose this vendor?”, you want the answer
+to be in the work itself, not in somebody’s memory.
+
+Jini makes the recommendation, proof, and approval path part of the same flow.
 
 ## 4. Incident Response {#incident-response}
 
-**When this matters:** the immediate outage is over, but the operational work
-still needs rollback, proof, and honest closure.
+**The situation:** the service is back, the immediate pressure is lower, and
+everyone wants to move on.
+
+**What usually goes wrong:** “recovered” gets confused with “closed.” The team
+forgets to keep visible:
+
+- rollback context
+- evidence of what happened
+- the work needed before true closure
 
 **Run:**
 
@@ -151,7 +228,7 @@ jini try-example incident-response
 
 ![Jini incident response demo](./assets/examples/incident-response.gif)
 
-**Look for these lines:**
+**The lines that matter are:**
 
 ```text
 HEALTH ready-to-make
@@ -164,11 +241,21 @@ MISSING-LATER
   - Evidence
 ```
 
-**What Jini makes obvious:**
+**Plain-English translation:**
 
-- recovery is not the same thing as closure
-- rollback context stays visible while pressure is still high
-- proof and approval are still part of the work even after the service is back
+- the incident is no longer just chaos, but it is not truly closed either
+- rollback is still a first-class concern
+- proof and signoff still matter after service recovery
+
+**Why this helps in daily work:**
+
+Many teams are good at firefighting and weak at closure.
+
+Jini helps keep the uncomfortable but necessary work visible:
+
+- what still needs to be proven
+- whether rollback is still relevant
+- whether someone can honestly say the incident is complete
 
 ## Breadth, After The Core Story
 
@@ -213,4 +300,4 @@ Use it:
 
 That is where Jini starts feeling useful in daily work. It gives one truthful
 state surface for consequential work instead of making you infer status from
-documents, tickets, and chat.
+documents, tickets, chat, and memory.
