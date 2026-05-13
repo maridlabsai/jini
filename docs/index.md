@@ -84,34 +84,19 @@ when it is making ordinary work more truthful.
   <p><strong>What changes in one run:</strong> Jini does not just say the workflow exists. It tells you the current state, the next action, and what is still missing before the work should be treated as durable.</p>
 </div>
 
-## Common Examples
+## Why These Four
 
-The best way to understand Jini is through a small set of scenarios that most
-teams already run, plus the exact state Jini makes visible.
+Those four workflows are the shortest honest explanation of Jini:
 
-- **Meeting follow-up.** Jini turns one meeting into a tracked follow-up pack
-  with explicit decisions, tasks, and missing execution requirements like
-  `Approval` and `Evidence` with `jini try-example meeting-followup`.
-- **Research to PRD handoff.** Jini shows the most important proof scene in one
-  screen: tasks can be `done: 3/3` while the pack is still
-  `awaiting_verification` and still missing `Approval` with
-  `jini try-example research-prd`.
-- **Vendor selection.** Jini compiles a recommendation into an approval-ready
-  workflow with visible control packs for `Proof`, `Guard`, `Cost`, and
-  `Approval` with `jini try-example vendor-selection`.
-- **Incident response.** Jini keeps the response honest by preserving rollback,
-  evidence, and closure state after the immediate firefight is over with
-  `jini try-example incident-response`.
-
-Those four examples cover the most common Jini shape: the draft exists, but the
-real work still needs ownership, verification, approval, and continuity.
+- work happened
+- a draft or decision exists
+- people are tempted to call it done
+- Jini shows what is still missing before the work should be treated as durable
 
 The public repo also proves the same kernel can stretch into personal planning,
 such as travel and budgeting, and into more formal workflows such as compliance
-audits.
-
-If you want the full examples breakdown with commands and output, [see the
-detailed examples page](./examples.md).
+audits. If you want the full examples breakdown with commands, output, and GIF
+walkthroughs, [see the detailed examples page](./examples.md).
 
 ## Day-To-Day Value
 
