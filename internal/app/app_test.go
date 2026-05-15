@@ -223,6 +223,70 @@ func TestProviderDoctorRejectsSonnet46ShortcutForDirectClaude(t *testing.T) {
 	}
 }
 
+func TestLauncherShowsInlineProviderChoicesWhenUsingLocalPreview(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader(""), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Working with",
+		"Local preview",
+		"Want a connected provider instead?",
+		"Type `Use Claude`",
+		"Type `Use Bedrock`",
+		"Type `Use Azure`",
+		"Type `Use Auto`",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+}
+
+func TestInteractiveSetupCanSaveClaudeProfileInsideJini(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("Use Claude\nsk-test-key\n\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Connect Claude",
+		"Setup saved. Working with Claude API / Claude Sonnet 4.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+
+	saved, err := os.ReadFile(filepath.Join(stateDir, "provider.json"))
+	if err != nil {
+		t.Fatalf("expected provider settings file: %v", err)
+	}
+	if !strings.Contains(string(saved), `"JINI_PROVIDER": "claude"`) || !strings.Contains(string(saved), `"JINI_MODEL": "sonnet"`) {
+		t.Fatalf("expected saved Claude settings, got:\n%s", string(saved))
+	}
+
+	stdout.Reset()
+	exitCode = app.Run([]string{"provider", "doctor"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected saved profile to drive provider doctor, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "Claude API / Claude Sonnet 4") {
+		t.Fatalf("expected provider doctor to use saved Claude profile, got:\n%s", stdout.String())
+	}
+}
+
 func TestInteractiveLauncherReportsProviderSetupBeforeCreatingWork(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)

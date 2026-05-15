@@ -36,17 +36,15 @@ go build -o jini ./cmd/jini
 
 If Jini is installed on your `PATH`, the command becomes `jini`.
 
-If you already know your provider, use the matching setup block on the
-[Install](./install.md) page:
+Inside Jini, you can connect a provider without leaving the main flow:
 
-- [I use Claude](./install.md#i-use-claude)
-- [I use Amazon Bedrock](./install.md#i-use-amazon-bedrock)
-- [My team uses Azure OpenAI](./install.md#my-team-uses-azure-openai)
-- [I want Jini to choose automatically](./install.md#i-want-jini-to-choose-automatically)
+- type `Use Claude`
+- type `Use Bedrock`
+- type `Use Azure`
+- type `Use Auto`
 
-If you do not want to think about provider or model settings yet, start with
-auto mode. Jini will choose the best ready option it can use and tell you what
-it picked.
+Jini saves that choice in this repo's `.jini` folder so the next start can stay
+at just `./jini`.
 
 ## What The Screen Should Feel Like
 
@@ -85,6 +83,15 @@ That is the experience Jini is being rebuilt around.
 
 When Jini opens, do not think about commands first. Paste the work you already
 have and ask for the outcome you want.
+
+If you want to connect a provider first, type one of these:
+
+```text
+Use Claude
+Use Bedrock
+Use Azure
+Use Auto
+```
 
 For example:
 

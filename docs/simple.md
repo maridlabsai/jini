@@ -35,6 +35,7 @@ Inside Jini you can:
 
 - paste messy notes
 - ask for the outcome you want
+- type `Use Claude`, `Use Bedrock`, `Use Azure`, or `Use Auto` if you want to connect a provider first
 - choose `Open ready work`
 - choose `See what is still missing`
 - choose `Plan this first`
@@ -44,16 +45,20 @@ into goal, requirements, design, steps, and run.
 
 ## If You Use Claude
 
-Copy this first:
+The easiest path is:
 
 ```bash
 go build -o jini ./cmd/jini
-export JINI_PROVIDER=claude
-export ANTHROPIC_API_KEY="paste-your-key-here"
-export JINI_MODEL=sonnet
-./jini provider doctor
 ./jini
 ```
+
+Then inside Jini, type:
+
+```text
+Use Claude
+```
+
+Jini will ask for the API key and remember it in this repo's `.jini` folder.
 
 Then type something plain like:
 

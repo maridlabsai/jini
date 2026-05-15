@@ -35,6 +35,7 @@ It should:
 - or show simple choices if nothing is active yet
 - let you type naturally
 - expose `Open ready work`, `See what is still missing`, and `Plan this first`
+- let you type `Use Claude`, `Use Bedrock`, `Use Azure`, or `Use Auto` to connect a provider inline
 
 ## In-Shell Actions
 
@@ -108,6 +109,18 @@ Most people should start with auto mode:
 ```
 
 Leave provider and model unset first. Let Jini tell you what it can use.
+
+Inside Jini itself, you can also type:
+
+```text
+Use Claude
+Use Bedrock
+Use Azure
+Use Auto
+```
+
+Jini will ask only for the missing details and save them in this repo's
+`.jini` folder.
 
 The setup knobs are:
 

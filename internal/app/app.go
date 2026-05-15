@@ -188,7 +188,7 @@ func detectProvider() providerConfig {
 	case "auto":
 		return detectAutoProvider()
 	default:
-		providerID := normalizeName(os.Getenv("JINI_PROVIDER"))
+		providerID := normalizeName(configValue("JINI_PROVIDER"))
 		return providerConfig{
 			ID:      providerID,
 			Label:   titleCase(providerID),
@@ -204,7 +204,7 @@ func detectLocalPreviewProvider() providerConfig {
 		Label:  "Local preview",
 		Status: "ok",
 		Settings: []string{
-			"JINI_PROVIDER: " + firstNonEmpty(strings.TrimSpace(os.Getenv("JINI_PROVIDER")), "auto") + " -> Local preview",
+			"JINI_PROVIDER: " + firstNonEmpty(configValue("JINI_PROVIDER"), "auto") + " -> Local preview",
 		},
 	}
 }
@@ -216,7 +216,7 @@ func detectAzureOpenAIProvider() providerConfig {
 		"AZURE_OPENAI_DEPLOYMENT",
 	})
 	label := "Azure OpenAI"
-	if deployment := strings.TrimSpace(os.Getenv("AZURE_OPENAI_DEPLOYMENT")); deployment != "" {
+	if deployment := configValue("AZURE_OPENAI_DEPLOYMENT"); deployment != "" {
 		label += " / " + deployment
 	}
 	settings := []string{
@@ -243,7 +243,7 @@ func detectBedrockProvider() providerConfig {
 	if strings.TrimSpace(resolveAWSRegion()) == "" {
 		missing = append(missing, "AWS_REGION or AWS_DEFAULT_REGION")
 	}
-	if strings.TrimSpace(os.Getenv("AWS_PROFILE")) == "" && (strings.TrimSpace(os.Getenv("AWS_ACCESS_KEY_ID")) == "" || strings.TrimSpace(os.Getenv("AWS_SECRET_ACCESS_KEY")) == "") {
+	if configValue("AWS_PROFILE") == "" && (configValue("AWS_ACCESS_KEY_ID") == "" || configValue("AWS_SECRET_ACCESS_KEY") == "") {
 		missing = append(missing, "AWS_PROFILE or AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY")
 	}
 	modelID, modelLabel := resolveBedrockModel()
@@ -272,7 +272,7 @@ func detectBedrockProvider() providerConfig {
 
 func detectAnthropicProvider() providerConfig {
 	missing := []string{}
-	if strings.TrimSpace(os.Getenv("ANTHROPIC_API_KEY")) == "" {
+	if configValue("ANTHROPIC_API_KEY") == "" {
 		missing = append(missing, "ANTHROPIC_API_KEY")
 	}
 	modelID, modelLabel, modelIssue := resolveAnthropicModel()
@@ -286,7 +286,7 @@ func detectAnthropicProvider() providerConfig {
 	settings := []string{
 		providerSettingLine("anthropic"),
 		anthropicModelSettingLine(modelID, modelLabel),
-		"ANTHROPIC_BASE_URL: " + firstNonEmpty(presentOrMissing("ANTHROPIC_BASE_URL"), "missing") + " (default https://api.anthropic.com)",
+		"ANTHROPIC_BASE_URL: " + presentOrMissing("ANTHROPIC_BASE_URL") + " (default https://api.anthropic.com)",
 	}
 	return providerConfig{
 		ID:       "anthropic",
@@ -301,7 +301,7 @@ func detectAnthropicProvider() providerConfig {
 func missingEnvVars(names []string) []string {
 	missing := []string{}
 	for _, name := range names {
-		if strings.TrimSpace(os.Getenv(name)) == "" {
+		if configValue(name) == "" {
 			missing = append(missing, name)
 		}
 	}
@@ -316,7 +316,7 @@ func statusFromMissing(missing []string) string {
 }
 
 func presentOrMissing(name string) string {
-	if strings.TrimSpace(os.Getenv(name)) == "" {
+	if configValue(name) == "" {
 		return "missing"
 	}
 	return "set"
@@ -324,7 +324,7 @@ func presentOrMissing(name string) string {
 
 func presentOrMissingEither(names ...string) string {
 	for _, name := range names {
-		if strings.TrimSpace(os.Getenv(name)) != "" {
+		if configValue(name) != "" {
 			return "set"
 		}
 	}
@@ -339,7 +339,7 @@ func presentOrMissingValue(value string) string {
 }
 
 func valueOrDefault(name, fallback string) string {
-	value := strings.TrimSpace(os.Getenv(name))
+	value := configValue(name)
 	if value == "" {
 		return fallback
 	}
@@ -379,46 +379,58 @@ func runNewWorkIntake(stdin io.Reader, stdout, stderr io.Writer) int {
 	renderNewWorkLauncher(stdout)
 	session := bufio.NewScanner(stdin)
 
-	firstRaw, ok := readInputLine(session, stdout)
-	if !ok {
-		return 0
-	}
+	for {
+		firstRaw, ok := readInputLine(session, stdout)
+		if !ok {
+			return 0
+		}
+		if handled, exitCode := maybeHandleProviderSetupIntent(firstRaw, session, stdout, stderr); handled {
+			if exitCode != 0 {
+				fmt.Fprintln(stdout)
+				renderNewWorkLauncher(stdout)
+				continue
+			}
+			fmt.Fprintln(stdout)
+			renderNewWorkLauncher(stdout)
+			continue
+		}
 
-	var source string
-	choice, err := resolveStarterChoice(firstRaw)
-	if err != nil {
-		source = strings.TrimSpace(firstRaw)
-		choice = classifyStarterChoice(source)
-	} else {
-		source, ok = readPromptLine(session, stdout, sourcePromptForChoice(choice))
-		if !ok || strings.TrimSpace(source) == "" {
+		var source string
+		choice, err := resolveStarterChoice(firstRaw)
+		if err != nil {
+			source = strings.TrimSpace(firstRaw)
+			choice = classifyStarterChoice(source)
+		} else {
+			source, ok = readPromptLine(session, stdout, sourcePromptForChoice(choice))
+			if !ok || strings.TrimSpace(source) == "" {
+				fmt.Fprintln(stderr, "I need one line of source context to start this work.")
+				return 1
+			}
+			if choice.PackID == "auto" {
+				choice = classifyStarterChoice(source)
+			}
+		}
+		if strings.TrimSpace(source) == "" {
 			fmt.Fprintln(stderr, "I need one line of source context to start this work.")
 			return 1
 		}
-		if choice.PackID == "auto" {
-			choice = classifyStarterChoice(source)
+
+		summary, err := bootstrapStarterWork(choice, source, "quick")
+		if err != nil {
+			fmt.Fprintf(stderr, "Could not start this work: %v\n", err)
+			return 1
 		}
-	}
-	if strings.TrimSpace(source) == "" {
-		fmt.Fprintln(stderr, "I need one line of source context to start this work.")
-		return 1
-	}
 
-	summary, err := bootstrapStarterWork(choice, source, "quick")
-	if err != nil {
-		fmt.Fprintf(stderr, "Could not start this work: %v\n", err)
-		return 1
-	}
-
-	renderFirstRunResult(stdout, summary)
-	action, ok := readOptionalInputLine(session, stdout)
-	if !ok || strings.TrimSpace(action) == "" {
+		renderFirstRunResult(stdout, summary)
+		action, ok := readOptionalInputLine(session, stdout)
+		if !ok || strings.TrimSpace(action) == "" {
+			fmt.Fprintln(stdout)
+			renderCheck(stdout, summary)
+			return 0
+		}
 		fmt.Fprintln(stdout)
-		renderCheck(stdout, summary)
-		return 0
+		return handlePostResultAction(action, summary, stdout, stderr)
 	}
-	fmt.Fprintln(stdout)
-	return handlePostResultAction(action, summary, stdout, stderr)
 }
 
 func readInputLine(scanner *bufio.Scanner, stdout io.Writer) (string, bool) {
@@ -1453,7 +1465,16 @@ func renderNewWorkLauncher(w io.Writer) {
 	fmt.Fprintln(w, "Paste messy notes, or type the outcome you want.")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Working with")
-	fmt.Fprintln(w, detectProvider().Label)
+	provider := detectProvider()
+	fmt.Fprintln(w, provider.Label)
+	if provider.ID == "local-preview" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Want a connected provider instead?")
+		fmt.Fprintln(w, "- Type `Use Claude`")
+		fmt.Fprintln(w, "- Type `Use Bedrock`")
+		fmt.Fprintln(w, "- Type `Use Azure`")
+		fmt.Fprintln(w, "- Type `Use Auto`")
+	}
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Good inputs:")
 	fmt.Fprintln(w, "- Turn meeting notes into something I can send")
@@ -1462,6 +1483,127 @@ func renderNewWorkLauncher(w io.Writer) {
 	fmt.Fprintln(w, "- I am not sure")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Nothing will be sent yet.")
+}
+
+func maybeHandleProviderSetupIntent(raw string, scanner *bufio.Scanner, stdout, stderr io.Writer) (bool, int) {
+	switch normalizeName(raw) {
+	case "use claude", "connect claude", "claude", "use anthropic", "anthropic":
+		return true, runProviderSetupWizard("claude", scanner, stdout, stderr)
+	case "use bedrock", "connect bedrock", "bedrock", "amazon bedrock":
+		return true, runProviderSetupWizard("bedrock", scanner, stdout, stderr)
+	case "use azure", "connect azure", "azure", "azure openai", "azure open ai":
+		return true, runProviderSetupWizard("azure-openai", scanner, stdout, stderr)
+	case "use auto", "auto", "choose automatically":
+		return true, runProviderSetupWizard("auto", scanner, stdout, stderr)
+	case "use local preview", "local preview", "preview", "work offline":
+		return true, runProviderSetupWizard("local-preview", scanner, stdout, stderr)
+	default:
+		return false, 0
+	}
+}
+
+func runProviderSetupWizard(mode string, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
+	fmt.Fprintln(stdout)
+	switch mode {
+	case "claude":
+		fmt.Fprintln(stdout, "Connect Claude")
+		fmt.Fprintln(stdout, "Paste your Anthropic API key. Jini will save it only in this repo's .jini folder.")
+		key, ok := readPromptLine(scanner, stdout, "Anthropic API key")
+		if !ok || strings.TrimSpace(key) == "" {
+			fmt.Fprintln(stderr, "Claude setup needs an API key.")
+			return 1
+		}
+		model, ok := readPromptLine(scanner, stdout, "Model (press Enter for sonnet)")
+		if !ok {
+			return 1
+		}
+		if err := saveProviderSettings(map[string]string{
+			"JINI_PROVIDER":     "claude",
+			"ANTHROPIC_API_KEY": key,
+			"JINI_MODEL":        firstNonEmpty(model, "sonnet"),
+		}); err != nil {
+			fmt.Fprintf(stderr, "Could not save Claude setup: %v\n", err)
+			return 1
+		}
+	case "bedrock":
+		fmt.Fprintln(stdout, "Connect Amazon Bedrock")
+		region, ok := readPromptLine(scanner, stdout, "AWS region (press Enter for us-east-1)")
+		if !ok {
+			return 1
+		}
+		profile, ok := readPromptLine(scanner, stdout, "AWS profile name")
+		if !ok || strings.TrimSpace(profile) == "" {
+			fmt.Fprintln(stderr, "Bedrock setup needs an AWS profile name.")
+			return 1
+		}
+		model, ok := readPromptLine(scanner, stdout, "Model (press Enter for sonnet-4.6)")
+		if !ok {
+			return 1
+		}
+		if err := saveProviderSettings(map[string]string{
+			"JINI_PROVIDER": "bedrock",
+			"AWS_REGION":    firstNonEmpty(region, "us-east-1"),
+			"AWS_PROFILE":   profile,
+			"JINI_MODEL":    firstNonEmpty(model, "sonnet-4.6"),
+		}); err != nil {
+			fmt.Fprintf(stderr, "Could not save Bedrock setup: %v\n", err)
+			return 1
+		}
+	case "azure-openai":
+		fmt.Fprintln(stdout, "Connect Azure OpenAI")
+		endpoint, ok := readPromptLine(scanner, stdout, "Azure endpoint")
+		if !ok || strings.TrimSpace(endpoint) == "" {
+			fmt.Fprintln(stderr, "Azure setup needs an endpoint.")
+			return 1
+		}
+		apiKey, ok := readPromptLine(scanner, stdout, "Azure API key")
+		if !ok || strings.TrimSpace(apiKey) == "" {
+			fmt.Fprintln(stderr, "Azure setup needs an API key.")
+			return 1
+		}
+		deployment, ok := readPromptLine(scanner, stdout, "Azure deployment name")
+		if !ok || strings.TrimSpace(deployment) == "" {
+			fmt.Fprintln(stderr, "Azure setup needs a deployment name.")
+			return 1
+		}
+		if err := saveProviderSettings(map[string]string{
+			"JINI_PROVIDER":            "azure-openai",
+			"AZURE_OPENAI_ENDPOINT":    endpoint,
+			"AZURE_OPENAI_API_KEY":     apiKey,
+			"AZURE_OPENAI_DEPLOYMENT":  deployment,
+			"AZURE_OPENAI_API_VERSION": "2024-10-21",
+		}); err != nil {
+			fmt.Fprintf(stderr, "Could not save Azure setup: %v\n", err)
+			return 1
+		}
+	case "auto":
+		fmt.Fprintln(stdout, "Use auto mode")
+		if err := saveProviderSettings(map[string]string{
+			"JINI_PROVIDER": "auto",
+			"JINI_MODEL":    "auto",
+		}); err != nil {
+			fmt.Fprintf(stderr, "Could not save auto mode: %v\n", err)
+			return 1
+		}
+	case "local-preview":
+		fmt.Fprintln(stdout, "Use local preview")
+		if err := saveProviderSettings(map[string]string{
+			"JINI_PROVIDER": "local-preview",
+			"JINI_MODEL":    "auto",
+		}); err != nil {
+			fmt.Fprintf(stderr, "Could not save local preview mode: %v\n", err)
+			return 1
+		}
+	}
+
+	provider := detectProvider()
+	fmt.Fprintln(stdout)
+	if provider.Status == "ok" {
+		fmt.Fprintf(stdout, "Setup saved. Working with %s.\n", provider.Label)
+		return 0
+	}
+	fmt.Fprintf(stderr, "Setup is still incomplete. Missing: %s\n", strings.Join(provider.Missing, ", "))
+	return 1
 }
 
 func renderFirstRunResult(w io.Writer, summary *workSummary) {

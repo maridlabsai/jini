@@ -87,7 +87,7 @@ func generateWithAnthropic(ctx context.Context, request providerGenerationReques
 	if modelIssue != "" {
 		return "", providerSetupError(providerConfig{Missing: []string{modelIssue}})
 	}
-	baseURL := strings.TrimRight(strings.TrimSpace(firstNonEmpty(os.Getenv("ANTHROPIC_BASE_URL"), "https://api.anthropic.com")), "/")
+	baseURL := strings.TrimRight(strings.TrimSpace(firstNonEmpty(configValue("ANTHROPIC_BASE_URL"), "https://api.anthropic.com")), "/")
 	target := baseURL + "/v1/messages"
 	payload := map[string]any{
 		"model":      modelID,
@@ -112,7 +112,7 @@ func generateWithAnthropic(ctx context.Context, request providerGenerationReques
 		return "", err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("x-api-key", strings.TrimSpace(os.Getenv("ANTHROPIC_API_KEY")))
+	req.Header.Set("x-api-key", configValue("ANTHROPIC_API_KEY"))
 	req.Header.Set("anthropic-version", "2023-06-01")
 
 	resp, err := providerHTTPClient.Do(req)
@@ -146,8 +146,8 @@ func generateWithAnthropic(ctx context.Context, request providerGenerationReques
 }
 
 func generateWithAzureOpenAI(ctx context.Context, request providerGenerationRequest) (string, error) {
-	endpoint := strings.TrimRight(strings.TrimSpace(os.Getenv("AZURE_OPENAI_ENDPOINT")), "/")
-	deployment := strings.TrimSpace(os.Getenv("AZURE_OPENAI_DEPLOYMENT"))
+	endpoint := strings.TrimRight(configValue("AZURE_OPENAI_ENDPOINT"), "/")
+	deployment := configValue("AZURE_OPENAI_DEPLOYMENT")
 	apiVersion := valueOrDefault("AZURE_OPENAI_API_VERSION", "2024-10-21")
 
 	parsed, err := url.Parse(endpoint)
@@ -177,7 +177,7 @@ func generateWithAzureOpenAI(ctx context.Context, request providerGenerationRequ
 		return "", err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("api-key", strings.TrimSpace(os.Getenv("AZURE_OPENAI_API_KEY")))
+	req.Header.Set("api-key", configValue("AZURE_OPENAI_API_KEY"))
 
 	resp, err := providerHTTPClient.Do(req)
 	if err != nil {
@@ -215,7 +215,7 @@ func generateWithBedrock(ctx context.Context, request providerGenerationRequest)
 		return "", err
 	}
 
-	endpoint := strings.TrimRight(strings.TrimSpace(os.Getenv("JINI_BEDROCK_ENDPOINT")), "/")
+	endpoint := strings.TrimRight(configValue("JINI_BEDROCK_ENDPOINT"), "/")
 	if endpoint == "" {
 		endpoint = fmt.Sprintf("https://bedrock-runtime.%s.amazonaws.com", region)
 	}
@@ -283,14 +283,14 @@ func generateWithBedrock(ctx context.Context, request providerGenerationRequest)
 }
 
 func loadAWSCredentials() (awsCredentials, error) {
-	if strings.TrimSpace(os.Getenv("AWS_ACCESS_KEY_ID")) != "" && strings.TrimSpace(os.Getenv("AWS_SECRET_ACCESS_KEY")) != "" {
+	if configValue("AWS_ACCESS_KEY_ID") != "" && configValue("AWS_SECRET_ACCESS_KEY") != "" {
 		return awsCredentials{
-			AccessKeyID:     strings.TrimSpace(os.Getenv("AWS_ACCESS_KEY_ID")),
-			SecretAccessKey: strings.TrimSpace(os.Getenv("AWS_SECRET_ACCESS_KEY")),
-			SessionToken:    strings.TrimSpace(os.Getenv("AWS_SESSION_TOKEN")),
+			AccessKeyID:     configValue("AWS_ACCESS_KEY_ID"),
+			SecretAccessKey: configValue("AWS_SECRET_ACCESS_KEY"),
+			SessionToken:    configValue("AWS_SESSION_TOKEN"),
 		}, nil
 	}
-	profile := strings.TrimSpace(os.Getenv("AWS_PROFILE"))
+	profile := configValue("AWS_PROFILE")
 	if profile == "" {
 		return awsCredentials{}, errors.New("Amazon Bedrock credentials are missing. Set AWS_PROFILE or AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY.")
 	}
@@ -306,10 +306,10 @@ func loadAWSCredentials() (awsCredentials, error) {
 }
 
 func resolveAWSRegion() string {
-	if region := strings.TrimSpace(firstNonEmpty(os.Getenv("AWS_REGION"), os.Getenv("AWS_DEFAULT_REGION"))); region != "" {
+	if region := strings.TrimSpace(firstNonEmpty(configValue("AWS_REGION"), configValue("AWS_DEFAULT_REGION"))); region != "" {
 		return region
 	}
-	profile := strings.TrimSpace(os.Getenv("AWS_PROFILE"))
+	profile := configValue("AWS_PROFILE")
 	if profile == "" {
 		return ""
 	}
@@ -317,7 +317,7 @@ func resolveAWSRegion() string {
 }
 
 func configuredProviderMode() string {
-	raw := normalizeName(firstNonEmpty(strings.TrimSpace(os.Getenv("JINI_PROVIDER")), "auto"))
+	raw := normalizeName(firstNonEmpty(configValue("JINI_PROVIDER"), "auto"))
 	switch raw {
 	case "", "auto":
 		return "auto"
@@ -390,7 +390,7 @@ func forcedAutoProviderMode() string {
 }
 
 func configuredModelInput() string {
-	return strings.TrimSpace(firstNonEmpty(os.Getenv("JINI_MODEL"), "auto"))
+	return strings.TrimSpace(firstNonEmpty(configValue("JINI_MODEL"), "auto"))
 }
 
 func azureModelSettingLine() string {
@@ -402,7 +402,7 @@ func azureModelSettingLine() string {
 }
 
 func bedrockModelSettingLine(modelID, modelLabel string) string {
-	raw := strings.TrimSpace(os.Getenv("BEDROCK_MODEL_ID"))
+	raw := configValue("BEDROCK_MODEL_ID")
 	modelInput := configuredModelInput()
 	switch {
 	case strings.TrimSpace(raw) != "":
@@ -415,7 +415,7 @@ func bedrockModelSettingLine(modelID, modelLabel string) string {
 }
 
 func anthropicModelSettingLine(modelID, modelLabel string) string {
-	raw := strings.TrimSpace(firstNonEmpty(os.Getenv("ANTHROPIC_MODEL"), os.Getenv("JINI_MODEL")))
+	raw := strings.TrimSpace(firstNonEmpty(configValue("ANTHROPIC_MODEL"), configValue("JINI_MODEL")))
 	if normalizeName(raw) == "auto" || raw == "" {
 		return "JINI_MODEL: auto -> " + modelLabel
 	}
@@ -431,7 +431,7 @@ func providerSettingLine(mode string) string {
 }
 
 func resolveBedrockModel() (string, string) {
-	rawID := strings.TrimSpace(os.Getenv("BEDROCK_MODEL_ID"))
+	rawID := configValue("BEDROCK_MODEL_ID")
 	if rawID != "" {
 		return rawID, friendlyModelLabel("bedrock", rawID)
 	}
@@ -449,7 +449,7 @@ func resolveBedrockModel() (string, string) {
 }
 
 func resolveAnthropicModel() (string, string, string) {
-	rawModel := strings.TrimSpace(firstNonEmpty(os.Getenv("ANTHROPIC_MODEL"), os.Getenv("JINI_MODEL")))
+	rawModel := strings.TrimSpace(firstNonEmpty(configValue("ANTHROPIC_MODEL"), configValue("JINI_MODEL")))
 	modelMode := normalizeName(rawModel)
 	compact := compactModelMode(modelMode)
 	switch modelMode {

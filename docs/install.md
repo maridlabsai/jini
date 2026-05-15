@@ -23,7 +23,32 @@ After that, use `./jini` in this preview.
 
 If you later install Jini onto your `PATH`, the command becomes `jini`.
 
-## Pick Your Setup Path
+## The Easy Start
+
+Start Jini first:
+
+```bash
+go build -o jini ./cmd/jini
+./jini
+```
+
+Inside Jini, if you want a connected provider, type one of these:
+
+```text
+Use Claude
+Use Bedrock
+Use Azure
+Use Auto
+```
+
+Jini will ask only for the missing setup details and save them in this repo's
+`.jini` folder. After that, your normal start stays:
+
+```bash
+./jini
+```
+
+## Copy-Paste Setup Paths
 
 ### I use Claude
 
