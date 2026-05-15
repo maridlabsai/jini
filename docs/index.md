@@ -1,222 +1,159 @@
 ---
 title: Jini
-description: See what is done, what happens next, and what is still missing before work should be treated as durable.
+description: Finish work without losing track of what is ready, what is missing, and what to do next.
 ---
 
 <div class="hero-panel">
-  <p class="hero-kicker">Less Friction In Daily Work</p>
-  <h1 class="hero-title">Finish work without status hunting or late surprises.</h1>
-  <p class="hero-summary">Spend less time chasing status, rebuilding context, and discovering missing work late. Jini is a harness orchestration CLI that keeps the next step, blockers, and proof visible while work is still moving.</p>
+  <p class="hero-kicker">Less friction in daily work</p>
+  <h1 class="hero-title">Finish work without status hunting or setup guessing.</h1>
+  <p class="hero-summary">Jini helps you turn messy work into something usable. It keeps the useful parts visible, shows what is still missing, and makes the next step obvious. It should also be obvious how to start.</p>
   <div class="cta-row">
-    <a class="cta-button" href="{{ '/proof.html' | relative_url }}">See the 30-second proof</a>
-    <a class="cta-button cta-button-secondary" href="{{ '/simple.html' | relative_url }}">Start with the simple guide</a>
-    <a class="cta-button cta-button-secondary" href="{{ '/install.html' | relative_url }}">Install Jini</a>
-  </div>
-  <div class="fact-strip">
-    <div class="fact-pill">
-      <strong>Question 1</strong>
-      <p>What is actually done?</p>
-    </div>
-    <div class="fact-pill">
-      <strong>Question 2</strong>
-      <p>What happens next?</p>
-    </div>
-    <div class="fact-pill">
-      <strong>Question 3</strong>
-      <p>What is still missing?</p>
-    </div>
+    <a class="cta-button" href="{{ '/install.html#i-use-claude' | relative_url }}">I Use Claude</a>
+    <a class="cta-button cta-button-secondary" href="{{ '/install.html#i-use-amazon-bedrock' | relative_url }}">I Use Bedrock</a>
+    <a class="cta-button cta-button-secondary" href="{{ '/install.html#my-team-uses-azure-openai' | relative_url }}">I Use Azure</a>
+    <a class="cta-button cta-button-secondary" href="{{ '/install.html#i-want-jini-to-choose-automatically' | relative_url }}">Use Auto Mode</a>
   </div>
 </div>
 
-**In plain words:** Jini helps you finish work with less rework by showing what
-is done, what comes next, and what is still missing.
+**In plain words:** Jini helps you finish work without losing track of what matters.
 
-If you want the simplest version first, read the [Simple Guide](./simple.md).
+It should tell you:
 
-Most AI tools are good at starting work. The harder part is finishing without
-confusion, repeated explanation, or late surprises. That is the problem this
-site is trying to solve.
-
-For technical readers: Jini is a framework with a small protocol core for AI
-work that needs durable state, approvals, evidence, memory, and portability.
-
-If you want the shortest explanation of how Jini keeps interaction, state, and
-artifacts visible, read [State And Artifacts](./state-and-artifacts.md).
+- what you are working on
+- what Jini is doing
+- what is ready now
+- what is still missing
+- what to do next
 
 ## Start Here
 
-If you want the fastest proof that Jini is different, run this:
+If you are trying the source-built preview, start with:
 
 ```bash
-jini example research-prd
-jini outcome
+go build -o jini ./cmd/jini
+./jini
 ```
 
-The important lines are:
+If Jini is installed on your `PATH`, the command becomes `jini`.
+
+If you already know your provider, use the matching setup block on the
+[Install](./install.md) page:
+
+- [I use Claude](./install.md#i-use-claude)
+- [I use Amazon Bedrock](./install.md#i-use-amazon-bedrock)
+- [My team uses Azure OpenAI](./install.md#my-team-uses-azure-openai)
+- [I want Jini to choose automatically](./install.md#i-want-jini-to-choose-automatically)
+
+If you do not want to think about provider or model settings yet, start with
+auto mode. Jini will choose the best ready option it can use and tell you what
+it picked.
+
+## What The Screen Should Feel Like
 
 ```text
-EXAMPLE Research To PRD Handoff
-HEALTH ready-to-verify
-STATE  awaiting_verification
-NEXT   Verify
-MISSING-LATER
-  - Approval
-TASKS
-  done:       3/3
-  unresolved: 0/3
+You're working on
+Research to PRD handoff
+
+Jini is using
+Latest PRD draft and review comments
+
+Jini is doing
+Checking assumptions and approval gaps
+2 of 4 steps done
+
+Ready now
+- Build-Readiness Check
+- Handoff Brief
+
+Still missing
+- Product approval
+- Rollback note
+
+Not sure about
+- Whether approval was already granted in the review thread
+
+Next step
+Open Build-readiness check
+
+Safe to do
+Nothing has been sent yet. You can review before sharing.
 ```
 
-That is the core idea in one screen: completed tasks are not the same thing as
-a usable outcome.
+That is the experience Jini is being rebuilt around.
 
-![Jini research to PRD proof demo](./assets/examples/research-prd.gif)
+## First Thing To Type
 
-<div class="section-card">
-  <strong>Read this screen in plain English:</strong>
-  <ul>
-    <li><code>done: 3/3</code> means the tasks were completed</li>
-    <li><code>STATE awaiting_verification</code> means the work still needs one more step before it becomes a safe outcome</li>
-    <li><code>MISSING-LATER Approval</code> means a later blocker is already visible now</li>
-  </ul>
-</div>
+When Jini opens, do not think about commands first. Paste the work you already
+have and ask for the outcome you want.
 
-## What Gets Easier Right Away
+For example:
 
-Start with the kind of work that already costs you time. Judge Jini by whether
-it reduces status hunting, follow-up drift, and cleanup work.
+```text
+turn these meeting notes into a follow-up I can send
+```
 
-Each example is framed around a productivity gain, not a product claim.
+or:
+
+```text
+check whether this plan is ready to hand off
+```
+
+or:
+
+```text
+plan a 7 day Paris trip with a clear day-by-day itinerary
+```
+
+## Start With The Problem You Already Have
 
 <div class="workflow-grid">
   <a class="workflow-card" href="{{ '/examples.html#meeting-followup' | relative_url }}">
-    <span class="workflow-meta">Meeting Follow-up</span>
-    <h3>Leave the meeting with clear owners and real follow-through.</h3>
-    <p>Spend less time cleaning up scattered notes, implied owners, and missing approvals.</p>
-    <code>jini example meeting-followup</code>
+    <span class="workflow-meta">After a meeting</span>
+    <h3>Turn scattered notes into something you can send.</h3>
+    <p>Get a follow-up, owners, decisions, and open questions without rebuilding the meeting later.</p>
   </a>
-  <a class="workflow-card" href="{{ '/examples.html#research-prd' | relative_url }}">
-    <span class="workflow-meta">Research To PRD</span>
-    <h3>Hand off a spec people can build from without second-guessing it.</h3>
-    <p>Reduce rework caused by polished drafts that still hide missing verification or approval.</p>
-    <code>jini example research-prd</code>
+  <a class="workflow-card" href="{{ '/examples.html#spec-readiness' | relative_url }}">
+    <span class="workflow-meta">Before a handoff</span>
+    <h3>Check whether a plan is actually ready.</h3>
+    <p>See what is safe, what is missing, and what still blocks a real handoff.</p>
   </a>
-  <a class="workflow-card" href="{{ '/examples.html#vendor-selection' | relative_url }}">
-    <span class="workflow-meta">Vendor Selection</span>
-    <h3>Move from comparison to approval without losing the reasoning.</h3>
-    <p>Spend less time rebuilding tradeoffs and rationale when someone asks why this option won.</p>
-    <code>jini example vendor-selection</code>
+  <a class="workflow-card" href="{{ '/examples.html#paris-trip' | relative_url }}">
+    <span class="workflow-meta">Before a trip</span>
+    <h3>Turn travel planning into a usable itinerary.</h3>
+    <p>Get the days, likely costs, missing choices, and booking checklist in one place.</p>
   </a>
-  <a class="workflow-card" href="{{ '/examples.html#incident-response' | relative_url }}">
-    <span class="workflow-meta">Incident Response</span>
-    <h3>Recover fast and still close the incident cleanly.</h3>
-    <p>Avoid the second wave of work that comes from skipping proof, rollback checks, or final closure steps.</p>
-    <code>jini example incident-response</code>
+  <a class="workflow-card" href="{{ '/examples.html#vendor-choice' | relative_url }}">
+    <span class="workflow-meta">Before a choice</span>
+    <h3>Keep the reasoning attached to the decision.</h3>
+    <p>Get a recommendation you can defend instead of a choice you have to re-argue later.</p>
   </a>
 </div>
 
-<div class="value-strip">
-  <p><strong>What changes in one run:</strong> you spend less time guessing, re-explaining, and fixing preventable misses because the next step and missing work are visible early.</p>
-</div>
+## What You Get Back
 
-## What Users Get Back
+Jini should not give you a lecture.
 
-Those four examples show the same payoff in different kinds of work:
+It should give you something you can use:
 
-- less time chasing status
-- less rework from false “done”
-- cleaner handoffs between people
-- fewer surprises at approval or closure time
+- a sendable follow-up
+- a build-readiness check
+- a recommendation memo
+- a 7 day trip plan
 
-The public repo also proves the same kernel can stretch into personal planning,
-such as travel and budgeting, and into more formal workflows such as compliance
-audits. If you want the full examples breakdown with commands, output, and GIF
-walkthroughs, [see the detailed examples page](./examples.md).
+And then it should show:
 
-## Day-To-Day Value
-
-Jini should earn its keep in normal work, not only in edge cases.
-
-Here is the practical payoff in day-to-day flows:
-
-- **After a meeting:** you can turn loose notes into explicit follow-up,
-  owners, tasks, and missing requirements instead of hoping the follow-up stays
-  coherent.
-- **Before engineering starts:** you can check whether a research-backed spec
-  can become a safe handoff, or whether the team is about to build from an
-  unfinished draft.
-- **Before asking for approval:** you can show the current state, missing
-  evidence, and rationale in one place instead of assembling the outcome story from docs,
-  chat, and memory.
-- **During handoffs:** the next person can run one command and see what is
-  done, what is missing, and what happens next to move the work forward.
-- **After an incident:** you can tell the difference between "the service is
-  back" and "the work is actually ready for closure."
-
-The recurring Jini move is simple:
-
-```bash
-jini outcome
-jini artifacts
-jini show prd
-```
-
-That one screen answers the questions teams ask every day:
-
-- What state is this in?
-- What happens next?
-- What is still missing?
-- Are the tasks merely done, or do we have a real outcome yet?
-
-If you want to feel that payoff before you have your own work pack, start with:
-
-```bash
-jini example meeting-followup
-```
-
-## Bring Your Own Harness
-
-Use the coding harness you already prefer to execute the work. Jini sits above
-that harness and keeps the state, artifacts, and next honest step coherent.
-
-```bash
-jini harnesses
-```
-
-## Explore More
+- what is still missing
+- what it is not sure about
+- the next step
 
 <div class="section-card">
   <h3>Go next</h3>
   <div class="on-this-page">
-    <a href="./simple.md">Read the Simple Guide</a>
-    <a href="./state-and-artifacts.md">See state and artifacts clearly</a>
-    <a href="./cli.md">See the short CLI guide</a>
-    <a href="./proof.md">See the proof path</a>
-    <a href="./install.md">See the install path</a>
-    <a href="./examples.md">See detailed examples</a>
-    <a href="./contact.md">See support and contact paths</a>
-    <a href="https://github.com/maridlabsai/jini/releases/tag/v0.1.0">See release notes</a>
+    <a href="./simple.md">Simple Guide</a>
+    <a href="./examples.md">Examples</a>
+    <a href="./install.md">Install</a>
+    <a href="./cli.md">CLI Guide</a>
+    <a href="./state-and-artifacts.md">What Jini Shows</a>
+    <a href="./contact.md">Contact</a>
   </div>
 </div>
-
-## Public Core Boundary
-
-Free and public:
-
-- framework code
-- CLI
-- protocol and schema docs
-- install path
-- example packs
-- proof path
-- tests
-
-Paid later:
-
-- implementation help
-- onboarding workshops
-- design-partner work
-- premium domain or control surfaces after repeated demand proves they are worth building
-- enterprise support, integrations, and governance
-
-The public repo is meant to be usable on its own. The paid path is for
-acceleration, customization, and enterprise trust.

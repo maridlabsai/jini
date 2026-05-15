@@ -1,47 +1,50 @@
 ---
 title: Proof
-description: One command shows the difference between finished tasks and a real usable outcome.
+description: The proof is simple: Jini should give you something usable and tell you what still blocks it.
 ---
 
-Jini’s public proof is simple:
+The proof is not a theory.
 
-**done does not mean outcome**
+The proof is this:
 
-Run:
+- you give Jini something messy
+- Jini gives you something usable
+- Jini also shows what is still missing
 
-```bash
-jini example research-prd
-```
+That is the difference between “a nice draft” and “work you can trust.”
 
-The important lines are:
+## What The Proof Should Feel Like
 
 ```text
-EXAMPLE Research To PRD Handoff
-HEALTH ready-to-verify
-STATE  awaiting_verification
-NEXT   Verify
-MISSING-LATER
-  - Approval
-TASKS
-  done:       3/3
-  unresolved: 0/3
+You're working on
+Research to PRD handoff
+
+Ready now
+- Build-Readiness Check
+- Handoff Brief
+
+Still missing
+- Product approval
+
+Next step
+Open Build-readiness check
 ```
 
-This is the difference Jini is trying to preserve:
+That is enough for a user to understand the value.
 
-- tasks can be complete
-- evidence can be attached
-- the work can still fall short of a safe outcome
+The point is not the label.
+The point is:
 
-![Jini research to PRD proof demo](./assets/examples/research-prd.gif)
+- something useful is already ready
+- the blocker is visible
+- the next move is obvious
 
-That is not a UI choice. It is the protocol core refusing to confuse activity
-with outcome.
+If Jini cannot do that, it is not done.
 
-If you want the same proof shape on a more ordinary workflow, run:
+One more test matters now:
 
-```bash
-jini example meeting-followup
-```
+- can a first-time user tell what to type
+- can they tell what provider Jini chose
+- can they tell whether the result is safe to review before sharing
 
-For the longer walkthrough, see [PROOF_OF_DIFFERENCE.md](https://github.com/maridlabsai/jini/blob/main/PROOF_OF_DIFFERENCE.md).
+If those are not obvious, the product still has work to do.

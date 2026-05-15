@@ -1,151 +1,109 @@
 ---
 title: Simple Guide
-description: The plain-language path for understanding how Jini reduces rework and confusion without technical terms first.
+description: The shortest explanation of what Jini is for and what to type first.
 ---
 
-Jini helps you answer three questions:
+Jini helps when work is messy and you do not want to lose time figuring out
+what is ready, what is missing, and what to do next.
 
-- What is done?
-- What happens next?
-- What is still missing?
+That is the whole idea.
 
-That is all.
+If you want the shortest first-run path, start on the [Install](./install.md)
+page and copy the setup block that matches your provider.
 
-<div class="section-card">
-  <strong>If you only remember one thing:</strong>
-  <p>Jini is a way to slow down just enough to get to a real outcome instead of stopping at “looks done.”</p>
-</div>
+## Think About Normal Problems
 
-You do not need to learn the whole system first.
+Jini helps when:
 
-## When Jini Helps
+- a meeting ended and the follow-up is fuzzy
+- a plan looks finished but may not be safe yet
+- a choice was made but the reasoning is getting lost
+- a trip is still scattered across tabs and notes
+- a problem is fixed but the real closure work is easy to skip
 
-Jini helps when work gets messy and starts wasting time.
-
-For example:
-
-- a meeting ends and nobody is sure what to do next
-- a plan looks finished, but nobody knows if it is really ready
-- a choice was made, but the reason is getting lost
-- a problem is fixed, but nobody knows if the work is truly closed
-
-## First Try
-
-Run this:
+## The Smallest Way To Use It
 
 ```bash
-jini example research-prd
-jini outcome
+./jini
 ```
 
-You will see lines like:
+`./jini` is the front door in this source-built preview.
+
+If Jini is already installed on your `PATH`, the command becomes `jini`.
+
+Inside Jini you can:
+
+- paste messy notes
+- ask for the outcome you want
+- choose `Open ready work`
+- choose `See what is still missing`
+- choose `Plan this first`
+
+When you choose `Plan this first`, Jini should slow down and structure the work
+into goal, requirements, design, steps, and run.
+
+## If You Use Claude
+
+Copy this first:
+
+```bash
+go build -o jini ./cmd/jini
+export JINI_PROVIDER=claude
+export ANTHROPIC_API_KEY="paste-your-key-here"
+export JINI_MODEL=sonnet
+./jini provider doctor
+./jini
+```
+
+Then type something plain like:
 
 ```text
-STATE  awaiting_verification
-NEXT   Verify
-MISSING-LATER
-  - Approval
+turn these meeting notes into a follow-up I can send
 ```
 
-Read them like this:
+If setup is not the thing you are stuck on, skip straight to the
+[Install](./install.md) page for the provider-specific paths.
 
-- `STATE`: where the work is now
-- `NEXT`: the next honest step
-- `MISSING-LATER`: what will cause trouble if you ignore it
+## What Good Help Looks Like
 
-## Why This Matters
+Jini should quickly tell you:
 
-Many teams stop at “good enough” too early.
+- what you are working on
+- what it is using
+- what it is doing
+- what is ready now
+- what is still missing
+- what it is not sure about
+- the next step
 
-Jini helps you slow down just enough to avoid preventable cleanup:
+It should also reassure you when the output is still a draft and safe to
+review before sharing.
 
-- what is really done
-- what still needs checking
-- what is missing before you call the work finished
+## The Kinds Of Things It Should Give Back
 
-## Four Common Cases
+- a follow-up you can send
+- a short plan check
+- a recommendation you can explain
+- a trip plan you can actually use
+- a closure checklist
 
-### Meeting Follow-up
+Not:
 
-Question:
+- a confusing status wall
+- a path to a file you have to interpret
+- a bunch of internal labels
 
-**Did that meeting produce real follow-through, or just notes?**
+## If You Only Remember One Rule
 
-Run:
+Jini should reduce stress, not add process.
 
-```bash
-jini example meeting-followup
-```
-
-### Research To PRD
-
-Question:
-
-**Is this spec really ready, or does it only look ready?**
-
-Run:
-
-```bash
-jini example research-prd
-```
-
-### Vendor Selection
-
-Question:
-
-**Can we still explain this choice later?**
-
-Run:
-
-```bash
-jini example vendor-selection
-```
-
-### Incident Response
-
-Question:
-
-**Is the incident really closed?**
-
-Run:
-
-```bash
-jini example incident-response
-```
-
-## Smallest Useful Habit
-
-Use this after important work:
-
-```bash
-jini outcome
-```
-
-It helps you see:
-
-- what state the work is in
-- what happens next
-- what is missing
-
-If you want to see what Jini already made for you, run:
-
-```bash
-jini artifacts
-jini show prd
-```
-
-If you want the non-technical explanation of how Jini keeps those things
-visible, read [State And Artifacts](./state-and-artifacts.md).
-
-## If You Want More
+If it makes you think harder about the tool than about the work, it is failing.
 
 <div class="section-card">
   <h3>Go next</h3>
   <div class="on-this-page">
-    <a href="./index.md">Home</a>
-    <a href="./state-and-artifacts.md">State and Artifacts</a>
     <a href="./examples.md">Examples</a>
-    <a href="./cli.md">CLI Guide</a>
     <a href="./install.md">Install</a>
+    <a href="./cli.md">CLI Guide</a>
   </div>
 </div>

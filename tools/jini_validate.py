@@ -54,6 +54,11 @@ LEARNING_EVENTS_PATH = LEARNING_EVENTS_ROOT / "runtime-events.jsonl"
 FRAMEWORK_EVOLUTION_ROOT = LEARNING_ROOT / "framework-evolution"
 COMPETITIVE_KPI_PATH = ROOT / "specs" / "competitive-kpis.yaml"
 GOLDEN_BENCHMARK_PATH = ROOT / "specs" / "golden-competitive-benchmark.yaml"
+REWRITE_SCORE_BASELINE_PATH = ROOT / "specs" / "rewrite-score-baseline.yaml"
+REWRITE_GUARDRAILS_PATH = ROOT / "specs" / "rewrite-guardrails.md"
+PRODUCT_REVIEW_ROLES_PATH = ROOT / "specs" / "product-review-roles.md"
+PRODUCT_CONSENSUS_PRD_PATH = ROOT / "specs" / "product-consensus-prd-and-plan.md"
+PRODUCT_REWRITE_CONTRACT_PATH = ROOT / "specs" / "product-rewrite-contract.md"
 INSTALL_MANIFEST_PATH = ROOT / "distribution" / "install-manifest.yaml"
 ADAPTER_REGISTRY_PATH = ROOT / "distribution" / "adapter-registry.yaml"
 VERSION_PATH = ROOT / "VERSION"
@@ -309,6 +314,13 @@ def load_golden_benchmark() -> dict[str, Any]:
     if not isinstance(competitors, list) or len(competitors) < 2:
         raise ValueError("golden benchmark must define at least two competitors")
     return benchmark
+
+
+def load_rewrite_score_baseline() -> dict[str, Any]:
+    baseline = load_document(REWRITE_SCORE_BASELINE_PATH)
+    if not isinstance(baseline, dict):
+        raise ValueError("rewrite score baseline must be a mapping")
+    return baseline
 
 
 def golden_benchmark_digest() -> str:
@@ -1509,8 +1521,7 @@ def build_install_catalog(
             "kit_id": beginner_kit_id,
             "target": selected_target,
             "commands": [
-                f"{cli} start --harness {selected_target}",
-                f"{cli} example research-prd",
+                f"{cli}",
             ],
         }
     if power_kit is not None:
@@ -1594,7 +1605,7 @@ def build_harness_catalog() -> dict[str, Any]:
                 "label": label,
                 "destination_root": str(raw_target.get("destination_root", "")).strip(),
                 "risk_notice": str(raw_target.get("risk_notice", "")).strip(),
-                "start_command": f"{cli} start --harness {harness_id}",
+                "start_command": f"{cli}",
                 "run_command": f"{cli} run /path/to/work --repo /path/to/repo --harness {harness_id}",
             }
         )
@@ -1602,14 +1613,14 @@ def build_harness_catalog() -> dict[str, Any]:
         "schema_version": "0.1.0",
         "catalog_type": "JiniHarnessCatalog",
         "generated_at": now_utc(),
-        "summary": "Bring your own harness. Jini keeps state, artifacts, and next steps coherent above it.",
+        "summary": "Bring your own harness. Jini keeps the work, what is ready, and what comes next clear above it.",
         "harnesses": harnesses,
     }
 
 
 def print_harness_catalog(report: dict[str, Any]) -> None:
     print("Jini works above coding harnesses.")
-    print("Use any harness to execute. Jini keeps the work, state, and next steps coherent.")
+    print("Use any harness to execute. Jini keeps the work, what is ready, and what comes next clear.")
     print()
     print("HARNESSES")
     for item in report.get("harnesses", []):
@@ -1624,6 +1635,8 @@ def build_publish_readiness() -> dict[str, Any]:
     pack_catalog = build_pack_catalog()
     install_catalog = build_install_catalog()
     scorecard = build_competitive_kpi_summary(load_competitive_kpis())
+    rewrite_score_baseline = load_rewrite_score_baseline()
+    benchmark_projection = build_golden_benchmark_projection()
 
     doc_paths = [
         ROOT / "README.md",
@@ -1632,6 +1645,11 @@ def build_publish_readiness() -> dict[str, Any]:
         ROOT / "specs" / "install-packaging.md",
         ROOT / "specs" / "competitive-kpis.yaml",
         ROOT / "specs" / "golden-competitive-benchmark.yaml",
+        ROOT / "specs" / "rewrite-score-baseline.yaml",
+        REWRITE_GUARDRAILS_PATH,
+        PRODUCT_REVIEW_ROLES_PATH,
+        PRODUCT_CONSENSUS_PRD_PATH,
+        PRODUCT_REWRITE_CONTRACT_PATH,
         ROOT / "distribution" / "install-manifest.yaml",
     ]
     doc_checks = [{"path": display_path(path), "exists": path.exists()} for path in doc_paths]
@@ -1719,22 +1737,16 @@ def build_publish_readiness() -> dict[str, Any]:
         },
         {
             "id": "beginner-command-prefix",
-            "all_jini_commands": all(str(command).startswith("jini ") for command in novice_commands),
-            "status": "ok" if novice_commands and all(str(command).startswith("jini ") for command in novice_commands) else "warning",
+            "all_jini_commands": all(str(command) == "jini" or str(command).startswith("jini ") for command in novice_commands),
+            "status": "ok"
+            if novice_commands and all(str(command) == "jini" or str(command).startswith("jini ") for command in novice_commands)
+            else "warning",
         },
         {
-            "id": "beginner-proof-command",
-            "present": any(
-                token in str(command)
-                for command in novice_commands
-                for token in ("try-example research-prd", "example research-prd")
-            ),
+            "id": "beginner-single-shell-command",
+            "present": novice_commands == ["jini"],
             "status": "ok"
-            if any(
-                token in str(command)
-                for command in novice_commands
-                for token in ("try-example research-prd", "example research-prd")
-            )
+            if novice_commands == ["jini"]
             else "warning",
         },
         {
@@ -1766,12 +1778,53 @@ def build_publish_readiness() -> dict[str, Any]:
             "id": "simple-guide-core-questions",
             "present": all(
                 phrase in ((ROOT / "docs" / "simple.md").read_text(encoding="utf-8") if (ROOT / "docs" / "simple.md").exists() else "")
-                for phrase in ("What is done?", "What happens next?", "What is still missing?")
+                for phrase in (
+                    "`jini` is the front door",
+                    "Open ready work",
+                    "Plan this first",
+                )
             ),
             "status": "ok"
             if all(
                 phrase in ((ROOT / "docs" / "simple.md").read_text(encoding="utf-8") if (ROOT / "docs" / "simple.md").exists() else "")
-                for phrase in ("What is done?", "What happens next?", "What is still missing?")
+                for phrase in (
+                    "`jini` is the front door",
+                    "Open ready work",
+                    "Plan this first",
+                )
+            )
+            else "warning",
+        },
+        {
+            "id": "provider-doctor-documented",
+            "present": all(
+                phrase in "\n".join(
+                    [
+                        (ROOT / "docs" / "cli.md").read_text(encoding="utf-8") if (ROOT / "docs" / "cli.md").exists() else "",
+                        (ROOT / "docs" / "install.md").read_text(encoding="utf-8") if (ROOT / "docs" / "install.md").exists() else "",
+                    ]
+                )
+                for phrase in (
+                    "jini provider doctor",
+                    "Azure OpenAI",
+                    "Amazon Bedrock",
+                    "does not print",
+                )
+            ),
+            "status": "ok"
+            if all(
+                phrase in "\n".join(
+                    [
+                        (ROOT / "docs" / "cli.md").read_text(encoding="utf-8") if (ROOT / "docs" / "cli.md").exists() else "",
+                        (ROOT / "docs" / "install.md").read_text(encoding="utf-8") if (ROOT / "docs" / "install.md").exists() else "",
+                    ]
+                )
+                for phrase in (
+                    "jini provider doctor",
+                    "Azure OpenAI",
+                    "Amazon Bedrock",
+                    "does not print",
+                )
             )
             else "warning",
         },
@@ -1822,6 +1875,198 @@ def build_publish_readiness() -> dict[str, Any]:
                 "status": "ok" if current_score >= competitor_score else "warning",
             }
         )
+
+    projected_overall_score = float(benchmark_projection.get("overall", {}).get("jini_score", 0.0))
+    strongest_projected_competitor = str(benchmark_projection.get("overall", {}).get("strongest_competitor", "")).strip()
+    strongest_projected_score = float(benchmark_projection.get("overall", {}).get("strongest_competitor_score", 0.0))
+    projected_margin = round(projected_overall_score - strongest_projected_score, 2)
+    required_floor = float(rewrite_score_baseline.get("minimum_next_overall_score", 0.0))
+    required_margin = float(rewrite_score_baseline.get("minimum_margin_over_strongest_competitor", 0.0))
+    rewrite_momentum_checks = [
+        {
+            "id": "overall-score-floor",
+            "current_overall_score": projected_overall_score,
+            "minimum_next_overall_score": required_floor,
+            "delta": round(projected_overall_score - required_floor, 3),
+            "status": "ok" if projected_overall_score > required_floor else "warning",
+        },
+        {
+            "id": "overall-lead-margin",
+            "current_overall_score": projected_overall_score,
+            "strongest_competitor": strongest_projected_competitor,
+            "strongest_competitor_score": strongest_projected_score,
+            "margin": projected_margin,
+            "minimum_margin": required_margin,
+            "status": "ok" if projected_margin >= required_margin else "warning",
+        },
+    ]
+
+    consensus_gate_requirements = [
+        {
+            "id": "product-review-role-docs",
+            "label": "Product-review role docs exist",
+            "requirements": [
+                {
+                    "path": PRODUCT_REVIEW_ROLES_PATH,
+                    "markers": [
+                        "### Competitive Analyst",
+                        "### UX Researcher",
+                        "### UX Designer",
+                        "### Program Manager",
+                        "## Consensus Gate",
+                    ],
+                },
+            ],
+        },
+        {
+            "id": "two-flagship-replacement-flows",
+            "label": "Two flagship replacement flows are constrained",
+            "requirements": [
+                {
+                    "path": PRODUCT_CONSENSUS_PRD_PATH,
+                    "markers": [
+                        "Replacement-critical flows:",
+                        "meeting follow-up",
+                        "plan/spec readiness",
+                        "Demo-only until parity is proven",
+                    ],
+                },
+                {
+                    "path": PRODUCT_REWRITE_CONTRACT_PATH,
+                    "markers": [
+                        "For the replacement-critical path, only two flows are approved",
+                        "meeting follow-up",
+                        "plan/spec readiness",
+                    ],
+                },
+            ],
+        },
+        {
+            "id": "useful-result-first",
+            "label": "Useful result appears before summary/status",
+            "requirements": [
+                {
+                    "path": PRODUCT_CONSENSUS_PRD_PATH,
+                    "markers": [
+                        "useful result before status",
+                        "The summary appears after the result",
+                        "meeting: `Sendable Follow-up`",
+                        "plan/spec: `Build-Readiness Check`",
+                    ],
+                },
+                {
+                    "path": PRODUCT_REWRITE_CONTRACT_PATH,
+                    "markers": [
+                        "Do not show the work summary before the first useful result on first run.",
+                        "The first result must include enough content to be useful",
+                    ],
+                },
+            ],
+        },
+        {
+            "id": "i-am-not-sure-fallback",
+            "label": "I-am-not-sure path returns a fallback object",
+            "requirements": [
+                {
+                    "path": PRODUCT_CONSENSUS_PRD_PATH,
+                    "markers": [
+                        "I am not sure",
+                        "First Useful Pass",
+                        "what Jini needs next",
+                        "Nothing will be sent yet.",
+                    ],
+                },
+                {
+                    "path": PRODUCT_REWRITE_CONTRACT_PATH,
+                    "markers": [
+                        "I am not sure",
+                        "First Useful Pass",
+                        "what the user appears to be trying to finish",
+                    ],
+                },
+            ],
+        },
+        {
+            "id": "real-continuation-actions",
+            "label": "Continuation actions are implemented paths, not placeholders",
+            "requirements": [
+                {
+                    "path": PRODUCT_CONSENSUS_PRD_PATH,
+                    "markers": [
+                        "`Keep going`",
+                        "`See what is still missing`",
+                        "Do not show actions that are not implemented.",
+                    ],
+                },
+                {
+                    "path": PRODUCT_REWRITE_CONTRACT_PATH,
+                    "markers": [
+                        "At least one real continuation path must exist",
+                        "Both must be real. They must not be placeholders.",
+                    ],
+                },
+            ],
+        },
+        {
+            "id": "parity-or-shared-generation",
+            "label": "Launcher-created work is gated by parity or shared generation",
+            "requirements": [
+                {
+                    "path": PRODUCT_CONSENSUS_PRD_PATH,
+                    "markers": [
+                        "launcher-created work uses shared generation or has golden parity fixtures",
+                        "golden parity fixtures for new and old work exist before cutover",
+                    ],
+                },
+                {
+                    "path": PRODUCT_REVIEW_ROLES_PATH,
+                    "markers": [
+                        "launcher-created work is parity-tested or uses shared generation",
+                        "meeting follow-up and plan readiness are bulletproof before broader launcher scope",
+                    ],
+                },
+                {
+                    "path": REWRITE_GUARDRAILS_PATH,
+                    "markers": [
+                        "shared generation",
+                        "old/new parity fixtures",
+                    ],
+                },
+            ],
+        },
+    ]
+    consensus_gate_checks: list[dict[str, Any]] = []
+    for gate in consensus_gate_requirements:
+        gate_doc_checks: list[dict[str, Any]] = []
+        for requirement in gate["requirements"]:
+            path = requirement["path"]
+            markers = [str(marker) for marker in requirement["markers"]]
+            text = path.read_text(encoding="utf-8") if path.exists() else ""
+            normalized_text = text.lower()
+            missing_markers = [marker for marker in markers if marker.lower() not in normalized_text]
+            gate_doc_checks.append(
+                {
+                    "path": display_path(path),
+                    "exists": path.exists(),
+                    "markers": markers,
+                    "missing_markers": missing_markers,
+                    "status": "ok" if path.exists() and not missing_markers else "warning",
+                }
+            )
+        consensus_gate_checks.append(
+            {
+                "id": gate["id"],
+                "label": gate["label"],
+                "status": "ok" if all(item["status"] == "ok" for item in gate_doc_checks) else "warning",
+                "docs": gate_doc_checks,
+            }
+        )
+    consensus_gates = {
+        "status": "ok" if all(item["status"] == "ok" for item in consensus_gate_checks) else "warning",
+        "check_ids": [str(item["id"]) for item in consensus_gate_checks],
+        "passed_gate_ids": [str(item["id"]) for item in consensus_gate_checks if item["status"] == "ok"],
+        "checks": consensus_gate_checks,
+    }
 
     commercial_kit = next((kit for kit in install_catalog.get("kits", []) if kit.get("id") == "vendor-decision-kit"), None)
     breadth_summary = {
@@ -1882,6 +2127,18 @@ def build_publish_readiness() -> dict[str, Any]:
             "status": "ok" if all(item["status"] == "ok" for item in leadership_checks) else "warning",
             "checks": leadership_checks,
         },
+        {
+            "id": "rewrite-momentum",
+            "label": "Rewrite score momentum",
+            "status": "ok" if all(item["status"] == "ok" for item in rewrite_momentum_checks) else "warning",
+            "checks": rewrite_momentum_checks,
+        },
+        {
+            "id": "consensus-gates",
+            "label": "Product consensus gates",
+            "status": consensus_gates["status"],
+            "checks": consensus_gate_checks,
+        },
     ]
     overall_status = "ok" if all(section["status"] == "ok" for section in sections) else "warning"
 
@@ -1895,6 +2152,7 @@ def build_publish_readiness() -> dict[str, Any]:
         "bundle_count": len(install_catalog.get("bundles", [])),
         "kit_count": len(install_catalog.get("kits", [])),
         "target_count": len(install_catalog.get("targets", [])),
+        "consensus_gates": consensus_gates,
         "sections": sections,
     }
 
@@ -2103,30 +2361,29 @@ def build_get_started_guide(
     beginner_path = {
         "audience": "beginner",
         "label": "Beginner Path",
-        "goal": "Reach a safe first success with one setup command and one proof command.",
+        "goal": "Reach a safe first success by entering the Jini shell and working naturally from there.",
         "kit_id": beginner_kit_id,
         "target": selected_target,
         "commands": [
-            f"{cli} start --harness {selected_target}",
-            f"{cli} example research-prd",
-            f"{cli} outcome",
+            f"{cli}",
         ],
         "trust_path": beginner_trust_path,
         "notes": [
             "Bundle-level detail is intentionally hidden from the beginner path.",
+            "`jini check` and `jini open` stay available for scripts and power users, but the normal user path starts with `jini`.",
             "If you want the manual trust path, use `jini guide --harness ...` or `jini plan-install ...`.",
         ],
     }
     power_path = {
         "audience": "power-user",
         "label": "Power-User Path",
-        "goal": "Orchestrate harness execution while keeping outcome state and artifacts coherent.",
+        "goal": "Work with a chosen harness while keeping the result and next step clear.",
         "kit_id": power_kit_id,
         "target": selected_target,
         "commands": [
             f"{cli} harnesses",
-            f"{cli} plan /path/to/work --repo /path/to/repo --intent verify",
-            f"{cli} handoff --repo /path/to/repo --harness {selected_target}",
+            f"{cli} check",
+            f"{cli} open",
             f"{cli} run --repo /path/to/repo --harness {selected_target} --activate-runtime --consent write --consent publish",
         ],
         "notes": [
@@ -2142,7 +2399,7 @@ def build_get_started_guide(
         "shared_model": [
             "Same kernel and lifecycle for both audiences.",
             "Beginners get the smallest safe path first.",
-            "Power users get the same system with more inspectable depth, not a different framework.",
+            "Power users get the same system with more inspectable depth, not a different product.",
         ],
         "beginner_path": beginner_path,
         "power_user_path": power_path,
@@ -2325,11 +2582,11 @@ def build_public_example_proof(
             "target": str(evidence_doc.get("target_artifact_id", "")) if isinstance(evidence_doc, dict) else "",
         },
         "daily_value": list(spec.get("daily_value", [])),
-        "try_command": f"{cli} example {example_id}",
+        "try_command": f"{cli}",
         "continue_with": [
-            f"{cli} outcome",
-            f"{cli} artifacts",
-            f"{cli} show {next((path.stem for path in sorted((pack_dir / 'views').glob('*.md'))), 'tasks')}",
+            f"{cli}",
+            "Inside Jini: Open ready work",
+            "Inside Jini: See what is still missing",
             f"{cli} next --intent {str(summary.get('next_operation', 'Verify')).lower()}",
         ],
         "warnings": [*validation_warnings, *compile_warnings],
@@ -2352,11 +2609,11 @@ def print_public_example_proof(report: dict[str, Any]) -> None:
     if control_packs:
         print(f"CTRL    {', '.join(control_packs)}")
     if report.get("missing_now"):
-        print("MISSING-NOW")
+        print("STILL MISSING")
         for item in report["missing_now"]:
             print(f"  - {item}")
     if report.get("missing_later"):
-        print("MISSING-LATER")
+        print("STILL MISSING LATER")
         for item in report["missing_later"]:
             print(f"  - {item}")
     task_summary = report.get("task_summary", {})
@@ -3270,10 +3527,7 @@ def setup_harness(
         "install_result": install_result,
         "doctor_report": doctor_report,
         "next_commands": [
-            f"{cli} example research-prd",
-            f"{cli} outcome",
-            f"{cli} artifacts",
-            f"{cli} show prd",
+            f"{cli}",
         ],
     }
 
@@ -3287,6 +3541,308 @@ def print_setup_result(result: dict[str, Any]) -> None:
     print("READY")
     for command in result.get("next_commands", []):
         print(f"  {command}")
+
+
+def _env_presence(name: str, *, env: dict[str, str] | None = None) -> str:
+    env_map = os.environ if env is None else env
+    return "set" if str(env_map.get(name, "")).strip() else "missing"
+
+
+def _provider_missing(names: list[str], *, env: dict[str, str] | None = None) -> list[str]:
+    env_map = os.environ if env is None else env
+    return [name for name in names if not str(env_map.get(name, "")).strip()]
+
+
+def _normalize_provider_mode(value: str) -> str:
+    normalized = (value or "").strip().lower().replace("_", "-").replace(" ", "-")
+    if normalized in {"", "auto"}:
+        return "auto"
+    if normalized in {"local", "local-preview", "localpreview"}:
+        return "local-preview"
+    if normalized in {"azure", "azure-openai", "azure-open-ai"}:
+        return "azure-openai"
+    if normalized in {"bedrock", "amazon-bedrock", "aws-bedrock"}:
+        return "bedrock"
+    if normalized in {"claude", "claude-api", "anthropic", "anthropic-api"}:
+        return "anthropic"
+    return normalized
+
+
+def _configured_model_input(*, env: dict[str, str] | None = None) -> str:
+    env_map = os.environ if env is None else env
+    return str(env_map.get("JINI_MODEL", "auto") or "auto").strip()
+
+
+def _normalized_model_mode(*, env: dict[str, str] | None = None) -> str:
+    return " ".join(_configured_model_input(env=env).strip().lower().replace("_", " ").replace("-", " ").replace(".", " ").replace("/", " ").split())
+
+
+def _compact_model_mode(*, env: dict[str, str] | None = None) -> str:
+    compact = _configured_model_input(env=env).strip().lower()
+    for marker in (" ", ".", "-", "_", "/"):
+        compact = compact.replace(marker, "")
+    return compact
+
+
+def _friendly_model_label(provider: str, model: str) -> str:
+    normalized = " ".join((model or "").strip().lower().replace("_", " ").replace("-", " ").replace(".", " ").replace("/", " ").split())
+    if "sonnet 4 6" in normalized or "sonnet46" in normalized:
+        return "Claude Sonnet 4.6"
+    if "claude sonnet 4 20250514" in normalized or "claude sonnet 4" in normalized or "sonnet 4" in normalized:
+        return "Claude Sonnet 4"
+    if "3 5 sonnet" in normalized or "sonnet 3 5" in normalized:
+        return "Claude Sonnet 3.5"
+    if not str(model or "").strip():
+        if provider == "bedrock":
+            return "Claude Sonnet 4.6"
+        if provider == "anthropic":
+            return "Claude Sonnet 4"
+        return ""
+    return "Custom model"
+
+
+def _is_bedrock_only_model_mode(*, env: dict[str, str] | None = None) -> bool:
+    compact = _compact_model_mode(env=env)
+    configured = _configured_model_input(env=env).strip().lower()
+    return compact in {"sonnet46", "claudesonnet46"} or configured.startswith("anthropic.")
+
+
+def _forced_auto_provider_mode(*, env: dict[str, str] | None = None) -> str:
+    normalized = _normalized_model_mode(env=env)
+    configured = _configured_model_input(env=env).strip().lower()
+    if _is_bedrock_only_model_mode(env=env):
+        return "bedrock"
+    if configured.startswith("claude-") or normalized.startswith("claude sonnet") or normalized.startswith("claude opus") or normalized.startswith("claude haiku"):
+        return "anthropic"
+    return ""
+
+
+def _provider_setting_value(resolved_label: str, *, env: dict[str, str] | None = None) -> str:
+    configured = _normalize_provider_mode(str((os.environ if env is None else env).get("JINI_PROVIDER", "auto") or "auto"))
+    if configured == "auto":
+        return f"auto -> {resolved_label}"
+    return configured
+
+
+def _resolve_bedrock_model(*, env: dict[str, str] | None = None) -> tuple[str, str]:
+    env_map = os.environ if env is None else env
+    raw_model_id = str(env_map.get("BEDROCK_MODEL_ID", "")).strip()
+    if raw_model_id:
+        return raw_model_id, _friendly_model_label("bedrock", raw_model_id)
+    raw_model = _configured_model_input(env=env)
+    normalized = _normalized_model_mode(env=env)
+    compact = _compact_model_mode(env=env)
+    if normalized in {"", "auto", "sonnet", "claude sonnet"} or compact in {"sonnet46", "claudesonnet46"}:
+        return "anthropic.claude-sonnet-4-6", "Claude Sonnet 4.6"
+    return raw_model, _friendly_model_label("bedrock", raw_model)
+
+
+def _resolve_anthropic_model(*, env: dict[str, str] | None = None) -> tuple[str, str, str]:
+    env_map = os.environ if env is None else env
+    raw_model = str(env_map.get("ANTHROPIC_MODEL") or env_map.get("JINI_MODEL") or "auto").strip()
+    normalized = " ".join(raw_model.strip().lower().replace("_", " ").replace("-", " ").replace(".", " ").replace("/", " ").split())
+    compact = raw_model.strip().lower()
+    for marker in (" ", ".", "-", "_", "/"):
+        compact = compact.replace(marker, "")
+    if normalized in {"", "auto", "sonnet", "claude sonnet", "sonnet 4", "claude sonnet 4"}:
+        return "claude-sonnet-4-20250514", "Claude Sonnet 4", ""
+    if compact in {"sonnet46", "claudesonnet46"}:
+        return "", "", "Sonnet 4.6 shortcut is supported only on Bedrock. For direct Claude API, set a full Anthropic model name like claude-sonnet-4-20250514."
+    return raw_model, _friendly_model_label("anthropic", raw_model), ""
+
+
+def _detect_local_preview_provider(*, env: dict[str, str] | None = None) -> dict[str, Any]:
+    return {
+        "schema_version": "0.1.0",
+        "result_type": "JiniProviderDoctor",
+        "provider_id": "local-preview",
+        "label": "Local preview",
+        "status": "ok",
+        "settings": [{"name": "JINI_PROVIDER", "presence": _provider_setting_value("Local preview", env=env)}],
+        "secrets": [],
+        "missing": [],
+    }
+
+
+def _detect_azure_provider(*, env: dict[str, str] | None = None) -> dict[str, Any]:
+    env_map = os.environ if env is None else env
+    missing = _provider_missing(
+        ["AZURE_OPENAI_ENDPOINT", "AZURE_OPENAI_API_KEY", "AZURE_OPENAI_DEPLOYMENT"],
+        env=env_map,
+    )
+    label = "Azure OpenAI"
+    deployment = str(env_map.get("AZURE_OPENAI_DEPLOYMENT", "")).strip()
+    if deployment:
+        label = f"{label} / {deployment}"
+    settings = [
+        {"name": "JINI_PROVIDER", "presence": _provider_setting_value(label, env=env)},
+        {"name": "AZURE_OPENAI_ENDPOINT", "presence": _env_presence("AZURE_OPENAI_ENDPOINT", env=env_map)},
+        {"name": "AZURE_OPENAI_DEPLOYMENT", "presence": _env_presence("AZURE_OPENAI_DEPLOYMENT", env=env_map)},
+        {
+            "name": "AZURE_OPENAI_API_VERSION",
+            "presence": _env_presence("AZURE_OPENAI_API_VERSION", env=env_map),
+            "default": "2024-10-21",
+        },
+    ]
+    raw_model = _configured_model_input(env=env_map)
+    if " ".join(raw_model.lower().replace("_", " ").replace("-", " ").replace(".", " ").replace("/", " ").split()) != "auto":
+        settings.append({"name": "JINI_MODEL", "presence": f"{raw_model} -> deployment decides the actual Azure model"})
+    return {
+        "schema_version": "0.1.0",
+        "result_type": "JiniProviderDoctor",
+        "provider_id": "azure-openai",
+        "label": label,
+        "status": "ok" if not missing else "needs setup",
+        "settings": settings,
+        "secrets": [{"name": "AZURE_OPENAI_API_KEY", "presence": _env_presence("AZURE_OPENAI_API_KEY", env=env_map)}],
+        "missing": missing,
+    }
+
+
+def _detect_bedrock_provider(*, env: dict[str, str] | None = None) -> dict[str, Any]:
+    env_map = os.environ if env is None else env
+    missing: list[str] = []
+    if _env_presence("AWS_REGION", env=env_map) == "missing" and _env_presence("AWS_DEFAULT_REGION", env=env_map) == "missing":
+        missing.append("AWS_REGION or AWS_DEFAULT_REGION")
+    has_profile = _env_presence("AWS_PROFILE", env=env_map) == "set"
+    has_static_keys = _env_presence("AWS_ACCESS_KEY_ID", env=env_map) == "set" and _env_presence("AWS_SECRET_ACCESS_KEY", env=env_map) == "set"
+    if not has_profile and not has_static_keys:
+        missing.append("AWS_PROFILE or AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY")
+    model_id, model_label = _resolve_bedrock_model(env=env_map)
+    label = f"Amazon Bedrock / {model_label}" if model_label else "Amazon Bedrock"
+    raw_model_id = str(env_map.get("BEDROCK_MODEL_ID", "")).strip()
+    model_input = _configured_model_input(env=env_map)
+    if raw_model_id:
+        model_presence = f"set -> {model_label}"
+    elif " ".join(model_input.lower().replace("_", " ").replace("-", " ").replace(".", " ").replace("/", " ").split()) == "auto":
+        model_presence = f"auto -> {model_label}"
+    else:
+        model_presence = f"{model_input} -> {model_label}"
+    return {
+        "schema_version": "0.1.0",
+        "result_type": "JiniProviderDoctor",
+        "provider_id": "bedrock",
+        "label": label,
+        "status": "ok" if not missing else "needs setup",
+        "settings": [
+            {"name": "JINI_PROVIDER", "presence": _provider_setting_value(label, env=env)},
+            {
+                "name": "AWS_REGION",
+                "presence": "set" if "AWS_REGION or AWS_DEFAULT_REGION" not in missing else "missing",
+                "aliases": ["AWS_DEFAULT_REGION"],
+            },
+            {"name": "JINI_MODEL" if not raw_model_id else "BEDROCK_MODEL_ID", "presence": model_presence},
+        ],
+        "secrets": [
+            {"name": "AWS_PROFILE", "presence": _env_presence("AWS_PROFILE", env=env_map)},
+            {"name": "AWS_ACCESS_KEY_ID", "presence": _env_presence("AWS_ACCESS_KEY_ID", env=env_map)},
+            {"name": "AWS_SECRET_ACCESS_KEY", "presence": _env_presence("AWS_SECRET_ACCESS_KEY", env=env_map)},
+        ],
+        "missing": missing,
+    }
+
+
+def _detect_anthropic_provider(*, env: dict[str, str] | None = None) -> dict[str, Any]:
+    env_map = os.environ if env is None else env
+    missing: list[str] = []
+    if _env_presence("ANTHROPIC_API_KEY", env=env_map) == "missing":
+        missing.append("ANTHROPIC_API_KEY")
+    _model_id, model_label, model_issue = _resolve_anthropic_model(env=env_map)
+    if model_issue:
+        missing.append(model_issue)
+    label = f"Claude API / {model_label}" if model_label else "Claude API"
+    raw_model = str(env_map.get("ANTHROPIC_MODEL") or env_map.get("JINI_MODEL") or "auto").strip()
+    if not raw_model or " ".join(raw_model.lower().replace("_", " ").replace("-", " ").replace(".", " ").replace("/", " ").split()) == "auto":
+        model_presence = f"auto -> {model_label}" if model_label else "auto"
+    elif model_issue:
+        model_presence = raw_model
+    else:
+        model_presence = f"{raw_model} -> {model_label}"
+    return {
+        "schema_version": "0.1.0",
+        "result_type": "JiniProviderDoctor",
+        "provider_id": "anthropic",
+        "label": label,
+        "status": "ok" if not missing else "needs setup",
+        "settings": [
+            {"name": "JINI_PROVIDER", "presence": _provider_setting_value(label, env=env)},
+            {"name": "JINI_MODEL", "presence": model_presence},
+            {
+                "name": "ANTHROPIC_BASE_URL",
+                "presence": _env_presence("ANTHROPIC_BASE_URL", env=env_map),
+                "default": "https://api.anthropic.com",
+            },
+        ],
+        "secrets": [{"name": "ANTHROPIC_API_KEY", "presence": _env_presence("ANTHROPIC_API_KEY", env=env_map)}],
+        "missing": missing,
+    }
+
+
+def _with_auto_provider_setting(report: dict[str, Any]) -> dict[str, Any]:
+    settings = list(report.get("settings", []))
+    label = str(report.get("label", "")).strip()
+    injected = {"name": "JINI_PROVIDER", "presence": f"auto -> {label}"}
+    if settings and isinstance(settings[0], dict) and settings[0].get("name") == "JINI_PROVIDER":
+        settings[0] = injected
+    else:
+        settings.insert(0, injected)
+    return {**report, "settings": settings}
+
+
+def build_provider_doctor(*, env: dict[str, str] | None = None) -> dict[str, Any]:
+    env_map = os.environ if env is None else env
+    provider_id = _normalize_provider_mode(str(env_map.get("JINI_PROVIDER", "auto") or "auto"))
+    if provider_id == "auto":
+        forced = _forced_auto_provider_mode(env=env_map)
+        if forced:
+            provider_id = forced
+        else:
+            for candidate in ("anthropic", "azure-openai", "bedrock"):
+                report = build_provider_doctor(env={**env_map, "JINI_PROVIDER": candidate})
+                if report.get("status") == "ok":
+                    return _with_auto_provider_setting(report)
+            return _detect_local_preview_provider(env=env_map)
+    if provider_id == "local-preview":
+        return _detect_local_preview_provider(env=env_map)
+    if provider_id == "azure-openai":
+        return _detect_azure_provider(env=env_map)
+    if provider_id == "bedrock":
+        return _detect_bedrock_provider(env=env_map)
+    if provider_id == "anthropic":
+        return _detect_anthropic_provider(env=env_map)
+    return {
+        "schema_version": "0.1.0",
+        "result_type": "JiniProviderDoctor",
+        "provider_id": provider_id,
+        "label": provider_id,
+        "status": "needs setup",
+        "settings": [],
+        "secrets": [],
+        "missing": ["Supported JINI_PROVIDER value: auto, claude, azure-openai, bedrock, or local-preview"],
+    }
+
+
+def print_provider_doctor(report: dict[str, Any]) -> None:
+    print("Provider")
+    print(report.get("label", ""))
+    print()
+    print("Status")
+    print(report.get("status", ""))
+    if report.get("settings"):
+        print()
+        print("Settings")
+        for item in report.get("settings", []):
+            print(f"- {item.get('name')}: {item.get('presence')}")
+    if report.get("secrets"):
+        print()
+        print("Secrets")
+        for item in report.get("secrets", []):
+            print(f"- {item.get('name')}: {item.get('presence')}")
+    if report.get("missing"):
+        print()
+        print("Missing")
+        for item in report.get("missing", []):
+            print(f"- {item}")
 
 
 def list_packs() -> list[tuple[str, Path, dict[str, Any]]]:
@@ -4525,13 +5081,13 @@ def resolve_context_pack_dir(
     context = load_current_work_context()
     if context is None:
         raise ValueError(
-            "No current Jini work is active yet. Run `jini example ...`, `jini compile-pack ...`, or pass a path once."
+            "Nothing is in progress yet. Run `jini` to start something, or pass a path once."
         )
 
     resolved = Path(str(context.get("pack_dir", ""))).expanduser().resolve()
     if not resolved.exists():
         raise ValueError(
-            f"Saved current work no longer exists: {display_path(resolved)}. Run `jini example ...` or pass a path again."
+            f"Remembered work no longer exists: {display_path(resolved)}. Run `jini` to start again, or pass a path."
         )
     remember_current_work(resolved, registry, source=command_label)
     return resolved
@@ -4565,7 +5121,7 @@ def build_artifact_catalog(pack_dir: Path, registry: dict[str, Any]) -> dict[str
             "path": display_path(resolved),
             "resolved_path": str(resolved),
             "aliases": aliases or [],
-            "show_command": f"{cli} show {artifact_id}",
+            "show_command": f"{cli} open {artifact_id}",
             "open_command": f"{cli} open {artifact_id}",
         }
 
@@ -4657,7 +5213,7 @@ def resolve_artifact_item(pack_dir: Path, registry: dict[str, Any], artifact_nam
     ]
     raise ValueError(
         "Unknown artifact "
-        f"{artifact_name!r}. Try `jini artifacts` to see what is available: {', '.join(sorted(available))}"
+        f"{artifact_name!r}. Try `jini open` to see what is available: {', '.join(sorted(available))}"
     )
 
 
@@ -4690,7 +5246,6 @@ def print_artifact_catalog(catalog: dict[str, Any]) -> None:
         print("  No shareable exports are ready yet.")
     print()
     print("USE")
-    print(f"  {cli_invocation()} show <name>")
     print(f"  {cli_invocation()} open <name>")
 
 
@@ -4745,23 +5300,21 @@ def print_cli_overview() -> None:
     print("Finish work with less rework, faster handoffs, and clearer next steps.")
     print()
     print("START HERE")
-    print(f"  {cli} start --harness codex")
-    print(f"  {cli} example research-prd")
-    print(f"  {cli} outcome")
+    print(f"  {cli}")
     print()
-    print("HARNESS ORCHESTRATION")
-    print(f"  {cli} harnesses")
+    print("INSIDE JINI")
+    print("  Keep going")
+    print("  Open ready work")
+    print("  See what is still missing")
+    print("  Plan this first")
+    print()
+    print("SCRIPTABLE")
+    print(f"  {cli} check")
+    print(f"  {cli} open")
     print(f"  {cli} run --repo /path/to/repo --harness codex")
-    print()
-    print("OUTCOME LAYER")
-    print(f"  {cli} outcome")
-    print(f"  {cli} artifacts")
-    print(f"  {cli} show prd")
-    print(f"  {cli} next --repo /path/to/repo --intent verify")
-    print(f"  {cli} resume --repo /path/to/repo --intent verify --max-chars 900")
+    print(f"  {cli} provider doctor")
     print()
     print("MORE")
-    print(f"  {cli} guide --harness codex")
     print(f"  {cli} help --all")
     print(f"  {cli} <command> --help")
 
@@ -10663,7 +11216,7 @@ def print_pack_status(summary: dict[str, Any]) -> None:
         )
 
     if summary["missing_stage_required"]:
-        print("MISSING-NOW")
+        print("STILL MISSING")
         for artifact_type in summary["missing_stage_required"]:
             print(f"  - {artifact_type}")
     future_missing = [
@@ -10672,7 +11225,7 @@ def print_pack_status(summary: dict[str, Any]) -> None:
         if artifact_type not in summary["missing_stage_required"]
     ]
     if future_missing:
-        print("MISSING-LATER")
+        print("STILL MISSING LATER")
         for artifact_type in future_missing:
             print(f"  - {artifact_type}")
 
@@ -11109,29 +11662,154 @@ def write_itinerary_view(
 ) -> None:
     view_dir = target_dir / "views"
     view_dir.mkdir(parents=True, exist_ok=True)
+    trip_days = build_trip_day_plan(title, brief["objective"])
+    budget_lines = build_trip_budget_lines(title, brief["objective"])
+    logistics_lines = build_trip_logistics_lines(title)
+    contingency_lines = build_trip_contingency_lines(title)
     lines = [
         f"# Itinerary: {title}",
         "",
-        "## Objective",
+        "## Trip at a glance",
         brief["objective"],
         "",
-        "## Scope Summary",
-        brief["scope_summary"],
+        "This draft gives you a usable week shape first, then shows the booking, budget, and contingency items to lock next.",
         "",
-        "## Constraints",
-        *[f"- {item}" for item in brief["constraints"]],
+        "## Day-by-day draft",
+        *trip_days,
         "",
-        "## Requirements",
-        *[f"- {item}" for item in spec["requirements"]],
+        "## Budget sketch",
+        *[f"- {item}" for item in budget_lines],
         "",
-        "## Delivery Slices",
-        *[f"- {item}" for item in plan["slices"]],
+        "## Logistics to lock",
+        *[f"- {item}" for item in logistics_lines],
         "",
-        "## Checklist",
+        "## If something changes",
+        *[f"- {item}" for item in contingency_lines],
+        "",
+        "## Still to confirm",
         *[f"- {item}" for item in tasks["tasks"]],
         "",
     ]
     (view_dir / "itinerary.md").write_text("\n".join(lines), encoding="utf-8")
+    (view_dir / "budget-sketch.md").write_text(
+        "\n".join(
+            [
+                f"# Budget Sketch: {title}",
+                "",
+                "Use this as the first planning split before you book anything.",
+                "",
+                *[f"- {item}" for item in budget_lines],
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (view_dir / "travel-logistics.md").write_text(
+        "\n".join(
+            [
+                f"# Travel Logistics: {title}",
+                "",
+                "These are the practical checkpoints that keep the trip usable, not just exciting on paper.",
+                "",
+                *[f"- {item}" for item in logistics_lines],
+                "",
+                "## Contingencies",
+                *[f"- {item}" for item in contingency_lines],
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+
+def build_trip_day_plan(title: str, objective: str) -> list[str]:
+    text = f"{title} {objective}".lower()
+    if "paris" in text:
+        return [
+            "### Day 1: Arrive and settle into Paris",
+            "- Keep arrival day light: hotel check-in, neighborhood walk, easy dinner, early night.",
+            "### Day 2: Louvre, Tuileries, and the Seine",
+            "- Anchor the day around one major museum, then keep the evening for a Seine walk or river cruise.",
+            "### Day 3: Ile de la Cite and the Latin Quarter",
+            "- Pair Sainte-Chapelle or Notre-Dame area time with a slower Left Bank afternoon and cafe stop.",
+            "### Day 4: Montmartre and Sacre-Coeur",
+            "- Use the morning for Montmartre before crowds build, then keep the afternoon flexible for shopping or rest.",
+            "### Day 5: Versailles or a second museum day",
+            "- If energy is high, use this as the day trip. If not, keep it in Paris with Musee d'Orsay and the Left Bank.",
+            "### Day 6: Le Marais and flexible favorites",
+            "- Revisit the neighborhood you liked most, leave space for food, markets, or anything skipped earlier.",
+            "### Day 7: Buffer and departure",
+            "- Keep the final day intentionally light so checkout, bags, and airport transfer do not turn into stress.",
+        ]
+    return [
+        "### Day 1: Arrive and settle in",
+        "- Keep the first day light and focus on arrival, hotel check-in, and one easy local activity.",
+        "### Day 2: First major anchor",
+        "- Use one major sight or neighborhood as the headline and keep the evening unstacked.",
+        "### Day 3: Local exploration",
+        "- Build around a second neighborhood or cultural stop and protect time for rest or weather shifts.",
+        "### Day 4: Flexible high-energy day",
+        "- Use this slot for the longest outing, day trip, or the attraction that needs the most time.",
+        "### Day 5: Recovery and favorites",
+        "- Rebalance the pace with lighter walking, food, or shopping time.",
+        "### Day 6: Backup and catch-up day",
+        "- Use this to catch anything missed earlier or slow down if the trip is running hot.",
+        "### Day 7: Departure buffer",
+        "- Keep the final day clear enough for transfers, bags, and a calm exit.",
+    ]
+
+
+def build_trip_budget_lines(title: str, objective: str) -> list[str]:
+    text = f"{title} {objective}".lower()
+    if "paris" in text:
+        return [
+            "Lodging: prioritize location over room size; central neighborhoods usually save time and transit cost.",
+            "Food: plan one stronger meal per day and keep breakfast/lunch simple to protect the total budget.",
+            "Transit: budget for airport transfer plus a metro pass; Paris is easier when local transit is decided early.",
+            "Tickets: reserve room for at least two paid anchors such as Louvre, Musee d'Orsay, or Versailles.",
+            "Buffer: keep a real weather / strike / last-minute reservation buffer instead of spending to the line.",
+        ]
+    return [
+        "Lodging: choose the base first because it shapes daily transit and fatigue.",
+        "Food: separate special meals from routine meals so the budget stays honest.",
+        "Transit: include both arrival/departure transfer and local movement.",
+        "Tickets: hold budget for the attractions or day trips that matter most.",
+        "Buffer: leave room for one disrupted plan, one splurge, and one minor emergency.",
+    ]
+
+
+def build_trip_logistics_lines(title: str) -> list[str]:
+    text = title.lower()
+    if "paris" in text:
+        return [
+            "Choose the hotel area before booking tickets; central Paris usually beats a cheaper far-out stay.",
+            "Lock airport transfer logic early: RER, taxi, or pre-booked car depending on arrival time and luggage.",
+            "Reserve high-demand museum or Versailles slots before filling the rest of the week.",
+            "Keep one offline copy of hotel address, train/flight details, and reservation numbers.",
+            "Decide whether one day is a Versailles day before overfilling the city itinerary.",
+        ]
+    return [
+        "Pick the base area before overcommitting the daily plan.",
+        "Lock arrival and departure transfer details before adding optional activities.",
+        "Reserve the highest-risk bookings first, then fit the rest of the trip around them.",
+        "Keep travel documents, reservation numbers, and one offline copy together.",
+    ]
+
+
+def build_trip_contingency_lines(title: str) -> list[str]:
+    text = title.lower()
+    if "paris" in text:
+        return [
+            "Swap outdoor time for museums, passages, or food halls if weather turns.",
+            "If a headline sight is sold out, use the day for a neighborhood loop instead of forcing a bad backup.",
+            "Protect one slower day in the middle of the trip so fatigue does not wreck the last half.",
+            "Keep the final day light enough that a delayed train or airport run does not collapse the schedule.",
+        ]
+    return [
+        "Have one indoor backup for every outdoor-heavy day.",
+        "Leave one uncommitted slot so a sold-out booking does not ruin the week.",
+        "Protect a recovery window if travel or weather burns more energy than expected.",
+    ]
 
 
 def write_budget_view(
@@ -11301,29 +11979,49 @@ def write_followup_view(
 ) -> None:
     view_dir = target_dir / "views"
     view_dir.mkdir(parents=True, exist_ok=True)
+    decisions = spec.get(
+        "journeys",
+        [
+            "Capture the meeting decisions in one place before people leave the room.",
+            "Keep owners and due points attached to each next step.",
+        ],
+    )
+    owner_due_points = tasks.get(
+        "tasks",
+        [
+            "Meeting owner: close the summary and confirm owners today.",
+            "Workstream owners: confirm deliverable, due point, and dependencies before work starts.",
+            "Approver or escalation owner: clear any decision that cannot move without approval.",
+        ],
+    )
+    next_actions = [
+        "Send this note today so everyone works from the same decisions and due points.",
+        "Ask each owner to confirm date risk or dependency risk before the next standup.",
+        "Close the metric and legal-review questions before implementation starts.",
+    ]
+    open_questions = assumptions.get("known_unknowns", [])
     lines = [
-        f"# Meeting Follow-up: {title}",
+        f"# Sendable Follow-Up: {title}",
         "",
-        "## Objective",
-        brief["objective"],
+        "## Send this",
+        f"Here is the clean follow-up from **{title}**.",
         "",
-        "## Scope Summary",
-        brief["scope_summary"],
+        "Use this note to align everyone on what was decided, who owns what, and what still needs confirmation before execution starts.",
         "",
-        "## Constraints",
+        "## What we agreed",
+        *[f"- {item}" for item in decisions],
+        "",
+        "## Owners and due points",
+        *[f"- {item}" for item in owner_due_points],
+        "",
+        "## Open questions",
+        *[f"- {item}" for item in open_questions],
+        "",
+        "## What happens next",
+        *[f"- {item}" for item in next_actions],
+        "",
+        "## Why this note exists",
         *[f"- {item}" for item in brief["constraints"]],
-        "",
-        "## Key Assumptions",
-        *[f"- {item}" for item in assumptions["assumptions"]],
-        "",
-        "## Follow-up Requirements",
-        *[f"- {item}" for item in spec["requirements"]],
-        "",
-        "## Follow-up Phases",
-        *[f"- {item}" for item in plan["slices"]],
-        "",
-        "## Checklist",
-        *[f"- {item}" for item in tasks["tasks"]],
         "",
     ]
     (view_dir / "followup.md").write_text("\n".join(lines), encoding="utf-8")
@@ -13158,7 +13856,7 @@ def write_compiled_meeting_followup_pack(
             "stakeholders": stakeholder_actor_ids,
             "constraints": [
                 "Decisions, owners, and due dates must be explicit before the meeting is considered closed",
-                "Open questions should remain visible instead of being buried in notes",
+                "Open questions should remain visible instead of being buried in notes or chat",
                 "Approvals or escalations should remain attached to the follow-up record",
             ],
             "success_criteria": list(manifest.get("success_checks", [])),
@@ -13192,8 +13890,8 @@ def write_compiled_meeting_followup_pack(
                 "Meetings are only complete when unresolved questions and approvals are still visible",
             ],
             "known_unknowns": [
-                "Whether every action item has a single accountable owner",
-                "Which decisions need formal approval before execution",
+                "Should launch success be measured by sign-ups or paid conversion?",
+                "Do we need legal review before publishing pricing changes?",
             ],
             "validation_plan": [
                 "Check that each task has an owner and deliverable before advancing the work unit",
@@ -13230,9 +13928,9 @@ def write_compiled_meeting_followup_pack(
                 "Wiki export bundle",
             ],
             "journeys": [
-                "Facilitator closes the meeting into a canonical follow-up packet",
-                "Owners review assigned tasks and challenge missing assumptions",
-                "Approvers confirm which decisions are ready to act on",
+                "Pricing draft moves to Sarah by Thursday so the launch page is no longer blocked on copy.",
+                "Landing page review stays with Amir and comments are due by Wednesday for design cleanup.",
+                "Analytics event coverage still needs Priya's metric decision before implementation starts.",
             ],
             "invariants": [
                 "Decisions, owners, and deadlines should not disagree across artifacts",
@@ -13327,9 +14025,9 @@ def write_compiled_meeting_followup_pack(
     tasks.update(
         {
             "tasks": [
-                "Capture the meeting decisions, owners, and due dates",
-                "Review unresolved questions and approval boundaries",
-                "Verify the follow-up packet before execution leaves the meeting boundary",
+                "Sarah: draft the pricing update by Thursday.",
+                "Amir: land the pricing page review comments by Wednesday.",
+                "Priya: confirm the launch metric decision by Friday.",
             ],
             "ownership": [
                 owner_actor_id,
@@ -13343,9 +14041,9 @@ def write_compiled_meeting_followup_pack(
             ],
             "blocked_by": [],
             "deliverables": [
-                "Canonical meeting summary",
-                "Reviewed approval and escalation state",
-                "Ready-to-execute follow-up packet",
+                "Team is working from one decision record.",
+                "Owners confirm whether any date or dependency risk exists.",
+                "Metric and legal-review questions are closed before implementation starts.",
             ],
         }
     )
@@ -13853,6 +14551,24 @@ def main() -> int:
         choices=["text", "json"],
         default="text",
         help="Output format for the setup result",
+    )
+
+    provider_parser = subparsers.add_parser(
+        "provider",
+        help="Inspect backstage model provider configuration without printing secrets",
+    )
+    provider_parser.add_argument(
+        "provider_command",
+        nargs="?",
+        default="doctor",
+        choices=["doctor"],
+        help="Provider action to run",
+    )
+    provider_parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for the provider doctor report",
     )
 
     get_started_parser = subparsers.add_parser(
@@ -15432,6 +16148,14 @@ def main() -> int:
         else:
             print_setup_result(result)
         return 0 if result.get("status") == "ok" else 1
+
+    if args.command == "provider":
+        report = build_provider_doctor()
+        if args.format == "json":
+            print(json.dumps(report, indent=2))
+        else:
+            print_provider_doctor(report)
+        return 0 if report.get("status") == "ok" else 1
 
     if args.command == "get-started":
         try:

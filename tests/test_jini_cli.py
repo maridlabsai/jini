@@ -6,7 +6,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 import yaml
 
@@ -35,15 +35,15 @@ class JiniCliConformanceTests(unittest.TestCase):
             path.unlink(missing_ok=True)
         self.temp_dir.cleanup()
 
-    def run_cli(self, *args: object) -> subprocess.CompletedProcess[str]:
-        env = dict(os.environ)
-        env["JINI_STATE_DIR"] = str((self.tmp / ".jini").resolve())
+    def run_cli(self, *args: object, env: Optional[dict[str, str]] = None) -> subprocess.CompletedProcess[str]:
+        run_env = dict(os.environ if env is None else env)
+        run_env["JINI_STATE_DIR"] = str((self.tmp / ".jini").resolve())
         return subprocess.run(
             [*CLI, *[str(arg) for arg in args]],
             cwd=REPO_ROOT,
             text=True,
             capture_output=True,
-            env=env,
+            env=run_env,
         )
 
     def assert_ok(self, result: subprocess.CompletedProcess[str]) -> None:
@@ -351,14 +351,12 @@ class JiniCliConformanceTests(unittest.TestCase):
         result = self.run_cli("help")
         self.assert_ok(result)
         self.assertIn("START HERE", result.stdout)
-        self.assertIn("jini start --harness codex", result.stdout)
-        self.assertIn("jini example research-prd", result.stdout)
-        self.assertIn("jini outcome", result.stdout)
-        self.assertIn("HARNESS ORCHESTRATION", result.stdout)
-        self.assertIn("jini harnesses", result.stdout)
+        self.assertIn("jini\n", result.stdout)
+        self.assertIn("INSIDE JINI", result.stdout)
+        self.assertIn("Open ready work", result.stdout)
+        self.assertIn("Plan this first", result.stdout)
+        self.assertIn("SCRIPTABLE", result.stdout)
         self.assertIn("jini run --repo /path/to/repo --harness codex", result.stdout)
-        self.assertIn("jini artifacts", result.stdout)
-        self.assertIn("jini show prd", result.stdout)
         self.assertNotIn("usage: jini", result.stdout)
 
     def test_help_all_shows_full_parser_surface(self) -> None:
@@ -376,15 +374,16 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("STATUS  ok", result.stdout)
         self.assertIn(f"PREFIX  {prefix.resolve()}", result.stdout)
         self.assertIn("READY", result.stdout)
-        self.assertIn("jini example research-prd", result.stdout)
-        self.assertIn("jini outcome", result.stdout)
-        self.assertIn("jini artifacts", result.stdout)
+        self.assertIn("jini\n", result.stdout)
+        self.assertNotIn("jini check", result.stdout)
+        self.assertNotIn("jini open", result.stdout)
 
     def test_guide_alias_resolves_to_get_started(self) -> None:
         result = self.run_cli("guide", "--harness", "codex")
         self.assert_ok(result)
         self.assertIn("BEGINNER", result.stdout)
-        self.assertIn("jini start --harness codex", result.stdout)
+        self.assertIn("jini", result.stdout)
+        self.assertIn("entering the Jini shell", result.stdout)
 
     def test_example_alias_resolves_to_try_example(self) -> None:
         result = self.run_cli("example", "research-prd", "--format", "json")
@@ -392,8 +391,8 @@ class JiniCliConformanceTests(unittest.TestCase):
         report = json.loads(result.stdout)
         self.assertEqual("research-prd", report["example_id"])
         self.assertTrue(any("next " in item for item in report["continue_with"]))
-        self.assertTrue(any(item == "jini outcome" for item in report["continue_with"]))
-        self.assertTrue(any(item == "jini artifacts" for item in report["continue_with"]))
+        self.assertTrue(any(item == "jini" for item in report["continue_with"]))
+        self.assertTrue(any(item == "Inside Jini: Open ready work" for item in report["continue_with"]))
 
     def test_next_and_resume_aliases_resolve(self) -> None:
         pack_dir = self.compile_research_pack()
@@ -452,7 +451,7 @@ class JiniCliConformanceTests(unittest.TestCase):
     def test_outcome_without_current_work_fails_cleanly(self) -> None:
         result = self.run_cli("outcome")
         self.assert_error(result)
-        self.assertIn("No current Jini work is active yet", result.stdout)
+        self.assertIn("Nothing is in progress yet. Run `jini` to start something", result.stdout)
 
     def test_outcome_missing_path_returns_friendly_error(self) -> None:
         result = self.run_cli("outcome", self.tmp / "missing-pack")
@@ -468,7 +467,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("codex", harness_ids)
         self.assertIn("claude-code", harness_ids)
         codex = next(item for item in report["harnesses"] if item["id"] == "codex")
-        self.assertIn("start --harness codex", codex["start_command"])
+        self.assertEqual("jini", codex["start_command"])
 
     def test_plan_alias_resolves_to_recommend_execution(self) -> None:
         pack_dir = self.compile_research_pack()
@@ -940,9 +939,17 @@ class JiniCliConformanceTests(unittest.TestCase):
         pack_dir = self.compile_travel_pack()
 
         self.assertTrue((pack_dir / "views" / "itinerary.md").exists())
+        self.assertTrue((pack_dir / "views" / "budget-sketch.md").exists())
+        self.assertTrue((pack_dir / "views" / "travel-logistics.md").exists())
         self.assertTrue((pack_dir / "views" / "tasks.md").exists())
         self.assertTrue((pack_dir / "exports" / "tasks-sync.json").exists())
         self.assertTrue((pack_dir / "exports" / "wiki" / "markdown" / "pages.json").exists())
+        itinerary = (pack_dir / "views" / "itinerary.md").read_text(encoding="utf-8")
+        self.assertIn("## Day-by-day draft", itinerary)
+        self.assertIn("### Day 1", itinerary)
+        self.assertIn("## Budget sketch", itinerary)
+        self.assertIn("## Logistics to lock", itinerary)
+        self.assertIn("## If something changes", itinerary)
 
     def test_compile_budget_pack_materializes_budget_view_and_exports(self) -> None:
         pack_dir = self.compile_budget_pack()
@@ -959,6 +966,17 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue((pack_dir / "views" / "tasks.md").exists())
         self.assertTrue((pack_dir / "exports" / "tasks-sync.json").exists())
         self.assertTrue((pack_dir / "exports" / "wiki" / "markdown" / "pages.json").exists())
+        followup = (pack_dir / "views" / "followup.md").read_text(encoding="utf-8")
+        self.assertIn("# Sendable Follow-Up:", followup)
+        self.assertIn("## Send this", followup)
+        self.assertIn("## Owners and due points", followup)
+        self.assertIn("## Open questions", followup)
+        self.assertIn("## What happens next", followup)
+        self.assertIn("Pricing draft moves to Sarah by Thursday", followup)
+        self.assertIn("Amir: land the pricing page review comments by Wednesday", followup)
+        self.assertIn("Priya: confirm the launch metric decision by Friday", followup)
+        self.assertIn("Should launch success be measured by sign-ups or paid conversion", followup)
+        self.assertIn("Do we need legal review before publishing pricing changes", followup)
 
         work_unit = yaml.safe_load((pack_dir / "work-unit.yaml").read_text(encoding="utf-8"))
         self.assertEqual("Delivery", work_unit["profile_id"])
@@ -1993,7 +2011,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(result)
 
         summary = json.loads(result.stdout)
-        self.assertEqual("2026-05-11", summary["updated_at"])
+        self.assertEqual("2026-05-14", summary["updated_at"])
         self.assertEqual(3, len(summary["dimensions"]))
         self.assertEqual("workflow-rigor", summary["dimensions"][0]["id"])
         self.assertEqual("Kiro", summary["dimensions"][0]["strongest_competitor"]["name"])
@@ -2013,7 +2031,8 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("ok", novice["status"])
         self.assertTrue(any(item.get("id") == "beginner-command-count" and item["command_count"] <= 4 for item in novice["checks"]))
         self.assertTrue(any(item.get("id") == "beginner-command-prefix" and item["all_jini_commands"] for item in novice["checks"]))
-        self.assertTrue(any(item.get("id") == "beginner-proof-command" and item["present"] for item in novice["checks"]))
+        self.assertTrue(any(item.get("id") == "beginner-single-shell-command" and item["present"] for item in novice["checks"]))
+        self.assertTrue(any(item.get("id") == "cli-guide-no-python-requirement" and item["present"] for item in novice["checks"]))
         self.assertTrue(any(item.get("id") == "readme-plain-words-entry" and item["present"] for item in novice["checks"]))
         self.assertTrue(any(item.get("id") == "homepage-plain-words-entry" and item["present"] for item in novice["checks"]))
         self.assertTrue(any(item.get("id") == "simple-guide-exists" and item["present"] for item in novice["checks"]))
@@ -2028,28 +2047,155 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue(
             any(item["dimension_id"] == "learning-maturity" and item["position"] == "ahead" for item in leadership["checks"])
         )
+        rewrite_momentum = next(section for section in report["sections"] if section["id"] == "rewrite-momentum")
+        self.assertEqual("ok", rewrite_momentum["status"])
+        self.assertTrue(any(item["id"] == "overall-score-floor" and item["delta"] > 0 for item in rewrite_momentum["checks"]))
+        self.assertTrue(
+            any(
+                item["id"] == "overall-lead-margin" and item["margin"] >= item["minimum_margin"]
+                for item in rewrite_momentum["checks"]
+            )
+        )
+        consensus_gates = report["consensus_gates"]
+        self.assertEqual("ok", consensus_gates["status"])
+        expected_gate_ids = {
+            "product-review-role-docs",
+            "two-flagship-replacement-flows",
+            "useful-result-first",
+            "i-am-not-sure-fallback",
+            "real-continuation-actions",
+            "parity-or-shared-generation",
+        }
+        self.assertEqual(expected_gate_ids, set(consensus_gates["check_ids"]))
+        self.assertEqual(expected_gate_ids, set(consensus_gates["passed_gate_ids"]))
+        self.assertTrue(any(section["id"] == "consensus-gates" and section["status"] == "ok" for section in report["sections"]))
 
-    def test_validate_golden_benchmark_reports_jini_against_kiro_and_hermes(self) -> None:
+    def test_provider_doctor_reports_azure_openai_safely(self) -> None:
+        env = os.environ.copy()
+        env.update(
+            {
+                "JINI_PROVIDER": "azure-openai",
+                "AZURE_OPENAI_ENDPOINT": "https://example.openai.azure.com",
+                "AZURE_OPENAI_API_KEY": "super-secret-key",
+                "AZURE_OPENAI_DEPLOYMENT": "gpt-4o-prod",
+                "AZURE_OPENAI_API_VERSION": "2024-10-21",
+            }
+        )
+        result = self.run_cli("provider", "doctor", "--format", "json", env=env)
+        self.assert_ok(result)
+
+        report = json.loads(result.stdout)
+        self.assertEqual("JiniProviderDoctor", report["result_type"])
+        self.assertEqual("azure-openai", report["provider_id"])
+        self.assertEqual("ok", report["status"])
+        rendered = json.dumps(report)
+        self.assertIn("AZURE_OPENAI_API_KEY", rendered)
+        self.assertNotIn("super-secret-key", rendered)
+
+    def test_provider_doctor_reports_bedrock_safely(self) -> None:
+        env = os.environ.copy()
+        env.update(
+            {
+                "JINI_PROVIDER": "bedrock",
+                "AWS_REGION": "us-east-1",
+                "AWS_PROFILE": "work-profile",
+                "BEDROCK_MODEL_ID": "anthropic.claude-3-5-sonnet-20240620-v1:0",
+            }
+        )
+        result = self.run_cli("provider", "doctor", "--format", "json", env=env)
+        self.assert_ok(result)
+
+        report = json.loads(result.stdout)
+        self.assertEqual("bedrock", report["provider_id"])
+        self.assertEqual("ok", report["status"])
+        rendered = json.dumps(report)
+        self.assertIn("AWS_PROFILE", rendered)
+        self.assertNotIn("work-profile", rendered)
+        self.assertNotIn("anthropic.claude-3-5-sonnet-20240620-v1:0", rendered)
+
+    def test_provider_doctor_reports_claude_direct_safely(self) -> None:
+        env = os.environ.copy()
+        env.update(
+            {
+                "JINI_PROVIDER": "claude",
+                "ANTHROPIC_API_KEY": "super-secret-key",
+                "JINI_MODEL": "sonnet",
+            }
+        )
+        result = self.run_cli("provider", "doctor", "--format", "json", env=env)
+        self.assert_ok(result)
+
+        report = json.loads(result.stdout)
+        self.assertEqual("anthropic", report["provider_id"])
+        self.assertEqual("ok", report["status"])
+        self.assertIn("Claude API", report["label"])
+        rendered = json.dumps(report)
+        self.assertIn("ANTHROPIC_API_KEY", rendered)
+        self.assertNotIn("super-secret-key", rendered)
+
+    def test_provider_doctor_auto_prefers_bedrock_for_sonnet_46(self) -> None:
+        env = os.environ.copy()
+        env.update(
+            {
+                "JINI_PROVIDER": "auto",
+                "JINI_MODEL": "sonnet-4.6",
+                "AWS_REGION": "us-east-1",
+                "AWS_PROFILE": "work-profile",
+            }
+        )
+        result = self.run_cli("provider", "doctor", "--format", "json", env=env)
+        self.assert_ok(result)
+
+        report = json.loads(result.stdout)
+        self.assertEqual("bedrock", report["provider_id"])
+        self.assertEqual("ok", report["status"])
+        provider_setting = next(item for item in report["settings"] if item["name"] == "JINI_PROVIDER")
+        self.assertIn("auto -> Amazon Bedrock", provider_setting["presence"])
+        model_setting = next(item for item in report["settings"] if item["name"] == "JINI_MODEL")
+        self.assertEqual("sonnet-4.6 -> Claude Sonnet 4.6", model_setting["presence"])
+        rendered = json.dumps(report)
+        self.assertNotIn("work-profile", rendered)
+        self.assertNotIn("anthropic.claude-sonnet-4-6", rendered)
+
+    def test_provider_doctor_rejects_sonnet_46_shortcut_for_direct_claude(self) -> None:
+        env = os.environ.copy()
+        env.update(
+            {
+                "JINI_PROVIDER": "claude",
+                "JINI_MODEL": "sonnet-4.6",
+                "ANTHROPIC_API_KEY": "super-secret-key",
+            }
+        )
+        result = self.run_cli("provider", "doctor", "--format", "json", env=env)
+        self.assertNotEqual(0, result.returncode)
+
+        report = json.loads(result.stdout)
+        self.assertEqual("anthropic", report["provider_id"])
+        self.assertEqual("needs setup", report["status"])
+        self.assertTrue(any("supported only on Bedrock" in item for item in report["missing"]))
+
+    def test_validate_golden_benchmark_reports_jini_against_expanded_competitor_field(self) -> None:
         result = self.run_cli("validate-golden-benchmark", "--format", "json")
         self.assert_ok(result)
 
         report = json.loads(result.stdout)
         self.assertEqual("JiniGoldenBenchmarkValidation", report["report_type"])
         self.assertTrue(self.resolve_repo_path(report["report_path"]).exists())
-        self.assertEqual("2026-05-12", report["last_verified_at"])
+        self.assertEqual("2026-05-14", report["last_verified_at"])
         self.assertTrue(report["dataset_digest"])
         competitor_ids = {item["id"] for item in report["competitors"]}
-        self.assertEqual({"kiro", "hermes"}, competitor_ids)
+        self.assertEqual({"claude-code", "kiro", "hermes", "agentfield", "ai-hero"}, competitor_ids)
         self.assertTrue(all(item.get("source_urls") for item in report["competitors"]))
-        self.assertEqual(6, report["scenario_count"])
+        self.assertEqual(7, report["scenario_count"])
         self.assertEqual("leading", report["overall"]["status"])
-        self.assertGreater(report["overall"]["jini_score"], report["overall"]["competitor_scores"]["kiro"])
-        self.assertGreater(report["overall"]["jini_score"], report["overall"]["competitor_scores"]["hermes"])
+        for competitor_id, competitor_score in report["overall"]["competitor_scores"].items():
+            self.assertGreater(report["overall"]["jini_score"], competitor_score, competitor_id)
         scenario_ids = {item["id"] for item in report["scenarios"]}
         self.assertIn("install-trust", scenario_ids)
         self.assertIn("portable-edges", scenario_ids)
         self.assertIn("guided-product-loop", scenario_ids)
         self.assertIn("operational-breadth", scenario_ids)
+        self.assertIn("product-consensus-gates", scenario_ids)
         install_scenario = next(item for item in report["scenarios"] if item["id"] == "install-trust")
         self.assertTrue(
             any(
@@ -2083,6 +2229,19 @@ class JiniCliConformanceTests(unittest.TestCase):
                 for check in breadth_scenario["checks"]
             )
         )
+        consensus_scenario = next(item for item in report["scenarios"] if item["id"] == "product-consensus-gates")
+        expected_consensus_checks = {
+            "product-review-role-docs-gate",
+            "two-flagship-replacement-flows-gate",
+            "useful-result-first-gate",
+            "i-am-not-sure-fallback-gate",
+            "real-continuation-actions-gate",
+            "parity-or-shared-generation-gate",
+        }
+        self.assertEqual(
+            expected_consensus_checks,
+            {check["id"] for check in consensus_scenario["checks"] if check["status"] == "ok"},
+        )
 
     def test_get_started_reports_beginner_and_power_paths(self) -> None:
         result = self.run_cli("get-started", "--harness", "codex", "--format", "json")
@@ -2095,15 +2254,12 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("benchmark-delivery-kit", guide["power_user_path"]["kit_id"])
         self.assertEqual("preview", guide["beginner_path"]["trust_path"][0]["id"])
         self.assertIn("Bundle-level detail is intentionally hidden", guide["beginner_path"]["notes"][0])
-        self.assertEqual(3, len(guide["beginner_path"]["commands"]))
-        self.assertTrue(all(item.startswith("jini ") for item in guide["beginner_path"]["commands"]))
-        self.assertTrue(any("start --harness codex" in item for item in guide["beginner_path"]["commands"]))
-        self.assertTrue(any("example research-prd" in item for item in guide["beginner_path"]["commands"]))
-        self.assertTrue(any(item == "jini outcome" for item in guide["beginner_path"]["commands"]))
+        self.assertEqual(["jini"], guide["beginner_path"]["commands"])
         self.assertFalse(any("catalog-bundles" in item for item in guide["beginner_path"]["commands"]))
         self.assertFalse(any("show-kpis" in item for item in guide["beginner_path"]["commands"]))
         self.assertTrue(any("harnesses" in item for item in guide["power_user_path"]["commands"]))
-        self.assertTrue(any("handoff --repo /path/to/repo" in item for item in guide["power_user_path"]["commands"]))
+        self.assertTrue(any(item == "jini check" for item in guide["power_user_path"]["commands"]))
+        self.assertTrue(any(item == "jini open" for item in guide["power_user_path"]["commands"]))
         self.assertTrue(guide["shared_model"])
 
     def test_try_example_reports_bundled_research_prd_value(self) -> None:
@@ -2122,7 +2278,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue(report["evidence_summary"]["present"])
         self.assertTrue(any("verification becomes a visible stage" in item.lower() for item in report["daily_value"]))
         self.assertTrue(any("jini next " in item for item in report["continue_with"]))
-        self.assertTrue(any(item == "jini artifacts" for item in report["continue_with"]))
+        self.assertTrue(any(item == "Inside Jini: Open ready work" for item in report["continue_with"]))
 
     def test_try_example_generates_meeting_followup_into_requested_output(self) -> None:
         output = self.tmp / "example-meeting-followup"
@@ -2141,6 +2297,12 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual(0, report["task_summary"]["done"])
         self.assertEqual(3, report["task_summary"]["unresolved"])
         self.assertTrue(any("action items stop living only in chat threads" in item.lower() for item in report["daily_value"]))
+        followup = (output / "views" / "followup.md").read_text(encoding="utf-8")
+        self.assertIn("# Sendable Follow-Up:", followup)
+        self.assertIn("## Send this", followup)
+        self.assertIn("## Owners and due points", followup)
+        self.assertIn("Pricing draft moves to Sarah by Thursday", followup)
+        self.assertIn("Priya: confirm the launch metric decision by Friday", followup)
 
     def test_review_framework_persists_prioritized_adoption_report(self) -> None:
         result = self.run_cli("review-framework", "--format", "json", "--limit", "3")
@@ -2283,8 +2445,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("regulated-readiness-kit", kit_ids)
         self.assertIn("vendor-decision-kit", kit_ids)
         self.assertEqual("starter-kit", catalog["recommended_paths"]["beginner"]["kit_id"])
-        self.assertTrue(any("start --harness" in item for item in catalog["recommended_paths"]["beginner"]["commands"]))
-        self.assertTrue(any("example research-prd" in item for item in catalog["recommended_paths"]["beginner"]["commands"]))
+        self.assertEqual(["jini"], catalog["recommended_paths"]["beginner"]["commands"])
         self.assertEqual("benchmark-delivery-kit", catalog["recommended_paths"]["power_user"]["kit_id"])
         starter_kit = next(item for item in catalog["kits"] if item["id"] == "starter-kit")
         self.assertEqual("beginner", starter_kit["audience"])

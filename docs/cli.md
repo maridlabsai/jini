@@ -1,125 +1,198 @@
 ---
 title: CLI Guide
-description: The small grouped command surface most people need once Jini is installed.
+description: The small public command surface and the setup check that sits behind it.
 ---
+
+Jini should feel small.
+
+Most people should start with one command:
+
+```bash
+./jini
+```
+
+If Jini is installed on your `PATH`, that command becomes `jini`.
 
 You do not need to know Python to use Jini.
 
-If Jini is installed, the command is just:
+## `./jini` or `jini`
+
+Use `./jini` when you just built the preview from source.
+
+Use `jini` only when the binary is already installed on your `PATH`.
+
+## The Main Entry
+
+Use this first:
 
 ```bash
-jini ...
+./jini
 ```
 
-If you are not installed yet, start with [install](./install.md).
+It should:
 
-<div class="section-card">
-  <h3>Start with these three</h3>
-  <p>If you only want the smallest useful command set, begin with grouped help, one example, and one real outcome check.</p>
-</div>
+- continue the thing you were already working on
+- or show simple choices if nothing is active yet
+- let you type naturally
+- expose `Open ready work`, `See what is still missing`, and `Plan this first`
 
-## Most People Start Here
+## In-Shell Actions
 
-```bash
-jini start --harness codex
-jini example research-prd
-jini outcome
-```
+Use these inside Jini:
 
-Use those three commands to:
+- `Keep going`
+- `Open ready work`
+- `See what is still missing`
+- `Plan this first`
+- `Start something else`
 
-- install the starter harness path
-- feel the product on a familiar workflow
-- inspect the current state of real work before pushing toward an outcome
+`Plan this first` is the structured mode. Use it when the work is still fuzzy
+and you want Jini to turn it into clear steps before execution:
 
-## Daily Workflow Commands
+- goal
+- requirements
+- design
+- steps
+- run
 
-Use these when you are working on one pack or handoff:
+## Scriptable Commands
 
-```bash
-jini plan /path/to/work --repo /path/to/repo --intent wiki
-jini handoff --repo /path/to/repo --harness codex
-jini activate --repo /path/to/repo --harness codex
-jini run --repo /path/to/repo --harness codex
-```
+These stay available for automation, tests, and power users. They are not the
+normal front door.
 
-Those commands let Jini act like a harness orchestration CLI:
+### `jini check`
 
-- `plan`: choose the right execution posture
-- `handoff`: stage a harness-ready bundle
-- `activate`: materialize the selected harness surface
-- `run`: execute the flow through the chosen harness
+Use this when you want a calm work summary.
 
-## Outcome Commands
+It should show:
 
-Use these when you want to keep the work itself coherent:
-
-```bash
-jini outcome
-jini artifacts
-jini show prd
-jini next --repo /path/to/repo --intent verify
-jini resume --repo /path/to/repo --intent verify --max-chars 900
-jini advance-pack /path/to/work
-```
-
-They answer:
-
-- what state the work is in
-- what happens next
+- what you are working on
+- what Jini is using
+- what Jini is doing
+- what is ready now
 - what is still missing
-- what context to hand to the next agent or person
+- what it is not sure about
+- the next step
 
-If you want the plain-language explanation of why those surfaces matter, read
-[State And Artifacts](./state-and-artifacts.md).
+### `jini open`
 
-## Install And Harnesses
+Use this when you want to see what Jini already made.
 
-Use these when you are setting up Jini in a shell or agent environment:
-
-```bash
-jini start --harness codex
-jini harnesses
-jini guide --harness codex
-```
-
-## Publish And Handoffs
-
-Use these when work needs to leave Jini and show up somewhere else:
+Examples:
 
 ```bash
-jini publish-issues /path/to/work --adapter github --apply-local --format json
-jini publish-wiki /path/to/work --adapter markdown --apply-local --format json
-jini show-adapters
-jini adapter-conformance
+./jini open
+./jini open prd
+./jini open follow-up
 ```
 
-## System Health
+The important rule is simple:
 
-Use these when you want to inspect the framework surface itself:
+- open useful things
+- not file paths
+- not internal labels
+
+`jini run` remains for explicit or scripted use, but it is not the public
+front door.
+
+### `jini provider doctor`
+
+Use this when setting up Claude direct, Azure OpenAI, Amazon Bedrock, or the
+local preview.
+
+Most people should start with auto mode:
 
 ```bash
-jini publish-readiness --format json
-jini show-kpis
-jini catalog-packs
-jini catalog-bundles
+./jini provider doctor
+./jini
 ```
 
-## Need The Full Surface?
+Leave provider and model unset first. Let Jini tell you what it can use.
 
-Run:
+The setup knobs are:
+
+- `JINI_PROVIDER=auto|claude|bedrock|azure-openai|local-preview`
+- `JINI_MODEL=auto|sonnet|sonnet-4.6|...`
+
+If unset, either value defaults to `auto`.
+
+The doctor checks required environment variables and reports only safe presence
+information. It tells you what Jini will use, what `auto` resolved to, and
+what is missing. It does not print API keys, AWS secret keys, profile values,
+or model IDs.
+
+It is a local setup check. It does not guarantee that cloud access is valid.
+
+Direct Claude API:
 
 ```bash
-jini help
+export JINI_PROVIDER=claude
+export ANTHROPIC_API_KEY="paste-your-key-here"
+export JINI_MODEL=sonnet
+./jini provider doctor
+./jini
 ```
 
-Use `jini help --all` when you need the full command inventory.
+Amazon Bedrock:
+
+```bash
+export JINI_PROVIDER=bedrock
+export AWS_REGION=us-east-1
+export AWS_PROFILE="your-profile"
+export JINI_MODEL=sonnet-4.6
+./jini provider doctor
+./jini
+```
+
+Azure OpenAI:
+
+```bash
+export JINI_PROVIDER=azure-openai
+export AZURE_OPENAI_ENDPOINT="https://your-resource.openai.azure.com"
+export AZURE_OPENAI_API_KEY="paste-your-key-here"
+export AZURE_OPENAI_DEPLOYMENT="your-deployment-name"
+export AZURE_OPENAI_API_VERSION=2024-10-21
+./jini provider doctor
+./jini
+```
+
+On Azure, the deployment decides the actual model.
+
+On Bedrock, `sonnet-4.6` maps to Claude Sonnet 4.6.
+
+On direct Claude, `sonnet` maps to Claude Sonnet 4.
+
+Auto mode:
+
+```bash
+./jini provider doctor
+./jini
+```
+
+In auto mode, Jini chooses from the providers that are actually ready in your
+environment.
+
+If you hint `sonnet-4.6`, Jini prefers a compatible provider such as Bedrock.
+
+If no cloud provider is ready, it falls back to local preview and tells you
+that directly.
+
+## The Shape Jini Is Leaving Behind
+
+Jini is moving away from:
+
+- long command lists
+- separate public verbs for every internal step
+- path-driven normal use
+- builder-first language
+
+That older surface is not the user model anymore.
 
 <div class="section-card">
-  <h3>What most people do next</h3>
+  <h3>Go next</h3>
   <div class="on-this-page">
-    <a href="./examples.md">Try another example</a>
-    <a href="./proof.md">Re-read the proof screen</a>
-    <a href="./contact.md">Ask a question or report a gap</a>
+    <a href="./simple.md">Simple Guide</a>
+    <a href="./examples.md">Examples</a>
+    <a href="./state-and-artifacts.md">What Jini Shows</a>
   </div>
 </div>

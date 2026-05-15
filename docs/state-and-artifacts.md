@@ -1,143 +1,98 @@
 ---
-title: State And Artifacts
-description: The shortest explanation of how Jini keeps interaction, state, and durable artifacts visible.
+title: What Jini Shows
+description: The shortest explanation of what Jini should keep visible while work is moving.
 ---
 
-Jini should never leave you guessing about three things:
+Jini should not make you guess.
 
-- what you can do now
-- what state the work is in
-- what artifacts back that state up
+When it is helping, it should keep these things visible:
 
-Those are not there for ceremony. They are there so the user can get to an
-outcome instead of stopping at a draft, a recommendation, or a false green
-light.
+- what you are working on
+- what it is using
+- what provider it is working with
+- what it is doing
+- what is ready now
+- what is still missing
+- what it is not sure about
+- what to do next
+- whether it is still safe to review before sharing
 
-<div class="section-card">
-  <h3>The three commands that matter most</h3>
-  <div class="on-this-page">
-    <a href="#outcome"><code>jini outcome</code>: see the truth of the work right now</a>
-    <a href="#execution-checklist"><code>jini next</code>: see the next honest step toward the outcome</a>
-    <a href="#compact-context"><code>jini resume</code>: hand the important context to the next person or agent</a>
-  </div>
-</div>
-
-## What Jini Always Shows
-
-When Jini is doing its job, these surfaces stay visible:
-
-<div class="example-snapshot">
-  <div class="snapshot-card">
-    <span class="snapshot-label">Interaction</span>
-    <p>You always have a clear next command, not a vague suggestion.</p>
-  </div>
-  <div class="snapshot-card">
-    <span class="snapshot-label">State</span>
-    <p>You can see the current state, health, next move, and what is still missing.</p>
-  </div>
-  <div class="snapshot-card">
-    <span class="snapshot-label">Artifacts</span>
-    <p>You can see which durable artifacts support the work instead of trusting chat memory.</p>
-  </div>
-</div>
-
-## `outcome` {#outcome}
-
-Run:
+## The Command That Matters
 
 ```bash
-jini outcome
-jini artifacts
-jini show prd
+./jini
 ```
 
-This is the everyday truth screen.
+That opens Jini in this source-built preview.
 
-You should expect to see things like:
+From there, the user should be able to open ready work, see what is missing, or
+plan first without learning file paths or command names.
+
+## What The Shell Should Tell You
+
+It should read like this:
 
 ```text
-STATE  awaiting_verification
-HEALTH ready-to-verify
-NEXT   Verify
-MISSING-LATER
-  - Approval
-TASKS
-  done:       3/3
-  unresolved: 0/3
+You're working on
+Weekly product review follow-up
+
+Working with
+Amazon Bedrock (chosen automatically)
+
+Jini picked this because
+- Bedrock credentials are ready
+- the requested model works there
+
+Jini is using
+Meeting notes and follow-up tasks
+
+Jini is doing
+Turning notes into owners and next steps
+2 of 4 steps done
+
+Ready now
+- Sendable Follow-up
+- Owners and Due Points
+
+Still missing
+- Owner confirmation
+
+Not sure about
+- Whether every action item has a clear owner
+
+Next step
+Open Sendable Follow-up
+
+Safe to do
+Nothing has been sent yet. You can review before sharing.
 ```
 
-Read it like this:
+That is the model.
 
-- `STATE`: where the work really is now
-- `HEALTH`: whether the current stage is healthy enough to advance toward an outcome
-- `NEXT`: the next honest move
-- `MISSING-LATER`: future blockers already visible now
-- `TASKS`: whether the tasks are truly done or still unresolved
+The important part is not only the provider name. The user should also be able
+to tell whether Jini chose that provider automatically or because they forced it.
 
-Under the hood, this is the simpler public view over Jini's deeper `status-pack`
-surface.
+## What `Open ready work` Should Feel Like
 
-## `execution-checklist` {#execution-checklist}
+It should show useful things, not file paths:
 
-Run:
+- `Sendable Follow-up`
+- `Build-Readiness Check`
+- `Handoff Brief`
+- `Recommendation Memo`
+- `Closure Checklist`
+- `7 Day Paris Trip`
 
-```bash
-jini next --repo /path/to/repo --intent verify
-```
+If a user has to learn the internal storage model before getting value, the
+tool is failing.
 
-Use this when you want the next step turned into an explicit checklist instead
-of relying on memory or chat scrollback.
+## What Each Label Means
 
-This is the bridge between state and action.
-
-## `compact-context` {#compact-context}
-
-Run:
-
-```bash
-jini resume --repo /path/to/repo --intent verify --max-chars 900
-```
-
-Use this when the next person or agent needs the essential context without a
-full reload.
-
-This is the bridge between artifacts and handoff.
-
-## The Core Artifacts
-
-Jini does not treat work as “whatever the last chat said.”
-
-It keeps durable artifacts such as:
-
-- `Brief`
-- `Plan`
-- `Tasks`
-- `Evidence`
-- `Approval`
-- `Publication`
-
-You do not need to memorize all of them on day one. The important point is
-that state should be backed by artifacts, so the team can reach an outcome
-without reconstructing the truth from memory.
-
-## The Practical Rule
-
-If someone asks:
-
-- “What state is this in?”
-- “What happens next?”
-- “Why do we think this is ready?”
-
-you should be able to answer from Jini directly, not by reconstructing the
-story from messages, meetings, or memory.
-
-## Go Next
-
-<div class="section-card">
-  <div class="on-this-page">
-    <a href="./proof.md">See the proof screen</a>
-    <a href="./examples.md">See example workflows</a>
-    <a href="./cli.md">See the grouped CLI guide</a>
-    <a href="./simple.md">Read the simple guide</a>
-  </div>
-</div>
+- `Working with`: the provider Jini is actually using right now
+- `Jini is using`: the notes, draft, or context it is pulling from
+- `Jini is doing`: the current step in plain words
+- `Ready now`: things you can open and use immediately
+- `Still missing`: blockers that still matter
+- `Not sure about`: uncertainty Jini could not safely guess through
+- `Next step`: the one most sensible move from here
+- `Safe to do`: whether anything has been sent or changed yet

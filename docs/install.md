@@ -1,64 +1,193 @@
 ---
 title: Install
-description: Use the smallest supported path to get Jini running as a normal CLI.
+description: Build the current Go-based Jini preview and start with the provider path that matches your setup.
 ---
 
-Jini should have one obvious install path.
+This preview is source-built today.
 
-<div class="section-card">
-  <h3>The shortest safe path</h3>
-  <p>Install Jini, let it show you the beginner path, then verify the target before you do anything more advanced.</p>
-</div>
+Use these commands from the Jini repo root.
 
-For the smallest guided path from GitHub:
+Before you start:
 
-```bash
-pipx install --editable git+https://github.com/maridlabsai/jini.git
-jini start --harness codex
-jini example research-prd
-jini outcome
-```
+- install Go
+- open a terminal in the Jini repo folder
+- run `go version` first if you are not sure Go is available
 
-What this does:
-
-- installs Jini as a real CLI while preserving the source checkout it needs for packs and specs
-- installs the starter kit for one harness
-- verifies that the harness-facing surface is ready
-- gives you one proof command immediately after setup
-
-Current distribution boundary:
-
-- `v0.1.0` supports source-backed installs
-- the supported public path is editable install from GitHub or a local checkout
-- a conventional wheel-only install is not documented yet because Jini still
-  couples public runtime assets and writable state to the source-backed runtime
-  layout
-
-If you prefer a local source checkout instead of `pipx`, the equivalent smoke path is:
+Build the local binary:
 
 ```bash
-python3 -m pip install -e .
-jini start --harness codex
+go build -o jini ./cmd/jini
 ```
 
-Once Jini is installed, the normal user surface is just `jini ...`. For the
-small grouped command set, see [the CLI guide](./cli.md).
+After that, use `./jini` in this preview.
 
-If you want the manual trust path instead of the one-command setup:
+If you later install Jini onto your `PATH`, the command becomes `jini`.
+
+## Pick Your Setup Path
+
+### I use Claude
+
+Copy this:
 
 ```bash
-jini guide --harness codex
-jini plan-install --kit starter-kit --harness codex
-jini install-bundles --kit starter-kit --harness codex --prefix /tmp/jini-stage
-jini doctor-install --kit starter-kit --harness codex --prefix /tmp/jini-stage
+go build -o jini ./cmd/jini
+export JINI_PROVIDER=claude
+export ANTHROPIC_API_KEY="paste-your-key-here"
+export JINI_MODEL=sonnet
+./jini provider doctor
+./jini
 ```
 
-<div class="section-card">
-  <h3>After install</h3>
-  <div class="on-this-page">
-    <a href="./proof.md">Run the proof command</a>
-    <a href="./examples.md">Try a common workflow</a>
-    <a href="./cli.md">See the grouped CLI guide</a>
-    <a href="https://github.com/maridlabsai/jini/blob/main/specs/install-packaging.md">Read deeper install details</a>
-  </div>
-</div>
+Replace `paste-your-key-here` with your real Anthropic API key.
+
+In Jini, `claude` and `anthropic` mean the same provider. Most people should
+type `claude`.
+
+### I use Amazon Bedrock
+
+Copy this:
+
+```bash
+go build -o jini ./cmd/jini
+export JINI_PROVIDER=bedrock
+export AWS_REGION=us-east-1
+export AWS_PROFILE="your-profile"
+export JINI_MODEL=sonnet-4.6
+./jini provider doctor
+./jini
+```
+
+`JINI_MODEL=sonnet-4.6` means Claude Sonnet 4.6 on Bedrock.
+
+If you already know the exact Bedrock model id, you can set
+`BEDROCK_MODEL_ID` instead. When both are set, `BEDROCK_MODEL_ID` wins.
+
+### My team uses Azure OpenAI
+
+If your company already uses Azure OpenAI, Jini can use that same setup.
+
+Copy this:
+
+```bash
+go build -o jini ./cmd/jini
+export JINI_PROVIDER=azure-openai
+export AZURE_OPENAI_ENDPOINT="https://your-resource.openai.azure.com"
+export AZURE_OPENAI_API_KEY="paste-your-key-here"
+export AZURE_OPENAI_DEPLOYMENT="your-deployment-name"
+export AZURE_OPENAI_API_VERSION=2024-10-21
+./jini provider doctor
+./jini
+```
+
+In Azure OpenAI, the deployment is the name your team gave the model endpoint.
+That deployment decides the actual model. `JINI_MODEL` is optional on Azure and
+acts only as a hint for the shell.
+
+### I want Jini to choose automatically
+
+Auto mode is the easiest start.
+
+```bash
+go build -o jini ./cmd/jini
+./jini provider doctor
+./jini
+```
+
+If `JINI_PROVIDER` and `JINI_MODEL` are unset, Jini uses auto mode.
+
+Auto mode:
+
+- checks what providers are actually ready
+- chooses the best available option it can use
+- tells you what it picked
+- falls back to local preview if no cloud provider is ready
+
+If you hint `JINI_MODEL=sonnet-4.6`, Jini prefers a compatible provider such as
+Bedrock.
+
+If you want to force auto explicitly:
+
+```bash
+export JINI_PROVIDER=auto
+export JINI_MODEL=auto
+./jini provider doctor
+./jini
+```
+
+## What `provider doctor` Really Checks
+
+`./jini provider doctor` is a local setup check.
+
+It tells you:
+
+- what Jini will use
+- what auto mode resolved to
+- what settings are missing
+
+It does not print secret values.
+
+It does not prove:
+
+- your AWS auth is valid
+- Bedrock model access is enabled
+- your Azure key is accepted by the service
+- your Claude account is allowed to use a model
+
+So the rule is:
+
+- if `provider doctor` says `needs setup`, fix that first
+- if it says `ok` and calls still fail, check real provider access next
+
+## First Thing To Do In Jini
+
+When Jini opens, paste the work you already have and ask for the outcome you
+want.
+
+For example:
+
+```text
+turn these meeting notes into a follow-up I can send
+```
+
+or:
+
+```text
+check whether this plan is ready to hand off
+```
+
+or:
+
+```text
+plan a 7 day Paris trip with a clear day-by-day itinerary
+```
+
+If Jini shows actions instead of a plain prompt, choose:
+
+- `Open ready work`
+- `See what is still missing`
+- `Plan this first`
+
+## One Command Versus Two
+
+On the website, you will often see `jini`.
+
+For this source-built preview, use:
+
+```bash
+./jini
+```
+
+Use plain `jini` only after you install the binary onto your `PATH`.
+
+## What This Preview Is
+
+Today’s Go runtime is the new front door.
+
+It already does the important part:
+
+- one interactive entry point
+- visible provider choice
+- visible work state
+- useful outputs before status recaps
+
+It is still a preview, so the rough edges are real.
