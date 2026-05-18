@@ -25,7 +25,7 @@ description: Finish messy work with one calm front door, visible progress, and t
   </div>
 </div>
 
-**In plain words:** Jini helps you turn messy work into something ready to send, hand off, or act on.
+**In plain words:** Jini helps you turn messy work into something ready to send, hand off, or act on, without making you manage model decisions all day.
 
 <div class="fact-strip">
   <div class="fact-pill">
@@ -56,6 +56,10 @@ description: Finish messy work with one calm front door, visible progress, and t
   <div class="proof-card">
     <h3>Keep one stable thread</h3>
     <p>You do not have to keep deciding which model to use or where the context went. Jini keeps the work thread, artifacts, and next move visible while the backend can change underneath.</p>
+  </div>
+  <div class="proof-card">
+    <h3>Spend less without thinking about it</h3>
+    <p>Jini defaults to the cheapest suitable route for routine work and only escalates when the request clearly needs more depth or stronger verification.</p>
   </div>
   <div class="proof-card">
     <h3>Get something you can actually use</h3>

@@ -3,20 +3,13 @@ title: Proof
 description: The proof is simple: Jini should give you something usable and tell you what still blocks it.
 ---
 
-The proof is not a theory.
+<p class="page-lead">The proof is not a theory. It is whether Jini can turn something messy into something usable while keeping the remaining risk visible.</p>
 
-The proof is this:
-
-- you give Jini something messy
-- Jini gives you something usable
-- Jini also shows what is still missing
-
-That is the difference between “a nice draft” and “work you can trust.”
-
-## What The Proof Should Feel Like
-
-```text
-You're working on
+<div class="section-card">
+  <span class="section-kicker">The core test</span>
+  <h2>What proof should look like</h2>
+  <div class="shell-panel">
+<pre>You're working on
 Research to PRD handoff
 
 Ready now
@@ -27,24 +20,29 @@ Still missing
 - Product approval
 
 Next step
-Open Build-readiness check
-```
+Open Build-Readiness Check</pre>
+  </div>
 
-That is enough for a user to understand the value.
+  <p>That is enough for a user to understand the value. Something useful is already ready, the blocker is visible, and the next move is obvious.</p>
+</div>
 
-The point is not the label.
-The point is:
+<div class="section-card">
+  <span class="section-kicker">User trust</span>
+  <h2>What must also be obvious</h2>
+  <div class="checklist-grid">
+    <div class="checklist-card">
+      <h3>What to type</h3>
+      <p>A first-time user should be able to see the front door immediately.</p>
+    </div>
+    <div class="checklist-card">
+      <h3>What route Jini chose</h3>
+      <p>The chosen provider, model, and route reason should be visible before the draft starts.</p>
+    </div>
+    <div class="checklist-card">
+      <h3>Whether the result is still a draft</h3>
+      <p>The user should know when it is still safe to review before anything is shared.</p>
+    </div>
+  </div>
 
-- something useful is already ready
-- the blocker is visible
-- the next move is obvious
-
-If Jini cannot do that, it is not done.
-
-One more test matters now:
-
-- can a first-time user tell what to type
-- can they tell what provider Jini chose
-- can they tell whether the result is safe to review before sharing
-
-If those are not obvious, the product still has work to do.
+  <p>If those signals are not obvious, the product still has work to do.</p>
+</div>

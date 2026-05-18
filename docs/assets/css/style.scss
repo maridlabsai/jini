@@ -144,43 +144,46 @@
   color: #344054;
 }
 
-.orientation-bar {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 0.8rem;
-  margin: 0 0 1.6rem;
-}
-
-.orientation-card {
-  padding: 0.95rem 1rem;
+.page-intro-card {
+  margin: 0 0 1.65rem;
+  padding: 1.2rem 1.25rem 1.1rem;
   border: 1px solid #d8dee4;
-  border-radius: 16px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top right, rgba(29, 78, 216, 0.06), transparent 30%),
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 0 12px 32px rgba(8, 17, 40, 0.06);
 }
 
-.orientation-card p {
-  margin: 0.28rem 0 0.7rem;
-  font-size: 0.94rem;
-  line-height: 1.5;
-  color: #344054;
+.page-intro-card .site-page-description {
+  max-width: 48rem;
+  margin-bottom: 1rem;
 }
 
-.orientation-card code {
-  display: inline-block;
-  padding: 0.26rem 0.52rem;
+.page-intro-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.page-intro-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.1rem;
+  padding: 0 0.8rem;
+  border: 1px solid #d8dee4;
   border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  color: #344054;
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.page-intro-links a:hover {
   background: #eef4ff;
   color: #1d4ed8;
-  white-space: normal;
-}
-
-.orientation-label {
-  display: block;
-  font-size: 0.76rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #667085;
+  text-decoration: none;
 }
 
 .hero-panel {
@@ -639,6 +642,174 @@
   white-space: normal;
 }
 
+.page-lead {
+  margin: 0 0 1.1rem;
+  font-size: 1.08rem;
+  line-height: 1.68;
+  color: #344054;
+}
+
+.section-kicker {
+  display: block;
+  margin-bottom: 0.42rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #667085;
+}
+
+.checklist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 1.5rem;
+}
+
+.checklist-card {
+  padding: 1rem 1rem 1.05rem;
+  border: 1px solid #d8dee4;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.checklist-card h3 {
+  margin: 0 0 0.45rem;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.checklist-card p {
+  margin: 0;
+  color: #344054;
+}
+
+.pill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 1rem 0 0;
+}
+
+.pill-list span,
+.pill-list a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0 0.78rem;
+  border-radius: 999px;
+  border: 1px solid #d8dee4;
+  background: #f8fafc;
+  color: #344054;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.pill-list a:hover {
+  background: #eef4ff;
+  color: #1d4ed8;
+  text-decoration: none;
+}
+
+.scenario-grid {
+  display: grid;
+  gap: 1rem;
+  margin: 1rem 0 1.8rem;
+}
+
+.scenario-card {
+  padding: 1.1rem 1.15rem;
+  border: 1px solid #d8dee4;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  box-shadow: 0 10px 28px rgba(8, 17, 40, 0.04);
+}
+
+.scenario-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.08rem;
+}
+
+.scenario-subgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.8rem;
+  margin-top: 0.9rem;
+}
+
+.scenario-block {
+  padding: 0.9rem 0.95rem;
+  border-radius: 16px;
+  background: #f8fafc;
+}
+
+.scenario-block strong {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.84rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #667085;
+}
+
+.scenario-block p,
+.scenario-block ul {
+  margin: 0;
+  color: #344054;
+}
+
+.scenario-block ul {
+  padding-left: 1.1rem;
+}
+
+.signal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.9rem;
+  margin: 1rem 0 1.5rem;
+}
+
+.signal-card {
+  padding: 1rem;
+  border: 1px solid #d8dee4;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.signal-card h3 {
+  margin: 0 0 0.45rem;
+  font-size: 1rem;
+}
+
+.signal-card p,
+.signal-card ul {
+  margin: 0;
+  color: #344054;
+}
+
+.signal-card ul {
+  padding-left: 1rem;
+}
+
+.shell-panel {
+  margin: 1rem 0 1.4rem;
+  padding: 1rem 1rem 1.05rem;
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  border-radius: 18px;
+  background: rgba(8, 17, 40, 0.96);
+  color: #f8fafc;
+}
+
+.shell-panel pre {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.compact-list > li + li {
+  margin-top: 0.28rem;
+}
+
 @media screen and (max-width: 640px) {
   .site-shell-header {
     flex-direction: column;
@@ -678,5 +849,9 @@
 
   .workflow-card code {
     white-space: normal;
+  }
+
+  .page-intro-card {
+    padding: 1rem;
   }
 }

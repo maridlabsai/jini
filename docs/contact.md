@@ -3,22 +3,26 @@ title: Contact
 description: Use Issues, Discussions, or commercial contact depending on the kind of help you need.
 ---
 
-## Community
+<p class="page-lead">Use the public repo when the discussion helps other users too. Use commercial contact when the need is adoption help, implementation, or onboarding.</p>
 
-Use the public repo for community interaction:
+<div class="checklist-grid">
+  <div class="checklist-card">
+    <h3>GitHub Issues</h3>
+    <p>Use <a href="https://github.com/maridlabsai/jini/issues">Issues</a> for bugs, documentation gaps, and clear feature requests.</p>
+  </div>
+  <div class="checklist-card">
+    <h3>GitHub Discussions</h3>
+    <p>Use <a href="https://github.com/maridlabsai/jini/discussions">Discussions</a> for workflow questions, design discussion, and adoption feedback.</p>
+  </div>
+  <div class="checklist-card">
+    <h3>Commercial support</h3>
+    <p>Use commercial contact for implementation, onboarding, or enterprise adoption help.</p>
+  </div>
+</div>
 
-- [GitHub Issues](https://github.com/maridlabsai/jini/issues) for bugs, documentation gaps, and clear feature requests
-- [GitHub Discussions](https://github.com/maridlabsai/jini/discussions) for questions, workflow design discussion, pack ideas, and adoption feedback
-
-If you are not sure whether something is a bug or a design question, start in
-Discussions. That keeps the bug tracker focused and still gives you a clear
-public place to ask for help.
-
-## Commercial
-
-Commercial implementation and onboarding support are described in
-[COMMERCIAL.md](https://github.com/maridlabsai/jini/blob/main/COMMERCIAL.md).
-
-Commercial contact:
-
-- `maridlabsai@gmail.com`
+<div class="section-card">
+  <span class="section-kicker">Commercial</span>
+  <h2>Paid help is for adoption, not basic access</h2>
+  <p>Commercial implementation and onboarding support are described in <a href="https://github.com/maridlabsai/jini/blob/main/COMMERCIAL.md">COMMERCIAL.md</a>.</p>
+  <p><strong>Email:</strong> <code>maridlabsai@gmail.com</code></p>
+</div>

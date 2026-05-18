@@ -33,31 +33,18 @@
 
       <main id="main-content">
         {% unless page.url == '/' %}
-        <p class="site-section-label">Jini</p>
-        <h1 class="site-page-title">{{ page.title }}</h1>
-        {% if page.description %}
-        <p class="site-page-description">{{ page.description }}</p>
-        {% endif %}
-        {% endunless %}
-
-        {% unless page.url == '/' %}
-        <aside class="orientation-bar" aria-label="Jini orientation">
-          <div class="orientation-card">
-            <span class="orientation-label">Start Jini</span>
-            <p>Install once, then start with the one command that matters.</p>
-            <code>jini</code>
+        <section class="page-intro-card">
+          <p class="site-section-label">Jini</p>
+          <h1 class="site-page-title">{{ page.title }}</h1>
+          {% if page.description %}
+          <p class="site-page-description">{{ page.description }}</p>
+          {% endif %}
+          <div class="page-intro-links">
+            <a href="{{ '/install.html' | relative_url }}">Install</a>
+            <a href="{{ '/simple.html' | relative_url }}">Simple Guide</a>
+            <a href="{{ '/examples.html' | relative_url }}">Examples</a>
           </div>
-          <div class="orientation-card">
-            <span class="orientation-label">Show what's ready</span>
-            <p>View the follow-up, check, memo, or checklist Jini already made.</p>
-            <code>inside Jini</code>
-          </div>
-          <div class="orientation-card">
-            <span class="orientation-label">Plan first</span>
-            <p>When work needs structure, move into goal, requirements, design, steps, and run.</p>
-            <code>inside Jini</code>
-          </div>
-        </aside>
+        </section>
         {% endunless %}
 
         {{ content }}

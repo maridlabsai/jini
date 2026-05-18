@@ -3,77 +3,89 @@ title: Install
 description: Install Jini once, then use `jini`.
 ---
 
-Install once from any terminal:
+<p class="page-lead">The normal path should be simple: install once, run <code>jini</code>, paste the work you want finished.</p>
+
+<div class="section-card" markdown="1">
+  <span class="section-kicker">Recommended</span>
+  <h2>Install once from any terminal</h2>
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/maridlabsai/jini/main/install.sh | bash
 ```
 
-Supported host targets today:
+  <div class="pill-list">
+    <span>macOS</span>
+    <span>Linux</span>
+    <span>HTTPS enforced</span>
+    <span>User-space install</span>
+  </div>
 
-- macOS
-- Linux
-
-Windows is not first-class yet. The current installer is a Bash installer, and
-the real CI matrix runs on macOS and Linux hosts.
-
-That installer:
-
-- first tries to install a matching release binary
-- falls back to a source build only when needed
-- installs a stable `jini` command into a user bin directory
-- verifies that the command launches
-- prints one PATH fix only if your shell still cannot see `jini`
-
-If the installer falls back to a source build, it needs Go and Git.
-
-If you already cloned the repo, the local equivalent is:
-
-```bash
-./install.sh
-```
-
-After install, the normal command is:
+  <p>The installer first tries to install a matching release binary. If needed, it falls back to a source-backed runtime, verifies that the command launches, and prints one PATH fix only when your shell still cannot see <code>jini</code>.</p>
 
 ```bash
 jini
 ```
 
-## Recommended First Run
+  <p>If the installer prints a PATH line, run it once in the current shell and add it to your shell profile later.</p>
+</div>
 
-For most people, the first run should be:
+<div class="section-card" markdown="1">
+  <span class="section-kicker">First run</span>
+  <h2>What should happen next</h2>
+  <div class="steps-grid">
+    <div class="step-card">
+      <span class="step-number">1</span>
+      <h3>Run <code>jini</code></h3>
+      <p>Do not start with provider jargon unless Jini tells you setup is missing.</p>
+    </div>
+    <div class="step-card">
+      <span class="step-number">2</span>
+      <h3>Paste the work</h3>
+      <p>Start from the notes, draft, screenshot, transcript, or rough ask you already have.</p>
+    </div>
+    <div class="step-card">
+      <span class="step-number">3</span>
+      <h3>Use Auto if needed</h3>
+      <p>If setup is missing, type <code>Use Auto</code> and let Jini help you connect the best available route.</p>
+    </div>
+  </div>
+</div>
 
-```bash
-jini
-```
+<div class="section-card" markdown="1">
+  <span class="section-kicker">Choose your path</span>
+  <h2>Only use the strict setup blocks when you actually need them</h2>
 
-Then paste the work you want finished.
+  <div class="checklist-grid">
+    <div class="checklist-card">
+      <h3>Use Auto</h3>
+      <p>Best for most people. Jini chooses the cheapest suitable route by default and escalates only when the request clearly needs deeper work.</p>
+    </div>
+    <div class="checklist-card">
+      <h3>Connect Claude</h3>
+      <p>Best when you already use Anthropic directly and want Claude as the strict route.</p>
+    </div>
+    <div class="checklist-card">
+      <h3>Connect Bedrock</h3>
+      <p>Best when AWS policy or existing Bedrock access decides the route.</p>
+    </div>
+    <div class="checklist-card">
+      <h3>Connect Azure OpenAI</h3>
+      <p>Best when company policy requires Azure OpenAI only.</p>
+    </div>
+    <div class="checklist-card">
+      <h3>Connect Local SLM</h3>
+      <p>Best when you already run an OpenAI-compatible local model server and want cheap-first local routing.</p>
+    </div>
+  </div>
+</div>
 
-If Jini says setup is missing, type:
+<div class="section-card" markdown="1">
+  <span class="section-kicker">Copy-paste paths</span>
+  <h2>Strict route setup</h2>
 
-```text
-Use Auto
-```
-
-That means: Jini picks for you. It chooses the cheapest suitable route by
-default, and only moves to a stronger route when the request clearly asks for
-deeper work.
-
-If Jini asks for a secret, it saves it in this repo's `.jini` folder so the
-next run can stay simple. Do not commit `.jini`.
-
-Use the copy-paste setup blocks below only if:
-
-- your company already gave you the exact values
-- you need one strict route
-- you are debugging setup
-
-## Copy-Paste Setup Paths
-
-### I use Claude
-
-Copy this:
-
+  <div class="scenario-grid">
+    <div class="scenario-card" markdown="1">
+      <h3>Claude direct</h3>
 ```bash
 export JINI_PROVIDER=claude
 export ANTHROPIC_API_KEY="paste-your-key-here"
@@ -81,16 +93,11 @@ export JINI_MODEL=sonnet
 jini provider doctor
 jini
 ```
+      <p>Use this when your team already gave you a direct Anthropic key and Claude should be the fixed route.</p>
+    </div>
 
-Replace `paste-your-key-here` with your real Anthropic API key.
-
-In Jini, `claude` and `anthropic` mean the same provider. Most people should
-type `claude`.
-
-### I use Amazon Bedrock
-
-Copy this:
-
+    <div class="scenario-card" markdown="1">
+      <h3>Amazon Bedrock</h3>
 ```bash
 export JINI_PROVIDER=bedrock
 export AWS_REGION=us-east-1
@@ -99,18 +106,11 @@ export JINI_MODEL=sonnet-4.6
 jini provider doctor
 jini
 ```
+      <p>Use this when AWS policy or Bedrock access already exists. If you know the exact model id, you can set <code>BEDROCK_MODEL_ID</code> instead.</p>
+    </div>
 
-`JINI_MODEL=sonnet-4.6` means Claude Sonnet 4.6 on Bedrock.
-
-If you already know the exact Bedrock model id, you can set
-`BEDROCK_MODEL_ID` instead. When both are set, `BEDROCK_MODEL_ID` wins.
-
-### My team uses Azure OpenAI
-
-If your company already uses Azure OpenAI, Jini can use that same setup.
-
-Copy this:
-
+    <div class="scenario-card" markdown="1">
+      <h3>Azure OpenAI</h3>
 ```bash
 export JINI_PROVIDER=azure-openai
 export AZURE_OPENAI_ENDPOINT="https://your-resource.openai.azure.com"
@@ -120,25 +120,11 @@ export AZURE_OPENAI_API_VERSION=2024-10-21
 jini provider doctor
 jini
 ```
+      <p>Use this when your company requires Azure OpenAI only. On Azure, the deployment decides the actual model.</p>
+    </div>
 
-In Azure OpenAI, the deployment is the name your team gave the model endpoint.
-That deployment decides the actual model. `JINI_MODEL` is optional on Azure and
-acts only as a hint for the shell.
-
-Ask your Azure admin for these four values:
-
-- Azure OpenAI endpoint URL
-- Azure OpenAI API key
-- Azure OpenAI deployment name
-- Azure OpenAI API version
-
-If company policy requires Azure OpenAI only, use this Azure path or type
-`Connect Azure OpenAI` inside Jini. Do not use Auto mode for that requirement.
-
-### I want Jini to choose automatically
-
-Auto mode is the easiest start.
-
+    <div class="scenario-card" markdown="1">
+      <h3>Auto route</h3>
 ```bash
 export JINI_TOOL=auto
 export JINI_PROVIDER=auto
@@ -146,37 +132,11 @@ export JINI_MODEL=auto
 jini provider doctor
 jini
 ```
+      <p>Use this if you want Jini to choose the cheapest suitable route, model, and effort level for each request.</p>
+    </div>
 
-Auto mode:
-
-- checks what tools are actually usable
-- checks what providers are actually ready
-- chooses the cheapest suitable option by default
-- chooses the model that fits that route
-- judges a request-specific effort level: `low`, `medium`, `high`, or `extra high`
-- tells you what it picked
-- falls back to local preview if no cloud provider is ready
-
-If you hint `JINI_MODEL=sonnet-4.6`, Jini prefers a Bedrock Sonnet route.
-
-For example:
-
-- trip planning or meeting follow-up can stay on a cheaper Azure-backed writing route
-- code-heavy work can stay on a cheaper Azure-backed code route
-- if you ask for deep, rigorous, or comprehensive work, Jini can switch to a stronger route such as `Claude Code` or `Bedrock Sonnet`
-
-If you need one strict route, do not use Auto. Force the route you require.
-
-Once Jini picks a route for a piece of work, it saves that choice with the work
-so later screens keep showing the same `Working with` label.
-
-### I want to keep most work on a local SLM
-
-If you already run an OpenAI-compatible local model server, Jini can use that
-as the cheap-first front line.
-
-Copy this:
-
+    <div class="scenario-card" markdown="1">
+      <h3>Local SLM</h3>
 ```bash
 export JINI_PROVIDER=local-slm
 export JINI_TOOL=auto
@@ -186,105 +146,46 @@ export JINI_LOCAL_SLM_MODEL="qwen3:8b"
 jini provider doctor
 jini
 ```
+      <p>Use this when you already run an OpenAI-compatible local model endpoint and want local workhorse routing.</p>
+    </div>
+  </div>
+</div>
 
-Optional profile overrides:
+<div class="section-card" markdown="1">
+  <span class="section-kicker">Setup check</span>
+  <h2>What <code>jini provider doctor</code> actually tells you</h2>
+  <div class="signal-grid">
+    <div class="signal-card">
+      <h3>What it does</h3>
+      <ul class="compact-list">
+        <li>shows what Jini will use</li>
+        <li>shows what auto mode resolved to</li>
+        <li>shows what settings are still missing</li>
+        <li>does not print secret values</li>
+      </ul>
+    </div>
+    <div class="signal-card">
+      <h3>What it does not prove</h3>
+      <ul class="compact-list">
+        <li>your AWS auth is valid</li>
+        <li>your Bedrock model access is enabled</li>
+        <li>your Azure key is accepted by the service</li>
+        <li>your Claude account is allowed to use a model</li>
+      </ul>
+    </div>
+    <div class="signal-card">
+      <h3>Local SLM extras</h3>
+      <p>When local routing is active, doctor also shows the machine and runtime view Jini is using, including device class, local runtime class, and accelerator context.</p>
+    </div>
+  </div>
+</div>
 
-```bash
-export JINI_LOCAL_SLM_FAST_MODEL="phi4-mini"
-export JINI_LOCAL_SLM_WORKHORSE_MODEL="qwen3:8b-instruct"
-export JINI_LOCAL_SLM_DEEP_MODEL="qwen3:14b"
-export JINI_LOCAL_SLM_MULTIMODAL_MODEL="gemma3:12b"
-```
-
-Inside Jini, the easier path is:
-
-```text
-Connect Local SLM
-```
-
-Jini will ask only for the endpoint and default model, then keep the profile
-slots in the same repo-local `.jini` folder.
-
-Jini also keeps a versioned device profile in `.jini` so local routing can
-adjust to the machine, OS version, and runtime capabilities instead of staying
-frozen to one generic local model choice.
-
-## What `provider doctor` Really Checks
-
-`jini provider doctor` is a local setup check.
-
-It tells you:
-
-- what Jini will use
-- what auto mode resolved to
-- how Jini handles effort level
-- what settings are missing
-
-It does not print secret values.
-
-It does not prove:
-
-- your AWS auth is valid
-- Bedrock model access is enabled
-- your Azure key is accepted by the service
-- your Claude account is allowed to use a model
-
-So the rule is:
-
-- if `provider doctor` says `needs setup`, fix that first
-- if it says `ok` and calls still fail, check real provider access next
-
-## First Thing To Do In Jini
-
-When Jini opens, paste the work you already have and ask for the outcome you
-want.
-
-For example:
-
-```text
-turn these meeting notes into a follow-up I can send
-```
-
-or:
-
-```text
-check whether this plan is ready to hand off
-```
-
-or:
-
-```text
-plan a 7 day Paris trip with a clear day-by-day itinerary
-```
-
-If Jini shows actions instead of a plain prompt, choose:
-
-- `Show what's ready`
-- `Show what is missing`
-- `Help me plan this`
-
-## Inside Jini
-
-When Jini opens, if setup is missing or you need one route first, type:
-
-```text
-Use Auto
-Connect Claude
-Connect Bedrock
-Connect Azure OpenAI
-Connect Local SLM
-```
-
-Jini will ask only for the missing details and save them in this repo's `.jini`
-folder.
-
-`Use Auto` is the recommended recovery path when setup is missing. It tells
-Jini to choose the cheapest suitable tool, provider, and model for the work,
-and only switch to a stronger route when the request clearly asks for deeper
-work.
-
-After that, the normal start stays:
-
-```bash
-jini
-```
+<div class="section-card section-card-cta" markdown="1">
+  <h2>Most people should stop here</h2>
+  <p>Install Jini, run <code>jini</code>, and paste the work you want finished. Only drop to the strict route blocks when policy or debugging requires it.</p>
+  <div class="page-intro-links">
+    <a href="./simple.html">Simple Guide</a>
+    <a href="./cli.html">CLI Guide</a>
+    <a href="./examples.html">Examples</a>
+  </div>
+</div>
