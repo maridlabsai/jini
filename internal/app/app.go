@@ -617,6 +617,14 @@ func startNewWorkFromRawInput(firstRaw string, session *bufio.Scanner, stdout, s
 	if strings.TrimSpace(normalizedSource) != "" {
 		source = normalizedSource
 	}
+	clarifiedSource, clarificationItem, ok := maybeClarifyStarterSource(choice, source, session, stdout)
+	if !ok {
+		return 0
+	}
+	source = clarifiedSource
+	if clarificationItem.InputID != "" {
+		inputItems = append(inputItems, clarificationItem)
+	}
 
 	request := providerGenerationRequest{
 		Choice: choice,
@@ -716,6 +724,91 @@ func classifyStarterChoice(source string) starterChoice {
 	default:
 		return starterChoice{PackID: "general-work", ChoiceLabel: "First Useful Pass", DefaultName: "First Useful Pass", State: "decided"}
 	}
+}
+
+func maybeClarifyStarterSource(choice starterChoice, source string, scanner *bufio.Scanner, stdout io.Writer) (string, inputItem, bool) {
+	if scanner == nil {
+		return source, inputItem{}, true
+	}
+	prompt, ok := clarificationPromptForStarter(choice, source)
+	if !ok {
+		return source, inputItem{}, true
+	}
+	answer, answered := readPromptLine(scanner, stdout, prompt)
+	if !answered {
+		return "", inputItem{}, false
+	}
+	answer = strings.TrimSpace(answer)
+	if answer == "" || normalizeName(answer) == "skip" {
+		return source, inputItem{}, true
+	}
+	return mergeClarifiedSource(source, answer), inputItem{
+		InputID: "clarified-scope",
+		Kind:    "clarification",
+		Title:   "Clarified scope",
+		Status:  "processed",
+		Preview: compactPreview(answer, 120),
+	}, true
+}
+
+func clarificationPromptForStarter(choice starterChoice, source string) (string, bool) {
+	switch choice.PackID {
+	case "travel-plan":
+		if !travelRequestNeedsClarification(source) {
+			return "", false
+		}
+		return strings.Join([]string{
+			"Before I draft it, give me the basics in one line:",
+			"- who is going",
+			"- rough budget",
+			"- dates or season",
+			"- trip style",
+			"- hotel area, or whether you want help choosing it",
+			"Type `skip` if you want a generic draft.",
+			"Example: couple, around $2500, early October, mixed pace, central hotel area, Versailles optional",
+		}, "\n"), true
+	default:
+		return "", false
+	}
+}
+
+func mergeClarifiedSource(source, answer string) string {
+	base := strings.TrimSpace(source)
+	scope := strings.TrimSpace(answer)
+	if base == "" {
+		return scope
+	}
+	if scope == "" {
+		return base
+	}
+	if strings.HasSuffix(base, ".") || strings.HasSuffix(base, "!") || strings.HasSuffix(base, "?") {
+		return base + " Scope: " + scope
+	}
+	return base + ". Scope: " + scope
+}
+
+func travelRequestNeedsClarification(source string) bool {
+	normalized := normalizeName(source)
+	if len(strings.Fields(normalized)) > 4 {
+		return false
+	}
+	signals := 0
+	if containsAny(normalized, []string{"solo", "couple", "friends", "family", "kids", "children", "parents", "honeymoon"}) {
+		signals++
+	}
+	if containsAny(normalized, []string{"$", "budget", "cheap", "luxury", "midrange", "2500", "3000", "2000"}) {
+		signals++
+	}
+	if containsAny(normalized, []string{"january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december", "spring", "summer", "fall", "autumn", "winter", "weekend"}) {
+		signals++
+	}
+	if containsAny(normalized, []string{"food", "museum", "romantic", "nightlife", "shopping", "kids", "family friendly", "mixed", "slow pace", "fast pace", "walking", "architecture"}) {
+		signals++
+	}
+	if containsAny(normalized, []string{"hotel", "stay", "marais", "latin quarter", "montmartre", "central", "area", "neighborhood", "neighbourhood"}) {
+		signals++
+	}
+	return signals == 0
 }
 
 func bootstrapStarterWork(choice starterChoice, source, detail string, inputItems []inputItem) (*workSummary, error) {

@@ -1321,6 +1321,50 @@ func TestInteractiveLauncherCreatesTravelWork(t *testing.T) {
 	}
 }
 
+func TestInteractiveLauncherAsksForTravelClarificationWhenUnderspecified(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	stdin := strings.NewReader("7 day paris trip\ncouple, around $2500, early October, mixed pace, central hotel area, Versailles optional\n")
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, stdin, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Before I draft it, give me the basics in one line:",
+		"Type `skip` if you want a generic draft.",
+		"Clarified scope",
+		"couple, around $2500, early October, mixed pace, central hotel area, Versailles optional",
+		"Goal",
+		"7 Day Paris Trip",
+		"Itinerary",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+}
+
+func TestInteractiveLauncherSkipsTravelClarificationWhenRequestAlreadyScoped(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	stdin := strings.NewReader("7 day Paris trip for a couple with a $2500 budget in early October, mixed pace, central hotel area\n")
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, stdin, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	if strings.Contains(out, "Before I draft it, give me the basics in one line:") {
+		t.Fatalf("expected already-scoped travel request to skip clarification, got:\n%s", out)
+	}
+}
+
 func TestLauncherShowsOtherActiveWorkWhenMultipleProjectsExist(t *testing.T) {
 	stateDir := t.TempDir()
 	copyWorkDir(t, filepath.Join(stateDir, "work", "travel-plan-paris"), seedTravelWork(t))
@@ -1391,7 +1435,7 @@ func TestCurrentWorkFreeformInputStartsNewWork(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("plan me a 7 day paris trip\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("plan me a 7 day paris trip\ncouple, around $2500, early October, mixed pace, central hotel area\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
