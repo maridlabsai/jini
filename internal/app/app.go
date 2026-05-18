@@ -680,25 +680,26 @@ func readPromptLine(scanner *bufio.Scanner, stdout io.Writer, prompt string) (st
 func resolveStarterChoice(raw string) (starterChoice, error) {
 	choice := normalizeName(raw)
 	switch choice {
-	case "1", "meeting", "turn meeting notes into something i can send", "follow up after a meeting", "follow up", "meeting follow up", "meeting followup":
-		return starterChoice{PackID: "meeting-followup", ChoiceLabel: "Turn meeting notes into something I can send", DefaultName: "Meeting Follow-up", State: "decided"}, nil
-	case "2", "plan", "check whether a plan is ready to hand off", "check if a plan is ready", "spec", "spec readiness":
-		return starterChoice{PackID: "research-prd", ChoiceLabel: "Check whether a plan is ready to hand off", DefaultName: "Plan Readiness", State: "awaiting_verification"}, nil
 	case "3", "i am not sure", "i'm not sure", "i’m not sure", "im not sure", "i m not sure", "not sure", "unsure":
 		return starterChoice{PackID: "auto", ChoiceLabel: "I am not sure", DefaultName: "First Useful Pass", State: "decided"}, nil
 	case "plan this first", "plan first":
 		return starterChoice{PackID: "auto", ChoiceLabel: "Plan this first", DefaultName: "Plan First", State: "modeled"}, nil
-	case "compare options", "compare options and choose one", "vendor":
-		return starterChoice{PackID: "vendor-selection", ChoiceLabel: "Compare options and choose one", DefaultName: "Option Review", State: "decided"}, nil
-	case "4", "incident", "clean up an incident":
-		return starterChoice{PackID: "incident-response", ChoiceLabel: "Clean up an incident", DefaultName: "Incident Cleanup", State: "incident"}, nil
-	case "5", "trip", "plan a trip":
-		return starterChoice{PackID: "travel-plan", ChoiceLabel: "Plan a trip", DefaultName: "Trip Plan", State: "decided"}, nil
-	case "6", "something else", "something":
-		return starterChoice{PackID: "general-work", ChoiceLabel: "Something else", DefaultName: "General Work", State: "decided"}, nil
-	default:
-		return starterChoice{}, fmt.Errorf("I couldn't match %q to a starter flow yet.", raw)
 	}
+	for _, packID := range starterPackMenuOrder {
+		profile, ok := starterProfileForPack(packID)
+		if !ok {
+			continue
+		}
+		for _, alias := range profile.MenuAliases {
+			if choice == alias {
+				resolved, ok := starterChoiceForPack(profile.PackID)
+				if ok {
+					return resolved, nil
+				}
+			}
+		}
+	}
+	return starterChoice{}, fmt.Errorf("I couldn't match %q to a starter flow yet.", raw)
 }
 
 func sourcePromptForChoice(choice starterChoice) string {
@@ -713,17 +714,12 @@ func sourcePromptForChoice(choice starterChoice) string {
 }
 
 func classifyStarterChoice(source string) starterChoice {
-	normalized := normalizeName(source)
-	switch {
-	case containsAny(normalized, []string{"meeting", "follow up", "followup", "action items", "owners", "due dates", "open questions"}):
-		return starterChoice{PackID: "meeting-followup", ChoiceLabel: "Turn meeting notes into something I can send", DefaultName: "Meeting Follow-up", State: "decided"}
-	case containsAny(normalized, []string{"prd", "spec", "build readiness", "ready to hand off", "handoff", "hand off", "rollback", "implementation slice"}):
-		return starterChoice{PackID: "research-prd", ChoiceLabel: "Check whether a plan is ready to hand off", DefaultName: "Plan Readiness", State: "awaiting_verification"}
-	case containsAny(normalized, []string{"trip", "travel", "paris", "hotel", "flight", "itinerary"}):
-		return starterChoice{PackID: "travel-plan", ChoiceLabel: "Plan a trip", DefaultName: "Trip Plan", State: "decided"}
-	default:
+	packID := detectStarterPackFromSource(source)
+	choice, ok := starterChoiceForPack(packID)
+	if !ok {
 		return starterChoice{PackID: "general-work", ChoiceLabel: "First Useful Pass", DefaultName: "First Useful Pass", State: "decided"}
 	}
+	return choice
 }
 
 func maybeClarifyStarterSource(choice starterChoice, source string, scanner *bufio.Scanner, stdout io.Writer) (string, inputItem, bool) {
@@ -752,24 +748,11 @@ func maybeClarifyStarterSource(choice starterChoice, source string, scanner *buf
 }
 
 func clarificationPromptForStarter(choice starterChoice, source string) (string, bool) {
-	switch choice.PackID {
-	case "travel-plan":
-		missing := missingTravelScopeDimensions(source)
-		if len(missing) <= 1 {
-			return "", false
-		}
-		lines := []string{"Before I draft it, give me what is still missing in one line:"}
-		for _, item := range missing {
-			lines = append(lines, "- "+item)
-		}
-		lines = append(lines,
-			"Type `skip` if you want a generic draft.",
-			"Example: early October, mixed pace, central hotel area, Louvre and Versailles are must-dos",
-		)
-		return strings.Join(lines, "\n"), true
-	default:
+	profile, ok := starterProfileForPack(choice.PackID)
+	if !ok {
 		return "", false
 	}
+	return clarificationPromptForProfile(profile, source)
 }
 
 func mergeClarifiedSource(source, answer string) string {
@@ -785,31 +768,6 @@ func mergeClarifiedSource(source, answer string) string {
 		return base + " Scope: " + scope
 	}
 	return base + ". Scope: " + scope
-}
-
-func missingTravelScopeDimensions(source string) []string {
-	normalized := normalizeName(source)
-	rawLower := strings.ToLower(strings.TrimSpace(source))
-	missing := []string{}
-	if !containsAny(normalized, []string{"solo", "couple", "friends", "family", "kids", "children", "parents", "honeymoon", "wife", "husband", "partner"}) {
-		missing = append(missing, "who is going")
-	}
-	if !containsAny(rawLower, []string{"$", "budget"}) && !containsAny(normalized, []string{"cheap", "luxury", "midrange", "2500", "3000", "2000", "1500", "4000"}) {
-		missing = append(missing, "rough budget")
-	}
-	if !containsAny(normalized, []string{"january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december", "spring", "summer", "fall", "autumn", "winter", "weekend", "weekday", "christmas", "new year"}) {
-		missing = append(missing, "dates or season")
-	}
-	if !containsAny(normalized, []string{"food", "museum", "romantic", "nightlife", "shopping", "family friendly", "mixed", "slow pace", "fast pace", "walking", "architecture", "relaxed", "packed", "kid friendly", "honeymoon", "adventure"}) {
-		missing = append(missing, "trip style")
-	}
-	if !containsAny(normalized, []string{"hotel", "stay", "marais", "latin quarter", "montmartre", "central", "area", "neighborhood", "neighbourhood", "arrondissement", "left bank", "right bank"}) {
-		missing = append(missing, "hotel area, or whether you want help choosing it")
-	}
-	if !containsAny(normalized, []string{"louvre", "versailles", "eiffel", "orsay", "montmartre", "notre dame", "latin quarter", "marais", "disneyland", "seine cruise", "must do", "must see"}) {
-		missing = append(missing, "must-do sights, or whether you want help choosing them")
-	}
-	return missing
 }
 
 func bootstrapStarterWork(choice starterChoice, source, detail string, inputItems []inputItem) (*workSummary, error) {
@@ -915,28 +873,11 @@ func writeStarterWork(choice starterChoice, workDir, title, source, detail strin
 		return err
 	}
 
-	switch choice.PackID {
-	case "meeting-followup":
-		return writeMeetingStarterWork(workDir, title, source, detail)
-	case "research-prd":
-		return writeResearchStarterWork(workDir, title, source, detail)
-	case "travel-plan":
-		return writeTravelStarterWork(workDir, title, source, detail)
-	case "vendor-selection":
-		return writeSimpleStarterWork(workDir, title, "Recommendation Memo", source, []string{
-			"Top option",
-			"Tradeoffs still to review",
-			"Budget or approval boundary",
-		})
-	case "incident-response":
-		return writeSimpleStarterWork(workDir, title, "Closure Checklist", source, []string{
-			"Recovery proof",
-			"Open follow-up owners",
-			"Customer or leadership update status",
-		})
-	default:
-		return writeFirstUsefulPassStarterWork(workDir, title, source)
+	profile, ok := starterProfileForPack(choice.PackID)
+	if ok && profile.Writer != nil {
+		return profile.Writer(workDir, title, source, detail)
 	}
+	return writeFirstUsefulPassStarterWork(workDir, title, source)
 }
 
 func writeMeetingStarterWork(workDir, title, source, detail string) error {
