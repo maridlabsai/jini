@@ -1296,6 +1296,42 @@ func TestInteractiveLauncherCanSwitchBetweenActiveProjects(t *testing.T) {
 	}
 }
 
+func TestCurrentWorkFreeformInputStartsNewWork(t *testing.T) {
+	stateDir := t.TempDir()
+	meetingDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, meetingDir, "meeting-followup", "example-meeting-followup", "Meeting Notes With Owners And Due Dates For Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("plan me a 7 day paris trip\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Your first draft is ready.",
+		"Goal",
+		"Plan Me A 7 Day Paris Trip",
+		"Ready now",
+		"Itinerary",
+		"Budget Sketch",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, "Weekly Product Review Follow-up") && !strings.Contains(out, "Plan Me A 7 Day Paris Trip") {
+		t.Fatalf("expected new work to replace the old current-work view, got:\n%s", out)
+	}
+
+	current := readCurrentWork(t, stateDir)
+	if current["pack_id"] != "travel-plan" {
+		t.Fatalf("expected current work to switch to travel-plan, got %#v", current)
+	}
+}
+
 func TestInteractiveLauncherShowsAttachmentInputChipForTextFile(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)

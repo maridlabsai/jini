@@ -210,6 +210,9 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		}
 		return runNewWorkIntakeWithScanner(scanner, stdout, stderr)
 	default:
+		if scanner != nil && strings.TrimSpace(action) != "" {
+			return startNewWorkFromRawInput(action, scanner, stdout, stderr)
+		}
 		renderCheck(stdout, summary)
 	}
 	return 0
@@ -578,55 +581,59 @@ func runNewWorkIntakeWithScanner(session *bufio.Scanner, stdout, stderr io.Write
 			renderNewWorkLauncher(stdout)
 			continue
 		}
+		return startNewWorkFromRawInput(firstRaw, session, stdout, stderr)
+	}
+}
 
-		var source string
-		choice, err := resolveStarterChoice(firstRaw)
-		if err != nil {
-			source = strings.TrimSpace(firstRaw)
-			choice = classifyStarterChoice(source)
-		} else {
-			source, ok = readPromptLine(session, stdout, sourcePromptForChoice(choice))
-			if !ok || strings.TrimSpace(source) == "" {
-				fmt.Fprintln(stderr, "I need one line of source context to start this work.")
-				return 1
-			}
-			if choice.PackID == "auto" {
-				choice = classifyStarterChoice(source)
-			}
-		}
-		if strings.TrimSpace(source) == "" {
+func startNewWorkFromRawInput(firstRaw string, session *bufio.Scanner, stdout, stderr io.Writer) int {
+	var source string
+	choice, err := resolveStarterChoice(firstRaw)
+	if err != nil {
+		source = strings.TrimSpace(firstRaw)
+		choice = classifyStarterChoice(source)
+	} else {
+		var ok bool
+		source, ok = readPromptLine(session, stdout, sourcePromptForChoice(choice))
+		if !ok || strings.TrimSpace(source) == "" {
 			fmt.Fprintln(stderr, "I need one line of source context to start this work.")
 			return 1
 		}
-		inputItems, normalizedSource := inputItemsForSource(source)
-		if strings.TrimSpace(normalizedSource) != "" {
-			source = normalizedSource
+		if choice.PackID == "auto" {
+			choice = classifyStarterChoice(source)
 		}
-
-		request := providerGenerationRequest{
-			Choice: choice,
-			Title:  deriveStarterTitle(choice.DefaultName, source),
-			Source: source,
-		}
-		decision := detectRouteForRequest(request)
-		renderRouteDecisionCard(stdout, request, decision)
-
-		summary, err := bootstrapStarterWork(choice, source, "quick", inputItems)
-		if err != nil {
-			fmt.Fprintf(stderr, "Could not start this work: %v\n", err)
-			return 1
-		}
-
-		renderFirstRunResult(stdout, summary)
-		action, ok := readOptionalInputLine(session, stdout)
-		if !ok || strings.TrimSpace(action) == "" {
-			fmt.Fprintln(stdout)
-			renderCheck(stdout, summary)
-			return 0
-		}
-		fmt.Fprintln(stdout)
-		return handlePostResultAction(action, summary, stdout, stderr)
 	}
+	if strings.TrimSpace(source) == "" {
+		fmt.Fprintln(stderr, "I need one line of source context to start this work.")
+		return 1
+	}
+	inputItems, normalizedSource := inputItemsForSource(source)
+	if strings.TrimSpace(normalizedSource) != "" {
+		source = normalizedSource
+	}
+
+	request := providerGenerationRequest{
+		Choice: choice,
+		Title:  deriveStarterTitle(choice.DefaultName, source),
+		Source: source,
+	}
+	decision := detectRouteForRequest(request)
+	renderRouteDecisionCard(stdout, request, decision)
+
+	summary, err := bootstrapStarterWork(choice, source, "quick", inputItems)
+	if err != nil {
+		fmt.Fprintf(stderr, "Could not start this work: %v\n", err)
+		return 1
+	}
+
+	renderFirstRunResult(stdout, summary)
+	action, ok := readOptionalInputLine(session, stdout)
+	if !ok || strings.TrimSpace(action) == "" {
+		fmt.Fprintln(stdout)
+		renderCheck(stdout, summary)
+		return 0
+	}
+	fmt.Fprintln(stdout)
+	return handlePostResultAction(action, summary, stdout, stderr)
 }
 
 func readInputLine(scanner *bufio.Scanner, stdout io.Writer) (string, bool) {

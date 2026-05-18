@@ -5,6 +5,8 @@ description: The small public command surface and the setup check that sits behi
 
 <p class="page-lead">Jini should feel small. Most people should learn one command, not a command tree.</p>
 
+<p>You do not need to know Python to use Jini.</p>
+
 <div class="section-card" markdown="1">
   <span class="section-kicker">Front door</span>
   <h2>Start here</h2>

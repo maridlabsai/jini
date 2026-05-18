@@ -32,6 +32,10 @@ jini
 ```
 
   <p>If setup is missing, Jini should say so in the shell. Then type <code>Use Auto</code>. If your company needs one strict route, use the matching setup path on the <a href="./install.html">Install</a> page instead.</p>
+
+  <p><code>jini</code> is the front door.</p>
+
+`jini` is the front door.
 </div>
 
 <div class="section-card" markdown="1">
