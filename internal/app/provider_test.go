@@ -2370,7 +2370,7 @@ func TestInteractiveLauncherShowsDecisionCardBeforeFirstDraft(t *testing.T) {
 	})
 
 	var stdout bytes.Buffer
-	exitCode := RunInteractive(nil, strings.NewReader("Plan 7 day Paris trip with a clear itinerary and budget.\n"), &stdout, &stdout)
+	exitCode := RunInteractive(nil, strings.NewReader("Plan 7 day Paris trip for a couple with a $2500 budget in early October, mixed pace, central hotel area.\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -2422,7 +2422,7 @@ func TestCheckShowsSavedDecisionExplanation(t *testing.T) {
 		return jsonResponse(200, `{"choices":[{"message":{"content":"# Itinerary: Provider Paris\n\n- Provider day one."}}]}`), nil
 	})
 
-	if exitCode := RunInteractive(nil, strings.NewReader("Plan 7 day Paris trip with a clear itinerary and budget.\n"), io.Discard, io.Discard); exitCode != 0 {
+	if exitCode := RunInteractive(nil, strings.NewReader("Plan 7 day Paris trip for a couple with a $2500 budget in early October, mixed pace, central hotel area.\n"), io.Discard, io.Discard); exitCode != 0 {
 		t.Fatalf("expected setup run to succeed, got %d", exitCode)
 	}
 
@@ -2470,7 +2470,7 @@ func TestCurrentWorkCanSaveModelFeedback(t *testing.T) {
 		return jsonResponse(200, `{"choices":[{"message":{"content":"# Itinerary: Provider Paris\n\n- Provider day one."}}]}`), nil
 	})
 
-	if exitCode := RunInteractive(nil, strings.NewReader("Plan 7 day Paris trip with a clear itinerary and budget.\n"), io.Discard, io.Discard); exitCode != 0 {
+	if exitCode := RunInteractive(nil, strings.NewReader("Plan 7 day Paris trip for a couple with a $2500 budget in early October, mixed pace, central hotel area.\n"), io.Discard, io.Discard); exitCode != 0 {
 		t.Fatalf("expected setup run to succeed, got %d", exitCode)
 	}
 

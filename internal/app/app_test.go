@@ -569,7 +569,7 @@ func TestInteractiveLauncherReportsProviderSetupBeforeCreatingWork(t *testing.T)
 	t.Setenv("JINI_PROVIDER", "azure-openai")
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("Plan 7 day Paris trip\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("Plan 7 day Paris trip for a couple with a $2500 budget in early October, mixed pace, central hotel area\n"), &stdout, &stdout)
 	if exitCode != 1 {
 		t.Fatalf("expected exit code 1, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -1291,7 +1291,7 @@ func TestInteractiveLauncherCreatesTravelWork(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
-	stdin := strings.NewReader("7 day Paris trip for a couple with a $2500 budget\n")
+	stdin := strings.NewReader("7 day Paris trip for a couple with a $2500 budget in early October, mixed pace, central hotel area\n")
 	var stdout bytes.Buffer
 	exitCode := app.RunInteractive(nil, stdin, &stdout, &stdout)
 	if exitCode != 0 {
@@ -1303,7 +1303,7 @@ func TestInteractiveLauncherCreatesTravelWork(t *testing.T) {
 		"Goal",
 		"7 Day Paris Trip For A Couple With A 2500 Budget",
 		"Working with",
-		"Your request: 7 day Paris trip for a couple with a $2500 budget",
+		"Your request: 7 day Paris trip for a couple with a $2500 budget in early October, mixed pace, central hotel area",
 		"Ready now",
 		"Itinerary",
 		"Budget Sketch",
@@ -1334,7 +1334,13 @@ func TestInteractiveLauncherAsksForTravelClarificationWhenUnderspecified(t *test
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Before I draft it, give me the basics in one line:",
+		"Before I draft it, give me what is still missing in one line:",
+		"- who is going",
+		"- rough budget",
+		"- dates or season",
+		"- trip style",
+		"- hotel area, or whether you want help choosing it",
+		"- must-do sights, or whether you want help choosing them",
 		"Type `skip` if you want a generic draft.",
 		"Clarified scope",
 		"couple, around $2500, early October, mixed pace, central hotel area, Versailles optional",
@@ -1360,8 +1366,41 @@ func TestInteractiveLauncherSkipsTravelClarificationWhenRequestAlreadyScoped(t *
 	}
 
 	out := stdout.String()
-	if strings.Contains(out, "Before I draft it, give me the basics in one line:") {
+	if strings.Contains(out, "Before I draft it, give me what is still missing in one line:") {
 		t.Fatalf("expected already-scoped travel request to skip clarification, got:\n%s", out)
+	}
+}
+
+func TestInteractiveLauncherAsksOnlyForMissingTravelDimensions(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	stdin := strings.NewReader("7 day Paris trip for a couple with a $2500 budget\nearly October, mixed pace, central hotel area, Louvre and Versailles are must-dos\n")
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, stdin, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Before I draft it, give me what is still missing in one line:",
+		"- dates or season",
+		"- trip style",
+		"- hotel area, or whether you want help choosing it",
+		"- must-do sights, or whether you want help choosing them",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected targeted clarification to contain %q, got:\n%s", want, out)
+		}
+	}
+	for _, unwanted := range []string{
+		"- who is going",
+		"- rough budget",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected targeted clarification to omit %q, got:\n%s", unwanted, out)
+		}
 	}
 }
 

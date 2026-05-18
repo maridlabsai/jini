@@ -754,19 +754,19 @@ func maybeClarifyStarterSource(choice starterChoice, source string, scanner *buf
 func clarificationPromptForStarter(choice starterChoice, source string) (string, bool) {
 	switch choice.PackID {
 	case "travel-plan":
-		if !travelRequestNeedsClarification(source) {
+		missing := missingTravelScopeDimensions(source)
+		if len(missing) <= 1 {
 			return "", false
 		}
-		return strings.Join([]string{
-			"Before I draft it, give me the basics in one line:",
-			"- who is going",
-			"- rough budget",
-			"- dates or season",
-			"- trip style",
-			"- hotel area, or whether you want help choosing it",
+		lines := []string{"Before I draft it, give me what is still missing in one line:"}
+		for _, item := range missing {
+			lines = append(lines, "- "+item)
+		}
+		lines = append(lines,
 			"Type `skip` if you want a generic draft.",
-			"Example: couple, around $2500, early October, mixed pace, central hotel area, Versailles optional",
-		}, "\n"), true
+			"Example: early October, mixed pace, central hotel area, Louvre and Versailles are must-dos",
+		)
+		return strings.Join(lines, "\n"), true
 	default:
 		return "", false
 	}
@@ -787,28 +787,29 @@ func mergeClarifiedSource(source, answer string) string {
 	return base + ". Scope: " + scope
 }
 
-func travelRequestNeedsClarification(source string) bool {
+func missingTravelScopeDimensions(source string) []string {
 	normalized := normalizeName(source)
-	if len(strings.Fields(normalized)) > 4 {
-		return false
+	rawLower := strings.ToLower(strings.TrimSpace(source))
+	missing := []string{}
+	if !containsAny(normalized, []string{"solo", "couple", "friends", "family", "kids", "children", "parents", "honeymoon", "wife", "husband", "partner"}) {
+		missing = append(missing, "who is going")
 	}
-	signals := 0
-	if containsAny(normalized, []string{"solo", "couple", "friends", "family", "kids", "children", "parents", "honeymoon"}) {
-		signals++
+	if !containsAny(rawLower, []string{"$", "budget"}) && !containsAny(normalized, []string{"cheap", "luxury", "midrange", "2500", "3000", "2000", "1500", "4000"}) {
+		missing = append(missing, "rough budget")
 	}
-	if containsAny(normalized, []string{"$", "budget", "cheap", "luxury", "midrange", "2500", "3000", "2000"}) {
-		signals++
+	if !containsAny(normalized, []string{"january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december", "spring", "summer", "fall", "autumn", "winter", "weekend", "weekday", "christmas", "new year"}) {
+		missing = append(missing, "dates or season")
 	}
-	if containsAny(normalized, []string{"january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december", "spring", "summer", "fall", "autumn", "winter", "weekend"}) {
-		signals++
+	if !containsAny(normalized, []string{"food", "museum", "romantic", "nightlife", "shopping", "family friendly", "mixed", "slow pace", "fast pace", "walking", "architecture", "relaxed", "packed", "kid friendly", "honeymoon", "adventure"}) {
+		missing = append(missing, "trip style")
 	}
-	if containsAny(normalized, []string{"food", "museum", "romantic", "nightlife", "shopping", "kids", "family friendly", "mixed", "slow pace", "fast pace", "walking", "architecture"}) {
-		signals++
+	if !containsAny(normalized, []string{"hotel", "stay", "marais", "latin quarter", "montmartre", "central", "area", "neighborhood", "neighbourhood", "arrondissement", "left bank", "right bank"}) {
+		missing = append(missing, "hotel area, or whether you want help choosing it")
 	}
-	if containsAny(normalized, []string{"hotel", "stay", "marais", "latin quarter", "montmartre", "central", "area", "neighborhood", "neighbourhood"}) {
-		signals++
+	if !containsAny(normalized, []string{"louvre", "versailles", "eiffel", "orsay", "montmartre", "notre dame", "latin quarter", "marais", "disneyland", "seine cruise", "must do", "must see"}) {
+		missing = append(missing, "must-do sights, or whether you want help choosing them")
 	}
-	return signals == 0
+	return missing
 }
 
 func bootstrapStarterWork(choice starterChoice, source, detail string, inputItems []inputItem) (*workSummary, error) {
