@@ -2194,6 +2194,106 @@ func TestMaybeWriteProviderFirstDraftOverwritesPrimaryView(t *testing.T) {
 	}
 }
 
+func TestBootstrapStarterWorkAddsSmartDestinationLinks(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_PROVIDER", "local-preview")
+
+	summary, err := bootstrapStarterWork(
+		starterChoice{PackID: "travel-plan", DefaultName: "Trip Plan", State: "decided"},
+		"Plan 7 day Paris trip",
+		"quick",
+		[]inputItem{{InputID: "request", Kind: "text", Title: "Your request", Status: "processed", Preview: "Plan 7 day Paris trip"}},
+	)
+	if err != nil {
+		t.Fatalf("bootstrap local starter: %v", err)
+	}
+	content, err := os.ReadFile(filepath.Join(summary.Dir, "views", "itinerary.md"))
+	if err != nil {
+		t.Fatalf("read itinerary: %v", err)
+	}
+	text := string(content)
+	for _, want := range []string{
+		"[Louvre](https://www.louvre.fr/en)",
+		"[Montmartre](https://parisjetaime.com/eng/article/montmartre-a043)",
+		"[Versailles](https://en.chateauversailles.fr/)",
+	} {
+		if !strings.Contains(text, want) {
+			t.Fatalf("expected itinerary to contain %q, got:\n%s", want, text)
+		}
+	}
+}
+
+func TestMaybeWriteProviderFirstDraftAddsSmartDestinationLinks(t *testing.T) {
+	t.Setenv("JINI_PROVIDER", "azure-openai")
+	t.Setenv("AZURE_OPENAI_ENDPOINT", "https://example.openai.azure.com")
+	t.Setenv("AZURE_OPENAI_API_KEY", "super-secret-key")
+	t.Setenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o-prod")
+
+	withProviderHTTPClient(t, func(req *http.Request) (*http.Response, error) {
+		return jsonResponse(200, `{"choices":[{"message":{"content":"# Itinerary: Paris\n\n## Day by day\n- Louvre in the morning, then Montmartre.\n- Versailles on day five.\n\n## Still to confirm\n- Dates."}}]}`), nil
+	})
+
+	workDir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(workDir, "views"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(workDir, "artifacts"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	choice := starterChoice{PackID: "travel-plan"}
+	if err := maybeWriteProviderFirstDraft(context.Background(), choice, workDir, "7-Day Paris Trip", "Plan 7 day Paris trip"); err != nil {
+		t.Fatalf("write provider draft: %v", err)
+	}
+
+	content, err := os.ReadFile(filepath.Join(workDir, "views", "itinerary.md"))
+	if err != nil {
+		t.Fatalf("read itinerary: %v", err)
+	}
+	text := string(content)
+	for _, want := range []string{
+		"[Louvre](https://www.louvre.fr/en)",
+		"[Montmartre](https://parisjetaime.com/eng/article/montmartre-a043)",
+		"[Versailles](https://en.chateauversailles.fr/)",
+	} {
+		if !strings.Contains(text, want) {
+			t.Fatalf("expected itinerary to contain %q, got:\n%s", want, text)
+		}
+	}
+}
+
+func TestMaybeWriteProviderFirstDraftPreservesSourceReferenceLinks(t *testing.T) {
+	t.Setenv("JINI_PROVIDER", "azure-openai")
+	t.Setenv("AZURE_OPENAI_ENDPOINT", "https://example.openai.azure.com")
+	t.Setenv("AZURE_OPENAI_API_KEY", "super-secret-key")
+	t.Setenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o-prod")
+
+	withProviderHTTPClient(t, func(req *http.Request) (*http.Response, error) {
+		return jsonResponse(200, `{"choices":[{"message":{"content":"## What looks ready now\n- The Project brief is clear enough to start.\n\n## Must clear before build\n- Approval path.\n\n## Recommended first slice\n- Ship the riskiest path first.\n\n## Who needs to answer what\n- PM: acceptance criteria.\n\n## Still to confirm\n- Final owner."}}]}`), nil
+	})
+
+	workDir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(workDir, "views"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(workDir, "artifacts"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	source := "Use the [Project brief](https://example.com/brief) before building."
+	choice := starterChoice{PackID: "research-prd"}
+	if err := maybeWriteProviderFirstDraft(context.Background(), choice, workDir, "Weekly product work", source); err != nil {
+		t.Fatalf("write provider draft: %v", err)
+	}
+
+	content, err := os.ReadFile(filepath.Join(workDir, "views", "prd.md"))
+	if err != nil {
+		t.Fatalf("read prd: %v", err)
+	}
+	if !strings.Contains(string(content), "[Project brief](https://example.com/brief)") {
+		t.Fatalf("expected source reference link to be preserved, got:\n%s", string(content))
+	}
+}
+
 func TestBootstrapStarterWorkUsesConfiguredProviderDraft(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)

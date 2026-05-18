@@ -32,11 +32,11 @@ type providerGenerationRequest struct {
 }
 
 type localRouteFeedbackStats struct {
-	SchemaVersion string                      `json:"schema_version"`
-	ContextType   string                      `json:"context_type"`
-	Routes        map[string]routeFeedbackRow `json:"routes"`
-	Cohorts       map[string]map[string]localCohortFeedbackRow `json:"cohorts,omitempty"`
-	ManualOverrides map[string]map[string]int `json:"manual_overrides,omitempty"`
+	SchemaVersion   string                                       `json:"schema_version"`
+	ContextType     string                                       `json:"context_type"`
+	Routes          map[string]routeFeedbackRow                  `json:"routes"`
+	Cohorts         map[string]map[string]localCohortFeedbackRow `json:"cohorts,omitempty"`
+	ManualOverrides map[string]map[string]int                    `json:"manual_overrides,omitempty"`
 }
 
 type routeFeedbackRow struct {
@@ -76,7 +76,10 @@ func maybeWriteProviderFirstDraft(ctx context.Context, choice starterChoice, wor
 		return nil
 	}
 	content := normalizeProviderMarkdown(label, title, text)
-	return os.WriteFile(filepath.Join(workDir, "views", path), []byte(content), 0o644)
+	if err := os.WriteFile(filepath.Join(workDir, "views", path), []byte(content), 0o644); err != nil {
+		return err
+	}
+	return enrichSmartHyperlinksInViews(workDir, request)
 }
 
 func generateWithConfiguredProvider(ctx context.Context, request providerGenerationRequest) (string, bool, error) {
@@ -1599,8 +1602,23 @@ func providerArtifactGuidance(request providerGenerationRequest) string {
 			"- `## Still to confirm`",
 			"Do not reduce the answer to a binary verdict. Keep missing proof and approval gaps visible.",
 		}, "\n")
+	case "travel-plan":
+		return strings.Join([]string{
+			"Return a trip-planning artifact, not a generic travel essay.",
+			"Use these sections exactly:",
+			"- `## Day by day`",
+			"- `## Budget`",
+			"- `## Travel logistics`",
+			"- `## Still to book`",
+			"- `## Still to confirm`",
+			"When a key destination, museum, or landmark is clearly part of the plan, add one smart Markdown link on first mention.",
+			"Prefer canonical destination links and avoid turning every bullet into a link list.",
+		}, "\n")
 	default:
-		return "Shape the answer as the first useful artifact for this work type."
+		return strings.Join([]string{
+			"Shape the answer as the first useful artifact for this work type.",
+			"When the source already includes a named reference or URL that belongs in the artifact, preserve it as one smart Markdown link on first mention.",
+		}, "\n")
 	}
 }
 

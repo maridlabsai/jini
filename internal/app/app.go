@@ -743,6 +743,13 @@ func bootstrapStarterWork(choice starterChoice, source, detail string, inputItem
 	if err := writeStarterWork(choice, workDir, title, source, detail); err != nil {
 		return nil, err
 	}
+	if err := enrichSmartHyperlinksInViews(workDir, providerGenerationRequest{
+		Choice: choice,
+		Title:  title,
+		Source: source,
+	}); err != nil {
+		return nil, err
+	}
 	if err := saveInputItems(workDir, inputItems); err != nil {
 		return nil, err
 	}
