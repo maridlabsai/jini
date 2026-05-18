@@ -158,8 +158,8 @@ If it only gives you a cleaner explanation of the work, it is not good enough.
 <div class="section-card">
   <h3>Go next</h3>
   <div class="on-this-page">
-    <a href="./simple.md">Simple Guide</a>
-    <a href="./state-and-artifacts.md">What Jini Shows</a>
-    <a href="./install.md">Install</a>
+    <a href="./simple.html">Simple Guide</a>
+    <a href="./state-and-artifacts.html">What Jini Shows</a>
+    <a href="./install.html">Install</a>
   </div>
 </div>

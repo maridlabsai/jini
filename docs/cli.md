@@ -15,7 +15,7 @@ You do not need to know Python to use Jini.
 
 ## Install First
 
-Use [Install](./install.md) once, then the normal command is just `jini`.
+Use [Install](./install.html) once, then the normal command is just `jini`.
 
 ## The Main Entry
 
@@ -317,8 +317,8 @@ That older surface is not the user model anymore.
 <div class="section-card">
   <h3>Go next</h3>
   <div class="on-this-page">
-    <a href="./simple.md">Simple Guide</a>
-    <a href="./examples.md">Examples</a>
-    <a href="./state-and-artifacts.md">What Jini Shows</a>
+    <a href="./simple.html">Simple Guide</a>
+    <a href="./examples.html">Examples</a>
+    <a href="./state-and-artifacts.html">What Jini Shows</a>
   </div>
 </div>

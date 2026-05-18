@@ -21,7 +21,7 @@ Use Auto
 ```
 
 If your company or workflow requires one strict route, use the matching path on
-the [Install](./install.md) page instead.
+the [Install](./install.html) page instead.
 
 ## Think About Normal Problems
 
@@ -96,7 +96,7 @@ turn these meeting notes into a follow-up I can send
 ```
 
 If setup is not the thing you are stuck on, skip straight to the
-[Install](./install.md) page for the provider-specific paths.
+[Install](./install.html) page for the provider-specific paths.
 
 ## What Good Help Looks Like
 
@@ -144,8 +144,8 @@ If it makes you think harder about the tool than about the work, it is failing.
 <div class="section-card">
   <h3>Go next</h3>
   <div class="on-this-page">
-    <a href="./examples.md">Examples</a>
-    <a href="./install.md">Install</a>
-    <a href="./cli.md">CLI Guide</a>
+    <a href="./examples.html">Examples</a>
+    <a href="./install.html">Install</a>
+    <a href="./cli.html">CLI Guide</a>
   </div>
 </div>
