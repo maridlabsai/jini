@@ -148,9 +148,16 @@ func runLauncher(stdin io.Reader, stdout, stderr io.Writer) int {
 func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
 	switch normalizeName(action) {
 	case "1", "continue", "continue current work", "keep going":
-		renderCheck(stdout, summary)
+		item := nextUsefulItem(summary)
+		if item == nil {
+			renderCheck(stdout, summary)
+			return 0
+		}
+		renderItem(stdout, item)
 	case "2", "open", "open ready work", "open ready", "open whats ready", "open what's ready", "open what is ready", "show whats ready", "show what's ready", "show what is ready":
 		renderOpenShelf(stdout, summary)
+	case "see what is still missing", "show what is missing", "missing", "check":
+		renderMissingOnly(stdout, summary)
 	case "model upvote", "upvote model", "model was right":
 		if err := saveModelFeedback(summary.Dir, "upvoted", ""); err != nil {
 			fmt.Fprintf(stderr, "Could not save model feedback: %v\n", err)
@@ -2553,6 +2560,59 @@ func renderCurrentWorkLauncher(w io.Writer, summary *workSummary, interactive bo
 		fmt.Fprintln(w, "AI route")
 		fmt.Fprintln(w, summary.Thread.CurrentRoute)
 	}
+	if interactive {
+		if strings.TrimSpace(summary.Thread.UpNext) != "" {
+			fmt.Fprintln(w)
+			fmt.Fprintln(w, "Up next")
+			fmt.Fprintln(w, summary.Thread.UpNext)
+		}
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Ready now")
+		if len(summary.Thread.ReadyNow) == 0 {
+			fmt.Fprintln(w, "- Nothing is ready yet")
+		} else {
+			for _, item := range summary.Thread.ReadyNow {
+				fmt.Fprintf(w, "- %s\n", item.Label)
+			}
+		}
+		if len(summary.Thread.Blocked) > 0 {
+			fmt.Fprintln(w)
+			fmt.Fprintln(w, "Blocked")
+			for _, item := range summary.Thread.Blocked {
+				fmt.Fprintf(w, "- %s\n", item)
+			}
+		}
+		other := otherActiveWorkSummaries(summary)
+		if len(other) > 0 {
+			fmt.Fprintln(w)
+			fmt.Fprintln(w, "Other active work")
+			for _, item := range other {
+				fmt.Fprintf(w, "- %s\n", item.Title)
+			}
+		}
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Choose one")
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "- Keep going")
+		fmt.Fprintln(w, "- Show what's ready")
+		fmt.Fprintln(w, "- Show what is missing")
+		fmt.Fprintln(w, "- Help me plan this")
+		if strings.TrimSpace(summary.Thread.ModelLabel) != "" {
+			fmt.Fprintln(w)
+			fmt.Fprintln(w, "Tell Jini how this draft went")
+			fmt.Fprintln(w, "- Accepted as is")
+			fmt.Fprintln(w, "- Needed light edits")
+			fmt.Fprintln(w, "- Not useful")
+			fmt.Fprintln(w, "- Shared this")
+			fmt.Fprintln(w, "- Replaced this")
+			fmt.Fprintln(w, "Advanced: `Used this`, `Model upvote`, or `Model downvote`.")
+		}
+		if len(other) > 0 {
+			fmt.Fprintln(w, "- Switch project")
+		}
+		fmt.Fprintln(w, "- Start new work")
+		return
+	}
 	if strings.TrimSpace(summary.Thread.ModelLabel) != "" {
 		fmt.Fprintln(w)
 		fmt.Fprintln(w, "Model")
@@ -2682,29 +2742,6 @@ func renderCurrentWorkLauncher(w io.Writer, summary *workSummary, interactive bo
 		}
 	}
 	fmt.Fprintln(w)
-	if !interactive {
-		return
-	}
-	fmt.Fprintln(w, "Choose one")
-	fmt.Fprintln(w)
-	fmt.Fprintln(w, "- Keep going")
-	fmt.Fprintln(w, "- Show what's ready")
-	fmt.Fprintln(w, "- Show what is missing")
-	fmt.Fprintln(w, "- Help me plan this")
-	if strings.TrimSpace(summary.Thread.ModelLabel) != "" {
-		fmt.Fprintln(w)
-		fmt.Fprintln(w, "Tell Jini how this draft went")
-		fmt.Fprintln(w, "- Accepted as is")
-		fmt.Fprintln(w, "- Needed light edits")
-		fmt.Fprintln(w, "- Not useful")
-		fmt.Fprintln(w, "- Shared this")
-		fmt.Fprintln(w, "- Replaced this")
-		fmt.Fprintln(w, "Advanced: `Used this`, `Model upvote`, or `Model downvote`.")
-	}
-	if len(other) > 0 {
-		fmt.Fprintln(w, "- Switch project")
-	}
-	fmt.Fprintln(w, "- Start new work")
 }
 
 func runActiveWorkLauncher(active []*workSummary, stdin io.Reader, stdout, stderr io.Writer) int {

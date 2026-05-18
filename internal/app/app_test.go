@@ -1171,6 +1171,93 @@ func TestCurrentWorkInteractiveChoicesAreReal(t *testing.T) {
 	}
 }
 
+func TestCurrentWorkInteractiveLauncherIsCompactByDefault(t *testing.T) {
+	stateDir := t.TempDir()
+	packDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader(""), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Goal",
+		"Weekly Product Review",
+		"Working with",
+		"AI route",
+		"Up next",
+		"Ready now",
+		"Choose one",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+	for _, unwanted := range []string{
+		"Need",
+		"Why this matters",
+		"Options",
+		"If you skip this",
+		"Just finished",
+		"Doing now",
+		"Safe to do",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected compact launcher not to contain %q, got:\n%s", unwanted, out)
+		}
+	}
+}
+
+func TestCurrentWorkInteractiveMissingChoiceShowsGapSummary(t *testing.T) {
+	stateDir := t.TempDir()
+	packDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("Show what is missing\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Still missing",
+		"Metric and legal-review decision",
+		"Not sure about",
+		"Next step",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+}
+
+func TestCurrentWorkInteractiveKeepGoingOpensNextUsefulSurface(t *testing.T) {
+	stateDir := t.TempDir()
+	packDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("Keep going\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	if !strings.Contains(out, "Owners and Due Points") {
+		t.Fatalf("expected keep going to open next useful surface, got:\n%s", out)
+	}
+}
+
 func TestCurrentWorkCanEnterPlanFirstMode(t *testing.T) {
 	stateDir := t.TempDir()
 	packDir := seedResearchPRDWork(t)
