@@ -101,9 +101,10 @@ while [[ $# -gt 0 ]]; do
 done
 
 script_dir="$(pwd)"
-if [[ -n "${BASH_SOURCE[0]-}" && "${BASH_SOURCE[0]}" != "bash" ]]; then
+script_source="${BASH_SOURCE[0]-}"
+if [[ -n "${script_source}" && "${script_source}" != "bash" ]]; then
   script_dir="$(
-    cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1
+    cd "$(dirname "${script_source}")" >/dev/null 2>&1
     pwd
   )"
 fi
@@ -111,6 +112,16 @@ fi
 detect_local_source() {
   local candidate="$1"
   [[ -f "${candidate}/go.mod" && -f "${candidate}/cmd/jini/main.go" ]]
+}
+
+python_source_fallback_ready() {
+  command -v python3 >/dev/null 2>&1 || return 1
+  python3 -c 'import yaml' >/dev/null 2>&1 || return 1
+}
+
+go_source_fallback_ready() {
+  command -v go >/dev/null 2>&1 || return 1
+  go version >/dev/null 2>&1 || return 1
 }
 
 should_try_release_install() {
@@ -158,6 +169,26 @@ try_install_prebuilt_release() {
   [[ -f "${binary_path}" ]] || return 1
   mv "${binary_path}" "${TARGET_BINARY}"
   chmod 0755 "${TARGET_BINARY}"
+  return 0
+}
+
+try_install_python_source_runtime() {
+  local app_dir="${INSTALL_DIR}/source-runtime"
+  local wrapper_path="${TARGET_BINARY}"
+
+  python_source_fallback_ready || return 1
+  rm -rf "${app_dir}"
+  mkdir -p "${app_dir}"
+  cp -R "${SOURCE_DIR}/." "${app_dir}"
+  rm -rf "${app_dir}/.git" "${app_dir}/.gocache" "${app_dir}/.jini"
+
+  cat >"${wrapper_path}" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+APP_DIR="${app_dir}"
+exec python3 "\${APP_DIR}/tools/jini.py" "\$@"
+EOF
+  chmod 0755 "${wrapper_path}"
   return 0
 }
 
@@ -271,15 +302,17 @@ if [[ ${INSTALLED_FROM_RELEASE} -ne 1 ]]; then
     fetch_source
   fi
   detect_local_source "${SOURCE_DIR}" || fail "source directory does not look like the Jini repo: ${SOURCE_DIR}"
-  command -v go >/dev/null 2>&1 || fail "Go is required for source build fallback. Install Go, then rerun this installer."
-  if ! (
-    cd "${SOURCE_DIR}"
-    go build -o "${BUILD_OUTPUT}" ./cmd/jini
-  ); then
-    fail "Go build failed."
+  if ! try_install_python_source_runtime; then
+    go_source_fallback_ready || fail "Jini could not install a release binary, and source fallback needs either Python 3 with PyYAML or Go."
+    if ! (
+      cd "${SOURCE_DIR}"
+      go build -o "${BUILD_OUTPUT}" ./cmd/jini
+    ); then
+      fail "Go build failed."
+    fi
+    mv "${BUILD_OUTPUT}" "${TARGET_BINARY}"
+    chmod 0755 "${TARGET_BINARY}"
   fi
-  mv "${BUILD_OUTPUT}" "${TARGET_BINARY}"
-  chmod 0755 "${TARGET_BINARY}"
 fi
 
 if [[ ${COPY_BINARY} -eq 1 ]]; then

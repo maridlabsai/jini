@@ -157,6 +157,30 @@ class InstallScriptTests(unittest.TestCase):
         self.assert_ok(result)
         self.assertIn("Installed Jini", result.stdout)
 
+    def test_remote_style_install_without_go_uses_python_fallback(self) -> None:
+        remote_snapshot = self.create_remote_snapshot()
+        remote_root = self.tmp / "remote-python"
+        remote_root.mkdir()
+        remote_installer = remote_root / "install.sh"
+        shutil.copy2(INSTALLER, remote_installer)
+
+        result = self.run_installer(
+            "--repo-url",
+            f"file://{remote_snapshot}",
+            "--repo-ref",
+            "main",
+            "--bin-dir",
+            str(remote_root / "bin"),
+            "--install-dir",
+            str(remote_root / "share" / "jini"),
+            "--force",
+            env={"PATH": "/usr/bin:/bin"},
+            cwd=remote_root,
+            installer_path=remote_installer,
+        )
+        self.assert_ok(result)
+        self.assertIn("Installed Jini", result.stdout)
+
     def test_piped_install_from_stdin_works_from_outside_repo(self) -> None:
         remote_snapshot = self.create_remote_snapshot()
         remote_root = self.tmp / "remote-pipe"
@@ -198,7 +222,7 @@ class InstallScriptTests(unittest.TestCase):
         self.assert_error(result)
         self.assertNotIn("BASH_SOURCE[0]: unbound variable", result.stderr)
 
-    def test_missing_go_reports_clear_error(self) -> None:
+    def test_missing_go_uses_python_source_fallback(self) -> None:
         result = self.run_installer(
             "--source-dir",
             str(REPO_ROOT),
@@ -209,8 +233,31 @@ class InstallScriptTests(unittest.TestCase):
             "--force",
             env={"PATH": "/usr/bin:/bin"},
         )
+        self.assert_ok(result)
+        self.assertIn("Installed Jini", result.stdout)
+
+    def test_missing_python_and_go_reports_clear_error(self) -> None:
+        fake_bin = self.tmp / "fake-no-runtime"
+        fake_bin.mkdir()
+        for name in ("python3", "go"):
+            fake = fake_bin / name
+            fake.write_text("#!/bin/sh\nexit 127\n", encoding="utf-8")
+            fake.chmod(0o755)
+        result = self.run_installer(
+            "--source-dir",
+            str(REPO_ROOT),
+            "--bin-dir",
+            str(self.tmp / "bin"),
+            "--install-dir",
+            str(self.tmp / "share" / "jini"),
+            "--force",
+            env={"PATH": f"{fake_bin}:/usr/bin:/bin"},
+        )
         self.assert_error(result)
-        self.assertIn("Go is required for source build fallback.", result.stderr)
+        self.assertIn(
+            "source fallback needs either Python 3 with PyYAML or Go",
+            result.stderr,
+        )
 
     def test_missing_git_reports_clear_error_for_remote_install(self) -> None:
         remote_root = self.tmp / "remote-no-git"
