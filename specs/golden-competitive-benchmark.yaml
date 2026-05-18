@@ -1,11 +1,12 @@
 schema_version: "0.1.0"
 benchmark_id: jini-product-golden-benchmark
 label: Jini Golden Product Benchmark
-updated_at: "2026-05-12"
-last_verified_at: "2026-05-12"
+updated_at: "2026-05-14"
+last_verified_at: "2026-05-14"
 purpose: >
-  Validate Jini against a rerunnable golden dataset and compare it against two
-  major product competitors using weighted user-journey scenarios.
+  Validate Jini against a rerunnable golden dataset and compare it against the
+  major product, harness, coding-agent, and UX competitors using weighted
+  user-journey scenarios.
 methodology:
   baseline_type: fixed-competitor-baselines-grounded-in-official-docs
   scoring_rule: >
@@ -14,10 +15,23 @@ methodology:
     real CLI check pass rate. Competitor scores stay fixed inside the golden
     dataset so repeated runs measure Jini drift instead of moving the goalposts.
   comparison_rule: >
-    Kiro is the productized workflow and delivery baseline. Hermes is the
-    memory, breadth, and autonomy baseline. The benchmark favors rerunnable
-    product behaviors over README-only claims.
+    Claude Code is the terminal immediacy baseline. Kiro is the productized
+    workflow and delivery baseline. Hermes is the memory, breadth, and autonomy
+    baseline. AgentField is the production harness-orchestration baseline. AI
+    Hero is the low-friction learning, tool-transparency, and human-in-the-loop
+    UX baseline. The benchmark favors rerunnable product behaviors over
+    README-only claims.
 competitors:
+  - id: claude-code
+    label: Claude Code
+    rationale: Strongest benchmark for terminal-native immediacy and direct developer action.
+    source_urls:
+      - https://docs.claude.com/en/docs/claude-code/overview
+      - https://claude.com/product/claude-code
+    validated_strengths:
+      - Starts from natural-language intent in the terminal
+      - Directly edits files, runs commands, and creates commits
+      - Composable Unix-style CLI surface
   - id: kiro
     label: Kiro
     rationale: Strongest benchmark for workflow productization and default delivery loop quality.
@@ -40,6 +54,28 @@ competitors:
       - Persistent bounded memory across sessions
       - Bundled skills with progressive disclosure
       - Breadth and automation as a daily product surface
+  - id: agentfield
+    label: AgentField
+    rationale: Strongest benchmark for treating coding-agent harnesses as production infrastructure.
+    source_urls:
+      - https://github.com/Agent-Field/agentfield
+      - https://agentfield.ai/blog/what-is-harness-orchestration
+      - https://agentfield.ai/examples
+    validated_strengths:
+      - Coding agents exposed as callable backend primitives
+      - Harness orchestration for Claude Code, Codex, and Gemini CLI
+      - Production concepts including identity, observability, rollout, and scale
+  - id: ai-hero
+    label: AI Hero
+    rationale: Strongest benchmark for transparent tool-call teaching and low-friction human-in-the-loop UX.
+    source_urls:
+      - https://www.aihero.dev/workshops/day-1-build-a-naive-agent
+      - https://www.aihero.dev/workshops/human-in-the-loop-skill-building-xlo4o
+      - https://aihero.studio/documentation
+    validated_strengths:
+      - Teaches visible tool calls, arguments, results, and sources
+      - Human approval before sensitive real-world action
+      - Simple agent creation and voice-first daily task capture
 scenarios:
   - id: install-trust
     label: Beginner install trust path
@@ -49,8 +85,11 @@ scenarios:
       - packaging-install
       - delivery-maturity
     competitor_scores:
+      claude-code: 8.3
       kiro: 8.5
       hermes: 7.2
+      agentfield: 7.0
+      ai-hero: 7.8
     setup:
       - id: install-starter-kit
         command:
@@ -99,8 +138,11 @@ scenarios:
       - token-efficiency
       - delivery-maturity
     competitor_scores:
+      claude-code: 7.8
       kiro: 7.8
       hermes: 7.1
+      agentfield: 7.5
+      ai-hero: 7.0
     setup:
       - id: compile-research-pack
         command:
@@ -148,8 +190,11 @@ scenarios:
       - adapter-portability
       - delivery-maturity
     competitor_scores:
+      claude-code: 6.5
       kiro: 6.8
       hermes: 7.4
+      agentfield: 8.6
+      ai-hero: 5.8
     checks:
       - id: adapter-conformance-clean
         command: ["adapter-conformance", "--format", "json"]
@@ -177,8 +222,11 @@ scenarios:
       - token-efficiency
       - adapter-portability
     competitor_scores:
+      claude-code: 8.3
       kiro: 8.4
       hermes: 7.6
+      agentfield: 8.7
+      ai-hero: 6.8
     setup:
       - id: compile-research-pack
         command:
@@ -347,6 +395,47 @@ scenarios:
         path: "token_strategy.reused_context_surfaces"
         contains: "runtime-handoff"
 
+  - id: product-consensus-gates
+    label: Product consensus replacement gates
+    purpose: Publish-readiness must prove the replacement-critical launcher shape is bounded, useful-first, continuable, and parity-safe.
+    weight: 1.9
+    dimensions:
+      - workflow-rigor
+      - delivery-maturity
+      - governance
+      - core-simplicity
+    competitor_scores:
+      claude-code: 8.1
+      kiro: 7.1
+      hermes: 7.1
+      agentfield: 7.9
+      ai-hero: 6.9
+    checks:
+      - id: product-review-role-docs-gate
+        command: ["publish-readiness", "--format", "json"]
+        path: "consensus_gates.passed_gate_ids"
+        contains: "product-review-role-docs"
+      - id: two-flagship-replacement-flows-gate
+        command: ["publish-readiness", "--format", "json"]
+        path: "consensus_gates.passed_gate_ids"
+        contains: "two-flagship-replacement-flows"
+      - id: useful-result-first-gate
+        command: ["publish-readiness", "--format", "json"]
+        path: "consensus_gates.passed_gate_ids"
+        contains: "useful-result-first"
+      - id: i-am-not-sure-fallback-gate
+        command: ["publish-readiness", "--format", "json"]
+        path: "consensus_gates.passed_gate_ids"
+        contains: "i-am-not-sure-fallback"
+      - id: real-continuation-actions-gate
+        command: ["publish-readiness", "--format", "json"]
+        path: "consensus_gates.passed_gate_ids"
+        contains: "real-continuation-actions"
+      - id: parity-or-shared-generation-gate
+        command: ["publish-readiness", "--format", "json"]
+        path: "consensus_gates.passed_gate_ids"
+        contains: "parity-or-shared-generation"
+
   - id: operational-breadth
     label: Operational advanced-set breadth
     purpose: Breadth should be operational through packs and routines, not just claimed in docs.
@@ -355,8 +444,11 @@ scenarios:
       - advanced-set-breadth
       - flexibility
     competitor_scores:
+      claude-code: 7.8
       kiro: 7.2
       hermes: 8.9
+      agentfield: 8.8
+      ai-hero: 7.2
     setup:
       - id: bootstrap-home
         command: ["bootstrap-home", "{scenario_root}/home", "--owner-name", "Golden User"]
@@ -390,8 +482,11 @@ scenarios:
       - learning-maturity
       - workflow-rigor
     competitor_scores:
+      claude-code: 6.9
       kiro: 7.1
       hermes: 7.8
+      agentfield: 7.7
+      ai-hero: 7.4
     checks:
       - id: framework-review-prefers-subtractive-experiment
         command: ["review-framework", "--format", "json", "--limit", "3"]

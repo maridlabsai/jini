@@ -10,10 +10,12 @@ learning/events/runtime-events.jsonl
 .DS_Store
 **/.DS_Store
 **/__pycache__/
+.pycache/
 build/
 dist/
 *.egg-info/
 .venv/
+.gocache/
 learning/
 private/
 .jini/

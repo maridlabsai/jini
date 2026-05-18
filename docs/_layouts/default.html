@@ -25,9 +25,9 @@
           <a class="{% if page.url == '/simple.html' %}is-active{% endif %}" href="{{ '/simple.html' | relative_url }}">Simple Guide</a>
           <a class="{% if page.url == '/state-and-artifacts.html' %}is-active{% endif %}" href="{{ '/state-and-artifacts.html' | relative_url }}">What Jini Shows</a>
           <a class="{% if page.url == '/examples.html' %}is-active{% endif %}" href="{{ '/examples.html' | relative_url }}">Examples</a>
-          <a class="{% if page.url == '/install.html' %}is-active{% endif %}" href="{{ '/install.html' | relative_url }}">Install</a>
           <a class="{% if page.url == '/proof.html' %}is-active{% endif %}" href="{{ '/proof.html' | relative_url }}">Proof</a>
           <a class="{% if page.url == '/contact.html' %}is-active{% endif %}" href="{{ '/contact.html' | relative_url }}">Contact</a>
+          <a class="site-nav-cta {% if page.url == '/install.html' %}is-active{% endif %}" href="{{ '/install.html' | relative_url }}">Install</a>
         </nav>
       </header>
 
@@ -40,14 +40,15 @@
         {% endif %}
         {% endunless %}
 
+        {% unless page.url == '/' %}
         <aside class="orientation-bar" aria-label="Jini orientation">
           <div class="orientation-card">
             <span class="orientation-label">Start Jini</span>
-            <p>Use the preview command first, then move to plain <code>jini</code> after install.</p>
-            <code>./jini</code>
+            <p>Install once, then start with the one command that matters.</p>
+            <code>jini</code>
           </div>
           <div class="orientation-card">
-            <span class="orientation-label">Open ready work</span>
+            <span class="orientation-label">Show what's ready</span>
             <p>View the follow-up, check, memo, or checklist Jini already made.</p>
             <code>inside Jini</code>
           </div>
@@ -57,6 +58,7 @@
             <code>inside Jini</code>
           </div>
         </aside>
+        {% endunless %}
 
         {{ content }}
       </main>

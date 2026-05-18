@@ -24,21 +24,32 @@ type currentWork struct {
 }
 
 type workSummary struct {
-	Dir        string
-	PackID     string
-	WorkUnitID string
-	Title      string
-	State      string
-	Views      []catalogItem
-	Exports    []catalogItem
-	Details    []catalogItem
-	Missing    []string
-	Uncertain  []string
-	Using      string
-	Doing      string
-	Progress   string
-	NextStep   string
-	SafeToDo   string
+	Dir                string
+	PackID             string
+	WorkUnitID         string
+	Title              string
+	WorkingWith        string
+	ModelLabel         string
+	ModelReason        string
+	ModelFeedback      string
+	EffortLevel        string
+	VerificationLevel  string
+	VerificationReason string
+	RoutePolicy        string
+	RouteReason        string
+	ContinuityReason   string
+	State              string
+	Views              []catalogItem
+	Exports            []catalogItem
+	Details            []catalogItem
+	Missing            []string
+	Uncertain          []string
+	Using              string
+	Doing              string
+	Progress           string
+	NextStep           string
+	SafeToDo           string
+	Thread             workThread
 }
 
 type catalogItem struct {
@@ -67,6 +78,8 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 	switch args[0] {
 	case "check":
 		return runCheck(args[1:], stdout, stderr)
+	case "observe":
+		return runObserve(args[1:], stdout, stderr)
 	case "open":
 		return runOpen(args[1:], stdout, stderr)
 	case "run":
@@ -88,8 +101,15 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 }
 
 func runLauncher(stdin io.Reader, stdout, stderr io.Writer) int {
+	if stdin != nil {
+		_ = maybeWarmLocalRuntimeCapabilitiesAsync()
+	}
 	current, err := loadCurrentWork()
 	if err != nil || current == nil {
+		active, activeErr := listActiveWorkSummaries(nil)
+		if activeErr == nil && len(active) > 0 {
+			return runActiveWorkLauncher(active, stdin, stdout, stderr)
+		}
 		if stdin != nil {
 			return runNewWorkIntake(stdin, stdout, stderr)
 		}
@@ -122,23 +142,73 @@ func runLauncher(stdin io.Reader, stdout, stderr io.Writer) int {
 		return 0
 	}
 	fmt.Fprintln(stdout)
-	return handleCurrentWorkAction(action, summary, stdin, stdout, stderr)
+	return handleCurrentWorkAction(action, summary, session, stdout, stderr)
 }
 
-func handleCurrentWorkAction(action string, summary *workSummary, stdin io.Reader, stdout, stderr io.Writer) int {
+func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
 	switch normalizeName(action) {
 	case "1", "continue", "continue current work", "keep going":
 		renderCheck(stdout, summary)
-	case "2", "open", "open ready work", "open ready", "open whats ready", "open what's ready", "open what is ready":
+	case "2", "open", "open ready work", "open ready", "open whats ready", "open what's ready", "open what is ready", "show whats ready", "show what's ready", "show what is ready":
 		renderOpenShelf(stdout, summary)
-	case "plan this first", "plan first", "plan", "requirements", "design":
+	case "model upvote", "upvote model", "model was right":
+		if err := saveModelFeedback(summary.Dir, "upvoted", ""); err != nil {
+			fmt.Fprintf(stderr, "Could not save model feedback: %v\n", err)
+			return 1
+		}
+		fmt.Fprintln(stdout, "Saved model feedback: upvoted.")
+	case "accepted as is", "accept as is", "artifact accepted", "accepted":
+		if err := saveModelFeedback(summary.Dir, "accepted-as-is", currentFeedbackArtifactPath(summary)); err != nil {
+			fmt.Fprintf(stderr, "Could not save artifact feedback: %v\n", err)
+			return 1
+		}
+		fmt.Fprintln(stdout, "Saved artifact feedback: accepted-as-is.")
+	case "needed light edits", "needs light edits", "light edits":
+		if err := saveModelFeedback(summary.Dir, "needed-light-edits", currentFeedbackArtifactPath(summary)); err != nil {
+			fmt.Fprintf(stderr, "Could not save artifact feedback: %v\n", err)
+			return 1
+		}
+		fmt.Fprintln(stdout, "Saved artifact feedback: needed-light-edits.")
+	case "used this", "used it", "kept this":
+		if err := saveArtifactOutcome(summary.Dir, "used-this", currentFeedbackArtifactPath(summary)); err != nil {
+			fmt.Fprintf(stderr, "Could not save artifact outcome: %v\n", err)
+			return 1
+		}
+		fmt.Fprintln(stdout, "Saved artifact outcome: used-this.")
+	case "shared this", "sent this", "forwarded this", "handed this off", "used this to hand off":
+		if err := saveArtifactOutcome(summary.Dir, "shared-this", currentFeedbackArtifactPath(summary)); err != nil {
+			fmt.Fprintf(stderr, "Could not save artifact outcome: %v\n", err)
+			return 1
+		}
+		fmt.Fprintln(stdout, "Saved artifact outcome: shared-this.")
+	case "model downvote", "downvote model", "model was wrong":
+		if err := saveModelFeedback(summary.Dir, "downvoted", ""); err != nil {
+			fmt.Fprintf(stderr, "Could not save model feedback: %v\n", err)
+			return 1
+		}
+		fmt.Fprintln(stdout, "Saved model feedback: downvoted.")
+	case "not useful", "artifact was not useful", "not good enough":
+		if err := saveModelFeedback(summary.Dir, "not-useful", currentFeedbackArtifactPath(summary)); err != nil {
+			fmt.Fprintf(stderr, "Could not save artifact feedback: %v\n", err)
+			return 1
+		}
+		fmt.Fprintln(stdout, "Saved artifact feedback: not-useful.")
+	case "replaced this", "rewrote this", "made a new one", "did not use this":
+		if err := saveArtifactOutcome(summary.Dir, "replaced-this", currentFeedbackArtifactPath(summary)); err != nil {
+			fmt.Fprintf(stderr, "Could not save artifact outcome: %v\n", err)
+			return 1
+		}
+		fmt.Fprintln(stdout, "Saved artifact outcome: replaced-this.")
+	case "switch work", "switch", "show active work", "active work", "switch project":
+		return runSwitchWorkPicker(summary, scanner, stdout, stderr)
+	case "plan this first", "plan first", "plan", "requirements", "design", "help me plan this":
 		renderPlanFirst(stdout, summary)
-	case "3", "new", "start new", "start something new":
-		if stdin == nil {
+	case "3", "new", "start new", "start something new", "start something else", "start new work":
+		if scanner == nil {
 			renderNewWorkLauncher(stdout)
 			return 0
 		}
-		return runNewWorkIntake(stdin, stdout, stderr)
+		return runNewWorkIntakeWithScanner(scanner, stdout, stderr)
 	default:
 		renderCheck(stdout, summary)
 	}
@@ -167,6 +237,9 @@ func runProvider(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "Try `jini provider doctor`.")
 		return 1
 	}
+	if shouldRefreshLocalBenchmarkForDoctor() {
+		_ = currentLocalRuntimeCapabilities(context.Background())
+	}
 	provider := detectProvider()
 	renderProviderDoctor(stdout, provider)
 	if provider.Status == "ok" {
@@ -176,9 +249,18 @@ func runProvider(args []string, stdout, stderr io.Writer) int {
 }
 
 func detectProvider() providerConfig {
+	if route := detectRoute(); route.Active {
+		return route.Provider
+	}
+	return detectLegacyProvider()
+}
+
+func detectLegacyProvider() providerConfig {
 	switch configuredProviderMode() {
 	case "local-preview":
 		return detectLocalPreviewProvider()
+	case "local-slm":
+		return detectLocalSLMProvider()
 	case "azure-openai":
 		return detectAzureOpenAIProvider()
 	case "bedrock":
@@ -193,7 +275,7 @@ func detectProvider() providerConfig {
 			ID:      providerID,
 			Label:   titleCase(providerID),
 			Status:  "needs setup",
-			Missing: []string{"Supported JINI_PROVIDER value: auto, claude, azure-openai, bedrock, or local-preview"},
+			Missing: []string{"Supported JINI_PROVIDER value: auto, claude, azure-openai, bedrock, local-slm, or local-preview"},
 		}
 	}
 }
@@ -206,6 +288,86 @@ func detectLocalPreviewProvider() providerConfig {
 		Settings: []string{
 			"JINI_PROVIDER: " + firstNonEmpty(configValue("JINI_PROVIDER"), "auto") + " -> Local preview",
 		},
+	}
+}
+
+func detectLocalSLMProvider() providerConfig {
+	defaultModelID, defaultModelLabel := resolveLocalSLMDefaultModel()
+	device := currentDeviceProfile()
+	missing := []string{}
+	if strings.TrimSpace(configValue("JINI_LOCAL_SLM_ENDPOINT")) == "" {
+		missing = append(missing, "JINI_LOCAL_SLM_ENDPOINT")
+	}
+	if strings.TrimSpace(defaultModelID) == "" {
+		missing = append(missing, "JINI_LOCAL_SLM_MODEL")
+	}
+	settings := []string{
+		providerSettingLine("local-slm"),
+		"JINI_LOCAL_SLM_ENDPOINT: " + presentOrMissing("JINI_LOCAL_SLM_ENDPOINT"),
+		"DEVICE_CLASS: " + firstNonEmpty(device.DeviceClass, "unknown"),
+		"DEVICE_OS: " + strings.TrimSpace(firstNonEmpty(device.OS, "unknown")) + " " + strings.TrimSpace(firstNonEmpty(device.OSVersion, "unknown")),
+		"LOCAL_ACCELERATOR: " + firstNonEmpty(device.AcceleratorClass, "unknown"),
+		"LOCAL_RUNTIME_CLASS: " + firstNonEmpty(device.LocalRuntimeClass, "unknown"),
+	}
+	for _, slot := range []struct {
+		env   string
+		label string
+	}{
+		{"JINI_LOCAL_SLM_MODEL", "Default local model"},
+		{"JINI_LOCAL_SLM_FAST_MODEL", "Fast profile"},
+		{"JINI_LOCAL_SLM_WORKHORSE_MODEL", "Workhorse profile"},
+		{"JINI_LOCAL_SLM_DEEP_MODEL", "Deep profile"},
+		{"JINI_LOCAL_SLM_MULTIMODAL_MODEL", "Multimodal profile"},
+	} {
+		if slot.env == "JINI_LOCAL_SLM_MODEL" {
+			settings = append(settings, slot.env+": "+presentOrMissing(slot.env)+" -> "+firstNonEmpty(defaultModelLabel, "missing"))
+			continue
+		}
+		state := strings.TrimSpace(device.LocalProfileStates[toolModeForLocalSetting(slot.env)])
+		if state != "" {
+			settings = append(settings, slot.env+": "+presentOrMissing(slot.env)+" ("+state+" on this device)")
+			continue
+		}
+		settings = append(settings, slot.env+": "+presentOrMissing(slot.env))
+	}
+	if len(missing) == 0 {
+		settings = append(settings, freshLocalBenchmarkSummaryLines()...)
+		settings = append(settings, freshLocalMultimodalLearningSummaryLines()...)
+	}
+	return providerConfig{
+		ID:       "local-slm",
+		Label:    "Local SLM",
+		Status:   statusFromMissing(missing),
+		Missing:  missing,
+		Settings: settings,
+		Secrets:  []string{"JINI_LOCAL_SLM_API_KEY: " + presentOrMissing("JINI_LOCAL_SLM_API_KEY")},
+	}
+}
+
+func shouldRefreshLocalBenchmarkForDoctor() bool {
+	if configuredProviderMode() == "local-slm" {
+		return true
+	}
+	switch configuredToolMode() {
+	case "local-fast", "local-workhorse", "local-deep", "local-multimodal":
+		return true
+	default:
+		return false
+	}
+}
+
+func toolModeForLocalSetting(envName string) string {
+	switch envName {
+	case "JINI_LOCAL_SLM_FAST_MODEL":
+		return "local-fast"
+	case "JINI_LOCAL_SLM_WORKHORSE_MODEL":
+		return "local-workhorse"
+	case "JINI_LOCAL_SLM_DEEP_MODEL":
+		return "local-deep"
+	case "JINI_LOCAL_SLM_MULTIMODAL_MODEL":
+		return "local-multimodal"
+	default:
+		return ""
 	}
 }
 
@@ -375,9 +537,31 @@ func renderProviderDoctor(w io.Writer, provider providerConfig) {
 	}
 }
 
+func workingWithLabel(provider providerConfig) string {
+	if route := detectRoute(); route.Active {
+		label := route.ToolLabel
+		if provider.Label != "" && provider.Label != route.ToolLabel && provider.ID != "local-preview" {
+			label += " via " + provider.Label
+		}
+		if route.ChosenAutomatically {
+			return label + " (chosen automatically)"
+		}
+		return label
+	}
+	if configuredProviderMode() == "auto" {
+		return provider.Label + " (chosen automatically)"
+	}
+	return provider.Label
+}
+
 func runNewWorkIntake(stdin io.Reader, stdout, stderr io.Writer) int {
-	renderNewWorkLauncher(stdout)
 	session := bufio.NewScanner(stdin)
+	return runNewWorkIntakeWithScanner(session, stdout, stderr)
+}
+
+func runNewWorkIntakeWithScanner(session *bufio.Scanner, stdout, stderr io.Writer) int {
+	_ = maybeWarmLocalRuntimeCapabilitiesAsync()
+	renderNewWorkLauncher(stdout)
 
 	for {
 		firstRaw, ok := readInputLine(session, stdout)
@@ -414,8 +598,20 @@ func runNewWorkIntake(stdin io.Reader, stdout, stderr io.Writer) int {
 			fmt.Fprintln(stderr, "I need one line of source context to start this work.")
 			return 1
 		}
+		inputItems, normalizedSource := inputItemsForSource(source)
+		if strings.TrimSpace(normalizedSource) != "" {
+			source = normalizedSource
+		}
 
-		summary, err := bootstrapStarterWork(choice, source, "quick")
+		request := providerGenerationRequest{
+			Choice: choice,
+			Title:  deriveStarterTitle(choice.DefaultName, source),
+			Source: source,
+		}
+		decision := detectRouteForRequest(request)
+		renderRouteDecisionCard(stdout, request, decision)
+
+		summary, err := bootstrapStarterWork(choice, source, "quick", inputItems)
 		if err != nil {
 			fmt.Fprintf(stderr, "Could not start this work: %v\n", err)
 			return 1
@@ -508,7 +704,10 @@ func classifyStarterChoice(source string) starterChoice {
 	}
 }
 
-func bootstrapStarterWork(choice starterChoice, source, detail string) (*workSummary, error) {
+func bootstrapStarterWork(choice starterChoice, source, detail string, inputItems []inputItem) (*workSummary, error) {
+	if len(inputItems) == 0 {
+		inputItems, _ = inputItemsForSource(source)
+	}
 	stateRoot := sessionStateRoot()
 	workRoot := filepath.Join(stateRoot, "work")
 	if err := os.MkdirAll(workRoot, 0o755); err != nil {
@@ -530,7 +729,29 @@ func bootstrapStarterWork(choice starterChoice, source, detail string) (*workSum
 	if err := writeStarterWork(choice, workDir, title, source, detail); err != nil {
 		return nil, err
 	}
+	if err := saveInputItems(workDir, inputItems); err != nil {
+		return nil, err
+	}
+	initialSummary := &workSummary{
+		Dir:        workDir,
+		PackID:     choice.PackID,
+		WorkUnitID: slugify(title),
+		Title:      title,
+		State:      choice.State,
+		Views:      collectViews(workDir, choice.PackID),
+		Missing:    inferMissing(choice.State, collectDetails(workDir), choice.PackID),
+		Uncertain:  inferUncertain(choice.PackID, inferMissing(choice.State, collectDetails(workDir), choice.PackID)),
+		Doing:      inferDoing(choice.PackID, choice.State),
+		NextStep:   inferNextStep(choice.PackID, collectViews(workDir, choice.PackID)),
+		SafeToDo:   "Nothing has been sent yet. You can review before sharing.",
+	}
+	if err := saveThreadState(workDir, synthesizeThreadState(initialSummary)); err != nil {
+		return nil, err
+	}
 	if err := maybeWriteProviderFirstDraft(context.Background(), choice, workDir, title, source); err != nil {
+		return nil, err
+	}
+	if err := saveArtifactFeedbackBaseline(workDir); err != nil {
 		return nil, err
 	}
 
@@ -604,32 +825,30 @@ func writeStarterWork(choice starterChoice, workDir, title, source, detail strin
 }
 
 func writeMeetingStarterWork(workDir, title, source, detail string) error {
+	decisions := starterSourceBullets(source, 4, []string{
+		"Summarize the main meeting decisions in one short list before sending anything.",
+	})
+	ownersToConfirm := starterMeetingOwnersToConfirm(source, decisions)
+	openQuestions := starterMeetingOpenQuestions(source)
+	nextMoves := starterMeetingNextMoves(source)
 	followup := strings.Join([]string{
 		fmt.Sprintf("# Sendable Follow-Up: %s", title),
 		"",
-		"## Send this",
-		fmt.Sprintf("Here is the clean follow-up from **%s**.", title),
+		"## Send this note",
+		fmt.Sprintf("Team, here is the clean follow-up from **%s**.", title),
 		"",
-		fmt.Sprintf("Source context: %s.", source),
+		fmt.Sprintf("I pulled this from the current notes: %s", source),
 		"",
-		"## What we agreed",
-		"- Pricing draft moves to Sarah by Thursday so the launch page is no longer blocked on copy.",
-		"- Landing page review stays with Amir and comments are due by Wednesday for design cleanup.",
-		"- Analytics event coverage still needs Priya's metric decision before implementation starts.",
+		"Please reply if any owner, due date, dependency, or open question below needs correction before this is treated as final.",
 		"",
-		"## Owners and due points",
-		"- Sarah: draft the pricing update by Thursday.",
-		"- Amir: land the pricing page review comments by Wednesday.",
-		"- Priya: confirm the launch metric decision by Friday.",
-		"",
-		"## Open questions",
-		"- Should launch success be measured by sign-ups or paid conversion?",
-		"- Do we need legal review before publishing pricing changes?",
-		"",
-		"## What happens next",
-		"- Send this note today so everyone works from the same decisions and due points.",
-		"- Ask each owner to confirm date risk or dependency risk before the next standup.",
-		"- Close the metric and legal-review questions before implementation starts.",
+		"## Decisions captured from the notes",
+		bulletLines(decisions),
+		"## Owners and due dates to confirm",
+		bulletLines(ownersToConfirm),
+		"## Open questions to close",
+		bulletLines(openQuestions),
+		"## Recommended next move",
+		bulletLines(nextMoves),
 		"",
 	}, "\n")
 	if strings.HasPrefix(strings.ToLower(strings.TrimSpace(detail)), "f") {
@@ -643,27 +862,46 @@ func writeMeetingStarterWork(workDir, title, source, detail string) error {
 	if err := os.WriteFile(filepath.Join(workDir, "views", "followup.md"), []byte(followup), 0o644); err != nil {
 		return err
 	}
-	if err := os.WriteFile(filepath.Join(workDir, "views", "tasks.md"), []byte("# Task List\n\n- Sarah: draft the pricing update by Thursday.\n- Amir: land the pricing page review comments by Wednesday.\n- Priya: confirm the launch metric decision by Friday.\n"), 0o644); err != nil {
+	ownersView := strings.Join([]string{
+		"# Owners and Due Points",
+		"",
+		"## Confirmed from the notes",
+		bulletLines(decisions),
+		"## Still missing owner or date",
+		bulletLines(ownersToConfirm),
+		"## Follow-up questions",
+		bulletLines(openQuestions),
+	}, "\n")
+	if err := os.WriteFile(filepath.Join(workDir, "views", "owners-and-due-points.md"), []byte(ownersView), 0o644); err != nil {
+		return err
+	}
+	if err := os.WriteFile(filepath.Join(workDir, "views", "tasks.md"), []byte("# Task List\n\n"+bulletLines(ownersToConfirm)), 0o644); err != nil {
 		return err
 	}
 	return writeStarterArtifacts(workDir, []string{"Brief", "Tasks"})
 }
 
 func writeResearchStarterWork(workDir, title, source, detail string) error {
+	readyNow := starterSourceBullets(source, 3, []string{
+		"User intent is clear enough to shape the first build slice.",
+	})
+	mustClear := starterResearchMustClear(source)
+	firstSlice := starterResearchFirstSlice(source)
+	whoNeeds := starterResearchWhoNeeds(source)
+	stillToConfirm := starterResearchStillToConfirm(source)
 	prd := strings.Join([]string{
 		fmt.Sprintf("# Build-Readiness Check: %s", title),
 		"",
-		"## Build-readiness check",
-		"- Safe to start: scope is visible enough to plan the first implementation pass.",
-		"- Still missing: approval, rollback note, and one clear decision on the highest-risk assumption.",
-		"",
-		"## Source summary",
-		source,
-		"",
-		"## What to build first",
-		"- Capture the first thin slice that proves the user value.",
-		"- Keep the approval owner attached before implementation starts.",
-		"- Record the rollback note in the same surface as the plan.",
+		"## What looks ready now",
+		bulletLines(readyNow),
+		"## Must clear before build",
+		bulletLines(mustClear),
+		"## Recommended first slice",
+		bulletLines(firstSlice),
+		"## Who needs to answer what",
+		bulletLines(whoNeeds),
+		"## Still to confirm",
+		bulletLines(stillToConfirm),
 		"",
 	}, "\n")
 	if strings.HasPrefix(strings.ToLower(strings.TrimSpace(detail)), "f") {
@@ -678,7 +916,20 @@ func writeResearchStarterWork(workDir, title, source, detail string) error {
 	if err := os.WriteFile(filepath.Join(workDir, "views", "prd.md"), []byte(prd), 0o644); err != nil {
 		return err
 	}
-	if err := os.WriteFile(filepath.Join(workDir, "views", "tasks.md"), []byte("# Missing Pieces Before Build\n\n- Confirm approval owner.\n- Add rollback note.\n- Lock the first implementation slice.\n"), 0o644); err != nil {
+	missingView := strings.Join([]string{
+		"# Missing Pieces Before Build",
+		"",
+		"## Must clear before build",
+		bulletLines(mustClear),
+		"## Who needs to answer what",
+		bulletLines(whoNeeds),
+		"## Still to confirm",
+		bulletLines(stillToConfirm),
+	}, "\n")
+	if err := os.WriteFile(filepath.Join(workDir, "views", "missing-pieces-before-build.md"), []byte(missingView), 0o644); err != nil {
+		return err
+	}
+	if err := os.WriteFile(filepath.Join(workDir, "views", "tasks.md"), []byte("# Missing Pieces Before Build\n\n"+bulletLines(mustClear)), 0o644); err != nil {
 		return err
 	}
 	return writeStarterArtifacts(workDir, []string{"Brief", "Plan", "Tasks", "Evidence"})
@@ -880,6 +1131,178 @@ func bulletLines(items []string) string {
 	return strings.Join(lines, "\n")
 }
 
+func starterSourceBullets(source string, limit int, fallback []string) []string {
+	parts := splitSourceFragments(source)
+	out := make([]string, 0, min(limit, len(parts)))
+	seen := map[string]bool{}
+	for _, part := range parts {
+		clean := strings.TrimSpace(part)
+		if clean == "" {
+			continue
+		}
+		if !strings.HasSuffix(clean, ".") && !strings.HasSuffix(clean, "!") && !strings.HasSuffix(clean, "?") {
+			clean += "."
+		}
+		key := normalizeName(clean)
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		out = append(out, strings.ToUpper(clean[:1])+clean[1:])
+		if len(out) >= limit {
+			break
+		}
+	}
+	if len(out) == 0 {
+		return append([]string{}, fallback...)
+	}
+	return out
+}
+
+func splitSourceFragments(source string) []string {
+	fields := strings.FieldsFunc(source, func(r rune) bool {
+		switch r {
+		case '\n', '\r', '.', '!', '?', ';':
+			return true
+		default:
+			return false
+		}
+	})
+	out := make([]string, 0, len(fields))
+	for _, field := range fields {
+		clean := strings.TrimSpace(field)
+		if clean == "" {
+			continue
+		}
+		out = append(out, clean)
+	}
+	return out
+}
+
+func starterMeetingOwnersToConfirm(source string, decisions []string) []string {
+	items := []string{}
+	for _, decision := range decisions {
+		trimmed := strings.TrimSpace(strings.TrimSuffix(decision, "."))
+		if trimmed == "" {
+			continue
+		}
+		items = append(items, "Confirm owner and due date for: "+strings.ToLower(trimmed)+".")
+		if len(items) >= 3 {
+			break
+		}
+	}
+	if containsAny(normalizeName(source), []string{"owner", "due date", "deadline"}) {
+		items = append(items, "Reply with any missing owner, due date, or dependency before this note is treated as final.")
+	}
+	if len(items) == 0 {
+		items = []string{
+			"Confirm the owner for the highest-priority follow-up item.",
+			"Confirm the due date or next checkpoint for each promised deliverable.",
+		}
+	}
+	return dedupeStrings(items)
+}
+
+func starterMeetingOpenQuestions(source string) []string {
+	items := []string{}
+	normalized := normalizeName(source)
+	switch {
+	case containsAny(normalized, []string{"pricing", "launch"}):
+		items = append(items, "Which launch or pricing detail is still blocked on a separate decision?")
+	case containsAny(normalized, []string{"renewal", "risk"}):
+		items = append(items, "Which renewal risk changes the immediate action plan if it stays unresolved?")
+	}
+	if containsAny(normalized, []string{"open question", "question", "unknown"}) {
+		items = append(items, "Which open question needs a named owner before the next check-in?")
+	}
+	items = append(items, "Does any dependency or approval need to be called out before work starts?")
+	return dedupeStrings(items)
+}
+
+func starterMeetingNextMoves(source string) []string {
+	items := []string{
+		"Send this note today so everyone is working from the same commitments.",
+		"Ask each owner to reply with any date or dependency risk before the next check-in.",
+	}
+	if containsAny(normalizeName(source), []string{"launch", "release", "ship"}) {
+		items = append(items, "Close any launch-blocking question before treating the plan as locked.")
+	} else {
+		items = append(items, "Close the highest-risk open question before the work is considered settled.")
+	}
+	return items
+}
+
+func starterResearchMustClear(source string) []string {
+	items := []string{
+		"Name the approval owner and the exact decision needed before build starts.",
+		"Add a rollback note for the first released slice so failure handling is not implicit.",
+		"Lock the first implementation slice to one user-facing outcome instead of a broad theme.",
+	}
+	normalized := normalizeName(source)
+	if containsAny(normalized, []string{"handoff", "hand off"}) {
+		items = append(items, "Confirm what the receiving team is expected to build first after handoff.")
+	}
+	return dedupeStrings(items)
+}
+
+func starterResearchFirstSlice(source string) []string {
+	items := starterSourceBullets(source, 1, []string{
+		"Start with the thinnest slice that proves the user-facing value before wider expansion.",
+	})
+	first := strings.TrimSpace(strings.TrimSuffix(items[0], "."))
+	return []string{
+		"Turn " + strings.ToLower(first) + " into the first thin slice that can be built and checked quickly.",
+		"Keep the first slice small enough that approval, rollback, and success checks stay obvious.",
+	}
+}
+
+func starterResearchWhoNeeds(source string) []string {
+	items := []string{
+		"Product owner: confirm approval and the success boundary for the first slice.",
+		"Engineering owner: record rollback behavior and implementation scope before build starts.",
+	}
+	if containsAny(normalizeName(source), []string{"handoff", "hand off"}) {
+		items = append(items, "Receiving team lead: confirm the handoff is specific enough to execute without guesswork.")
+	}
+	return items
+}
+
+func starterResearchStillToConfirm(source string) []string {
+	items := []string{
+		"Whether approval is already explicit or still only implied in discussion.",
+		"Whether the rollback note belongs in the same artifact or a linked operational surface.",
+	}
+	if containsAny(normalizeName(source), []string{"notification", "notifications"}) {
+		items = append(items, "Which notification path or user case should be the very first implementation slice.")
+	}
+	return items
+}
+
+func dedupeStrings(items []string) []string {
+	out := make([]string, 0, len(items))
+	seen := map[string]bool{}
+	for _, item := range items {
+		clean := strings.TrimSpace(item)
+		if clean == "" {
+			continue
+		}
+		key := normalizeName(clean)
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		out = append(out, clean)
+	}
+	return out
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 func deriveStarterTitle(defaultName, source string) string {
 	cleaned := titleCase(cleanForTitle(source))
 	if strings.TrimSpace(cleaned) == "" {
@@ -954,6 +1377,93 @@ func runCheck(args []string, stdout, stderr io.Writer) int {
 	return 0
 }
 
+func runObserve(args []string, stdout, stderr io.Writer) int {
+	summary, err := resolveSummary(nil)
+	if err != nil {
+		fmt.Fprintf(stderr, "%v\n", err)
+		return 1
+	}
+	if len(args) == 0 || normalizeName(args[0]) == "status" {
+		if err := scanExternalObservations(summary.Dir); err != nil {
+			fmt.Fprintf(stderr, "Could not scan observed files: %v\n", err)
+			return 1
+		}
+		renderExternalObservationStatus(stdout, summary.Dir)
+		return 0
+	}
+	switch normalizeName(args[0]) {
+	case "add":
+		targetPath, connectorID, parseErr := parseObserveAddArgs(args[1:])
+		if parseErr != nil {
+			fmt.Fprintf(stderr, "%v\n", parseErr)
+			fmt.Fprintln(stderr, "Usage: jini observe add [--connector github|jira|confluence|markdown] <external-file>")
+			return 1
+		}
+		artifactPath := currentFeedbackArtifactPath(summary)
+		item, err := addExternalObservation(summary.Dir, artifactPath, targetPath, connectorID)
+		if err != nil {
+			fmt.Fprintf(stderr, "Could not add observed file: %v\n", err)
+			return 1
+		}
+		if err := scanExternalObservations(summary.Dir); err != nil {
+			fmt.Fprintf(stderr, "Could not scan observed files: %v\n", err)
+			return 1
+		}
+		fmt.Fprintln(stdout, "Observing external file")
+		fmt.Fprintln(stdout, item.TargetPath)
+		return 0
+	case "scan":
+		if err := scanExternalObservations(summary.Dir); err != nil {
+			fmt.Fprintf(stderr, "Could not scan observed files: %v\n", err)
+			return 1
+		}
+		renderExternalObservationStatus(stdout, summary.Dir)
+		return 0
+	default:
+		fmt.Fprintf(stderr, "Unknown observe command %q.\n", args[0])
+		fmt.Fprintln(stderr, "Try `jini observe`, `jini observe add [--connector github|jira|confluence|markdown] <external-file>`, or `jini observe scan`.")
+		return 1
+	}
+}
+
+func parseObserveAddArgs(args []string) (string, string, error) {
+	if len(args) == 0 {
+		return "", "", fmt.Errorf("missing external file to observe")
+	}
+	var targetPath string
+	var connectorID string
+	for index := 0; index < len(args); index++ {
+		part := strings.TrimSpace(args[index])
+		if part == "" {
+			continue
+		}
+		if part == "--connector" {
+			if index+1 >= len(args) || strings.TrimSpace(args[index+1]) == "" {
+				return "", "", fmt.Errorf("missing connector value after --connector")
+			}
+			connectorID = strings.TrimSpace(args[index+1])
+			index++
+			continue
+		}
+		if strings.HasPrefix(part, "--connector=") {
+			connectorID = strings.TrimSpace(strings.TrimPrefix(part, "--connector="))
+			continue
+		}
+		if targetPath == "" {
+			targetPath = part
+			continue
+		}
+		return "", "", fmt.Errorf("too many arguments for observe add")
+	}
+	if strings.TrimSpace(targetPath) == "" {
+		return "", "", fmt.Errorf("missing external file to observe")
+	}
+	if connectorID != "" && normalizeConnectorID(connectorID) == "" {
+		return "", "", fmt.Errorf("unsupported connector %q", connectorID)
+	}
+	return targetPath, normalizeConnectorID(connectorID), nil
+}
+
 func runOpen(args []string, stdout, stderr io.Writer) int {
 	summary, err := resolveSummary(nil)
 	if err != nil {
@@ -969,6 +1479,10 @@ func runOpen(args []string, stdout, stderr io.Writer) int {
 	item, err := resolveOpenItem(summary, args[0])
 	if err != nil {
 		fmt.Fprintf(stderr, "%v\n", err)
+		return 1
+	}
+	if err := recordPassiveArtifactObservation(summary.Dir, *item); err != nil {
+		fmt.Fprintf(stderr, "Could not record artifact open: %v\n", err)
 		return 1
 	}
 	content, err := os.ReadFile(item.Path)
@@ -1086,6 +1600,9 @@ func loadWorkSummary(dir string, current *currentWork) (*workSummary, error) {
 	details := collectDetails(resolved)
 	missing := inferMissing(state, details, packID)
 	uncertain := inferUncertain(packID, missing)
+	route := loadWorkRoute(resolved)
+	_ = scanExternalObservations(resolved)
+	route = loadWorkRoute(resolved)
 
 	summary := &workSummary{
 		Dir:    resolved,
@@ -1096,19 +1613,30 @@ func loadWorkSummary(dir string, current *currentWork) (*workSummary, error) {
 			}
 			return ""
 		}()),
-		Title:     title,
-		State:     state,
-		Views:     views,
-		Exports:   exports,
-		Details:   details,
-		Missing:   missing,
-		Uncertain: uncertain,
-		Using:     inferUsing(packID),
-		Doing:     inferDoing(packID, state),
-		Progress:  inferProgress(state),
-		SafeToDo:  "Nothing has been sent yet. You can review before sharing.",
+		Title:              title,
+		WorkingWith:        workingWithLabelForSavedRoute(route),
+		ModelLabel:         strings.TrimSpace(route.ModelLabel),
+		ModelReason:        strings.TrimSpace(route.ModelReason),
+		ModelFeedback:      strings.TrimSpace(route.ModelFeedback),
+		EffortLevel:        strings.TrimSpace(route.EffortLevel),
+		VerificationLevel:  strings.TrimSpace(route.VerificationLevel),
+		VerificationReason: strings.TrimSpace(route.VerificationReason),
+		RoutePolicy:        strings.TrimSpace(route.RoutePolicy),
+		RouteReason:        strings.TrimSpace(route.Reason),
+		ContinuityReason:   strings.TrimSpace(route.ContinuityReason),
+		State:              state,
+		Views:              views,
+		Exports:            exports,
+		Details:            details,
+		Missing:            missing,
+		Uncertain:          uncertain,
+		Using:              inferUsing(packID),
+		Doing:              inferDoing(packID, state),
+		Progress:           inferProgress(state),
+		SafeToDo:           "Nothing has been sent yet. You can review before sharing.",
 	}
 	summary.NextStep = inferNextStep(packID, summary.Views)
+	summary.Thread = buildWorkThread(summary, loadInputItems(resolved, packID), loadThreadState(resolved, summary))
 	return summary, nil
 }
 
@@ -1217,11 +1745,22 @@ func viewCatalogItem(packID, stem, path string) catalogItem {
 		return catalogItem{ID: "handoff-brief", Label: "Handoff Brief", Path: path, Aliases: []string{"prd", "summary", "brief", "handoff"}}
 	case "followup":
 		return catalogItem{ID: "sendable-follow-up", Label: "Sendable Follow-up", Path: path, Aliases: []string{"follow-up", "followup", "summary"}}
+	case "owners-and-due-points":
+		return catalogItem{ID: "owners-and-due-points", Label: "Owners and Due Points", Path: path, Aliases: []string{"owners", "due points", "owners and due points"}}
+	case "missing-pieces-before-build":
+		return catalogItem{ID: "missing-pieces-before-build", Label: "Missing Pieces Before Build", Path: path, Aliases: []string{"missing", "before build", "missing pieces"}}
 	case "tasks":
+		dir := filepath.Dir(path)
 		switch packID {
 		case "meeting-followup":
+			if fileExists(filepath.Join(dir, "owners-and-due-points.md")) {
+				return catalogItem{ID: "task-list", Label: "Task List", Path: path, Aliases: []string{"tasks", "task list"}}
+			}
 			return catalogItem{ID: "owners-and-due-points", Label: "Owners and Due Points", Path: path, Aliases: []string{"tasks", "task list", "owners"}}
 		case "research-prd":
+			if fileExists(filepath.Join(dir, "missing-pieces-before-build.md")) {
+				return catalogItem{ID: "task-list", Label: "Task List", Path: path, Aliases: []string{"tasks", "task list"}}
+			}
 			return catalogItem{ID: "missing-pieces-before-build", Label: "Missing Pieces Before Build", Path: path, Aliases: []string{"tasks", "task list", "missing"}}
 		case "travel-plan":
 			return catalogItem{ID: "still-to-book", Label: "Still To Book", Path: path, Aliases: []string{"tasks", "task list", "booking"}}
@@ -1461,38 +2000,118 @@ func resolveOpenItem(summary *workSummary, name string) (*catalogItem, error) {
 func renderNewWorkLauncher(w io.Writer) {
 	fmt.Fprintln(w, "What do you need help finishing?")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Jini shell")
-	fmt.Fprintln(w, "Paste messy notes, or type the outcome you want.")
+	fmt.Fprintln(w, "Paste notes or type what you want finished.")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Working with")
 	provider := detectProvider()
-	fmt.Fprintln(w, provider.Label)
+	fmt.Fprintln(w, workingWithLabel(provider))
 	if provider.ID == "local-preview" {
 		fmt.Fprintln(w)
-		fmt.Fprintln(w, "Want a connected provider instead?")
-		fmt.Fprintln(w, "- Type `Use Claude`")
-		fmt.Fprintln(w, "- Type `Use Bedrock`")
-		fmt.Fprintln(w, "- Type `Use Azure`")
-		fmt.Fprintln(w, "- Type `Use Auto`")
+		if configuredToolMode() == "auto" {
+			fmt.Fprintln(w, "Auto mode is on. No cloud tool is ready yet.")
+		} else if configuredProviderMode() == "auto" {
+			fmt.Fprintln(w, "Auto mode is on. No cloud provider is ready yet.")
+		}
+		fmt.Fprintln(w, "Need setup help? Type `Use Auto` and Jini will help you connect the best available option.")
 	}
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Good inputs:")
+	fmt.Fprintln(w, "Not sure? Type `help me finish this`.")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Examples:")
 	fmt.Fprintln(w, "- Turn meeting notes into something I can send")
 	fmt.Fprintln(w, "- Check whether a plan is ready to hand off")
-	fmt.Fprintln(w, "- Plan this first")
+	fmt.Fprintln(w, "- Help me plan this")
 	fmt.Fprintln(w, "- I am not sure")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Nothing will be sent yet.")
 }
 
+func renderRouteDecisionCard(w io.Writer, request providerGenerationRequest, decision routeDecision) {
+	if !decision.Active {
+		return
+	}
+	features := classifyRouteFeatures(request)
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Jini will start with")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Tool")
+	fmt.Fprintln(w, firstNonEmpty(strings.TrimSpace(decision.ToolLabel), "Not decided yet"))
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Provider")
+	fmt.Fprintln(w, firstNonEmpty(strings.TrimSpace(decision.Provider.Label), "Local preview"))
+	if strings.TrimSpace(decision.RoutePolicy) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "How chosen")
+		fmt.Fprintln(w, decision.RoutePolicy)
+	}
+	if strings.TrimSpace(decision.ModelLabel) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Model")
+		fmt.Fprintln(w, decision.ModelLabel)
+	}
+	if strings.TrimSpace(decision.ModelReason) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Why this model")
+		fmt.Fprintln(w, decision.ModelReason)
+	}
+	if strings.TrimSpace(decision.EffortLevel) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Effort level")
+		fmt.Fprintln(w, titleCase(decision.EffortLevel))
+	}
+	if strings.TrimSpace(decision.VerificationLevel) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Verification")
+		fmt.Fprintln(w, decision.VerificationLevel)
+	}
+	if strings.TrimSpace(decision.VerificationReason) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Why this verification")
+		fmt.Fprintln(w, decision.VerificationReason)
+	}
+	if strings.TrimSpace(decision.Reason) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Why this route")
+		fmt.Fprintln(w, decision.Reason)
+	}
+	if strings.TrimSpace(decision.ContinuityReason) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Continuity")
+		fmt.Fprintln(w, decision.ContinuityReason)
+	}
+	if lines := freshLocalMultimodalLearningViewLines(features); len(lines) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Multimodal learning")
+		for _, line := range lines {
+			fmt.Fprintf(w, "- %s\n", line)
+		}
+	}
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Want a different route?")
+	fmt.Fprintln(w, "Type `Connect Claude`, `Connect Bedrock`, `Connect Azure OpenAI`, `Connect Local SLM`, or `Use Auto`.")
+	fmt.Fprintln(w)
+}
+
 func maybeHandleProviderSetupIntent(raw string, scanner *bufio.Scanner, stdout, stderr io.Writer) (bool, int) {
 	switch normalizeName(raw) {
+	case "use claude code", "connect claude code", "claude code":
+		return true, runProviderSetupWizard("claude-code", scanner, stdout, stderr)
+	case "use bedrock sonnet", "connect bedrock sonnet", "bedrock sonnet":
+		return true, runProviderSetupWizard("bedrock-sonnet", scanner, stdout, stderr)
+	case "use chatgpt", "connect chatgpt", "chatgpt":
+		return true, runProviderSetupWizard("chatgpt", scanner, stdout, stderr)
+	case "use codex", "connect codex", "codex":
+		return true, runProviderSetupWizard("codex", scanner, stdout, stderr)
+	case "use azure openai", "connect azure openai":
+		return true, runProviderSetupWizard("azure-openai", scanner, stdout, stderr)
 	case "use claude", "connect claude", "claude", "use anthropic", "anthropic":
 		return true, runProviderSetupWizard("claude", scanner, stdout, stderr)
 	case "use bedrock", "connect bedrock", "bedrock", "amazon bedrock":
 		return true, runProviderSetupWizard("bedrock", scanner, stdout, stderr)
 	case "use azure", "connect azure", "azure", "azure openai", "azure open ai":
 		return true, runProviderSetupWizard("azure-openai", scanner, stdout, stderr)
+	case "use local slm", "connect local slm", "local slm", "local model":
+		return true, runProviderSetupWizard("local-slm", scanner, stdout, stderr)
 	case "use auto", "auto", "choose automatically":
 		return true, runProviderSetupWizard("auto", scanner, stdout, stderr)
 	case "use local preview", "local preview", "preview", "work offline":
@@ -1505,6 +2124,90 @@ func maybeHandleProviderSetupIntent(raw string, scanner *bufio.Scanner, stdout, 
 func runProviderSetupWizard(mode string, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
 	fmt.Fprintln(stdout)
 	switch mode {
+	case "claude-code":
+		fmt.Fprintln(stdout, "Connect Claude")
+		fmt.Fprintln(stdout, "Paste your Anthropic API key. Jini will route this repo through Claude for code work.")
+		key, ok := readPromptLine(scanner, stdout, "Anthropic API key")
+		if !ok || strings.TrimSpace(key) == "" {
+			fmt.Fprintln(stderr, "Claude Code setup needs an API key.")
+			return 1
+		}
+		model, ok := readPromptLine(scanner, stdout, "Model (press Enter for sonnet)")
+		if !ok {
+			return 1
+		}
+		if err := saveRouterSettings("claude-code"); err != nil {
+			fmt.Fprintf(stderr, "Could not save Claude Code route: %v\n", err)
+			return 1
+		}
+		if err := saveProviderSettings(map[string]string{
+			"JINI_PROVIDER":     "claude",
+			"ANTHROPIC_API_KEY": key,
+			"JINI_MODEL":        firstNonEmpty(model, "sonnet"),
+		}); err != nil {
+			fmt.Fprintf(stderr, "Could not save Claude setup: %v\n", err)
+			return 1
+		}
+	case "bedrock-sonnet":
+		fmt.Fprintln(stdout, "Connect Bedrock")
+		region, ok := readPromptLine(scanner, stdout, "AWS region (press Enter for us-east-1)")
+		if !ok {
+			return 1
+		}
+		profile, ok := readPromptLine(scanner, stdout, "AWS profile name")
+		if !ok || strings.TrimSpace(profile) == "" {
+			fmt.Fprintln(stderr, "Bedrock Sonnet setup needs an AWS profile name.")
+			return 1
+		}
+		if err := saveRouterSettings("bedrock-sonnet"); err != nil {
+			fmt.Fprintf(stderr, "Could not save Bedrock Sonnet route: %v\n", err)
+			return 1
+		}
+		if err := saveProviderSettings(map[string]string{
+			"JINI_PROVIDER": "bedrock",
+			"AWS_REGION":    firstNonEmpty(region, "us-east-1"),
+			"AWS_PROFILE":   profile,
+			"JINI_MODEL":    "sonnet-4.6",
+		}); err != nil {
+			fmt.Fprintf(stderr, "Could not save Bedrock setup: %v\n", err)
+			return 1
+		}
+	case "chatgpt", "codex", "azure-openai":
+		targetLabel := map[string]string{
+			"chatgpt":      "Azure OpenAI",
+			"codex":        "Azure OpenAI",
+			"azure-openai": "Azure OpenAI",
+		}[mode]
+		fmt.Fprintf(stdout, "Connect %s\n", targetLabel)
+		endpoint, ok := readPromptLine(scanner, stdout, "Azure endpoint")
+		if !ok || strings.TrimSpace(endpoint) == "" {
+			fmt.Fprintln(stderr, targetLabel+" setup needs an endpoint.")
+			return 1
+		}
+		apiKey, ok := readPromptLine(scanner, stdout, "Azure API key")
+		if !ok || strings.TrimSpace(apiKey) == "" {
+			fmt.Fprintln(stderr, targetLabel+" setup needs an API key.")
+			return 1
+		}
+		deployment, ok := readPromptLine(scanner, stdout, "Azure deployment name")
+		if !ok || strings.TrimSpace(deployment) == "" {
+			fmt.Fprintln(stderr, targetLabel+" setup needs a deployment name.")
+			return 1
+		}
+		if err := saveRouterSettings(mode); err != nil {
+			fmt.Fprintf(stderr, "Could not save %s route: %v\n", targetLabel, err)
+			return 1
+		}
+		if err := saveProviderSettings(map[string]string{
+			"JINI_PROVIDER":            "azure-openai",
+			"AZURE_OPENAI_ENDPOINT":    endpoint,
+			"AZURE_OPENAI_API_KEY":     apiKey,
+			"AZURE_OPENAI_DEPLOYMENT":  deployment,
+			"AZURE_OPENAI_API_VERSION": "2024-10-21",
+		}); err != nil {
+			fmt.Fprintf(stderr, "Could not save Azure setup: %v\n", err)
+			return 1
+		}
 	case "claude":
 		fmt.Fprintln(stdout, "Connect Claude")
 		fmt.Fprintln(stdout, "Paste your Anthropic API key. Jini will save it only in this repo's .jini folder.")
@@ -1515,6 +2218,10 @@ func runProviderSetupWizard(mode string, scanner *bufio.Scanner, stdout, stderr 
 		}
 		model, ok := readPromptLine(scanner, stdout, "Model (press Enter for sonnet)")
 		if !ok {
+			return 1
+		}
+		if err := clearRouterSettings(); err != nil {
+			fmt.Fprintf(stderr, "Could not clear saved tool route: %v\n", err)
 			return 1
 		}
 		if err := saveProviderSettings(map[string]string{
@@ -1540,6 +2247,10 @@ func runProviderSetupWizard(mode string, scanner *bufio.Scanner, stdout, stderr 
 		if !ok {
 			return 1
 		}
+		if err := clearRouterSettings(); err != nil {
+			fmt.Fprintf(stderr, "Could not clear saved tool route: %v\n", err)
+			return 1
+		}
 		if err := saveProviderSettings(map[string]string{
 			"JINI_PROVIDER": "bedrock",
 			"AWS_REGION":    firstNonEmpty(region, "us-east-1"),
@@ -1549,35 +2260,12 @@ func runProviderSetupWizard(mode string, scanner *bufio.Scanner, stdout, stderr 
 			fmt.Fprintf(stderr, "Could not save Bedrock setup: %v\n", err)
 			return 1
 		}
-	case "azure-openai":
-		fmt.Fprintln(stdout, "Connect Azure OpenAI")
-		endpoint, ok := readPromptLine(scanner, stdout, "Azure endpoint")
-		if !ok || strings.TrimSpace(endpoint) == "" {
-			fmt.Fprintln(stderr, "Azure setup needs an endpoint.")
-			return 1
-		}
-		apiKey, ok := readPromptLine(scanner, stdout, "Azure API key")
-		if !ok || strings.TrimSpace(apiKey) == "" {
-			fmt.Fprintln(stderr, "Azure setup needs an API key.")
-			return 1
-		}
-		deployment, ok := readPromptLine(scanner, stdout, "Azure deployment name")
-		if !ok || strings.TrimSpace(deployment) == "" {
-			fmt.Fprintln(stderr, "Azure setup needs a deployment name.")
-			return 1
-		}
-		if err := saveProviderSettings(map[string]string{
-			"JINI_PROVIDER":            "azure-openai",
-			"AZURE_OPENAI_ENDPOINT":    endpoint,
-			"AZURE_OPENAI_API_KEY":     apiKey,
-			"AZURE_OPENAI_DEPLOYMENT":  deployment,
-			"AZURE_OPENAI_API_VERSION": "2024-10-21",
-		}); err != nil {
-			fmt.Fprintf(stderr, "Could not save Azure setup: %v\n", err)
-			return 1
-		}
 	case "auto":
 		fmt.Fprintln(stdout, "Use auto mode")
+		if err := saveRouterSettings("auto"); err != nil {
+			fmt.Fprintf(stderr, "Could not save auto tool mode: %v\n", err)
+			return 1
+		}
 		if err := saveProviderSettings(map[string]string{
 			"JINI_PROVIDER": "auto",
 			"JINI_MODEL":    "auto",
@@ -1585,8 +2273,64 @@ func runProviderSetupWizard(mode string, scanner *bufio.Scanner, stdout, stderr 
 			fmt.Fprintf(stderr, "Could not save auto mode: %v\n", err)
 			return 1
 		}
+	case "local-slm":
+		fmt.Fprintln(stdout, "Connect Local SLM")
+		fmt.Fprintln(stdout, "Point Jini at an OpenAI-compatible local model server. Jini will keep the exact endpoint in this repo's .jini folder.")
+		endpoint, ok := readPromptLine(scanner, stdout, "Local SLM endpoint")
+		if !ok || strings.TrimSpace(endpoint) == "" {
+			fmt.Fprintln(stderr, "Local SLM setup needs an endpoint.")
+			return 1
+		}
+		model, ok := readPromptLine(scanner, stdout, "Default local model")
+		if !ok || strings.TrimSpace(model) == "" {
+			fmt.Fprintln(stderr, "Local SLM setup needs a default model.")
+			return 1
+		}
+		apiKey, ok := readPromptLine(scanner, stdout, "Local SLM API key (press Enter if not needed)")
+		if !ok {
+			return 1
+		}
+		fastModel, ok := readPromptLine(scanner, stdout, "Fast profile model (press Enter to reuse the default)")
+		if !ok {
+			return 1
+		}
+		workhorseModel, ok := readPromptLine(scanner, stdout, "Workhorse profile model (press Enter to reuse the default)")
+		if !ok {
+			return 1
+		}
+		deepModel, ok := readPromptLine(scanner, stdout, "Deep profile model (press Enter to reuse the default)")
+		if !ok {
+			return 1
+		}
+		multimodalModel, ok := readPromptLine(scanner, stdout, "Multimodal profile model (press Enter to reuse the default)")
+		if !ok {
+			return 1
+		}
+		if err := saveRouterSettings("auto"); err != nil {
+			fmt.Fprintf(stderr, "Could not save Local SLM route mode: %v\n", err)
+			return 1
+		}
+		if err := saveProviderSettings(map[string]string{
+			"JINI_PROVIDER":                   "local-slm",
+			"JINI_MODEL":                      "auto",
+			"JINI_LOCAL_SLM_ENDPOINT":         endpoint,
+			"JINI_LOCAL_SLM_MODEL":            model,
+			"JINI_LOCAL_SLM_API_KEY":          apiKey,
+			"JINI_LOCAL_SLM_FAST_MODEL":       firstNonEmpty(strings.TrimSpace(fastModel), strings.TrimSpace(model)),
+			"JINI_LOCAL_SLM_WORKHORSE_MODEL":  firstNonEmpty(strings.TrimSpace(workhorseModel), strings.TrimSpace(model)),
+			"JINI_LOCAL_SLM_DEEP_MODEL":       firstNonEmpty(strings.TrimSpace(deepModel), strings.TrimSpace(model)),
+			"JINI_LOCAL_SLM_MULTIMODAL_MODEL": firstNonEmpty(strings.TrimSpace(multimodalModel), strings.TrimSpace(model)),
+		}); err != nil {
+			fmt.Fprintf(stderr, "Could not save Local SLM setup: %v\n", err)
+			return 1
+		}
+		_ = saveLocalRuntimeCapabilities(benchmarkLocalRuntimeCapabilities(context.Background()))
 	case "local-preview":
 		fmt.Fprintln(stdout, "Use local preview")
+		if err := saveRouterSettings("local-preview"); err != nil {
+			fmt.Fprintf(stderr, "Could not save local preview route: %v\n", err)
+			return 1
+		}
 		if err := saveProviderSettings(map[string]string{
 			"JINI_PROVIDER": "local-preview",
 			"JINI_MODEL":    "auto",
@@ -1599,7 +2343,11 @@ func runProviderSetupWizard(mode string, scanner *bufio.Scanner, stdout, stderr 
 	provider := detectProvider()
 	fmt.Fprintln(stdout)
 	if provider.Status == "ok" {
-		fmt.Fprintf(stdout, "Setup saved. Working with %s.\n", provider.Label)
+		if mode == "local-slm" {
+			fmt.Fprintf(stdout, "Setup saved. Working with %s / %s.\n", provider.Label, firstNonEmpty(strings.TrimSpace(configValue("JINI_LOCAL_SLM_MODEL")), "default local model"))
+			return 0
+		}
+		fmt.Fprintf(stdout, "Setup saved. Working with %s.\n", workingWithLabel(provider))
 		return 0
 	}
 	fmt.Fprintf(stderr, "Setup is still incomplete. Missing: %s\n", strings.Join(provider.Missing, ", "))
@@ -1633,6 +2381,19 @@ func renderFirstRunResult(w io.Writer, summary *workSummary) {
 	renderPostResultActions(w, summary, item)
 }
 
+func currentFeedbackArtifactPath(summary *workSummary) string {
+	if summary == nil {
+		return ""
+	}
+	if item := firstResultItem(summary); item != nil {
+		return item.Path
+	}
+	if len(summary.Views) > 0 {
+		return summary.Views[0].Path
+	}
+	return ""
+}
+
 func firstResultItem(summary *workSummary) *catalogItem {
 	if len(summary.Views) == 0 {
 		return nil
@@ -1644,9 +2405,9 @@ func renderPostResultActions(w io.Writer, summary *workSummary, item *catalogIte
 	fmt.Fprintln(w, "What do you want to do next?")
 	fmt.Fprintln(w, "- Keep going")
 	fmt.Fprintln(w, "- Make it fuller")
-	fmt.Fprintln(w, "- See what is still missing")
-	fmt.Fprintln(w, "- Plan this first")
-	fmt.Fprintln(w, "- Start something new")
+	fmt.Fprintln(w, "- Show what is missing")
+	fmt.Fprintln(w, "- Help me plan this")
+	fmt.Fprintln(w, "- Start new work")
 }
 
 func handlePostResultAction(action string, summary *workSummary, stdout, stderr io.Writer) int {
@@ -1660,11 +2421,11 @@ func handlePostResultAction(action string, summary *workSummary, stdout, stderr 
 		renderItem(stdout, item)
 	case "make it fuller", "full", "full version", "2":
 		renderFullerPrompt(stdout, summary)
-	case "see what is still missing", "missing", "check", "3":
+	case "see what is still missing", "show what is missing", "missing", "check", "3":
 		renderMissingOnly(stdout, summary)
-	case "plan this first", "plan first", "plan", "4":
+	case "plan this first", "plan first", "plan", "help me plan this", "4":
 		renderPlanFirst(stdout, summary)
-	case "start something new", "new", "5":
+	case "start something new", "start new work", "new", "5":
 		renderNewWorkLauncher(stdout)
 	default:
 		renderCheck(stdout, summary)
@@ -1739,7 +2500,7 @@ func renderMissingOnly(w io.Writer, summary *workSummary) {
 }
 
 func renderPlanFirst(w io.Writer, summary *workSummary) {
-	fmt.Fprintln(w, "Plan this first")
+	fmt.Fprintln(w, "Help me plan this")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Goal")
 	fmt.Fprintf(w, "- Finish %s without hiding what is missing.\n", summary.Title)
@@ -1765,93 +2526,486 @@ func renderPlanFirst(w io.Writer, summary *workSummary) {
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Run")
 	fmt.Fprintln(w, "- Keep going")
-	fmt.Fprintln(w, "- Open ready work")
-	fmt.Fprintln(w, "- See what is still missing")
+	fmt.Fprintln(w, "- Show what's ready")
+	fmt.Fprintln(w, "- Show what is missing")
 }
 
 func renderCurrentWorkLauncher(w io.Writer, summary *workSummary, interactive bool) {
-	fmt.Fprintln(w, "You're working on")
-	fmt.Fprintln(w, summary.Title)
+	fmt.Fprintln(w, "Goal")
+	fmt.Fprintln(w, summary.Thread.Goal)
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Working with")
-	fmt.Fprintln(w, detectProvider().Label)
-	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Ready now")
-	for _, item := range summary.Views {
-		fmt.Fprintf(w, "- %s\n", item.Label)
+	for _, item := range summary.Thread.WorkingWith {
+		fmt.Fprintf(w, "- %s\n", item)
 	}
-	if len(summary.Views) == 0 {
-		fmt.Fprintln(w, "- Nothing is ready yet")
+	if len(summary.Thread.WorkingWith) == 0 {
+		fmt.Fprintln(w, "- Nothing attached yet")
+	}
+	if strings.TrimSpace(summary.Thread.CurrentRoute) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "AI route")
+		fmt.Fprintln(w, summary.Thread.CurrentRoute)
+	}
+	if strings.TrimSpace(summary.Thread.ModelLabel) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Model")
+		fmt.Fprintln(w, summary.Thread.ModelLabel)
+	}
+	if strings.TrimSpace(summary.Thread.ModelReason) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Why this model")
+		fmt.Fprintln(w, summary.Thread.ModelReason)
+	}
+	if strings.TrimSpace(summary.Thread.ModelFeedback) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Model feedback")
+		fmt.Fprintln(w, titleCase(summary.Thread.ModelFeedback))
+	}
+	if strings.TrimSpace(summary.Thread.RoutePolicy) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "How chosen")
+		fmt.Fprintln(w, summary.Thread.RoutePolicy)
+	}
+	if strings.TrimSpace(summary.Thread.EffortLevel) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Effort level")
+		fmt.Fprintln(w, titleCase(summary.Thread.EffortLevel))
+	}
+	if strings.TrimSpace(summary.Thread.VerificationLevel) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Verification")
+		fmt.Fprintln(w, summary.Thread.VerificationLevel)
+	}
+	if strings.TrimSpace(summary.Thread.VerificationReason) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Why this verification")
+		fmt.Fprintln(w, summary.Thread.VerificationReason)
+	}
+	if strings.TrimSpace(summary.Thread.RouteReason) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Why this route")
+		fmt.Fprintln(w, summary.Thread.RouteReason)
+	}
+	if strings.TrimSpace(summary.Thread.ContinuityReason) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Continuity")
+		fmt.Fprintln(w, summary.Thread.ContinuityReason)
+	}
+	if len(summary.Thread.MultimodalLearning) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Multimodal learning")
+		for _, line := range summary.Thread.MultimodalLearning {
+			fmt.Fprintf(w, "- %s\n", line)
+		}
 	}
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Still missing")
-	if len(summary.Missing) == 0 {
-		fmt.Fprintln(w, "- Nothing right now")
-	} else {
-		for _, item := range summary.Missing {
+	fmt.Fprintln(w, "Just finished")
+	for _, item := range summary.Thread.JustFinished {
+		fmt.Fprintf(w, "- %s\n", item)
+	}
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Doing now")
+	fmt.Fprintln(w, summary.Thread.DoingNow)
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Up next")
+	fmt.Fprintln(w, summary.Thread.UpNext)
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Now")
+	fmt.Fprintln(w, summary.Thread.Now)
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Done")
+	for _, item := range summary.Thread.Done {
+		fmt.Fprintf(w, "- %s\n", item)
+	}
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Need")
+	fmt.Fprintln(w, summary.Thread.Need)
+	if strings.TrimSpace(summary.Thread.NeedReason) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Why this matters")
+		fmt.Fprintln(w, summary.Thread.NeedReason)
+	}
+	if len(summary.Thread.NeedOptions) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Options")
+		for _, item := range summary.Thread.NeedOptions {
+			fmt.Fprintf(w, "- %s\n", item)
+		}
+	}
+	if len(summary.Thread.Assumptions) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "If you skip this")
+		for _, item := range summary.Thread.Assumptions {
 			fmt.Fprintf(w, "- %s\n", item)
 		}
 	}
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Next step")
-	fmt.Fprintln(w, summary.NextStep)
+	fmt.Fprintln(w, "Next")
+	fmt.Fprintln(w, summary.Thread.Next)
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Ready now")
+	for _, item := range summary.Thread.ReadyNow {
+		fmt.Fprintf(w, "- %s\n", item.Label)
+	}
+	if len(summary.Thread.ReadyNow) == 0 {
+		fmt.Fprintln(w, "- Nothing is ready yet")
+	}
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Blocked")
+	if len(summary.Thread.Blocked) == 0 {
+		fmt.Fprintln(w, "- Nothing right now")
+	} else {
+		for _, item := range summary.Thread.Blocked {
+			fmt.Fprintf(w, "- %s\n", item)
+		}
+	}
+	if len(summary.Thread.NotSureAbout) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Not sure about")
+		for _, item := range summary.Thread.NotSureAbout {
+			fmt.Fprintf(w, "- %s\n", item)
+		}
+	}
+	other := otherActiveWorkSummaries(summary)
+	if len(other) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Other active work")
+		for _, item := range other {
+			fmt.Fprintf(w, "- %s\n", item.Title)
+		}
+	}
 	fmt.Fprintln(w)
 	if !interactive {
 		return
 	}
-	fmt.Fprintln(w, "Jini shell")
-	fmt.Fprintln(w, "What do you want to do?")
+	fmt.Fprintln(w, "Choose one")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "- Keep going")
-	fmt.Fprintln(w, "- Open ready work")
-	fmt.Fprintln(w, "- See what is still missing")
-	fmt.Fprintln(w, "- Plan this first")
-	fmt.Fprintln(w, "- Start something else")
+	fmt.Fprintln(w, "- Show what's ready")
+	fmt.Fprintln(w, "- Show what is missing")
+	fmt.Fprintln(w, "- Help me plan this")
+	if strings.TrimSpace(summary.Thread.ModelLabel) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Tell Jini how this draft went")
+		fmt.Fprintln(w, "- Accepted as is")
+		fmt.Fprintln(w, "- Needed light edits")
+		fmt.Fprintln(w, "- Not useful")
+		fmt.Fprintln(w, "- Shared this")
+		fmt.Fprintln(w, "- Replaced this")
+		fmt.Fprintln(w, "Advanced: `Used this`, `Model upvote`, or `Model downvote`.")
+	}
+	if len(other) > 0 {
+		fmt.Fprintln(w, "- Switch project")
+	}
+	fmt.Fprintln(w, "- Start new work")
+}
+
+func runActiveWorkLauncher(active []*workSummary, stdin io.Reader, stdout, stderr io.Writer) int {
+	renderActiveWorkLauncher(stdout, active)
+	if stdin == nil {
+		return 0
+	}
+	session := bufio.NewScanner(stdin)
+	action, ok := readOptionalInputLine(session, stdout)
+	if !ok || strings.TrimSpace(action) == "" {
+		return 0
+	}
+	fmt.Fprintln(stdout)
+	return handleActiveWorkSelection(action, active, session, stdout, stderr)
+}
+
+func renderActiveWorkLauncher(w io.Writer, active []*workSummary) {
+	fmt.Fprintln(w, "Active work")
+	fmt.Fprintln(w)
+	for index, item := range active {
+		fmt.Fprintf(w, "%d. %s\n", index+1, item.Title)
+		fmt.Fprintf(w, "   Next: %s\n", item.NextStep)
+	}
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Type a number to open one, or type `Start something new`.")
+}
+
+func handleActiveWorkSelection(action string, active []*workSummary, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
+	selection, err := resolveActiveWorkSelection(action, active)
+	if err != nil {
+		switch normalizeName(action) {
+		case "start something new", "start something else", "start new work", "new", "start new":
+			if scanner == nil {
+				renderNewWorkLauncher(stdout)
+				return 0
+			}
+			return runNewWorkIntakeWithScanner(scanner, stdout, stderr)
+		}
+		fmt.Fprintf(stderr, "%v\n", err)
+		return 1
+	}
+	if err := saveSummaryAsCurrent(selection); err != nil {
+		fmt.Fprintf(stderr, "Could not switch work: %v\n", err)
+		return 1
+	}
+	fmt.Fprintln(stdout, "Switched to")
+	fmt.Fprintln(stdout, selection.Title)
+	fmt.Fprintln(stdout)
+	renderCheck(stdout, selection)
+	return 0
+}
+
+func runSwitchWorkPicker(current *workSummary, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
+	other := otherActiveWorkSummaries(current)
+	if len(other) == 0 {
+		fmt.Fprintln(stdout, "No other active work right now.")
+		return 0
+	}
+	fmt.Fprintln(stdout, "Switch project")
+	fmt.Fprintln(stdout)
+	for index, item := range other {
+		fmt.Fprintf(stdout, "%d. %s\n", index+1, item.Title)
+		fmt.Fprintf(stdout, "   Next: %s\n", item.NextStep)
+	}
+	if scanner == nil {
+		return 0
+	}
+	choice, ok := readOptionalInputLine(scanner, stdout)
+	if !ok || strings.TrimSpace(choice) == "" {
+		return 0
+	}
+	fmt.Fprintln(stdout)
+	selection, err := resolveActiveWorkSelection(choice, other)
+	if err != nil {
+		fmt.Fprintf(stderr, "%v\n", err)
+		return 1
+	}
+	if err := saveSummaryAsCurrent(selection); err != nil {
+		fmt.Fprintf(stderr, "Could not switch work: %v\n", err)
+		return 1
+	}
+	fmt.Fprintln(stdout, "Switched to")
+	fmt.Fprintln(stdout, selection.Title)
+	fmt.Fprintln(stdout)
+	renderCheck(stdout, selection)
+	return 0
+}
+
+func listActiveWorkSummaries(current *workSummary) ([]*workSummary, error) {
+	root := filepath.Join(sessionStateRoot(), "work")
+	entries, err := os.ReadDir(root)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	active := []*workSummary{}
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		summary, loadErr := loadWorkSummary(filepath.Join(root, entry.Name()), nil)
+		if loadErr != nil {
+			continue
+		}
+		active = append(active, summary)
+	}
+	sort.SliceStable(active, func(i, j int) bool {
+		return active[i].Title < active[j].Title
+	})
+	if current == nil {
+		return active, nil
+	}
+	currentPath := ""
+	if resolved, err := filepath.Abs(current.Dir); err == nil {
+		currentPath = resolved
+	}
+	out := make([]*workSummary, 0, len(active))
+	for _, item := range active {
+		itemPath := item.Dir
+		if resolved, err := filepath.Abs(item.Dir); err == nil {
+			itemPath = resolved
+		}
+		if currentPath != "" && itemPath == currentPath {
+			continue
+		}
+		out = append(out, item)
+	}
+	return out, nil
+}
+
+func otherActiveWorkSummaries(current *workSummary) []*workSummary {
+	active, err := listActiveWorkSummaries(current)
+	if err != nil {
+		return nil
+	}
+	return active
+}
+
+func resolveActiveWorkSelection(action string, active []*workSummary) (*workSummary, error) {
+	normalized := normalizeName(action)
+	for index, item := range active {
+		if normalized == normalizeName(fmt.Sprintf("%d", index+1)) || normalized == normalizeName(item.Title) {
+			return item, nil
+		}
+	}
+	return nil, fmt.Errorf("I couldn't find that work. Pick a shown number or title.")
+}
+
+func saveSummaryAsCurrent(summary *workSummary) error {
+	current := &currentWork{
+		PackDir:    summary.Dir,
+		PackID:     summary.PackID,
+		WorkUnitID: summary.WorkUnitID,
+		Title:      summary.Title,
+		State:      summary.State,
+		Health:     inferHealthFromState(summary.State),
+	}
+	return saveCurrentWork(current)
 }
 
 func renderCheck(w io.Writer, summary *workSummary) {
-	fmt.Fprintln(w, "You're working on")
-	fmt.Fprintln(w, summary.Title)
+	fmt.Fprintln(w, "Goal")
+	fmt.Fprintln(w, summary.Thread.Goal)
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Working with")
-	fmt.Fprintln(w, detectProvider().Label)
-	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Jini is using")
-	fmt.Fprintln(w, summary.Using)
-	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Jini is doing")
-	fmt.Fprintln(w, summary.Doing)
-	fmt.Fprintln(w, summary.Progress)
-	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Ready now")
-	for _, item := range summary.Views {
-		fmt.Fprintf(w, "- %s\n", item.Label)
+	for _, item := range summary.Thread.WorkingWith {
+		fmt.Fprintf(w, "- %s\n", item)
 	}
-	if len(summary.Views) == 0 {
-		fmt.Fprintln(w, "- Nothing is ready yet")
+	if len(summary.Thread.WorkingWith) == 0 {
+		fmt.Fprintln(w, "- Nothing attached yet")
+	}
+	if strings.TrimSpace(summary.Thread.CurrentRoute) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "AI route")
+		fmt.Fprintln(w, summary.Thread.CurrentRoute)
+	}
+	if strings.TrimSpace(summary.Thread.ModelLabel) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Model")
+		fmt.Fprintln(w, summary.Thread.ModelLabel)
+	}
+	if strings.TrimSpace(summary.Thread.ModelReason) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Why this model")
+		fmt.Fprintln(w, summary.Thread.ModelReason)
+	}
+	if strings.TrimSpace(summary.Thread.ModelFeedback) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Model feedback")
+		fmt.Fprintln(w, titleCase(summary.Thread.ModelFeedback))
+	}
+	if strings.TrimSpace(summary.Thread.RoutePolicy) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "How chosen")
+		fmt.Fprintln(w, summary.Thread.RoutePolicy)
+	}
+	if strings.TrimSpace(summary.Thread.EffortLevel) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Effort level")
+		fmt.Fprintln(w, titleCase(summary.Thread.EffortLevel))
+	}
+	if strings.TrimSpace(summary.Thread.VerificationLevel) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Verification")
+		fmt.Fprintln(w, summary.Thread.VerificationLevel)
+	}
+	if strings.TrimSpace(summary.Thread.VerificationReason) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Why this verification")
+		fmt.Fprintln(w, summary.Thread.VerificationReason)
+	}
+	if strings.TrimSpace(summary.Thread.RouteReason) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Why this route")
+		fmt.Fprintln(w, summary.Thread.RouteReason)
+	}
+	if strings.TrimSpace(summary.Thread.ContinuityReason) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Continuity")
+		fmt.Fprintln(w, summary.Thread.ContinuityReason)
+	}
+	if len(summary.Thread.MultimodalLearning) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Multimodal learning")
+		for _, line := range summary.Thread.MultimodalLearning {
+			fmt.Fprintf(w, "- %s\n", line)
+		}
 	}
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Still missing")
-	if len(summary.Missing) == 0 {
-		fmt.Fprintln(w, "- Nothing right now")
-	} else {
-		for _, item := range summary.Missing {
+	fmt.Fprintln(w, "Just finished")
+	for _, item := range summary.Thread.JustFinished {
+		fmt.Fprintf(w, "- %s\n", item)
+	}
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Doing now")
+	fmt.Fprintln(w, summary.Thread.DoingNow)
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Up next")
+	fmt.Fprintln(w, summary.Thread.UpNext)
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Now")
+	fmt.Fprintln(w, summary.Thread.Now)
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Done")
+	for _, item := range summary.Thread.Done {
+		fmt.Fprintf(w, "- %s\n", item)
+	}
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Need")
+	fmt.Fprintln(w, summary.Thread.Need)
+	if strings.TrimSpace(summary.Thread.NeedReason) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Why this matters")
+		fmt.Fprintln(w, summary.Thread.NeedReason)
+	}
+	if len(summary.Thread.NeedOptions) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Options")
+		for _, item := range summary.Thread.NeedOptions {
+			fmt.Fprintf(w, "- %s\n", item)
+		}
+	}
+	if len(summary.Thread.Assumptions) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "If you skip this")
+		for _, item := range summary.Thread.Assumptions {
 			fmt.Fprintf(w, "- %s\n", item)
 		}
 	}
 	fmt.Fprintln(w)
-	if len(summary.Uncertain) > 0 {
+	fmt.Fprintln(w, "Next")
+	fmt.Fprintln(w, summary.Thread.Next)
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Ready now")
+	for _, item := range summary.Thread.ReadyNow {
+		fmt.Fprintf(w, "- %s\n", item.Label)
+	}
+	if len(summary.Thread.ReadyNow) == 0 {
+		fmt.Fprintln(w, "- Nothing is ready yet")
+	}
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Blocked")
+	if len(summary.Thread.Blocked) == 0 {
+		fmt.Fprintln(w, "- Nothing right now")
+	} else {
+		for _, item := range summary.Thread.Blocked {
+			fmt.Fprintf(w, "- %s\n", item)
+		}
+	}
+	fmt.Fprintln(w)
+	if len(summary.Thread.NotSureAbout) > 0 {
 		fmt.Fprintln(w, "Not sure about")
-		for _, item := range summary.Uncertain {
+		for _, item := range summary.Thread.NotSureAbout {
 			fmt.Fprintf(w, "- %s\n", item)
 		}
 		fmt.Fprintln(w)
 	}
-	fmt.Fprintln(w, "Next step")
-	fmt.Fprintln(w, summary.NextStep)
-	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Safe to do")
-	fmt.Fprintln(w, summary.SafeToDo)
+	fmt.Fprintln(w, summary.Thread.SafeToDo)
+}
+
+func summaryWorkingWith(summary *workSummary) string {
+	if summary != nil && strings.TrimSpace(summary.WorkingWith) != "" {
+		return summary.WorkingWith
+	}
+	return workingWithLabel(detectProvider())
 }
 
 func renderOpenShelf(w io.Writer, summary *workSummary) {

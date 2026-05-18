@@ -8,8 +8,20 @@ what is ready, what is missing, and what to do next.
 
 That is the whole idea.
 
-If you want the shortest first-run path, start on the [Install](./install.md)
-page and copy the setup block that matches your provider.
+If you want the shortest first-run path:
+
+1. install Jini
+2. run `jini`
+3. paste the work you want finished
+
+If setup is missing, Jini should say so in the shell. Then type:
+
+```text
+Use Auto
+```
+
+If your company or workflow requires one strict route, use the matching path on
+the [Install](./install.md) page instead.
 
 ## Think About Normal Problems
 
@@ -24,23 +36,33 @@ Jini helps when:
 ## The Smallest Way To Use It
 
 ```bash
-./jini
+jini
 ```
 
-`./jini` is the front door in this source-built preview.
-
-If Jini is already installed on your `PATH`, the command becomes `jini`.
+Install once, then `jini` is the front door.
 
 Inside Jini you can:
 
 - paste messy notes
 - ask for the outcome you want
-- type `Use Claude`, `Use Bedrock`, `Use Azure`, or `Use Auto` if you want to connect a provider first
-- choose `Open ready work`
-- choose `See what is still missing`
-- choose `Plan this first`
+- type `Use Auto` only if Jini says setup is missing
+- type `Connect Claude`, `Connect Bedrock`, `Connect Azure OpenAI`, or `Connect Local SLM` if you want to steer the route
+- choose `Show what's ready`
+- choose `Show what is missing`
+- choose `Help me plan this`
+- choose `Switch project` when more than one project is active
 
-When you choose `Plan this first`, Jini should slow down and structure the work
+Before Jini starts a new piece of work, it should also show a short decision
+card with:
+
+- tool
+- provider
+- how chosen
+- model
+- effort level
+- why it made that choice
+
+When you choose `Help me plan this`, Jini should slow down and structure the work
 into goal, requirements, design, steps, and run.
 
 ## If You Use Claude
@@ -48,17 +70,24 @@ into goal, requirements, design, steps, and run.
 The easiest path is:
 
 ```bash
-go build -o jini ./cmd/jini
-./jini
+curl -fsSL https://raw.githubusercontent.com/maridlabsai/jini/main/install.sh | bash
+jini
 ```
 
 Then inside Jini, type:
 
 ```text
-Use Claude
+Connect Claude
 ```
 
-Jini will ask for the API key and remember it in this repo's `.jini` folder.
+Jini will ask for the API key and save it in this repo's `.jini` folder.
+Do not commit `.jini`.
+
+If you do not know how to begin, type:
+
+```text
+help me finish this
+```
 
 Then type something plain like:
 
@@ -73,9 +102,17 @@ If setup is not the thing you are stuck on, skip straight to the
 
 Jini should quickly tell you:
 
-- what you are working on
-- what it is using
-- what it is doing
+- the goal
+- the working inputs
+- the AI route when it matters
+- what it just finished
+- what it is doing now
+- what it will do next
+- what else is already active
+- what is already done
+- what it still needs
+- why that missing thing matters
+- what your options are
 - what is ready now
 - what is still missing
 - what it is not sure about

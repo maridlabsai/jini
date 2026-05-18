@@ -108,6 +108,22 @@
   color: #1d4ed8;
 }
 
+.site-nav-cta {
+  background: #1d4ed8;
+  color: #ffffff !important;
+  box-shadow: 0 8px 18px rgba(29, 78, 216, 0.2);
+}
+
+.site-nav-cta:hover {
+  background: #1849a9 !important;
+  color: #ffffff !important;
+}
+
+.site-nav-cta.is-active {
+  background: #1849a9 !important;
+  color: #ffffff !important;
+}
+
 .site-section-label {
   margin: 0 0 0.4rem;
   font-size: 0.78rem;
@@ -202,6 +218,10 @@
   color: #344054;
 }
 
+.hero-panel-marketing {
+  overflow: hidden;
+}
+
 .cta-row {
   display: flex;
   flex-wrap: wrap;
@@ -239,6 +259,54 @@
 .cta-button-secondary:hover {
   background: #eef4ff;
   color: #1d4ed8 !important;
+}
+
+.command-block {
+  display: grid;
+  gap: 0.55rem;
+  margin: 1.2rem 0 0;
+  padding: 1rem 1rem 1.05rem;
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  border-radius: 18px;
+  background: rgba(8, 17, 40, 0.96);
+  color: #f8fafc;
+}
+
+.command-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(226, 232, 240, 0.76);
+}
+
+.command-block code {
+  display: block;
+  padding: 0.45rem 0.65rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  white-space: normal;
+}
+
+.compat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 1rem 0 0;
+}
+
+.compat-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0 0.75rem;
+  border: 1px solid #d8dee4;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #344054;
 }
 
 .fact-strip {
@@ -409,6 +477,133 @@
 
 .workflow-jump .workflow-card p {
   margin-bottom: 0.65rem;
+}
+
+.proof-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin: 1.25rem 0 2rem;
+}
+
+.proof-card {
+  padding: 1.1rem 1.05rem;
+  border: 1px solid #d8dee4;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: 0 10px 30px rgba(8, 17, 40, 0.04);
+}
+
+.proof-card h3 {
+  margin: 0 0 0.45rem;
+  font-size: 1.03rem;
+}
+
+.proof-card p {
+  margin: 0;
+  color: #344054;
+}
+
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin: 1.25rem 0 2rem;
+}
+
+.media-card {
+  overflow: hidden;
+  border: 1px solid #d8dee4;
+  border-radius: 22px;
+  background: #ffffff;
+  color: inherit;
+  text-decoration: none !important;
+  box-shadow: 0 12px 36px rgba(8, 17, 40, 0.08);
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+
+.media-card:hover {
+  transform: translateY(-2px);
+  border-color: #9fbef6;
+  box-shadow: 0 20px 44px rgba(8, 17, 40, 0.12);
+}
+
+.media-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  background: #e5e7eb;
+}
+
+.media-copy {
+  padding: 1rem 1rem 1.1rem;
+}
+
+.media-copy h3 {
+  margin: 0 0 0.45rem;
+  font-size: 1.06rem;
+  line-height: 1.3;
+}
+
+.media-copy p {
+  margin: 0;
+  color: #344054;
+}
+
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin: 1.25rem 0 2rem;
+}
+
+.step-card {
+  position: relative;
+  padding: 1.1rem 1rem 1rem;
+  border: 1px solid #d8dee4;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.step-card h3 {
+  margin: 0 0 0.45rem;
+  font-size: 1.02rem;
+}
+
+.step-card p {
+  margin: 0;
+  color: #344054;
+}
+
+.step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  margin-bottom: 0.7rem;
+  border-radius: 999px;
+  background: #e8f0ff;
+  color: #1d4ed8;
+  font-weight: 800;
+}
+
+.section-card-cta {
+  margin-top: 2rem;
+  padding: 1.35rem 1.25rem;
+  background:
+    radial-gradient(circle at top right, rgba(29, 78, 216, 0.08), transparent 32%),
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 0 16px 40px rgba(8, 17, 40, 0.08);
+}
+
+.section-card-cta h2 {
+  margin-bottom: 0.35rem;
+}
+
+.section-card-cta p {
+  margin-top: 0;
 }
 
 .example-snapshot {

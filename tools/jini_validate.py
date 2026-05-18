@@ -59,6 +59,10 @@ REWRITE_GUARDRAILS_PATH = ROOT / "specs" / "rewrite-guardrails.md"
 PRODUCT_REVIEW_ROLES_PATH = ROOT / "specs" / "product-review-roles.md"
 PRODUCT_CONSENSUS_PRD_PATH = ROOT / "specs" / "product-consensus-prd-and-plan.md"
 PRODUCT_REWRITE_CONTRACT_PATH = ROOT / "specs" / "product-rewrite-contract.md"
+DEVICE_CAPABILITY_ROUTING_PATH = ROOT / "specs" / "device-capability-routing.md"
+DEVICE_RUNTIME_GATE_PATH = ROOT / "specs" / "device-runtime-gate.md"
+ADAPTER_CAPABILITY_BENCHMARKING_PATH = ROOT / "specs" / "adapter-capability-benchmarking.md"
+ADAPTER_BENCHMARK_GATE_PATH = ROOT / "specs" / "adapter-benchmark-gate.md"
 INSTALL_MANIFEST_PATH = ROOT / "distribution" / "install-manifest.yaml"
 ADAPTER_REGISTRY_PATH = ROOT / "distribution" / "adapter-registry.yaml"
 VERSION_PATH = ROOT / "VERSION"
@@ -1780,8 +1784,8 @@ def build_publish_readiness() -> dict[str, Any]:
                 phrase in ((ROOT / "docs" / "simple.md").read_text(encoding="utf-8") if (ROOT / "docs" / "simple.md").exists() else "")
                 for phrase in (
                     "`jini` is the front door",
-                    "Open ready work",
-                    "Plan this first",
+                    "Show what's ready",
+                    "Help me plan this",
                 )
             ),
             "status": "ok"
@@ -1789,8 +1793,8 @@ def build_publish_readiness() -> dict[str, Any]:
                 phrase in ((ROOT / "docs" / "simple.md").read_text(encoding="utf-8") if (ROOT / "docs" / "simple.md").exists() else "")
                 for phrase in (
                     "`jini` is the front door",
-                    "Open ready work",
-                    "Plan this first",
+                    "Show what's ready",
+                    "Help me plan this",
                 )
             )
             else "warning",
@@ -1994,7 +1998,7 @@ def build_publish_readiness() -> dict[str, Any]:
                     "path": PRODUCT_CONSENSUS_PRD_PATH,
                     "markers": [
                         "`Keep going`",
-                        "`See what is still missing`",
+                        "`Show what is missing`",
                         "Do not show actions that are not implemented.",
                     ],
                 },
@@ -2585,8 +2589,8 @@ def build_public_example_proof(
         "try_command": f"{cli}",
         "continue_with": [
             f"{cli}",
-            "Inside Jini: Open ready work",
-            "Inside Jini: See what is still missing",
+            "Inside Jini: Show what's ready",
+            "Inside Jini: Show what is missing",
             f"{cli} next --intent {str(summary.get('next_operation', 'Verify')).lower()}",
         ],
         "warnings": [*validation_warnings, *compile_warnings],
@@ -3843,6 +3847,384 @@ def print_provider_doctor(report: dict[str, Any]) -> None:
         print("Missing")
         for item in report.get("missing", []):
             print(f"- {item}")
+
+
+def _marker_check(path: Path, markers: list[str], *, case_insensitive: bool = False) -> dict[str, Any]:
+    exists = path.exists()
+    text = path.read_text(encoding="utf-8") if exists else ""
+    haystack = text.lower() if case_insensitive else text
+    needles = [marker.lower() if case_insensitive else marker for marker in markers]
+    missing_markers = [marker for marker, needle in zip(markers, needles) if needle not in haystack]
+    return {
+        "path": str(path.relative_to(ROOT)),
+        "exists": exists,
+        "markers": markers,
+        "missing_markers": missing_markers,
+        "status": "ok" if exists and not missing_markers else "warning",
+    }
+
+
+def validate_device_runtime_gate() -> dict[str, Any]:
+    checks: list[dict[str, Any]] = []
+    checks.append(
+        {
+            "id": "capability-probe-spec",
+            "label": "Device capability routing spec exists",
+            "status": "ok",
+            "docs": [
+                _marker_check(
+                    DEVICE_CAPABILITY_ROUTING_PATH,
+                    [
+                        "## Capability Probe Surface",
+                        "## Device Classes",
+                        "## Upgrade Rule",
+                        "## Acceptance Criteria",
+                    ],
+                )
+            ],
+        }
+    )
+    checks.append(
+        {
+            "id": "independent-gate-spec",
+            "label": "Independent gate spec exists",
+            "status": "ok",
+            "docs": [
+                _marker_check(
+                    DEVICE_RUNTIME_GATE_PATH,
+                    [
+                        "## Gate Categories",
+                        "### 1. Capability Probe",
+                        "### 2. Versioned Cache",
+                        "### 3. Routing Use",
+                        "### 4. Transparency",
+                        "### 5. Tests",
+                    ],
+                )
+            ],
+        }
+    )
+    checks.append(
+        {
+            "id": "device-profile-runtime",
+            "label": "Runtime device profile implementation exists",
+            "status": "ok",
+            "files": [
+                _marker_check(
+                    ROOT / "internal" / "app" / "device_profile.go",
+                    [
+                        "type deviceProfile struct",
+                        "func currentDeviceProfile()",
+                        "func deviceProfileIsFresh(",
+                        "CapabilityRegistryVersion",
+                        "ProbeFingerprint",
+                        "HardwareProfileStates",
+                        "func probeOSVersion(",
+                        "func probeTotalMemoryBytes(",
+                        "func detectAcceleratorClass(",
+                        "func detectLocalRuntimeClass(",
+                        "func classifyDeviceClass(",
+                        "func effectiveLocalProfileStatesForDevice(",
+                    ],
+                )
+            ],
+        }
+    )
+    checks.append(
+        {
+            "id": "routing-uses-device-profile",
+            "label": "Routing uses device profile and local capability bias",
+            "status": "ok",
+            "files": [
+                _marker_check(
+                    ROOT / "internal" / "app" / "router.go",
+                    [
+                        "DeviceClass",
+                        "currentDeviceProfile()",
+                        "localDeviceCapabilityBias(",
+                        "routeFeedbackBias(",
+                        "FeedbackKey",
+                    ],
+                )
+            ],
+        }
+    )
+    checks.append(
+        {
+            "id": "doctor-exposes-device-state",
+            "label": "Provider doctor exposes device and runtime state",
+            "status": "ok",
+            "files": [
+                _marker_check(
+                    ROOT / "internal" / "app" / "app.go",
+                    [
+                        "DEVICE_CLASS:",
+                        "DEVICE_OS:",
+                        "LOCAL_ACCELERATOR:",
+                        "LOCAL_RUNTIME_CLASS:",
+                    ],
+                )
+            ],
+        }
+    )
+    checks.append(
+        {
+            "id": "device-runtime-tests",
+            "label": "Device-aware tests exist",
+            "status": "ok",
+            "files": [
+                _marker_check(
+                    ROOT / "internal" / "app" / "device_profile_test.go",
+                    [
+                        "TestCurrentDeviceProfileInvalidatesOldSchemaCache",
+                        "TestCurrentDeviceProfileInvalidatesRuntimeDrift",
+                        "TestEffectiveLocalProfileStatesRequireActuallyLocalRuntime",
+                    ],
+                ),
+                _marker_check(
+                    ROOT / "internal" / "app" / "provider_test.go",
+                    [
+                        "JINI_DEVICE_CLASS_OVERRIDE",
+                        "TestDetectRouteForRequestAutoPrefersLocalWorkhorseForTravelPlanningWhenReady",
+                        "TestRouteFeedbackBiasIsScopedByDeviceAndModelFingerprint",
+                    ],
+                ),
+                _marker_check(
+                    ROOT / "internal" / "app" / "app_test.go",
+                    [
+                        "TestProviderDoctorDetectsLocalSLMWithoutLeakingOptionalKey",
+                    ],
+                ),
+            ],
+        }
+    )
+
+    overall_status = "ok"
+    for check in checks:
+        docs = check.get("docs", [])
+        files = check.get("files", [])
+        child_statuses = [item.get("status", "warning") for item in [*docs, *files] if isinstance(item, dict)]
+        if child_statuses and any(status != "ok" for status in child_statuses):
+            check["status"] = "warning"
+            overall_status = "warning"
+    return {
+        "schema_version": "0.1.0",
+        "result_type": "JiniDeviceRuntimeGate",
+        "generated_at": now_utc(),
+        "status": overall_status,
+        "checks": checks,
+    }
+
+
+def print_device_runtime_gate(report: dict[str, Any]) -> None:
+    print("Device Runtime Gate")
+    print(report.get("status", "unknown"))
+    for check in report.get("checks", []):
+        print()
+        print(f"{check.get('id')}: {check.get('status')}")
+        print(check.get("label", ""))
+        for group in ("docs", "files"):
+            for item in check.get(group, []):
+                print(f"- {item.get('path')}: {item.get('status')}")
+                missing = item.get("missing_markers", [])
+                if missing:
+                    print(f"  missing: {', '.join(missing)}")
+
+
+def validate_adapter_benchmark_gate() -> dict[str, Any]:
+    checks: list[dict[str, Any]] = []
+    checks.append(
+        {
+            "id": "adapter-benchmark-spec",
+            "label": "Adapter capability benchmarking spec exists",
+            "status": "ok",
+            "docs": [
+                _marker_check(
+                    ADAPTER_CAPABILITY_BENCHMARKING_PATH,
+                    [
+                        "## Adapter Registry",
+                        "## Capability Report",
+                        "## Benchmark Rule",
+                        "## Routing Rule",
+                        "## Acceptance Criteria",
+                    ],
+                )
+            ],
+        }
+    )
+    checks.append(
+        {
+            "id": "adapter-benchmark-gate-spec",
+            "label": "Independent adapter benchmark gate spec exists",
+            "status": "ok",
+            "docs": [
+                _marker_check(
+                    ADAPTER_BENCHMARK_GATE_PATH,
+                    [
+                        "## Gate Categories",
+                        "### 1. Registry",
+                        "### 2. Capability Report",
+                        "### 3. Benchmarking",
+                        "### 4. Routing Use",
+                        "### 5. Transparency And Tests",
+                    ],
+                )
+            ],
+        }
+    )
+    checks.append(
+        {
+            "id": "adapter-registry-runtime",
+            "label": "Adapter registry implementation exists",
+            "status": "ok",
+            "files": [
+                _marker_check(
+                    ROOT / "internal" / "app" / "adapter_registry.go",
+                    [
+                        "type adapterDescriptor struct",
+                        "func adapterRegistry()",
+                        "ProviderMode",
+                        "SupportsBenchmark",
+                        "func localBenchmarkableAdapterModes()",
+                    ],
+                )
+            ],
+        }
+    )
+    checks.append(
+        {
+            "id": "local-runtime-capability-runtime",
+            "label": "Measured local runtime capability implementation exists",
+            "status": "ok",
+            "files": [
+                _marker_check(
+                    ROOT / "internal" / "app" / "local_runtime_capabilities.go",
+                    [
+                        "type localRuntimeCapabilities struct",
+                        "type localAdapterCapability struct",
+                        "type localAdapterSample struct",
+                        "CohortHistory",
+                        "CohortFeedback",
+                        "func currentLocalRuntimeCapabilities(",
+                        "func benchmarkLocalRuntimeCapabilities(",
+                        "func benchmarkLocalAdapter(",
+                        "func localBenchmarkBias(",
+                        "func localBenchmarkHistoryBias(",
+                        "func localBenchmarkSummaryLines(",
+                    ],
+                )
+            ],
+        }
+    )
+    checks.append(
+        {
+            "id": "routing-uses-benchmark-bias",
+            "label": "Routing uses measured benchmark bias",
+            "status": "ok",
+            "files": [
+                _marker_check(
+                    ROOT / "internal" / "app" / "router.go",
+                    [
+                        "localBenchmarkBiasForFeatures(",
+                        "adapterDescriptorForMode(",
+                    ],
+                )
+            ],
+        }
+    )
+    checks.append(
+        {
+            "id": "doctor-exposes-benchmark-lines",
+            "label": "Provider doctor exposes benchmark summary lines",
+            "status": "ok",
+            "files": [
+                _marker_check(
+                    ROOT / "internal" / "app" / "app.go",
+                    [
+                        "freshLocalBenchmarkSummaryLines(",
+                    ],
+                )
+            ],
+        }
+    )
+    checks.append(
+        {
+            "id": "adapter-benchmark-tests",
+            "label": "Benchmark tests exist",
+            "status": "ok",
+            "files": [
+                _marker_check(
+                    ROOT / "internal" / "app" / "provider_test.go",
+                    [
+                        "TestBenchmarkLocalRuntimeCapabilitiesRecordsMeasuredResults",
+                        "TestLocalBenchmarkBiasUsesSavedMeasuredResults",
+                        "TestSaveLocalRuntimeCapabilitiesAppendsRollingHistory",
+                        "TestLocalBenchmarkBiasPenalizesRegressionTrend",
+                        "TestLocalBenchmarkHistoryBiasRewardsRecoveryAfterRegression",
+                        "TestLocalBenchmarkRecoveryBiasIsScopedByWorkClass",
+                        "TestLocalBenchmarkRecoveryBiasIsScopedByPlanningSubtype",
+                        "TestGenerateWithConfiguredProviderCallsLocalSLMOpenAICompatible",
+                        "TestLocalBenchmarkBiasUsesDirectCohortEvidenceForTripItinerary",
+                        "TestLocalBenchmarkBiasUsesCohortFeedbackForTripItinerary",
+                        "TestLocalBenchmarkBiasUsesGradedCohortFeedbackForTripItinerary",
+                        "TestLocalBenchmarkBiasPenalizesPassiveHeavyEditsForTripItinerary",
+                        "TestClassifyArtifactEditSignalTreatsTitleOnlyChangeAsHeaderOnly",
+                        "TestClassifyArtifactEditSignalTreatsCoreRewriteAsCoreSections",
+                        "TestClassifyArtifactEditSignalTreatsCoreWordingEditSeparately",
+                        "TestCurrentWorkLocalModelFeedbackRecordsCohortFeedback",
+                        "TestCurrentWorkLocalArtifactAcceptanceRecordsGradedCohortFeedback",
+                        "TestCurrentWorkLocalArtifactAcceptanceTreatsHeaderEditAsCosmetic",
+                        "TestCurrentWorkLocalArtifactAcceptanceTracksCoreDecisionChange",
+                        "TestLocalBenchmarkBiasUsesOutcomeAdoptionForSendableFollowup",
+                        "TestCurrentWorkLocalArtifactOutcomeRecordsSharedUse",
+                        "TestCurrentWorkLocalArtifactOutcomeRecordsSubtypeSpecificRouteCohortOutcome",
+                        "TestRunOpenPassiveLocalArtifactExportSignalsSharedIntent",
+                        "TestRunOpenPassiveLocalArtifactReopenSignalsUsefulness",
+                        "TestRunOpenPassiveLocalArtifactDetectsSubstantiveReplacement",
+                        "TestObserveAddPassiveExternalTargetSignalsSharedIntent",
+                        "TestObserveScanPassiveExternalEditSignalsUsefulness",
+                        "TestObserveScanPassiveExternalRewriteSignalsReplacement",
+                        "TestObserveScanPassiveExternalRewriteRecordsSubtypeSpecificRouteCohortOutcome",
+                    ],
+                ),
+                _marker_check(
+                    ROOT / "internal" / "app" / "app_test.go",
+                    ["TestProviderDoctorDetectsLocalSLMWithoutLeakingOptionalKey"],
+                ),
+            ],
+        }
+    )
+
+    overall_status = "ok"
+    for check in checks:
+        docs = check.get("docs", [])
+        files = check.get("files", [])
+        child_statuses = [item.get("status", "warning") for item in [*docs, *files] if isinstance(item, dict)]
+        if child_statuses and any(status != "ok" for status in child_statuses):
+            check["status"] = "warning"
+            overall_status = "warning"
+    return {
+        "schema_version": "0.1.0",
+        "result_type": "JiniAdapterBenchmarkGate",
+        "generated_at": now_utc(),
+        "status": overall_status,
+        "checks": checks,
+    }
+
+
+def print_adapter_benchmark_gate(report: dict[str, Any]) -> None:
+    print("Adapter Benchmark Gate")
+    print(report.get("status", "unknown"))
+    for check in report.get("checks", []):
+        print()
+        print(f"{check.get('id')}: {check.get('status')}")
+        print(check.get("label", ""))
+        for group in ("docs", "files"):
+            for item in check.get(group, []):
+                print(f"- {item.get('path')}: {item.get('status')}")
+                missing = item.get("missing_markers", [])
+                if missing:
+                    print(f"  missing: {', '.join(missing)}")
 
 
 def list_packs() -> list[tuple[str, Path, dict[str, Any]]]:
@@ -5304,9 +5686,9 @@ def print_cli_overview() -> None:
     print()
     print("INSIDE JINI")
     print("  Keep going")
-    print("  Open ready work")
-    print("  See what is still missing")
-    print("  Plan this first")
+    print("  Show what's ready")
+    print("  Show what is missing")
+    print("  Help me plan this")
     print()
     print("SCRIPTABLE")
     print(f"  {cli} check")
@@ -14534,6 +14916,28 @@ def main() -> int:
         help="Output format for the golden benchmark report",
     )
 
+    device_runtime_gate_parser = subparsers.add_parser(
+        "validate-device-runtime-gate",
+        help="Run the independent gate for device-aware local runtime routing",
+    )
+    device_runtime_gate_parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for the device runtime gate report",
+    )
+
+    adapter_benchmark_gate_parser = subparsers.add_parser(
+        "validate-adapter-benchmark-gate",
+        help="Run the independent gate for adapter registry and empirical local benchmarking",
+    )
+    adapter_benchmark_gate_parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for the adapter benchmark gate report",
+    )
+
     setup_parser = subparsers.add_parser(
         "setup",
         help="Install the starter kit for one harness and verify that Jini is ready to use",
@@ -16132,6 +16536,30 @@ def main() -> int:
         else:
             print_golden_benchmark_report(report)
         return 0
+
+    if args.command == "validate-device-runtime-gate":
+        try:
+            report = validate_device_runtime_gate()
+        except (FileNotFoundError, KeyError, TypeError, ValueError) as exc:
+            print(f"ERROR {exc}")
+            return 1
+        if args.format == "json":
+            print(json.dumps(report, indent=2))
+        else:
+            print_device_runtime_gate(report)
+        return 0 if report.get("status") == "ok" else 1
+
+    if args.command == "validate-adapter-benchmark-gate":
+        try:
+            report = validate_adapter_benchmark_gate()
+        except (FileNotFoundError, KeyError, TypeError, ValueError) as exc:
+            print(f"ERROR {exc}")
+            return 1
+        if args.format == "json":
+            print(json.dumps(report, indent=2))
+        else:
+            print_adapter_benchmark_gate(report)
+        return 0 if report.get("status") == "ok" else 1
 
     if args.command == "setup":
         try:

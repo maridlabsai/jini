@@ -1,4 +1,4 @@
-updated_at: "2026-05-11"
+updated_at: "2026-05-14"
 target_score: 9.0
 comparison_set:
   - Kiro
@@ -43,13 +43,13 @@ dimensions:
   - id: delivery-maturity
     label: Delivery maturity
     execution_order: 2
-    current_score: 8.8
+    current_score: 8.9
     target_score: 9.0
     strongest_competitor:
       name: Kiro
       score: 8.0
       advantage: Day-to-day execution is faster because repo-aware assistance and the default operator loop are already productized.
-    weakness: Jini now has a guided `execute-flow` that collapses recommendation, compact reload, handoff, activation, run, harvest, and local publish apply, but broader repo-family defaults and live remote edges still need less human interpretation.
+    weakness: Jini now has a real first-run `jini` launcher in the new Go runtime plus the guided `execute-flow`, but broader repo-family defaults, live remote edges, and deeper continue/open/start interactions still need less human interpretation.
     conversion_strategy: Preserve governance, but compress operator friction through repo-aware orchestration, workspace steering, compact repo maps, target-ready handoff bundles, guided execution flows, hook-style post-step automation, and benchmark-ready defaults.
     kpi: The benchmark pack can be driven from idea to verification with fewer than five manual control decisions.
     next_build_steps:
@@ -68,6 +68,9 @@ dimensions:
       - packs/budget-cycle
       - specs/personal-os.md
       - README.md
+      - cmd/jini/main.go
+      - internal/app/app.go
+      - internal/app/app_test.go
 
   - id: packaging-install
     label: Packaging and install ergonomics

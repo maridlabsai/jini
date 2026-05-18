@@ -7,64 +7,121 @@ Jini should not make you guess.
 
 When it is helping, it should keep these things visible:
 
-- what you are working on
-- what it is using
-- what provider it is working with
-- what it is doing
+- the goal
+- the working inputs
+- what other active work exists
+- the AI route
+- what model it chose
+- what effort level it judged for this request
+- why it made that route choice
+- what device class it sees when Local SLM routing matters
+- what local runtime and accelerator it sees when Local SLM routing matters
+- what it just finished
+- what it is doing now
+- what it will do next
+- what it is doing right now
+- what is already done
+- what it still needs
+- why that missing thing matters
+- what options the user has for resolving it
+- what comes next
 - what is ready now
 - what is still missing
 - what it is not sure about
-- what to do next
 - whether it is still safe to review before sharing
 
 ## The Command That Matters
 
 ```bash
-./jini
+jini
 ```
 
-That opens Jini in this source-built preview.
+That opens Jini after install.
 
 From there, the user should be able to open ready work, see what is missing, or
 plan first without learning file paths or command names.
+
+If more than one project is already active, Jini should show `Active work`
+first, let the user pick one, and keep the rest visible as sibling work instead
+of hiding them behind the filesystem.
 
 ## What The Shell Should Tell You
 
 It should read like this:
 
 ```text
-You're working on
+Goal
 Weekly product review follow-up
 
 Working with
+- Meeting notes.txt (processed)
+- Hotel screenshot.png (attached)
+
+AI route
 Amazon Bedrock (chosen automatically)
 
-Jini picked this because
-- Bedrock credentials are ready
-- the requested model works there
+How chosen
+Automatic
 
-Jini is using
-Meeting notes and follow-up tasks
+Model
+Claude Sonnet 4.6
 
-Jini is doing
+Effort level
+High
+
+Why this route
+Auto mode prefers the best planning tool when the request asks for deep or high-rigor work.
+
+Just finished
+- Sendable follow-up drafted
+- Owners and due points pulled out
+
+Doing now
+Tightening owners, due dates, and open questions
+
+Up next
+Open Owners and Due Points
+
+Now
 Turning notes into owners and next steps
-2 of 4 steps done
+
+Done
+- Sendable follow-up drafted
+- Owners and due points pulled out
+
+Need
+Confirm any missing owner or due date before sending this follow-up.
+
+Why this matters
+The note is usable now, but it becomes truly sendable only when ownership and timing are explicit.
+
+Options
+- Add missing owner
+- Add due date
+- Skip for now
+
+If you skip this
+- Jini will keep the follow-up in draft form and leave missing owner or date gaps visible.
+
+Next
+Open Sendable Follow-up
 
 Ready now
 - Sendable Follow-up
 - Owners and Due Points
 
-Still missing
+Blocked
 - Owner confirmation
 
 Not sure about
 - Whether every action item has a clear owner
 
-Next step
-Open Sendable Follow-up
-
 Safe to do
 Nothing has been sent yet. You can review before sharing.
+
+Other active work
+- Pricing vendor review
+- Paris trip
 ```
 
 That is the model.
@@ -72,7 +129,17 @@ That is the model.
 The important part is not only the provider name. The user should also be able
 to tell whether Jini chose that provider automatically or because they forced it.
 
-## What `Open ready work` Should Feel Like
+It should also be able to tell the user whether this is a low, medium, high, or
+extra-high effort request, and why that route was chosen before the first draft begins.
+
+When Local SLM routing is active, Jini should also be able to explain:
+
+- device class
+- local runtime class
+- accelerator class
+- why that pushed the work toward `fast`, `workhorse`, `deep`, or `multimodal`
+
+## What `Show what's ready` Should Feel Like
 
 It should show useful things, not file paths:
 
@@ -88,11 +155,25 @@ tool is failing.
 
 ## What Each Label Means
 
-- `Working with`: the provider Jini is actually using right now
-- `Jini is using`: the notes, draft, or context it is pulling from
-- `Jini is doing`: the current step in plain words
+- `Goal`: the current thing the user is trying to finish
+- `Working with`: the visible inputs for this thread, including text, files, images, audio, or links
+- `AI route`: the tool/provider route Jini is actually using right now
+- `How chosen`: whether the route was automatic, user-locked, or a fallback
+- `Model`: the model Jini chose for this request
+- `Effort level`: how hard Jini judged this request to be
+- `Why this route`: the route policy or explicit user choice behind the tool/provider decision
+- `Just finished`: the durable changes from the latest turn
+- `Doing now`: the current active step in plain words
+- `Up next`: the next artifact or move Jini expects to take
+- `Now`: the current step in plain words
+- `Done`: what Jini has already completed
+- `Need`: the one highest-impact thing Jini still needs
+- `Why this matters`: why Jini is asking for that one thing
+- `Options`: the bounded ways the user can resolve the active ask
+- `If you skip this`: the assumptions or draft limits Jini will preserve if the user does not answer yet
+- `Next`: the one most sensible move from here
+- `Other active work`: sibling projects you can switch to without losing context
 - `Ready now`: things you can open and use immediately
-- `Still missing`: blockers that still matter
+- `Blocked`: blockers that still matter
 - `Not sure about`: uncertainty Jini could not safely guess through
-- `Next step`: the one most sensible move from here
 - `Safe to do`: whether anything has been sent or changed yet

@@ -28,12 +28,12 @@ You get back:
 
 - `Sendable Follow-up`
 - `Owners and Due Points`
-- `Decisions Made`
-- `Open Questions`
+- `Task List`
 
 Then you do:
 
 - open `Sendable Follow-up`
+- confirm the owners and due points
 - review what is still missing
 - send or edit with less cleanup work
 
@@ -56,11 +56,12 @@ You get back:
 - `Build-Readiness Check`
 - `Handoff Brief`
 - `Missing Pieces Before Build`
-- `Risk List`
+- `Task List`
 
 Then you do:
 
 - open `Build-Readiness Check`
+- clear the missing pieces before build
 - fix what still blocks the handoff
 - avoid sending a plan that only looks finished
 

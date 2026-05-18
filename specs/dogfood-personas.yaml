@@ -1,0 +1,79 @@
+schema_version: 0.1.0
+catalog_id: jini-dogfood-personas
+updated_at: 2026-05-15
+purpose: >
+  Standing dogfood panel used to gate install, configuration, and usage
+  experience changes.
+personas:
+  - id: low-literacy-first-time-user
+    label: Low-literacy first-time user
+    group: beginner-trust
+    priority: critical
+  - id: just-make-it-work-user
+    label: Pragmatic "just make it work" user
+    group: beginner-trust
+    priority: critical
+  - id: student-user
+    label: Student user
+    group: beginner-trust
+    priority: high
+  - id: homemaker-user
+    label: Homemaker user
+    group: beginner-trust
+    priority: high
+  - id: aws-bedrock-user
+    label: AWS Bedrock user
+    group: platform-and-policy
+    priority: critical
+  - id: enterprise-azure-user
+    label: Enterprise Azure user
+    group: platform-and-policy
+    priority: critical
+  - id: claude-user
+    label: Claude user
+    group: platform-and-policy
+    priority: high
+  - id: codex-user
+    label: Codex user
+    group: platform-and-policy
+    priority: high
+  - id: chatgpt-user
+    label: ChatGPT user
+    group: platform-and-policy
+    priority: high
+  - id: gemini-user
+    label: Gemini user
+    group: platform-and-policy
+    priority: high
+  - id: power-user
+    label: Power user
+    group: expert-operator
+    priority: high
+  - id: hardcore-developer
+    label: Hardcore developer
+    group: expert-operator
+    priority: high
+  - id: ai-engineer
+    label: AI engineer
+    group: expert-operator
+    priority: high
+  - id: qa-tester
+    label: QA tester
+    group: expert-operator
+    priority: high
+  - id: architect-user
+    label: Architect user
+    group: expert-operator
+    priority: high
+  - id: ai-pm
+    label: AI PM
+    group: product-and-exec
+    priority: high
+  - id: software-vp
+    label: Software VP user
+    group: product-and-exec
+    priority: medium
+  - id: travel-advisor-user
+    label: Travel advisor user
+    group: domain-specific
+    priority: medium

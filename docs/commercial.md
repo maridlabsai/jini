@@ -1,33 +1,25 @@
 ---
 title: Commercial
-description: The free core stays public. Paid work is for acceleration, customization, and trust.
+description: The core tool stays public. Paid work is for adoption help, implementation, and enterprise support.
 ---
 
-Jini’s commercial boundary is explicit.
+The core Jini tool stays public.
 
-## Free and Public
+That includes:
 
-- framework code
-- CLI
-- protocol docs
-- schemas
-- install path
-- public example packs
-- proof path
+- runtime
+- docs
+- examples
 - tests
 
-## Paid
+Paid work later is for:
 
 - adoption help
+- implementation help
 - onboarding
-- custom workflow mapping
 - custom integrations
-- premium surfaces only after repeated demand proves they should exist
-- enterprise support and governance
+- enterprise support
 
 The rule is simple:
 
-**charge for acceleration, customization, and trust. Do not charge for basic
-access to the framework.**
-
-For the full commercial plan, see [COMMERCIAL.md](https://github.com/maridlabsai/jini/blob/main/COMMERCIAL.md).
+**charge for help and trust, not for basic access to the core tool.**
