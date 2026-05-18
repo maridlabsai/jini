@@ -255,7 +255,7 @@ class InstallScriptTests(unittest.TestCase):
         )
         self.assert_error(result)
         self.assertIn(
-            "source fallback needs either Python 3 with PyYAML or Go",
+            "source fallback needs either Python 3 (Jini will try to add PyYAML automatically) or Go",
             result.stderr,
         )
 

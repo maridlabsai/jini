@@ -116,7 +116,26 @@ detect_local_source() {
 
 python_source_fallback_ready() {
   command -v python3 >/dev/null 2>&1 || return 1
-  python3 -c 'import yaml' >/dev/null 2>&1 || return 1
+}
+
+ensure_python_yaml_runtime() {
+  local app_dir="$1"
+  local vendor_dir="${app_dir}/vendor"
+
+  if python3 -c 'import yaml' >/dev/null 2>&1; then
+    return 0
+  fi
+
+  python3 -m pip --version >/dev/null 2>&1 || return 1
+  mkdir -p "${vendor_dir}"
+  python3 -m pip install --disable-pip-version-check --no-input --target "${vendor_dir}" "PyYAML>=6,<7" >/dev/null 2>&1 || return 1
+  JINI_VENDOR_DIR="${vendor_dir}" python3 - <<'PY' >/dev/null 2>&1 || return 1
+import os
+import sys
+
+sys.path.insert(0, os.environ["JINI_VENDOR_DIR"])
+import yaml  # noqa: F401
+PY
 }
 
 go_source_fallback_ready() {
@@ -181,11 +200,15 @@ try_install_python_source_runtime() {
   mkdir -p "${app_dir}"
   cp -R "${SOURCE_DIR}/." "${app_dir}"
   rm -rf "${app_dir}/.git" "${app_dir}/.gocache" "${app_dir}/.jini"
+  ensure_python_yaml_runtime "${app_dir}" || return 1
 
   cat >"${wrapper_path}" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
 APP_DIR="${app_dir}"
+if [[ -d "\${APP_DIR}/vendor" ]]; then
+  export PYTHONPATH="\${APP_DIR}/vendor\${PYTHONPATH:+:\${PYTHONPATH}}"
+fi
 exec python3 "\${APP_DIR}/tools/jini.py" "\$@"
 EOF
   chmod 0755 "${wrapper_path}"
@@ -303,7 +326,7 @@ if [[ ${INSTALLED_FROM_RELEASE} -ne 1 ]]; then
   fi
   detect_local_source "${SOURCE_DIR}" || fail "source directory does not look like the Jini repo: ${SOURCE_DIR}"
   if ! try_install_python_source_runtime; then
-    go_source_fallback_ready || fail "Jini could not install a release binary, and source fallback needs either Python 3 with PyYAML or Go."
+    go_source_fallback_ready || fail "Jini could not install a release binary, and source fallback needs either Python 3 (Jini will try to add PyYAML automatically) or Go."
     if ! (
       cd "${SOURCE_DIR}"
       go build -o "${BUILD_OUTPUT}" ./cmd/jini
