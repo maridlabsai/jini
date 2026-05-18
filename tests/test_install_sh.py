@@ -50,6 +50,26 @@ class InstallScriptTests(unittest.TestCase):
             env=run_env,
         )
 
+    def run_installer_via_stdin(
+        self,
+        *args: str,
+        env: Optional[dict[str, str]] = None,
+        cwd: Optional[Path] = None,
+        installer_path: Optional[Path] = None,
+    ) -> subprocess.CompletedProcess[str]:
+        run_env = dict(os.environ)
+        if env:
+            run_env.update(env)
+        script_text = (installer_path or INSTALLER).read_text(encoding="utf-8")
+        return subprocess.run(
+            ["/bin/bash", "-s", "--", *args],
+            cwd=str(cwd or REPO_ROOT),
+            text=True,
+            input=script_text,
+            capture_output=True,
+            env=run_env,
+        )
+
     def go_ready_env(self, extra_path: str = "") -> dict[str, str]:
         path_parts = [str(LOCAL_GO_BIN)]
         if extra_path:
@@ -136,6 +156,47 @@ class InstallScriptTests(unittest.TestCase):
         )
         self.assert_ok(result)
         self.assertIn("Installed Jini", result.stdout)
+
+    def test_piped_install_from_stdin_works_from_outside_repo(self) -> None:
+        remote_snapshot = self.create_remote_snapshot()
+        remote_root = self.tmp / "remote-pipe"
+        remote_root.mkdir()
+
+        result = self.run_installer_via_stdin(
+            "--repo-url",
+            f"file://{remote_snapshot}",
+            "--repo-ref",
+            "main",
+            "--bin-dir",
+            str(remote_root / "bin"),
+            "--install-dir",
+            str(remote_root / "share" / "jini"),
+            "--force",
+            env=self.go_ready_env(),
+            cwd=remote_root,
+        )
+        self.assert_ok(result)
+        self.assertIn("Installed Jini", result.stdout)
+
+    def test_piped_install_without_go_fails_cleanly_not_with_bash_source(self) -> None:
+        remote_root = self.tmp / "remote-pipe-no-go"
+        remote_root.mkdir()
+
+        result = self.run_installer_via_stdin(
+            "--repo-url",
+            "file:///does/not/exist",
+            "--repo-ref",
+            "main",
+            "--bin-dir",
+            str(remote_root / "bin"),
+            "--install-dir",
+            str(remote_root / "share" / "jini"),
+            "--force",
+            env={"PATH": "/usr/bin:/bin"},
+            cwd=remote_root,
+        )
+        self.assert_error(result)
+        self.assertNotIn("BASH_SOURCE[0]: unbound variable", result.stderr)
 
     def test_missing_go_reports_clear_error(self) -> None:
         result = self.run_installer(

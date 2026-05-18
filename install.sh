@@ -100,10 +100,13 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-script_dir="$(
-  cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1
-  pwd
-)"
+script_dir="$(pwd)"
+if [[ -n "${BASH_SOURCE[0]-}" && "${BASH_SOURCE[0]}" != "bash" ]]; then
+  script_dir="$(
+    cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1
+    pwd
+  )"
+fi
 
 detect_local_source() {
   local candidate="$1"
