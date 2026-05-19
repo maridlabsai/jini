@@ -18,6 +18,7 @@ The merge-time guardrails for this contract live in:
 - [full-product-prd-execution-plan.md](./full-product-prd-execution-plan.md)
 - [local-slm-frontline-policy.md](./local-slm-frontline-policy.md)
 - [conversation-and-artifact-ux.md](./conversation-and-artifact-ux.md)
+- [public-repo-boundary.md](./public-repo-boundary.md)
 
 The rewrite goal is to make Jini the easiest way to turn messy AI work into a
 usable, trustworthy result.
@@ -30,6 +31,10 @@ Major product decisions under this contract must clear the scorecard gate in:
 
 No major UX, routing, artifact, or command-surface decision is considered done
 until it has been checked against those score sources.
+
+The public repo boundary is also a hard gate: internal business strategy,
+commercialization drafts, and candid internal review notes belong in the
+private commercial repo, not in this public tree.
 
 ## Product Identity
 

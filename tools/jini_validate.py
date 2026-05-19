@@ -59,6 +59,7 @@ REWRITE_GUARDRAILS_PATH = ROOT / "specs" / "rewrite-guardrails.md"
 PRODUCT_REVIEW_ROLES_PATH = ROOT / "specs" / "product-review-roles.md"
 PRODUCT_CONSENSUS_PRD_PATH = ROOT / "specs" / "product-consensus-prd-and-plan.md"
 PRODUCT_REWRITE_CONTRACT_PATH = ROOT / "specs" / "product-rewrite-contract.md"
+PUBLIC_REPO_BOUNDARY_PATH = ROOT / "specs" / "public-repo-boundary.md"
 DEVICE_CAPABILITY_ROUTING_PATH = ROOT / "specs" / "device-capability-routing.md"
 DEVICE_RUNTIME_GATE_PATH = ROOT / "specs" / "device-runtime-gate.md"
 ADAPTER_CAPABILITY_BENCHMARKING_PATH = ROOT / "specs" / "adapter-capability-benchmarking.md"
@@ -73,6 +74,19 @@ VERIFY_STATES = {"awaiting_verification", "operational"}
 HIGH_CONTROL_PROFILES = {"Critical", "Regulated"}
 RUNTIME_CONSENT_CATEGORIES = ("write", "command", "publish")
 HARVEST_CATEGORY_ORDER = ("test", "verify", "startup", "demo", "docs")
+PUBLIC_BOUNDARY_FORBIDDEN_GLOBS = (
+    "COMMERCIAL.md",
+    "commercial/**",
+    "gtm/**",
+    "sales/**",
+    "internal/**",
+    "specs/20[0-9][0-9]-*.md",
+)
+PUBLIC_BOUNDARY_REFERENCE_PATTERNS = (
+    re.compile(r"\bCOMMERCIAL\.md\b"),
+    re.compile(r"specs/20[0-9][0-9]-[0-9]{2}-[0-9]{2}-[^\s)\"']+"),
+    re.compile(r"\./20[0-9][0-9]-[0-9]{2}-[0-9]{2}-[^\s)\"']+"),
+)
 PUBLIC_EXAMPLE_SPECS: dict[str, dict[str, Any]] = {
     "meeting-followup": {
         "label": "Meeting Follow-up",
@@ -1654,6 +1668,7 @@ def build_publish_readiness() -> dict[str, Any]:
         PRODUCT_REVIEW_ROLES_PATH,
         PRODUCT_CONSENSUS_PRD_PATH,
         PRODUCT_REWRITE_CONTRACT_PATH,
+        PUBLIC_REPO_BOUNDARY_PATH,
         ROOT / "distribution" / "install-manifest.yaml",
     ]
     doc_checks = [{"path": display_path(path), "exists": path.exists()} for path in doc_paths]
@@ -2071,6 +2086,7 @@ def build_publish_readiness() -> dict[str, Any]:
         "passed_gate_ids": [str(item["id"]) for item in consensus_gate_checks if item["status"] == "ok"],
         "checks": consensus_gate_checks,
     }
+    public_boundary_report = validate_public_repo_boundary()
 
     commercial_kit = next((kit for kit in install_catalog.get("kits", []) if kit.get("id") == "vendor-decision-kit"), None)
     breadth_summary = {
@@ -2142,6 +2158,12 @@ def build_publish_readiness() -> dict[str, Any]:
             "label": "Product consensus gates",
             "status": consensus_gates["status"],
             "checks": consensus_gate_checks,
+        },
+        {
+            "id": "public-boundary",
+            "label": "Public repo boundary",
+            "status": public_boundary_report["status"],
+            "checks": public_boundary_report["checks"],
         },
     ]
     overall_status = "ok" if all(section["status"] == "ok" for section in sections) else "warning"
@@ -3862,6 +3884,131 @@ def _marker_check(path: Path, markers: list[str], *, case_insensitive: bool = Fa
         "missing_markers": missing_markers,
         "status": "ok" if exists and not missing_markers else "warning",
     }
+
+
+def _repo_relative(path: Path) -> str:
+    return path.relative_to(ROOT).as_posix()
+
+
+def tracked_repo_files() -> list[Path]:
+    try:
+        completed = subprocess.run(
+            ["git", "-C", str(ROOT), "ls-files"],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+    except OSError:
+        completed = None
+    if completed and completed.returncode == 0:
+        paths = [ROOT / line.strip() for line in completed.stdout.splitlines() if line.strip()]
+        return [path for path in paths if path.exists() and path.is_file()]
+    return [path for path in ROOT.rglob("*") if path.is_file() and ".git" not in path.parts]
+
+
+def validate_public_repo_boundary() -> dict[str, Any]:
+    checks: list[dict[str, Any]] = []
+    checks.append(
+        {
+            "id": "boundary-policy-doc",
+            "label": "Public/private boundary policy exists",
+            "status": "ok",
+            "docs": [
+                _marker_check(
+                    PUBLIC_REPO_BOUNDARY_PATH,
+                    [
+                        "## Public Repo Rule",
+                        "## Private Commercial Repo Rule",
+                        "## Forbidden In The Public Repo",
+                        "## Allowed In The Public Repo",
+                        "## Enforcement",
+                    ],
+                )
+            ],
+        }
+    )
+
+    forbidden_matches: list[str] = []
+    tracked_files = tracked_repo_files()
+    for path in tracked_files:
+        rel = _repo_relative(path)
+        for pattern in PUBLIC_BOUNDARY_FORBIDDEN_GLOBS:
+            if path.match(pattern):
+                forbidden_matches.append(_repo_relative(path))
+                break
+    forbidden_matches = sorted(set(forbidden_matches))
+    checks.append(
+        {
+            "id": "forbidden-paths",
+            "label": "Forbidden internal-business paths are absent from the public repo",
+            "status": "ok" if not forbidden_matches else "warning",
+            "forbidden_globs": list(PUBLIC_BOUNDARY_FORBIDDEN_GLOBS),
+            "matches": forbidden_matches,
+        }
+    )
+
+    reference_hits: list[dict[str, str]] = []
+    candidate_suffixes = {".md", ".html", ".yaml", ".yml", ".json", ".txt"}
+    for path in tracked_files:
+        if path.suffix.lower() not in candidate_suffixes:
+            continue
+        if path == PUBLIC_REPO_BOUNDARY_PATH:
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        for pattern in PUBLIC_BOUNDARY_REFERENCE_PATTERNS:
+            match = pattern.search(text)
+            if match:
+                reference_hits.append({"path": _repo_relative(path), "match": match.group(0)})
+                break
+    checks.append(
+        {
+            "id": "forbidden-references",
+            "label": "Public docs do not link to blocked internal-business notes",
+            "status": "ok" if not reference_hits else "warning",
+            "matches": reference_hits,
+        }
+    )
+
+    for check in checks:
+        child_statuses = []
+        for group in ("docs", "files"):
+            child_statuses.extend(
+                item.get("status", "warning") for item in check.get(group, []) if isinstance(item, dict)
+            )
+        if child_statuses and any(status != "ok" for status in child_statuses):
+            check["status"] = "warning"
+
+    overall_status = "ok" if all(check.get("status") == "ok" for check in checks) else "warning"
+    return {
+        "schema_version": "0.1.0",
+        "result_type": "JiniPublicRepoBoundary",
+        "generated_at": now_utc(),
+        "status": overall_status,
+        "checks": checks,
+    }
+
+
+def print_public_repo_boundary(report: dict[str, Any]) -> None:
+    print("Public Repo Boundary")
+    print(report.get("status", "unknown"))
+    for check in report.get("checks", []):
+        print()
+        print(f"{check.get('id')}: {check.get('status')}")
+        print(check.get("label", ""))
+        for item in check.get("docs", []):
+            print(f"- {item.get('path')}: {item.get('status')}")
+            missing = item.get("missing_markers", [])
+            if missing:
+                print(f"  missing: {', '.join(missing)}")
+        for match in check.get("matches", []):
+            if isinstance(match, dict):
+                print(f"- {match.get('path')}: {match.get('match')}")
+            else:
+                print(f"- {match}")
 
 
 def validate_device_runtime_gate() -> dict[str, Any]:
@@ -14938,6 +15085,17 @@ def main() -> int:
         help="Output format for the adapter benchmark gate report",
     )
 
+    public_boundary_parser = subparsers.add_parser(
+        "validate-public-boundary",
+        help="Run the public/private repo boundary gate for public hygiene",
+    )
+    public_boundary_parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for the public boundary report",
+    )
+
     setup_parser = subparsers.add_parser(
         "setup",
         help="Install the starter kit for one harness and verify that Jini is ready to use",
@@ -16559,6 +16717,18 @@ def main() -> int:
             print(json.dumps(report, indent=2))
         else:
             print_adapter_benchmark_gate(report)
+        return 0 if report.get("status") == "ok" else 1
+
+    if args.command == "validate-public-boundary":
+        try:
+            report = validate_public_repo_boundary()
+        except (FileNotFoundError, KeyError, TypeError, ValueError) as exc:
+            print(f"ERROR {exc}")
+            return 1
+        if args.format == "json":
+            print(json.dumps(report, indent=2))
+        else:
+            print_public_repo_boundary(report)
         return 0 if report.get("status") == "ok" else 1
 
     if args.command == "setup":
