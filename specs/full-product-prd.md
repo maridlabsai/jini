@@ -25,6 +25,9 @@ The public surface and free-tier requirements across CLI, desktop, and mobile
 live in
 [client-surfaces-and-free-tier.md](./client-surfaces-and-free-tier.md).
 
+The stable engineering framework for major workstreams lives in
+[workstream-technical-framework.md](./workstream-technical-framework.md).
+
 Coding workflow strategy should stay aligned with three public product rules:
 
 - preserve one stable work thread even when the route changes underneath

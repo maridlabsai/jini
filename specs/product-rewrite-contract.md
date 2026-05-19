@@ -19,6 +19,9 @@ The merge-time guardrails for this contract live in:
 - [local-slm-frontline-policy.md](./local-slm-frontline-policy.md)
 - [conversation-and-artifact-ux.md](./conversation-and-artifact-ux.md)
 - [client-surfaces-and-free-tier.md](./client-surfaces-and-free-tier.md)
+- [workstream-technical-framework.md](./workstream-technical-framework.md)
+- [workstream-technical-framework-review.md](./workstream-technical-framework-review.md)
+- [workstream-technical-framework-gate.md](./workstream-technical-framework-gate.md)
 - [public-repo-boundary.md](./public-repo-boundary.md)
 
 The rewrite goal is to make Jini the easiest way to turn messy AI work into a
