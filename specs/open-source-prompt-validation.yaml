@@ -1,0 +1,282 @@
+schema_version: "0.1.0"
+benchmark_id: open-source-prompt-validation
+label: Open-source prompt validation corpus
+updated_at: "2026-05-19"
+purpose: >
+  Validate Jini against public GitHub prompt patterns without importing private
+  prompts or turning community examples into brittle exact-output fixtures.
+methodology:
+  stance: >
+    Use open-source prompt collections as signal about prompt classes and eval
+    discipline, then derive Jini-native prompts that test work shaping,
+    clarification, artifact creation, routing posture, and comparison behavior.
+  why_not_copy_as_is: >
+    Jini should not become a wrapper around prompt-library strings. The corpus
+    preserves source attribution and license posture while adapting the ideas to
+    Jini's work/artifact model.
+  comparison_goal: >
+    Keep Jini comparable with prompt/eval frameworks by testing whether each
+    prompt class has observable assertions, not whether a particular paragraph
+    is reproduced.
+source_policy:
+  use_derived_prompts_only: true
+  require_license: true
+  require_source_url: true
+  require_github_repository: true
+  require_assertable_expected_behavior: true
+  forbid_exact_output_locks: true
+  no_private_prompts: true
+permitted_licenses:
+  - Apache-2.0
+  - CC0-1.0
+  - MIT
+sources:
+  - id: prompts-chat
+    name: prompts.chat / Awesome ChatGPT Prompts
+    repository: https://github.com/f/prompts.chat
+    license: CC0-1.0
+    license_url: https://raw.githubusercontent.com/f/prompts.chat/main/LICENSE
+    consumed_as: Broad role, task, and persona prompt patterns.
+    adaptation_rule: >
+      Convert role prompts into outcome-oriented work requests with visible
+      missing context, artifact readiness, and next-action options.
+    lesson_for_jini: >
+      Role clarity helps, but Jini must preserve work state and ask for missing
+      scope instead of producing a polished generic answer too early.
+  - id: promptsource
+    name: BigScience PromptSource / P3
+    repository: https://github.com/bigscience-workshop/promptsource
+    license: Apache-2.0
+    license_url: https://raw.githubusercontent.com/bigscience-workshop/promptsource/main/LICENSE
+    consumed_as: Research-style prompt template variation and task framing.
+    adaptation_rule: >
+      Use template variation to test semantic invariance: different wording
+      should map to the same work class when intent is the same.
+    lesson_for_jini: >
+      Prompt quality should be measured across variations, not only by a single
+      hand-crafted phrasing.
+  - id: promptfoo
+    name: Promptfoo
+    repository: https://github.com/promptfoo/promptfoo
+    license: MIT
+    license_url: https://raw.githubusercontent.com/promptfoo/promptfoo/main/LICENSE
+    consumed_as: Evaluation harness discipline, assertion thinking, and provider comparison posture.
+    adaptation_rule: >
+      Treat each prompt class as a test case with explicit assertions and
+      comparison signals, not as a demo transcript.
+    lesson_for_jini: >
+      Competitive prompt quality needs repeatable gates, provider neutrality,
+      and failure reasons that can be acted on.
+  - id: simple-evals
+    name: OpenAI Simple Evals
+    repository: https://github.com/openai/simple-evals
+    license: MIT
+    license_url: https://raw.githubusercontent.com/openai/simple-evals/main/LICENSE
+    consumed_as: Lightweight model-evaluation harness shape and benchmark reporting pattern.
+    adaptation_rule: >
+      Keep the prompt corpus small, inspectable, and runnable in CI before
+      expanding into heavier empirical model comparisons.
+    lesson_for_jini: >
+      A lean eval can still be useful when it reports method, sources,
+      assumptions, and failure modes clearly.
+prompt_classes:
+  - id: ambiguous-greeting-no-work
+    label: Lightweight greeting should not create a work artifact
+    source_ids:
+      - prompts-chat
+      - promptfoo
+    derived_prompt: true
+    verbatim_source_prompt: false
+    prompt: "hello"
+    expected_behavior:
+      work_class: conversational-small-talk
+      should_create_artifact: false
+      should_ask_clarifying_question: false
+      should_offer_next_step: true
+      must_not_use_default_work_template: true
+    comparison_signals:
+      - Avoids forcing every input into a rigid first-draft artifact.
+      - Keeps CLI interaction natural for low-intent input.
+      - Produces a small helpful response rather than a status envelope.
+  - id: underspecified-travel-scope
+    label: Travel planning request should scope before drafting
+    source_ids:
+      - prompts-chat
+      - promptsource
+      - promptfoo
+    derived_prompt: true
+    verbatim_source_prompt: false
+    prompt: "Plan me a 7 day trip to Paris."
+    expected_behavior:
+      work_class: travel-plan
+      should_create_artifact: false
+      should_ask_clarifying_question: true
+      minimum_clarifiers:
+        - dates_or_season
+        - traveler_profile
+        - budget_or_style
+        - trip_pace
+      should_explain_why_scope_matters: true
+    comparison_signals:
+      - Beats generic itinerary-first behavior by improving first-output quality.
+      - Separates destination/day extraction from readiness to draft.
+      - Preserves momentum with a default assumption path if the user wants speed.
+  - id: scoped-travel-curation
+    label: Scoped trip request should produce linked, curated artifacts
+    source_ids:
+      - prompts-chat
+      - promptfoo
+    derived_prompt: true
+    verbatim_source_prompt: false
+    prompt: >
+      Plan a 5 day Lisbon trip for two adults in October, food and design
+      focused, moderate budget, no rental car, slower pace.
+    expected_behavior:
+      work_class: travel-plan
+      should_create_artifact: true
+      expected_artifacts:
+        - itinerary
+        - booking_priorities
+        - map_or_destination_links
+        - budget_sketch
+      should_include_smart_links: true
+      should_surface_open_decisions: true
+    comparison_signals:
+      - Tests richer travel experience beyond plain CLI text.
+      - Requires useful links and logistics anchors, not only prose.
+      - Keeps unresolved booking details visible.
+  - id: meeting-followup-from-raw-notes
+    label: Raw meeting notes should become a sendable follow-up with gaps visible
+    source_ids:
+      - prompts-chat
+      - promptsource
+    derived_prompt: true
+    verbatim_source_prompt: false
+    prompt: >
+      Turn these notes into a sendable follow-up: launch review moved to next
+      Tuesday, pricing owner is Maya, legal still has a question on regional
+      claims, growth wants metrics by Friday, no one owns the support FAQ yet.
+    expected_behavior:
+      work_class: meeting-followup
+      should_create_artifact: true
+      expected_artifacts:
+        - sendable_followup
+        - owners_and_due_points
+        - unresolved_gaps
+      must_preserve_missing_owner: true
+      should_not_hide_blockers: true
+    comparison_signals:
+      - Tests role/task prompt translation into durable work state.
+      - Measures whether the assistant distinguishes ready content from blockers.
+      - Validates that missing ownership remains visible.
+  - id: launch-plan-critique
+    label: Plan critique should separate findings, risks, and next gates
+    source_ids:
+      - prompts-chat
+      - promptfoo
+      - simple-evals
+    derived_prompt: true
+    verbatim_source_prompt: false
+    prompt: >
+      Critique this launch plan: announce next month, migrate all beta users in
+      one weekend, publish pricing after legal review, train support later, and
+      decide rollback once engineering confirms feasibility.
+    expected_behavior:
+      work_class: plan-review
+      should_create_artifact: true
+      expected_artifacts:
+        - critique
+        - risk_register
+        - gate_checklist
+      should_prioritize_findings: true
+      should_reject_unowned_rollbacks: true
+    comparison_signals:
+      - Tests adversarial quality rather than agreeable summary.
+      - Requires gateable recommendations.
+      - Checks that risk and sequencing are explicit.
+  - id: vendor-decision-comparison
+    label: Vendor comparison should produce decision-ready scoring
+    source_ids:
+      - promptfoo
+      - simple-evals
+    derived_prompt: true
+    verbatim_source_prompt: false
+    prompt: >
+      Compare three support-ticket vendors for a 40-person SaaS team. Vendor A
+      is cheapest but lacks SOC 2 evidence, Vendor B has best automation but
+      higher cost, Vendor C integrates well but has weak reporting.
+    expected_behavior:
+      work_class: vendor-selection
+      should_create_artifact: true
+      expected_artifacts:
+        - comparison_matrix
+        - recommendation
+        - approval_questions
+      should_show_tradeoffs: true
+      should_avoid_single-metric_selection: true
+    comparison_signals:
+      - Tests structured comparison under incomplete evidence.
+      - Rewards finance, security, and workflow tradeoff visibility.
+      - Keeps approval questions attached to the recommendation.
+  - id: semantic-template-variation
+    label: Rephrased requests with same intent should map to same work class
+    source_ids:
+      - promptsource
+      - promptfoo
+    derived_prompt: true
+    verbatim_source_prompt: false
+    prompt: >
+      I have scattered research notes, customer quotes, and a rough bet. Shape
+      it into something engineering can evaluate without pretending it is
+      already approved.
+    equivalent_prompts:
+      - >
+        Convert discovery notes into a product handoff that shows what is
+        verified, what is assumed, and what still needs approval.
+      - >
+        Help me turn research into a build-readiness memo with evidence gaps
+        visible.
+    expected_behavior:
+      work_class: research-prd
+      should_create_artifact: true
+      expected_artifacts:
+        - build_readiness_check
+        - assumptions
+        - evidence_gaps
+      should_preserve_unverified_state: true
+    comparison_signals:
+      - Tests semantic invariance across prompt templates.
+      - Prevents overfitting to one prompt wording.
+      - Rewards honest stage boundaries before implementation.
+comparison_frameworks:
+  - id: promptfoo
+    role: Assertion and provider comparison harness.
+    jini_use: >
+      Keep Jini's corpus declarative and assertion-shaped so external
+      providers/frameworks can be tested later without rewriting the corpus.
+  - id: simple-evals
+    role: Lightweight eval report and model comparison shape.
+    jini_use: >
+      Keep reports compact, reproducible, and explicit about benchmark source,
+      dataset digest, and failure list.
+  - id: claude-code
+    role: Coding agent comparison baseline from the golden benchmark.
+    jini_use: >
+      Compare Jini on work continuity, artifact readiness, and response
+      naturalness rather than model raw intelligence alone.
+  - id: codex
+    role: Coding agent comparison baseline from the golden benchmark.
+    jini_use: >
+      Compare Jini on cross-surface work state, explicit routing posture, and
+      ability to continue from CLI into richer surfaces.
+gates:
+  - id: source-provenance
+    must: Every source has repository, license, license_url, consumed_as, and adaptation_rule.
+  - id: derived-only
+    must: Every prompt class declares derived_prompt=true and verbatim_source_prompt=false.
+  - id: no-exact-output-lock
+    must: Prompt classes define expected_behavior and comparison_signals, not expected_output.
+  - id: source-coverage
+    must: Each prompt class references known source_ids, and each source is used by at least one prompt class.
+  - id: comparison-coverage
+    must: Corpus includes both prompt/eval frameworks and agent baselines.

@@ -54,6 +54,7 @@ LEARNING_EVENTS_PATH = LEARNING_EVENTS_ROOT / "runtime-events.jsonl"
 FRAMEWORK_EVOLUTION_ROOT = LEARNING_ROOT / "framework-evolution"
 COMPETITIVE_KPI_PATH = ROOT / "specs" / "competitive-kpis.yaml"
 GOLDEN_BENCHMARK_PATH = ROOT / "specs" / "golden-competitive-benchmark.yaml"
+OPEN_SOURCE_PROMPT_VALIDATION_PATH = ROOT / "specs" / "open-source-prompt-validation.yaml"
 REWRITE_SCORE_BASELINE_PATH = ROOT / "specs" / "rewrite-score-baseline.yaml"
 REWRITE_GUARDRAILS_PATH = ROOT / "specs" / "rewrite-guardrails.md"
 PRODUCT_REVIEW_ROLES_PATH = ROOT / "specs" / "product-review-roles.md"
@@ -87,6 +88,7 @@ PUBLIC_BOUNDARY_REFERENCE_PATTERNS = (
     re.compile(r"specs/20[0-9][0-9]-[0-9]{2}-[0-9]{2}-[^\s)\"']+"),
     re.compile(r"\./20[0-9][0-9]-[0-9]{2}-[0-9]{2}-[^\s)\"']+"),
 )
+OPEN_SOURCE_PROMPT_LICENSES = {"Apache-2.0", "CC0-1.0", "MIT"}
 PUBLIC_EXAMPLE_SPECS: dict[str, dict[str, Any]] = {
     "meeting-followup": {
         "label": "Meeting Follow-up",
@@ -334,6 +336,19 @@ def load_golden_benchmark() -> dict[str, Any]:
     return benchmark
 
 
+def load_open_source_prompt_validation() -> dict[str, Any]:
+    corpus = load_document(OPEN_SOURCE_PROMPT_VALIDATION_PATH)
+    if not isinstance(corpus, dict):
+        raise ValueError("open-source prompt validation corpus must be a mapping")
+    sources = corpus.get("sources")
+    prompt_classes = corpus.get("prompt_classes")
+    if not isinstance(sources, list) or not sources:
+        raise ValueError("open-source prompt validation corpus must define non-empty sources")
+    if not isinstance(prompt_classes, list) or not prompt_classes:
+        raise ValueError("open-source prompt validation corpus must define non-empty prompt_classes")
+    return corpus
+
+
 def load_rewrite_score_baseline() -> dict[str, Any]:
     baseline = load_document(REWRITE_SCORE_BASELINE_PATH)
     if not isinstance(baseline, dict):
@@ -343,6 +358,11 @@ def load_rewrite_score_baseline() -> dict[str, Any]:
 
 def golden_benchmark_digest() -> str:
     return hashlib.sha256(GOLDEN_BENCHMARK_PATH.read_text(encoding="utf-8").encode("utf-8")).hexdigest()[:16]
+
+
+def open_source_prompt_validation_digest() -> str:
+    text = OPEN_SOURCE_PROMPT_VALIDATION_PATH.read_text(encoding="utf-8")
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
 
 
 def load_adapter_registry() -> dict[str, Any]:
@@ -816,6 +836,228 @@ def print_golden_benchmark_report(report: dict[str, Any]) -> None:
             f"  - {scenario['id']} | {scenario['status']} | "
             f"jini={scenario['validated_jini_score']:.2f} | pass={scenario['check_pass_rate']:.3f}"
         )
+
+
+def _status_from_failures(failures: list[str]) -> str:
+    return "ok" if not failures else "warning"
+
+
+def _source_id_set(corpus: dict[str, Any]) -> set[str]:
+    return {
+        str(source.get("id", "")).strip()
+        for source in corpus.get("sources", [])
+        if isinstance(source, dict) and str(source.get("id", "")).strip()
+    }
+
+
+def validate_open_source_prompt_corpus() -> dict[str, Any]:
+    corpus = load_open_source_prompt_validation()
+    sources = [source for source in corpus.get("sources", []) if isinstance(source, dict)]
+    prompt_classes = [item for item in corpus.get("prompt_classes", []) if isinstance(item, dict)]
+    source_ids = _source_id_set(corpus)
+    source_usage = Counter(
+        source_id
+        for prompt_class in prompt_classes
+        for source_id in prompt_class.get("source_ids", [])
+        if isinstance(source_id, str)
+    )
+    permitted_licenses = {
+        str(item)
+        for item in corpus.get("permitted_licenses", OPEN_SOURCE_PROMPT_LICENSES)
+        if str(item).strip()
+    }
+
+    checks: list[dict[str, Any]] = []
+
+    source_id_values = [
+        str(source.get("id", "")).strip()
+        for source in sources
+        if str(source.get("id", "")).strip()
+    ]
+    prompt_id_values = [
+        str(prompt_class.get("id", "")).strip()
+        for prompt_class in prompt_classes
+        if str(prompt_class.get("id", "")).strip()
+    ]
+    shape_failures: list[str] = []
+    if len(sources) < 3:
+        shape_failures.append("corpus must include at least three open-source GitHub sources")
+    if len(prompt_classes) < 6:
+        shape_failures.append("corpus must include at least six prompt classes")
+    if len(source_id_values) != len(sources):
+        shape_failures.append("every source must define a non-empty id")
+    if len(set(source_id_values)) != len(source_id_values):
+        shape_failures.append("source ids must be unique")
+    if len(prompt_id_values) != len(prompt_classes):
+        shape_failures.append("every prompt class must define a non-empty id")
+    if len(set(prompt_id_values)) != len(prompt_id_values):
+        shape_failures.append("prompt class ids must be unique")
+    checks.append(
+        {
+            "id": "corpus-shape",
+            "label": "Corpus has enough unique sources and prompt classes to be useful",
+            "status": _status_from_failures(shape_failures),
+            "failures": shape_failures,
+        }
+    )
+
+    policy = corpus.get("source_policy", {}) if isinstance(corpus.get("source_policy", {}), dict) else {}
+    policy_failures = [
+        key
+        for key in (
+            "use_derived_prompts_only",
+            "require_license",
+            "require_source_url",
+            "require_github_repository",
+            "require_assertable_expected_behavior",
+            "forbid_exact_output_locks",
+            "no_private_prompts",
+        )
+        if policy.get(key) is not True
+    ]
+    checks.append(
+        {
+            "id": "source-policy",
+            "label": "Corpus policy requires derived, licensed, assertable prompts",
+            "status": _status_from_failures(policy_failures),
+            "failures": policy_failures,
+        }
+    )
+
+    source_failures: list[str] = []
+    for source in sources:
+        source_id = str(source.get("id", "")).strip() or "<missing>"
+        repository = str(source.get("repository", "")).strip()
+        license_name = str(source.get("license", "")).strip()
+        if not repository.startswith("https://github.com/"):
+            source_failures.append(f"{source_id}: repository must be a GitHub URL")
+        if license_name not in permitted_licenses or license_name not in OPEN_SOURCE_PROMPT_LICENSES:
+            source_failures.append(f"{source_id}: license must be one of {sorted(OPEN_SOURCE_PROMPT_LICENSES)}")
+        for required_key in ("license_url", "consumed_as", "adaptation_rule"):
+            if not str(source.get(required_key, "")).strip():
+                source_failures.append(f"{source_id}: missing {required_key}")
+        if source_usage[source_id] == 0:
+            source_failures.append(f"{source_id}: source is not referenced by any prompt class")
+    checks.append(
+        {
+            "id": "source-provenance",
+            "label": "Sources are permissively licensed GitHub inputs with adaptation rules",
+            "status": _status_from_failures(source_failures),
+            "failures": source_failures,
+        }
+    )
+
+    prompt_failures: list[str] = []
+    prompt_ids: list[str] = []
+    for prompt_class in prompt_classes:
+        prompt_id = str(prompt_class.get("id", "")).strip() or "<missing>"
+        prompt_ids.append(prompt_id)
+        prompt_source_ids = [
+            str(source_id).strip()
+            for source_id in prompt_class.get("source_ids", [])
+            if str(source_id).strip()
+        ]
+        if not prompt_source_ids:
+            prompt_failures.append(f"{prompt_id}: missing source_ids")
+        unknown_sources = sorted(set(prompt_source_ids) - source_ids)
+        if unknown_sources:
+            prompt_failures.append(f"{prompt_id}: unknown source_ids {unknown_sources}")
+        if prompt_class.get("derived_prompt") is not True:
+            prompt_failures.append(f"{prompt_id}: derived_prompt must be true")
+        if prompt_class.get("verbatim_source_prompt") is not False:
+            prompt_failures.append(f"{prompt_id}: verbatim_source_prompt must be false")
+        if not str(prompt_class.get("prompt", "")).strip():
+            prompt_failures.append(f"{prompt_id}: missing prompt")
+        expected_behavior = prompt_class.get("expected_behavior")
+        if not isinstance(expected_behavior, dict) or not expected_behavior:
+            prompt_failures.append(f"{prompt_id}: missing expected_behavior")
+        comparison_signals = prompt_class.get("comparison_signals")
+        if not isinstance(comparison_signals, list) or not comparison_signals:
+            prompt_failures.append(f"{prompt_id}: missing comparison_signals")
+        if "expected_output" in prompt_class:
+            prompt_failures.append(f"{prompt_id}: expected_output exact locks are not allowed")
+    checks.append(
+        {
+            "id": "prompt-classes",
+            "label": "Prompt classes are derived, source-linked, and assertion-shaped",
+            "status": _status_from_failures(prompt_failures),
+            "failures": prompt_failures,
+        }
+    )
+
+    comparison_frameworks = [
+        item
+        for item in corpus.get("comparison_frameworks", [])
+        if isinstance(item, dict) and str(item.get("id", "")).strip()
+    ]
+    comparison_ids = {str(item.get("id", "")).strip() for item in comparison_frameworks}
+    comparison_failures = []
+    for required in ("promptfoo", "simple-evals", "claude-code", "codex"):
+        if required not in comparison_ids:
+            comparison_failures.append(f"missing comparison framework {required}")
+    checks.append(
+        {
+            "id": "comparison-coverage",
+            "label": "Corpus compares against prompt/eval frameworks and agent baselines",
+            "status": _status_from_failures(comparison_failures),
+            "failures": comparison_failures,
+        }
+    )
+
+    gates = [gate for gate in corpus.get("gates", []) if isinstance(gate, dict)]
+    gate_failures = []
+    gate_ids = {str(gate.get("id", "")).strip() for gate in gates}
+    for required in (
+        "source-provenance",
+        "derived-only",
+        "no-exact-output-lock",
+        "source-coverage",
+        "comparison-coverage",
+    ):
+        if required not in gate_ids:
+            gate_failures.append(f"missing documented gate {required}")
+    checks.append(
+        {
+            "id": "documented-gates",
+            "label": "Corpus documents the gates it enforces",
+            "status": _status_from_failures(gate_failures),
+            "failures": gate_failures,
+        }
+    )
+
+    failed_checks = [check["id"] for check in checks if check["status"] != "ok"]
+    return {
+        "schema_version": corpus.get("schema_version", "0.1.0"),
+        "result_type": "JiniOpenSourcePromptValidation",
+        "generated_at": now_utc(),
+        "benchmark_id": corpus.get("benchmark_id", "open-source-prompt-validation"),
+        "dataset_path": display_path(OPEN_SOURCE_PROMPT_VALIDATION_PATH),
+        "dataset_digest": open_source_prompt_validation_digest(),
+        "updated_at": corpus.get("updated_at", ""),
+        "status": "ok" if not failed_checks else "warning",
+        "source_count": len(sources),
+        "source_ids": sorted(source_ids),
+        "prompt_class_count": len(prompt_classes),
+        "prompt_class_ids": prompt_ids,
+        "comparison_framework_ids": sorted(comparison_ids),
+        "policy": policy,
+        "failed_checks": failed_checks,
+        "checks": checks,
+    }
+
+
+def print_open_source_prompt_validation(report: dict[str, Any]) -> None:
+    print("Open-source Prompt Validation")
+    print(f"STATUS  {report.get('status', 'unknown')}")
+    print(f"DATASET {report.get('dataset_path', '')}")
+    print(f"DIGEST  {report.get('dataset_digest', '')}")
+    print(f"SOURCES {report.get('source_count', 0)}")
+    print(f"PROMPTS {report.get('prompt_class_count', 0)}")
+    print("CHECKS")
+    for check in report.get("checks", []):
+        print(f"  - {check.get('id', '')}: {check.get('status', '')}")
+        for failure in check.get("failures", []):
+            print(f"    failure: {failure}")
 
 
 def framework_review_dir() -> Path:
@@ -1670,6 +1912,7 @@ def build_publish_readiness() -> dict[str, Any]:
         ROOT / "specs" / "workstream-technical-framework-gate.md",
         ROOT / "specs" / "competitive-kpis.yaml",
         ROOT / "specs" / "golden-competitive-benchmark.yaml",
+        OPEN_SOURCE_PROMPT_VALIDATION_PATH,
         ROOT / "specs" / "rewrite-score-baseline.yaml",
         REWRITE_GUARDRAILS_PATH,
         PRODUCT_REVIEW_ROLES_PATH,
@@ -2093,6 +2336,7 @@ def build_publish_readiness() -> dict[str, Any]:
         "passed_gate_ids": [str(item["id"]) for item in consensus_gate_checks if item["status"] == "ok"],
         "checks": consensus_gate_checks,
     }
+    open_source_prompt_report = validate_open_source_prompt_corpus()
     public_boundary_report = validate_public_repo_boundary()
 
     commercial_kit = next((kit for kit in install_catalog.get("kits", []) if kit.get("id") == "vendor-decision-kit"), None)
@@ -2165,6 +2409,12 @@ def build_publish_readiness() -> dict[str, Any]:
             "label": "Product consensus gates",
             "status": consensus_gates["status"],
             "checks": consensus_gate_checks,
+        },
+        {
+            "id": "open-source-prompt-validation",
+            "label": "Open-source prompt validation",
+            "status": open_source_prompt_report["status"],
+            "checks": open_source_prompt_report["checks"],
         },
         {
             "id": "public-boundary",
@@ -4469,6 +4719,13 @@ def default_personal_tool_inventory() -> list[dict[str, str]]:
             "scope": "local",
             "location": display_path(GOLDEN_BENCHMARK_PATH),
             "description": "Weighted golden dataset used to compare Jini against Kiro and Hermes.",
+        },
+        {
+            "id": "open-source-prompt-validation",
+            "kind": "benchmark",
+            "scope": "local",
+            "location": display_path(OPEN_SOURCE_PROMPT_VALIDATION_PATH),
+            "description": "Derived public GitHub prompt corpus for source-attributed validation and framework comparison.",
         },
         {
             "id": "framework-evolution",
@@ -15070,6 +15327,17 @@ def main() -> int:
         help="Output format for the golden benchmark report",
     )
 
+    open_source_prompt_parser = subparsers.add_parser(
+        "validate-open-source-prompts",
+        help="Validate the derived open-source GitHub prompt corpus and framework comparison gates",
+    )
+    open_source_prompt_parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for the open-source prompt validation report",
+    )
+
     device_runtime_gate_parser = subparsers.add_parser(
         "validate-device-runtime-gate",
         help="Run the independent gate for device-aware local runtime routing",
@@ -16701,6 +16969,18 @@ def main() -> int:
         else:
             print_golden_benchmark_report(report)
         return 0
+
+    if args.command == "validate-open-source-prompts":
+        try:
+            report = validate_open_source_prompt_corpus()
+        except (FileNotFoundError, KeyError, TypeError, ValueError) as exc:
+            print(f"ERROR {exc}")
+            return 1
+        if args.format == "json":
+            print(json.dumps(report, indent=2))
+        else:
+            print_open_source_prompt_validation(report)
+        return 0 if report.get("status") == "ok" else 1
 
     if args.command == "validate-device-runtime-gate":
         try:
