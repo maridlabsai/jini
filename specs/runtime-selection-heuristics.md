@@ -5,8 +5,6 @@ Updated: 2026-05-15
 See also:
 
 - [research-informed-heuristics.md](./research-informed-heuristics.md)
-- [2026-05-17-coding-tool-market-note.md](./2026-05-17-coding-tool-market-note.md)
-- [2026-05-17-coding-routing-heuristic-update.md](./2026-05-17-coding-routing-heuristic-update.md)
 
 ## Purpose
 
@@ -60,6 +58,8 @@ Adjustment rule:
   churn routes when the current route is still good enough
 - for coding work, factor practical quota headroom and iteration economics, not
   only per-turn model strength
+- for coding work, prefer stable continuation unless a materially better route
+  justifies the context-switch cost
 
 ## Model Heuristic
 

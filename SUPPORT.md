@@ -45,10 +45,13 @@ Commercial support is separate:
 
 ## Commercial Help
 
-Commercial implementation and onboarding support are described in
-[COMMERCIAL.md](COMMERCIAL.md).
+Commercial support is available for:
+
+- implementation help in a real repo
+- onboarding and workshops
+- custom workflow mapping
+- enterprise governance and rollout guidance
 
 Commercial contact:
 
 - `maridlabsai@gmail.com`
-- commercial overview: [github.com/maridlabsai/jini/blob/main/COMMERCIAL.md](https://github.com/maridlabsai/jini/blob/main/COMMERCIAL.md)

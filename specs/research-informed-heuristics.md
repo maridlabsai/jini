@@ -38,11 +38,6 @@ full text during implementation. The official Anthropic Cowork and workflow
 materials above expose the same underlying pattern clearly enough to drive
 product decisions.
 
-See also:
-
-- [2026-05-17-coding-tool-market-note.md](./2026-05-17-coding-tool-market-note.md)
-- [2026-05-17-coding-routing-heuristic-update.md](./2026-05-17-coding-routing-heuristic-update.md)
-
 ## Product Interpretation
 
 ### 1. Outcome-first delegation beats prompt-first chat

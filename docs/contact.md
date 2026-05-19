@@ -23,6 +23,6 @@ description: Use Issues, Discussions, or commercial contact depending on the kin
 <div class="section-card">
   <span class="section-kicker">Commercial</span>
   <h2>Paid help is for adoption, not basic access</h2>
-  <p>Commercial implementation and onboarding support are described in <a href="https://github.com/maridlabsai/jini/blob/main/COMMERCIAL.md">COMMERCIAL.md</a>.</p>
+  <p>Use commercial contact for implementation help, onboarding, workflow mapping, or enterprise rollout support.</p>
   <p><strong>Email:</strong> <code>maridlabsai@gmail.com</code></p>
 </div>

@@ -21,10 +21,13 @@ The execution sequence for this PRD lives in
 The runtime-learning interpretation of this PRD lives in
 [research-informed-heuristics.md](./research-informed-heuristics.md).
 
-Recent market/product interpretation for coding workflows also lives in:
+Coding workflow strategy should stay aligned with three public product rules:
 
-- [2026-05-17-coding-tool-market-note.md](./2026-05-17-coding-tool-market-note.md)
-- [2026-05-17-coding-routing-heuristic-update.md](./2026-05-17-coding-routing-heuristic-update.md)
+- preserve one stable work thread even when the route changes underneath
+- bias toward the cheapest suitable route with enough quota and continuity for
+  long iteration loops
+- keep route overrides available without making model choice the user's normal
+  burden
 
 ## Product Thesis
 
