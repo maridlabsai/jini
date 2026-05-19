@@ -28,6 +28,9 @@ live in
 The stable engineering framework for major workstreams lives in
 [workstream-technical-framework.md](./workstream-technical-framework.md).
 
+The public framework for curated travel work lives in
+[travel-curated-experience-framework.md](./travel-curated-experience-framework.md).
+
 Coding workflow strategy should stay aligned with three public product rules:
 
 - preserve one stable work thread even when the route changes underneath
