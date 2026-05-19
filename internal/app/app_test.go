@@ -1059,6 +1059,40 @@ func TestInteractiveLauncherHandlesUnsureInputWithUsefulPass(t *testing.T) {
 	}
 }
 
+func TestInteractiveLauncherGreetingDoesNotCreateWork(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("hello\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Paste notes or type what you want finished.",
+		"Hi.",
+		"Tell me what you want finished, or paste notes when you're ready.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+	for _, unwanted := range []string{
+		"Your first draft is ready.",
+		"First Useful Pass",
+		"Goal",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("did not expect output to contain %q, got:\n%s", unwanted, out)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(stateDir, "current-work.json")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("expected no current work file after greeting, got err=%v", err)
+	}
+}
+
 func TestInteractiveLauncherRunsMeetingPostResultActions(t *testing.T) {
 	cases := []struct {
 		name            string

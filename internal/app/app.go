@@ -580,6 +580,13 @@ func runNewWorkIntakeWithScanner(session *bufio.Scanner, stdout, stderr io.Write
 		if !ok {
 			return 0
 		}
+		if isGreetingOnly(firstRaw) {
+			fmt.Fprintln(stdout)
+			fmt.Fprintln(stdout, "Hi.")
+			fmt.Fprintln(stdout, "Tell me what you want finished, or paste notes when you're ready.")
+			fmt.Fprintln(stdout)
+			continue
+		}
 		if handled, exitCode := maybeHandleProviderSetupIntent(firstRaw, session, stdout, stderr); handled {
 			if exitCode != 0 {
 				fmt.Fprintln(stdout)
@@ -702,6 +709,15 @@ func resolveStarterChoice(raw string) (starterChoice, error) {
 		}
 	}
 	return starterChoice{}, fmt.Errorf("I couldn't match %q to a starter flow yet.", raw)
+}
+
+func isGreetingOnly(raw string) bool {
+	switch normalizeName(raw) {
+	case "hello", "hi", "hey", "hey there", "hello there", "good morning", "good afternoon", "good evening", "morning", "evening":
+		return true
+	default:
+		return false
+	}
 }
 
 func sourcePromptForChoice(choice starterChoice) string {
