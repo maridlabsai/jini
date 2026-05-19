@@ -101,6 +101,16 @@ Responsibilities:
 - keep installation and updates trustworthy
 - preserve the same public product contract across targets
 
+## Cross-Cutting Requirements
+
+Every workstream must also answer the same non-functional obligations:
+
+- security and privacy boundaries
+- observability and rollback
+- migration and compatibility
+- user-visible trust and exportability
+- competitive usefulness, not just internal elegance
+
 ## Shared Invariants
 
 Every workstream must preserve:
@@ -110,6 +120,8 @@ Every workstream must preserve:
 3. the free local/BYO boundary
 4. route and verification transparency
 5. one account/work-thread/product identity across surfaces
+6. exportability and explicit local-versus-hosted boundaries
+7. rollback-safe and observable rollout behavior
 
 ## Dependency Order
 
@@ -131,6 +143,27 @@ A workstream change is not ready unless it can answer:
 - Which invariant could this break?
 - What proof shows it did not fork the product model?
 - What gate or benchmark protects it from regression?
+- What is the rollback or downgrade path if it underperforms?
+- How does it improve user outcome, trust, or spend posture against the field?
+
+## Required Outputs
+
+Each major workstream should leave behind:
+
+- one design or framework note
+- one review trail
+- one gate or benchmark hook
+- one explicit statement of what changed in user-visible behavior
+
+## Exit Criteria
+
+A workstream should not be called complete unless:
+
+- the shared invariants still hold
+- the change is observable in product behavior or protection, not only code
+- the rollback path is understood
+- the benchmark or gate story is still green
+- the change improves or protects competitive posture
 
 ## Review Loop
 
@@ -153,6 +186,8 @@ That review loop is defined in:
 - feature work that bypasses shared artifact or routing semantics
 - learning systems that silently rewrite public behavior
 - launch plumbing that becomes the real product architecture
+- commercial or regulated work that ignores identity, audit, or privacy
+  inheritance from the shared product model
 
 ## Rationale
 

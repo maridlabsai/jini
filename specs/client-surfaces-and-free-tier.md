@@ -27,6 +27,31 @@ The product should have:
 - one route and artifact model
 - one continuity model across surfaces
 
+## Shipping Status And Public Commitment
+
+Jini needs a clear distinction between what is shipping now and what is a
+public product commitment.
+
+### Shipping Now
+
+- CLI is the live primary surface.
+- public install, proof, and routing transparency are already part of the
+  current product story.
+
+### Public Product Commitment
+
+- desktop support for macOS and Windows is part of the public product
+  direction, but it should not be described as generally available until the
+  real surface exists and passes the same work-thread and trust checks as CLI.
+- mobile continuation/review is also a public commitment, not a claim that the
+  full mobile surface is already shipped.
+
+Public docs should never blur the difference between:
+
+- available now
+- publicly committed next
+- speculative later
+
 ## Surface Requirements
 
 ### CLI
@@ -102,6 +127,19 @@ That means:
 The free tier must not be a fake evaluation shell that becomes useless without
 hosted spend.
 
+## Public Upgrade Logic
+
+The public repo should explain the upgrade ladder in product terms without
+turning into a pricing page.
+
+The stable public story is:
+
+- free gives real local and BYO use
+- hosted proof-of-value may exist without making free deceptive
+- paid product adds hosted convenience, continuity, shared work, and
+  governance
+- paid services and support are separate from paid product capability
+
 ## Commercial Boundary
 
 The commercial layer may monetize:
@@ -131,6 +169,21 @@ A user should be able to:
 - return to desktop or CLI
 
 without losing the thread, artifact identity, or routing transparency.
+
+## Trust, Identity, And Export Boundary
+
+If Jini offers signed-in continuity across surfaces, it must preserve:
+
+- visible route and verification transparency
+- exportability of user work
+- clear separation between local/BYO behavior and hosted behavior
+- explicit privacy boundaries for cross-surface identity and sync
+
+Commercial convenience may extend continuity. It may not quietly erase:
+
+- what is running locally
+- what is running through Jini-hosted infrastructure
+- what the user can export or take with them
 
 ## Public Non-Negotiables
 

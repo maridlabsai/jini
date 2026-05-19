@@ -31,6 +31,10 @@ curl -fsSL https://raw.githubusercontent.com/maridlabsai/jini/main/install.sh | 
 
 Supported install hosts today: macOS and Linux.
 
+Desktop and mobile are part of the public product direction, but they should
+not be treated as generally available installs until those surfaces are shipped
+and pass the same work-thread and trust checks as the CLI.
+
 If you already cloned the repo, the local equivalent is:
 
 ```bash

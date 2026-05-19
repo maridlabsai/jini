@@ -39,6 +39,24 @@ The framework must explicitly reject:
 The framework must include or reference a completed critique, revision, and
 rationalization pass.
 
+### 5. Operational And Trust Safety
+
+The framework must define cross-cutting requirements for:
+
+- privacy
+- exportability
+- rollback
+- observability
+
+### 6. Competitive Utility
+
+The framework must force workstreams to justify how they improve or protect:
+
+- user outcome
+- trust posture
+- cost posture
+- competitive position
+
 ## Pass Rule
 
-The framework passes only if all four categories are clearly satisfied.
+The framework passes only if all six categories are clearly satisfied.

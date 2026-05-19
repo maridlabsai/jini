@@ -44,6 +44,29 @@ Finding:
 
 - the first draft needed dependency order and explicit gate obligations
 
+### Security And Privacy Reviewer
+
+Concern:
+
+- workstream frameworks often omit trust, export, and rollback obligations
+
+Finding:
+
+- the first draft needed explicit cross-cutting requirements for privacy,
+  exportability, observability, and rollback-safe rollout
+
+### Competitive Systems Reviewer
+
+Concern:
+
+- framework docs often optimize internal neatness instead of user and market
+  advantage
+
+Finding:
+
+- the first draft needed clearer competitive and user-outcome pressure on each
+  workstream
+
 ## Critique Summary
 
 Round 1 issues:
@@ -51,6 +74,8 @@ Round 1 issues:
 - too much architecture language, not enough explicit invariants
 - not enough connection to the existing public contract
 - no clear workstream admission rule
+- no explicit non-functional obligations
+- no explicit competitive posture requirement
 
 ## Revisions Applied
 
@@ -60,6 +85,8 @@ The framework was tightened to:
 - add shared invariants
 - add dependency order
 - add admission questions
+- add cross-cutting requirements
+- add required outputs and exit criteria
 - define what the framework rejects
 
 ## Rationalized Position
@@ -76,5 +103,7 @@ The final document is intentionally narrow:
 - Architecture Reviewer: pass
 - Product Systems Reviewer: pass
 - Delivery Reviewer: pass
+- Security And Privacy Reviewer: pass
+- Competitive Systems Reviewer: pass
 
 `PASS`
