@@ -874,9 +874,6 @@ func bootstrapStarterWork(choice starterChoice, source, detail string, inputItem
 	if err != nil {
 		return nil, err
 	}
-	if err := saveSemanticEnvelopeForSummary(summary); err != nil {
-		return nil, err
-	}
 	return summary, nil
 }
 
@@ -1884,6 +1881,7 @@ func loadWorkSummary(dir string, current *currentWork) (*workSummary, error) {
 	}
 	summary.NextStep = inferNextStep(packID, summary.Views)
 	summary.Thread = buildWorkThread(summary, inputs, loadThreadState(resolved, summary))
+	refreshSemanticEnvelopeForSummary(summary)
 	return summary, nil
 }
 

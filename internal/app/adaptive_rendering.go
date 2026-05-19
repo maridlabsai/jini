@@ -27,6 +27,7 @@ type semanticEnvelope struct {
 	NextAction            string               `json:"next_action"`
 	TrustState            string               `json:"trust_state"`
 	ConfirmationRequired  bool                 `json:"confirmation_required"`
+	ActiveAsk             *threadAsk           `json:"active_ask,omitempty"`
 	TurnDelta             threadTurnRecord     `json:"turn_delta"`
 	RenderHints           []renderRequest      `json:"render_hints"`
 }
@@ -64,6 +65,18 @@ type renderRequest struct {
 	AvailableActions []string `json:"available_actions"`
 }
 
+type threadProjector struct{}
+
+func (threadProjector) Project(summary *workSummary, inputs []inputItem, state savedThreadState) semanticEnvelope {
+	return projectSemanticEnvelope(summary, inputs, state)
+}
+
+type renderPolicy struct{}
+
+func (renderPolicy) Select(envelope semanticEnvelope, surface, userFamiliarity string) renderRequest {
+	return selectRenderRequest(envelope, surface, userFamiliarity)
+}
+
 func semanticEnvelopePath(workDir string) string {
 	return filepath.Join(workDir, "semantic-envelope.json")
 }
@@ -77,22 +90,38 @@ func saveSemanticEnvelopeForSummary(summary *workSummary) error {
 		inputs = loadInputItems(summary.Dir, summary.PackID)
 	}
 	state := loadThreadState(summary.Dir, summary)
-	envelope := projectSemanticEnvelope(summary, inputs, state)
-	envelope.RenderHints = []renderRequest{selectRenderRequest(envelope, "cli", "new")}
+	projector := threadProjector{}
+	policy := renderPolicy{}
+	envelope := projector.Project(summary, inputs, state)
+	envelope.RenderHints = []renderRequest{policy.Select(envelope, "cli", "new")}
 	return saveSemanticEnvelope(summary.Dir, envelope)
+}
+
+func refreshSemanticEnvelopeForSummary(summary *workSummary) {
+	_ = saveSemanticEnvelopeForSummary(summary)
 }
 
 func saveSemanticEnvelope(workDir string, envelope semanticEnvelope) error {
 	if strings.TrimSpace(workDir) == "" {
 		return nil
 	}
+	envelope = normalizeSemanticEnvelope(envelope)
 	envelope.SchemaVersion = firstNonEmpty(envelope.SchemaVersion, "0.1.0")
 	envelope.ContextType = firstNonEmpty(envelope.ContextType, "JiniSemanticEnvelope")
 	data, err := json.MarshalIndent(envelope, "", "  ")
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(semanticEnvelopePath(workDir), append(data, '\n'), 0o600)
+	path := semanticEnvelopePath(workDir)
+	tmpPath := path + ".tmp"
+	if err := os.WriteFile(tmpPath, append(data, '\n'), 0o600); err != nil {
+		return err
+	}
+	if err := os.Rename(tmpPath, path); err != nil {
+		_ = os.Remove(tmpPath)
+		return err
+	}
+	return nil
 }
 
 func projectSemanticEnvelope(summary *workSummary, inputs []inputItem, state savedThreadState) semanticEnvelope {
@@ -122,7 +151,7 @@ func projectSemanticEnvelope(summary *workSummary, inputs []inputItem, state sav
 		SchemaVersion:         "0.1.0",
 		ContextType:           "JiniSemanticEnvelope",
 		ThreadID:              firstNonEmpty(summary.WorkUnitID, slugify(summary.Title)),
-		TurnID:                "current-turn",
+		TurnID:                semanticTurnID(summary, turn),
 		IntentKind:            semanticIntentKind(summary),
 		WorkClass:             firstNonEmpty(profile.WorkClass, summary.PackID, "general"),
 		ArtifactFamily:        firstNonEmpty(profile.ArtifactFamily, "general-pass"),
@@ -140,11 +169,13 @@ func projectSemanticEnvelope(summary *workSummary, inputs []inputItem, state sav
 			VerificationLevel: summary.VerificationLevel,
 		},
 		Artifacts:            semanticArtifacts(summary, profile, inputs),
+		Decisions:            []string{},
 		Missing:              missing,
 		Uncertainty:          append([]string{}, summary.Uncertain...),
 		NextAction:           summary.NextStep,
 		TrustState:           semanticTrustState(summary),
 		ConfirmationRequired: len(missing) > 0 || (state.ActiveAsk != nil && state.ActiveAsk.Blocking),
+		ActiveAsk:            state.ActiveAsk,
 		TurnDelta:            turn,
 	}
 	return envelope
@@ -200,6 +231,18 @@ func semanticComplexity(summary *workSummary, inputs []inputItem) string {
 }
 
 func semanticInputQuality(inputs []inputItem) string {
+	if len(inputs) > 0 {
+		allDerived := true
+		for _, item := range inputs {
+			if item.Kind != "derived" {
+				allDerived = false
+				break
+			}
+		}
+		if allDerived {
+			return "derived"
+		}
+	}
 	source := strings.TrimSpace(sourceFromInputItems(inputs))
 	switch {
 	case source == "":
@@ -223,7 +266,7 @@ func semanticArtifacts(summary *workSummary, profile starterPackProfile, inputs 
 			purpose = "Primary user-facing result"
 		}
 		artifacts = append(artifacts, semanticArtifact{
-			ArtifactID:    firstNonEmpty(item.ID, normalizeFilename(item.Label)),
+			ArtifactID:    semanticArtifactID(item),
 			Family:        firstNonEmpty(profile.ArtifactFamily, "general-pass"),
 			Title:         item.Label,
 			Purpose:       purpose,
@@ -236,6 +279,67 @@ func semanticArtifacts(summary *workSummary, profile starterPackProfile, inputs 
 		})
 	}
 	return artifacts
+}
+
+func semanticArtifactID(item catalogItem) string {
+	id := normalizeFilename(item.ID)
+	if id == "" {
+		id = normalizeFilename(item.Label)
+	}
+	return id
+}
+
+func semanticTurnID(summary *workSummary, turn threadTurnRecord) string {
+	parts := []string{}
+	if summary != nil {
+		parts = append(parts, summary.WorkUnitID, summary.Title)
+	}
+	parts = append(parts, turn.DoingNow, turn.UpNext)
+	parts = append(parts, turn.ArtifactsCreated...)
+	parts = append(parts, turn.ArtifactsUpdated...)
+	id := slugify(strings.Join(parts, " "))
+	if id == "" {
+		return "current-turn"
+	}
+	if len(id) > 80 {
+		id = strings.Trim(id[:80], "-")
+	}
+	return "turn-" + id
+}
+
+func normalizeSemanticEnvelope(envelope semanticEnvelope) semanticEnvelope {
+	if envelope.Artifacts == nil {
+		envelope.Artifacts = []semanticArtifact{}
+	}
+	if envelope.Decisions == nil {
+		envelope.Decisions = []string{}
+	}
+	if envelope.Missing == nil {
+		envelope.Missing = []string{}
+	}
+	if envelope.Uncertainty == nil {
+		envelope.Uncertainty = []string{}
+	}
+	if envelope.RenderHints == nil {
+		envelope.RenderHints = []renderRequest{}
+	}
+	envelope.TurnDelta.JustFinished = stringSliceOrEmpty(envelope.TurnDelta.JustFinished)
+	envelope.TurnDelta.ArtifactsCreated = stringSliceOrEmpty(envelope.TurnDelta.ArtifactsCreated)
+	envelope.TurnDelta.ArtifactsUpdated = stringSliceOrEmpty(envelope.TurnDelta.ArtifactsUpdated)
+	for index := range envelope.Artifacts {
+		envelope.Artifacts[index].SourceRefs = stringSliceOrEmpty(envelope.Artifacts[index].SourceRefs)
+		envelope.Artifacts[index].OpenDecisions = stringSliceOrEmpty(envelope.Artifacts[index].OpenDecisions)
+		envelope.Artifacts[index].MissingInputs = stringSliceOrEmpty(envelope.Artifacts[index].MissingInputs)
+		envelope.Artifacts[index].RenderHints = stringSliceOrEmpty(envelope.Artifacts[index].RenderHints)
+	}
+	return envelope
+}
+
+func stringSliceOrEmpty(values []string) []string {
+	if values == nil {
+		return []string{}
+	}
+	return values
 }
 
 func inputSourceRefs(inputs []inputItem) []string {
