@@ -73,33 +73,45 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 		stderr = io.Discard
 	}
 
-	if len(args) == 0 {
-		return runLauncher(stdin, stdout, stderr)
-	}
-
-	switch args[0] {
-	case "check":
-		return runCheck(args[1:], stdout, stderr)
-	case "observe":
-		return runObserve(args[1:], stdout, stderr)
-	case "open":
-		return runOpen(args[1:], stdout, stderr)
-	case "run":
-		if len(args) > 1 && (args[1] == "--new" || args[1] == "new") {
-			if stdin != nil {
-				return runNewWorkIntake(stdin, stdout, stderr)
-			}
-			renderNewWorkLauncher(stdout)
-			return 0
+	return safelyRunInteractive(stderr, func() int {
+		if len(args) == 0 {
+			return runLauncher(stdin, stdout, stderr)
 		}
-		return runLauncher(stdin, stdout, stderr)
-	case "provider":
-		return runProvider(args[1:], stdout, stderr)
-	default:
-		fmt.Fprintf(stderr, "Unknown command %q.\n", args[0])
-		fmt.Fprintln(stderr, "Try `jini`, `jini provider doctor`, or a scriptable command such as `jini check`.")
-		return 1
-	}
+
+		switch args[0] {
+		case "check":
+			return runCheck(args[1:], stdout, stderr)
+		case "observe":
+			return runObserve(args[1:], stdout, stderr)
+		case "open":
+			return runOpen(args[1:], stdout, stderr)
+		case "run":
+			if len(args) > 1 && (args[1] == "--new" || args[1] == "new") {
+				if stdin != nil {
+					return runNewWorkIntake(stdin, stdout, stderr)
+				}
+				renderNewWorkLauncher(stdout)
+				return 0
+			}
+			return runLauncher(stdin, stdout, stderr)
+		case "provider":
+			return runProvider(args[1:], stdout, stderr)
+		default:
+			fmt.Fprintf(stderr, "Unknown command %q.\n", args[0])
+			fmt.Fprintln(stderr, "Try `jini`, `jini provider doctor`, or a scriptable command such as `jini check`.")
+			return 1
+		}
+	})
+}
+
+func safelyRunInteractive(stderr io.Writer, fn func() int) (exitCode int) {
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			fmt.Fprintf(stderr, "Jini hit an unexpected internal error and stopped safely.\n")
+			exitCode = 1
+		}
+	}()
+	return fn()
 }
 
 func runLauncher(stdin io.Reader, stdout, stderr io.Writer) int {
