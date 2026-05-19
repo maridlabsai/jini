@@ -36,12 +36,15 @@ Examples:
 - desktop behavior
 - mobile continuation/review behavior
 - docs and install surfaces
+- adaptive response rendering
 
 Responsibilities:
 
 - keep the same product identity across surfaces
 - surface the right artifact, missing-state, and next-step information
 - preserve free local/BYO usefulness
+- render from shared semantic and artifact contracts instead of hard-coded
+  use-case response molds
 
 ### 2. Runtime Workstreams
 
@@ -176,6 +179,9 @@ Every major workstream change should go through:
 
 That review loop is defined in:
 
+- [adaptive-response-rendering-framework.md](./adaptive-response-rendering-framework.md)
+- [adaptive-response-rendering-framework-review.md](./adaptive-response-rendering-framework-review.md)
+- [adaptive-response-rendering-framework-gate.md](./adaptive-response-rendering-framework-gate.md)
 - [workstream-technical-framework-review.md](./workstream-technical-framework-review.md)
 - [workstream-technical-framework-gate.md](./workstream-technical-framework-gate.md)
 
