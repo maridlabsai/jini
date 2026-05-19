@@ -61,6 +61,8 @@ PRODUCT_REVIEW_ROLES_PATH = ROOT / "specs" / "product-review-roles.md"
 PRODUCT_CONSENSUS_PRD_PATH = ROOT / "specs" / "product-consensus-prd-and-plan.md"
 PRODUCT_REWRITE_CONTRACT_PATH = ROOT / "specs" / "product-rewrite-contract.md"
 PUBLIC_REPO_BOUNDARY_PATH = ROOT / "specs" / "public-repo-boundary.md"
+FRICTION_REDUCTION_RESEARCH_PATH = ROOT / "specs" / "friction-reduction-research.md"
+FRICTION_REDUCTION_GATE_PATH = ROOT / "specs" / "friction-reduction-gate.md"
 DEVICE_CAPABILITY_ROUTING_PATH = ROOT / "specs" / "device-capability-routing.md"
 DEVICE_RUNTIME_GATE_PATH = ROOT / "specs" / "device-runtime-gate.md"
 ADAPTER_CAPABILITY_BENCHMARKING_PATH = ROOT / "specs" / "adapter-capability-benchmarking.md"
@@ -1919,6 +1921,8 @@ def build_publish_readiness() -> dict[str, Any]:
         PRODUCT_CONSENSUS_PRD_PATH,
         PRODUCT_REWRITE_CONTRACT_PATH,
         PUBLIC_REPO_BOUNDARY_PATH,
+        FRICTION_REDUCTION_RESEARCH_PATH,
+        FRICTION_REDUCTION_GATE_PATH,
         ROOT / "distribution" / "install-manifest.yaml",
     ]
     doc_checks = [{"path": display_path(path), "exists": path.exists()} for path in doc_paths]
@@ -2336,6 +2340,62 @@ def build_publish_readiness() -> dict[str, Any]:
         "passed_gate_ids": [str(item["id"]) for item in consensus_gate_checks if item["status"] == "ok"],
         "checks": consensus_gate_checks,
     }
+    friction_reduction_requirements = [
+        {
+            "path": FRICTION_REDUCTION_RESEARCH_PATH,
+            "markers": [
+                "https://help.openai.com/en/articles/11369540/",
+                "https://openai.com/index/work-with-codex-from-anywhere/",
+                "https://help.openai.com/en/articles/10169521-using-projects-in-chatgpt",
+                "https://help.openai.com/en/articles/9930697-what-is-the-canvas-feature-in-chatgpt-and-how-do-i-use-it",
+                "https://docs.anthropic.com/en/docs/claude-code/overview",
+                "https://docs.anthropic.com/en/docs/claude-code/hooks",
+                "https://support.anthropic.com/en/articles/9487310-what-are-artifacts-and-how-do-i-use-them",
+                "One Prompt Before Taxonomy",
+                "No Empty-Shell Noise",
+                "Artifact Escalation",
+                "Continue Anywhere",
+                "Best Productivity With Least Expense",
+            ],
+        },
+        {
+            "path": FRICTION_REDUCTION_GATE_PATH,
+            "markers": [
+                "First-Minute Simplicity",
+                "Natural Intent Handling",
+                "Continue-Anywhere Work State",
+                "Artifact Escalation",
+                "Setup Doctor And Self-Healing",
+                "Cost And Route Minimalism",
+                "Trust Without Ceremony",
+                "`continue-anywhere`",
+                "`artifact-escalation`",
+                "`setup-doctor`",
+                "`best-productivity-least-expense`",
+                "`visible-trust`",
+            ],
+        },
+    ]
+    friction_reduction_checks: list[dict[str, Any]] = []
+    for requirement in friction_reduction_requirements:
+        path = requirement["path"]
+        markers = [str(marker) for marker in requirement["markers"]]
+        text = path.read_text(encoding="utf-8") if path.exists() else ""
+        normalized_text = text.lower()
+        missing_markers = [marker for marker in markers if marker.lower() not in normalized_text]
+        friction_reduction_checks.append(
+            {
+                "path": display_path(path),
+                "exists": path.exists(),
+                "markers": markers,
+                "missing_markers": missing_markers,
+                "status": "ok" if path.exists() and not missing_markers else "warning",
+            }
+        )
+    friction_reduction_gate = {
+        "status": "ok" if all(item["status"] == "ok" for item in friction_reduction_checks) else "warning",
+        "checks": friction_reduction_checks,
+    }
     open_source_prompt_report = validate_open_source_prompt_corpus()
     public_boundary_report = validate_public_repo_boundary()
 
@@ -2409,6 +2469,12 @@ def build_publish_readiness() -> dict[str, Any]:
             "label": "Product consensus gates",
             "status": consensus_gates["status"],
             "checks": consensus_gate_checks,
+        },
+        {
+            "id": "friction-reduction",
+            "label": "Competitive friction reduction",
+            "status": friction_reduction_gate["status"],
+            "checks": friction_reduction_gate["checks"],
         },
         {
             "id": "open-source-prompt-validation",

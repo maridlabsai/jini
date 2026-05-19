@@ -1,0 +1,173 @@
+# Friction Reduction Gate
+
+## Gate Purpose
+
+This gate prevents Jini from becoming harder to use than Codex, ChatGPT, or
+Claude while trying to be more capable. Any feature that adds surface area must
+show how it reduces user effort, preserves context, improves trust, lowers cost,
+or creates a richer artifact experience.
+
+## Gate Categories
+
+### 1. First-Minute Simplicity
+
+Pass criteria:
+
+- `jini` starts without stale default work output.
+- `jini help` or an explicit help request shows examples and setup guidance.
+- A new user can type natural language before learning packs, routes, or
+  provider names.
+- The first useful result appears before status or model metadata.
+
+Regression inputs:
+
+- `hello`
+- empty shell start
+- `help`
+- `7 day paris trip`
+- `turn these notes into a follow-up`
+
+### 2. Natural Intent Handling
+
+Pass criteria:
+
+- Greeting-only input stays conversational.
+- Ambiguous work asks minimal clarifying questions.
+- Already-scoped work drafts immediately.
+- Complex multi-artifact work creates a durable artifact plan.
+- Core behavior is driven by semantic envelope fields, not use-case-specific
+  hard-coded response blocks.
+
+Regression inputs:
+
+- greeting
+- underspecified travel request
+- scoped travel request
+- raw meeting notes
+- launch-plan critique
+- vendor comparison
+
+### 3. Continue-Anywhere Work State
+
+Pass criteria:
+
+- A work item has one stable identity across CLI, desktop, mobile, and hosted
+  commercial sync.
+- Resume does not require a path when one active item is obvious.
+- When multiple active items exist, Jini asks the smallest useful chooser.
+- The resume view carries goal, ready artifacts, blockers, last action, next
+  action, pending approvals, and route/cost posture.
+
+Required markers:
+
+- `continue-anywhere`
+- `single-work-identity`
+- `minimal-active-work-chooser`
+- `cross-surface-resume`
+
+### 4. Artifact Escalation
+
+Pass criteria:
+
+- Long, reusable, editable, or multi-part outputs become artifacts.
+- Terminal output summarizes the artifact instead of dumping all detail.
+- Artifact metadata includes type, title, source context, readiness, missing
+  inputs, safe actions, and smart links.
+- Native/commercial surfaces can render the same artifact envelope without
+  changing the core work state.
+
+Required markers:
+
+- `artifact-escalation`
+- `terminal-summary-not-dump`
+- `surface-independent-artifact-envelope`
+- `smart-links`
+
+### 5. Setup Doctor And Self-Healing
+
+Pass criteria:
+
+- PATH, runtime, provider, OS, accelerator, token, and subscription issues map
+  to doctor checks.
+- Doctor output explains what failed, why it matters, and the next command or
+  user action.
+- Provider setup never leaks secret values.
+- A failed strict route offers local/free fallback when safe.
+
+Required markers:
+
+- `setup-doctor`
+- `path-self-healing`
+- `provider-secret-redaction`
+- `local-or-cheap-fallback`
+
+### 6. Cost And Route Minimalism
+
+Pass criteria:
+
+- Default routing chooses least-expense capable route.
+- Premium routes are justified by quality, safety, context size, or external
+  action risk.
+- The user can inspect model/API/provider choice without seeing route metadata
+  before useful content.
+- Subscription exhaustion degrades to local/free capability rather than a dead
+  end.
+
+Required markers:
+
+- `best-productivity-least-expense`
+- `route-explain-on-demand`
+- `subscription-aware-fallback`
+- `premium-route-justification`
+
+### 7. Trust Without Ceremony
+
+Pass criteria:
+
+- Risky write, publish, payment, booking, and external-action paths require
+  confirmation.
+- Low-risk continuation does not repeatedly ask for the same permission.
+- Trust grants are scoped, inspectable, expirable, and reversible.
+- Jini shows what is safe to review before sharing.
+
+Required markers:
+
+- `visible-trust`
+- `scoped-approval-memory`
+- `review-before-share`
+- `no-repeated-permission-ceremony`
+
+## Reject Conditions
+
+Reject a change if any of these are true:
+
+- It adds a required command before the first useful result.
+- It prints route/model/provider/state metadata before useful content without a
+  safety reason.
+- It adds a use-case-specific response mold to core rendering.
+- It creates a detailed terminal-only answer when an artifact envelope is
+  required.
+- It makes resume depend on remembering a file path when a current work item is
+  known.
+- It hides subscription or route fallback state until after failure.
+- It adds an approval prompt that cannot be remembered, scoped, or explained.
+
+## Required Regression Inputs
+
+- `jini`
+- `jini help`
+- `hello`
+- `7 day paris trip`
+- `Plan a 5 day Lisbon trip for two adults in October, food/design focused,
+  moderate budget, no rental car.`
+- `turn these notes into a follow-up`
+- `critique this launch plan`
+- `continue`
+- provider missing-token setup
+- subscription exhausted with local runtime available
+
+## Gate Summary
+
+The gate passes only when Jini keeps the first minute lighter than a workflow
+tool, the resume path clearer than chat history, the artifact path richer than a
+terminal dump, and the route path cheaper by default than premium-model habit.
