@@ -21,7 +21,7 @@ people lose time:
 
 For travel work specifically, the public product direction is now "curated
 trip planning first, execution later". The framework for that lives in
-[specs/travel-curated-experience-framework.md](/Users/sharad.sharma/Developer/jini/specs/travel-curated-experience-framework.md).
+[specs/travel-curated-experience-framework.md](specs/travel-curated-experience-framework.md).
 
 ## The Public Shape
 
