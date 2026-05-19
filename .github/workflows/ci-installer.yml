@@ -1,0 +1,51 @@
+name: Installer And Go CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  installer-and-go:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Show tool versions
+        shell: bash
+        run: |
+          go version
+          python3 --version
+          git --version
+
+      - name: Lint installer shell syntax
+        shell: bash
+        run: bash -n install.sh
+
+      - name: Run Go test suite
+        shell: bash
+        run: go test ./...
+
+      - name: Run installer matrix tests
+        shell: bash
+        run: python3 -m unittest tests/test_install_sh.py -v
