@@ -79,6 +79,8 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 		}
 
 		switch args[0] {
+		case "help", "--help", "-h":
+			return runHelp(stdout, stderr)
 		case "check":
 			return runCheck(args[1:], stdout, stderr)
 		case "observe":
@@ -127,7 +129,7 @@ func runLauncher(stdin io.Reader, stdout, stderr io.Writer) int {
 		if stdin != nil {
 			return runNewWorkIntake(stdin, stdout, stderr)
 		}
-		renderNewWorkLauncher(stdout)
+		renderNewWorkPrompt(stdout)
 		return 0
 	}
 
@@ -137,15 +139,15 @@ func runLauncher(stdin io.Reader, stdout, stderr io.Writer) int {
 			_ = clearCurrentWork()
 			fmt.Fprintln(stdout, "Remembered work is no longer available.")
 			fmt.Fprintln(stdout)
-			renderNewWorkLauncher(stdout)
+			renderNewWorkPrompt(stdout)
 			return 0
 		}
 		fmt.Fprintln(stderr, "Could not load current work. Run `jini` to start again or pass a valid work directory.")
-		renderNewWorkLauncher(stdout)
+		renderNewWorkPrompt(stdout)
 		return 0
 	}
 
-	renderCurrentWorkLauncher(stdout, summary, stdin != nil)
+	renderCurrentWorkPrompt(stdout, summary)
 	if stdin == nil {
 		return 0
 	}
@@ -161,6 +163,8 @@ func runLauncher(stdin io.Reader, stdout, stderr io.Writer) int {
 
 func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
 	switch normalizeName(action) {
+	case "help", "?", "status", "show help":
+		renderCurrentWorkHelp(stdout, summary)
 	case "1", "continue", "continue current work", "keep going":
 		item := nextUsefulItem(summary)
 		if item == nil {
@@ -270,6 +274,27 @@ func runProvider(args []string, stdout, stderr io.Writer) int {
 		return 0
 	}
 	return 1
+}
+
+func runHelp(stdout, stderr io.Writer) int {
+	current, err := loadCurrentWork()
+	if err == nil && current != nil {
+		summary, loadErr := loadWorkSummary(current.PackDir, current)
+		if loadErr == nil {
+			renderCurrentWorkHelp(stdout, summary)
+			return 0
+		}
+		if errors.Is(loadErr, os.ErrNotExist) {
+			_ = clearCurrentWork()
+			fmt.Fprintln(stdout, "Remembered work is no longer available.")
+			fmt.Fprintln(stdout)
+			renderNewWorkLauncher(stdout)
+			return 0
+		}
+		fmt.Fprintln(stderr, "Could not load current work. Showing start help instead.")
+	}
+	renderNewWorkLauncher(stdout)
+	return 0
 }
 
 func detectProvider() providerConfig {
@@ -585,12 +610,18 @@ func runNewWorkIntake(stdin io.Reader, stdout, stderr io.Writer) int {
 
 func runNewWorkIntakeWithScanner(session *bufio.Scanner, stdout, stderr io.Writer) int {
 	_ = maybeWarmLocalRuntimeCapabilitiesAsync()
-	renderNewWorkLauncher(stdout)
+	renderNewWorkPrompt(stdout)
 
 	for {
 		firstRaw, ok := readInputLine(session, stdout)
 		if !ok {
 			return 0
+		}
+		if isHelpInput(firstRaw) {
+			fmt.Fprintln(stdout)
+			renderNewWorkLauncher(stdout)
+			fmt.Fprintln(stdout)
+			continue
 		}
 		if isGreetingOnly(firstRaw) {
 			fmt.Fprintln(stdout)
@@ -726,6 +757,15 @@ func resolveStarterChoice(raw string) (starterChoice, error) {
 func isGreetingOnly(raw string) bool {
 	switch normalizeName(raw) {
 	case "hello", "hi", "hey", "hey there", "hello there", "good morning", "good afternoon", "good evening", "morning", "evening":
+		return true
+	default:
+		return false
+	}
+}
+
+func isHelpInput(raw string) bool {
+	switch normalizeName(raw) {
+	case "help", "?", "show help", "examples", "setup help", "what can you do":
 		return true
 	default:
 		return false
@@ -2131,6 +2171,12 @@ func renderNewWorkLauncher(w io.Writer) {
 	fmt.Fprintln(w, "Nothing will be sent yet.")
 }
 
+func renderNewWorkPrompt(w io.Writer) {
+	fmt.Fprintln(w, "Jini")
+	fmt.Fprintln(w, "Paste what you want finished.")
+	fmt.Fprintln(w, "Type `help` for examples or setup.")
+}
+
 func renderRouteDecisionCard(w io.Writer, request providerGenerationRequest, decision routeDecision) {
 	if !decision.Active {
 		return
@@ -2833,6 +2879,40 @@ func renderCurrentWorkLauncher(w io.Writer, summary *workSummary, interactive bo
 		}
 	}
 	fmt.Fprintln(w)
+}
+
+func renderCurrentWorkPrompt(w io.Writer, summary *workSummary) {
+	fmt.Fprintln(w, "Jini")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Current work")
+	if summary == nil || strings.TrimSpace(summary.Thread.Goal) == "" {
+		fmt.Fprintln(w, "- None")
+	} else {
+		fmt.Fprintf(w, "- %s\n", summary.Thread.Goal)
+	}
+	if summary != nil {
+		if other := otherActiveWorkSummaries(summary); len(other) > 0 {
+			fmt.Fprintln(w)
+			fmt.Fprintln(w, "Other active work")
+			for _, item := range other {
+				fmt.Fprintf(w, "- %s\n", item.Title)
+			}
+			fmt.Fprintln(w, "Type `Switch project` to change focus.")
+		}
+	}
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Paste a new request, or type `help` to inspect current work.")
+}
+
+func renderCurrentWorkHelp(w io.Writer, summary *workSummary) {
+	renderCurrentWorkLauncher(w, summary, false)
+	fmt.Fprintln(w, "Choose one")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "- Keep going")
+	fmt.Fprintln(w, "- Show what's ready")
+	fmt.Fprintln(w, "- Show what is missing")
+	fmt.Fprintln(w, "- Help me plan this")
+	fmt.Fprintln(w, "- Start new work")
 }
 
 func runActiveWorkLauncher(active []*workSummary, stdin io.Reader, stdout, stderr io.Writer) int {

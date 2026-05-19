@@ -241,7 +241,7 @@ func TestLauncherShowsInlineProviderChoicesWhenUsingLocalPreview(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader(""), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("help\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -277,7 +277,7 @@ func TestLauncherShowsAutoModeStateWhenConfigured(t *testing.T) {
 	t.Setenv("JINI_MODEL", "auto")
 
 	var stdout bytes.Buffer
-	exitCode := app.Run(nil, &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("help\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -636,12 +636,21 @@ func TestLauncherRecoversFromStaleCurrentWork(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Remembered work is no longer available.",
-		"What do you need help finishing?",
-		"Working with",
-		"Local preview",
+		"Jini",
+		"Paste what you want finished.",
+		"Type `help` for examples or setup.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+	for _, unwanted := range []string{
+		"Working with",
+		"Examples:",
+		"Need setup help?",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected compact stale-work recovery not to contain %q, got:\n%s", unwanted, out)
 		}
 	}
 	for _, leak := range []string{missingPackDir, "stat ", "no such file or directory"} {
@@ -701,7 +710,7 @@ func TestOpenPrintsNamedView(t *testing.T) {
 	}
 }
 
-func TestLauncherShowsCurrentWorkRecap(t *testing.T) {
+func TestLauncherStartsAsCompactShellWhenCurrentWorkExists(t *testing.T) {
 	stateDir := t.TempDir()
 	packDir := seedMeetingWork(t)
 	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
@@ -710,6 +719,47 @@ func TestLauncherShowsCurrentWorkRecap(t *testing.T) {
 
 	var stdout bytes.Buffer
 	exitCode := app.Run(nil, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Jini",
+		"Current work",
+		"Weekly Product Review",
+		"Paste a new request, or type `help` to inspect current work.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+	for _, unwanted := range []string{
+		"Goal",
+		"Working with",
+		"Just finished",
+		"Doing now",
+		"Need",
+		"Why this matters",
+		"Continue current work",
+		"Open what's ready",
+		"Start something new",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected bare launcher to hide default work detail %q, got:\n%s", unwanted, out)
+		}
+	}
+}
+
+func TestCurrentWorkHelpShowsCurrentWorkRecap(t *testing.T) {
+	stateDir := t.TempDir()
+	packDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("help\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -728,18 +778,12 @@ func TestLauncherShowsCurrentWorkRecap(t *testing.T) {
 		"Ready now",
 		"Sendable Follow-up",
 		"Next",
+		"Choose one",
+		"Keep going",
+		"Start new work",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
-		}
-	}
-	for _, unwanted := range []string{
-		"Continue current work",
-		"Open what's ready",
-		"Start something new",
-	} {
-		if strings.Contains(out, unwanted) {
-			t.Fatalf("expected noninteractive launcher to hide fake choice %q, got:\n%s", unwanted, out)
 		}
 	}
 }
@@ -764,7 +808,7 @@ func TestLauncherShowsCurrentWorkContinuityReason(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.Run(nil, &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("help\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -839,12 +883,47 @@ func TestCheckHighlightsSpecificTravelGaps(t *testing.T) {
 	}
 }
 
-func TestLauncherShowsStartChoicesWithoutCurrentWork(t *testing.T) {
+func TestLauncherStartsAsCompactShellWithoutCurrentWork(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
 	exitCode := app.Run(nil, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Jini",
+		"Paste what you want finished.",
+		"Type `help` for examples or setup.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+	for _, unwanted := range []string{
+		"Examples:",
+		"Working with",
+		"Need setup help?",
+		"choose a common job below",
+		"1. Turn meeting notes",
+		"2. Check whether",
+		"3. I am not sure",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected shell-first launcher not to expose menu %q, got:\n%s", unwanted, out)
+		}
+	}
+}
+
+func TestLauncherHelpShowsStartChoicesWithoutCurrentWork(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("help\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -862,16 +941,6 @@ func TestLauncherShowsStartChoicesWithoutCurrentWork(t *testing.T) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
 	}
-	for _, unwanted := range []string{
-		"choose a common job below",
-		"1. Turn meeting notes",
-		"2. Check whether",
-		"3. I am not sure",
-	} {
-		if strings.Contains(out, unwanted) {
-			t.Fatalf("expected shell-first launcher not to expose menu %q, got:\n%s", unwanted, out)
-		}
-	}
 }
 
 func TestInteractiveLauncherCreatesMeetingWork(t *testing.T) {
@@ -887,7 +956,8 @@ func TestInteractiveLauncherCreatesMeetingWork(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"What do you need help finishing?",
+		"Jini",
+		"Paste what you want finished.",
 		"Sendable Follow-up",
 		"## Send this",
 		"Keep going",
@@ -965,7 +1035,8 @@ func TestInteractiveLauncherCreatesSpecReadinessWork(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"What do you need help finishing?",
+		"Jini",
+		"Paste what you want finished.",
 		"Build-Readiness Check",
 		"## What looks ready now",
 		"Keep going",
@@ -1031,7 +1102,8 @@ func TestInteractiveLauncherHandlesUnsureInputWithUsefulPass(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"I am not sure",
+		"Jini",
+		"Paste what you want finished.",
 		"Paste what you have. A rough version is fine.",
 		"I will help figure out whether this is follow-up, a plan check, or something else.",
 		"Nothing will be sent yet.",
@@ -1071,7 +1143,8 @@ func TestInteractiveLauncherGreetingDoesNotCreateWork(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Paste notes or type what you want finished.",
+		"Paste what you want finished.",
+		"Type `help` for examples or setup.",
 		"Hi.",
 		"Tell me what you want finished, or paste notes when you're ready.",
 	} {
@@ -1222,19 +1295,22 @@ func TestCurrentWorkInteractiveLauncherIsCompactByDefault(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Goal",
+		"Jini",
+		"Current work",
 		"Weekly Product Review",
-		"Working with",
-		"AI route",
-		"Up next",
-		"Ready now",
-		"Choose one",
+		"Paste a new request, or type `help` to inspect current work.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
 	}
 	for _, unwanted := range []string{
+		"Goal",
+		"Working with",
+		"AI route",
+		"Up next",
+		"Ready now",
+		"Choose one",
 		"Need",
 		"Why this matters",
 		"Options",
@@ -1516,7 +1592,8 @@ func TestLauncherShowsOtherActiveWorkWhenMultipleProjectsExist(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Goal",
+		"Jini",
+		"Current work",
 		"Weekly Product Review",
 		"Other active work",
 		"7-Day Paris Trip",
