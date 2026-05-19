@@ -1026,20 +1026,7 @@ func providerSetupError(provider providerConfig) error {
 }
 
 func providerPrimaryView(packID string) (string, string) {
-	switch packID {
-	case "travel-plan":
-		return "itinerary.md", "Itinerary"
-	case "meeting-followup":
-		return "followup.md", "Sendable Follow-Up"
-	case "research-prd":
-		return "prd.md", "Build-Readiness Check"
-	case "vendor-selection":
-		return "recommendation-memo.md", "Recommendation Memo"
-	case "incident-response":
-		return "closure-checklist.md", "Closure Checklist"
-	default:
-		return "first-useful-pass.md", "First Useful Pass"
-	}
+	return starterPrimaryView(packID)
 }
 
 func normalizeProviderMarkdown(label, title, text string) string {
@@ -1327,33 +1314,24 @@ func draftQualityProfileForRequest(request providerGenerationRequest) draftQuali
 		UncertaintyWeight:      4,
 		RequiredHeadings:       []string{"## Still to confirm"},
 	}
-	switch request.Choice.PackID {
-	case "meeting-followup":
-		profile.RequiredHeadings = []string{
-			"## Send this note",
-			"## Decisions captured from the notes",
-			"## Owners and due dates to confirm",
-			"## Open questions to close",
-			"## Recommended next move",
+	if base := starterDraftQualityProfile(request.Choice.PackID); len(base.RequiredHeadings) > 0 || len(base.PreferredHeadings) > 0 {
+		profile.RequiredHeadings = append([]string{}, base.RequiredHeadings...)
+		profile.PreferredHeadings = append([]string{}, base.PreferredHeadings...)
+		if base.RequiredHeadingWeight != 0 {
+			profile.RequiredHeadingWeight = base.RequiredHeadingWeight
 		}
-		profile.PreferredHeadings = []string{"## Still to confirm"}
-	case "research-prd":
-		profile.RequiredHeadings = []string{
-			"## What looks ready now",
-			"## Must clear before build",
-			"## Recommended first slice",
-			"## Who needs to answer what",
-			"## Still to confirm",
+		if base.PreferredHeadingWeight != 0 {
+			profile.PreferredHeadingWeight = base.PreferredHeadingWeight
 		}
-		profile.PreferredHeadings = []string{"## Risks", "## Approval gaps"}
-	case "travel-plan":
-		profile.RequiredHeadings = []string{"## Day by day", "## Still to confirm"}
-		profile.PreferredHeadings = []string{"## Budget", "## Travel logistics", "## Still to book"}
-		profile.RequiredHeadingWeight = 7
-	case "vendor-selection":
-		profile.RequiredHeadings = []string{"## Recommendation", "## Risks", "## Still to confirm"}
-		profile.PreferredHeadings = []string{"## Tradeoffs", "## Next move"}
-		profile.RequiredHeadingWeight = 7
+		if base.EvidenceWeight != 0 {
+			profile.EvidenceWeight = base.EvidenceWeight
+		}
+		if base.UncertaintyWeight != 0 {
+			profile.UncertaintyWeight = base.UncertaintyWeight
+		}
+		if len(base.EvidenceSignals) > 0 {
+			profile.EvidenceSignals = append([]string{}, base.EvidenceSignals...)
+		}
 	}
 	if profile.Cohort == "multimodal-extract" || profile.ArtifactFamily == "multimodal-extract" || features.ModalityClass == "multimodal" {
 		profile.RequiredHeadings = []string{
@@ -1579,47 +1557,13 @@ func providerArtifactGuidance(request providerGenerationRequest) string {
 			"Call out what came from the source, what is ambiguous, and what still needs verification.",
 		}, "\n")
 	}
-	switch request.Choice.PackID {
-	case "meeting-followup":
-		return strings.Join([]string{
-			"Return a sendable follow-up note first.",
-			"Use these sections exactly:",
-			"- `## Send this note`",
-			"- `## Decisions captured from the notes`",
-			"- `## Owners and due dates to confirm`",
-			"- `## Open questions to close`",
-			"- `## Recommended next move`",
-			"Do not invent names, dates, or commitments that are not grounded in the source.",
-		}, "\n")
-	case "research-prd":
-		return strings.Join([]string{
-			"Return a build-readiness artifact, not a vague summary.",
-			"Use these sections exactly:",
-			"- `## What looks ready now`",
-			"- `## Must clear before build`",
-			"- `## Recommended first slice`",
-			"- `## Who needs to answer what`",
-			"- `## Still to confirm`",
-			"Do not reduce the answer to a binary verdict. Keep missing proof and approval gaps visible.",
-		}, "\n")
-	case "travel-plan":
-		return strings.Join([]string{
-			"Return a trip-planning artifact, not a generic travel essay.",
-			"Use these sections exactly:",
-			"- `## Day by day`",
-			"- `## Budget`",
-			"- `## Travel logistics`",
-			"- `## Still to book`",
-			"- `## Still to confirm`",
-			"When a key destination, museum, or landmark is clearly part of the plan, add one smart Markdown link on first mention.",
-			"Prefer canonical destination links and avoid turning every bullet into a link list.",
-		}, "\n")
-	default:
-		return strings.Join([]string{
-			"Shape the answer as the first useful artifact for this work type.",
-			"When the source already includes a named reference or URL that belongs in the artifact, preserve it as one smart Markdown link on first mention.",
-		}, "\n")
+	if guidance := starterProviderArtifactGuidance(request.Choice.PackID); guidance != "" {
+		return guidance
 	}
+	return strings.Join([]string{
+		"Shape the answer as the first useful artifact for this work type.",
+		"When the source already includes a named reference or URL that belongs in the artifact, preserve it as one smart Markdown link on first mention.",
+	}, "\n")
 }
 
 func homeDir() string {

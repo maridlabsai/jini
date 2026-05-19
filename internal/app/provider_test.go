@@ -2201,9 +2201,9 @@ func TestBootstrapStarterWorkAddsSmartDestinationLinks(t *testing.T) {
 
 	summary, err := bootstrapStarterWork(
 		starterChoice{PackID: "travel-plan", DefaultName: "Trip Plan", State: "decided"},
-		"Plan 7 day Paris trip",
+		"Plan 7 day Paris trip. Louvre is a must-do; Montmartre is a must-do; Versailles is a must-do.",
 		"quick",
-		[]inputItem{{InputID: "request", Kind: "text", Title: "Your request", Status: "processed", Preview: "Plan 7 day Paris trip"}},
+		[]inputItem{{InputID: "request", Kind: "text", Title: "Your request", Status: "processed", Preview: "Plan 7 day Paris trip. Louvre is a must-do; Montmartre is a must-do; Versailles is a must-do.", OriginRef: "Plan 7 day Paris trip. Louvre is a must-do; Montmartre is a must-do; Versailles is a must-do."}},
 	)
 	if err != nil {
 		t.Fatalf("bootstrap local starter: %v", err)

@@ -115,25 +115,7 @@ func hostLabelForURL(raw string) string {
 }
 
 func packSpecificSmartLinks(request providerGenerationRequest) []smartLink {
-	switch request.Choice.PackID {
-	case "travel-plan":
-		return []smartLink{
-			{URL: "https://www.louvre.fr/en", Labels: []string{"Louvre"}},
-			{URL: "https://www.paris.fr/lieux/jardin-des-tuileries-1710", Labels: []string{"Tuileries", "Tuileries Garden"}},
-			{URL: "https://www.paris.fr/pages/la-seine-2077", Labels: []string{"Seine"}},
-			{URL: "https://www.sainte-chapelle.fr/en/", Labels: []string{"Sainte-Chapelle"}},
-			{URL: "https://www.cathedrale-notredamedeparis.fr/en/", Labels: []string{"Notre-Dame", "Notre-Dame area"}},
-			{URL: "https://parisjetaime.com/eng/article/the-latin-quarter-a775", Labels: []string{"Latin Quarter"}},
-			{URL: "https://parisjetaime.com/eng/article/montmartre-a043", Labels: []string{"Montmartre"}},
-			{URL: "https://www.sacre-coeur-montmartre.com/english/", Labels: []string{"Sacre-Coeur", "Sacré-Cœur"}},
-			{URL: "https://en.chateauversailles.fr/", Labels: []string{"Versailles"}},
-			{URL: "https://www.musee-orsay.fr/en", Labels: []string{"Musee d'Orsay", "Musée d'Orsay"}},
-			{URL: "https://parisjetaime.com/eng/article/le-marais-a057", Labels: []string{"Le Marais"}},
-			{URL: "https://parisjetaime.com/eng/article/ile-de-la-cite-and-ile-saint-louis-a051", Labels: []string{"Ile de la Cite", "Île de la Cité"}},
-		}
-	default:
-		return nil
-	}
+	return starterPackSmartLinks(request.Choice.PackID)
 }
 
 func applySmartLinks(content string, links []smartLink) string {

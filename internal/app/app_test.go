@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -810,10 +811,11 @@ func TestCheckHighlightsSpecificMeetingGaps(t *testing.T) {
 
 func TestCheckHighlightsSpecificTravelGaps(t *testing.T) {
 	stateDir := t.TempDir()
-	packDir := seedTravelWork(t)
-	writeCurrentWork(t, stateDir, packDir, "travel-plan", "paris-7d", "7-Day Paris Trip", "decided", "ready-to-make")
-
 	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	if exitCode := app.RunInteractive(nil, strings.NewReader("7 day Paris trip for a couple with a $2500 budget in early October, mixed pace, central hotel area\n"), io.Discard, io.Discard); exitCode != 0 {
+		t.Fatalf("expected setup run to succeed, got %d", exitCode)
+	}
 
 	var stdout bytes.Buffer
 	exitCode := app.Run([]string{"check"}, &stdout, &stdout)
@@ -824,12 +826,12 @@ func TestCheckHighlightsSpecificTravelGaps(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Blocked",
-		"Dates, budget, and hotel area",
-		"Confirm dates, budget, and hotel area before booking from this draft.",
+		"Must Do Sights, Or Whether You Want Help Choosing Them",
+		"Confirm the highest-impact trip details before booking from this draft.",
 		"Options",
-		"Add dates",
+		"Add must do sights, or whether you want help choosing them",
 		"Not sure about",
-		"Whether Versailles is a must-do day trip or an optional slot",
+		"Which one or two anchor experiences should be locked first",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -1301,14 +1303,14 @@ func TestInteractiveLauncherCreatesTravelWork(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Goal",
-		"7 Day Paris Trip For A Couple With A 2500 Budget",
+		"7 Day Paris Trip",
 		"Working with",
 		"Your request: 7 day Paris trip for a couple with a $2500 budget in early October, mixed pace, central hotel area",
 		"Ready now",
 		"Itinerary",
 		"Budget Sketch",
 		"Blocked",
-		"Dates, budget, and hotel area",
+		"Must Do Sights, Or Whether You Want Help Choosing Them",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -1343,7 +1345,6 @@ func TestInteractiveLauncherAsksForTravelClarificationWhenUnderspecified(t *test
 		"- must-do sights, or whether you want help choosing them",
 		"Type `skip` if you want a generic draft.",
 		"Clarified scope",
-		"couple, around $2500, early October, mixed pace, central hotel area, Versailles optional",
 		"Goal",
 		"7 Day Paris Trip",
 		"Itinerary",
@@ -1351,6 +1352,9 @@ func TestInteractiveLauncherAsksForTravelClarificationWhenUnderspecified(t *test
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
+	}
+	if !strings.Contains(out, "one museum and one day trip are must-dos") {
+		t.Fatalf("expected generic clarification example, got:\n%s", out)
 	}
 }
 
@@ -1401,6 +1405,65 @@ func TestInteractiveLauncherAsksOnlyForMissingTravelDimensions(t *testing.T) {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("expected targeted clarification to omit %q, got:\n%s", unwanted, out)
 		}
+	}
+}
+
+func TestInteractiveLauncherCreatesNonParisTravelWithoutParisFallbacks(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	stdin := strings.NewReader("5 day Rome trip\ncouple, around $2500, early October, mixed pace, central stay, Colosseum is a must-do\n")
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, stdin, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"5 Day Rome Trip",
+		"Colosseum",
+		"### Day 5: Buffer and departure",
+		"Blocked",
+		"- Nothing right now",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, "Whether Versailles") || strings.Contains(out, "Louvre and Versailles are must-dos") {
+		t.Fatalf("expected non-Paris trip to avoid Paris-specific fallback, got:\n%s", out)
+	}
+}
+
+func TestInteractiveLauncherCreatesLongerScopedTravelWithExactDayCount(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	stdin := strings.NewReader("12 day Spain trip for a family with kids, $5000 budget, early June, mixed pace, central stays, Barcelona and Granada are must-dos\n")
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, stdin, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"12 Day Spain Trip",
+		"### Day 12: Buffer and departure",
+		"Barcelona and Granada",
+		"Blocked",
+		"- Nothing right now",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, "Whether Versailles") || strings.Contains(out, "Louvre and Versailles are must-dos") {
+		t.Fatalf("expected Spain trip to avoid Paris-specific fallback, got:\n%s", out)
+	}
+	if strings.Contains(out, "Before I draft it, give me what is still missing in one line:") {
+		t.Fatalf("expected fully scoped travel request to skip clarification, got:\n%s", out)
 	}
 }
 
@@ -1483,7 +1546,7 @@ func TestCurrentWorkFreeformInputStartsNewWork(t *testing.T) {
 	for _, want := range []string{
 		"Your first draft is ready.",
 		"Goal",
-		"Plan Me A 7 Day Paris Trip",
+		"7 Day Paris Trip",
 		"Ready now",
 		"Itinerary",
 		"Budget Sketch",
@@ -1492,7 +1555,7 @@ func TestCurrentWorkFreeformInputStartsNewWork(t *testing.T) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
 	}
-	if strings.Contains(out, "Weekly Product Review Follow-up") && !strings.Contains(out, "Plan Me A 7 Day Paris Trip") {
+	if strings.Contains(out, "Weekly Product Review Follow-up") && !strings.Contains(out, "7 Day Paris Trip") {
 		t.Fatalf("expected new work to replace the old current-work view, got:\n%s", out)
 	}
 

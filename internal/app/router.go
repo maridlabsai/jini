@@ -710,11 +710,8 @@ func classifyRouteWork(request providerGenerationRequest) string {
 		request.Title,
 		request.Source,
 	}, " "))
-	switch request.Choice.PackID {
-	case "travel-plan", "meeting-followup", "vendor-selection":
-		return "planning"
-	case "research-prd", "incident-response":
-		return "code"
+	if workClass := starterWorkClass(request.Choice.PackID); workClass != "" {
+		return workClass
 	}
 	if containsAny(source, []string{
 		"fix", "bug", "failing", "test", "repo", "repository", "code", "implement",
@@ -737,17 +734,8 @@ func classifyRequestCohort(request providerGenerationRequest) string {
 		request.Title,
 		request.Source,
 	}, " "))
-	switch request.Choice.PackID {
-	case "meeting-followup":
-		return "sendable-followup"
-	case "research-prd":
-		return "build-readiness"
-	case "travel-plan":
-		return "trip-itinerary"
-	case "vendor-selection":
-		return "option-compare"
-	case "incident-response":
-		return "incident-cleanup"
+	if cohort := starterRequestCohort(request.Choice.PackID); cohort != "" {
+		return cohort
 	}
 	switch {
 	case containsAny(source, []string{"meeting", "follow up", "followup", "sendable", "owners", "due date"}):
@@ -770,6 +758,9 @@ func classifyRequestCohort(request providerGenerationRequest) string {
 }
 
 func classifyArtifactFamily(request providerGenerationRequest) string {
+	if family := starterArtifactFamily(request.Choice.PackID); family != "" {
+		return family
+	}
 	switch classifyRequestCohort(request) {
 	case "sendable-followup":
 		return "narrative-draft"
@@ -1720,24 +1711,29 @@ func providerRequestForInputs(packID, title string, inputs []inputItem) provider
 	}
 	parts := make([]string, 0, len(inputs))
 	for _, item := range inputs {
-		preview := strings.TrimSpace(item.Preview)
-		if preview != "" {
-			parts = append(parts, preview)
-			continue
-		}
-		title := strings.TrimSpace(item.Title)
-		if title == "" {
-			continue
-		}
 		switch item.Kind {
+		case "text", "clarification", "derived":
+			text := strings.TrimSpace(item.OriginRef)
+			if text == "" {
+				text = strings.TrimSpace(item.Preview)
+			}
+			if text != "" {
+				parts = append(parts, text)
+			}
 		case "image":
-			parts = append(parts, "Image attachment: "+title)
+			label := firstNonEmpty(strings.TrimSpace(item.Title), strings.TrimSpace(item.Preview), "image")
+			parts = append(parts, "Image attachment: "+label)
 		case "audio":
-			parts = append(parts, "Audio attachment: "+title)
+			label := firstNonEmpty(strings.TrimSpace(item.Title), strings.TrimSpace(item.Preview), "audio")
+			parts = append(parts, "Audio attachment: "+label)
 		case "file":
-			parts = append(parts, "File attachment: "+title)
+			label := firstNonEmpty(strings.TrimSpace(item.Title), strings.TrimSpace(item.Preview), "file")
+			parts = append(parts, "File attachment: "+label)
 		default:
-			parts = append(parts, title)
+			text := firstNonEmpty(strings.TrimSpace(item.OriginRef), strings.TrimSpace(item.Preview), strings.TrimSpace(item.Title))
+			if text != "" {
+				parts = append(parts, text)
+			}
 		}
 	}
 	request.Source = strings.Join(parts, "\n")

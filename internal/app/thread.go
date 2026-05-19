@@ -170,6 +170,7 @@ func inputItemsForSource(source string) ([]inputItem, string) {
 		Title:   "Your request",
 		Status:  "processed",
 		Preview: compactPreview(trimmed, 120),
+		OriginRef: trimmed,
 	}}, trimmed
 }
 
@@ -344,80 +345,11 @@ func synthesizeTurnRecord(summary *workSummary) threadTurnRecord {
 }
 
 func synthesizeThreadAsk(summary *workSummary) *threadAsk {
-	switch summary.PackID {
-	case "meeting-followup":
-		return &threadAsk{
-			AskID:   "confirm-owners-and-dates",
-			Prompt:  "Confirm any missing owner or due date before sending this follow-up.",
-			Reason:  "The note is usable now, but it becomes truly sendable only when ownership and timing are explicit.",
-			Options: []string{"Add missing owner", "Add due date", "Skip for now"},
-			AssumptionsIfSkipped: []string{
-				"Jini will keep the follow-up in draft form and leave missing owner or date gaps visible.",
-			},
-			Blocking: true,
-		}
-	case "research-prd":
-		return &threadAsk{
-			AskID:   "confirm-approval-and-first-slice",
-			Prompt:  "Name the approval owner and confirm the first implementation slice.",
-			Reason:  "The readiness check is useful now, but build should not start until approval and the first slice are explicit.",
-			Options: []string{"Set approval owner", "Set first slice", "Skip for now"},
-			AssumptionsIfSkipped: []string{
-				"Jini will keep approval and first-slice gaps visible instead of treating the plan as build-ready.",
-			},
-			Blocking: true,
-		}
-	case "travel-plan":
-		return &threadAsk{
-			AskID:   "confirm-trip-basics",
-			Prompt:  "Confirm dates, budget, and hotel area before booking from this draft.",
-			Reason:  "Those details materially change the itinerary and cost guidance.",
-			Options: []string{"Add dates", "Add budget", "Skip for now"},
-			AssumptionsIfSkipped: []string{
-				"Jini will keep the itinerary as a draft and leave booking decisions visibly open.",
-			},
-			Blocking: true,
-		}
-	default:
-		if len(summary.Missing) == 0 {
-			return nil
-		}
-		return &threadAsk{
-			AskID:   "confirm-blocking-detail",
-			Prompt:  inferNeed(summary.Missing),
-			Reason:  "This is the highest-impact missing detail before Jini can strengthen the next draft.",
-			Options: []string{"Answer now", "Skip for now"},
-			AssumptionsIfSkipped: []string{
-				"Jini will keep the missing detail visible and avoid pretending the work is complete.",
-			},
-			Blocking: true,
-		}
-	}
+	return starterAsk(summary, sourceFromInputItems(summary.Thread.InputItems))
 }
 
 func inferDone(packID string, views []catalogItem) []string {
-	switch packID {
-	case "meeting-followup":
-		return []string{
-			"Sendable follow-up drafted",
-			"Owners and due points pulled out",
-		}
-	case "research-prd":
-		return []string{
-			"Build-readiness draft created",
-			"Missing build blockers identified",
-		}
-	case "travel-plan":
-		return []string{
-			"Itinerary drafted",
-			"Budget sketch created",
-		}
-	default:
-		if len(views) > 0 {
-			return []string{views[0].Label + " drafted"}
-		}
-		return []string{"First useful pass created"}
-	}
+	return starterDone(packID, views)
 }
 
 func inferNeed(missing []string) string {

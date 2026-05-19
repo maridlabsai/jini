@@ -9,7 +9,9 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"unicode"
 )
@@ -628,7 +630,7 @@ func startNewWorkFromRawInput(firstRaw string, session *bufio.Scanner, stdout, s
 
 	request := providerGenerationRequest{
 		Choice: choice,
-		Title:  deriveStarterTitle(choice.DefaultName, source),
+		Title:  deriveStarterTitle(choice.DefaultName, source, choice.PackID),
 		Source: source,
 	}
 	decision := detectRouteForRequest(request)
@@ -744,6 +746,7 @@ func maybeClarifyStarterSource(choice starterChoice, source string, scanner *buf
 		Title:   "Clarified scope",
 		Status:  "processed",
 		Preview: compactPreview(answer, 120),
+		OriginRef: answer,
 	}, true
 }
 
@@ -780,7 +783,7 @@ func bootstrapStarterWork(choice starterChoice, source, detail string, inputItem
 		return nil, err
 	}
 
-	title := deriveStarterTitle(choice.DefaultName, source)
+	title := deriveStarterTitle(choice.DefaultName, source, choice.PackID)
 	workDir, err := uniqueWorkDir(workRoot, choice.PackID, title)
 	if err != nil {
 		return nil, err
@@ -812,8 +815,8 @@ func bootstrapStarterWork(choice starterChoice, source, detail string, inputItem
 		Title:      title,
 		State:      choice.State,
 		Views:      collectViews(workDir, choice.PackID),
-		Missing:    inferMissing(choice.State, collectDetails(workDir), choice.PackID),
-		Uncertain:  inferUncertain(choice.PackID, inferMissing(choice.State, collectDetails(workDir), choice.PackID)),
+		Missing:    inferMissing(choice.State, collectDetails(workDir), choice.PackID, source),
+		Uncertain:  inferUncertain(choice.PackID, inferMissing(choice.State, collectDetails(workDir), choice.PackID, source), source),
 		Doing:      inferDoing(choice.PackID, choice.State),
 		NextStep:   inferNextStep(choice.PackID, collectViews(workDir, choice.PackID)),
 		SafeToDo:   "Nothing has been sent yet. You can review before sharing.",
@@ -992,6 +995,7 @@ func writeResearchStarterWork(workDir, title, source, detail string) error {
 }
 
 func writeTravelStarterWork(workDir, title, source, detail string) error {
+	ctx := parseTravelStarterContext(source)
 	lines := []string{
 		fmt.Sprintf("# Itinerary: %s", title),
 		"",
@@ -1002,47 +1006,48 @@ func writeTravelStarterWork(workDir, title, source, detail string) error {
 		"",
 		"## Day-by-day draft",
 	}
-	for _, item := range starterTripDays(title) {
+	for _, item := range starterTripDays(ctx) {
 		lines = append(lines, item)
 	}
 	lines = append(lines,
 		"",
 		"## Budget sketch",
 	)
-	for _, item := range starterTripBudget(title) {
+	for _, item := range starterTripBudget(ctx) {
 		lines = append(lines, "- "+item)
 	}
 	lines = append(lines,
 		"",
 		"## Logistics to lock",
 	)
-	for _, item := range starterTripLogistics(title) {
+	for _, item := range starterTripLogistics(ctx) {
 		lines = append(lines, "- "+item)
 	}
 	lines = append(lines,
 		"",
 		"## If something changes",
 	)
-	for _, item := range starterTripContingencies(title) {
+	for _, item := range starterTripContingencies(ctx) {
 		lines = append(lines, "- "+item)
 	}
 	lines = append(lines,
 		"",
 		"## Still to confirm",
-		"- Dates, budget, and hotel area",
-		"- Whether Versailles is a must-do day trip or an optional slot",
-		"",
 	)
+	for _, item := range travelStillToConfirm(ctx) {
+		lines = append(lines, "- "+item)
+	}
+	lines = append(lines, "")
 	if err := os.WriteFile(filepath.Join(workDir, "views", "itinerary.md"), []byte(strings.Join(lines, "\n")), 0o644); err != nil {
 		return err
 	}
-	if err := os.WriteFile(filepath.Join(workDir, "views", "budget-sketch.md"), []byte("# Budget Sketch\n\n"+bulletLines(starterTripBudget(title))), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(workDir, "views", "budget-sketch.md"), []byte("# Budget Sketch\n\n"+bulletLines(starterTripBudget(ctx))), 0o644); err != nil {
 		return err
 	}
-	if err := os.WriteFile(filepath.Join(workDir, "views", "travel-logistics.md"), []byte("# Travel Logistics\n\n"+bulletLines(starterTripLogistics(title))), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(workDir, "views", "travel-logistics.md"), []byte("# Travel Logistics\n\n"+bulletLines(starterTripLogistics(ctx))), 0o644); err != nil {
 		return err
 	}
-	if err := os.WriteFile(filepath.Join(workDir, "views", "tasks.md"), []byte("# Task List\n\n- Confirm dates and budget.\n- Choose the hotel area.\n- Decide whether Versailles is locked or optional.\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(workDir, "views", "tasks.md"), []byte("# Task List\n\n"+bulletLines(travelTaskList(ctx))), 0o644); err != nil {
 		return err
 	}
 	return writeStarterArtifacts(workDir, []string{"Brief", "Tasks"})
@@ -1105,76 +1110,94 @@ func writeStarterArtifacts(workDir string, artifactTypes []string) error {
 	return nil
 }
 
-func starterTripDays(title string) []string {
-	if strings.Contains(strings.ToLower(title), "paris") {
-		return []string{
-			"### Day 1: Arrive and settle into Paris",
-			"- Keep arrival day light: hotel check-in, neighborhood walk, easy dinner, early night.",
-			"### Day 2: Louvre, Tuileries, and the Seine",
-			"- Anchor the day around one major museum, then keep the evening for a Seine walk or river cruise.",
-			"### Day 3: Ile de la Cite and the Latin Quarter",
-			"- Pair Sainte-Chapelle or Notre-Dame area time with a slower Left Bank afternoon and cafe stop.",
-			"### Day 4: Montmartre and Sacre-Coeur",
-			"- Use the morning for Montmartre before crowds build, then keep the afternoon flexible for shopping or rest.",
-			"### Day 5: Versailles or a second museum day",
-			"- If energy is high, use this as the day trip. If not, keep it in Paris with Musee d'Orsay and the Left Bank.",
-			"### Day 6: Le Marais and flexible favorites",
-			"- Revisit the neighborhood you liked most, leave space for food, markets, or anything skipped earlier.",
-			"### Day 7: Buffer and departure",
-			"- Keep the final day intentionally light so checkout, bags, and airport transfer do not turn into stress.",
+func starterTripDays(ctx travelStarterContext) []string {
+	dayCount := ctx.DayCount
+	if dayCount <= 0 {
+		dayCount = 7
+	}
+	if dayCount > 14 {
+		dayCount = 14
+	}
+	destination := ctx.Destination
+	if destination == "" {
+		destination = "the destination"
+	}
+	themes := []string{
+		"First neighborhood anchor",
+		"Headliner day",
+		"Food and wandering day",
+		"Flexible favorite day",
+		"Day trip or second anchor",
+		"Slow day and catch-up",
+		"Last highlights and packing buffer",
+		"Second-city or deeper exploration",
+		"Open favorites day",
+		"Departure buffer",
+	}
+	lines := []string{}
+	for day := 1; day <= dayCount; day++ {
+		switch {
+		case day == 1:
+			lines = append(lines,
+				fmt.Sprintf("### Day %d: Arrive and settle into %s", day, destination),
+				fmt.Sprintf("- Keep the first day light so arrival, check-in, and your first look at %s do not turn into a forced march.", destination),
+			)
+		case day == dayCount:
+			lines = append(lines,
+				fmt.Sprintf("### Day %d: Buffer and departure", day),
+				"- Keep the final day intentionally light so checkout, bags, airport or rail transfer, and one last meal fit without stress.",
+			)
+		default:
+			index := day - 2
+			if index < len(ctx.MustDos) {
+				mustDo := ctx.MustDos[index]
+				lines = append(lines,
+					fmt.Sprintf("### Day %d: %s", day, titleCase(cleanForTitle(mustDo))),
+					fmt.Sprintf("- Build the day around %s, then leave enough room for meals, transit, queues, and one lighter backup if timing slips.", strings.ToLower(strings.TrimSpace(mustDo))),
+				)
+				continue
+			}
+			theme := themes[min(index, len(themes)-1)]
+			lines = append(lines,
+				fmt.Sprintf("### Day %d: %s", day, theme),
+				fmt.Sprintf("- Use this day to balance one anchor in %s with slower time for food, neighborhoods, or recovery so the trip stays usable end to end.", destination),
+			)
 		}
 	}
-	return []string{
-		"### Day 1: Arrive and settle in",
-		"- Keep the first day light and focus on arrival, check-in, and one easy local activity.",
-		"### Day 2: First major anchor",
-		"- Use one major sight or neighborhood as the headline and keep the evening unstacked.",
-		"### Day 3: Local exploration",
-		"- Build around a second neighborhood or cultural stop and protect time for rest or weather shifts.",
-	}
+	return lines
 }
 
-func starterTripBudget(title string) []string {
-	if strings.Contains(strings.ToLower(title), "paris") {
-		return []string{
-			"Lodging: prioritize location over room size; central neighborhoods usually save time and transit cost.",
-			"Food: plan one stronger meal per day and keep breakfast/lunch simple to protect the total budget.",
-			"Transit: budget for airport transfer plus a metro pass; Paris is easier when local transit is decided early.",
-			"Tickets: reserve room for at least two paid anchors such as Louvre, Musee d'Orsay, or Versailles.",
-		}
+func starterTripBudget(ctx travelStarterContext) []string {
+	destination := firstNonEmpty(ctx.Destination, "the destination")
+	items := []string{
+		fmt.Sprintf("Lodging: choose the base first because where you stay in %s will shape daily transit, fatigue, and how much you can fit into each day.", destination),
+		"Food: separate anchor meals from routine meals so the budget stays honest instead of getting eaten by convenience spending.",
+		"Transit: include both arrival or departure transfer and the local movement needed to connect the trip's main anchors.",
 	}
-	return []string{
-		"Lodging: choose the base first because it shapes daily transit and fatigue.",
-		"Food: separate special meals from routine meals so the budget stays honest.",
-		"Transit: include both arrival/departure transfer and local movement.",
+	if len(ctx.MustDos) > 0 {
+		items = append(items, fmt.Sprintf("Tickets: reserve room for at least one paid anchor such as %s before filling the rest of the week.", strings.ToLower(ctx.MustDos[0])))
 	}
+	return items
 }
 
-func starterTripLogistics(title string) []string {
-	if strings.Contains(strings.ToLower(title), "paris") {
-		return []string{
-			"Choose the hotel area before booking tickets; central Paris usually beats a cheaper far-out stay.",
-			"Lock airport transfer logic early: RER, taxi, or pre-booked car depending on arrival time and luggage.",
-			"Reserve high-demand museum or Versailles slots before filling the rest of the week.",
-		}
+func starterTripLogistics(ctx travelStarterContext) []string {
+	items := []string{
+		"Pick the base area before overcommitting the daily plan so each day does not inherit hidden transit cost.",
+		"Lock arrival and departure transfer details before filling optional activities around them.",
 	}
-	return []string{
-		"Pick the base area before overcommitting the daily plan.",
-		"Lock arrival and departure transfer details before adding optional activities.",
+	if len(ctx.MustDos) > 0 {
+		items = append(items, fmt.Sprintf("Reserve any timed anchors like %s before treating the rest of the itinerary as fixed.", strings.ToLower(ctx.MustDos[0])))
+	} else {
+		items = append(items, "Reserve the first timed anchor before treating the rest of the itinerary as fixed.")
 	}
+	return items
 }
 
-func starterTripContingencies(title string) []string {
-	if strings.Contains(strings.ToLower(title), "paris") {
-		return []string{
-			"Swap outdoor time for museums, passages, or food halls if weather turns.",
-			"If a headline sight is sold out, use the day for a neighborhood loop instead of forcing a bad backup.",
-			"Protect one slower day in the middle of the trip so fatigue does not wreck the last half.",
-		}
-	}
+func starterTripContingencies(ctx travelStarterContext) []string {
 	return []string{
-		"Have one indoor backup for every outdoor-heavy day.",
-		"Leave one uncommitted slot so a sold-out booking does not ruin the week.",
+		"Have one indoor or low-effort backup for every outdoor-heavy or reservation-heavy day.",
+		"Leave one uncommitted slot so a sold-out booking or bad weather does not wreck the rest of the plan.",
+		"Protect one slower day in the middle of longer trips so fatigue does not spill into the final third.",
 	}
 }
 
@@ -1359,12 +1382,143 @@ func min(a, b int) int {
 	return b
 }
 
-func deriveStarterTitle(defaultName, source string) string {
+func deriveStarterTitle(defaultName, source, packID string) string {
+	if packID == "travel-plan" {
+		ctx := parseTravelStarterContext(source)
+		if ctx.DayCount > 0 && strings.TrimSpace(ctx.Destination) != "" {
+			return fmt.Sprintf("%d Day %s Trip", ctx.DayCount, ctx.Destination)
+		}
+		if strings.TrimSpace(ctx.Destination) != "" {
+			return fmt.Sprintf("Trip To %s", ctx.Destination)
+		}
+		source = ctx.BaseSource
+	} else {
+		source = primaryStarterTitleSource(source)
+	}
 	cleaned := titleCase(cleanForTitle(source))
 	if strings.TrimSpace(cleaned) == "" {
 		return defaultName
 	}
 	return cleaned
+}
+
+func primaryStarterTitleSource(source string) string {
+	trimmed := strings.TrimSpace(source)
+	lower := strings.ToLower(trimmed)
+	if idx := strings.Index(lower, " scope: "); idx >= 0 {
+		return strings.TrimSpace(strings.TrimRight(trimmed[:idx], ".!? "))
+	}
+	return trimmed
+}
+
+type travelStarterContext struct {
+	BaseSource  string
+	Destination string
+	DayCount    int
+	MustDos     []string
+	Missing     []string
+}
+
+func parseTravelStarterContext(source string) travelStarterContext {
+	ctx := travelStarterContext{
+		BaseSource: primaryStarterTitleSource(source),
+	}
+	ctx.DayCount = extractTravelDayCount(ctx.BaseSource)
+	ctx.Destination = extractTravelDestination(ctx.BaseSource)
+	ctx.MustDos = extractTravelMustDos(source)
+	ctx.Missing = travelMissingDimensions(source)
+	return ctx
+}
+
+func travelMissingDimensions(source string) []string {
+	return missingScopeDimensions(source, travelScopeDimensions)
+}
+
+func extractTravelDayCount(source string) int {
+	re := regexp.MustCompile(`(?i)\b(\d+)\s*[- ]day\b`)
+	match := re.FindStringSubmatch(source)
+	if len(match) < 2 {
+		return 0
+	}
+	count, err := strconv.Atoi(match[1])
+	if err != nil || count <= 0 {
+		return 0
+	}
+	return count
+}
+
+func extractTravelDestination(source string) string {
+	patterns := []*regexp.Regexp{
+		regexp.MustCompile(`(?i)\b\d+\s*[- ]day\b\s+(.+?)\s+trip\b`),
+		regexp.MustCompile(`(?i)\btrip\s+to\s+(.+?)(?:\s+for\b|\s+with\b|[,.]|$)`),
+	}
+	for _, pattern := range patterns {
+		match := pattern.FindStringSubmatch(source)
+		if len(match) < 2 {
+			continue
+		}
+		destination := titleCase(cleanForTitle(match[1]))
+		if strings.TrimSpace(destination) != "" {
+			return destination
+		}
+	}
+	return ""
+}
+
+func extractTravelMustDos(source string) []string {
+	mustDos := []string{}
+	seen := map[string]bool{}
+	pattern := regexp.MustCompile(`(?i)^(.*?)(?:\s+(?:is|are))?\s+(?:a\s+)?must[- ]?(?:do|see)s?$`)
+	fragments := strings.FieldsFunc(source, func(r rune) bool {
+		return r == ',' || r == '\n' || r == '\r' || r == ';'
+	})
+	for _, fragment := range fragments {
+		trimmed := strings.TrimSpace(fragment)
+		normalized := normalizeName(trimmed)
+		if !containsAny(normalized, []string{"must do", "must see", "must dos", "must sees"}) {
+			continue
+		}
+		match := pattern.FindStringSubmatch(trimmed)
+		if len(match) < 2 {
+			continue
+		}
+		item := strings.TrimSpace(match[1])
+		item = strings.Trim(item, " ,")
+		item = strings.TrimPrefix(strings.ToLower(item), "that ")
+		item = strings.TrimSpace(item)
+		if item == "" {
+			continue
+		}
+		key := normalizeName(item)
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		mustDos = append(mustDos, item)
+	}
+	return mustDos
+}
+
+func travelStillToConfirm(ctx travelStarterContext) []string {
+	if len(ctx.Missing) > 0 {
+		items := make([]string, 0, len(ctx.Missing))
+		for _, missing := range ctx.Missing {
+			items = append(items, titleCase(missing))
+		}
+		return items
+	}
+	return []string{"Nothing right now"}
+}
+
+func travelTaskList(ctx travelStarterContext) []string {
+	if len(ctx.Missing) > 0 {
+		items := make([]string, 0, len(ctx.Missing))
+		for _, missing := range ctx.Missing {
+			items = append(items, "Confirm "+strings.ToLower(missing)+".")
+		}
+		return items
+	}
+	return []string{"Nothing right now"}
 }
 
 func cleanForTitle(value string) string {
@@ -1654,8 +1808,10 @@ func loadWorkSummary(dir string, current *currentWork) (*workSummary, error) {
 	views := collectViews(resolved, packID)
 	exports := collectExports(resolved)
 	details := collectDetails(resolved)
-	missing := inferMissing(state, details, packID)
-	uncertain := inferUncertain(packID, missing)
+	inputs := loadInputItems(resolved, packID)
+	source := sourceFromInputItems(inputs)
+	missing := inferMissing(state, details, packID, source)
+	uncertain := inferUncertain(packID, missing, source)
 	route := loadWorkRoute(resolved)
 	_ = scanExternalObservations(resolved)
 	route = loadWorkRoute(resolved)
@@ -1692,7 +1848,7 @@ func loadWorkSummary(dir string, current *currentWork) (*workSummary, error) {
 		SafeToDo:           "Nothing has been sent yet. You can review before sharing.",
 	}
 	summary.NextStep = inferNextStep(packID, summary.Views)
-	summary.Thread = buildWorkThread(summary, loadInputItems(resolved, packID), loadThreadState(resolved, summary))
+	summary.Thread = buildWorkThread(summary, inputs, loadThreadState(resolved, summary))
 	return summary, nil
 }
 
@@ -1766,76 +1922,18 @@ func synthesizeViews(root, packID string) []catalogItem {
 }
 
 func synthesizedPackViews(root, packID string) []catalogItem {
-	switch packID {
-	case "research-prd":
-		prdPath := filepath.Join(root, "views", "prd.md")
-		if fileExists(prdPath) {
-			return []catalogItem{
-				{
-					ID:      "build-readiness-check",
-					Label:   "Build-Readiness Check",
-					Path:    prdPath,
-					Aliases: []string{"readiness", "build readiness check", "check"},
-				},
-			}
-		}
-	case "meeting-followup":
-		followupPath := filepath.Join(root, "views", "followup.md")
-		if fileExists(followupPath) {
-			return []catalogItem{
-				{
-					ID:      "sendable-follow-up",
-					Label:   "Sendable Follow-up",
-					Path:    followupPath,
-					Aliases: []string{"follow-up", "followup", "summary"},
-				},
-			}
-		}
-	}
-	return nil
+	return starterSynthesizedViews(root, packID)
 }
 
 func viewCatalogItem(packID, stem, path string) catalogItem {
-	switch stem {
-	case "prd":
-		return catalogItem{ID: "handoff-brief", Label: "Handoff Brief", Path: path, Aliases: []string{"prd", "summary", "brief", "handoff"}}
-	case "followup":
-		return catalogItem{ID: "sendable-follow-up", Label: "Sendable Follow-up", Path: path, Aliases: []string{"follow-up", "followup", "summary"}}
-	case "owners-and-due-points":
-		return catalogItem{ID: "owners-and-due-points", Label: "Owners and Due Points", Path: path, Aliases: []string{"owners", "due points", "owners and due points"}}
-	case "missing-pieces-before-build":
-		return catalogItem{ID: "missing-pieces-before-build", Label: "Missing Pieces Before Build", Path: path, Aliases: []string{"missing", "before build", "missing pieces"}}
-	case "tasks":
-		dir := filepath.Dir(path)
-		switch packID {
-		case "meeting-followup":
-			if fileExists(filepath.Join(dir, "owners-and-due-points.md")) {
-				return catalogItem{ID: "task-list", Label: "Task List", Path: path, Aliases: []string{"tasks", "task list"}}
-			}
-			return catalogItem{ID: "owners-and-due-points", Label: "Owners and Due Points", Path: path, Aliases: []string{"tasks", "task list", "owners"}}
-		case "research-prd":
-			if fileExists(filepath.Join(dir, "missing-pieces-before-build.md")) {
-				return catalogItem{ID: "task-list", Label: "Task List", Path: path, Aliases: []string{"tasks", "task list"}}
-			}
-			return catalogItem{ID: "missing-pieces-before-build", Label: "Missing Pieces Before Build", Path: path, Aliases: []string{"tasks", "task list", "missing"}}
-		case "travel-plan":
-			return catalogItem{ID: "still-to-book", Label: "Still To Book", Path: path, Aliases: []string{"tasks", "task list", "booking"}}
-		default:
-			return catalogItem{ID: "next-actions", Label: "Next Actions", Path: path, Aliases: []string{"tasks", "task list", "actions"}}
-		}
-	case "selection":
-		return catalogItem{ID: "recommendation-memo", Label: "Recommendation Memo", Path: path, Aliases: []string{"selection", "memo"}}
-	case "response":
-		return catalogItem{ID: "closure-checklist", Label: "Closure Checklist", Path: path, Aliases: []string{"response", "checklist"}}
-	case "first-useful-pass":
-		return catalogItem{ID: "first-useful-pass", Label: "First Useful Pass", Path: path, Aliases: []string{"first pass", "useful pass", "summary"}}
-	default:
-		return catalogItem{
-			ID:      normalizeName(stem),
-			Label:   titleCase(stem),
-			Path:    path,
-			Aliases: []string{stem},
-		}
+	if item, ok := starterViewForStem(packID, stem, path); ok {
+		return item
+	}
+	return catalogItem{
+		ID:      normalizeName(stem),
+		Label:   titleCase(stem),
+		Path:    path,
+		Aliases: []string{stem},
 	}
 }
 
@@ -1886,7 +1984,24 @@ func collectDetails(root string) []catalogItem {
 	return items
 }
 
-func inferMissing(state string, details []catalogItem, packID string) []string {
+func sourceFromInputItems(items []inputItem) string {
+	parts := []string{}
+	for _, item := range items {
+		switch item.Kind {
+		case "text", "clarification", "derived":
+			text := strings.TrimSpace(item.OriginRef)
+			if text == "" {
+				text = strings.TrimSpace(item.Preview)
+			}
+			if text != "" {
+				parts = append(parts, text)
+			}
+		}
+	}
+	return strings.Join(parts, ". ")
+}
+
+func inferMissing(state string, details []catalogItem, packID, source string) []string {
 	available := map[string]bool{}
 	for _, item := range details {
 		available[item.Label] = true
@@ -1901,67 +2016,21 @@ func inferMissing(state string, details []catalogItem, packID string) []string {
 			missing = append(missing, "Evidence")
 		}
 	case "decided", "in_make":
-		if packID == "meeting-followup" {
-			missing = append(missing, "Metric and legal-review decision")
-		}
-		if packID == "travel-plan" {
-			missing = append(missing, "Dates, budget, and hotel area")
-		}
+		missing = append(missing, starterMissing(packID, state, details, source)...)
 	}
 	return missing
 }
 
-func inferUncertain(packID string, missing []string) []string {
-	if len(missing) == 0 {
-		return nil
-	}
-	switch packID {
-	case "research-prd":
-		return []string{"Whether approval was already granted in the review thread"}
-	case "meeting-followup":
-		return []string{"Whether the metric decision also needs legal review"}
-	case "travel-plan":
-		return []string{"Whether Versailles is a must-do day trip or an optional slot"}
-	default:
-		return []string{"Whether the missing items already exist outside this work record"}
-	}
+func inferUncertain(packID string, missing []string, source string) []string {
+	return starterUncertain(packID, missing, source)
 }
 
 func inferUsing(packID string) string {
-	switch packID {
-	case "research-prd":
-		return "Latest PRD draft and review comments"
-	case "meeting-followup":
-		return "Meeting notes and follow-up tasks"
-	case "vendor-selection":
-		return "Vendor notes, tradeoffs, and decision criteria"
-	case "incident-response":
-		return "Incident notes, timeline, and follow-up tasks"
-	case "travel-plan":
-		return "Trip notes, dates, and planning details"
-	default:
-		return "The files and notes in this work"
-	}
+	return starterWorkingWith(packID)
 }
 
 func inferDoing(packID, state string) string {
-	switch state {
-	case "awaiting_verification":
-		return "Checking assumptions and approval gaps"
-	case "decided":
-		if packID == "meeting-followup" {
-			return "Turning notes into owners and next steps"
-		}
-		return "Turning decisions into a usable draft"
-	case "in_make":
-		return "Drafting the next usable version"
-	case "operational":
-		return "Keeping the work current and verified"
-	case "incident":
-		return "Checking recovery work and missing proof"
-	default:
-		return "Turning the work into something usable"
-	}
+	return starterDoing(packID, state)
 }
 
 func inferProgress(state string) string {
@@ -1980,64 +2049,11 @@ func inferProgress(state string) string {
 }
 
 func inferNextStep(packID string, views []catalogItem) string {
-	switch packID {
-	case "research-prd":
-		return "Open Build-Readiness Check"
-	case "meeting-followup":
-		return "Open Sendable Follow-up"
-	case "travel-plan":
-		return "Open Itinerary"
-	default:
-		if len(views) > 0 {
-			return "Open " + views[0].Label
-		}
-		return "Review what is ready"
-	}
+	return starterNextStep(packID, views)
 }
 
 func prioritizeViews(packID string, items []catalogItem) []catalogItem {
-	if len(items) == 0 {
-		return items
-	}
-	order := map[string]int{}
-	switch packID {
-	case "research-prd":
-		order = map[string]int{
-			"build-readiness-check":       0,
-			"handoff-brief":               1,
-			"missing-pieces-before-build": 2,
-		}
-	case "meeting-followup":
-		order = map[string]int{
-			"sendable-follow-up":    0,
-			"owners-and-due-points": 1,
-		}
-	case "travel-plan":
-		order = map[string]int{
-			"itinerary":        0,
-			"budget-sketch":    1,
-			"travel-logistics": 2,
-			"still-to-book":    3,
-		}
-	default:
-		return items
-	}
-
-	sort.SliceStable(items, func(i, j int) bool {
-		left, leftOK := order[items[i].ID]
-		right, rightOK := order[items[j].ID]
-		switch {
-		case leftOK && rightOK:
-			return left < right
-		case leftOK:
-			return true
-		case rightOK:
-			return false
-		default:
-			return items[i].Label < items[j].Label
-		}
-	})
-	return items
+	return starterPrioritizeViews(packID, items)
 }
 
 func resolveOpenItem(summary *workSummary, name string) (*catalogItem, error) {
