@@ -769,11 +769,11 @@ func maybeClarifyStarterSource(choice starterChoice, source string, scanner *buf
 		return source, inputItem{}, true
 	}
 	return mergeClarifiedSource(source, answer), inputItem{
-		InputID: "clarified-scope",
-		Kind:    "clarification",
-		Title:   "Clarified scope",
-		Status:  "processed",
-		Preview: compactPreview(answer, 120),
+		InputID:   "clarified-scope",
+		Kind:      "clarification",
+		Title:     "Clarified scope",
+		Status:    "processed",
+		Preview:   compactPreview(answer, 120),
 		OriginRef: answer,
 	}, true
 }
@@ -870,7 +870,14 @@ func bootstrapStarterWork(choice starterChoice, source, detail string, inputItem
 	if err := saveCurrentWork(current); err != nil {
 		return nil, err
 	}
-	return loadWorkSummary(workDir, current)
+	summary, err := loadWorkSummary(workDir, current)
+	if err != nil {
+		return nil, err
+	}
+	if err := saveSemanticEnvelopeForSummary(summary); err != nil {
+		return nil, err
+	}
+	return summary, nil
 }
 
 func saveCurrentWork(current *currentWork) error {
