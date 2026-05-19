@@ -21,6 +21,10 @@ The execution sequence for this PRD lives in
 The runtime-learning interpretation of this PRD lives in
 [research-informed-heuristics.md](./research-informed-heuristics.md).
 
+The public surface and free-tier requirements across CLI, desktop, and mobile
+live in
+[client-surfaces-and-free-tier.md](./client-surfaces-and-free-tier.md).
+
 Coding workflow strategy should stay aligned with three public product rules:
 
 - preserve one stable work thread even when the route changes underneath

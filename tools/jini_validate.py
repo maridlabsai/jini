@@ -1661,6 +1661,7 @@ def build_publish_readiness() -> dict[str, Any]:
         ROOT / "WHITEPAPER.md",
         ROOT / "specs" / "learning-system.md",
         ROOT / "specs" / "install-packaging.md",
+        ROOT / "specs" / "client-surfaces-and-free-tier.md",
         ROOT / "specs" / "competitive-kpis.yaml",
         ROOT / "specs" / "golden-competitive-benchmark.yaml",
         ROOT / "specs" / "rewrite-score-baseline.yaml",

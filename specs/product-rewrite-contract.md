@@ -18,6 +18,7 @@ The merge-time guardrails for this contract live in:
 - [full-product-prd-execution-plan.md](./full-product-prd-execution-plan.md)
 - [local-slm-frontline-policy.md](./local-slm-frontline-policy.md)
 - [conversation-and-artifact-ux.md](./conversation-and-artifact-ux.md)
+- [client-surfaces-and-free-tier.md](./client-surfaces-and-free-tier.md)
 - [public-repo-boundary.md](./public-repo-boundary.md)
 
 The rewrite goal is to make Jini the easiest way to turn messy AI work into a
