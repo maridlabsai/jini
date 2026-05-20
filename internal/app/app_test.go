@@ -1244,6 +1244,147 @@ func TestInteractiveLauncherSocialAckDoesNotCreateWork(t *testing.T) {
 	}
 }
 
+func TestInteractiveLauncherFamiliarSlashCommandsDoNotCreateWork(t *testing.T) {
+	cases := []struct {
+		name string
+		line string
+		want []string
+	}{
+		{
+			name: "status",
+			line: "/status\n",
+			want: []string{"No current work yet.", "Paste what you want finished."},
+		},
+		{
+			name: "doctor",
+			line: "/doctor\n",
+			want: []string{"Provider", "Status"},
+		},
+		{
+			name: "init",
+			line: "/init\n",
+			want: []string{"No init step is required before first value.", "Paste what you want finished."},
+		},
+		{
+			name: "model",
+			line: "/model\n",
+			want: []string{"Provider", "Status"},
+		},
+		{
+			name: "memory",
+			line: "/memory\n",
+			want: []string{"Memory", "No current work is saved yet."},
+		},
+		{
+			name: "permissions",
+			line: "/permissions\n",
+			want: []string{"Permissions", "Nothing has been sent, published, booked, or changed."},
+		},
+		{
+			name: "clear",
+			line: "/clear\n",
+			want: []string{"Nothing to clear yet.", "Paste what you want finished when you're ready."},
+		},
+		{
+			name: "route",
+			line: "/route\n",
+			want: []string{"Route and cost", "Least-expense capable route"},
+		},
+		{
+			name: "cost",
+			line: "/cost\n",
+			want: []string{"Route and cost", "Least-expense capable route"},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			stateDir := t.TempDir()
+			t.Setenv("JINI_STATE_DIR", stateDir)
+
+			var stdout bytes.Buffer
+			exitCode := app.RunInteractive(nil, strings.NewReader(tc.line), &stdout, &stdout)
+			if exitCode != 0 {
+				t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+			}
+
+			out := stdout.String()
+			for _, want := range tc.want {
+				if !strings.Contains(out, want) {
+					t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+				}
+			}
+			for _, unwanted := range []string{"Your first draft is ready.", "First Useful Pass"} {
+				if strings.Contains(out, unwanted) {
+					t.Fatalf("expected slash command not to create work %q, got:\n%s", unwanted, out)
+				}
+			}
+			if _, err := os.Stat(filepath.Join(stateDir, "current-work.json")); !errors.Is(err, os.ErrNotExist) {
+				t.Fatalf("expected no current work file after slash command, got err=%v", err)
+			}
+		})
+	}
+}
+
+func TestInteractiveLauncherHelpWithPunctuationDoesNotCreateWork(t *testing.T) {
+	for _, line := range []string{"what can you do?\n", "help!\n", "/help\n", "?\n"} {
+		t.Run(strings.TrimSpace(line), func(t *testing.T) {
+			stateDir := t.TempDir()
+			t.Setenv("JINI_STATE_DIR", stateDir)
+
+			var stdout bytes.Buffer
+			exitCode := app.RunInteractive(nil, strings.NewReader(line), &stdout, &stdout)
+			if exitCode != 0 {
+				t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+			}
+
+			out := stdout.String()
+			for _, want := range []string{
+				"What do you need help finishing?",
+				"Examples:",
+				"Familiar commands also work",
+			} {
+				if !strings.Contains(out, want) {
+					t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+				}
+			}
+			for _, unwanted := range []string{"Your first draft is ready.", "First Useful Pass"} {
+				if strings.Contains(out, unwanted) {
+					t.Fatalf("expected punctuated help not to create work %q, got:\n%s", unwanted, out)
+				}
+			}
+			if _, err := os.Stat(filepath.Join(stateDir, "current-work.json")); !errors.Is(err, os.ErrNotExist) {
+				t.Fatalf("expected no current work file after help input, got err=%v", err)
+			}
+		})
+	}
+}
+
+func TestInteractiveLauncherMenuPhraseWithSentencePunctuationStartsWork(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("Turn meeting notes into something I can send.\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Your first draft is ready.",
+		"Sendable Follow-up",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+	current := readCurrentWork(t, stateDir)
+	if current["pack_id"] != "meeting-followup" {
+		t.Fatalf("expected meeting-followup current work, got %#v", current)
+	}
+}
+
 func TestInteractiveLauncherRunsMeetingPostResultActions(t *testing.T) {
 	cases := []struct {
 		name            string
@@ -1364,6 +1505,30 @@ func TestCurrentWorkInteractiveChoicesAreReal(t *testing.T) {
 	}
 	if !strings.Contains(out, "Sendable Follow-up") {
 		t.Fatalf("expected sendable follow-up in open shelf, got:\n%s", out)
+	}
+}
+
+func TestCurrentWorkInteractivePunctuatedReadyCommandOpensShelf(t *testing.T) {
+	stateDir := t.TempDir()
+	packDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("show what's ready?\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{"Open something ready", "Sendable Follow-up"} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, "First Useful Pass") {
+		t.Fatalf("expected punctuated ready command not to start work, got:\n%s", out)
 	}
 }
 
@@ -1507,6 +1672,251 @@ func TestCurrentWorkInteractiveSocialAckDoesNotStartNewWork(t *testing.T) {
 	current := readCurrentWork(t, stateDir)
 	if current["title"] != "Weekly Product Review" {
 		t.Fatalf("expected current work to remain unchanged, got %#v", current)
+	}
+}
+
+func TestCurrentWorkInteractiveSlashDoctorDoesNotStartNewWork(t *testing.T) {
+	stateDir := t.TempDir()
+	packDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("/doctor\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{"Provider", "Status"} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, "First Useful Pass: Doctor") {
+		t.Fatalf("expected slash doctor not to start literal work, got:\n%s", out)
+	}
+	current := readCurrentWork(t, stateDir)
+	if current["title"] != "Weekly Product Review" {
+		t.Fatalf("expected current work to remain unchanged, got %#v", current)
+	}
+}
+
+func TestCurrentWorkInteractiveTacticalCommandsDoNotStartNewWork(t *testing.T) {
+	cases := []struct {
+		name string
+		line string
+		want []string
+	}{
+		{
+			name: "status",
+			line: "/status\n",
+			want: []string{"Goal", "Weekly Product Review", "Ready now", "Sendable Follow-up"},
+		},
+		{
+			name: "check",
+			line: "check\n",
+			want: []string{"Goal", "Weekly Product Review", "Ready now", "Sendable Follow-up"},
+		},
+		{
+			name: "memory",
+			line: "/memory\n",
+			want: []string{"Memory", "Current work is saved: Weekly Product Review."},
+		},
+		{
+			name: "route",
+			line: "/route\n",
+			want: []string{"Route and cost", "Least-expense capable route"},
+		},
+		{
+			name: "cost",
+			line: "/cost\n",
+			want: []string{"Route and cost", "Least-expense capable route"},
+		},
+		{
+			name: "permissions",
+			line: "/permissions\n",
+			want: []string{"Permissions", "Nothing has been sent, published, booked, or changed."},
+		},
+		{
+			name: "clear",
+			line: "/clear\n",
+			want: []string{"Nothing was deleted.", "Type `Start new work` to switch focus without removing this work."},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			stateDir := t.TempDir()
+			packDir := seedMeetingWork(t)
+			writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+			t.Setenv("JINI_STATE_DIR", stateDir)
+
+			var stdout bytes.Buffer
+			exitCode := app.RunInteractive(nil, strings.NewReader(tc.line), &stdout, &stdout)
+			if exitCode != 0 {
+				t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+			}
+
+			out := stdout.String()
+			for _, want := range tc.want {
+				if !strings.Contains(out, want) {
+					t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+				}
+			}
+			if strings.Contains(out, "First Useful Pass") {
+				t.Fatalf("expected tactical command not to start literal work, got:\n%s", out)
+			}
+			current := readCurrentWork(t, stateDir)
+			if current["title"] != "Weekly Product Review" {
+				t.Fatalf("expected current work to remain unchanged, got %#v", current)
+			}
+		})
+	}
+}
+
+func TestPostResultStatusCommandShowsFullState(t *testing.T) {
+	source := "Weekly product review. Need owners, due dates, and open questions."
+	out := runInteractiveForTest(t, t.TempDir(), source+"\n/status\n")
+
+	for _, want := range []string{
+		"Your first draft is ready.",
+		"Goal",
+		"Weekly Product Review Need Owners",
+		"Ready now",
+		"Sendable Follow-up",
+		"Safe to do",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, "First Useful Pass: Status") {
+		t.Fatalf("expected status not to start literal work, got:\n%s", out)
+	}
+}
+
+func TestInteractiveTacticalSurfacesStayCompact(t *testing.T) {
+	cases := []struct {
+		name        string
+		arg         string
+		maxNonEmpty int
+	}{
+		{name: "status", arg: "/status", maxNonEmpty: 3},
+		{name: "memory", arg: "/memory", maxNonEmpty: 3},
+		{name: "permissions", arg: "/permissions", maxNonEmpty: 3},
+		{name: "route", arg: "/route", maxNonEmpty: 3},
+		{name: "help", arg: "/help", maxNonEmpty: 16},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			stateDir := t.TempDir()
+			t.Setenv("JINI_STATE_DIR", stateDir)
+
+			var stdout bytes.Buffer
+			exitCode := app.RunInteractive([]string{tc.arg}, nil, &stdout, &stdout)
+			if exitCode != 0 {
+				t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+			}
+			out := stdout.String()
+			if got := nonEmptyLineCount(out); got > tc.maxNonEmpty {
+				t.Fatalf("expected %s to stay within %d non-empty lines, got %d:\n%s", tc.name, tc.maxNonEmpty, got, out)
+			}
+		})
+	}
+}
+
+func TestInteractiveTacticalSurfacesStayWithinLatencySmokeBudget(t *testing.T) {
+	budget := 500 * time.Millisecond
+	cases := []struct {
+		name string
+		run  func(t *testing.T)
+	}{
+		{
+			name: "top-level status",
+			run: func(t *testing.T) {
+				t.Helper()
+				stateDir := t.TempDir()
+				t.Setenv("JINI_STATE_DIR", stateDir)
+
+				var stdout bytes.Buffer
+				if exitCode := app.RunInteractive([]string{"/status"}, nil, &stdout, &stdout); exitCode != 0 {
+					t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+				}
+			},
+		},
+		{
+			name: "top-level memory",
+			run: func(t *testing.T) {
+				t.Helper()
+				stateDir := t.TempDir()
+				t.Setenv("JINI_STATE_DIR", stateDir)
+
+				var stdout bytes.Buffer
+				if exitCode := app.RunInteractive([]string{"/memory"}, nil, &stdout, &stdout); exitCode != 0 {
+					t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+				}
+			},
+		},
+		{
+			name: "current work ready shelf",
+			run: func(t *testing.T) {
+				t.Helper()
+				stateDir := t.TempDir()
+				packDir := seedMeetingWork(t)
+				writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+				t.Setenv("JINI_STATE_DIR", stateDir)
+
+				var stdout bytes.Buffer
+				if exitCode := app.RunInteractive(nil, strings.NewReader("show what's ready?\n"), &stdout, &stdout); exitCode != 0 {
+					t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+				}
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			start := time.Now()
+			tc.run(t)
+			if elapsed := time.Since(start); elapsed > budget {
+				t.Fatalf("expected %s to finish within %s, took %s", tc.name, budget, elapsed)
+			}
+		})
+	}
+}
+
+func TestTopLevelSlashHelpAliasesAreAccepted(t *testing.T) {
+	cases := [][]string{
+		{"/help"},
+		{"/doctor"},
+		{"/model"},
+		{"/status"},
+		{"/init"},
+		{"/memory"},
+		{"/permissions"},
+		{"/route"},
+		{"/cost"},
+		{"/new"},
+		{"provider", "/doctor"},
+	}
+	for _, args := range cases {
+		t.Run(strings.Join(args, " "), func(t *testing.T) {
+			stateDir := t.TempDir()
+			t.Setenv("JINI_STATE_DIR", stateDir)
+
+			var stdout bytes.Buffer
+			exitCode := app.RunInteractive(args, nil, &stdout, &stdout)
+			if exitCode != 0 {
+				t.Fatalf("expected exit code 0 for %v, got %d with output:\n%s", args, exitCode, stdout.String())
+			}
+			if strings.Contains(stdout.String(), "Unknown command") {
+				t.Fatalf("expected familiar slash alias not to be unknown, got:\n%s", stdout.String())
+			}
+		})
 	}
 }
 
@@ -1851,7 +2261,7 @@ func assertNoFirstRunStatusDump(t *testing.T, out string) {
 	}
 }
 
-func writeCurrentWork(t *testing.T, stateDir, packDir, packID, workUnitID, title, state, health string) {
+func writeCurrentWork(t testing.TB, stateDir, packDir, packID, workUnitID, title, state, health string) {
 	t.Helper()
 
 	payload := map[string]any{
@@ -1966,6 +2376,44 @@ func requireStringAfter(t *testing.T, out, anchor, want string) {
 	}
 }
 
+func nonEmptyLineCount(out string) int {
+	count := 0
+	for _, line := range strings.Split(out, "\n") {
+		if strings.TrimSpace(line) != "" {
+			count++
+		}
+	}
+	return count
+}
+
+func BenchmarkInteractiveNoWorkHelp(b *testing.B) {
+	stateDir := b.TempDir()
+	b.Setenv("JINI_STATE_DIR", stateDir)
+	b.ReportAllocs()
+
+	for b.Loop() {
+		var stdout bytes.Buffer
+		if exitCode := app.RunInteractive(nil, strings.NewReader("/help\n"), &stdout, io.Discard); exitCode != 0 {
+			b.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+		}
+	}
+}
+
+func BenchmarkInteractiveCurrentWorkReadyShelf(b *testing.B) {
+	stateDir := b.TempDir()
+	packDir := seedMeetingWork(b)
+	writeCurrentWork(b, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+	b.Setenv("JINI_STATE_DIR", stateDir)
+	b.ReportAllocs()
+
+	for b.Loop() {
+		var stdout bytes.Buffer
+		if exitCode := app.RunInteractive(nil, strings.NewReader("show what's ready?\n"), &stdout, io.Discard); exitCode != 0 {
+			b.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+		}
+	}
+}
+
 func seedResearchPRDWork(t *testing.T) string {
 	t.Helper()
 
@@ -2027,7 +2475,7 @@ func writeLocalRuntimeCapabilitiesFixture(t *testing.T, stateDir string) {
 	}
 }
 
-func seedMeetingWork(t *testing.T) string {
+func seedMeetingWork(t testing.TB) string {
 	t.Helper()
 
 	root := t.TempDir()
@@ -2047,7 +2495,7 @@ current_state: decided
 	return root
 }
 
-func seedTravelWork(t *testing.T) string {
+func seedTravelWork(t testing.TB) string {
 	t.Helper()
 
 	root := t.TempDir()
@@ -2069,14 +2517,14 @@ current_state: decided
 	return root
 }
 
-func mkdirAll(t *testing.T, dir string) {
+func mkdirAll(t testing.TB, dir string) {
 	t.Helper()
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		t.Fatalf("mkdir %s: %v", dir, err)
 	}
 }
 
-func writeFile(t *testing.T, path, content string) {
+func writeFile(t testing.TB, path, content string) {
 	t.Helper()
 	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
 		t.Fatalf("write %s: %v", path, err)

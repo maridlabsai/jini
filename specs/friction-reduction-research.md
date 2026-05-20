@@ -147,6 +147,13 @@ The first-minute path must be benchmarked against Codex, ChatGPT, and Claude:
 Exit criterion: a new user can reach a useful result without learning internal
 Jini terminology.
 
+Compatibility requirement: common tactical commands from adjacent AI tools must
+be accepted as low-risk aliases. `/help`, `/status`, `/doctor`, `/model`,
+`/init`, `/memory`, `/permissions`, and `/cost` should explain state, setup,
+memory, permission, or route posture without creating a `First Useful Pass` or
+mutating current work. These surfaces should stay compact and have benchmark
+coverage because they are used repeatedly during ramp-up and recovery.
+
 ### B. Natural Intake
 
 Jini must maintain a generic intake layer that detects intent and uncertainty

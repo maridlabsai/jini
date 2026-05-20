@@ -17,6 +17,9 @@ Pass criteria:
 - `jini help` or an explicit help request shows examples and setup guidance.
 - A new user can type natural language before learning packs, routes, or
   provider names.
+- Familiar tactical commands such as `/help`, `/status`, `/doctor`, `/model`,
+  `/init`, `/memory`, `/permissions`, and `/cost` are safe aliases and never
+  create work artifacts by themselves.
 - The first useful result appears before status or model metadata.
 
 Regression inputs:
@@ -24,6 +27,9 @@ Regression inputs:
 - `hello`
 - empty shell start
 - `help`
+- `/status`
+- `/doctor`
+- `/memory`
 - `7 day paris trip`
 - `turn these notes into a follow-up`
 
@@ -142,6 +148,8 @@ Required markers:
 Reject a change if any of these are true:
 
 - It adds a required command before the first useful result.
+- It treats a tactical command, greeting, acknowledgement, or help request as a
+  new work artifact.
 - It prints route/model/provider/state metadata before useful content without a
   safety reason.
 - It adds a use-case-specific response mold to core rendering.
@@ -156,6 +164,9 @@ Reject a change if any of these are true:
 
 - `jini`
 - `jini help`
+- `jini /status`
+- `jini /doctor`
+- `jini /memory`
 - `hello`
 - `7 day paris trip`
 - `Plan a 5 day Lisbon trip for two adults in October, food/design focused,

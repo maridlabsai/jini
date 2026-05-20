@@ -46,6 +46,10 @@ jobs:
         shell: bash
         run: go test ./...
 
+      - name: Run CLI latency benchmark smoke
+        shell: bash
+        run: go test ./internal/app -run '^$' -bench 'BenchmarkInteractive(NoWorkHelp|CurrentWorkReadyShelf)$' -benchmem -benchtime=50x
+
       - name: Run installer matrix tests
         shell: bash
         run: python3 -m unittest tests/test_install_sh.py -v

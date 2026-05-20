@@ -78,9 +78,38 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 			return runLauncher(stdin, stdout, stderr)
 		}
 
-		switch args[0] {
-		case "help", "--help", "-h":
+		switch normalizeName(args[0]) {
+		case "help", "h":
 			return runHelp(stdout, stderr)
+		case "status":
+			return runStatus(stdout, stderr)
+		case "doctor", "model":
+			renderInteractiveProviderDoctor(stdout)
+			return 0
+		case "route", "cost":
+			renderRouteCostStatus(stdout)
+			return 0
+		case "memory":
+			current, err := loadCurrentWork()
+			if err == nil && current != nil {
+				if summary, loadErr := loadWorkSummary(current.PackDir, current); loadErr == nil {
+					renderCurrentWorkMemoryStatus(stdout, summary)
+					return 0
+				}
+			}
+			renderNoCurrentMemoryStatus(stdout)
+			return 0
+		case "permissions", "permission":
+			renderSafePermissionsStatus(stdout)
+			return 0
+		case "init":
+			renderNoInitRequired(stdout)
+			fmt.Fprintln(stdout)
+			renderNewWorkLauncher(stdout)
+			return 0
+		case "new", "new work":
+			renderNewWorkLauncher(stdout)
+			return 0
 		case "check":
 			return runCheck(args[1:], stdout, stderr)
 		case "observe":
@@ -163,8 +192,10 @@ func runLauncher(stdin io.Reader, stdout, stderr io.Writer) int {
 
 func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
 	switch normalizeName(action) {
-	case "help", "?", "status", "show help":
+	case "help", "?", "show help":
 		renderCurrentWorkHelp(stdout, summary)
+	case "status", "show status", "check":
+		renderCheck(stdout, summary)
 	case "1", "continue", "continue current work", "keep going", "proceed", "go ahead", "next":
 		item := nextUsefulItem(summary)
 		if item == nil {
@@ -174,7 +205,7 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		renderItem(stdout, item)
 	case "2", "open", "open ready work", "open ready", "open whats ready", "open what's ready", "open what is ready", "show whats ready", "show what's ready", "show what is ready":
 		renderOpenShelf(stdout, summary)
-	case "see what is still missing", "show what is missing", "missing", "check":
+	case "see what is still missing", "show what is missing", "missing":
 		renderMissingOnly(stdout, summary)
 	case "model upvote", "upvote model", "model was right":
 		if err := saveModelFeedback(summary.Dir, "upvoted", ""); err != nil {
@@ -226,6 +257,19 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		fmt.Fprintln(stdout, "Saved artifact outcome: replaced-this.")
 	case "switch work", "switch", "show active work", "active work", "switch project":
 		return runSwitchWorkPicker(summary, scanner, stdout, stderr)
+	case "doctor", "model":
+		renderInteractiveProviderDoctor(stdout)
+	case "route", "cost":
+		renderRouteCostStatus(stdout)
+	case "memory":
+		renderCurrentWorkMemoryStatus(stdout, summary)
+	case "permissions", "permission":
+		renderSafePermissionsStatus(stdout)
+	case "init":
+		renderNoInitRequired(stdout)
+	case "clear":
+		fmt.Fprintln(stdout, "Nothing was deleted.")
+		fmt.Fprintln(stdout, "Type `Start new work` to switch focus without removing this work.")
 	case "plan this first", "plan first", "plan", "requirements", "design", "help me plan this":
 		renderPlanFirst(stdout, summary)
 	case "3", "new", "start new", "start something new", "start something else", "start new work":
@@ -264,7 +308,7 @@ type providerConfig struct {
 }
 
 func runProvider(args []string, stdout, stderr io.Writer) int {
-	if len(args) > 0 && args[0] != "doctor" {
+	if len(args) > 0 && normalizeName(args[0]) != "doctor" {
 		fmt.Fprintf(stderr, "Unknown provider command %q.\n", args[0])
 		fmt.Fprintln(stderr, "Try `jini provider doctor`.")
 		return 1
@@ -278,6 +322,28 @@ func runProvider(args []string, stdout, stderr io.Writer) int {
 		return 0
 	}
 	return 1
+}
+
+func runStatus(stdout, stderr io.Writer) int {
+	current, err := loadCurrentWork()
+	if err != nil || current == nil {
+		renderNoCurrentWorkStatus(stdout)
+		return 0
+	}
+	summary, err := loadWorkSummary(current.PackDir, current)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			_ = clearCurrentWork()
+			fmt.Fprintln(stdout, "Remembered work is no longer available.")
+			fmt.Fprintln(stdout)
+			renderNoCurrentWorkStatus(stdout)
+			return 0
+		}
+		fmt.Fprintln(stderr, "Could not load current work. Run `jini` to start again.")
+		return 1
+	}
+	renderCheck(stdout, summary)
+	return 0
 }
 
 func runHelp(stdout, stderr io.Writer) int {
@@ -590,6 +656,13 @@ func renderProviderDoctor(w io.Writer, provider providerConfig) {
 	}
 }
 
+func renderInteractiveProviderDoctor(w io.Writer) {
+	if shouldRefreshLocalBenchmarkForDoctor() {
+		_ = currentLocalRuntimeCapabilities(context.Background())
+	}
+	renderProviderDoctor(w, detectProvider())
+}
+
 func workingWithLabel(provider providerConfig) string {
 	if route := detectRoute(); route.Active {
 		label := route.ToolLabel
@@ -631,6 +704,13 @@ func runNewWorkIntakeWithScanner(session *bufio.Scanner, stdout, stderr io.Write
 			fmt.Fprintln(stdout)
 			fmt.Fprintln(stdout, "Hi.")
 			fmt.Fprintln(stdout, "Tell me what you want finished, or paste notes when you're ready.")
+			fmt.Fprintln(stdout)
+			continue
+		}
+		if handled, exitCode := maybeHandleNewWorkUtilityIntent(firstRaw, stdout); handled {
+			if exitCode != 0 {
+				return exitCode
+			}
 			fmt.Fprintln(stdout)
 			continue
 		}
@@ -742,6 +822,9 @@ func readPromptLine(scanner *bufio.Scanner, stdout io.Writer, prompt string) (st
 }
 
 func resolveStarterChoice(raw string) (starterChoice, error) {
+	if !looksLikeStarterMenuSelection(raw) {
+		return starterChoice{}, fmt.Errorf("I couldn't match %q to a starter flow yet.", raw)
+	}
 	choice := normalizeName(raw)
 	switch choice {
 	case "3", "i am not sure", "i'm not sure", "i’m not sure", "im not sure", "i m not sure", "not sure", "unsure", "help me finish this":
@@ -764,6 +847,16 @@ func resolveStarterChoice(raw string) (starterChoice, error) {
 		}
 	}
 	return starterChoice{}, fmt.Errorf("I couldn't match %q to a starter flow yet.", raw)
+}
+
+func looksLikeStarterMenuSelection(raw string) bool {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return false
+	}
+	runes := []rune(trimmed)
+	last := runes[len(runes)-1]
+	return last != '.' && last != '!' && last != '?'
 }
 
 func isGreetingOnly(raw string) bool {
@@ -799,6 +892,44 @@ func isHelpInput(raw string) bool {
 		return true
 	default:
 		return false
+	}
+}
+
+func maybeHandleNewWorkUtilityIntent(raw string, stdout io.Writer) (bool, int) {
+	switch normalizeName(raw) {
+	case "status":
+		fmt.Fprintln(stdout)
+		renderNoCurrentWorkStatus(stdout)
+		return true, 0
+	case "doctor", "model":
+		fmt.Fprintln(stdout)
+		renderInteractiveProviderDoctor(stdout)
+		return true, 0
+	case "route", "cost":
+		fmt.Fprintln(stdout)
+		renderRouteCostStatus(stdout)
+		return true, 0
+	case "memory":
+		fmt.Fprintln(stdout)
+		renderNoCurrentMemoryStatus(stdout)
+		return true, 0
+	case "permissions", "permission":
+		fmt.Fprintln(stdout)
+		renderSafePermissionsStatus(stdout)
+		return true, 0
+	case "init":
+		fmt.Fprintln(stdout)
+		renderNoInitRequired(stdout)
+		fmt.Fprintln(stdout)
+		renderNewWorkPrompt(stdout)
+		return true, 0
+	case "clear":
+		fmt.Fprintln(stdout)
+		fmt.Fprintln(stdout, "Nothing to clear yet.")
+		fmt.Fprintln(stdout, "Paste what you want finished when you're ready.")
+		return true, 0
+	default:
+		return false, 0
 	}
 }
 
@@ -2199,12 +2330,43 @@ func renderNewWorkLauncher(w io.Writer) {
 	fmt.Fprintln(w, "- I am not sure")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Nothing will be sent yet.")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Familiar commands also work: `/help`, `/status`, `/doctor`, `/init`, `/memory`, `/permissions`, `/cost`.")
 }
 
 func renderNewWorkPrompt(w io.Writer) {
 	fmt.Fprintln(w, "Jini")
 	fmt.Fprintln(w, "Paste what you want finished.")
-	fmt.Fprintln(w, "Type `help` for examples or setup.")
+	fmt.Fprintln(w, "Type `help` for examples or setup. Slash commands like `/help` also work.")
+}
+
+func renderNoCurrentWorkStatus(w io.Writer) {
+	fmt.Fprintln(w, "No current work yet.")
+	fmt.Fprintln(w, "Paste what you want finished.")
+	fmt.Fprintln(w, "Type `help` or `/help` for examples and setup.")
+}
+
+func renderNoInitRequired(w io.Writer) {
+	fmt.Fprintln(w, "No init step is required before first value.")
+	fmt.Fprintln(w, "Paste notes, files, or a request and Jini will create the work record when there is real work to preserve.")
+}
+
+func renderNoCurrentMemoryStatus(w io.Writer) {
+	fmt.Fprintln(w, "Memory")
+	fmt.Fprintln(w, "No current work is saved yet.")
+	fmt.Fprintln(w, "Jini starts durable memory only when there is real work, an artifact, or a setting to preserve.")
+}
+
+func renderSafePermissionsStatus(w io.Writer) {
+	fmt.Fprintln(w, "Permissions")
+	fmt.Fprintln(w, "Nothing has been sent, published, booked, or changed.")
+	fmt.Fprintln(w, "Jini asks before risky external actions and keeps low-risk drafts reviewable first.")
+}
+
+func renderRouteCostStatus(w io.Writer) {
+	fmt.Fprintln(w, "Route and cost")
+	fmt.Fprintf(w, "Current route: %s.\n", workingWithLabel(detectProvider()))
+	fmt.Fprintln(w, "Least-expense capable route is the default; use `/doctor` to inspect setup or `Use Auto` to restore automatic routing.")
 }
 
 func renderRouteDecisionCard(w io.Writer, request providerGenerationRequest, decision routeDecision) {
@@ -2601,6 +2763,12 @@ func renderCurrentWorkNoop(w io.Writer) {
 	fmt.Fprintln(w, "Use `keep going`, `show what's ready`, or paste a new request.")
 }
 
+func renderCurrentWorkMemoryStatus(w io.Writer, summary *workSummary) {
+	fmt.Fprintln(w, "Memory")
+	fmt.Fprintf(w, "Current work is saved: %s.\n", summary.Title)
+	fmt.Fprintln(w, "Type `check` for the full work state, blockers, route, and ready artifacts.")
+}
+
 func renderPostResultContext(w io.Writer, summary *workSummary, item *catalogItem) {
 	if summary == nil {
 		return
@@ -2668,7 +2836,9 @@ func handlePostResultAction(action string, summary *workSummary, stdout, stderr 
 			return 0
 		}
 		renderItem(stdout, item)
-	case "see what is still missing", "show what is missing", "missing", "check", "2":
+	case "status", "show status", "check":
+		renderCheck(stdout, summary)
+	case "see what is still missing", "show what is missing", "missing", "2":
 		renderMissingOnly(stdout, summary)
 	case "plan this first", "plan first", "plan", "help me plan this", "3":
 		renderPlanFirst(stdout, summary)
@@ -3002,6 +3172,8 @@ func renderCurrentWorkHelp(w io.Writer, summary *workSummary) {
 	fmt.Fprintln(w, "- Show what is missing")
 	fmt.Fprintln(w, "- Help me plan this")
 	fmt.Fprintln(w, "- Start new work")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Familiar commands also work: `/status`, `/doctor`, `/model`, `/init`, `/memory`, `/permissions`, `/cost`.")
 }
 
 func runActiveWorkLauncher(active []*workSummary, stdin io.Reader, stdout, stderr io.Writer) int {
@@ -3358,9 +3530,21 @@ func dedupeItems(items []catalogItem) []catalogItem {
 }
 
 func normalizeName(value string) string {
-	replacer := strings.NewReplacer("-", " ", "_", " ", "/", " ")
-	value = replacer.Replace(strings.ToLower(strings.TrimSpace(value)))
-	return strings.Join(strings.Fields(value), " ")
+	if strings.TrimSpace(value) == "?" {
+		return "?"
+	}
+	var builder strings.Builder
+	for _, r := range strings.ToLower(strings.TrimSpace(value)) {
+		switch {
+		case unicode.IsLetter(r) || unicode.IsDigit(r) || unicode.IsSpace(r):
+			builder.WriteRune(r)
+		case r == '\'' || r == '’':
+			continue
+		default:
+			builder.WriteRune(' ')
+		}
+	}
+	return strings.Join(strings.Fields(builder.String()), " ")
 }
 
 func containsAny(value string, candidates []string) bool {
