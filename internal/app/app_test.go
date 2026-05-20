@@ -1872,6 +1872,95 @@ func TestCurrentWorkTransformUsesFocusedArtifact(t *testing.T) {
 	}
 }
 
+func TestCurrentWorkFocusedOutcomeUsesSelectedArtifact(t *testing.T) {
+	stateDir := t.TempDir()
+	packDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+	writeCurrentWorkRoute(t, packDir, map[string]any{
+		"tool_mode":       "local-workhorse",
+		"provider_label":  "Local SLM",
+		"feedback_key":    "local-workhorse",
+		"route_policy":    "auto",
+		"provider_mode":   "local-slm",
+		"artifact_family": "narrative-draft",
+	})
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	if exitCode := app.RunInteractive(nil, strings.NewReader("Show what's ready\n2\n"), io.Discard, io.Discard); exitCode != 0 {
+		t.Fatalf("expected selection to succeed, got %d", exitCode)
+	}
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("shared this\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected focused outcome to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	routeSaved := mustReadFile(t, filepath.Join(packDir, "route.json"))
+	if !strings.Contains(routeSaved, "tasks.md") {
+		t.Fatalf("expected route feedback path to point at focused artifact, got:\n%s", routeSaved)
+	}
+	threadState := mustReadFile(t, filepath.Join(packDir, "thread-state.json"))
+	if !strings.Contains(threadState, "Shared this") {
+		t.Fatalf("expected thread state to record shared decision, got:\n%s", threadState)
+	}
+}
+
+func TestCurrentWorkCanResolveBlockingAskBySkipping(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	if exitCode := app.RunInteractive(nil, strings.NewReader("Weekly product review for pricing launch. Need owners, due dates, and open questions.\n"), io.Discard, io.Discard); exitCode != 0 {
+		t.Fatalf("expected starter work to succeed, got %d", exitCode)
+	}
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("skip for now\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected ask skip to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "Recorded decision: Skipped for now.") {
+		t.Fatalf("expected skip confirmation, got:\n%s", stdout.String())
+	}
+
+	current := readCurrentWork(t, stateDir)
+	threadState := mustReadFile(t, filepath.Join(current["pack_dir"].(string), "thread-state.json"))
+	if strings.Contains(threadState, "\"active_ask\"") {
+		t.Fatalf("expected active ask to be cleared, got:\n%s", threadState)
+	}
+	if !strings.Contains(threadState, "Skipped for now") {
+		t.Fatalf("expected thread state to record skip decision, got:\n%s", threadState)
+	}
+}
+
+func TestCurrentWorkCanResolveBlockingAskByApproving(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	if exitCode := app.RunInteractive(nil, strings.NewReader("Notifications PRD needs a build-readiness check and handoff call.\n"), io.Discard, io.Discard); exitCode != 0 {
+		t.Fatalf("expected starter work to succeed, got %d", exitCode)
+	}
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("approved\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected approval decision to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "Recorded decision: Approved.") {
+		t.Fatalf("expected approval confirmation, got:\n%s", stdout.String())
+	}
+
+	current := readCurrentWork(t, stateDir)
+	threadState := mustReadFile(t, filepath.Join(current["pack_dir"].(string), "thread-state.json"))
+	if strings.Contains(threadState, "\"active_ask\"") {
+		t.Fatalf("expected active ask to be cleared, got:\n%s", threadState)
+	}
+	if !strings.Contains(threadState, "Approved") {
+		t.Fatalf("expected thread state to record approval, got:\n%s", threadState)
+	}
+}
+
 func TestCurrentWorkInteractiveSocialAckDoesNotStartNewWork(t *testing.T) {
 	stateDir := t.TempDir()
 	packDir := seedMeetingWork(t)

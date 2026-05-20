@@ -453,3 +453,52 @@ func sameThreadFocus(left, right *threadFocus) bool {
 		strings.TrimSpace(left.ArtifactPath) == strings.TrimSpace(right.ArtifactPath) &&
 		strings.TrimSpace(left.ArtifactLabel) == strings.TrimSpace(right.ArtifactLabel)
 }
+
+func resolveActiveAskAction(workDir string, summary *workSummary, action string) (string, bool, error) {
+	if strings.TrimSpace(workDir) == "" {
+		return "", false, nil
+	}
+	state := loadThreadState(workDir, summary)
+	if state.ActiveAsk == nil {
+		return "", false, nil
+	}
+	normalized := normalizeName(action)
+	resolution := ""
+	switch normalized {
+	case "skip", "skip for now":
+		resolution = "Skipped for now"
+	case "approve", "approved", "approve this", "mark approved", "approval granted":
+		resolution = "Approved"
+	default:
+		for _, option := range state.ActiveAsk.Options {
+			if normalizeName(option) == normalized {
+				resolution = option
+				break
+			}
+		}
+	}
+	if strings.TrimSpace(resolution) == "" {
+		return "", false, nil
+	}
+	state.CurrentTurn.JustFinished = dedupeStrings(append(state.CurrentTurn.JustFinished, resolution))
+	state.ActiveAsk = nil
+	if summary != nil {
+		state.CurrentFocus = defaultThreadFocus(summary)
+	}
+	if err := saveThreadState(workDir, state); err != nil {
+		return "", true, err
+	}
+	return resolution, true, nil
+}
+
+func recordThreadDecision(workDir string, summary *workSummary, label string) {
+	if strings.TrimSpace(workDir) == "" || strings.TrimSpace(label) == "" {
+		return
+	}
+	state := loadThreadState(workDir, summary)
+	state.CurrentTurn.JustFinished = dedupeStrings(append(state.CurrentTurn.JustFinished, label))
+	if summary != nil && state.CurrentFocus == nil {
+		state.CurrentFocus = defaultThreadFocus(summary)
+	}
+	_ = saveThreadState(workDir, state)
+}

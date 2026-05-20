@@ -191,6 +191,14 @@ func runLauncher(stdin io.Reader, stdout, stderr io.Writer) int {
 }
 
 func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
+	if resolution, resolved, err := resolveActiveAskAction(summary.Dir, summary, action); resolved {
+		if err != nil {
+			fmt.Fprintf(stderr, "Could not save the decision: %v\n", err)
+			return 1
+		}
+		fmt.Fprintf(stdout, "Recorded decision: %s.\n", resolution)
+		return 0
+	}
 	switch normalizeName(action) {
 	case "help", "?", "show help":
 		renderCurrentWorkHelp(stdout, summary)
@@ -268,24 +276,28 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 			fmt.Fprintf(stderr, "Could not save artifact feedback: %v\n", err)
 			return 1
 		}
+		recordThreadDecision(summary.Dir, summary, "Approved")
 		fmt.Fprintln(stdout, "Saved artifact feedback: accepted-as-is.")
 	case "needed light edits", "needs light edits", "light edits":
 		if err := saveModelFeedback(summary.Dir, "needed-light-edits", currentFeedbackArtifactPath(summary)); err != nil {
 			fmt.Fprintf(stderr, "Could not save artifact feedback: %v\n", err)
 			return 1
 		}
+		recordThreadDecision(summary.Dir, summary, "Needs light edits")
 		fmt.Fprintln(stdout, "Saved artifact feedback: needed-light-edits.")
 	case "used this", "used it", "kept this":
 		if err := saveArtifactOutcome(summary.Dir, "used-this", currentFeedbackArtifactPath(summary)); err != nil {
 			fmt.Fprintf(stderr, "Could not save artifact outcome: %v\n", err)
 			return 1
 		}
+		recordThreadDecision(summary.Dir, summary, "Used this")
 		fmt.Fprintln(stdout, "Saved artifact outcome: used-this.")
 	case "shared this", "sent this", "forwarded this", "handed this off", "used this to hand off":
 		if err := saveArtifactOutcome(summary.Dir, "shared-this", currentFeedbackArtifactPath(summary)); err != nil {
 			fmt.Fprintf(stderr, "Could not save artifact outcome: %v\n", err)
 			return 1
 		}
+		recordThreadDecision(summary.Dir, summary, "Shared this")
 		fmt.Fprintln(stdout, "Saved artifact outcome: shared-this.")
 	case "model downvote", "downvote model", "model was wrong":
 		if err := saveModelFeedback(summary.Dir, "downvoted", ""); err != nil {
@@ -298,12 +310,14 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 			fmt.Fprintf(stderr, "Could not save artifact feedback: %v\n", err)
 			return 1
 		}
+		recordThreadDecision(summary.Dir, summary, "Not useful")
 		fmt.Fprintln(stdout, "Saved artifact feedback: not-useful.")
 	case "replaced this", "rewrote this", "made a new one", "did not use this":
 		if err := saveArtifactOutcome(summary.Dir, "replaced-this", currentFeedbackArtifactPath(summary)); err != nil {
 			fmt.Fprintf(stderr, "Could not save artifact outcome: %v\n", err)
 			return 1
 		}
+		recordThreadDecision(summary.Dir, summary, "Replaced this")
 		fmt.Fprintln(stdout, "Saved artifact outcome: replaced-this.")
 	case "switch work", "switch", "show active work", "active work", "switch project":
 		return runSwitchWorkPicker(summary, scanner, stdout, stderr)
@@ -2603,11 +2617,8 @@ func currentFeedbackArtifactPath(summary *workSummary) string {
 	if summary == nil {
 		return ""
 	}
-	if item := firstResultItem(summary); item != nil {
+	if item := currentArtifactItem(summary); item != nil {
 		return item.Path
-	}
-	if len(summary.Views) > 0 {
-		return summary.Views[0].Path
 	}
 	return ""
 }
@@ -2868,6 +2879,14 @@ func postResultAlsoReady(items []catalogItem, primary *catalogItem) []string {
 }
 
 func handlePostResultAction(action string, summary *workSummary, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
+	if resolution, resolved, err := resolveActiveAskAction(summary.Dir, summary, action); resolved {
+		if err != nil {
+			fmt.Fprintf(stderr, "Could not save the decision: %v\n", err)
+			return 1
+		}
+		fmt.Fprintf(stdout, "Recorded decision: %s.\n", resolution)
+		return 0
+	}
 	switch normalizeName(action) {
 	case "resume", "resume this", "continue this":
 		if !renderFocusedContinuation(stdout, summary) {
@@ -2935,6 +2954,48 @@ func handlePostResultAction(action string, summary *workSummary, scanner *bufio.
 	case "plan this first", "plan first", "plan", "help me plan this", "5":
 		updateThreadFocus(summary.Dir, &threadFocus{Kind: "plan"})
 		renderPlanFirst(stdout, summary)
+	case "accepted as is", "accept as is", "artifact accepted", "accepted":
+		if err := saveModelFeedback(summary.Dir, "accepted-as-is", currentFeedbackArtifactPath(summary)); err != nil {
+			fmt.Fprintf(stderr, "Could not save artifact feedback: %v\n", err)
+			return 1
+		}
+		recordThreadDecision(summary.Dir, summary, "Approved")
+		fmt.Fprintln(stdout, "Saved artifact feedback: accepted-as-is.")
+	case "needed light edits", "needs light edits", "light edits":
+		if err := saveModelFeedback(summary.Dir, "needed-light-edits", currentFeedbackArtifactPath(summary)); err != nil {
+			fmt.Fprintf(stderr, "Could not save artifact feedback: %v\n", err)
+			return 1
+		}
+		recordThreadDecision(summary.Dir, summary, "Needs light edits")
+		fmt.Fprintln(stdout, "Saved artifact feedback: needed-light-edits.")
+	case "used this", "used it", "kept this":
+		if err := saveArtifactOutcome(summary.Dir, "used-this", currentFeedbackArtifactPath(summary)); err != nil {
+			fmt.Fprintf(stderr, "Could not save artifact outcome: %v\n", err)
+			return 1
+		}
+		recordThreadDecision(summary.Dir, summary, "Used this")
+		fmt.Fprintln(stdout, "Saved artifact outcome: used-this.")
+	case "shared this", "sent this", "forwarded this", "handed this off", "used this to hand off":
+		if err := saveArtifactOutcome(summary.Dir, "shared-this", currentFeedbackArtifactPath(summary)); err != nil {
+			fmt.Fprintf(stderr, "Could not save artifact outcome: %v\n", err)
+			return 1
+		}
+		recordThreadDecision(summary.Dir, summary, "Shared this")
+		fmt.Fprintln(stdout, "Saved artifact outcome: shared-this.")
+	case "not useful", "artifact was not useful", "not good enough":
+		if err := saveModelFeedback(summary.Dir, "not-useful", currentFeedbackArtifactPath(summary)); err != nil {
+			fmt.Fprintf(stderr, "Could not save artifact feedback: %v\n", err)
+			return 1
+		}
+		recordThreadDecision(summary.Dir, summary, "Not useful")
+		fmt.Fprintln(stdout, "Saved artifact feedback: not-useful.")
+	case "replaced this", "rewrote this", "made a new one", "did not use this":
+		if err := saveArtifactOutcome(summary.Dir, "replaced-this", currentFeedbackArtifactPath(summary)); err != nil {
+			fmt.Fprintf(stderr, "Could not save artifact outcome: %v\n", err)
+			return 1
+		}
+		recordThreadDecision(summary.Dir, summary, "Replaced this")
+		fmt.Fprintln(stdout, "Saved artifact outcome: replaced-this.")
 	case "start something new", "start new work", "new", "6":
 		renderNewWorkLauncher(stdout)
 	default:
