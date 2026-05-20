@@ -353,6 +353,15 @@ type starterChoice struct {
 	State       string
 }
 
+type workEnvelope struct {
+	Choice         starterChoice
+	Goal           string
+	Source         string
+	WorkClass      string
+	RequestCohort  string
+	ArtifactFamily string
+}
+
 type providerConfig struct {
 	ID       string
 	Label    string
@@ -813,27 +822,30 @@ func startNewWorkFromRawInput(firstRaw string, session *bufio.Scanner, stdout, s
 		fmt.Fprintln(stderr, "I need one line of source context to start this work.")
 		return 1
 	}
+	envelope := classifyWorkEnvelope(choice, source)
 	inputItems, normalizedSource := inputItemsForSource(source)
 	if strings.TrimSpace(normalizedSource) != "" {
 		source = normalizedSource
+		envelope = classifyWorkEnvelope(choice, source)
 	}
-	clarifiedSource, clarificationItem, ok := maybeClarifyStarterSource(choice, source, session, stdout)
+	clarifiedSource, clarificationItem, ok := maybeClarifyStarterSource(envelope, session, stdout)
 	if !ok {
 		return 0
 	}
 	source = clarifiedSource
+	envelope = classifyWorkEnvelope(envelope.Choice, source)
 	if clarificationItem.InputID != "" {
 		inputItems = append(inputItems, clarificationItem)
 	}
 
 	request := providerGenerationRequest{
-		Choice: choice,
-		Title:  deriveStarterTitle(choice.DefaultName, source, choice.PackID),
+		Choice: envelope.Choice,
+		Title:  deriveStarterTitle(envelope.Choice.DefaultName, source, envelope.Choice.PackID),
 		Source: source,
 	}
 	_ = detectRouteForRequest(request)
 
-	summary, err := bootstrapStarterWork(choice, source, "quick", inputItems)
+	summary, err := bootstrapStarterWork(envelope.Choice, source, "quick", inputItems)
 	if err != nil {
 		fmt.Fprintf(stderr, "Could not start this work: %v\n", err)
 		return 1
@@ -990,30 +1002,25 @@ func maybeHandleNewWorkUtilityIntent(raw string, stdout io.Writer) (bool, int) {
 func sourcePromptForChoice(choice starterChoice) string {
 	if choice.PackID == "auto" {
 		return strings.Join([]string{
-			"Paste what you have. A rough version is fine.",
+			"Paste what you want finished. Rough notes are fine.",
 			"I will turn it into a useful draft or ask one short follow-up if something important is missing.",
 			"Nothing will be sent yet.",
 		}, "\n")
 	}
-	return "Paste what you have. A rough version is fine."
+	return "Paste what you want finished. Rough notes are fine."
 }
 
 func classifyStarterChoice(source string) starterChoice {
-	packID := detectStarterPackFromSource(source)
-	choice, ok := starterChoiceForPack(packID)
-	if !ok {
-		return starterChoice{PackID: "general-work", ChoiceLabel: "Working Draft", DefaultName: "Working Draft", State: "decided"}
-	}
-	return choice
+	return classifyWorkEnvelope(starterChoice{}, source).Choice
 }
 
-func maybeClarifyStarterSource(choice starterChoice, source string, scanner *bufio.Scanner, stdout io.Writer) (string, inputItem, bool) {
+func maybeClarifyStarterSource(envelope workEnvelope, scanner *bufio.Scanner, stdout io.Writer) (string, inputItem, bool) {
 	if scanner == nil {
-		return source, inputItem{}, true
+		return envelope.Source, inputItem{}, true
 	}
-	prompt, ok := clarificationPromptForStarter(choice, source)
+	prompt, ok := clarificationPromptForEnvelope(envelope)
 	if !ok {
-		return source, inputItem{}, true
+		return envelope.Source, inputItem{}, true
 	}
 	answer, answered := readPromptLine(scanner, stdout, prompt)
 	if !answered {
@@ -1021,9 +1028,9 @@ func maybeClarifyStarterSource(choice starterChoice, source string, scanner *buf
 	}
 	answer = strings.TrimSpace(answer)
 	if answer == "" || normalizeName(answer) == "skip" {
-		return source, inputItem{}, true
+		return envelope.Source, inputItem{}, true
 	}
-	return mergeClarifiedSource(source, answer), inputItem{
+	return mergeClarifiedSource(envelope.Source, answer), inputItem{
 		InputID:   "clarified-scope",
 		Kind:      "clarification",
 		Title:     "Clarified scope",
@@ -1033,12 +1040,30 @@ func maybeClarifyStarterSource(choice starterChoice, source string, scanner *buf
 	}, true
 }
 
-func clarificationPromptForStarter(choice starterChoice, source string) (string, bool) {
-	profile, ok := starterProfileForPack(choice.PackID)
-	if !ok {
-		return "", false
+func classifyWorkEnvelope(explicitChoice starterChoice, source string) workEnvelope {
+	source = strings.TrimSpace(source)
+	choice := explicitChoice
+	if strings.TrimSpace(choice.PackID) == "" {
+		packID := detectStarterPackFromSource(source)
+		resolved, ok := starterChoiceForPack(packID)
+		if !ok {
+			resolved = starterChoice{PackID: "general-work", ChoiceLabel: "Working Draft", DefaultName: "Working Draft", State: "decided"}
+		}
+		choice = resolved
 	}
-	return clarificationPromptForProfile(profile, source)
+	profile := starterProfile(choice.PackID)
+	return workEnvelope{
+		Choice:         choice,
+		Goal:           deriveStarterTitle(choice.DefaultName, source, choice.PackID),
+		Source:         source,
+		WorkClass:      strings.TrimSpace(profile.WorkClass),
+		RequestCohort:  strings.TrimSpace(profile.RequestCohort),
+		ArtifactFamily: strings.TrimSpace(profile.ArtifactFamily),
+	}
+}
+
+func clarificationPromptForEnvelope(envelope workEnvelope) (string, bool) {
+	return clarificationPromptForCohort(envelope.RequestCohort, envelope.Source)
 }
 
 func mergeClarifiedSource(source, answer string) string {
@@ -1171,219 +1196,23 @@ func writeStarterWork(choice starterChoice, workDir, title, source, detail strin
 }
 
 func writeMeetingStarterWork(workDir, title, source, detail string) error {
-	decisions := starterSourceBullets(source, 4, []string{
-		"Summarize the main meeting decisions in one short list before sending anything.",
-	})
-	ownersToConfirm := starterMeetingOwnersToConfirm(source, decisions)
-	openQuestions := starterMeetingOpenQuestions(source)
-	nextMoves := starterMeetingNextMoves(source)
-	followup := strings.Join([]string{
-		fmt.Sprintf("# Sendable Follow-Up: %s", title),
-		"",
-		"## Send this note",
-		fmt.Sprintf("Team, here is the clean follow-up from **%s**.", title),
-		"",
-		fmt.Sprintf("I pulled this from the current notes: %s", source),
-		"",
-		"Please reply if any owner, due date, dependency, or open question below needs correction before this is treated as final.",
-		"",
-		"## Decisions captured from the notes",
-		bulletLines(decisions),
-		"## Owners and due dates to confirm",
-		bulletLines(ownersToConfirm),
-		"## Open questions to close",
-		bulletLines(openQuestions),
-		"## Recommended next move",
-		bulletLines(nextMoves),
-		"",
-	}, "\n")
-	if strings.HasPrefix(strings.ToLower(strings.TrimSpace(detail)), "f") {
-		followup += strings.Join([]string{
-			"## Why this note exists",
-			"- Decisions, owners, and due dates must stay explicit before the meeting is considered closed.",
-			"- Open questions should stay visible instead of getting buried in notes or chat.",
-			"",
-		}, "\n")
-	}
-	if err := os.WriteFile(filepath.Join(workDir, "views", "followup.md"), []byte(followup), 0o644); err != nil {
-		return err
-	}
-	ownersView := strings.Join([]string{
-		"# Owners and Due Points",
-		"",
-		"## Confirmed from the notes",
-		bulletLines(decisions),
-		"## Still missing owner or date",
-		bulletLines(ownersToConfirm),
-		"## Follow-up questions",
-		bulletLines(openQuestions),
-	}, "\n")
-	if err := os.WriteFile(filepath.Join(workDir, "views", "owners-and-due-points.md"), []byte(ownersView), 0o644); err != nil {
-		return err
-	}
-	if err := os.WriteFile(filepath.Join(workDir, "views", "tasks.md"), []byte("# Task List\n\n"+bulletLines(ownersToConfirm)), 0o644); err != nil {
-		return err
-	}
-	return writeStarterArtifacts(workDir, []string{"Brief", "Tasks"})
+	return writeStarterArtifactPlan(workDir, buildMeetingArtifactPlan(title, source, detail))
 }
 
 func writeResearchStarterWork(workDir, title, source, detail string) error {
-	readyNow := starterSourceBullets(source, 3, []string{
-		"User intent is clear enough to shape the first build slice.",
-	})
-	mustClear := starterResearchMustClear(source)
-	firstSlice := starterResearchFirstSlice(source)
-	whoNeeds := starterResearchWhoNeeds(source)
-	stillToConfirm := starterResearchStillToConfirm(source)
-	prd := strings.Join([]string{
-		fmt.Sprintf("# Build-Readiness Check: %s", title),
-		"",
-		"## What looks ready now",
-		bulletLines(readyNow),
-		"## Must clear before build",
-		bulletLines(mustClear),
-		"## Recommended first slice",
-		bulletLines(firstSlice),
-		"## Who needs to answer what",
-		bulletLines(whoNeeds),
-		"## Still to confirm",
-		bulletLines(stillToConfirm),
-		"",
-	}, "\n")
-	if strings.HasPrefix(strings.ToLower(strings.TrimSpace(detail)), "f") {
-		prd += strings.Join([]string{
-			"## Risks to clear",
-			"- Product approval may still be implicit rather than recorded.",
-			"- Rollback behavior is still under-specified.",
-			"- The highest-risk assumption needs one owner before build starts.",
-			"",
-		}, "\n")
-	}
-	if err := os.WriteFile(filepath.Join(workDir, "views", "prd.md"), []byte(prd), 0o644); err != nil {
-		return err
-	}
-	missingView := strings.Join([]string{
-		"# Missing Pieces Before Build",
-		"",
-		"## Must clear before build",
-		bulletLines(mustClear),
-		"## Who needs to answer what",
-		bulletLines(whoNeeds),
-		"## Still to confirm",
-		bulletLines(stillToConfirm),
-	}, "\n")
-	if err := os.WriteFile(filepath.Join(workDir, "views", "missing-pieces-before-build.md"), []byte(missingView), 0o644); err != nil {
-		return err
-	}
-	if err := os.WriteFile(filepath.Join(workDir, "views", "tasks.md"), []byte("# Missing Pieces Before Build\n\n"+bulletLines(mustClear)), 0o644); err != nil {
-		return err
-	}
-	return writeStarterArtifacts(workDir, []string{"Brief", "Plan", "Tasks", "Evidence"})
+	return writeStarterArtifactPlan(workDir, buildResearchArtifactPlan(title, source, detail))
 }
 
 func writeTravelStarterWork(workDir, title, source, detail string) error {
-	ctx := parseTravelStarterContext(source)
-	lines := []string{
-		fmt.Sprintf("# Itinerary: %s", title),
-		"",
-		"## Trip at a glance",
-		source,
-		"",
-		"This draft gives you a usable week shape first, then shows the booking, budget, and contingency items to lock next.",
-		"",
-		"## Day-by-day draft",
-	}
-	for _, item := range starterTripDays(ctx) {
-		lines = append(lines, item)
-	}
-	lines = append(lines,
-		"",
-		"## Budget sketch",
-	)
-	for _, item := range starterTripBudget(ctx) {
-		lines = append(lines, "- "+item)
-	}
-	lines = append(lines,
-		"",
-		"## Logistics to lock",
-	)
-	for _, item := range starterTripLogistics(ctx) {
-		lines = append(lines, "- "+item)
-	}
-	lines = append(lines,
-		"",
-		"## If something changes",
-	)
-	for _, item := range starterTripContingencies(ctx) {
-		lines = append(lines, "- "+item)
-	}
-	lines = append(lines,
-		"",
-		"## Still to confirm",
-	)
-	for _, item := range travelStillToConfirm(ctx) {
-		lines = append(lines, "- "+item)
-	}
-	lines = append(lines, "")
-	if err := os.WriteFile(filepath.Join(workDir, "views", "itinerary.md"), []byte(strings.Join(lines, "\n")), 0o644); err != nil {
-		return err
-	}
-	if err := os.WriteFile(filepath.Join(workDir, "views", "budget-sketch.md"), []byte("# Budget Sketch\n\n"+bulletLines(starterTripBudget(ctx))), 0o644); err != nil {
-		return err
-	}
-	if err := os.WriteFile(filepath.Join(workDir, "views", "travel-logistics.md"), []byte("# Travel Logistics\n\n"+bulletLines(starterTripLogistics(ctx))), 0o644); err != nil {
-		return err
-	}
-	if err := os.WriteFile(filepath.Join(workDir, "views", "tasks.md"), []byte("# Task List\n\n"+bulletLines(travelTaskList(ctx))), 0o644); err != nil {
-		return err
-	}
-	return writeStarterArtifacts(workDir, []string{"Brief", "Tasks"})
+	return writeStarterArtifactPlan(workDir, buildTravelArtifactPlan(title, source))
 }
 
 func writeFirstUsefulPassStarterWork(workDir, title, source string) error {
-	pass := strings.Join([]string{
-		fmt.Sprintf("# Working Draft: %s", title),
-		"",
-		"## What this looks like",
-		fmt.Sprintf("- %s", source),
-		"",
-		"## Useful starting point",
-		"- This is enough to begin shaping a real output without guessing hidden details.",
-		"- The next pass can turn this into a follow-up, plan check, memo, checklist, or another concrete artifact.",
-		"",
-		"## Best next inputs",
-		"- The audience or recipient.",
-		"- The outcome you want after someone reads or uses this.",
-		"- Any deadline, owner, blocker, or decision that should not be guessed.",
-		"",
-		"## Safe right now",
-		"- Nothing has been sent, changed, booked, or committed.",
-		"- You can review this pass before sharing or turning it into a fuller artifact.",
-		"",
-	}, "\n")
-	if err := os.WriteFile(filepath.Join(workDir, "views", "first-useful-pass.md"), []byte(pass), 0o644); err != nil {
-		return err
-	}
-	if err := os.WriteFile(filepath.Join(workDir, "views", "tasks.md"), []byte("# What I Need Next\n\n- Name the audience or recipient.\n- Confirm the desired outcome.\n- Add any deadline, owner, blocker, or decision.\n"), 0o644); err != nil {
-		return err
-	}
-	return writeStarterArtifacts(workDir, []string{"Brief", "Tasks"})
+	return writeStarterArtifactPlan(workDir, buildFirstUsefulPassArtifactPlan(title, source))
 }
 
 func writeSimpleStarterWork(workDir, title, viewLabel, source string, bullets []string) error {
-	var lines []string
-	lines = append(lines, fmt.Sprintf("# %s: %s", viewLabel, title), "", source, "")
-	for _, item := range bullets {
-		lines = append(lines, "- "+item)
-	}
-	lines = append(lines, "")
-	if err := os.WriteFile(filepath.Join(workDir, "views", normalizeFilename(viewLabel)+".md"), []byte(strings.Join(lines, "\n")), 0o644); err != nil {
-		return err
-	}
-	if err := os.WriteFile(filepath.Join(workDir, "views", "tasks.md"), []byte("# Task List\n\n- Review what is ready.\n- Confirm what is still missing.\n"), 0o644); err != nil {
-		return err
-	}
-	return writeStarterArtifacts(workDir, []string{"Brief", "Tasks"})
+	return writeStarterArtifactPlan(workDir, buildSimpleArtifactPlan(title, viewLabel, source, bullets))
 }
 
 func writeStarterArtifacts(workDir string, artifactTypes []string) error {
@@ -2371,19 +2200,19 @@ func renderNewWorkLauncher(w io.Writer) {
 	fmt.Fprintln(w, "Nothing will be sent yet.")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "If you want help shaping a messy ask, type `I'm not sure`.")
-	fmt.Fprintln(w, "Commands also work: `/help`, `/status`, `/doctor`, `/init`, `/memory`, `/permissions`, `/cost`.")
+	fmt.Fprintln(w, "If you need commands, type `help` or `/help`.")
 }
 
 func renderNewWorkPrompt(w io.Writer) {
 	fmt.Fprintln(w, "Jini")
 	fmt.Fprintln(w, "Paste what you want finished.")
-	fmt.Fprintln(w, "Type `help` for examples or commands. Slash commands like `/help` also work.")
+	fmt.Fprintln(w, "Type `help` if you want examples or commands.")
 }
 
 func renderNoCurrentWorkStatus(w io.Writer) {
 	fmt.Fprintln(w, "No current work yet.")
 	fmt.Fprintln(w, "Paste what you want finished.")
-	fmt.Fprintln(w, "Type `help` or `/help` for examples and commands.")
+	fmt.Fprintln(w, "Type `help` if you want examples or commands.")
 }
 
 func renderNoInitRequired(w io.Writer) {

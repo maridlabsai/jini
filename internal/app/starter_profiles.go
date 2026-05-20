@@ -8,40 +8,41 @@ import (
 )
 
 type starterPackProfile struct {
-	PackID        string
-	ChoiceLabel   string
-	DefaultName   string
-	State         string
-	WorkClass     string
-	RequestCohort string
-	ArtifactFamily string
-	MenuAliases     []string
-	DetectSignals   []string
-	PrimaryViewPath  string
-	PrimaryViewLabel string
-	WorkingWith      string
-	Done             []string
-	NextStep         string
-	PrioritizedViewIDs []string
-	SynthesizedViews []starterCatalogSpec
-	TasksView        *starterTasksViewProfile
-	DoingByState     map[string]string
-	SmartLinks       []smartLink
+	PackID                   string
+	ChoiceLabel              string
+	DefaultName              string
+	State                    string
+	WorkClass                string
+	RequestCohort            string
+	ArtifactFamily           string
+	MenuAliases              []string
+	DetectSignals            []string
+	PrimaryViewPath          string
+	PrimaryViewLabel         string
+	WorkingWith              string
+	Done                     []string
+	NextStep                 string
+	PrioritizedViewIDs       []string
+	SynthesizedViews         []starterCatalogSpec
+	TasksView                *starterTasksViewProfile
+	DoingByState             map[string]string
+	SmartLinks               []smartLink
 	ProviderArtifactGuidance string
 	DraftQualityProfile      draftQualityProfile
-	MissingBuilder   func(state string, details []catalogItem, source string) []string
-	UncertainBuilder func(source string, missing []string) []string
-	AskBuilder       func(summary *workSummary, source string) *threadAsk
-	Writer        func(workDir, title, source, detail string) error
+	MissingBuilder           func(state string, details []catalogItem, source string) []string
+	UncertainBuilder         func(source string, missing []string) []string
+	AskBuilder               func(summary *workSummary, source string) *threadAsk
+	Writer                   func(workDir, title, source, detail string) error
 }
 
 type scopePlannerProfile struct {
-	RequestCohorts []string
-	Intro          string
-	SkipHint       string
-	Example        string
-	MinimumMissing int
-	Dimensions     []scopePlannerDimension
+	RequestCohorts          []string
+	Intro                   string
+	SkipHint                string
+	Example                 string
+	MinimumMissing          int
+	Dimensions              []scopePlannerDimension
+	PreferDraftSignalGroups [][]string
 }
 
 type scopePlannerDimension struct {
@@ -67,20 +68,20 @@ type starterTasksViewProfile struct {
 
 var starterPackProfiles = map[string]starterPackProfile{
 	"meeting-followup": {
-		PackID:        "meeting-followup",
-		ChoiceLabel:   "Turn meeting notes into something I can send",
-		DefaultName:   "Meeting Follow-up",
-		State:         "decided",
-		WorkClass:     "planning",
-		RequestCohort: "sendable-followup",
-		ArtifactFamily:"narrative-draft",
-		MenuAliases:   []string{"1", "meeting", "turn meeting notes into something i can send", "follow up after a meeting", "follow up", "meeting follow up", "meeting followup"},
-		DetectSignals: []string{"meeting", "follow up", "followup", "action items", "owners", "due dates", "open questions"},
-		PrimaryViewPath:  "followup.md",
-		PrimaryViewLabel: "Sendable Follow-Up",
-		WorkingWith:      "Meeting notes and follow-up tasks",
-		Done:             []string{"Sendable follow-up drafted", "Owners and due points pulled out"},
-		NextStep:         "Open Sendable Follow-up",
+		PackID:             "meeting-followup",
+		ChoiceLabel:        "Turn meeting notes into something I can send",
+		DefaultName:        "Meeting Follow-up",
+		State:              "decided",
+		WorkClass:          "planning",
+		RequestCohort:      "sendable-followup",
+		ArtifactFamily:     "narrative-draft",
+		MenuAliases:        []string{"1", "meeting", "turn meeting notes into something i can send", "follow up after a meeting", "follow up", "meeting follow up", "meeting followup"},
+		DetectSignals:      []string{"meeting", "follow up", "followup", "action items", "owners", "due dates", "open questions"},
+		PrimaryViewPath:    "followup.md",
+		PrimaryViewLabel:   "Sendable Follow-Up",
+		WorkingWith:        "Meeting notes and follow-up tasks",
+		Done:               []string{"Sendable follow-up drafted", "Owners and due points pulled out"},
+		NextStep:           "Open Sendable Follow-up",
 		PrioritizedViewIDs: []string{"sendable-follow-up", "owners-and-due-points"},
 		SynthesizedViews: []starterCatalogSpec{
 			{ID: "sendable-follow-up", FileStem: "followup", Label: "Sendable Follow-up", Aliases: []string{"follow-up", "followup", "summary"}},
@@ -92,10 +93,10 @@ var starterPackProfiles = map[string]starterPackProfile{
 			Aliases:           []string{"tasks", "task list", "owners"},
 			CompanionFileStem: "owners-and-due-points",
 			CompanionPresentView: &starterCatalogSpec{
-				ID:      "task-list",
+				ID:       "task-list",
 				FileStem: "tasks",
-				Label:   "Task List",
-				Aliases: []string{"tasks", "task list"},
+				Label:    "Task List",
+				Aliases:  []string{"tasks", "task list"},
 			},
 		},
 		DoingByState: map[string]string{
@@ -142,23 +143,23 @@ var starterPackProfiles = map[string]starterPackProfile{
 				Blocking: true,
 			}
 		},
-		Writer:        writeMeetingStarterWork,
+		Writer: writeMeetingStarterWork,
 	},
 	"research-prd": {
-		PackID:        "research-prd",
-		ChoiceLabel:   "Check whether a plan is ready to hand off",
-		DefaultName:   "Plan Readiness",
-		State:         "awaiting_verification",
-		WorkClass:     "code",
-		RequestCohort: "build-readiness",
-		ArtifactFamily:"structured-check",
-		MenuAliases:   []string{"2", "plan", "check whether a plan is ready to hand off", "check if a plan is ready", "spec", "spec readiness"},
-		DetectSignals: []string{"prd", "spec", "build readiness", "ready to hand off", "handoff", "hand off", "rollback", "implementation slice"},
-		PrimaryViewPath:  "prd.md",
-		PrimaryViewLabel: "Build-Readiness Check",
-		WorkingWith:      "Latest PRD draft and review comments",
-		Done:             []string{"Build-readiness draft created", "Missing build blockers identified"},
-		NextStep:         "Open Build-Readiness Check",
+		PackID:             "research-prd",
+		ChoiceLabel:        "Check whether a plan is ready to hand off",
+		DefaultName:        "Plan Readiness",
+		State:              "awaiting_verification",
+		WorkClass:          "code",
+		RequestCohort:      "build-readiness",
+		ArtifactFamily:     "structured-check",
+		MenuAliases:        []string{"2", "plan", "check whether a plan is ready to hand off", "check if a plan is ready", "spec", "spec readiness"},
+		DetectSignals:      []string{"prd", "spec", "build readiness", "ready to hand off", "handoff", "hand off", "rollback", "implementation slice"},
+		PrimaryViewPath:    "prd.md",
+		PrimaryViewLabel:   "Build-Readiness Check",
+		WorkingWith:        "Latest PRD draft and review comments",
+		Done:               []string{"Build-readiness draft created", "Missing build blockers identified"},
+		NextStep:           "Open Build-Readiness Check",
 		PrioritizedViewIDs: []string{"build-readiness-check", "handoff-brief", "missing-pieces-before-build"},
 		SynthesizedViews: []starterCatalogSpec{
 			{ID: "build-readiness-check", FileStem: "prd", Label: "Build-Readiness Check", Aliases: []string{"readiness", "build readiness check", "check"}},
@@ -171,10 +172,10 @@ var starterPackProfiles = map[string]starterPackProfile{
 			Aliases:           []string{"tasks", "task list", "missing"},
 			CompanionFileStem: "missing-pieces-before-build",
 			CompanionPresentView: &starterCatalogSpec{
-				ID:      "task-list",
+				ID:       "task-list",
 				FileStem: "tasks",
-				Label:   "Task List",
-				Aliases: []string{"tasks", "task list"},
+				Label:    "Task List",
+				Aliases:  []string{"tasks", "task list"},
 			},
 		},
 		ProviderArtifactGuidance: strings.Join([]string{
@@ -212,23 +213,23 @@ var starterPackProfiles = map[string]starterPackProfile{
 				Blocking: true,
 			}
 		},
-		Writer:        writeResearchStarterWork,
+		Writer: writeResearchStarterWork,
 	},
 	"vendor-selection": {
-		PackID:        "vendor-selection",
-		ChoiceLabel:   "Compare options and choose one",
-		DefaultName:   "Option Review",
-		State:         "decided",
-		WorkClass:     "planning",
-		RequestCohort: "option-compare",
-		ArtifactFamily:"comparison-matrix",
-		MenuAliases:   []string{"compare options", "compare options and choose one", "vendor"},
-		DetectSignals: []string{"vendor", "compare options", "choose one", "recommendation memo"},
-		PrimaryViewPath:  "recommendation-memo.md",
-		PrimaryViewLabel: "Recommendation Memo",
-		WorkingWith:      "Vendor notes, tradeoffs, and decision criteria",
-		Done:             []string{"Recommendation memo drafted", "Tradeoffs laid out"},
-		NextStep:         "Open Recommendation Memo",
+		PackID:             "vendor-selection",
+		ChoiceLabel:        "Compare options and choose one",
+		DefaultName:        "Option Review",
+		State:              "decided",
+		WorkClass:          "planning",
+		RequestCohort:      "option-compare",
+		ArtifactFamily:     "comparison-matrix",
+		MenuAliases:        []string{"compare options", "compare options and choose one", "vendor"},
+		DetectSignals:      []string{"vendor", "compare options", "choose one", "recommendation memo"},
+		PrimaryViewPath:    "recommendation-memo.md",
+		PrimaryViewLabel:   "Recommendation Memo",
+		WorkingWith:        "Vendor notes, tradeoffs, and decision criteria",
+		Done:               []string{"Recommendation memo drafted", "Tradeoffs laid out"},
+		NextStep:           "Open Recommendation Memo",
 		PrioritizedViewIDs: []string{"recommendation-memo"},
 		SynthesizedViews: []starterCatalogSpec{
 			{ID: "recommendation-memo", FileStem: "selection", Label: "Recommendation Memo", Aliases: []string{"selection", "memo"}},
@@ -258,20 +259,20 @@ var starterPackProfiles = map[string]starterPackProfile{
 		},
 	},
 	"incident-response": {
-		PackID:        "incident-response",
-		ChoiceLabel:   "Clean up an incident",
-		DefaultName:   "Incident Cleanup",
-		State:         "incident",
-		WorkClass:     "code",
-		RequestCohort: "incident-cleanup",
-		ArtifactFamily:"step-plan",
-		MenuAliases:   []string{"4", "incident", "clean up an incident"},
-		DetectSignals: []string{"incident", "outage", "customer impact", "root cause", "recovery"},
-		PrimaryViewPath:  "closure-checklist.md",
-		PrimaryViewLabel: "Closure Checklist",
-		WorkingWith:      "Incident notes, timeline, and follow-up tasks",
-		Done:             []string{"Closure checklist drafted", "Recovery follow-ups pulled out"},
-		NextStep:         "Open Closure Checklist",
+		PackID:             "incident-response",
+		ChoiceLabel:        "Clean up an incident",
+		DefaultName:        "Incident Cleanup",
+		State:              "incident",
+		WorkClass:          "code",
+		RequestCohort:      "incident-cleanup",
+		ArtifactFamily:     "step-plan",
+		MenuAliases:        []string{"4", "incident", "clean up an incident"},
+		DetectSignals:      []string{"incident", "outage", "customer impact", "root cause", "recovery"},
+		PrimaryViewPath:    "closure-checklist.md",
+		PrimaryViewLabel:   "Closure Checklist",
+		WorkingWith:        "Incident notes, timeline, and follow-up tasks",
+		Done:               []string{"Closure checklist drafted", "Recovery follow-ups pulled out"},
+		NextStep:           "Open Closure Checklist",
 		PrioritizedViewIDs: []string{"closure-checklist"},
 		SynthesizedViews: []starterCatalogSpec{
 			{ID: "closure-checklist", FileStem: "response", Label: "Closure Checklist", Aliases: []string{"response", "checklist"}},
@@ -285,20 +286,20 @@ var starterPackProfiles = map[string]starterPackProfile{
 		},
 	},
 	"travel-plan": {
-		PackID:        "travel-plan",
-		ChoiceLabel:   "Plan a trip",
-		DefaultName:   "Trip Plan",
-		State:         "decided",
-		WorkClass:     "planning",
-		RequestCohort: "trip-itinerary",
-		ArtifactFamily:"itinerary-plan",
-		MenuAliases:   []string{"5", "trip", "plan a trip"},
-		DetectSignals: []string{"trip", "travel", "paris", "hotel", "flight", "itinerary"},
-		PrimaryViewPath:  "itinerary.md",
-		PrimaryViewLabel: "Itinerary",
-		WorkingWith:      "Trip notes, dates, and planning details",
-		Done:             []string{"Itinerary drafted", "Budget sketch created"},
-		NextStep:         "Open Itinerary",
+		PackID:             "travel-plan",
+		ChoiceLabel:        "Plan a trip",
+		DefaultName:        "Trip Plan",
+		State:              "decided",
+		WorkClass:          "planning",
+		RequestCohort:      "trip-itinerary",
+		ArtifactFamily:     "itinerary-plan",
+		MenuAliases:        []string{"5", "trip", "plan a trip"},
+		DetectSignals:      []string{"trip", "travel", "paris", "hotel", "flight", "itinerary"},
+		PrimaryViewPath:    "itinerary.md",
+		PrimaryViewLabel:   "Itinerary",
+		WorkingWith:        "Trip notes, dates, and planning details",
+		Done:               []string{"Itinerary drafted", "Budget sketch created"},
+		NextStep:           "Open Itinerary",
 		PrioritizedViewIDs: []string{"itinerary", "budget-sketch", "travel-logistics", "still-to-book"},
 		TasksView: &starterTasksViewProfile{
 			ID:      "still-to-book",
@@ -383,19 +384,19 @@ var starterPackProfiles = map[string]starterPackProfile{
 		Writer: writeTravelStarterWork,
 	},
 	"general-work": {
-		PackID:        "general-work",
-		ChoiceLabel:   "Something else",
-		DefaultName:   "Working Draft",
-		State:         "decided",
-		WorkClass:     "general",
-		RequestCohort: "general-pass",
-		ArtifactFamily:"general-pass",
-		MenuAliases:   []string{"6", "something else", "something"},
-		DetectSignals: nil,
-		PrimaryViewPath:  "first-useful-pass.md",
-		PrimaryViewLabel: "Working Draft",
-		WorkingWith:      "The files and notes in this work",
-		NextStep:         "Review what is ready",
+		PackID:             "general-work",
+		ChoiceLabel:        "Something else",
+		DefaultName:        "Working Draft",
+		State:              "decided",
+		WorkClass:          "general",
+		RequestCohort:      "general-pass",
+		ArtifactFamily:     "general-pass",
+		MenuAliases:        []string{"6", "something else", "something"},
+		DetectSignals:      nil,
+		PrimaryViewPath:    "first-useful-pass.md",
+		PrimaryViewLabel:   "Working Draft",
+		WorkingWith:        "The files and notes in this work",
+		NextStep:           "Review what is ready",
 		PrioritizedViewIDs: []string{"first-useful-pass", "next-actions"},
 		SynthesizedViews: []starterCatalogSpec{
 			{ID: "first-useful-pass", FileStem: "first-useful-pass", Label: "Working Draft", Aliases: []string{"working draft", "first pass", "useful pass", "summary", "draft"}},
@@ -414,40 +415,119 @@ var starterPackProfiles = map[string]starterPackProfile{
 var starterScopePlannerProfiles = []scopePlannerProfile{
 	{
 		RequestCohorts: []string{"trip-itinerary"},
-		Intro:          "Before I draft it, help me narrow the scope in one line:",
+		Intro:          "Before I draft it, help me narrow the highest-impact details in one line:",
 		SkipHint:       "Type `skip` if you want a generic first draft.",
 		Example:        "Example: early October, mixed pace, central hotel area, one museum and one day trip are must-dos",
 		MinimumMissing: 2,
-		Dimensions:     travelScopeDimensions,
+		Dimensions: []scopePlannerDimension{
+			scopeDimensionTravelers(),
+			scopeDimensionBudgetRange(),
+			scopeDimensionDatesOrSeason(),
+			scopeDimensionPaceOrStyle(),
+			scopeDimensionBaseArea(),
+			scopeDimensionMustDoAnchors(),
+		},
+	},
+	{
+		RequestCohorts: []string{"build-readiness"},
+		Intro:          "Before I draft it, help me narrow the highest-impact details in one line:",
+		SkipHint:       "Type `skip` if you want a first pass with the gaps called out.",
+		Example:        "Example: notifications PRD, first slice is digest emails, rollback is still open, approval owner is Priya",
+		MinimumMissing: 2,
+		Dimensions: []scopePlannerDimension{
+			scopeDimensionPlanUnderReview(),
+			scopeDimensionFirstSlice(),
+			scopeDimensionKnownBlockers(),
+			scopeDimensionApprovalOrOwner(),
+		},
+		PreferDraftSignalGroups: [][]string{
+			{"prd", "handoff"},
+			{"prd", "build readiness"},
+			{"spec", "handoff"},
+			{"spec", "build readiness"},
+		},
 	},
 }
 
 var travelScopeDimensions = []scopePlannerDimension{
-	{
+	scopeDimensionTravelers(),
+	scopeDimensionBudgetRange(),
+	scopeDimensionDatesOrSeason(),
+	scopeDimensionPaceOrStyle(),
+	scopeDimensionBaseArea(),
+	scopeDimensionMustDoAnchors(),
+}
+
+func scopeDimensionTravelers() scopePlannerDimension {
+	return scopePlannerDimension{
 		Label:             "travelers",
 		NormalizedSignals: []string{"solo", "couple", "friends", "family", "kids", "children", "parents", "honeymoon", "wife", "husband", "partner"},
-	},
-	{
+	}
+}
+
+func scopeDimensionBudgetRange() scopePlannerDimension {
+	return scopePlannerDimension{
 		Label:             "budget range",
-		NormalizedSignals: []string{"cheap", "luxury", "midrange", "2500", "3000", "2000", "1500", "4000"},
+		NormalizedSignals: []string{"cheap", "luxury", "midrange", "2500", "3000", "2000", "1500", "4000", "5000", "6000"},
 		RawSignals:        []string{"$", "budget"},
-	},
-	{
+	}
+}
+
+func scopeDimensionDatesOrSeason() scopePlannerDimension {
+	return scopePlannerDimension{
 		Label:             "dates or season",
 		NormalizedSignals: []string{"january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december", "spring", "summer", "fall", "autumn", "winter", "weekend", "weekday", "christmas", "new year"},
-	},
-	{
+	}
+}
+
+func scopeDimensionPaceOrStyle() scopePlannerDimension {
+	return scopePlannerDimension{
 		Label:             "pace or style",
 		NormalizedSignals: []string{"food", "museum", "romantic", "nightlife", "shopping", "family friendly", "mixed", "slow pace", "fast pace", "walking", "architecture", "relaxed", "packed", "kid friendly", "honeymoon", "adventure"},
-	},
-	{
+	}
+}
+
+func scopeDimensionBaseArea() scopePlannerDimension {
+	return scopePlannerDimension{
 		Label:             "base area, or whether you want help choosing one",
-		NormalizedSignals: []string{"hotel", "stay", "marais", "latin quarter", "montmartre", "central", "area", "neighborhood", "neighbourhood", "arrondissement", "left bank", "right bank"},
-	},
-	{
+		NormalizedSignals: []string{"hotel", "stay", "marais", "latin quarter", "montmartre", "central", "area", "neighborhood", "neighbourhood", "arrondissement", "left bank", "right bank", "base"},
+	}
+}
+
+func scopeDimensionMustDoAnchors() scopePlannerDimension {
+	return scopePlannerDimension{
 		Label:             "must-do anchors, or whether you want help choosing them",
-		NormalizedSignals: []string{"louvre", "versailles", "eiffel", "orsay", "montmartre", "notre dame", "latin quarter", "marais", "disneyland", "seine cruise", "must do", "must see"},
-	},
+		NormalizedSignals: []string{"louvre", "versailles", "eiffel", "orsay", "montmartre", "notre dame", "latin quarter", "marais", "disneyland", "seine cruise", "must do", "must see", "anchor"},
+	}
+}
+
+func scopeDimensionPlanUnderReview() scopePlannerDimension {
+	return scopePlannerDimension{
+		Label:             "which plan or feature this is for",
+		NormalizedSignals: []string{"notifications", "billing", "pricing", "onboarding", "checkout", "auth", "authentication", "search", "dashboard", "email", "mobile", "api", "portal", "integration", "migration", "feature", "prd", "spec"},
+	}
+}
+
+func scopeDimensionFirstSlice() scopePlannerDimension {
+	return scopePlannerDimension{
+		Label:             "the first slice or decision this handoff should cover",
+		NormalizedSignals: []string{"first slice", "first pass", "phase 1", "mvp", "rollout", "digest", "v1", "launch", "implementation slice", "cut this", "scope"},
+		RawSignals:        []string{"slice", "phase"},
+	}
+}
+
+func scopeDimensionKnownBlockers() scopePlannerDimension {
+	return scopePlannerDimension{
+		Label:             "known blockers, risks, or open gaps",
+		NormalizedSignals: []string{"blocker", "risk", "rollback", "dependency", "open question", "missing", "approval gap", "legal", "compliance", "owner missing", "unclear"},
+	}
+}
+
+func scopeDimensionApprovalOrOwner() scopePlannerDimension {
+	return scopePlannerDimension{
+		Label:             "approval owner or review owner",
+		NormalizedSignals: []string{"owner", "approver", "approval", "reviewer", "pm", "eng", "design", "legal", "priya", "alex", "jordan"},
+	}
 }
 
 var starterPackDetectionOrder = []string{
@@ -507,9 +587,13 @@ func detectStarterPackFromSource(source string) string {
 }
 
 func scopePlannerForProfile(profile starterPackProfile) (scopePlannerProfile, bool) {
+	return scopePlannerForCohort(profile.RequestCohort)
+}
+
+func scopePlannerForCohort(requestCohort string) (scopePlannerProfile, bool) {
 	for _, planner := range starterScopePlannerProfiles {
 		for _, cohort := range planner.RequestCohorts {
-			if cohort == profile.RequestCohort {
+			if cohort == requestCohort {
 				return planner, true
 			}
 		}
@@ -518,11 +602,18 @@ func scopePlannerForProfile(profile starterPackProfile) (scopePlannerProfile, bo
 }
 
 func clarificationPromptForProfile(profile starterPackProfile, source string) (string, bool) {
-	planner, ok := scopePlannerForProfile(profile)
+	return clarificationPromptForCohort(profile.RequestCohort, source)
+}
+
+func clarificationPromptForCohort(requestCohort, source string) (string, bool) {
+	planner, ok := scopePlannerForCohort(requestCohort)
 	if !ok {
 		return "", false
 	}
 	missing := missingScopeDimensions(source, planner.Dimensions)
+	if shouldPreferDraftForPlanner(source, planner, missing) {
+		return "", false
+	}
 	if len(missing) < maxInt(1, planner.MinimumMissing) {
 		return "", false
 	}
@@ -537,6 +628,29 @@ func clarificationPromptForProfile(profile starterPackProfile, source string) (s
 		lines = append(lines, planner.Example)
 	}
 	return strings.Join(lines, "\n"), true
+}
+
+func shouldPreferDraftForPlanner(source string, planner scopePlannerProfile, missing []string) bool {
+	if len(missing) <= 1 {
+		return true
+	}
+	normalized := normalizeName(source)
+	for _, group := range planner.PreferDraftSignalGroups {
+		if len(group) == 0 {
+			continue
+		}
+		allPresent := true
+		for _, signal := range group {
+			if !strings.Contains(normalized, normalizeName(signal)) {
+				allPresent = false
+				break
+			}
+		}
+		if allPresent {
+			return true
+		}
+	}
+	return false
 }
 
 func missingScopeDimensions(source string, dimensions []scopePlannerDimension) []string {

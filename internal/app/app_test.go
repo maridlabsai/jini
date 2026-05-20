@@ -639,7 +639,7 @@ func TestLauncherRecoversFromStaleCurrentWork(t *testing.T) {
 		"Remembered work is no longer available.",
 		"Jini",
 		"Paste what you want finished.",
-		"Type `help` for examples or commands.",
+		"Type `help` if you want examples or commands.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -898,7 +898,7 @@ func TestLauncherStartsAsCompactShellWithoutCurrentWork(t *testing.T) {
 	for _, want := range []string{
 		"Jini",
 		"Paste what you want finished.",
-		"Type `help` for examples or commands.",
+		"Type `help` if you want examples or commands.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -1126,7 +1126,7 @@ func TestInteractiveLauncherHandlesUnsureInputWithUsefulPass(t *testing.T) {
 	for _, want := range []string{
 		"Jini",
 		"Paste what you want finished.",
-		"Paste what you have. A rough version is fine.",
+		"Paste what you want finished. Rough notes are fine.",
 		"I will turn it into a useful draft or ask one short follow-up if something important is missing.",
 		"Nothing will be sent yet.",
 		"Working Draft",
@@ -1167,7 +1167,7 @@ func TestInteractiveLauncherHelpMeFinishThisAsksForRoughContext(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Paste what you have. A rough version is fine.",
+		"Paste what you want finished. Rough notes are fine.",
 		"I will turn it into a useful draft or ask one short follow-up if something important is missing.",
 		"Sendable Follow-up",
 		"## Send this",
@@ -1205,7 +1205,7 @@ func TestInteractiveLauncherGreetingDoesNotCreateWork(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Paste what you want finished.",
-		"Type `help` for examples or commands.",
+		"Type `help` if you want examples or commands.",
 		"Hi.",
 		"Tell me what you want finished, or paste notes when you're ready.",
 	} {
@@ -1350,7 +1350,7 @@ func TestInteractiveLauncherHelpWithPunctuationDoesNotCreateWork(t *testing.T) {
 			for _, want := range []string{
 				"Jini",
 				"Examples:",
-				"Commands also work",
+				"If you need commands, type `help` or `/help`.",
 			} {
 				if !strings.Contains(out, want) {
 					t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -2157,7 +2157,7 @@ func TestInteractiveLauncherAsksForTravelClarificationWhenUnderspecified(t *test
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Before I draft it, help me narrow the scope in one line:",
+		"Before I draft it, help me narrow the highest-impact details in one line:",
 		"- travelers",
 		"- budget range",
 		"- dates or season",
@@ -2191,7 +2191,7 @@ func TestInteractiveLauncherSkipsTravelClarificationWhenRequestAlreadyScoped(t *
 	}
 
 	out := stdout.String()
-	if strings.Contains(out, "Before I draft it, help me narrow the scope in one line:") {
+	if strings.Contains(out, "Before I draft it, help me narrow the highest-impact details in one line:") {
 		t.Fatalf("expected already-scoped travel request to skip clarification, got:\n%s", out)
 	}
 }
@@ -2209,7 +2209,7 @@ func TestInteractiveLauncherAsksOnlyForMissingTravelDimensions(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Before I draft it, help me narrow the scope in one line:",
+		"Before I draft it, help me narrow the highest-impact details in one line:",
 		"- dates or season",
 		"- pace or style",
 		"- base area, or whether you want help choosing one",
@@ -2282,10 +2282,84 @@ func TestInteractiveLauncherCreatesLongerScopedTravelWithExactDayCount(t *testin
 	if strings.Contains(out, "Whether Versailles") || strings.Contains(out, "Louvre and Versailles are must-dos") {
 		t.Fatalf("expected Spain trip to avoid Paris-specific fallback, got:\n%s", out)
 	}
-	if strings.Contains(out, "Before I draft it, help me narrow the scope in one line:") {
+	if strings.Contains(out, "Before I draft it, help me narrow the highest-impact details in one line:") {
 		t.Fatalf("expected fully scoped travel request to skip clarification, got:\n%s", out)
 	}
 	assertNoFirstRunStatusDump(t, out)
+}
+
+func TestInteractiveLauncherAsksForBuildReadinessClarificationWhenUnderspecified(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	stdin := strings.NewReader("check whether this plan is ready to hand off\nnotifications PRD, rollback is still open, approval owner is Priya\n")
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, stdin, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Before I draft it, help me narrow the highest-impact details in one line:",
+		"- which plan or feature this is for",
+		"- the first slice or decision this handoff should cover",
+		"- known blockers, risks, or open gaps",
+		"- approval owner or review owner",
+		"Type `skip` if you want a first pass with the gaps called out.",
+		"Build-Readiness Check",
+		"Clarified scope",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+}
+
+func TestInteractiveLauncherDraftsBuildReadinessWhenOnlyOneDimensionIsMissing(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	stdin := strings.NewReader("notifications PRD needs a build-readiness check, rollback is still open, approval owner is Priya\nfirst slice is digest emails\n")
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, stdin, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, unwanted := range []string{
+		"Before I draft it, help me narrow the highest-impact details in one line:",
+		"- the first slice or decision this handoff should cover",
+		"Clarified scope",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected single-gap build-readiness request to draft immediately without %q, got:\n%s", unwanted, out)
+		}
+	}
+	if !strings.Contains(out, "Build-Readiness Check") {
+		t.Fatalf("expected build-readiness draft, got:\n%s", out)
+	}
+}
+
+func TestInteractiveLauncherSkipsBuildReadinessClarificationWhenRequestAlreadyScoped(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	stdin := strings.NewReader("Notifications PRD needs a build-readiness check for digest emails, rollback is still open, approval owner is Priya\n")
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, stdin, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	if strings.Contains(out, "Before I draft it, help me narrow the highest-impact details in one line:") {
+		t.Fatalf("expected already-scoped build-readiness request to skip clarification, got:\n%s", out)
+	}
+	if !strings.Contains(out, "Build-Readiness Check") {
+		t.Fatalf("expected build-readiness draft, got:\n%s", out)
+	}
 }
 
 func TestLauncherShowsOtherActiveWorkWhenMultipleProjectsExist(t *testing.T) {
