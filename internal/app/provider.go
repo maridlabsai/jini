@@ -1301,102 +1301,7 @@ type draftQualityProfile struct {
 }
 
 func draftQualityProfileForRequest(request providerGenerationRequest) draftQualityProfile {
-	features := classifyRouteFeatures(request)
-	cohort := strings.TrimSpace(classifyRequestCohort(request))
-	family := strings.TrimSpace(classifyArtifactFamily(request))
-	profile := draftQualityProfile{
-		Cohort:                 cohort,
-		ArtifactFamily:         family,
-		ModalitySubtype:        strings.TrimSpace(features.ModalitySubtype),
-		RequiredHeadingWeight:  6,
-		PreferredHeadingWeight: 3,
-		EvidenceWeight:         0,
-		UncertaintyWeight:      4,
-		RequiredHeadings:       []string{"## Still to confirm"},
-	}
-	if base := starterDraftQualityProfile(request.Choice.PackID); len(base.RequiredHeadings) > 0 || len(base.PreferredHeadings) > 0 {
-		profile.RequiredHeadings = append([]string{}, base.RequiredHeadings...)
-		profile.PreferredHeadings = append([]string{}, base.PreferredHeadings...)
-		if base.RequiredHeadingWeight != 0 {
-			profile.RequiredHeadingWeight = base.RequiredHeadingWeight
-		}
-		if base.PreferredHeadingWeight != 0 {
-			profile.PreferredHeadingWeight = base.PreferredHeadingWeight
-		}
-		if base.EvidenceWeight != 0 {
-			profile.EvidenceWeight = base.EvidenceWeight
-		}
-		if base.UncertaintyWeight != 0 {
-			profile.UncertaintyWeight = base.UncertaintyWeight
-		}
-		if len(base.EvidenceSignals) > 0 {
-			profile.EvidenceSignals = append([]string{}, base.EvidenceSignals...)
-		}
-	}
-	if profile.Cohort == "multimodal-extract" || profile.ArtifactFamily == "multimodal-extract" || features.ModalityClass == "multimodal" {
-		profile.RequiredHeadings = []string{
-			"## Extracted evidence",
-			"## What the source shows",
-			"## Still unclear",
-		}
-		profile.PreferredHeadings = []string{
-			"## Recommended next move",
-			"## Confidence notes",
-		}
-		profile.EvidenceSignals = []string{
-			"image", "screenshot", "pdf", "audio", "recording", "document",
-			"source", "evidence", "shows", "visible", "transcript", "scan",
-		}
-		profile.RequiredHeadingWeight = 8
-		profile.PreferredHeadingWeight = 4
-		profile.EvidenceWeight = 5
-		profile.UncertaintyWeight = 5
-		switch profile.ModalitySubtype {
-		case "pdf-scan":
-			profile.RequiredHeadings = []string{
-				"## Extracted evidence",
-				"## What the document shows",
-				"## Still unclear",
-			}
-			profile.PreferredHeadings = []string{
-				"## Recommended next move",
-				"## OCR or confidence notes",
-			}
-			profile.EvidenceSignals = []string{
-				"pdf", "document", "page", "scan", "ocr", "text", "field",
-				"label", "signature", "table", "section",
-			}
-		case "image-screenshot":
-			profile.RequiredHeadings = []string{
-				"## Extracted evidence",
-				"## What is visible",
-				"## Still unclear",
-			}
-			profile.PreferredHeadings = []string{
-				"## Recommended next move",
-				"## Confidence notes",
-			}
-			profile.EvidenceSignals = []string{
-				"image", "screenshot", "visible", "screen", "button", "label",
-				"panel", "photo", "diagram", "highlight",
-			}
-		case "audio-transcript":
-			profile.RequiredHeadings = []string{
-				"## Extracted evidence",
-				"## What the recording says",
-				"## Still unclear",
-			}
-			profile.PreferredHeadings = []string{
-				"## Recommended next move",
-				"## Confidence notes",
-			}
-			profile.EvidenceSignals = []string{
-				"audio", "recording", "voice", "transcript", "speaker",
-				"said", "heard", "timecode", "quote",
-			}
-		}
-	}
-	return profile
+	return starterArtifactContractForRequest(request).Quality
 }
 
 func providerDraftCohortLearningBias(profile draftQualityProfile, decision routeDecision, text string) int {
@@ -1514,51 +1419,9 @@ func providerDraftCohortRowBias(profile draftQualityProfile, total localCohortFe
 }
 
 func providerArtifactGuidance(request providerGenerationRequest) string {
-	if cohort := strings.TrimSpace(classifyRequestCohort(request)); cohort == "multimodal-extract" {
-		switch classifyRouteModalitySubtype(request) {
-		case "pdf-scan":
-			return strings.Join([]string{
-				"Return an evidence-grounded document extraction artifact, not a generic summary.",
-				"Use these sections exactly:",
-				"- `## Extracted evidence`",
-				"- `## What the document shows`",
-				"- `## Still unclear`",
-				"- `## Recommended next move`",
-				"Call out what is visible in the PDF or scan, what OCR may have missed, and what still needs verification.",
-			}, "\n")
-		case "image-screenshot":
-			return strings.Join([]string{
-				"Return an evidence-grounded image or screenshot extraction artifact, not a generic summary.",
-				"Use these sections exactly:",
-				"- `## Extracted evidence`",
-				"- `## What is visible`",
-				"- `## Still unclear`",
-				"- `## Recommended next move`",
-				"Call out what is visually present, what may be obscured, and what still needs verification.",
-			}, "\n")
-		case "audio-transcript":
-			return strings.Join([]string{
-				"Return an evidence-grounded audio extraction artifact, not a generic summary.",
-				"Use these sections exactly:",
-				"- `## Extracted evidence`",
-				"- `## What the recording says`",
-				"- `## Still unclear`",
-				"- `## Recommended next move`",
-				"Call out what is directly supported by the recording or transcript, what may have been misheard, and what still needs verification.",
-			}, "\n")
-		}
-		return strings.Join([]string{
-			"Return an evidence-grounded extraction artifact, not a generic summary.",
-			"Use these sections exactly:",
-			"- `## Extracted evidence`",
-			"- `## What the source shows`",
-			"- `## Still unclear`",
-			"- `## Recommended next move`",
-			"Call out what came from the source, what is ambiguous, and what still needs verification.",
-		}, "\n")
-	}
-	if guidance := starterProviderArtifactGuidance(request.Choice.PackID); guidance != "" {
-		return guidance
+	contract := starterArtifactContractForRequest(request)
+	if len(contract.ProviderLines) > 0 {
+		return strings.Join(contract.ProviderLines, "\n")
 	}
 	return strings.Join([]string{
 		"Shape the answer as the first useful artifact for this work type.",

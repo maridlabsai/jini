@@ -2639,6 +2639,22 @@ func TestPostResultCanMakeItExecutive(t *testing.T) {
 	}
 }
 
+func TestPostResultUsesSharedStructuredCheckTransformProfileForShorter(t *testing.T) {
+	stateDir := t.TempDir()
+	out := runInteractiveForTest(t, stateDir, "Notifications PRD needs a build-readiness check and handoff call.\nMake it shorter\n")
+
+	for _, want := range []string{
+		"Build-Readiness Check",
+		"## What looks ready now",
+		"## Must clear before build",
+		"## Recommended first slice",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected structured-check shorter output to contain %q, got:\n%s", want, out)
+		}
+	}
+}
+
 func TestPostResultCanTurnArtifactIntoChecklist(t *testing.T) {
 	stateDir := t.TempDir()
 	out := runInteractiveForTest(t, stateDir, "Weekly product review for pricing launch. Need owners, due dates, and open questions.\nTurn this into a checklist\n")

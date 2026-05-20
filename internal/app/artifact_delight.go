@@ -302,42 +302,69 @@ func transformArtifactContent(summary *workSummary, item catalogItem, content, m
 	}
 	gaps := collectArtifactGapBullets(summary, sections)
 	nextMove := collectArtifactNextMove(summary, sections)
+	profile := artifactTransformProfileForSummary(summary, mode)
 
 	switch normalizeName(mode) {
 	case "executive":
 		return strings.Join([]string{
 			"# " + title,
 			"",
-			"## Executive summary",
+			"## " + profile.CoreHeading,
 			bulletLines(limitStrings(core, 3)),
-			"## Risks or gaps",
+			"## " + profile.GapHeading,
 			bulletLines(limitStrings(gaps, 3)),
-			"## Next move",
+			"## " + profile.NextHeading,
 			bulletLines(limitStrings(nextMove, 2)),
 		}, "\n")
 	case "checklist":
 		return strings.Join([]string{
 			"# " + title,
 			"",
-			"## Do now",
+			"## " + profile.CoreHeading,
 			checkboxLines(limitStrings(append([]string{}, nextMove...), 3)),
-			"## Confirm",
+			"## " + profile.GapHeading,
 			checkboxLines(limitStrings(gaps, 4)),
-			"## Watch",
+			"## " + profile.WatchHeading,
 			checkboxLines(limitStrings(collectArtifactWatchBullets(summary, sections), 3)),
 		}, "\n")
 	default:
 		return strings.Join([]string{
 			"# " + title,
 			"",
-			"## Short version",
+			"## " + profile.CoreHeading,
 			bulletLines(limitStrings(core, 3)),
-			"## Still to confirm",
+			"## " + profile.GapHeading,
 			bulletLines(limitStrings(gaps, 3)),
-			"## Next move",
+			"## " + profile.NextHeading,
 			bulletLines(limitStrings(nextMove, 2)),
 		}, "\n")
 	}
+}
+
+func artifactTransformProfileForSummary(summary *workSummary, mode string) artifactTransformProfile {
+	contract := starterArtifactContractForSummary(summary)
+	profile, ok := contract.Transforms[normalizeName(mode)]
+	if !ok {
+		profile = artifactTransformProfile{
+			CoreHeading:  "Short version",
+			GapHeading:   "Still to confirm",
+			NextHeading:  "Next move",
+			WatchHeading: "Watch",
+		}
+	}
+	if strings.TrimSpace(profile.CoreHeading) == "" {
+		profile.CoreHeading = "Short version"
+	}
+	if strings.TrimSpace(profile.GapHeading) == "" {
+		profile.GapHeading = "Still to confirm"
+	}
+	if strings.TrimSpace(profile.NextHeading) == "" {
+		profile.NextHeading = "Next move"
+	}
+	if strings.TrimSpace(profile.WatchHeading) == "" {
+		profile.WatchHeading = "Watch"
+	}
+	return profile
 }
 
 func artifactDocumentTitle(item catalogItem, sections []artifactSection) string {

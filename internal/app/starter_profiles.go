@@ -8,31 +8,29 @@ import (
 )
 
 type starterPackProfile struct {
-	PackID                   string
-	ChoiceLabel              string
-	DefaultName              string
-	State                    string
-	WorkClass                string
-	RequestCohort            string
-	ArtifactFamily           string
-	MenuAliases              []string
-	DetectSignals            []string
-	PrimaryViewPath          string
-	PrimaryViewLabel         string
-	WorkingWith              string
-	Done                     []string
-	NextStep                 string
-	PrioritizedViewIDs       []string
-	SynthesizedViews         []starterCatalogSpec
-	TasksView                *starterTasksViewProfile
-	DoingByState             map[string]string
-	SmartLinks               []smartLink
-	ProviderArtifactGuidance string
-	DraftQualityProfile      draftQualityProfile
-	MissingBuilder           func(state string, details []catalogItem, source string) []string
-	UncertainBuilder         func(source string, missing []string) []string
-	AskBuilder               func(summary *workSummary, source string) *threadAsk
-	Writer                   func(workDir, title, source, detail string) error
+	PackID             string
+	ChoiceLabel        string
+	DefaultName        string
+	State              string
+	WorkClass          string
+	RequestCohort      string
+	ArtifactFamily     string
+	MenuAliases        []string
+	DetectSignals      []string
+	PrimaryViewPath    string
+	PrimaryViewLabel   string
+	WorkingWith        string
+	Done               []string
+	NextStep           string
+	PrioritizedViewIDs []string
+	SynthesizedViews   []starterCatalogSpec
+	TasksView          *starterTasksViewProfile
+	DoingByState       map[string]string
+	SmartLinks         []smartLink
+	MissingBuilder     func(state string, details []catalogItem, source string) []string
+	UncertainBuilder   func(source string, missing []string) []string
+	AskBuilder         func(summary *workSummary, source string) *threadAsk
+	Writer             func(workDir, title, source, detail string) error
 }
 
 type scopePlannerProfile struct {
@@ -102,23 +100,6 @@ var starterPackProfiles = map[string]starterPackProfile{
 		DoingByState: map[string]string{
 			"decided": "Turning notes into owners and next steps",
 		},
-		ProviderArtifactGuidance: strings.Join([]string{
-			"Return a sendable follow-up note first.",
-			"Use these sections exactly:",
-			"- `## Send this note`",
-			"- `## Decisions captured from the notes`",
-			"- `## Owners and due dates to confirm`",
-			"- `## Open questions to close`",
-			"- `## Recommended next move`",
-			"Do not invent names, dates, or commitments that are not grounded in the source.",
-		}, "\n"),
-		DraftQualityProfile: draftQualityProfile{
-			RequiredHeadings:       []string{"## Send this note", "## Decisions captured from the notes", "## Owners and due dates to confirm", "## Open questions to close", "## Recommended next move"},
-			PreferredHeadings:      []string{"## Still to confirm"},
-			RequiredHeadingWeight:  6,
-			PreferredHeadingWeight: 3,
-			UncertaintyWeight:      4,
-		},
 		MissingBuilder: func(state string, details []catalogItem, source string) []string {
 			if state == "decided" || state == "in_make" {
 				return []string{"Metric and legal-review decision"}
@@ -178,23 +159,6 @@ var starterPackProfiles = map[string]starterPackProfile{
 				Aliases:  []string{"tasks", "task list"},
 			},
 		},
-		ProviderArtifactGuidance: strings.Join([]string{
-			"Return a build-readiness artifact, not a vague summary.",
-			"Use these sections exactly:",
-			"- `## What looks ready now`",
-			"- `## Must clear before build`",
-			"- `## Recommended first slice`",
-			"- `## Who needs to answer what`",
-			"- `## Still to confirm`",
-			"Do not reduce the answer to a binary verdict. Keep missing proof and approval gaps visible.",
-		}, "\n"),
-		DraftQualityProfile: draftQualityProfile{
-			RequiredHeadings:       []string{"## What looks ready now", "## Must clear before build", "## Recommended first slice", "## Who needs to answer what", "## Still to confirm"},
-			PreferredHeadings:      []string{"## Risks", "## Approval gaps"},
-			RequiredHeadingWeight:  6,
-			PreferredHeadingWeight: 3,
-			UncertaintyWeight:      4,
-		},
 		UncertainBuilder: func(source string, missing []string) []string {
 			if len(missing) == 0 {
 				return nil
@@ -233,22 +197,6 @@ var starterPackProfiles = map[string]starterPackProfile{
 		PrioritizedViewIDs: []string{"recommendation-memo"},
 		SynthesizedViews: []starterCatalogSpec{
 			{ID: "recommendation-memo", FileStem: "selection", Label: "Recommendation Memo", Aliases: []string{"selection", "memo"}},
-		},
-		ProviderArtifactGuidance: strings.Join([]string{
-			"Return a recommendation artifact, not a generic comparison summary.",
-			"Use these sections exactly:",
-			"- `## Recommendation`",
-			"- `## Tradeoffs`",
-			"- `## Risks`",
-			"- `## Next move`",
-			"- `## Still to confirm`",
-		}, "\n"),
-		DraftQualityProfile: draftQualityProfile{
-			RequiredHeadings:       []string{"## Recommendation", "## Risks", "## Still to confirm"},
-			PreferredHeadings:      []string{"## Tradeoffs", "## Next move"},
-			RequiredHeadingWeight:  7,
-			PreferredHeadingWeight: 3,
-			UncertaintyWeight:      4,
 		},
 		Writer: func(workDir, title, source, detail string) error {
 			return writeSimpleStarterWork(workDir, title, "Recommendation Memo", source, []string{
@@ -319,24 +267,6 @@ var starterPackProfiles = map[string]starterPackProfile{
 			{URL: "https://www.musee-orsay.fr/en", Labels: []string{"Musee d'Orsay", "Musée d'Orsay"}},
 			{URL: "https://parisjetaime.com/eng/article/le-marais-a057", Labels: []string{"Le Marais"}},
 			{URL: "https://parisjetaime.com/eng/article/ile-de-la-cite-and-ile-saint-louis-a051", Labels: []string{"Ile de la Cite", "Île de la Cité"}},
-		},
-		ProviderArtifactGuidance: strings.Join([]string{
-			"Return a trip-planning artifact, not a generic travel essay.",
-			"Use these sections exactly:",
-			"- `## Day by day`",
-			"- `## Budget`",
-			"- `## Travel logistics`",
-			"- `## Still to book`",
-			"- `## Still to confirm`",
-			"When a key destination, museum, or landmark is clearly part of the plan, add one smart Markdown link on first mention.",
-			"Prefer canonical destination links and avoid turning every bullet into a link list.",
-		}, "\n"),
-		DraftQualityProfile: draftQualityProfile{
-			RequiredHeadings:       []string{"## Day by day", "## Still to confirm"},
-			PreferredHeadings:      []string{"## Budget", "## Travel logistics", "## Still to book"},
-			RequiredHeadingWeight:  7,
-			PreferredHeadingWeight: 3,
-			UncertaintyWeight:      4,
 		},
 		MissingBuilder: func(state string, details []catalogItem, source string) []string {
 			if state != "decided" && state != "in_make" {
@@ -892,12 +822,4 @@ func starterPackSmartLinks(packID string) []smartLink {
 	out := make([]smartLink, len(links))
 	copy(out, links)
 	return out
-}
-
-func starterProviderArtifactGuidance(packID string) string {
-	return strings.TrimSpace(starterProfile(packID).ProviderArtifactGuidance)
-}
-
-func starterDraftQualityProfile(packID string) draftQualityProfile {
-	return starterProfile(packID).DraftQualityProfile
 }
