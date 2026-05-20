@@ -653,7 +653,10 @@ func startNewWorkFromRawInput(firstRaw string, session *bufio.Scanner, stdout, s
 	} else {
 		var ok bool
 		source, ok = readPromptLine(session, stdout, sourcePromptForChoice(choice))
-		if !ok || strings.TrimSpace(source) == "" {
+		if !ok {
+			return 0
+		}
+		if strings.TrimSpace(source) == "" {
 			fmt.Fprintln(stderr, "I need one line of source context to start this work.")
 			return 1
 		}
@@ -696,7 +699,6 @@ func startNewWorkFromRawInput(firstRaw string, session *bufio.Scanner, stdout, s
 	action, ok := readOptionalInputLine(session, stdout)
 	if !ok || strings.TrimSpace(action) == "" {
 		fmt.Fprintln(stdout)
-		renderCheck(stdout, summary)
 		return 0
 	}
 	fmt.Fprintln(stdout)
@@ -732,7 +734,7 @@ func readPromptLine(scanner *bufio.Scanner, stdout io.Writer, prompt string) (st
 func resolveStarterChoice(raw string) (starterChoice, error) {
 	choice := normalizeName(raw)
 	switch choice {
-	case "3", "i am not sure", "i'm not sure", "i’m not sure", "im not sure", "i m not sure", "not sure", "unsure":
+	case "3", "i am not sure", "i'm not sure", "i’m not sure", "im not sure", "i m not sure", "not sure", "unsure", "help me finish this":
 		return starterChoice{PackID: "auto", ChoiceLabel: "I am not sure", DefaultName: "First Useful Pass", State: "decided"}, nil
 	case "plan this first", "plan first":
 		return starterChoice{PackID: "auto", ChoiceLabel: "Plan this first", DefaultName: "Plan First", State: "modeled"}, nil
@@ -2559,6 +2561,65 @@ func renderPostResultActions(w io.Writer, summary *workSummary, item *catalogIte
 	fmt.Fprintln(w, "- Show what is missing")
 	fmt.Fprintln(w, "- Help me plan this")
 	fmt.Fprintln(w, "- Start new work")
+	renderPostResultContext(w, summary, item)
+}
+
+func renderPostResultContext(w io.Writer, summary *workSummary, item *catalogItem) {
+	if summary == nil {
+		return
+	}
+	workingWith := postResultWorkingWith(summary.Thread.WorkingWith)
+	if len(workingWith) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Working with")
+		for _, value := range workingWith {
+			fmt.Fprintf(w, "- %s\n", value)
+		}
+	}
+	alsoReady := postResultAlsoReady(summary.Thread.ReadyNow, item)
+	if len(alsoReady) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Also ready")
+		for _, value := range alsoReady {
+			fmt.Fprintf(w, "- %s\n", value)
+		}
+	}
+	if len(summary.Thread.MultimodalLearning) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Multimodal learning")
+		for _, value := range summary.Thread.MultimodalLearning {
+			fmt.Fprintf(w, "- %s\n", value)
+		}
+	}
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Saved. Type `check` for full status.")
+}
+
+func postResultWorkingWith(items []string) []string {
+	out := []string{}
+	for _, item := range items {
+		clean := strings.TrimSpace(item)
+		if clean == "" || strings.HasPrefix(clean, "Your request:") {
+			continue
+		}
+		out = append(out, clean)
+	}
+	return out
+}
+
+func postResultAlsoReady(items []catalogItem, primary *catalogItem) []string {
+	out := []string{}
+	primaryID := ""
+	if primary != nil {
+		primaryID = primary.ID
+	}
+	for _, item := range items {
+		if strings.TrimSpace(item.Label) == "" || item.ID == primaryID {
+			continue
+		}
+		out = append(out, item.Label)
+	}
+	return out
 }
 
 func handlePostResultAction(action string, summary *workSummary, stdout, stderr io.Writer) int {

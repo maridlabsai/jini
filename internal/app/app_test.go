@@ -979,6 +979,7 @@ func TestInteractiveLauncherCreatesMeetingWork(t *testing.T) {
 	if strings.Contains(out, "Goal") && strings.Index(out, "## Send this") > strings.Index(out, "Goal") {
 		t.Fatalf("expected first useful result before work summary, got:\n%s", out)
 	}
+	assertNoFirstRunStatusDump(t, out)
 
 	current := readCurrentWork(t, stateDir)
 	if current["pack_id"] != "meeting-followup" {
@@ -1056,6 +1057,7 @@ func TestInteractiveLauncherCreatesSpecReadinessWork(t *testing.T) {
 	if strings.Contains(out, "Goal") && strings.Index(out, "## What looks ready now") > strings.Index(out, "Goal") {
 		t.Fatalf("expected first useful result before work summary, got:\n%s", out)
 	}
+	assertNoFirstRunStatusDump(t, out)
 
 	current := readCurrentWork(t, stateDir)
 	if current["pack_id"] != "research-prd" {
@@ -1124,10 +1126,49 @@ func TestInteractiveLauncherHandlesUnsureInputWithUsefulPass(t *testing.T) {
 	if strings.Contains(out, "Goal") && strings.Index(out, "First Useful Pass") > strings.Index(out, "Goal") {
 		t.Fatalf("expected first useful result before work summary, got:\n%s", out)
 	}
+	assertNoFirstRunStatusDump(t, out)
 
 	current := readCurrentWork(t, stateDir)
 	if current["pack_id"] != "general-work" {
 		t.Fatalf("expected general-work current work, got %#v", current)
+	}
+}
+
+func TestInteractiveLauncherHelpMeFinishThisAsksForRoughContext(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	stdin := strings.NewReader("help me finish this\nWeekly product review for pricing launch. Need owners, due dates, and open questions.\n")
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, stdin, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Paste what you have. A rough version is fine.",
+		"I will help figure out whether this is follow-up, a plan check, or something else.",
+		"Sendable Follow-up",
+		"## Send this",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+	for _, unwanted := range []string{
+		"First Useful Pass: Help Me Finish This",
+		"What this seems to be\n- help me finish this",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected help-me-finish path not to create literal work %q, got:\n%s", unwanted, out)
+		}
+	}
+	assertNoFirstRunStatusDump(t, out)
+
+	current := readCurrentWork(t, stateDir)
+	if current["pack_id"] != "meeting-followup" {
+		t.Fatalf("expected help-me-finish context to classify as meeting follow-up, got %#v", current)
 	}
 }
 
@@ -1412,20 +1453,18 @@ func TestInteractiveLauncherCreatesTravelWork(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Goal",
 		"7 Day Paris Trip",
-		"Working with",
-		"Your request: 7 day Paris trip for a couple with a $2500 budget in early October, mixed pace, central hotel area",
-		"Ready now",
 		"Itinerary",
+		"# Itinerary: 7 Day Paris Trip",
 		"Budget Sketch",
-		"Blocked",
+		"## Still to confirm",
 		"Must Do Sights, Or Whether You Want Help Choosing Them",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
 	}
+	assertNoFirstRunStatusDump(t, out)
 
 	current := readCurrentWork(t, stateDir)
 	if current["pack_id"] != "travel-plan" {
@@ -1455,7 +1494,6 @@ func TestInteractiveLauncherAsksForTravelClarificationWhenUnderspecified(t *test
 		"- must-do sights, or whether you want help choosing them",
 		"Type `skip` if you want a generic draft.",
 		"Clarified scope",
-		"Goal",
 		"7 Day Paris Trip",
 		"Itinerary",
 	} {
@@ -1466,6 +1504,7 @@ func TestInteractiveLauncherAsksForTravelClarificationWhenUnderspecified(t *test
 	if !strings.Contains(out, "one museum and one day trip are must-dos") {
 		t.Fatalf("expected generic clarification example, got:\n%s", out)
 	}
+	assertNoFirstRunStatusDump(t, out)
 }
 
 func TestInteractiveLauncherSkipsTravelClarificationWhenRequestAlreadyScoped(t *testing.T) {
@@ -1534,7 +1573,6 @@ func TestInteractiveLauncherCreatesNonParisTravelWithoutParisFallbacks(t *testin
 		"5 Day Rome Trip",
 		"Colosseum",
 		"### Day 5: Buffer and departure",
-		"Blocked",
 		"- Nothing right now",
 	} {
 		if !strings.Contains(out, want) {
@@ -1544,6 +1582,7 @@ func TestInteractiveLauncherCreatesNonParisTravelWithoutParisFallbacks(t *testin
 	if strings.Contains(out, "Whether Versailles") || strings.Contains(out, "Louvre and Versailles are must-dos") {
 		t.Fatalf("expected non-Paris trip to avoid Paris-specific fallback, got:\n%s", out)
 	}
+	assertNoFirstRunStatusDump(t, out)
 }
 
 func TestInteractiveLauncherCreatesLongerScopedTravelWithExactDayCount(t *testing.T) {
@@ -1562,7 +1601,6 @@ func TestInteractiveLauncherCreatesLongerScopedTravelWithExactDayCount(t *testin
 		"12 Day Spain Trip",
 		"### Day 12: Buffer and departure",
 		"Barcelona and Granada",
-		"Blocked",
 		"- Nothing right now",
 	} {
 		if !strings.Contains(out, want) {
@@ -1575,6 +1613,7 @@ func TestInteractiveLauncherCreatesLongerScopedTravelWithExactDayCount(t *testin
 	if strings.Contains(out, "Before I draft it, give me what is still missing in one line:") {
 		t.Fatalf("expected fully scoped travel request to skip clarification, got:\n%s", out)
 	}
+	assertNoFirstRunStatusDump(t, out)
 }
 
 func TestLauncherShowsOtherActiveWorkWhenMultipleProjectsExist(t *testing.T) {
@@ -1656,9 +1695,7 @@ func TestCurrentWorkFreeformInputStartsNewWork(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Your first draft is ready.",
-		"Goal",
 		"7 Day Paris Trip",
-		"Ready now",
 		"Itinerary",
 		"Budget Sketch",
 	} {
@@ -1669,6 +1706,7 @@ func TestCurrentWorkFreeformInputStartsNewWork(t *testing.T) {
 	if strings.Contains(out, "Weekly Product Review Follow-up") && !strings.Contains(out, "7 Day Paris Trip") {
 		t.Fatalf("expected new work to replace the old current-work view, got:\n%s", out)
 	}
+	assertNoFirstRunStatusDump(t, out)
 
 	current := readCurrentWork(t, stateDir)
 	if current["pack_id"] != "travel-plan" {
@@ -1690,13 +1728,26 @@ func TestInteractiveLauncherShowsAttachmentInputChipForTextFile(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Working with",
 		"meeting-notes.txt (processed)",
-		"Goal",
-		"Need",
+		"Sendable Follow-up",
+		"## Send this",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+	assertNoFirstRunStatusDump(t, out)
+}
+
+func assertNoFirstRunStatusDump(t *testing.T, out string) {
+	t.Helper()
+	for _, unwanted := range []string{
+		"\nGoal\n",
+		"\nAI route\n",
+		"\nSafe to do\n",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected first-run output not to dump full status frame %q, got:\n%s", unwanted, out)
 		}
 	}
 }
