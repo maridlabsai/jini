@@ -217,14 +217,12 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 	case "2", "open", "open ready work", "open ready", "open whats ready", "open what's ready", "open what is ready", "show whats ready", "show what's ready", "show what is ready":
 		return runInteractiveOpenShelf(summary, scanner, stdout, stderr)
 	case "show what jini used", "what jini used", "show context", "what did you use", "what shaped this":
-		updateThreadFocus(summary.Dir, &threadFocus{Kind: "context"})
-		renderContextCapsule(stdout, summary)
+		renderThreadSurface(stdout, summary, &threadFocus{Kind: "context"})
 	case "see what is still missing", "show what is missing", "missing":
 		if renderActiveAskSurface(stdout, summary) {
 			return 0
 		}
-		updateThreadFocus(summary.Dir, &threadFocus{Kind: "missing"})
-		renderMissingOnly(stdout, summary)
+		renderThreadSurface(stdout, summary, &threadFocus{Kind: "missing"})
 	case "make it fuller", "fuller", "show more", "expand", "expand this":
 		if !renderNextContinuation(stdout, summary) {
 			renderCheck(stdout, summary)
@@ -338,8 +336,7 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		fmt.Fprintln(stdout, "Nothing was deleted.")
 		fmt.Fprintln(stdout, "Type `Start new work` to switch focus without removing this work.")
 	case "plan this first", "plan first", "plan", "requirements", "design", "help me plan this":
-		updateThreadFocus(summary.Dir, &threadFocus{Kind: "plan"})
-		renderPlanFirst(stdout, summary)
+		renderThreadSurface(stdout, summary, &threadFocus{Kind: "plan"})
 	case "3", "new", "start new", "start something new", "start something else", "start new work":
 		if scanner == nil {
 			renderNewWorkLauncher(stdout)
@@ -356,8 +353,7 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 				fmt.Fprintf(stderr, "Could not record artifact open: %v\n", err)
 				return 1
 			}
-			updateThreadFocus(summary.Dir, &threadFocus{Kind: "artifact", ArtifactPath: artifactRelativePath(summary.Dir, item.Path), ArtifactLabel: item.Label})
-			renderItem(stdout, item)
+			renderThreadSurface(stdout, summary, artifactThreadFocus(summary, item))
 			return 0
 		}
 		if scanner != nil && strings.TrimSpace(action) != "" {
@@ -2803,9 +2799,16 @@ func runInteractiveOpenShelf(summary *workSummary, scanner *bufio.Scanner, stdou
 		fmt.Fprintf(stderr, "Could not record artifact open: %v\n", err)
 		return 1
 	}
-	updateThreadFocus(summary.Dir, &threadFocus{Kind: "artifact", ArtifactPath: artifactRelativePath(summary.Dir, item.Path), ArtifactLabel: item.Label})
+	updateThreadFocus(summary.Dir, artifactThreadFocus(summary, item))
 	renderItem(stdout, item)
 	return 0
+}
+
+func artifactThreadFocus(summary *workSummary, item *catalogItem) *threadFocus {
+	if summary == nil || item == nil {
+		return nil
+	}
+	return &threadFocus{Kind: "artifact", ArtifactPath: artifactRelativePath(summary.Dir, item.Path), ArtifactLabel: item.Label}
 }
 
 func activeAskFocus(summary *workSummary) *threadFocus {
@@ -2819,34 +2822,29 @@ func activeAskFocus(summary *workSummary) *threadFocus {
 	return &threadFocus{Kind: "ask", AskID: state.ActiveAsk.AskID}
 }
 
-func renderActiveAskSurface(w io.Writer, summary *workSummary) bool {
-	if summary == nil {
-		return false
+func renderThreadAsk(w io.Writer, summary *workSummary, ask *threadAsk) {
+	if ask == nil {
+		return
 	}
-	state := loadThreadState(summary.Dir, summary)
-	if state.ActiveAsk == nil {
-		return false
-	}
-	updateThreadFocus(summary.Dir, &threadFocus{Kind: "ask", AskID: state.ActiveAsk.AskID})
 	fmt.Fprintln(w, "Pending decision")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, state.ActiveAsk.Prompt)
-	if strings.TrimSpace(state.ActiveAsk.Reason) != "" {
+	fmt.Fprintln(w, ask.Prompt)
+	if strings.TrimSpace(ask.Reason) != "" {
 		fmt.Fprintln(w)
 		fmt.Fprintln(w, "Why this matters")
-		fmt.Fprintln(w, state.ActiveAsk.Reason)
+		fmt.Fprintln(w, ask.Reason)
 	}
-	if len(state.ActiveAsk.Options) > 0 {
+	if len(ask.Options) > 0 {
 		fmt.Fprintln(w)
 		fmt.Fprintln(w, "Options")
-		for _, item := range state.ActiveAsk.Options {
+		for _, item := range ask.Options {
 			fmt.Fprintf(w, "- %s\n", item)
 		}
 	}
-	if len(state.ActiveAsk.AssumptionsIfSkipped) > 0 {
+	if len(ask.AssumptionsIfSkipped) > 0 {
 		fmt.Fprintln(w)
 		fmt.Fprintln(w, "If you skip this")
-		for _, item := range state.ActiveAsk.AssumptionsIfSkipped {
+		for _, item := range ask.AssumptionsIfSkipped {
 			fmt.Fprintf(w, "- %s\n", item)
 		}
 	}
@@ -2855,7 +2853,70 @@ func renderActiveAskSurface(w io.Writer, summary *workSummary) bool {
 		fmt.Fprintln(w, "Safe right now")
 		fmt.Fprintln(w, summary.SafeToDo)
 	}
-	return true
+}
+
+func resolveThreadSurface(summary *workSummary, state savedThreadState, focus *threadFocus) *threadFocus {
+	if summary == nil || focus == nil {
+		return nil
+	}
+	switch focus.Kind {
+	case "artifact":
+		if focusedArtifactItem(summary, focus) != nil {
+			return focus
+		}
+	case "ask":
+		if focusedThreadAsk(state, focus) != nil {
+			return focus
+		}
+	case "missing":
+		if state.ActiveAsk != nil {
+			return activeAskFocus(summary)
+		}
+		return &threadFocus{Kind: "missing"}
+	case "context":
+		return &threadFocus{Kind: "context"}
+	case "plan":
+		return &threadFocus{Kind: "plan"}
+	}
+	return nil
+}
+
+func renderThreadSurface(w io.Writer, summary *workSummary, focus *threadFocus) bool {
+	if summary == nil {
+		return false
+	}
+	state := loadThreadState(summary.Dir, summary)
+	resolved := resolveThreadSurface(summary, state, focus)
+	if resolved == nil {
+		return false
+	}
+	updateThreadFocus(summary.Dir, resolved)
+	switch resolved.Kind {
+	case "artifact":
+		if item := focusedArtifactItem(summary, resolved); item != nil {
+			renderItem(w, item)
+			return true
+		}
+	case "ask":
+		if ask := focusedThreadAsk(state, resolved); ask != nil {
+			renderThreadAsk(w, summary, ask)
+			return true
+		}
+	case "missing":
+		renderMissingOnly(w, summary)
+		return true
+	case "context":
+		renderContextCapsule(w, summary)
+		return true
+	case "plan":
+		renderPlanFirst(w, summary)
+		return true
+	}
+	return false
+}
+
+func renderActiveAskSurface(w io.Writer, summary *workSummary) bool {
+	return renderThreadSurface(w, summary, activeAskFocus(summary))
 }
 
 func renderFocusedContinuation(w io.Writer, summary *workSummary) bool {
@@ -2863,34 +2924,8 @@ func renderFocusedContinuation(w io.Writer, summary *workSummary) bool {
 		return false
 	}
 	state := loadThreadState(summary.Dir, summary)
-	if state.CurrentFocus != nil {
-		switch state.CurrentFocus.Kind {
-		case "artifact":
-			if item := focusedArtifactItem(summary, state.CurrentFocus); item != nil {
-				updateThreadFocus(summary.Dir, state.CurrentFocus)
-				renderItem(w, item)
-				return true
-			}
-		case "ask":
-			if focusedThreadAsk(state, state.CurrentFocus) != nil && renderActiveAskSurface(w, summary) {
-				return true
-			}
-		case "missing":
-			if state.ActiveAsk != nil && renderActiveAskSurface(w, summary) {
-				return true
-			}
-			updateThreadFocus(summary.Dir, &threadFocus{Kind: "missing"})
-			renderMissingOnly(w, summary)
-			return true
-		case "context":
-			updateThreadFocus(summary.Dir, &threadFocus{Kind: "context"})
-			renderContextCapsule(w, summary)
-			return true
-		case "plan":
-			updateThreadFocus(summary.Dir, &threadFocus{Kind: "plan"})
-			renderPlanFirst(w, summary)
-			return true
-		}
+	if state.CurrentFocus != nil && renderThreadSurface(w, summary, state.CurrentFocus) {
+		return true
 	}
 	if item := currentArtifactItem(summary); item != nil {
 		renderItem(w, item)
@@ -2904,9 +2939,7 @@ func renderNextContinuation(w io.Writer, summary *workSummary) bool {
 		return false
 	}
 	if item := nextUsefulItem(summary); item != nil {
-		updateThreadFocus(summary.Dir, &threadFocus{Kind: "artifact", ArtifactPath: artifactRelativePath(summary.Dir, item.Path), ArtifactLabel: item.Label})
-		renderItem(w, item)
-		return true
+		return renderThreadSurface(w, summary, artifactThreadFocus(summary, item))
 	}
 	return false
 }
@@ -2963,14 +2996,12 @@ func handlePostResultAction(action string, summary *workSummary, scanner *bufio.
 	case "status", "show status", "check":
 		renderCheck(stdout, summary)
 	case "show what jini used", "what jini used", "show context", "what did you use", "what shaped this":
-		updateThreadFocus(summary.Dir, &threadFocus{Kind: "context"})
-		renderContextCapsule(stdout, summary)
+		renderThreadSurface(stdout, summary, &threadFocus{Kind: "context"})
 	case "see what is still missing", "show what is missing", "missing", "3":
 		if renderActiveAskSurface(stdout, summary) {
 			return 0
 		}
-		updateThreadFocus(summary.Dir, &threadFocus{Kind: "missing"})
-		renderMissingOnly(stdout, summary)
+		renderThreadSurface(stdout, summary, &threadFocus{Kind: "missing"})
 	case "make it fuller", "fuller", "show more", "expand", "expand this", "4":
 		if !renderNextContinuation(stdout, summary) {
 			renderCheck(stdout, summary)
@@ -3015,8 +3046,7 @@ func handlePostResultAction(action string, summary *workSummary, scanner *bufio.
 		fmt.Fprintln(stdout)
 		renderItem(stdout, item)
 	case "plan this first", "plan first", "plan", "help me plan this", "5":
-		updateThreadFocus(summary.Dir, &threadFocus{Kind: "plan"})
-		renderPlanFirst(stdout, summary)
+		renderThreadSurface(stdout, summary, &threadFocus{Kind: "plan"})
 	case "accepted as is", "accept as is", "artifact accepted", "accepted":
 		if err := saveModelFeedback(summary.Dir, "accepted-as-is", currentFeedbackArtifactPath(summary)); err != nil {
 			fmt.Fprintf(stderr, "Could not save artifact feedback: %v\n", err)
@@ -3071,8 +3101,7 @@ func handlePostResultAction(action string, summary *workSummary, scanner *bufio.
 				fmt.Fprintf(stderr, "Could not record artifact open: %v\n", err)
 				return 1
 			}
-			updateThreadFocus(summary.Dir, &threadFocus{Kind: "artifact", ArtifactPath: artifactRelativePath(summary.Dir, item.Path), ArtifactLabel: item.Label})
-			renderItem(stdout, item)
+			renderThreadSurface(stdout, summary, artifactThreadFocus(summary, item))
 			return 0
 		}
 		renderCheck(stdout, summary)
