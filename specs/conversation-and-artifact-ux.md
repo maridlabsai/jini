@@ -359,7 +359,6 @@ Trip Plan
 
 What do you want to do next?
 - Keep going
-- Make it fuller
 - Show what is missing
 - Help me plan this
 - Start new work

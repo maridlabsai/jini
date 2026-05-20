@@ -14,7 +14,7 @@ The approved user experience is:
 1. user gives messy context
 2. Jini returns a useful object first
 3. Jini shows what is missing, uncertain, and safe
-4. user can keep going, make it fuller, inspect trust, or start new work
+4. user can keep going, inspect gaps, plan next work, inspect trust, or start new work
 
 Jini is not approved as only a launcher into a work system.
 
@@ -91,8 +91,8 @@ missing.
 After the first result, show only real actions:
 
 - `Keep going`
-- `Make it fuller`
 - `Show what is missing`
+- `Help me plan this`
 - `Start something new`
 
 Do not show actions that are not implemented.

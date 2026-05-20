@@ -388,7 +388,7 @@ func routeVisibility(envelope semanticEnvelope) string {
 func renderActionsForMode(mode string) []string {
 	switch mode {
 	case "first_result":
-		return []string{"Keep going", "Make it fuller", "Show what is missing", "Start new work"}
+		return []string{"Keep going", "Show what is missing", "Help me plan this", "Start new work"}
 	case "work_summary", "multi_thread_home":
 		return []string{"Continue current work", "Open what is ready", "Start new work"}
 	case "ask":

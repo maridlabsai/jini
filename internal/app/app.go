@@ -2585,7 +2585,6 @@ func firstResultItem(summary *workSummary) *catalogItem {
 func renderPostResultActions(w io.Writer, summary *workSummary, item *catalogItem) {
 	fmt.Fprintln(w, "What do you want to do next?")
 	fmt.Fprintln(w, "- Keep going")
-	fmt.Fprintln(w, "- Make it fuller")
 	fmt.Fprintln(w, "- Show what is missing")
 	fmt.Fprintln(w, "- Help me plan this")
 	fmt.Fprintln(w, "- Start new work")
@@ -2669,13 +2668,11 @@ func handlePostResultAction(action string, summary *workSummary, stdout, stderr 
 			return 0
 		}
 		renderItem(stdout, item)
-	case "make it fuller", "full", "full version", "2":
-		renderFullerPrompt(stdout, summary)
-	case "see what is still missing", "show what is missing", "missing", "check", "3":
+	case "see what is still missing", "show what is missing", "missing", "check", "2":
 		renderMissingOnly(stdout, summary)
-	case "plan this first", "plan first", "plan", "help me plan this", "4":
+	case "plan this first", "plan first", "plan", "help me plan this", "3":
 		renderPlanFirst(stdout, summary)
-	case "start something new", "start new work", "new", "5":
+	case "start something new", "start new work", "new", "4":
 		renderNewWorkLauncher(stdout)
 	default:
 		if isAcknowledgementOnly(action) {
@@ -2719,17 +2716,6 @@ func renderItem(w io.Writer, item *catalogItem) {
 	}
 	fmt.Fprint(w, strings.TrimSpace(string(content)))
 	fmt.Fprintln(w)
-}
-
-func renderFullerPrompt(w io.Writer, summary *workSummary) {
-	fmt.Fprintln(w, "Make it fuller")
-	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Add any missing audience, owner, deadline, budget, approval, or blocker detail. Then Jini can turn this into a stronger next draft.")
-	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Ready now")
-	for _, item := range summary.Views {
-		fmt.Fprintf(w, "- %s\n", item.Label)
-	}
 }
 
 func renderMissingOnly(w io.Writer, summary *workSummary) {

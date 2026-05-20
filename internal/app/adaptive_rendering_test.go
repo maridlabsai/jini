@@ -67,10 +67,13 @@ func TestRenderPolicyForMeetingFirstResultUsesCompactCLIWithoutChangingTruth(t *
 	if request.Density != "compact" {
 		t.Fatalf("expected compact density, got %q", request.Density)
 	}
-	for _, want := range []string{"Keep going", "Make it fuller", "Show what is missing", "Start new work"} {
+	for _, want := range []string{"Keep going", "Show what is missing", "Help me plan this", "Start new work"} {
 		if !slices.Contains(request.AvailableActions, want) {
 			t.Fatalf("expected render action %q in %#v", want, request.AvailableActions)
 		}
+	}
+	if slices.Contains(request.AvailableActions, "Make it fuller") {
+		t.Fatalf("expected placeholder action to be removed from first-result actions: %#v", request.AvailableActions)
 	}
 	if request.RouteVisibility != "compact" {
 		t.Fatalf("expected compact route visibility, got %q", request.RouteVisibility)

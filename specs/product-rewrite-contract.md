@@ -144,14 +144,16 @@ Rules:
 - Do not show the work summary before the first useful result on first run.
 - Do not ask the user to choose output size before the first useful result.
 - Default silently to a quick useful draft.
-- Offer `Make it fuller` only after the first result exists.
+- Do not offer decorative continuation actions. If Jini cannot materially
+  change or open a useful artifact from the action, remove it from the default
+  surface.
 - The first result must include enough content to be useful without opening a second screen.
 
 After the first result, Jini should offer:
 
 - `Keep going`
-- `Make it fuller`
 - `Show what is missing`
+- `Help me plan this`
 - `Start something new`
 
 ## Work Summary Screen
@@ -221,7 +223,7 @@ The approved shape is a complete work loop:
 1. user gives Jini messy context
 2. Jini returns a useful object
 3. Jini shows what is missing and what is safe
-4. user can continue, make it fuller, inspect trust, or start new work
+4. user can continue, inspect gaps, plan next work, inspect trust, or start new work
 
 The product must not stop at launcher intake.
 
@@ -265,8 +267,8 @@ quality and parity gates.
 11. The work summary appears after the useful object, or when the user asks what is still missing.
 12. Jini ends the first pass with clear actions:
    - keep going
-   - make it fuller
    - see what is still missing
+   - help me plan this
    - start something new
 
 ### Post-Result Continuation

@@ -961,8 +961,8 @@ func TestInteractiveLauncherCreatesMeetingWork(t *testing.T) {
 		"Sendable Follow-up",
 		"## Send this",
 		"Keep going",
-		"Make it fuller",
 		"Show what is missing",
+		"Help me plan this",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -971,6 +971,7 @@ func TestInteractiveLauncherCreatesMeetingWork(t *testing.T) {
 	for _, unwanted := range []string{
 		"Paste notes, paste a doc, or describe it in one line",
 		"Short version or full version",
+		"Make it fuller",
 	} {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("expected output not to contain %q, got:\n%s", unwanted, out)
@@ -1041,8 +1042,8 @@ func TestInteractiveLauncherCreatesSpecReadinessWork(t *testing.T) {
 		"Build-Readiness Check",
 		"## What looks ready now",
 		"Keep going",
-		"Make it fuller",
 		"Show what is missing",
+		"Help me plan this",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -1050,6 +1051,9 @@ func TestInteractiveLauncherCreatesSpecReadinessWork(t *testing.T) {
 	}
 	if strings.Contains(out, "Short version or full version") {
 		t.Fatalf("expected no first-run output-size prompt, got:\n%s", out)
+	}
+	if strings.Contains(out, "Make it fuller") {
+		t.Fatalf("expected placeholder continuation action to be removed, got:\n%s", out)
 	}
 	if strings.Contains(out, "Paste notes, paste a doc, or describe it in one line") {
 		t.Fatalf("expected no legacy source-context prompt, got:\n%s", out)
