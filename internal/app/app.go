@@ -1826,7 +1826,7 @@ func runOpen(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "Could not record artifact open: %v\n", err)
 		return 1
 	}
-	updateThreadFocus(summary.Dir, &threadFocus{Kind: "artifact", ArtifactPath: artifactRelativePath(summary.Dir, item.Path), ArtifactLabel: item.Label})
+	updateThreadFocus(summary.Dir, artifactThreadFocus(summary, item))
 	content, err := os.ReadFile(item.Path)
 	if err != nil {
 		fmt.Fprintf(stderr, "Could not read %q: %v\n", item.Label, err)

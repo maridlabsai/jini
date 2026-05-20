@@ -1821,6 +1821,29 @@ func TestCurrentWorkResumeReopensSelectedReadyArtifact(t *testing.T) {
 	}
 }
 
+func TestOpenCommandUpdatesFocusedArtifactForResume(t *testing.T) {
+	stateDir := t.TempDir()
+	packDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var openOut bytes.Buffer
+	exitCode := app.RunInteractive([]string{"open", "Owners and Due Points"}, nil, &openOut, &openOut)
+	if exitCode != 0 {
+		t.Fatalf("expected open command to succeed, got %d with output:\n%s", exitCode, openOut.String())
+	}
+
+	var stdout bytes.Buffer
+	exitCode = app.RunInteractive(nil, strings.NewReader("resume this\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected resume after open command to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "Owners and Due Points") {
+		t.Fatalf("expected resume to reopen artifact selected by open command, got:\n%s", stdout.String())
+	}
+}
+
 func TestCurrentWorkResumeReopensMissingSurface(t *testing.T) {
 	stateDir := t.TempDir()
 	packDir := seedMeetingWork(t)
