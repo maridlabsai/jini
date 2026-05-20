@@ -1833,6 +1833,9 @@ func TestOpenCommandUpdatesFocusedArtifactForResume(t *testing.T) {
 	if exitCode != 0 {
 		t.Fatalf("expected open command to succeed, got %d with output:\n%s", exitCode, openOut.String())
 	}
+	if !strings.Contains(openOut.String(), "Owners and Due Points") {
+		t.Fatalf("expected open command to render named artifact surface, got:\n%s", openOut.String())
+	}
 
 	var stdout bytes.Buffer
 	exitCode = app.RunInteractive(nil, strings.NewReader("resume this\n"), &stdout, &stdout)

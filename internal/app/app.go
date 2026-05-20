@@ -1821,18 +1821,9 @@ func runOpen(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "%v\n", err)
 		return 1
 	}
-	if err := recordAndFocusArtifactSelection(summary, item); err != nil {
+	if err := renderSelectedArtifact(stdout, summary, item); err != nil {
 		fmt.Fprintf(stderr, "Could not open artifact: %v\n", err)
 		return 1
-	}
-	content, err := os.ReadFile(item.Path)
-	if err != nil {
-		fmt.Fprintf(stderr, "Could not read %q: %v\n", item.Label, err)
-		return 1
-	}
-	fmt.Fprint(stdout, string(content))
-	if len(content) == 0 || content[len(content)-1] != '\n' {
-		fmt.Fprintln(stdout)
 	}
 	return 0
 }
