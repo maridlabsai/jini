@@ -18,6 +18,23 @@ The approved user experience is:
 
 Jini is not approved as only a launcher into a work system.
 
+## Critique Resolution Rule
+
+Jini should act in favor of better outcomes for the user, not in favor of
+preserving internal shapes.
+
+If more than one critique source independently identifies the same friction,
+confusion, or low-value surface:
+
+- the default decision is to remove it
+- or demote it behind explicit user intent
+- or simplify it until the critique no longer holds
+
+Keeping the criticized behavior requires explicit proof that it materially
+improves user outcome through speed, trust, clarity, quality, or cost posture.
+Implementation effort, prior investment, and architectural tidiness are not
+sufficient reasons to keep it.
+
 ## Flagship Scope
 
 Replacement-critical flows:
@@ -151,6 +168,7 @@ The product shape is approved only when all four roles accept it:
 - UX Researcher: first minute works for tired or unsure users
 - UX Designer: screen order and copy are obvious
 - Program Manager: scope, sequence, parity, and score lead are safe
+- repeated critique convergence triggers removal, demotion, or simplification unless user-outcome proof says otherwise
 
 ## Implementation Plan
 
@@ -163,6 +181,7 @@ The product shape is approved only when all four roles accept it:
 - meeting follow-up and plan/spec readiness include real `Keep going` and `Show what is missing` actions
 - launcher-created work uses shared generation or has golden parity fixtures before it ships or expands
 - golden parity fixtures for new and old work exist before cutover
+- repeated multi-role critique is resolved by simplification, not carried forward as known UX debt
 
 ### Phase 2: Add Parity And Current-Work Safety
 

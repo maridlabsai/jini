@@ -196,7 +196,7 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		renderCurrentWorkHelp(stdout, summary)
 	case "status", "show status", "check":
 		renderCheck(stdout, summary)
-	case "1", "continue", "continue current work", "keep going", "proceed", "go ahead", "next":
+	case "1", "continue", "continue current work", "continue this", "resume this", "keep going", "proceed", "go ahead", "next":
 		item := nextUsefulItem(summary)
 		if item == nil {
 			renderCheck(stdout, summary)
@@ -204,9 +204,16 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		}
 		renderItem(stdout, item)
 	case "2", "open", "open ready work", "open ready", "open whats ready", "open what's ready", "open what is ready", "show whats ready", "show what's ready", "show what is ready":
-		renderOpenShelf(stdout, summary)
+		return runInteractiveOpenShelf(summary, scanner, stdout, stderr)
 	case "see what is still missing", "show what is missing", "missing":
 		renderMissingOnly(stdout, summary)
+	case "make it fuller", "fuller", "show more", "expand", "expand this":
+		item := richerUsefulItem(summary)
+		if item == nil {
+			renderCheck(stdout, summary)
+			return 0
+		}
+		renderItem(stdout, item)
 	case "model upvote", "upvote model", "model was right":
 		if err := saveModelFeedback(summary.Dir, "upvoted", ""); err != nil {
 			fmt.Fprintf(stderr, "Could not save model feedback: %v\n", err)
@@ -283,8 +290,16 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 			renderCurrentWorkNoop(stdout)
 			return 0
 		}
+		if item, ok := resolveInteractiveArtifactSelection(summary, action); ok {
+			if err := recordPassiveArtifactObservation(summary.Dir, *item); err != nil {
+				fmt.Fprintf(stderr, "Could not record artifact open: %v\n", err)
+				return 1
+			}
+			renderItem(stdout, item)
+			return 0
+		}
 		if scanner != nil && strings.TrimSpace(action) != "" {
-			return startNewWorkFromRawInput(action, scanner, stdout, stderr)
+			return confirmCurrentWorkInterruptionAndContinue(summary, action, scanner, stdout, stderr)
 		}
 		renderCheck(stdout, summary)
 	}
@@ -792,7 +807,7 @@ func startNewWorkFromRawInput(firstRaw string, session *bufio.Scanner, stdout, s
 		return 0
 	}
 	fmt.Fprintln(stdout)
-	return handlePostResultAction(action, summary, stdout, stderr)
+	return handlePostResultAction(action, summary, session, stdout, stderr)
 }
 
 func readInputLine(scanner *bufio.Scanner, stdout io.Writer) (string, bool) {
@@ -2308,19 +2323,6 @@ func renderNewWorkLauncher(w io.Writer) {
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Paste notes or type what you want finished.")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Working with")
-	provider := detectProvider()
-	fmt.Fprintln(w, workingWithLabel(provider))
-	if provider.ID == "local-preview" {
-		fmt.Fprintln(w)
-		if configuredToolMode() == "auto" {
-			fmt.Fprintln(w, "Auto mode is on. No cloud tool is ready yet.")
-		} else if configuredProviderMode() == "auto" {
-			fmt.Fprintln(w, "Auto mode is on. No cloud provider is ready yet.")
-		}
-		fmt.Fprintln(w, "Need setup help? Type `Use Auto` and Jini will help you connect the best available option.")
-	}
-	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Not sure? Type `help me finish this`.")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Examples:")
@@ -2747,7 +2749,9 @@ func firstResultItem(summary *workSummary) *catalogItem {
 func renderPostResultActions(w io.Writer, summary *workSummary, item *catalogItem) {
 	fmt.Fprintln(w, "What do you want to do next?")
 	fmt.Fprintln(w, "- Keep going")
+	fmt.Fprintln(w, "- Open what's ready")
 	fmt.Fprintln(w, "- Show what is missing")
+	fmt.Fprintln(w, "- Make it fuller")
 	fmt.Fprintln(w, "- Help me plan this")
 	fmt.Fprintln(w, "- Start new work")
 	renderPostResultContext(w, summary, item)
@@ -2761,6 +2765,49 @@ func renderNewWorkNoop(w io.Writer) {
 func renderCurrentWorkNoop(w io.Writer) {
 	fmt.Fprintln(w, "Nothing changed.")
 	fmt.Fprintln(w, "Use `keep going`, `show what's ready`, or paste a new request.")
+}
+
+func confirmCurrentWorkInterruptionAndContinue(summary *workSummary, candidate string, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
+	if scanner == nil {
+		return startNewWorkFromRawInput(candidate, scanner, stdout, stderr)
+	}
+	renderCurrentWorkInterruptionPrompt(stdout, summary, candidate)
+	choice, ok := readOptionalInputLine(scanner, stdout)
+	if !ok || strings.TrimSpace(choice) == "" {
+		return 0
+	}
+	fmt.Fprintln(stdout)
+	switch normalizeName(choice) {
+	case "1", "start new work", "start new", "start something new", "new", "switch focus":
+		return startNewWorkFromRawInput(candidate, scanner, stdout, stderr)
+	case "2", "keep current work", "keep current", "stay here", "cancel", "never mind":
+		fmt.Fprintln(stdout, "Keeping current work.")
+		fmt.Fprintln(stdout, "Use `keep going`, `show what's ready`, or paste a new request when you mean to switch.")
+		return 0
+	case "3", "switch project", "switch", "show active work", "active work":
+		return runSwitchWorkPicker(summary, scanner, stdout, stderr)
+	default:
+		fmt.Fprintln(stderr, "Choose `Start new work`, `Keep current work`, or `Switch project`.")
+		return 1
+	}
+}
+
+func renderCurrentWorkInterruptionPrompt(w io.Writer, summary *workSummary, candidate string) {
+	fmt.Fprintln(w, "This looks like new work.")
+	if summary != nil && strings.TrimSpace(summary.Title) != "" {
+		fmt.Fprintf(w, "Current work stays saved: %s.\n", summary.Title)
+	}
+	if strings.TrimSpace(candidate) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "New request")
+		fmt.Fprintf(w, "- %s\n", compactPreview(candidate, 140))
+	}
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Choose one")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "- Start new work")
+	fmt.Fprintln(w, "- Keep current work")
+	fmt.Fprintln(w, "- Switch project")
 }
 
 func renderCurrentWorkMemoryStatus(w io.Writer, summary *workSummary) {
@@ -2800,6 +2847,85 @@ func renderPostResultContext(w io.Writer, summary *workSummary, item *catalogIte
 	fmt.Fprintln(w, "Saved. Type `check` for full status.")
 }
 
+func richerUsefulItem(summary *workSummary) *catalogItem {
+	if summary == nil {
+		return nil
+	}
+	if len(summary.Views) > 1 {
+		return &summary.Views[1]
+	}
+	if len(summary.Details) > 0 {
+		return &summary.Details[0]
+	}
+	if len(summary.Exports) > 0 {
+		return &summary.Exports[0]
+	}
+	return nil
+}
+
+func openShelfItems(summary *workSummary) []catalogItem {
+	if summary == nil {
+		return nil
+	}
+	items := make([]catalogItem, 0, len(summary.Views)+len(summary.Exports)+len(summary.Details))
+	seen := map[string]bool{}
+	appendUnique := func(group []catalogItem) {
+		for _, item := range group {
+			key := normalizeName(item.Label + ":" + item.Path)
+			if seen[key] {
+				continue
+			}
+			seen[key] = true
+			items = append(items, item)
+		}
+	}
+	appendUnique(summary.Views)
+	appendUnique(summary.Exports)
+	appendUnique(summary.Details)
+	return items
+}
+
+func resolveInteractiveArtifactSelection(summary *workSummary, raw string) (*catalogItem, bool) {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return nil, false
+	}
+	if index, err := strconv.Atoi(trimmed); err == nil {
+		items := openShelfItems(summary)
+		if index >= 1 && index <= len(items) {
+			return &items[index-1], true
+		}
+	}
+	item, err := resolveOpenItem(summary, raw)
+	if err != nil {
+		return nil, false
+	}
+	return item, true
+}
+
+func runInteractiveOpenShelf(summary *workSummary, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
+	renderOpenShelf(stdout, summary)
+	if scanner == nil {
+		return 0
+	}
+	choice, ok := readOptionalInputLine(scanner, stdout)
+	if !ok || strings.TrimSpace(choice) == "" {
+		return 0
+	}
+	fmt.Fprintln(stdout)
+	item, ok := resolveInteractiveArtifactSelection(summary, choice)
+	if !ok {
+		fmt.Fprintln(stderr, "Type a number or artifact name to open one.")
+		return 1
+	}
+	if err := recordPassiveArtifactObservation(summary.Dir, *item); err != nil {
+		fmt.Fprintf(stderr, "Could not record artifact open: %v\n", err)
+		return 1
+	}
+	renderItem(stdout, item)
+	return 0
+}
+
 func postResultWorkingWith(items []string) []string {
 	out := []string{}
 	for _, item := range items {
@@ -2827,7 +2953,7 @@ func postResultAlsoReady(items []catalogItem, primary *catalogItem) []string {
 	return out
 }
 
-func handlePostResultAction(action string, summary *workSummary, stdout, stderr io.Writer) int {
+func handlePostResultAction(action string, summary *workSummary, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
 	switch normalizeName(action) {
 	case "keep going", "1", "continue", "proceed", "go ahead", "next":
 		item := nextUsefulItem(summary)
@@ -2836,17 +2962,34 @@ func handlePostResultAction(action string, summary *workSummary, stdout, stderr 
 			return 0
 		}
 		renderItem(stdout, item)
+	case "open whats ready", "open what's ready", "open what is ready", "show whats ready", "show what's ready", "show what is ready", "2":
+		return runInteractiveOpenShelf(summary, scanner, stdout, stderr)
 	case "status", "show status", "check":
 		renderCheck(stdout, summary)
-	case "see what is still missing", "show what is missing", "missing", "2":
+	case "see what is still missing", "show what is missing", "missing", "3":
 		renderMissingOnly(stdout, summary)
-	case "plan this first", "plan first", "plan", "help me plan this", "3":
+	case "make it fuller", "fuller", "show more", "expand", "expand this", "4":
+		item := richerUsefulItem(summary)
+		if item == nil {
+			renderCheck(stdout, summary)
+			return 0
+		}
+		renderItem(stdout, item)
+	case "plan this first", "plan first", "plan", "help me plan this", "5":
 		renderPlanFirst(stdout, summary)
-	case "start something new", "start new work", "new", "4":
+	case "start something new", "start new work", "new", "6":
 		renderNewWorkLauncher(stdout)
 	default:
 		if isAcknowledgementOnly(action) {
 			renderCurrentWorkNoop(stdout)
+			return 0
+		}
+		if item, ok := resolveInteractiveArtifactSelection(summary, action); ok {
+			if err := recordPassiveArtifactObservation(summary.Dir, *item); err != nil {
+				fmt.Fprintf(stderr, "Could not record artifact open: %v\n", err)
+				return 1
+			}
+			renderItem(stdout, item)
 			return 0
 		}
 		renderCheck(stdout, summary)
@@ -3170,6 +3313,7 @@ func renderCurrentWorkHelp(w io.Writer, summary *workSummary) {
 	fmt.Fprintln(w, "- Keep going")
 	fmt.Fprintln(w, "- Show what's ready")
 	fmt.Fprintln(w, "- Show what is missing")
+	fmt.Fprintln(w, "- Make it fuller")
 	fmt.Fprintln(w, "- Help me plan this")
 	fmt.Fprintln(w, "- Start new work")
 	fmt.Fprintln(w)
@@ -3488,8 +3632,12 @@ func renderOpenShelf(w io.Writer, summary *workSummary) {
 	fmt.Fprintln(w, "Open something ready")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Ready now")
+	indexByPath := map[string]int{}
+	nextIndex := 1
 	for _, item := range summary.Views {
-		fmt.Fprintf(w, "- %s\n", item.Label)
+		fmt.Fprintf(w, "%d. %s\n", nextIndex, item.Label)
+		indexByPath[item.Path] = nextIndex
+		nextIndex++
 	}
 	if len(summary.Views) == 0 {
 		fmt.Fprintln(w, "- Nothing is ready yet")
@@ -3500,7 +3648,13 @@ func renderOpenShelf(w io.Writer, summary *workSummary) {
 		fmt.Fprintln(w, "- Nothing to share yet")
 	} else {
 		for _, item := range summary.Exports {
-			fmt.Fprintf(w, "- %s\n", item.Label)
+			if index, ok := indexByPath[item.Path]; ok {
+				fmt.Fprintf(w, "%d. %s\n", index, item.Label)
+				continue
+			}
+			fmt.Fprintf(w, "%d. %s\n", nextIndex, item.Label)
+			indexByPath[item.Path] = nextIndex
+			nextIndex++
 		}
 	}
 	fmt.Fprintln(w)
@@ -3509,9 +3663,17 @@ func renderOpenShelf(w io.Writer, summary *workSummary) {
 		fmt.Fprintln(w, "- No extra details yet")
 	} else {
 		for _, item := range summary.Details {
-			fmt.Fprintf(w, "- %s\n", item.Label)
+			if index, ok := indexByPath[item.Path]; ok {
+				fmt.Fprintf(w, "%d. %s\n", index, item.Label)
+				continue
+			}
+			fmt.Fprintf(w, "%d. %s\n", nextIndex, item.Label)
+			indexByPath[item.Path] = nextIndex
+			nextIndex++
 		}
 	}
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Type a number or name to open one, or press Enter to go back.")
 }
 
 func dedupeItems(items []catalogItem) []catalogItem {

@@ -1111,6 +1111,7 @@ def framework_adoption_constraints() -> list[str]:
         "Memory must change behavior at the right step without forcing the user to restate context.",
         "Portable execution edges must be real enough that users can stay in their preferred runtime or system.",
         "Anything that adds friction or kernel pressure without proven adoption value should be removed, demoted, or consolidated.",
+        "If more than one critique source converges on the same friction, the default action should be to remove, demote, or simplify it unless user-outcome proof justifies keeping it.",
     ]
 
 
@@ -2192,6 +2193,39 @@ def build_publish_readiness() -> dict[str, Any]:
             ],
         },
         {
+            "id": "cross-critic-convergence",
+            "label": "Repeated multi-role critique forces simplification unless user-outcome proof exists",
+            "requirements": [
+                {
+                    "path": PRODUCT_REVIEW_ROLES_PATH,
+                    "markers": [
+                        "Convergent Critique Rule",
+                        "If two or more roles converge on the same critique",
+                        "default to remove, demote, simplify, or hide the surface",
+                        "explicit proof",
+                        "first useful result speed",
+                    ],
+                },
+                {
+                    "path": PRODUCT_CONSENSUS_PRD_PATH,
+                    "markers": [
+                        "Critique Resolution Rule",
+                        "If more than one critique source independently identifies the same friction",
+                        "the default decision is to remove it",
+                        "Keeping the criticized behavior requires explicit proof",
+                        "improves user outcome through speed, trust, clarity, quality, or cost posture",
+                    ],
+                },
+                {
+                    "path": REWRITE_GUARDRAILS_PATH,
+                    "markers": [
+                        "Remove or demote any surface that attracts the same critique from more than one review role",
+                        "If two or more roles raised the same friction, was the default action remove, demote, or simplify it",
+                    ],
+                },
+            ],
+        },
+        {
             "id": "two-flagship-replacement-flows",
             "label": "Two flagship replacement flows are constrained",
             "requirements": [
@@ -2356,6 +2390,12 @@ def build_publish_readiness() -> dict[str, Any]:
                 "Artifact Escalation",
                 "Continue Anywhere",
                 "Best Productivity With Least Expense",
+                "Prompt Surface Comparison",
+                "Current Jini Deviations",
+                "Major Work Items To Bridge The Gap",
+                "Replace Pack-First Intake With A Shared Work Envelope",
+                "Demote Product Teaching In The First Minute",
+                "Prune Demo-Grade Hard Coding From Core Runtime",
             ],
         },
         {
@@ -2368,11 +2408,17 @@ def build_publish_readiness() -> dict[str, Any]:
                 "Setup Doctor And Self-Healing",
                 "Cost And Route Minimalism",
                 "Trust Without Ceremony",
+                "Prompt Adoption Parity",
                 "`continue-anywhere`",
                 "`artifact-escalation`",
                 "`setup-doctor`",
                 "`best-productivity-least-expense`",
                 "`visible-trust`",
+                "`natural-task-intake`",
+                "`no-early-provider-leak`",
+                "`no-internal-taxonomy-reliance`",
+                "`generic-scope-planner`",
+                "`no-core-use-case-hard-coding`",
             ],
         },
     ]

@@ -83,6 +83,12 @@ class FrictionReductionDocsTests(unittest.TestCase):
             "### 4. Artifact Escalation",
             "### 5. Continue Anywhere",
             "### 8. Best Productivity With Least Expense",
+            "## Prompt Surface Comparison",
+            "## Current Jini Deviations",
+            "## Major Work Items To Bridge The Gap",
+            "Replace Pack-First Intake With A Shared Work Envelope",
+            "Demote Product Teaching In The First Minute",
+            "Prune Demo-Grade Hard Coding From Core Runtime",
             "## What Jini Should Not Do",
             "## Measurement",
             "time to first useful result",
@@ -104,6 +110,7 @@ class FrictionReductionDocsTests(unittest.TestCase):
             "### 5. Setup Doctor And Self-Healing",
             "### 6. Cost And Route Minimalism",
             "### 7. Trust Without Ceremony",
+            "### 8. Prompt Adoption Parity",
             "## Reject Conditions",
             "## Required Regression Inputs",
             "`continue-anywhere`",
@@ -111,6 +118,11 @@ class FrictionReductionDocsTests(unittest.TestCase):
             "`setup-doctor`",
             "`best-productivity-least-expense`",
             "`visible-trust`",
+            "`natural-task-intake`",
+            "`no-early-provider-leak`",
+            "`no-internal-taxonomy-reliance`",
+            "`generic-scope-planner`",
+            "`no-core-use-case-hard-coding`",
         ]
         for marker in required_markers:
             with self.subTest(marker=marker):

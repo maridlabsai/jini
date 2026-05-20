@@ -415,6 +415,10 @@ scenarios:
         command: ["publish-readiness", "--format", "json"]
         path: "consensus_gates.passed_gate_ids"
         contains: "product-review-role-docs"
+      - id: cross-critic-convergence-gate
+        command: ["publish-readiness", "--format", "json"]
+        path: "consensus_gates.passed_gate_ids"
+        contains: "cross-critic-convergence"
       - id: two-flagship-replacement-flows-gate
         command: ["publish-readiness", "--format", "json"]
         path: "consensus_gates.passed_gate_ids"

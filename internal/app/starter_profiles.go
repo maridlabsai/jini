@@ -15,9 +15,8 @@ type starterPackProfile struct {
 	WorkClass     string
 	RequestCohort string
 	ArtifactFamily string
-	MenuAliases   []string
-	DetectSignals []string
-	Clarification *starterClarificationProfile
+	MenuAliases     []string
+	DetectSignals   []string
 	PrimaryViewPath  string
 	PrimaryViewLabel string
 	WorkingWith      string
@@ -36,15 +35,16 @@ type starterPackProfile struct {
 	Writer        func(workDir, title, source, detail string) error
 }
 
-type starterClarificationProfile struct {
+type scopePlannerProfile struct {
+	RequestCohorts []string
 	Intro          string
 	SkipHint       string
 	Example        string
 	MinimumMissing int
-	Dimensions     []starterScopeDimension
+	Dimensions     []scopePlannerDimension
 }
 
-type starterScopeDimension struct {
+type scopePlannerDimension struct {
 	Label             string
 	NormalizedSignals []string
 	RawSignals        []string
@@ -294,13 +294,6 @@ var starterPackProfiles = map[string]starterPackProfile{
 		ArtifactFamily:"itinerary-plan",
 		MenuAliases:   []string{"5", "trip", "plan a trip"},
 		DetectSignals: []string{"trip", "travel", "paris", "hotel", "flight", "itinerary"},
-		Clarification: &starterClarificationProfile{
-			Intro:          "Before I draft it, give me what is still missing in one line:",
-			SkipHint:       "Type `skip` if you want a generic draft.",
-			Example:        "Example: early October, mixed pace, central hotel area, one museum and one day trip are must-dos",
-			MinimumMissing: 2,
-			Dimensions:     travelScopeDimensions,
-		},
 		PrimaryViewPath:  "itinerary.md",
 		PrimaryViewLabel: "Itinerary",
 		WorkingWith:      "Trip notes, dates, and planning details",
@@ -417,13 +410,24 @@ var starterPackProfiles = map[string]starterPackProfile{
 	},
 }
 
-var travelScopeDimensions = []starterScopeDimension{
+var starterScopePlannerProfiles = []scopePlannerProfile{
 	{
-		Label:             "who is going",
+		RequestCohorts: []string{"trip-itinerary"},
+		Intro:          "Before I draft it, help me narrow the scope in one line:",
+		SkipHint:       "Type `skip` if you want a generic first draft.",
+		Example:        "Example: early October, mixed pace, central hotel area, one museum and one day trip are must-dos",
+		MinimumMissing: 2,
+		Dimensions:     travelScopeDimensions,
+	},
+}
+
+var travelScopeDimensions = []scopePlannerDimension{
+	{
+		Label:             "travelers",
 		NormalizedSignals: []string{"solo", "couple", "friends", "family", "kids", "children", "parents", "honeymoon", "wife", "husband", "partner"},
 	},
 	{
-		Label:             "rough budget",
+		Label:             "budget range",
 		NormalizedSignals: []string{"cheap", "luxury", "midrange", "2500", "3000", "2000", "1500", "4000"},
 		RawSignals:        []string{"$", "budget"},
 	},
@@ -432,15 +436,15 @@ var travelScopeDimensions = []starterScopeDimension{
 		NormalizedSignals: []string{"january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december", "spring", "summer", "fall", "autumn", "winter", "weekend", "weekday", "christmas", "new year"},
 	},
 	{
-		Label:             "trip style",
+		Label:             "pace or style",
 		NormalizedSignals: []string{"food", "museum", "romantic", "nightlife", "shopping", "family friendly", "mixed", "slow pace", "fast pace", "walking", "architecture", "relaxed", "packed", "kid friendly", "honeymoon", "adventure"},
 	},
 	{
-		Label:             "hotel area, or whether you want help choosing it",
+		Label:             "base area, or whether you want help choosing one",
 		NormalizedSignals: []string{"hotel", "stay", "marais", "latin quarter", "montmartre", "central", "area", "neighborhood", "neighbourhood", "arrondissement", "left bank", "right bank"},
 	},
 	{
-		Label:             "must-do sights, or whether you want help choosing them",
+		Label:             "must-do anchors, or whether you want help choosing them",
 		NormalizedSignals: []string{"louvre", "versailles", "eiffel", "orsay", "montmartre", "notre dame", "latin quarter", "marais", "disneyland", "seine cruise", "must do", "must see"},
 	},
 }
@@ -501,28 +505,40 @@ func detectStarterPackFromSource(source string) string {
 	return "general-work"
 }
 
+func scopePlannerForProfile(profile starterPackProfile) (scopePlannerProfile, bool) {
+	for _, planner := range starterScopePlannerProfiles {
+		for _, cohort := range planner.RequestCohorts {
+			if cohort == profile.RequestCohort {
+				return planner, true
+			}
+		}
+	}
+	return scopePlannerProfile{}, false
+}
+
 func clarificationPromptForProfile(profile starterPackProfile, source string) (string, bool) {
-	if profile.Clarification == nil {
+	planner, ok := scopePlannerForProfile(profile)
+	if !ok {
 		return "", false
 	}
-	missing := missingScopeDimensions(source, profile.Clarification.Dimensions)
-	if len(missing) < max(1, profile.Clarification.MinimumMissing) {
+	missing := missingScopeDimensions(source, planner.Dimensions)
+	if len(missing) < maxInt(1, planner.MinimumMissing) {
 		return "", false
 	}
-	lines := []string{profile.Clarification.Intro}
+	lines := []string{planner.Intro}
 	for _, item := range missing {
 		lines = append(lines, "- "+item)
 	}
-	if strings.TrimSpace(profile.Clarification.SkipHint) != "" {
-		lines = append(lines, profile.Clarification.SkipHint)
+	if strings.TrimSpace(planner.SkipHint) != "" {
+		lines = append(lines, planner.SkipHint)
 	}
-	if strings.TrimSpace(profile.Clarification.Example) != "" {
-		lines = append(lines, profile.Clarification.Example)
+	if strings.TrimSpace(planner.Example) != "" {
+		lines = append(lines, planner.Example)
 	}
 	return strings.Join(lines, "\n"), true
 }
 
-func missingScopeDimensions(source string, dimensions []starterScopeDimension) []string {
+func missingScopeDimensions(source string, dimensions []scopePlannerDimension) []string {
 	normalized := normalizeName(source)
 	rawLower := strings.ToLower(strings.TrimSpace(source))
 	missing := make([]string, 0, len(dimensions))
@@ -538,7 +554,7 @@ func missingScopeDimensions(source string, dimensions []starterScopeDimension) [
 	return missing
 }
 
-func max(a, b int) int {
+func maxInt(a, b int) int {
 	if a > b {
 		return a
 	}

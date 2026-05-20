@@ -236,7 +236,7 @@ func TestProviderDoctorRejectsSonnet46ShortcutForDirectClaude(t *testing.T) {
 	}
 }
 
-func TestLauncherShowsInlineProviderChoicesWhenUsingLocalPreview(t *testing.T) {
+func TestLauncherHelpHidesProviderStateWhenUsingLocalPreview(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
@@ -248,10 +248,7 @@ func TestLauncherShowsInlineProviderChoicesWhenUsingLocalPreview(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Working with",
-		"Local preview",
 		"Paste notes or type what you want finished.",
-		"Need setup help? Type `Use Auto` and Jini will help you connect the best available option.",
 		"Not sure? Type `help me finish this`.",
 	} {
 		if !strings.Contains(out, want) {
@@ -259,6 +256,9 @@ func TestLauncherShowsInlineProviderChoicesWhenUsingLocalPreview(t *testing.T) {
 		}
 	}
 	for _, unwanted := range []string{
+		"Working with",
+		"Local preview",
+		"Need setup help?",
 		"Choose how Jini should work",
 		"Type `Connect Claude`",
 		"Type `Connect Bedrock`",
@@ -270,7 +270,7 @@ func TestLauncherShowsInlineProviderChoicesWhenUsingLocalPreview(t *testing.T) {
 	}
 }
 
-func TestLauncherShowsAutoModeStateWhenConfigured(t *testing.T) {
+func TestLauncherHelpHidesAutoModeStateWhenConfigured(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)
 	t.Setenv("JINI_PROVIDER", "auto")
@@ -283,13 +283,14 @@ func TestLauncherShowsAutoModeStateWhenConfigured(t *testing.T) {
 	}
 
 	out := stdout.String()
-	for _, want := range []string{
+	for _, unwanted := range []string{
 		"Working with",
 		"Local preview (chosen automatically)",
-		"Auto mode is on. No cloud provider is ready yet.",
+		"Auto mode is on.",
+		"Need setup help?",
 	} {
-		if !strings.Contains(out, want) {
-			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected output not to contain %q, got:\n%s", unwanted, out)
 		}
 	}
 }
@@ -870,10 +871,10 @@ func TestCheckHighlightsSpecificTravelGaps(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Blocked",
-		"Must Do Sights, Or Whether You Want Help Choosing Them",
+		"Must Do Anchors, Or Whether You Want Help Choosing Them",
 		"Confirm the highest-impact trip details before booking from this draft.",
 		"Options",
-		"Add must do sights, or whether you want help choosing them",
+		"Add must do anchors, or whether you want help choosing them",
 		"Not sure about",
 		"Which one or two anchor experiences should be locked first",
 	} {
@@ -941,6 +942,20 @@ func TestLauncherHelpShowsStartChoicesWithoutCurrentWork(t *testing.T) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
 	}
+	for _, unwanted := range []string{
+		"Working with",
+		"Need setup help?",
+		"Auto mode is on.",
+		"Claude",
+		"OpenAI",
+		"Azure OpenAI",
+		"Bedrock",
+		"Local preview",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected help launcher not to leak provider/setup state %q, got:\n%s", unwanted, out)
+		}
+	}
 }
 
 func TestInteractiveLauncherCreatesMeetingWork(t *testing.T) {
@@ -961,7 +976,9 @@ func TestInteractiveLauncherCreatesMeetingWork(t *testing.T) {
 		"Sendable Follow-up",
 		"## Send this",
 		"Keep going",
+		"Open what's ready",
 		"Show what is missing",
+		"Make it fuller",
 		"Help me plan this",
 	} {
 		if !strings.Contains(out, want) {
@@ -971,7 +988,6 @@ func TestInteractiveLauncherCreatesMeetingWork(t *testing.T) {
 	for _, unwanted := range []string{
 		"Paste notes, paste a doc, or describe it in one line",
 		"Short version or full version",
-		"Make it fuller",
 	} {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("expected output not to contain %q, got:\n%s", unwanted, out)
@@ -1042,7 +1058,9 @@ func TestInteractiveLauncherCreatesSpecReadinessWork(t *testing.T) {
 		"Build-Readiness Check",
 		"## What looks ready now",
 		"Keep going",
+		"Open what's ready",
 		"Show what is missing",
+		"Make it fuller",
 		"Help me plan this",
 	} {
 		if !strings.Contains(out, want) {
@@ -1051,9 +1069,6 @@ func TestInteractiveLauncherCreatesSpecReadinessWork(t *testing.T) {
 	}
 	if strings.Contains(out, "Short version or full version") {
 		t.Fatalf("expected no first-run output-size prompt, got:\n%s", out)
-	}
-	if strings.Contains(out, "Make it fuller") {
-		t.Fatalf("expected placeholder continuation action to be removed, got:\n%s", out)
 	}
 	if strings.Contains(out, "Paste notes, paste a doc, or describe it in one line") {
 		t.Fatalf("expected no legacy source-context prompt, got:\n%s", out)
@@ -1522,13 +1537,40 @@ func TestCurrentWorkInteractivePunctuatedReadyCommandOpensShelf(t *testing.T) {
 	}
 
 	out := stdout.String()
-	for _, want := range []string{"Open something ready", "Sendable Follow-up"} {
+	for _, want := range []string{"Open something ready", "1. Sendable Follow-up", "Type a number or name to open one"} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
 	}
 	if strings.Contains(out, "First Useful Pass") {
 		t.Fatalf("expected punctuated ready command not to start work, got:\n%s", out)
+	}
+}
+
+func TestCurrentWorkInteractiveContinuationAliasesOpenNextUsefulSurface(t *testing.T) {
+	cases := []string{"continue this\n", "resume this\n", "next\n"}
+	for _, line := range cases {
+		t.Run(strings.TrimSpace(line), func(t *testing.T) {
+			stateDir := t.TempDir()
+			packDir := seedMeetingWork(t)
+			writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+			t.Setenv("JINI_STATE_DIR", stateDir)
+
+			var stdout bytes.Buffer
+			exitCode := app.RunInteractive(nil, strings.NewReader(line), &stdout, &stdout)
+			if exitCode != 0 {
+				t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+			}
+
+			out := stdout.String()
+			if !strings.Contains(out, "Owners and Due Points") {
+				t.Fatalf("expected continuation alias to open next useful surface, got:\n%s", out)
+			}
+			if strings.Contains(out, "First Useful Pass") {
+				t.Fatalf("expected continuation alias not to start new work, got:\n%s", out)
+			}
+		})
 	}
 }
 
@@ -1622,6 +1664,25 @@ func TestCurrentWorkInteractiveKeepGoingOpensNextUsefulSurface(t *testing.T) {
 	}
 }
 
+func TestCurrentWorkInteractiveFullerOpensRicherSurface(t *testing.T) {
+	stateDir := t.TempDir()
+	packDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("Make it fuller\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	if !strings.Contains(out, "Owners and Due Points") {
+		t.Fatalf("expected fuller action to open richer surface, got:\n%s", out)
+	}
+}
+
 func TestCurrentWorkInteractiveProceedOpensNextUsefulSurface(t *testing.T) {
 	stateDir := t.TempDir()
 	packDir := seedMeetingWork(t)
@@ -1641,6 +1702,55 @@ func TestCurrentWorkInteractiveProceedOpensNextUsefulSurface(t *testing.T) {
 	}
 	if strings.Contains(out, "First Useful Pass: Proceed") {
 		t.Fatalf("expected proceed not to start literal work, got:\n%s", out)
+	}
+}
+
+func TestCurrentWorkReadyShelfSelectionOpensArtifactByNumber(t *testing.T) {
+	stateDir := t.TempDir()
+	packDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("Show what's ready\n2\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Open something ready",
+		"2. Owners and Due Points",
+		"Owners and Due Points",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+}
+
+func TestCurrentWorkReadyShelfSelectionOpensArtifactByName(t *testing.T) {
+	stateDir := t.TempDir()
+	packDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("Open what's ready\nOwners and Due Points\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Open something ready",
+		"Owners and Due Points",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
 	}
 }
 
@@ -1829,6 +1939,36 @@ func TestInteractiveTacticalSurfacesStayCompact(t *testing.T) {
 	}
 }
 
+func TestCurrentWorkTacticalSurfacesStayCompact(t *testing.T) {
+	cases := []struct {
+		name     string
+		input    string
+		maxLines int
+	}{
+		{name: "fuller", input: "Make it fuller\n", maxLines: 14},
+		{name: "ready shelf", input: "Show what's ready\n", maxLines: 16},
+		{name: "interrupt prompt", input: "plan me a 7 day paris trip\n", maxLines: 14},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			stateDir := t.TempDir()
+			packDir := seedMeetingWork(t)
+			writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+			t.Setenv("JINI_STATE_DIR", stateDir)
+
+			var stdout bytes.Buffer
+			exitCode := app.RunInteractive(nil, strings.NewReader(tc.input), &stdout, &stdout)
+			if exitCode != 0 {
+				t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+			}
+			if got := nonEmptyLineCount(stdout.String()); got > tc.maxLines {
+				t.Fatalf("expected %s to stay within %d non-empty lines, got %d:\n%s", tc.name, tc.maxLines, got, stdout.String())
+			}
+		})
+	}
+}
+
 func TestInteractiveTacticalSurfacesStayWithinLatencySmokeBudget(t *testing.T) {
 	budget := 500 * time.Millisecond
 	cases := []struct {
@@ -1872,6 +2012,36 @@ func TestInteractiveTacticalSurfacesStayWithinLatencySmokeBudget(t *testing.T) {
 
 				var stdout bytes.Buffer
 				if exitCode := app.RunInteractive(nil, strings.NewReader("show what's ready?\n"), &stdout, &stdout); exitCode != 0 {
+					t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+				}
+			},
+		},
+		{
+			name: "current work fuller surface",
+			run: func(t *testing.T) {
+				t.Helper()
+				stateDir := t.TempDir()
+				packDir := seedMeetingWork(t)
+				writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+				t.Setenv("JINI_STATE_DIR", stateDir)
+
+				var stdout bytes.Buffer
+				if exitCode := app.RunInteractive(nil, strings.NewReader("make it fuller\n"), &stdout, &stdout); exitCode != 0 {
+					t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+				}
+			},
+		},
+		{
+			name: "current work interruption prompt",
+			run: func(t *testing.T) {
+				t.Helper()
+				stateDir := t.TempDir()
+				packDir := seedMeetingWork(t)
+				writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+				t.Setenv("JINI_STATE_DIR", stateDir)
+
+				var stdout bytes.Buffer
+				if exitCode := app.RunInteractive(nil, strings.NewReader("plan me a 7 day paris trip\n"), &stdout, &stdout); exitCode != 0 {
 					t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 				}
 			},
@@ -1967,7 +2137,7 @@ func TestInteractiveLauncherCreatesTravelWork(t *testing.T) {
 		"# Itinerary: 7 Day Paris Trip",
 		"Budget Sketch",
 		"## Still to confirm",
-		"Must Do Sights, Or Whether You Want Help Choosing Them",
+		"Must Do Anchors, Or Whether You Want Help Choosing Them",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -1994,14 +2164,14 @@ func TestInteractiveLauncherAsksForTravelClarificationWhenUnderspecified(t *test
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Before I draft it, give me what is still missing in one line:",
-		"- who is going",
-		"- rough budget",
+		"Before I draft it, help me narrow the scope in one line:",
+		"- travelers",
+		"- budget range",
 		"- dates or season",
-		"- trip style",
-		"- hotel area, or whether you want help choosing it",
-		"- must-do sights, or whether you want help choosing them",
-		"Type `skip` if you want a generic draft.",
+		"- pace or style",
+		"- base area, or whether you want help choosing one",
+		"- must-do anchors, or whether you want help choosing them",
+		"Type `skip` if you want a generic first draft.",
 		"Clarified scope",
 		"7 Day Paris Trip",
 		"Itinerary",
@@ -2011,7 +2181,7 @@ func TestInteractiveLauncherAsksForTravelClarificationWhenUnderspecified(t *test
 		}
 	}
 	if !strings.Contains(out, "one museum and one day trip are must-dos") {
-		t.Fatalf("expected generic clarification example, got:\n%s", out)
+		t.Fatalf("expected shared scope-planner example, got:\n%s", out)
 	}
 	assertNoFirstRunStatusDump(t, out)
 }
@@ -2028,7 +2198,7 @@ func TestInteractiveLauncherSkipsTravelClarificationWhenRequestAlreadyScoped(t *
 	}
 
 	out := stdout.String()
-	if strings.Contains(out, "Before I draft it, give me what is still missing in one line:") {
+	if strings.Contains(out, "Before I draft it, help me narrow the scope in one line:") {
 		t.Fatalf("expected already-scoped travel request to skip clarification, got:\n%s", out)
 	}
 }
@@ -2046,19 +2216,19 @@ func TestInteractiveLauncherAsksOnlyForMissingTravelDimensions(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Before I draft it, give me what is still missing in one line:",
+		"Before I draft it, help me narrow the scope in one line:",
 		"- dates or season",
-		"- trip style",
-		"- hotel area, or whether you want help choosing it",
-		"- must-do sights, or whether you want help choosing them",
+		"- pace or style",
+		"- base area, or whether you want help choosing one",
+		"- must-do anchors, or whether you want help choosing them",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected targeted clarification to contain %q, got:\n%s", want, out)
 		}
 	}
 	for _, unwanted := range []string{
-		"- who is going",
-		"- rough budget",
+		"- travelers",
+		"- budget range",
 	} {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("expected targeted clarification to omit %q, got:\n%s", unwanted, out)
@@ -2119,7 +2289,7 @@ func TestInteractiveLauncherCreatesLongerScopedTravelWithExactDayCount(t *testin
 	if strings.Contains(out, "Whether Versailles") || strings.Contains(out, "Louvre and Versailles are must-dos") {
 		t.Fatalf("expected Spain trip to avoid Paris-specific fallback, got:\n%s", out)
 	}
-	if strings.Contains(out, "Before I draft it, give me what is still missing in one line:") {
+	if strings.Contains(out, "Before I draft it, help me narrow the scope in one line:") {
 		t.Fatalf("expected fully scoped travel request to skip clarification, got:\n%s", out)
 	}
 	assertNoFirstRunStatusDump(t, out)
@@ -2188,7 +2358,7 @@ func TestInteractiveLauncherCanSwitchBetweenActiveProjects(t *testing.T) {
 	}
 }
 
-func TestCurrentWorkFreeformInputStartsNewWork(t *testing.T) {
+func TestCurrentWorkFreeformInputConfirmsBeforeStartingNewWork(t *testing.T) {
 	stateDir := t.TempDir()
 	meetingDir := seedMeetingWork(t)
 	writeCurrentWork(t, stateDir, meetingDir, "meeting-followup", "example-meeting-followup", "Meeting Notes With Owners And Due Dates For Weekly Product Review", "decided", "ready-to-make")
@@ -2196,13 +2366,16 @@ func TestCurrentWorkFreeformInputStartsNewWork(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("plan me a 7 day paris trip\ncouple, around $2500, early October, mixed pace, central hotel area\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("plan me a 7 day paris trip\nstart new work\ncouple, around $2500, early October, mixed pace, central hotel area\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
 
 	out := stdout.String()
 	for _, want := range []string{
+		"This looks like new work.",
+		"Current work stays saved",
+		"Start new work",
 		"Your first draft is ready.",
 		"7 Day Paris Trip",
 		"Itinerary",
@@ -2220,6 +2393,68 @@ func TestCurrentWorkFreeformInputStartsNewWork(t *testing.T) {
 	current := readCurrentWork(t, stateDir)
 	if current["pack_id"] != "travel-plan" {
 		t.Fatalf("expected current work to switch to travel-plan, got %#v", current)
+	}
+}
+
+func TestCurrentWorkFreeformInputCanKeepCurrentWork(t *testing.T) {
+	stateDir := t.TempDir()
+	meetingDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, meetingDir, "meeting-followup", "example-meeting-followup", "Meeting Notes With Owners And Due Dates For Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("plan me a 7 day paris trip\nkeep current work\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"This looks like new work.",
+		"Keeping current work.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, "7 Day Paris Trip") {
+		t.Fatalf("expected keep-current path not to start new work, got:\n%s", out)
+	}
+	current := readCurrentWork(t, stateDir)
+	if current["pack_id"] != "meeting-followup" {
+		t.Fatalf("expected current work to remain meeting-followup, got %#v", current)
+	}
+}
+
+func TestCurrentWorkFreeformInputCanSwitchProjectFromInterruptPrompt(t *testing.T) {
+	stateDir := t.TempDir()
+	travelDir := copyWorkDir(t, filepath.Join(stateDir, "work", "travel-plan-paris"), seedTravelWork(t))
+	meetingDir := copyWorkDir(t, filepath.Join(stateDir, "work", "meeting-followup-weekly-review"), seedMeetingWork(t))
+	writeCurrentWork(t, stateDir, meetingDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("plan me a 7 day paris trip\nswitch project\n1\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"This looks like new work.",
+		"Switch project",
+		"Switched to",
+		"7-Day Paris Trip",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+	current := readCurrentWork(t, stateDir)
+	if current["pack_id"] != "travel-plan" || current["pack_dir"] != travelDir {
+		t.Fatalf("expected current work to switch to travel plan, got %#v", current)
 	}
 }
 
@@ -2409,6 +2644,51 @@ func BenchmarkInteractiveCurrentWorkReadyShelf(b *testing.B) {
 	for b.Loop() {
 		var stdout bytes.Buffer
 		if exitCode := app.RunInteractive(nil, strings.NewReader("show what's ready?\n"), &stdout, io.Discard); exitCode != 0 {
+			b.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+		}
+	}
+}
+
+func BenchmarkInteractiveCurrentWorkOpenShelfSelection(b *testing.B) {
+	stateDir := b.TempDir()
+	packDir := seedMeetingWork(b)
+	writeCurrentWork(b, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+	b.Setenv("JINI_STATE_DIR", stateDir)
+	b.ReportAllocs()
+
+	for b.Loop() {
+		var stdout bytes.Buffer
+		if exitCode := app.RunInteractive(nil, strings.NewReader("show what's ready?\n2\n"), &stdout, io.Discard); exitCode != 0 {
+			b.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+		}
+	}
+}
+
+func BenchmarkInteractiveCurrentWorkFuller(b *testing.B) {
+	stateDir := b.TempDir()
+	packDir := seedMeetingWork(b)
+	writeCurrentWork(b, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+	b.Setenv("JINI_STATE_DIR", stateDir)
+	b.ReportAllocs()
+
+	for b.Loop() {
+		var stdout bytes.Buffer
+		if exitCode := app.RunInteractive(nil, strings.NewReader("make it fuller\n"), &stdout, io.Discard); exitCode != 0 {
+			b.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+		}
+	}
+}
+
+func BenchmarkInteractiveCurrentWorkInterruptionPrompt(b *testing.B) {
+	stateDir := b.TempDir()
+	packDir := seedMeetingWork(b)
+	writeCurrentWork(b, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+	b.Setenv("JINI_STATE_DIR", stateDir)
+	b.ReportAllocs()
+
+	for b.Loop() {
+		var stdout bytes.Buffer
+		if exitCode := app.RunInteractive(nil, strings.NewReader("plan me a 7 day paris trip\n"), &stdout, io.Discard); exitCode != 0 {
 			b.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 		}
 	}

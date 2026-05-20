@@ -143,6 +143,30 @@ Required markers:
 - `review-before-share`
 - `no-repeated-permission-ceremony`
 
+### 8. Prompt Adoption Parity
+
+Pass criteria:
+
+- The first-turn experience feels like natural task intake, not workflow setup.
+- Provider, route, model, pack, or profile labels stay hidden until the user
+  asks or cost, safety, or capability constraints make them relevant.
+- Greeting, thanks, tactical commands, and lightweight social inputs never
+  create work or expose internal artifact taxonomy.
+- Internal product terms such as `First Useful Pass` are not required to
+  understand or navigate default user flows.
+- Clarification is driven by shared scope logic and asks only the smallest
+  useful set of high-yield questions.
+- Core output shaping does not depend on use-case-specific hard coding in the
+  primary intake path.
+
+Required markers:
+
+- `natural-task-intake`
+- `no-early-provider-leak`
+- `no-internal-taxonomy-reliance`
+- `generic-scope-planner`
+- `no-core-use-case-hard-coding`
+
 ## Reject Conditions
 
 Reject a change if any of these are true:
@@ -159,6 +183,12 @@ Reject a change if any of these are true:
   known.
 - It hides subscription or route fallback state until after failure.
 - It adds an approval prompt that cannot be remembered, scoped, or explained.
+- It teaches provider, route, pack, or command taxonomy before the user has
+  stated the work.
+- It relies on product-internal terms such as `First Useful Pass` in the normal
+  first-minute journey.
+- It adds or preserves use-case-specific hard coding in core intake when the
+  same behavior should be driven by the shared work envelope.
 
 ## Required Regression Inputs
 
@@ -168,11 +198,17 @@ Reject a change if any of these are true:
 - `jini /doctor`
 - `jini /memory`
 - `hello`
+- `thanks`
+- `what can you do?`
 - `7 day paris trip`
 - `Plan a 5 day Lisbon trip for two adults in October, food/design focused,
   moderate budget, no rental car.`
+- `Plan a 5 day Lisbon trip for two adults in October, food/design focused,
+  moderate budget, no rental car, Alfama stay, no museums, Sintra optional.`
 - `turn these notes into a follow-up`
+- `rewrite this note to be sendable`
 - `critique this launch plan`
+- `continue this`
 - `continue`
 - provider missing-token setup
 - subscription exhausted with local runtime available
@@ -182,3 +218,5 @@ Reject a change if any of these are true:
 The gate passes only when Jini keeps the first minute lighter than a workflow
 tool, the resume path clearer than chat history, the artifact path richer than a
 terminal dump, and the route path cheaper by default than premium-model habit.
+It also requires prompt behavior that feels native to Claude, ChatGPT, and
+Codex users without making them learn Jini-specific taxonomy first.

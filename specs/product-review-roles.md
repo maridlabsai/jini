@@ -10,6 +10,11 @@ as ready for implementation or public positioning.
 The goal is consensus on the user experience, not agreement that the design is
 architecturally tidy.
 
+When two or more review roles independently raise the same user-friction issue,
+the default action is not debate. The default action is to remove, demote, or
+simplify the offending surface unless there is explicit evidence that keeping it
+materially improves user outcome.
+
 ## Roles
 
 ### Competitive Analyst
@@ -84,6 +89,29 @@ Approval condition:
 - parity tests exist for new and old work
 - score momentum improves without weakening the guarded lead
 
+## Convergent Critique Rule
+
+The review system should be ruthless in favor of the user.
+
+If two or more roles converge on the same critique:
+
+- default to remove, demote, simplify, or hide the surface
+- do not keep it only because it is already implemented
+- do not keep it only because it is architecturally neat
+- do not keep it only because it helps an internal abstraction
+
+The only acceptable reason to keep the criticized behavior is explicit proof
+that it improves at least one of:
+
+- first useful result speed
+- user trust
+- output quality
+- continuation clarity
+- cost efficiency
+
+If that proof does not exist, the criticized behavior should be treated as
+product debt and cut back.
+
 ## Consensus Gate
 
 A product change is not approved until all four roles accept these conditions:
@@ -95,4 +123,4 @@ A product change is not approved until all four roles accept these conditions:
 - source, assumptions, missing proof, and safe next action are visible
 - launcher-created work is parity-tested or uses shared generation
 - meeting follow-up and plan readiness are bulletproof before broader launcher scope
-
+- repeated critique from more than one role triggers simplification unless user-outcome proof justifies keeping the surface

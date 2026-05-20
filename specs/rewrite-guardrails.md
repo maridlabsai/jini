@@ -122,6 +122,7 @@ These are good simplifications. They improve UX without weakening the system.
 - Move capability growth into packs, adapters, and views instead of growing the kernel.
 - Add human-facing summaries over existing canonical artifacts instead of inventing a second truth model.
 - Keep the public face small while leaving operator tooling intact behind it.
+- Remove or demote any surface that attracts the same critique from more than one review role unless there is explicit user-outcome proof to keep it.
 
 ## Lead-Damaging Simplifications
 
@@ -213,6 +214,7 @@ If any answer is `no`, stop and fix it before merge.
 - [ ] Did the UX designer approve the exact screen order, copy, and output shelf labels?
 - [ ] Did the program manager approve scope, sequencing, parity evidence, and lead preservation?
 - [ ] Are all role objections either resolved in the design or recorded as explicit non-goals for this slice?
+- [ ] If two or more roles raised the same friction, was the default action remove, demote, or simplify it unless user-outcome proof justified keeping it?
 - [ ] Is launcher-created work blocked from shipping or expanding without shared generation or golden parity fixtures?
 - [ ] Do old/new parity fixtures exist before public cutover?
 

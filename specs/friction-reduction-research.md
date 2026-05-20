@@ -193,6 +193,178 @@ Exit criterion: every route decision can explain model/API/provider, why it was
 chosen, cheaper fallback, stronger fallback, and local/offline fallback when
 available.
 
+## Prompt Surface Comparison
+
+The important comparison is not "which product has the prettiest prompt." The
+important comparison is where each product asks the user to carry product
+theory instead of simply stating the work.
+
+| Dimension | Claude Code | ChatGPT | Codex | Jini today | Jini gap |
+| --- | --- | --- | --- | --- | --- |
+| First turn | Terminal-native task intake with advanced control living behind commands, memory files, and skills | Conversational first turn; projects and canvas appear when work needs durable context or editing | Natural task intake across CLI, app, web, and mobile-connected continuation | Compact paste-first shell exists, but richer launcher still exposes more scaffolding | Jini still explains itself too early |
+| Clarification | Typically asks only when blocked; repo and tool context already carry a lot | Clarifies selectively, then keeps the conversation flowing | Clarifies around approvals, repo state, or task direction while preserving active work state | Profile-based clarification can be helpful, but it is still partly template-driven | Clarification is not yet driven by one generic scope engine |
+| Tactical help | Commands, skills, memory, and hooks are discoverable without blocking first work | Tools are present, but everyday use starts from chat | Coding surfaces expose approvals, clients, plugins, and active work without making them mandatory upfront | `/help`, `/status`, `/doctor`, `/memory`, and related aliases are safe and tested | Good parity here, but the launcher still teaches too much before the task |
+| Rich editing | Artifacts, skills, IDE, desktop, and browser workflows | Canvas, projects, saved project sources, tasks, and memory | Diffs, screenshots, approvals, terminal output, and mobile review/approval loops | Artifact envelope direction is right, but many flows still resolve to markdown-first terminal behavior | Artifact escalation is still narrower and more implicit than competitors |
+| Resume and continuity | Memory files, auto memory, remote control, desktop, web, and IDE | Projects keep chats, files, instructions, and project memory together | Active threads, approvals, plugins, and project context flow across machines and phone | Current-work resume is strong in CLI, but cross-surface identity is still mostly architectural intent | Jini continuity is ahead conceptually, behind in shipped surface depth |
+| Context visibility | Project memory and CLAUDE.md are explicit, inspectable, and layered | Project memory, project sources, and saved responses are visible containers | Connected machines keep local files and credentials in place while live state syncs to other surfaces | Work state is visible, but pack/profile structure still leaks through the experience | Jini needs user-facing context containers, not internal pack vocabulary |
+| Route and model visibility | Available when useful, not mandatory before task intake | Largely abstracted unless tools/settings matter | Model, approvals, plugins, and client surfaces are inspectable during active work | Public launcher still prints `Working with` immediately in richer help modes | Route/provider labels still appear too early |
+
+### What The Official Product Patterns Say
+
+- Claude Code documents a terminal, IDE, desktop, and browser posture, then
+  layers memory via `CLAUDE.md`, auto memory, and optional skills instead of
+  requiring them before the first request.
+- ChatGPT projects document a persistent workspace for chats, files,
+  instructions, and project memory, while canvas is a separate editing surface
+  that can open when the work becomes longer or more revision-heavy.
+- Codex documents one account across app, CLI, IDE extension, web, and mobile
+  continuation. The mobile continuation write-up is especially important:
+  active work, approvals, screenshots, terminal output, diffs, and context stay
+  attached to the running environment instead of being re-entered manually.
+
+Jini should consume these as interaction principles, not mimicry targets:
+
+- natural language first
+- durable context second
+- rich editing when complexity rises
+- inspectable control surfaces on demand
+- seamless continuation across devices and sessions
+
+## Current Jini Deviations
+
+### Adoption-Positive
+
+- The compact `jini` shell is materially lighter than the earlier default state
+  dump and now behaves more like a paste-first front door.
+- Tactical inputs such as `/help`, `/status`, `/doctor`, `/memory`, and
+  punctuated variants are already treated as non-work control inputs with
+  regression coverage.
+- Greeting-only input now stays conversational instead of forcing a fake work
+  object.
+- Jini already has the right instinct around "least expense first" routing and
+  durable work identity.
+
+### Adoption-Negative
+
+- The richer launcher still opens with a teaching surface rather than a plain
+  work box. `What do you need help finishing?`, `Working with`, examples, and
+  command lists are still more instructional than Claude, ChatGPT, or Codex.
+- `Working with` and provider labels still leak before the user has received
+  value. Competitors generally reveal this kind of infrastructure only when it
+  matters for action, cost, or trust.
+- `help me finish this` and `First Useful Pass` are still internal Jini
+  concepts. They may be reasonable implementation concepts, but they are not
+  concepts users of Claude, ChatGPT, or Codex arrive expecting.
+- Starter packs still encode visible product behavior through use-case profiles,
+  hard-coded detect signals, hard-coded headings, and in some cases hard-coded
+  destination links. That creates useful demos, but it does not create the
+  feeling of a broadly capable assistant.
+- Clarification is still profile-specific. Travel shows the issue clearly:
+  there is a reasonably good scoped-question path, but it is still built as a
+  travel profile rather than a generic scope planner that happens to work for
+  travel.
+- Hidden provider prompts still over-shape the work through pack-specific
+  guidance. This improves consistency, but it also risks making output feel
+  canned when users expect a more adaptive assistant.
+- Jini still has more visible internal taxonomy than the competitors. The
+  target experience should be "stateful assistant with good artifacts," not
+  "starter-pack workflow engine."
+
+## Major Work Items To Bridge The Gap
+
+### 1. Replace Pack-First Intake With A Shared Work Envelope
+
+Introduce one generic intake and planning schema:
+
+- user goal
+- current material
+- output intent
+- missing high-value scope
+- risk level
+- artifact need
+- continuation need
+
+Travel, follow-up, research, vendor choice, and code should be profile lenses
+on top of this envelope, not primary branching structures in the first-turn
+experience.
+
+### 2. Demote Product Teaching In The First Minute
+
+Default launcher behavior should move closer to:
+
+- one short invitation to paste the work
+- optional help only when requested
+- no provider/route label before the user asks or a safety/cost issue requires
+  it
+- no example wall unless the user is blocked
+
+This is the single largest adoption gap because it affects every new user and
+every context switch.
+
+### 3. Remove Internal Product Terms From User-Facing Default Flows
+
+`First Useful Pass` can remain an internal artifact class if needed, but it
+should not be a headline concept in the user journey. Users should see artifact
+names that match the work itself: itinerary, follow-up, decision memo, bug
+brief, handoff note, task list.
+
+### 4. Generalize Clarification Into A Scope Planner
+
+Replace profile-specific clarification builders with a generic planner that:
+
+- detects what is already known
+- ranks missing inputs by output value
+- asks only the smallest set of high-yield questions
+- decides when a generic first draft is better than more questioning
+- works across travel, planning, writing, research, code, and mixed requests
+
+### 5. Generalize Artifact Planning And Smart Linking
+
+Artifact shaping should come from a shared artifact planner and capability
+registry, not from pack-local heading scripts and destination-specific smart
+links. Domain packs may contribute optional hints, but the base planner should
+own:
+
+- artifact type selection
+- section planning
+- link preservation rules
+- readiness and missing-input summaries
+- cross-surface renderability
+
+### 6. Make Continuation Feel Native, Not Bolted On
+
+Codex and ChatGPT show the value of seamless continuation across clients and
+devices. Jini should keep work identity stable and allow:
+
+- current work resume
+- lightweight mobile/desktop review
+- artifact review before share
+- approval and clarification check-ins without reopening the whole workflow
+
+### 7. Benchmark Prompt Friction As A First-Class Quality Signal
+
+The regression suite should compare Jini against prompt classes, not only local
+goldens:
+
+- greeting
+- vague request
+- already-scoped request
+- revise-this artifact request
+- tactical command
+- continue/resume request
+- long-running delegated work check-in
+
+The goal is not to clone competitor wording. The goal is to keep Jini's
+required user effort at or below the benchmark set by Claude, ChatGPT, and
+Codex for the same class of ask.
+
+### 8. Prune Demo-Grade Hard Coding From Core Runtime
+
+Hard-coded profile signals, destination-specific links, and pack-specific
+section templates should be treated as temporary scaffolding unless they can be
+proven to generalize. Anything that survives in core must justify itself as a
+domain-agnostic capability or as a clearly isolated optional profile.
+
 ## What Jini Should Not Do
 
 - Do not copy Codex by becoming only a coding shell.

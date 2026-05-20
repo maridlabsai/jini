@@ -2060,6 +2060,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("ok", consensus_gates["status"])
         expected_gate_ids = {
             "product-review-role-docs",
+            "cross-critic-convergence",
             "two-flagship-replacement-flows",
             "useful-result-first",
             "i-am-not-sure-fallback",
@@ -2232,6 +2233,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         consensus_scenario = next(item for item in report["scenarios"] if item["id"] == "product-consensus-gates")
         expected_consensus_checks = {
             "product-review-role-docs-gate",
+            "cross-critic-convergence-gate",
             "two-flagship-replacement-flows-gate",
             "useful-result-first-gate",
             "i-am-not-sure-fallback-gate",
