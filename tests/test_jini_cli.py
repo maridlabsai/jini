@@ -2022,7 +2022,7 @@ class JiniCliConformanceTests(unittest.TestCase):
 
         report = json.loads(result.stdout)
         self.assertEqual("JiniPublishReadiness", report["result_type"])
-        self.assertEqual("ok", report["status"])
+        self.assertEqual("warning", report["status"])
         self.assertEqual("starter-kit", report["default_kit_id"])
         self.assertGreaterEqual(report["pack_count"], 6)
         self.assertGreaterEqual(report["kit_count"], 6)
@@ -2048,11 +2048,11 @@ class JiniCliConformanceTests(unittest.TestCase):
             any(item["dimension_id"] == "learning-maturity" and item["position"] == "ahead" for item in leadership["checks"])
         )
         rewrite_momentum = next(section for section in report["sections"] if section["id"] == "rewrite-momentum")
-        self.assertEqual("ok", rewrite_momentum["status"])
+        self.assertEqual("warning", rewrite_momentum["status"])
         self.assertTrue(any(item["id"] == "overall-score-floor" and item["delta"] > 0 for item in rewrite_momentum["checks"]))
         self.assertTrue(
             any(
-                item["id"] == "overall-lead-margin" and item["margin"] >= item["minimum_margin"]
+                item["id"] == "overall-lead-margin" and item["margin"] < item["minimum_margin"] and item["status"] == "warning"
                 for item in rewrite_momentum["checks"]
             )
         )
@@ -2182,19 +2182,23 @@ class JiniCliConformanceTests(unittest.TestCase):
         report = json.loads(result.stdout)
         self.assertEqual("JiniGoldenBenchmarkValidation", report["report_type"])
         self.assertTrue(self.resolve_repo_path(report["report_path"]).exists())
-        self.assertEqual("2026-05-14", report["last_verified_at"])
+        self.assertEqual("2026-05-20", report["last_verified_at"])
         self.assertTrue(report["dataset_digest"])
         competitor_ids = {item["id"] for item in report["competitors"]}
-        self.assertEqual({"claude-code", "kiro", "hermes", "agentfield", "ai-hero"}, competitor_ids)
+        self.assertEqual({"claude-code", "codex", "chatgpt", "kiro", "hermes", "agentfield", "ai-hero"}, competitor_ids)
         self.assertTrue(all(item.get("source_urls") for item in report["competitors"]))
-        self.assertEqual(7, report["scenario_count"])
+        self.assertEqual(8, report["scenario_count"])
         self.assertEqual("leading", report["overall"]["status"])
+        self.assertIn("tracks", report["overall"])
+        self.assertEqual("leading", report["overall"]["tracks"]["architecture-strength"]["status"])
+        self.assertEqual("trailing", report["overall"]["tracks"]["adoption-truth"]["status"])
         for competitor_id, competitor_score in report["overall"]["competitor_scores"].items():
             self.assertGreater(report["overall"]["jini_score"], competitor_score, competitor_id)
         scenario_ids = {item["id"] for item in report["scenarios"]}
         self.assertIn("install-trust", scenario_ids)
         self.assertIn("portable-edges", scenario_ids)
         self.assertIn("guided-product-loop", scenario_ids)
+        self.assertIn("first-minute-adoption", scenario_ids)
         self.assertIn("operational-breadth", scenario_ids)
         self.assertIn("product-consensus-gates", scenario_ids)
         install_scenario = next(item for item in report["scenarios"] if item["id"] == "install-trust")
@@ -2215,6 +2219,14 @@ class JiniCliConformanceTests(unittest.TestCase):
             any(
                 check["id"] == "guided-loop-reuses-handoff-context" and check["status"] == "ok"
                 for check in guided_loop["checks"]
+            )
+        )
+        adoption_scenario = next(item for item in report["scenarios"] if item["id"] == "first-minute-adoption")
+        self.assertEqual(["adoption-truth"], adoption_scenario["tracks"])
+        self.assertTrue(
+            any(
+                check["id"] == "beginner-path-is-single-command" and check["status"] == "ok"
+                for check in adoption_scenario["checks"]
             )
         )
         breadth_scenario = next(item for item in report["scenarios"] if item["id"] == "operational-breadth")

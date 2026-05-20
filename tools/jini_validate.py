@@ -656,6 +656,7 @@ def build_golden_benchmark_projection() -> dict[str, Any]:
                 "label": str(raw_scenario.get("label", "")),
                 "purpose": str(raw_scenario.get("purpose", "")),
                 "weight": weight,
+                "tracks": [str(item) for item in raw_scenario.get("tracks", []) if str(item).strip()],
                 "dimensions": dimensions,
                 "dimension_scores": {item: float(dimension_lookup[item]["current_score"]) for item in dimensions if item in dimension_lookup},
                 "base_jini_score": jini_score,
@@ -677,6 +678,7 @@ def build_golden_benchmark_projection() -> dict[str, Any]:
     strongest_score = 0.0
     if competitor_aggregates:
         strongest_competitor, strongest_score = max(competitor_aggregates.items(), key=lambda item: item[1])
+    track_scores = build_golden_benchmark_track_scores(scenarios, competitor_ids)
     return {
         "schema_version": benchmark.get("schema_version", "0.1.0"),
         "report_type": "JiniGoldenBenchmarkProjection",
@@ -698,9 +700,55 @@ def build_golden_benchmark_projection() -> dict[str, Any]:
             "strongest_competitor": strongest_competitor,
             "strongest_competitor_score": strongest_score,
             "failed_scenarios": [],
+            "tracks": track_scores,
         },
         "scenarios": scenarios,
     }
+
+
+def build_golden_benchmark_track_scores(
+    scenarios: list[dict[str, Any]], competitor_ids: list[str]
+) -> dict[str, Any]:
+    track_totals: dict[str, float] = {}
+    track_weights: dict[str, float] = {}
+    competitor_totals: dict[str, dict[str, float]] = {}
+    for scenario in scenarios:
+        tracks = [str(item) for item in scenario.get("tracks", []) if str(item).strip()]
+        if not tracks:
+            continue
+        weight = float(scenario.get("weight", 1.0))
+        jini_score = float(scenario.get("validated_jini_score", 0.0))
+        scenario_competitors = {
+            competitor_id: float(scenario.get("competitor_scores", {}).get(competitor_id, 0.0))
+            for competitor_id in competitor_ids
+        }
+        for track in tracks:
+            track_totals[track] = track_totals.get(track, 0.0) + (jini_score * weight)
+            track_weights[track] = track_weights.get(track, 0.0) + weight
+            totals = competitor_totals.setdefault(track, {competitor_id: 0.0 for competitor_id in competitor_ids})
+            for competitor_id, score in scenario_competitors.items():
+                totals[competitor_id] = totals.get(competitor_id, 0.0) + (score * weight)
+    report: dict[str, Any] = {}
+    for track, total in track_totals.items():
+        weight = track_weights.get(track, 0.0)
+        jini_score = round(total / weight, 2) if weight else 0.0
+        competitor_scores = {
+            competitor_id: round(competitor_totals.get(track, {}).get(competitor_id, 0.0) / weight, 2) if weight else 0.0
+            for competitor_id in competitor_ids
+        }
+        strongest_competitor = ""
+        strongest_score = 0.0
+        if competitor_scores:
+            strongest_competitor, strongest_score = max(competitor_scores.items(), key=lambda item: item[1])
+        report[track] = {
+            "status": "leading" if jini_score >= strongest_score else "trailing",
+            "jini_score": jini_score,
+            "competitor_scores": competitor_scores,
+            "strongest_competitor": strongest_competitor,
+            "strongest_competitor_score": strongest_score,
+            "scenario_ids": [scenario["id"] for scenario in scenarios if track in scenario.get("tracks", [])],
+        }
+    return report
 
 
 def build_golden_benchmark_report() -> tuple[dict[str, Any], Path]:
@@ -768,6 +816,7 @@ def build_golden_benchmark_report() -> tuple[dict[str, Any], Path]:
                     "label": str(raw_scenario.get("label", scenario_id)),
                     "purpose": str(raw_scenario.get("purpose", "")).strip(),
                     "weight": weight,
+                    "tracks": [str(item) for item in raw_scenario.get("tracks", []) if str(item).strip()],
                     "dimensions": dimensions,
                     "dimension_scores": {item: float(dimension_lookup[item]["current_score"]) for item in dimensions if item in dimension_lookup},
                     "base_jini_score": base_jini_score,
@@ -789,6 +838,7 @@ def build_golden_benchmark_report() -> tuple[dict[str, Any], Path]:
         strongest_score = 0.0
         if competitor_aggregates:
             strongest_competitor, strongest_score = max(competitor_aggregates.items(), key=lambda item: item[1])
+        track_scores = build_golden_benchmark_track_scores(scenarios, competitor_ids)
         report = {
             "schema_version": benchmark.get("schema_version", "0.1.0"),
             "report_type": "JiniGoldenBenchmarkValidation",
@@ -810,6 +860,7 @@ def build_golden_benchmark_report() -> tuple[dict[str, Any], Path]:
                 "strongest_competitor": strongest_competitor,
                 "strongest_competitor_score": strongest_score,
                 "failed_scenarios": [scenario["id"] for scenario in scenarios if scenario["status"] != "ok"],
+                "tracks": track_scores,
             },
             "scenarios": scenarios,
         }
@@ -832,6 +883,12 @@ def print_golden_benchmark_report(report: dict[str, Any]) -> None:
     if strongest_competitor:
         strongest_score = report.get("overall", {}).get("strongest_competitor_score", 0.0)
         print(f"BEST    {strongest_competitor} ({strongest_score:.2f})")
+    for track_id, track in report.get("overall", {}).get("tracks", {}).items():
+        print(
+            f"TRACK   {track_id} | {track.get('status', '')} | "
+            f"jini={float(track.get('jini_score', 0.0)):.2f} | "
+            f"best={track.get('strongest_competitor', '')} ({float(track.get('strongest_competitor_score', 0.0)):.2f})"
+        )
     print("SCENARIOS")
     for scenario in report.get("scenarios", []):
         print(

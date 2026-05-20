@@ -1,19 +1,22 @@
 schema_version: "0.1.0"
 benchmark_id: jini-product-golden-benchmark
 label: Jini Golden Product Benchmark
-updated_at: "2026-05-14"
-last_verified_at: "2026-05-14"
+updated_at: "2026-05-20"
+last_verified_at: "2026-05-20"
 purpose: >
   Validate Jini against a rerunnable golden dataset and compare it against the
   major product, harness, coding-agent, and UX competitors using weighted
   user-journey scenarios.
 methodology:
+  benchmark_scope: internal-drift-benchmark-not-live-market-ranking
   baseline_type: fixed-competitor-baselines-grounded-in-official-docs
   scoring_rule: >
     Each scenario starts from the current KPI-backed Jini score for its listed
     dimensions, then multiplies that base by a validation factor derived from
     real CLI check pass rate. Competitor scores stay fixed inside the golden
-    dataset so repeated runs measure Jini drift instead of moving the goalposts.
+    dataset so repeated runs measure Jini drift instead of moving the
+    goalposts. This means the benchmark is useful for regression detection, but
+    it must not be treated as a live external market ranking.
   comparison_rule: >
     Claude Code is the terminal immediacy baseline. Kiro is the productized
     workflow and delivery baseline. Hermes is the memory, breadth, and autonomy
@@ -21,6 +24,22 @@ methodology:
     Hero is the low-friction learning, tool-transparency, and human-in-the-loop
     UX baseline. The benchmark favors rerunnable product behaviors over
     README-only claims.
+  track_rule: >
+    The benchmark reports two explicit score tracks. `architecture-strength`
+    captures protocol rigor, governance, install, portability, and breadth.
+    `adoption-truth` captures first-minute clarity, cheap-default posture,
+    guided-loop smoothness, and friction-reduction proxies. Jini should be
+    allowed to lead on architecture while still trailing on adoption if the
+    product has not yet earned parity there.
+  bias_controls:
+    - Competitor scores are fixed reference baselines, so the benchmark can flatter Jini if the market has moved since the last benchmark refresh.
+    - Adoption-heavy scenarios intentionally use tougher competitor baselines than architecture scenarios.
+    - Overall score is less important than track-level honesty; use `adoption-truth` as the harsher read.
+    - Prefer checks that penalize product theory leakage, extra control decisions, and weak cheap-default behavior.
+  interpretation_warning: >
+    A green benchmark does not prove Jini is currently better than Claude,
+    Codex, ChatGPT, or other competitors in real usage. It proves only that
+    Jini is internally consistent and strong against this fixed golden dataset.
 competitors:
   - id: claude-code
     label: Claude Code
@@ -32,6 +51,26 @@ competitors:
       - Starts from natural-language intent in the terminal
       - Directly edits files, runs commands, and creates commits
       - Composable Unix-style CLI surface
+  - id: codex
+    label: Codex
+    rationale: Strongest benchmark for cross-surface coding continuity and approval-aware remote execution.
+    source_urls:
+      - https://platform.openai.com/docs/codex
+      - https://openai.com/index/work-with-codex-from-anywhere/
+    validated_strengths:
+      - Natural task intake across local and remote coding surfaces
+      - Continuation, approvals, and review loops across devices
+      - Strong coding-task portability and active-work continuity
+  - id: chatgpt
+    label: ChatGPT
+    rationale: Strongest benchmark for conversational first-run clarity, projects, and editable artifact surfaces.
+    source_urls:
+      - https://help.openai.com/en/articles/10169521-using-projects-in-chatgpt
+      - https://help.openai.com/en/articles/9930697-what-is-the-canvas-feature-in-chatgpt-and-how-do-i-use-it
+    validated_strengths:
+      - Conversational first turn with low setup pressure
+      - Persistent project context and files
+      - Rich edit surfaces for revision-heavy work
   - id: kiro
     label: Kiro
     rationale: Strongest benchmark for workflow productization and default delivery loop quality.
@@ -81,15 +120,20 @@ scenarios:
     label: Beginner install trust path
     purpose: A new user should see one obvious trust path before bundle-level detail.
     weight: 1.7
+    tracks:
+      - adoption-truth
+      - architecture-strength
     dimensions:
       - packaging-install
       - delivery-maturity
     competitor_scores:
-      claude-code: 8.3
-      kiro: 8.5
+      claude-code: 8.8
+      codex: 8.6
+      chatgpt: 8.2
+      kiro: 8.9
       hermes: 7.2
       agentfield: 7.0
-      ai-hero: 7.8
+      ai-hero: 8.4
     setup:
       - id: install-starter-kit
         command:
@@ -134,15 +178,19 @@ scenarios:
     label: Cheap default resume loop
     purpose: Low-cost execution should be the obvious path when the intent allows it.
     weight: 1.6
+    tracks:
+      - adoption-truth
     dimensions:
       - token-efficiency
       - delivery-maturity
     competitor_scores:
-      claude-code: 7.8
-      kiro: 7.8
+      claude-code: 8.7
+      codex: 8.8
+      chatgpt: 7.6
+      kiro: 8.3
       hermes: 7.1
       agentfield: 7.5
-      ai-hero: 7.0
+      ai-hero: 7.7
     setup:
       - id: compile-research-pack
         command:
@@ -186,11 +234,15 @@ scenarios:
     label: Portable execution edges
     purpose: Runtime, issue, and wiki edges should be visible through one canonical contract.
     weight: 1.7
+    tracks:
+      - architecture-strength
     dimensions:
       - adapter-portability
       - delivery-maturity
     competitor_scores:
       claude-code: 6.5
+      codex: 7.8
+      chatgpt: 5.9
       kiro: 6.8
       hermes: 7.4
       agentfield: 8.6
@@ -217,16 +269,21 @@ scenarios:
     label: Guided publish loop
     purpose: The default guided loop should collapse activation, execution, and local publish into one operator path.
     weight: 1.8
+    tracks:
+      - adoption-truth
+      - architecture-strength
     dimensions:
       - delivery-maturity
       - token-efficiency
       - adapter-portability
     competitor_scores:
-      claude-code: 8.3
-      kiro: 8.4
+      claude-code: 8.8
+      codex: 8.9
+      chatgpt: 7.2
+      kiro: 8.6
       hermes: 7.6
       agentfield: 8.7
-      ai-hero: 6.8
+      ai-hero: 7.1
     setup:
       - id: compile-research-pack
         command:
@@ -395,10 +452,48 @@ scenarios:
         path: "token_strategy.reused_context_surfaces"
         contains: "runtime-handoff"
 
+  - id: first-minute-adoption
+    label: First-minute adoption truth
+    purpose: The benchmark should punish Jini when first-run clarity and low-friction adoption still lag stronger everyday products.
+    weight: 1.9
+    tracks:
+      - adoption-truth
+    dimensions:
+      - delivery-maturity
+      - token-efficiency
+      - core-simplicity
+    competitor_scores:
+      claude-code: 9.3
+      codex: 9.2
+      chatgpt: 9.1
+      kiro: 8.8
+      hermes: 8.3
+      agentfield: 7.4
+      ai-hero: 8.9
+    checks:
+      - id: friction-reduction-section-present
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "friction-reduction"
+      - id: beginner-path-is-single-command
+        command: ["get-started", "--target", "codex", "--format", "json"]
+        path: "beginner_path.commands"
+        equals: ["jini"]
+      - id: beginner-path-hides-bundle-detail
+        command: ["get-started", "--target", "codex", "--format", "json"]
+        path: "beginner_path.notes.0"
+        contains: "Bundle-level detail is intentionally hidden"
+      - id: framework-review-prefers-subtractive-adoption-pressure
+        command: ["review-framework", "--format", "json", "--limit", "3"]
+        path: "adoption_constraints"
+        contains: "removed, demoted, or consolidated"
+
   - id: product-consensus-gates
     label: Product consensus replacement gates
     purpose: Publish-readiness must prove the replacement-critical launcher shape is bounded, useful-first, continuable, and parity-safe.
     weight: 1.9
+    tracks:
+      - architecture-strength
     dimensions:
       - workflow-rigor
       - delivery-maturity
@@ -406,6 +501,8 @@ scenarios:
       - core-simplicity
     competitor_scores:
       claude-code: 8.1
+      codex: 8.0
+      chatgpt: 7.6
       kiro: 7.1
       hermes: 7.1
       agentfield: 7.9
@@ -444,11 +541,15 @@ scenarios:
     label: Operational advanced-set breadth
     purpose: Breadth should be operational through packs and routines, not just claimed in docs.
     weight: 1.5
+    tracks:
+      - architecture-strength
     dimensions:
       - advanced-set-breadth
       - flexibility
     competitor_scores:
       claude-code: 7.8
+      codex: 8.1
+      chatgpt: 7.0
       kiro: 7.2
       hermes: 8.9
       agentfield: 8.8
@@ -482,11 +583,15 @@ scenarios:
     label: Governed framework learning loop
     purpose: Framework evolution should be staged, measured, and replay-safe.
     weight: 1.3
+    tracks:
+      - architecture-strength
     dimensions:
       - learning-maturity
       - workflow-rigor
     competitor_scores:
       claude-code: 6.9
+      codex: 7.6
+      chatgpt: 6.8
       kiro: 7.1
       hermes: 7.8
       agentfield: 7.7
