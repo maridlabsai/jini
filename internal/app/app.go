@@ -346,11 +346,10 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 			return 0
 		}
 		if item, ok := resolveInteractiveArtifactSelection(summary, action); ok {
-			if err := recordAndFocusArtifactSelection(summary, item); err != nil {
+			if err := renderSelectedArtifact(stdout, summary, item); err != nil {
 				fmt.Fprintf(stderr, "Could not open artifact: %v\n", err)
 				return 1
 			}
-			renderThreadSurface(stdout, summary, artifactThreadFocus(summary, item))
 			return 0
 		}
 		if scanner != nil && strings.TrimSpace(action) != "" {
@@ -2791,11 +2790,10 @@ func runInteractiveOpenShelf(summary *workSummary, scanner *bufio.Scanner, stdou
 		fmt.Fprintln(stderr, "Type a number or artifact name to open one.")
 		return 1
 	}
-	if err := recordAndFocusArtifactSelection(summary, item); err != nil {
+	if err := renderSelectedArtifact(stdout, summary, item); err != nil {
 		fmt.Fprintf(stderr, "Could not open artifact: %v\n", err)
 		return 1
 	}
-	renderThreadSurface(stdout, summary, artifactThreadFocus(summary, item))
 	return 0
 }
 
@@ -2821,6 +2819,14 @@ func recordAndFocusArtifactSelection(summary *workSummary, item *catalogItem) er
 		return err
 	}
 	focusArtifactSelection(summary, item)
+	return nil
+}
+
+func renderSelectedArtifact(w io.Writer, summary *workSummary, item *catalogItem) error {
+	if err := recordAndFocusArtifactSelection(summary, item); err != nil {
+		return err
+	}
+	renderThreadSurface(w, summary, artifactThreadFocus(summary, item))
 	return nil
 }
 
@@ -3103,11 +3109,10 @@ func handlePostResultAction(action string, summary *workSummary, scanner *bufio.
 			return 0
 		}
 		if item, ok := resolveInteractiveArtifactSelection(summary, action); ok {
-			if err := recordAndFocusArtifactSelection(summary, item); err != nil {
+			if err := renderSelectedArtifact(stdout, summary, item); err != nil {
 				fmt.Fprintf(stderr, "Could not open artifact: %v\n", err)
 				return 1
 			}
-			renderThreadSurface(stdout, summary, artifactThreadFocus(summary, item))
 			return 0
 		}
 		renderCheck(stdout, summary)
