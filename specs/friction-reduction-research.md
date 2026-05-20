@@ -209,6 +209,207 @@ theory instead of simply stating the work.
 | Context visibility | Project memory and CLAUDE.md are explicit, inspectable, and layered | Project memory, project sources, and saved responses are visible containers | Connected machines keep local files and credentials in place while live state syncs to other surfaces | Work state is visible, but pack/profile structure still leaks through the experience | Jini needs user-facing context containers, not internal pack vocabulary |
 | Route and model visibility | Available when useful, not mandatory before task intake | Largely abstracted unless tools/settings matter | Model, approvals, plugins, and client surfaces are inspectable during active work | Public launcher still prints `Working with` immediately in richer help modes | Route/provider labels still appear too early |
 
+## Prompt Archetype Comparison
+
+The fastest way to see prompt adoption gaps is to compare what a user can type
+without learning the product first, and how much product shape comes back
+before the first useful move.
+
+### 1. Greeting Or Tiny Social Input
+
+User input examples:
+
+- `hello`
+- `hi`
+- `good morning`
+
+Observed competitor pattern:
+
+- ChatGPT stays conversational.
+- Claude stays conversational unless the surrounding IDE or terminal context
+  makes a work request obvious.
+- Codex stays minimal and usually waits for concrete work rather than
+  manufacturing a durable artifact.
+
+Jini target:
+
+- greet back briefly
+- do not create work
+- do not print a framework
+- do not introduce route, provider, pack, or artifact language
+
+Current Jini deviation:
+
+- this has improved, but any regression here is extremely damaging because it
+  teaches users that Jini is a workflow engine before it proves it is an
+  assistant
+
+### 2. Vague Task Intake
+
+User input examples:
+
+- `plan me a trip`
+- `help me with this`
+- `I need to follow up on a meeting`
+
+Observed competitor pattern:
+
+- ChatGPT usually asks one or two clarifying questions or offers a short
+  scaffold while keeping the tone conversational.
+- Claude often asks for the missing high-yield context and does not invent a
+  large template unless the user asks for one.
+- Codex tends to ask for repo, file, or task specifics when the action surface
+  is ambiguous.
+
+Jini target:
+
+- detect uncertainty
+- ask only the minimum high-yield questions
+- avoid printing a domain template before scope is understood
+- prefer a generic scope planner over profile-specific questionnaires
+
+Current Jini deviation:
+
+- clarification quality is better than before, but it is still too visibly
+  shaped by starter profiles
+
+### 3. Already-Scoped Request
+
+User input examples:
+
+- `plan a 7 day Paris trip for two adults in October with a mid-range budget`
+- `turn these meeting notes into a sendable follow-up`
+- `summarize this doc for the leadership team in bullet points`
+
+Observed competitor pattern:
+
+- ChatGPT drafts immediately when the ask is sufficiently scoped.
+- Claude drafts or acts immediately when context is present.
+- Codex proceeds directly when the instruction is concrete and the execution
+  path is clear.
+
+Jini target:
+
+- draft immediately
+- avoid follow-up questions unless the missing detail materially changes the
+  result
+- keep route and state metadata behind the result, not ahead of it
+
+Current Jini deviation:
+
+- Jini is closer here, but it still sometimes over-values additional scoping
+  instead of rewarding the user for already doing the work of being specific
+
+### 4. Tactical Command Or Tooling Input
+
+User input examples:
+
+- `/help`
+- `/doctor`
+- `/memory`
+- `show what's ready`
+
+Observed competitor pattern:
+
+- Claude exposes advanced controls in slash commands, but they do not become
+  required in normal use.
+- Codex exposes active-work, model, approval, and tooling state when asked.
+- ChatGPT rarely makes tactical controls the main entry posture.
+
+Jini target:
+
+- accept adjacent-tool command habits
+- answer tactically
+- never create fake work
+- keep command output compact and benchmarked for latency
+
+Current Jini deviation:
+
+- this is one of Jini's stronger competitive surfaces, but it must stay compact
+  and must not bleed back into the launcher
+
+### 5. Revise This / Transform This
+
+User input examples:
+
+- `make this shorter`
+- `turn this into a checklist`
+- `make it more executive`
+
+Observed competitor pattern:
+
+- ChatGPT Canvas and Claude Artifacts make revision feel natural and local to
+  the current artifact.
+- Codex keeps transformation attached to the active diff, output, or artifact
+  instead of reopening the whole intake experience.
+
+Jini target:
+
+- treat revision as an edit of the current artifact
+- preserve versions
+- expose undo
+- keep the transform local, not as a restart of the workflow
+
+Current Jini deviation:
+
+- the product direction is now correct, but artifact revision still needs to
+  feel more native than command-driven
+
+### 6. Resume / Continue
+
+User input examples:
+
+- `continue`
+- `resume this`
+- `what's left`
+
+Observed competitor pattern:
+
+- Codex is strongest here because active work, approvals, terminal state,
+  screenshots, and diffs travel together across surfaces.
+- ChatGPT Projects are strong for persistent knowledge work and files.
+- Claude memory and project context reduce restart cost, but continuation is
+  still more environment-specific than Codex.
+
+Jini target:
+
+- continue obvious work immediately
+- show blockers, ready artifacts, and next safe action
+- avoid making the user remember file paths, IDs, or internal work terms
+
+Current Jini deviation:
+
+- CLI continuation is strong, but cross-surface continuation is still more
+  promise than shipped experience
+
+### 7. Long-Running Or Multi-Artifact Work
+
+User input examples:
+
+- `compare these vendors and give me a memo plus shortlist`
+- `review this PR and draft the team update`
+- `plan the trip and make a packing list`
+
+Observed competitor pattern:
+
+- ChatGPT escalates long-form work into projects, files, canvas, and tasks.
+- Claude escalates substantial standalone outputs into artifacts.
+- Codex keeps active execution state attached while exposing outputs, diffs,
+  logs, and approvals.
+
+Jini target:
+
+- split work into a shared work object with multiple artifacts
+- keep the shell concise
+- provide smart links into the richer outputs
+- make "what is ready", "what is blocked", and "what changed" inspectable on
+  demand
+
+Current Jini deviation:
+
+- Jini still leans too heavily on markdown-first terminal rendering for work
+  that deserves richer artifact-first presentation
+
 ### What The Official Product Patterns Say
 
 - Claude Code documents a terminal, IDE, desktop, and browser posture, then
@@ -269,6 +470,9 @@ Jini should consume these as interaction principles, not mimicry targets:
 - Jini still has more visible internal taxonomy than the competitors. The
   target experience should be "stateful assistant with good artifacts," not
   "starter-pack workflow engine."
+- Jini still lacks one shared prompt contract across CLI, desktop, and mobile.
+  Competitors differ in surface design, but they all preserve a more stable
+  mental model for what `continue`, `revise`, `help`, and a scoped ask will do.
 
 ## Major Work Items To Bridge The Gap
 
@@ -365,6 +569,22 @@ section templates should be treated as temporary scaffolding unless they can be
 proven to generalize. Anything that survives in core must justify itself as a
 domain-agnostic capability or as a clearly isolated optional profile.
 
+### 9. Establish One Cross-Surface Prompt Contract
+
+The same classes of input should behave the same way across CLI, desktop, and
+mobile review surfaces:
+
+- greeting stays conversational
+- vague ask triggers minimal scoping
+- scoped ask drafts immediately
+- revise transforms the active artifact
+- continue resumes active work
+- tactical input reveals control surfaces without mutating work
+
+This is the cleanest way to reduce ramp-up friction for users coming from
+Codex, ChatGPT, or Claude, because it removes surprise rather than adding more
+documentation.
+
 ## What Jini Should Not Do
 
 - Do not copy Codex by becoming only a coding shell.
@@ -383,7 +603,9 @@ presence:
 
 - time to first useful result
 - commands before first useful result
+- percent of already-scoped requests that draft on first response
 - clarification quality score
+- clarification burden per vague request
 - stale-context recovery rate
 - artifact open/reuse rate
 - resume success rate
@@ -391,6 +613,8 @@ presence:
 - repeated-permission prompt rate
 - local/cheap route adoption rate
 - premium-route regret rate after user edits
+- prompt archetype parity score across greeting, vague ask, scoped ask, revise,
+  continue, and tactical help
 
 ## Research Verdict
 

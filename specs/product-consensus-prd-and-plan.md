@@ -56,18 +56,17 @@ The first minute must feel like relief, not setup.
 Required flow:
 
 ```text
-What do you need help finishing?
-
-Jini shell
-Paste messy notes, or type the outcome you want.
+Jini
+Paste what you want finished.
 
 Good inputs:
 - Turn meeting notes into something I can send
 - Check whether a plan is ready to hand off
-- Help me plan this
-- I am not sure
+- Plan a 7 day Paris trip for two adults in October
+- Compare these vendors and recommend one
 
 Nothing will be sent yet.
+If you want help shaping a messy ask, type `I'm not sure`.
 ```
 
 If the user types a clear job or pastes source directly, Jini should start from
@@ -77,23 +76,21 @@ If the user types `I am not sure`:
 
 ```text
 Paste what you have. A rough version is fine.
-I will help figure out whether this is follow-up, a plan check, or something else.
+I will turn it into a useful draft or ask one short follow-up if something important is missing.
 Nothing will be sent yet.
 ```
 
 If the input does not clearly fit a flagship flow, Jini still returns a useful
 first object:
 
-- `First Useful Pass`
+- `Working Draft`
 
 It must show:
 
 - what the user appears to be trying to finish
-- what can be used now
+- what is usable now
 - what Jini needs next
 - what is safe because nothing has been sent
-
-Inline examples may appear under the prompt.
 
 The first visible result must be:
 

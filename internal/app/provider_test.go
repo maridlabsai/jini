@@ -98,7 +98,7 @@ func TestGenerateWithConfiguredProviderCallsAnthropicMessages(t *testing.T) {
 		if strings.Contains(body, "super-secret-key") {
 			t.Fatalf("Anthropic request body leaked API key:\n%s", body)
 		}
-		return jsonResponse(200, `{"content":[{"type":"text","text":"# First Useful Pass: Claude Draft\n\nAnthropic draft."}]}`), nil
+		return jsonResponse(200, `{"content":[{"type":"text","text":"# Working Draft: Claude Draft\n\nAnthropic draft."}]}`), nil
 	})
 
 	result, used, err := generateWithConfiguredProvider(context.Background(), providerGenerationRequest{
@@ -2377,34 +2377,26 @@ func TestInteractiveLauncherShowsDecisionCardBeforeFirstDraft(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Jini will start with",
-		"Tool",
-		"Azure writing route",
-		"Provider",
-		"Azure OpenAI / gpt-4o-prod",
-		"How chosen",
-		"Automatic",
-		"Model",
-		"gpt-4o-prod",
-		"Why this model",
-		"The deployment decides the actual Azure model.",
-		"Effort level",
-		"Medium",
-		"Verification",
-		"Single pass",
-		"Why this verification",
-		"Why this route",
-		"planning work",
-		"Want a different route?",
-		"Connect Claude",
-		"Connect Bedrock",
+		"Your first draft is ready.",
+		"Itinerary",
+		"Provider Paris",
+		"Show what Jini used",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
 	}
-	if strings.Index(out, "Jini will start with") == -1 || strings.Index(out, "Your first draft is ready.") == -1 || strings.Index(out, "Jini will start with") > strings.Index(out, "Your first draft is ready.") {
-		t.Fatalf("expected decision card before first draft, got:\n%s", out)
+	for _, unwanted := range []string{
+		"Jini will start with",
+		"Tool",
+		"How chosen",
+		"Want a different route?",
+		"Connect Claude",
+		"Connect Bedrock",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected first-run output not to expose early route card %q, got:\n%s", unwanted, out)
+		}
 	}
 }
 

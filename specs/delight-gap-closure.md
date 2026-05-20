@@ -33,6 +33,30 @@ Only ship delight features that meet all three tests:
 3. the behavior generalizes across work types instead of depending on
    use-case-specific hard coding
 
+## Critique Rule
+
+Delight work does not get special protection just because it feels polished.
+
+If two or more critique sources independently say the same delight feature:
+
+- adds cognitive load
+- teaches too much
+- duplicates an easier action
+- creates anxiety about making a mistake
+- adds a branch the user does not actually need
+
+then the default action is to remove, demote, hide, or collapse it.
+
+Do not keep a criticized delight feature only because:
+
+- it is already implemented
+- it demonstrates technical cleverness
+- it looks richer in a screenshot
+- it helps explain an internal architecture
+
+Keeping the feature requires explicit proof that it improves user outcome
+through speed, trust, clarity, quality, or cost posture.
+
 ## Selected Features
 
 ### 1. Interruption-Safe New Work
@@ -181,3 +205,124 @@ selected features above.
 3. fuller next pass
 
 This order protects trust first, then makes artifacts feel more native.
+
+## Next Delight Slice
+
+The next highest-leverage delight work is not more startup scaffolding. It is
+making the artifact feel more inspectable, more revisable, and safer to revise.
+
+### 1. Inspectable Context Capsule
+
+#### Competitor pattern
+
+- ChatGPT Projects and memory make stored context and project-scoped sources a
+  user-facing concept instead of hidden prompt state.
+- Claude Code makes memory files and project context inspectable.
+- Codex continuation emphasizes visible task context, terminal state, and
+  approval context across surfaces.
+
+#### UX design
+
+Jini should let the user ask:
+
+- `Show what Jini used`
+- `Show context`
+- `What did you use`
+
+The answer should stay compact and show:
+
+- direct user inputs
+- clarifications or attachments
+- links or source references when present
+- what Jini intentionally kept visible as missing or uncertain
+- route and continuity context when it materially shaped the work
+
+#### Technical design
+
+- use existing `inputItems`, `thread-state`, route fields, and source-link
+  extraction
+- avoid pack-specific rendering; the capsule is generic across work types
+- keep it read-only and available both immediately after first draft and later
+  during current-work resume
+
+#### Pass criteria
+
+- users can inspect what shaped a draft without opening JSON files
+- the capsule explains context without dumping internal implementation details
+- the same command works for text, clarified scope, and file-backed inputs
+
+### 2. Quick Artifact Rewrite Shortcuts
+
+#### Competitor pattern
+
+- ChatGPT Canvas supports fast editing and rewrite-style iteration.
+- Claude Artifacts encourages iterative reshaping of the same work object.
+- Codex continuation flows keep users moving from draft to improved draft
+  without rebuilding context from scratch.
+
+#### UX design
+
+Jini should support natural rewrite shortcuts on the current artifact:
+
+- `Make it shorter`
+- `Make it executive`
+- `Turn this into a checklist`
+
+These should feel like immediate refinements of the current artifact, not new
+work records or provider setup flows.
+
+#### Technical design
+
+- treat the current primary artifact as the editable object
+- apply generic markdown transforms over headings, bullets, gaps, and next-step
+  state instead of pack-specific rewrite templates
+- keep transforms deterministic so they work even when no external provider is
+  configured
+
+#### Pass criteria
+
+- rewrite shortcuts work on any ready markdown artifact
+- the output becomes immediately usable in the same session
+- the transform does not create a second parallel work unit
+
+### 3. Revision History And Undo
+
+#### Competitor pattern
+
+- ChatGPT Canvas exposes revision-oriented editing and restore flows.
+- Claude Artifacts supports iterative updates and encourages safe reuse instead
+  of one-shot transcript text.
+- Rich assistant surfaces generally make users comfortable revising because the
+  previous state is not lost.
+
+#### UX design
+
+After Jini rewrites an artifact, the user should be able to say:
+
+- `Show versions`
+- `Undo last change`
+
+This keeps experimentation safe and lowers the fear of asking for a rewrite.
+
+#### Technical design
+
+- save a lightweight snapshot before every in-place artifact rewrite
+- keep a small per-work ledger for artifact snapshots
+- restore the latest snapshot in one step without requiring file paths or git
+
+#### Pass criteria
+
+- every shortcut rewrite creates a restorable version first
+- `Show versions` is human-readable, not file-system-oriented
+- `Undo last change` restores the prior artifact content in one step
+
+## Why These Three
+
+These features were chosen because they combine directly:
+
+- trust, by making context inspectable
+- delight, by making artifact refinement immediate
+- safety, by making revision reversible
+
+Together they move Jini closer to competitor strengths without copying their
+entire product surfaces or adding more startup ceremony.

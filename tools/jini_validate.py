@@ -2223,6 +2223,15 @@ def build_publish_readiness() -> dict[str, Any]:
                         "If two or more roles raised the same friction, was the default action remove, demote, or simplify it",
                     ],
                 },
+                {
+                    "path": ROOT / "specs" / "delight-gap-closure.md",
+                    "markers": [
+                        "## Critique Rule",
+                        "If two or more critique sources independently say the same delight feature",
+                        "the default action is to remove, demote, hide, or collapse it",
+                        "Keeping the feature requires explicit proof",
+                    ],
+                },
             ],
         },
         {
@@ -2278,7 +2287,7 @@ def build_publish_readiness() -> dict[str, Any]:
                     "path": PRODUCT_CONSENSUS_PRD_PATH,
                     "markers": [
                         "I am not sure",
-                        "First Useful Pass",
+                        "Working Draft",
                         "what Jini needs next",
                         "Nothing will be sent yet.",
                     ],
@@ -2287,7 +2296,7 @@ def build_publish_readiness() -> dict[str, Any]:
                     "path": PRODUCT_REWRITE_CONTRACT_PATH,
                     "markers": [
                         "I am not sure",
-                        "First Useful Pass",
+                        "Working Draft",
                         "what the user appears to be trying to finish",
                     ],
                 },

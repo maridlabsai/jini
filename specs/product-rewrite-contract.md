@@ -239,21 +239,20 @@ quality and parity gates.
 
 1. User runs `jini`.
 2. If no current work exists, Jini asks:
-   - `What do you need help finishing?`
+   - `Jini`
 3. Jini supports natural paste-first intake:
-   - `Jini shell`
-   - `Paste messy notes, or type the outcome you want.`
+   - `Paste what you want finished.`
 4. Jini shows example inputs without requiring command selection:
    - Turn meeting notes into something I can send
    - Check whether a plan is ready to hand off
-   - Help me plan this
-   - I am not sure
+   - Plan a 7 day Paris trip for two adults in October
+   - Compare these vendors and recommend one
 5. If the user chooses `I am not sure`, Jini says:
    - `Paste what you have. A rough version is fine.`
-   - `I will help figure out whether this is follow-up, a plan check, or something else.`
+   - `I will turn it into a useful draft or ask one short follow-up if something important is missing.`
    - `Nothing will be sent yet.`
    If the input does not clearly match a flagship flow, Jini still returns a
-   useful first object called `First Useful Pass` with:
+   useful first object called `Working Draft` with:
    - what the user appears to be trying to finish
    - what can be used now
    - what Jini needs next

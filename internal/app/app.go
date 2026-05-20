@@ -205,6 +205,8 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		renderItem(stdout, item)
 	case "2", "open", "open ready work", "open ready", "open whats ready", "open what's ready", "open what is ready", "show whats ready", "show what's ready", "show what is ready":
 		return runInteractiveOpenShelf(summary, scanner, stdout, stderr)
+	case "show what jini used", "what jini used", "show context", "what did you use", "what shaped this":
+		renderContextCapsule(stdout, summary)
 	case "see what is still missing", "show what is missing", "missing":
 		renderMissingOnly(stdout, summary)
 	case "make it fuller", "fuller", "show more", "expand", "expand this":
@@ -213,6 +215,44 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 			renderCheck(stdout, summary)
 			return 0
 		}
+		renderItem(stdout, item)
+	case "make it shorter", "shorter", "tighten this", "make this shorter":
+		item, err := applyArtifactTransform(summary, "shorter")
+		if err != nil {
+			fmt.Fprintf(stderr, "Could not revise the artifact: %v\n", err)
+			return 1
+		}
+		renderItem(stdout, item)
+		fmt.Fprintln(stdout)
+		fmt.Fprintln(stdout, "Saved a restorable version. You can say `Show versions` or `Undo last change`.")
+	case "make it executive", "executive", "executive version", "make this executive":
+		item, err := applyArtifactTransform(summary, "executive")
+		if err != nil {
+			fmt.Fprintf(stderr, "Could not revise the artifact: %v\n", err)
+			return 1
+		}
+		renderItem(stdout, item)
+		fmt.Fprintln(stdout)
+		fmt.Fprintln(stdout, "Saved a restorable version. You can say `Show versions` or `Undo last change`.")
+	case "turn this into a checklist", "checklist", "make this a checklist":
+		item, err := applyArtifactTransform(summary, "checklist")
+		if err != nil {
+			fmt.Fprintf(stderr, "Could not revise the artifact: %v\n", err)
+			return 1
+		}
+		renderItem(stdout, item)
+		fmt.Fprintln(stdout)
+		fmt.Fprintln(stdout, "Saved a restorable version. You can say `Show versions` or `Undo last change`.")
+	case "show versions", "show version history", "versions", "history":
+		renderArtifactVersions(stdout, summary)
+	case "undo last change", "undo", "restore last change", "revert last change":
+		item, err := undoLastArtifactChange(summary)
+		if err != nil {
+			fmt.Fprintf(stderr, "Could not restore the artifact: %v\n", err)
+			return 1
+		}
+		fmt.Fprintln(stdout, "Restored the previous version.")
+		fmt.Fprintln(stdout)
 		renderItem(stdout, item)
 	case "model upvote", "upvote model", "model was right":
 		if err := saveModelFeedback(summary.Dir, "upvoted", ""); err != nil {
@@ -791,8 +831,7 @@ func startNewWorkFromRawInput(firstRaw string, session *bufio.Scanner, stdout, s
 		Title:  deriveStarterTitle(choice.DefaultName, source, choice.PackID),
 		Source: source,
 	}
-	decision := detectRouteForRequest(request)
-	renderRouteDecisionCard(stdout, request, decision)
+	_ = detectRouteForRequest(request)
 
 	summary, err := bootstrapStarterWork(choice, source, "quick", inputItems)
 	if err != nil {
@@ -843,7 +882,7 @@ func resolveStarterChoice(raw string) (starterChoice, error) {
 	choice := normalizeName(raw)
 	switch choice {
 	case "3", "i am not sure", "i'm not sure", "i’m not sure", "im not sure", "i m not sure", "not sure", "unsure", "help me finish this":
-		return starterChoice{PackID: "auto", ChoiceLabel: "I am not sure", DefaultName: "First Useful Pass", State: "decided"}, nil
+		return starterChoice{PackID: "auto", ChoiceLabel: "I am not sure", DefaultName: "Working Draft", State: "decided"}, nil
 	case "plan this first", "plan first":
 		return starterChoice{PackID: "auto", ChoiceLabel: "Plan this first", DefaultName: "Plan First", State: "modeled"}, nil
 	}
@@ -952,7 +991,7 @@ func sourcePromptForChoice(choice starterChoice) string {
 	if choice.PackID == "auto" {
 		return strings.Join([]string{
 			"Paste what you have. A rough version is fine.",
-			"I will help figure out whether this is follow-up, a plan check, or something else.",
+			"I will turn it into a useful draft or ask one short follow-up if something important is missing.",
 			"Nothing will be sent yet.",
 		}, "\n")
 	}
@@ -963,7 +1002,7 @@ func classifyStarterChoice(source string) starterChoice {
 	packID := detectStarterPackFromSource(source)
 	choice, ok := starterChoiceForPack(packID)
 	if !ok {
-		return starterChoice{PackID: "general-work", ChoiceLabel: "First Useful Pass", DefaultName: "First Useful Pass", State: "decided"}
+		return starterChoice{PackID: "general-work", ChoiceLabel: "Working Draft", DefaultName: "Working Draft", State: "decided"}
 	}
 	return choice
 }
@@ -1303,16 +1342,16 @@ func writeTravelStarterWork(workDir, title, source, detail string) error {
 
 func writeFirstUsefulPassStarterWork(workDir, title, source string) error {
 	pass := strings.Join([]string{
-		fmt.Sprintf("# First Useful Pass: %s", title),
+		fmt.Sprintf("# Working Draft: %s", title),
 		"",
-		"## What this seems to be",
+		"## What this looks like",
 		fmt.Sprintf("- %s", source),
 		"",
-		"## What can be used now",
-		"- A named work record has been started so the context is not lost.",
-		"- The next pass can turn this into follow-up, a plan check, a decision memo, or another concrete output.",
+		"## Useful starting point",
+		"- This is enough to begin shaping a real output without guessing hidden details.",
+		"- The next pass can turn this into a follow-up, plan check, memo, checklist, or another concrete artifact.",
 		"",
-		"## What I need next",
+		"## Best next inputs",
 		"- The audience or recipient.",
 		"- The outcome you want after someone reads or uses this.",
 		"- Any deadline, owner, blocker, or decision that should not be guessed.",
@@ -2319,33 +2358,32 @@ func resolveOpenItem(summary *workSummary, name string) (*catalogItem, error) {
 }
 
 func renderNewWorkLauncher(w io.Writer) {
-	fmt.Fprintln(w, "What do you need help finishing?")
+	fmt.Fprintln(w, "Jini")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Paste notes or type what you want finished.")
-	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Not sure? Type `help me finish this`.")
+	fmt.Fprintln(w, "Paste what you want finished.")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Examples:")
 	fmt.Fprintln(w, "- Turn meeting notes into something I can send")
 	fmt.Fprintln(w, "- Check whether a plan is ready to hand off")
-	fmt.Fprintln(w, "- Help me plan this")
-	fmt.Fprintln(w, "- I am not sure")
+	fmt.Fprintln(w, "- Plan a 7 day Paris trip for two adults in October")
+	fmt.Fprintln(w, "- Compare these vendors and recommend one")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Nothing will be sent yet.")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Familiar commands also work: `/help`, `/status`, `/doctor`, `/init`, `/memory`, `/permissions`, `/cost`.")
+	fmt.Fprintln(w, "If you want help shaping a messy ask, type `I'm not sure`.")
+	fmt.Fprintln(w, "Commands also work: `/help`, `/status`, `/doctor`, `/init`, `/memory`, `/permissions`, `/cost`.")
 }
 
 func renderNewWorkPrompt(w io.Writer) {
 	fmt.Fprintln(w, "Jini")
 	fmt.Fprintln(w, "Paste what you want finished.")
-	fmt.Fprintln(w, "Type `help` for examples or setup. Slash commands like `/help` also work.")
+	fmt.Fprintln(w, "Type `help` for examples or commands. Slash commands like `/help` also work.")
 }
 
 func renderNoCurrentWorkStatus(w io.Writer) {
 	fmt.Fprintln(w, "No current work yet.")
 	fmt.Fprintln(w, "Paste what you want finished.")
-	fmt.Fprintln(w, "Type `help` or `/help` for examples and setup.")
+	fmt.Fprintln(w, "Type `help` or `/help` for examples and commands.")
 }
 
 func renderNoInitRequired(w io.Writer) {
@@ -2706,7 +2744,7 @@ func renderFirstRunResult(w io.Writer, summary *workSummary) {
 
 	item := firstResultItem(summary)
 	if item == nil {
-		fmt.Fprintln(w, "First Useful Pass")
+		fmt.Fprintln(w, "Working draft")
 		fmt.Fprintln(w)
 		fmt.Fprintln(w, "No result file is ready yet. Jini still created the work record so the source context is not lost.")
 		renderPostResultActions(w, summary, nil)
@@ -2750,8 +2788,14 @@ func renderPostResultActions(w io.Writer, summary *workSummary, item *catalogIte
 	fmt.Fprintln(w, "What do you want to do next?")
 	fmt.Fprintln(w, "- Keep going")
 	fmt.Fprintln(w, "- Open what's ready")
+	fmt.Fprintln(w, "- Show what Jini used")
 	fmt.Fprintln(w, "- Show what is missing")
 	fmt.Fprintln(w, "- Make it fuller")
+	fmt.Fprintln(w, "Revision shortcuts: `Make it shorter`, `Make it executive`, `Turn this into a checklist`.")
+	if hasArtifactVersions(summary) {
+		fmt.Fprintln(w, "- Show versions")
+		fmt.Fprintln(w, "- Undo last change")
+	}
 	fmt.Fprintln(w, "- Help me plan this")
 	fmt.Fprintln(w, "- Start new work")
 	renderPostResultContext(w, summary, item)
@@ -2966,6 +3010,8 @@ func handlePostResultAction(action string, summary *workSummary, scanner *bufio.
 		return runInteractiveOpenShelf(summary, scanner, stdout, stderr)
 	case "status", "show status", "check":
 		renderCheck(stdout, summary)
+	case "show what jini used", "what jini used", "show context", "what did you use", "what shaped this":
+		renderContextCapsule(stdout, summary)
 	case "see what is still missing", "show what is missing", "missing", "3":
 		renderMissingOnly(stdout, summary)
 	case "make it fuller", "fuller", "show more", "expand", "expand this", "4":
@@ -2974,6 +3020,44 @@ func handlePostResultAction(action string, summary *workSummary, scanner *bufio.
 			renderCheck(stdout, summary)
 			return 0
 		}
+		renderItem(stdout, item)
+	case "make it shorter", "shorter", "tighten this", "make this shorter":
+		item, err := applyArtifactTransform(summary, "shorter")
+		if err != nil {
+			fmt.Fprintf(stderr, "Could not revise the artifact: %v\n", err)
+			return 1
+		}
+		renderItem(stdout, item)
+		fmt.Fprintln(stdout)
+		fmt.Fprintln(stdout, "Saved a restorable version. You can say `Show versions` or `Undo last change`.")
+	case "make it executive", "executive", "executive version", "make this executive":
+		item, err := applyArtifactTransform(summary, "executive")
+		if err != nil {
+			fmt.Fprintf(stderr, "Could not revise the artifact: %v\n", err)
+			return 1
+		}
+		renderItem(stdout, item)
+		fmt.Fprintln(stdout)
+		fmt.Fprintln(stdout, "Saved a restorable version. You can say `Show versions` or `Undo last change`.")
+	case "turn this into a checklist", "checklist", "make this a checklist":
+		item, err := applyArtifactTransform(summary, "checklist")
+		if err != nil {
+			fmt.Fprintf(stderr, "Could not revise the artifact: %v\n", err)
+			return 1
+		}
+		renderItem(stdout, item)
+		fmt.Fprintln(stdout)
+		fmt.Fprintln(stdout, "Saved a restorable version. You can say `Show versions` or `Undo last change`.")
+	case "show versions", "show version history", "versions", "history":
+		renderArtifactVersions(stdout, summary)
+	case "undo last change", "undo", "restore last change", "revert last change":
+		item, err := undoLastArtifactChange(summary)
+		if err != nil {
+			fmt.Fprintf(stderr, "Could not restore the artifact: %v\n", err)
+			return 1
+		}
+		fmt.Fprintln(stdout, "Restored the previous version.")
+		fmt.Fprintln(stdout)
 		renderItem(stdout, item)
 	case "plan this first", "plan first", "plan", "help me plan this", "5":
 		renderPlanFirst(stdout, summary)
@@ -3312,8 +3396,14 @@ func renderCurrentWorkHelp(w io.Writer, summary *workSummary) {
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "- Keep going")
 	fmt.Fprintln(w, "- Show what's ready")
+	fmt.Fprintln(w, "- Show what Jini used")
 	fmt.Fprintln(w, "- Show what is missing")
 	fmt.Fprintln(w, "- Make it fuller")
+	fmt.Fprintln(w, "Revision shortcuts: `Make it shorter`, `Make it executive`, `Turn this into a checklist`.")
+	if hasArtifactVersions(summary) {
+		fmt.Fprintln(w, "- Show versions")
+		fmt.Fprintln(w, "- Undo last change")
+	}
 	fmt.Fprintln(w, "- Help me plan this")
 	fmt.Fprintln(w, "- Start new work")
 	fmt.Fprintln(w)

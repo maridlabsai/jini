@@ -248,8 +248,8 @@ func TestLauncherHelpHidesProviderStateWhenUsingLocalPreview(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Paste notes or type what you want finished.",
-		"Not sure? Type `help me finish this`.",
+		"Paste what you want finished.",
+		"If you want help shaping a messy ask, type `I'm not sure`.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -639,7 +639,7 @@ func TestLauncherRecoversFromStaleCurrentWork(t *testing.T) {
 		"Remembered work is no longer available.",
 		"Jini",
 		"Paste what you want finished.",
-		"Type `help` for examples or setup.",
+		"Type `help` for examples or commands.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -898,7 +898,7 @@ func TestLauncherStartsAsCompactShellWithoutCurrentWork(t *testing.T) {
 	for _, want := range []string{
 		"Jini",
 		"Paste what you want finished.",
-		"Type `help` for examples or setup.",
+		"Type `help` for examples or commands.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -911,7 +911,7 @@ func TestLauncherStartsAsCompactShellWithoutCurrentWork(t *testing.T) {
 		"choose a common job below",
 		"1. Turn meeting notes",
 		"2. Check whether",
-		"3. I am not sure",
+		"If you want help shaping a messy ask, type `I'm not sure`.",
 	} {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("expected shell-first launcher not to expose menu %q, got:\n%s", unwanted, out)
@@ -931,12 +931,13 @@ func TestLauncherHelpShowsStartChoicesWithoutCurrentWork(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"What do you need help finishing?",
-		"Paste notes or type what you want finished.",
-		"Not sure? Type `help me finish this`.",
+		"Jini",
+		"Paste what you want finished.",
 		"Turn meeting notes into something I can send",
 		"Check whether a plan is ready to hand off",
-		"I am not sure",
+		"Plan a 7 day Paris trip for two adults in October",
+		"Compare these vendors and recommend one",
+		"If you want help shaping a messy ask, type `I'm not sure`.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -1126,12 +1127,12 @@ func TestInteractiveLauncherHandlesUnsureInputWithUsefulPass(t *testing.T) {
 		"Jini",
 		"Paste what you want finished.",
 		"Paste what you have. A rough version is fine.",
-		"I will help figure out whether this is follow-up, a plan check, or something else.",
+		"I will turn it into a useful draft or ask one short follow-up if something important is missing.",
 		"Nothing will be sent yet.",
-		"First Useful Pass",
-		"What this seems to be",
-		"What can be used now",
-		"What I need next",
+		"Working Draft",
+		"What this looks like",
+		"Useful starting point",
+		"Best next inputs",
 		"Safe right now",
 		"Nothing has been sent",
 	} {
@@ -1142,7 +1143,7 @@ func TestInteractiveLauncherHandlesUnsureInputWithUsefulPass(t *testing.T) {
 	if strings.Contains(out, "Short version or full version") {
 		t.Fatalf("expected no first-run output-size prompt, got:\n%s", out)
 	}
-	if strings.Contains(out, "Goal") && strings.Index(out, "First Useful Pass") > strings.Index(out, "Goal") {
+	if strings.Contains(out, "Goal") && strings.Index(out, "Working Draft") > strings.Index(out, "Goal") {
 		t.Fatalf("expected first useful result before work summary, got:\n%s", out)
 	}
 	assertNoFirstRunStatusDump(t, out)
@@ -1167,7 +1168,7 @@ func TestInteractiveLauncherHelpMeFinishThisAsksForRoughContext(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Paste what you have. A rough version is fine.",
-		"I will help figure out whether this is follow-up, a plan check, or something else.",
+		"I will turn it into a useful draft or ask one short follow-up if something important is missing.",
 		"Sendable Follow-up",
 		"## Send this",
 	} {
@@ -1176,8 +1177,8 @@ func TestInteractiveLauncherHelpMeFinishThisAsksForRoughContext(t *testing.T) {
 		}
 	}
 	for _, unwanted := range []string{
-		"First Useful Pass: Help Me Finish This",
-		"What this seems to be\n- help me finish this",
+		"Working Draft: Help Me Finish This",
+		"What this looks like\n- help me finish this",
 	} {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("expected help-me-finish path not to create literal work %q, got:\n%s", unwanted, out)
@@ -1204,7 +1205,7 @@ func TestInteractiveLauncherGreetingDoesNotCreateWork(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Paste what you want finished.",
-		"Type `help` for examples or setup.",
+		"Type `help` for examples or commands.",
 		"Hi.",
 		"Tell me what you want finished, or paste notes when you're ready.",
 	} {
@@ -1212,11 +1213,7 @@ func TestInteractiveLauncherGreetingDoesNotCreateWork(t *testing.T) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
 	}
-	for _, unwanted := range []string{
-		"Your first draft is ready.",
-		"First Useful Pass",
-		"Goal",
-	} {
+	for _, unwanted := range []string{"Your first draft is ready.", "Working Draft", "Goal"} {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("did not expect output to contain %q, got:\n%s", unwanted, out)
 		}
@@ -1245,11 +1242,7 @@ func TestInteractiveLauncherSocialAckDoesNotCreateWork(t *testing.T) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
 	}
-	for _, unwanted := range []string{
-		"Your first draft is ready.",
-		"First Useful Pass",
-		"Goal",
-	} {
+	for _, unwanted := range []string{"Your first draft is ready.", "Working Draft", "Goal"} {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("did not expect output to contain %q, got:\n%s", unwanted, out)
 		}
@@ -1329,7 +1322,7 @@ func TestInteractiveLauncherFamiliarSlashCommandsDoNotCreateWork(t *testing.T) {
 					t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 				}
 			}
-			for _, unwanted := range []string{"Your first draft is ready.", "First Useful Pass"} {
+			for _, unwanted := range []string{"Your first draft is ready.", "Working Draft"} {
 				if strings.Contains(out, unwanted) {
 					t.Fatalf("expected slash command not to create work %q, got:\n%s", unwanted, out)
 				}
@@ -1355,15 +1348,15 @@ func TestInteractiveLauncherHelpWithPunctuationDoesNotCreateWork(t *testing.T) {
 
 			out := stdout.String()
 			for _, want := range []string{
-				"What do you need help finishing?",
+				"Jini",
 				"Examples:",
-				"Familiar commands also work",
+				"Commands also work",
 			} {
 				if !strings.Contains(out, want) {
 					t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 				}
 			}
-			for _, unwanted := range []string{"Your first draft is ready.", "First Useful Pass"} {
+			for _, unwanted := range []string{"Your first draft is ready.", "Working Draft"} {
 				if strings.Contains(out, unwanted) {
 					t.Fatalf("expected punctuated help not to create work %q, got:\n%s", unwanted, out)
 				}
@@ -1542,7 +1535,7 @@ func TestCurrentWorkInteractivePunctuatedReadyCommandOpensShelf(t *testing.T) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
 	}
-	if strings.Contains(out, "First Useful Pass") {
+	if strings.Contains(out, "Working Draft") {
 		t.Fatalf("expected punctuated ready command not to start work, got:\n%s", out)
 	}
 }
@@ -1567,7 +1560,7 @@ func TestCurrentWorkInteractiveContinuationAliasesOpenNextUsefulSurface(t *testi
 			if !strings.Contains(out, "Owners and Due Points") {
 				t.Fatalf("expected continuation alias to open next useful surface, got:\n%s", out)
 			}
-			if strings.Contains(out, "First Useful Pass") {
+			if strings.Contains(out, "Working Draft") {
 				t.Fatalf("expected continuation alias not to start new work, got:\n%s", out)
 			}
 		})
@@ -1700,7 +1693,7 @@ func TestCurrentWorkInteractiveProceedOpensNextUsefulSurface(t *testing.T) {
 	if !strings.Contains(out, "Owners and Due Points") {
 		t.Fatalf("expected proceed to open next useful surface, got:\n%s", out)
 	}
-	if strings.Contains(out, "First Useful Pass: Proceed") {
+	if strings.Contains(out, "Working Draft: Proceed") {
 		t.Fatalf("expected proceed not to start literal work, got:\n%s", out)
 	}
 }
@@ -1776,7 +1769,7 @@ func TestCurrentWorkInteractiveSocialAckDoesNotStartNewWork(t *testing.T) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
 	}
-	if strings.Contains(out, "First Useful Pass: Thanks") {
+	if strings.Contains(out, "Working Draft: Thanks") {
 		t.Fatalf("expected thanks not to start literal work, got:\n%s", out)
 	}
 	current := readCurrentWork(t, stateDir)
@@ -1804,7 +1797,7 @@ func TestCurrentWorkInteractiveSlashDoctorDoesNotStartNewWork(t *testing.T) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
 	}
-	if strings.Contains(out, "First Useful Pass: Doctor") {
+	if strings.Contains(out, "Working Draft: Doctor") {
 		t.Fatalf("expected slash doctor not to start literal work, got:\n%s", out)
 	}
 	current := readCurrentWork(t, stateDir)
@@ -1876,7 +1869,7 @@ func TestCurrentWorkInteractiveTacticalCommandsDoNotStartNewWork(t *testing.T) {
 					t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 				}
 			}
-			if strings.Contains(out, "First Useful Pass") {
+			if strings.Contains(out, "Working Draft") {
 				t.Fatalf("expected tactical command not to start literal work, got:\n%s", out)
 			}
 			current := readCurrentWork(t, stateDir)
@@ -1903,7 +1896,7 @@ func TestPostResultStatusCommandShowsFullState(t *testing.T) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
 	}
-	if strings.Contains(out, "First Useful Pass: Status") {
+	if strings.Contains(out, "Working Draft: Status") {
 		t.Fatalf("expected status not to start literal work, got:\n%s", out)
 	}
 }
@@ -2481,6 +2474,112 @@ func TestInteractiveLauncherShowsAttachmentInputChipForTextFile(t *testing.T) {
 		}
 	}
 	assertNoFirstRunStatusDump(t, out)
+}
+
+func TestPostResultCanShowWhatJiniUsed(t *testing.T) {
+	stateDir := t.TempDir()
+	out := runInteractiveForTest(t, stateDir, "7 day paris trip\ncouple, around $2500, early October, mixed pace, central hotel area, Versailles optional\nShow what Jini used\n")
+
+	for _, want := range []string{
+		"What Jini used",
+		"From you",
+		"Your request: 7 day paris trip",
+		"Clarified scope: couple, around $2500, early October, mixed pace, central hotel area, Versailles optional",
+		"Kept visible",
+		"Route and continuity",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+}
+
+func TestPostResultCanMakeItShorterAndUndoLastChange(t *testing.T) {
+	stateDir := t.TempDir()
+	out := runInteractiveForTest(t, stateDir, "Weekly product review for pricing launch. Need owners, due dates, and open questions.\nMake it shorter\n")
+
+	for _, want := range []string{
+		"Sendable Follow-up",
+		"## Short version",
+		"## Still to confirm",
+		"## Next move",
+		"Saved a restorable version.",
+		"Show versions",
+		"Undo last change",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected shorter transform output to contain %q, got:\n%s", want, out)
+		}
+	}
+
+	current := readCurrentWork(t, stateDir)
+	followupPath := filepath.Join(current["pack_dir"].(string), "views", "followup.md")
+	shortened := mustReadFile(t, followupPath)
+	if !strings.Contains(shortened, "## Short version") {
+		t.Fatalf("expected transformed artifact to be saved, got:\n%s", shortened)
+	}
+
+	versionsOut := runInteractiveForTest(t, stateDir, "Show versions\n")
+	for _, want := range []string{
+		"Versions",
+		"Make it shorter",
+		"Undo last change",
+	} {
+		if !strings.Contains(versionsOut, want) {
+			t.Fatalf("expected versions output to contain %q, got:\n%s", want, versionsOut)
+		}
+	}
+
+	undoOut := runInteractiveForTest(t, stateDir, "Undo last change\n")
+	for _, want := range []string{
+		"Restored the previous version.",
+		"## Send this note",
+	} {
+		if !strings.Contains(undoOut, want) {
+			t.Fatalf("expected undo output to contain %q, got:\n%s", want, undoOut)
+		}
+	}
+
+	restored := mustReadFile(t, followupPath)
+	if strings.Contains(restored, "## Short version") {
+		t.Fatalf("expected undo to restore original artifact, got:\n%s", restored)
+	}
+	if !strings.Contains(restored, "## Send this note") {
+		t.Fatalf("expected original artifact content after undo, got:\n%s", restored)
+	}
+}
+
+func TestPostResultCanMakeItExecutive(t *testing.T) {
+	stateDir := t.TempDir()
+	out := runInteractiveForTest(t, stateDir, "Notifications PRD needs a build-readiness check and handoff call.\nMake it executive\n")
+
+	for _, want := range []string{
+		"Build-Readiness Check",
+		"## Executive summary",
+		"## Risks or gaps",
+		"## Next move",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected executive transform output to contain %q, got:\n%s", want, out)
+		}
+	}
+}
+
+func TestPostResultCanTurnArtifactIntoChecklist(t *testing.T) {
+	stateDir := t.TempDir()
+	out := runInteractiveForTest(t, stateDir, "Weekly product review for pricing launch. Need owners, due dates, and open questions.\nTurn this into a checklist\n")
+
+	for _, want := range []string{
+		"Sendable Follow-up",
+		"## Do now",
+		"- [ ]",
+		"## Confirm",
+		"## Watch",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected checklist transform output to contain %q, got:\n%s", want, out)
+		}
+	}
 }
 
 func assertNoFirstRunStatusDump(t *testing.T, out string) {
