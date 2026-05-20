@@ -219,9 +219,6 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 	case "show what jini used", "what jini used", "show context", "what did you use", "what shaped this":
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "context"})
 	case "see what is still missing", "show what is missing", "missing":
-		if renderActiveAskSurface(stdout, summary) {
-			return 0
-		}
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "missing"})
 	case "make it fuller", "fuller", "show more", "expand", "expand this":
 		if !renderNextContinuation(stdout, summary) {
@@ -2915,10 +2912,6 @@ func renderThreadSurface(w io.Writer, summary *workSummary, focus *threadFocus) 
 	return false
 }
 
-func renderActiveAskSurface(w io.Writer, summary *workSummary) bool {
-	return renderThreadSurface(w, summary, activeAskFocus(summary))
-}
-
 func renderFocusedContinuation(w io.Writer, summary *workSummary) bool {
 	if summary == nil {
 		return false
@@ -2998,9 +2991,6 @@ func handlePostResultAction(action string, summary *workSummary, scanner *bufio.
 	case "show what jini used", "what jini used", "show context", "what did you use", "what shaped this":
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "context"})
 	case "see what is still missing", "show what is missing", "missing", "3":
-		if renderActiveAskSurface(stdout, summary) {
-			return 0
-		}
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "missing"})
 	case "make it fuller", "fuller", "show more", "expand", "expand this", "4":
 		if !renderNextContinuation(stdout, summary) {
