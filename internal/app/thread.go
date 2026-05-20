@@ -16,6 +16,12 @@ type threadTurnRecord struct {
 	ArtifactsUpdated []string `json:"artifacts_updated"`
 }
 
+type threadFocus struct {
+	Kind          string `json:"kind"`
+	ArtifactPath  string `json:"artifact_path,omitempty"`
+	ArtifactLabel string `json:"artifact_label,omitempty"`
+}
+
 type threadAsk struct {
 	AskID                string   `json:"ask_id"`
 	Prompt               string   `json:"prompt"`
@@ -30,6 +36,7 @@ type savedThreadState struct {
 	ContextType   string           `json:"context_type"`
 	CurrentTurn   threadTurnRecord `json:"current_turn"`
 	ActiveAsk     *threadAsk       `json:"active_ask,omitempty"`
+	CurrentFocus  *threadFocus     `json:"current_focus,omitempty"`
 }
 
 type inputItem struct {
@@ -77,6 +84,7 @@ type workThread struct {
 	EffortLevel        string
 	VerificationLevel  string
 	VerificationReason string
+	ResumeTarget       string
 }
 
 func threadStatePath(workDir string) string {
@@ -105,7 +113,7 @@ func loadThreadState(workDir string, summary *workSummary) savedThreadState {
 	if err == nil {
 		var payload savedThreadState
 		if json.Unmarshal(data, &payload) == nil {
-			if payload.CurrentTurn.DoingNow != "" || payload.ActiveAsk != nil {
+			if payload.CurrentTurn.DoingNow != "" || payload.ActiveAsk != nil || payload.CurrentFocus != nil {
 				return payload
 			}
 		}
@@ -165,11 +173,11 @@ func inputItemsForSource(source string) ([]inputItem, string) {
 		return []inputItem{item}, normalized
 	}
 	return []inputItem{{
-		InputID: "request",
-		Kind:    "text",
-		Title:   "Your request",
-		Status:  "processed",
-		Preview: compactPreview(trimmed, 120),
+		InputID:   "request",
+		Kind:      "text",
+		Title:     "Your request",
+		Status:    "processed",
+		Preview:   compactPreview(trimmed, 120),
 		OriginRef: trimmed,
 	}}, trimmed
 }
@@ -289,6 +297,10 @@ func buildWorkThread(summary *workSummary, inputs []inputItem, state savedThread
 	doingNow := firstNonEmpty(strings.TrimSpace(state.CurrentTurn.DoingNow), summary.Doing)
 	upNext := firstNonEmpty(strings.TrimSpace(state.CurrentTurn.UpNext), summary.NextStep)
 	request := providerRequestForInputs(summary.PackID, summary.Title, inputs)
+	resumeTarget := ""
+	if !sameThreadFocus(state.CurrentFocus, defaultThreadFocus(summary)) {
+		resumeTarget = threadFocusLabel(summary, state.CurrentFocus)
+	}
 	return workThread{
 		ThreadID:           firstNonEmpty(summary.WorkUnitID, slugify(summary.Title)),
 		Goal:               summary.Title,
@@ -319,12 +331,14 @@ func buildWorkThread(summary *workSummary, inputs []inputItem, state savedThread
 		EffortLevel:        summary.EffortLevel,
 		VerificationLevel:  summary.VerificationLevel,
 		VerificationReason: summary.VerificationReason,
+		ResumeTarget:       resumeTarget,
 	}
 }
 
 func synthesizeThreadState(summary *workSummary) savedThreadState {
 	state := savedThreadState{
-		CurrentTurn: synthesizeTurnRecord(summary),
+		CurrentTurn:  synthesizeTurnRecord(summary),
+		CurrentFocus: defaultThreadFocus(summary),
 	}
 	if ask := synthesizeThreadAsk(summary); ask != nil {
 		state.ActiveAsk = ask
@@ -333,6 +347,9 @@ func synthesizeThreadState(summary *workSummary) savedThreadState {
 }
 
 func synthesizeTurnRecord(summary *workSummary) threadTurnRecord {
+	if summary == nil {
+		return threadTurnRecord{}
+	}
 	record := threadTurnRecord{
 		JustFinished: inferDone(summary.PackID, summary.Views),
 		DoingNow:     summary.Doing,
@@ -345,6 +362,9 @@ func synthesizeTurnRecord(summary *workSummary) threadTurnRecord {
 }
 
 func synthesizeThreadAsk(summary *workSummary) *threadAsk {
+	if summary == nil {
+		return nil
+	}
 	return starterAsk(summary, sourceFromInputItems(summary.Thread.InputItems))
 }
 
@@ -357,4 +377,79 @@ func inferNeed(missing []string) string {
 		return "Nothing right now"
 	}
 	return missing[0]
+}
+
+func defaultThreadFocus(summary *workSummary) *threadFocus {
+	if summary == nil {
+		return nil
+	}
+	if item := firstResultItem(summary); item != nil {
+		return &threadFocus{
+			Kind:          "artifact",
+			ArtifactPath:  artifactRelativePath(summary.Dir, item.Path),
+			ArtifactLabel: item.Label,
+		}
+	}
+	if len(summary.Missing) > 0 {
+		return &threadFocus{Kind: "missing"}
+	}
+	return nil
+}
+
+func threadFocusLabel(summary *workSummary, focus *threadFocus) string {
+	if focus == nil {
+		return ""
+	}
+	switch focus.Kind {
+	case "artifact":
+		if item := focusedArtifactItem(summary, focus); item != nil {
+			return item.Label
+		}
+		return strings.TrimSpace(focus.ArtifactLabel)
+	case "missing":
+		return "What is missing"
+	case "context":
+		return "What Jini used"
+	case "plan":
+		return "Plan this first"
+	default:
+		return ""
+	}
+}
+
+func focusedArtifactItem(summary *workSummary, focus *threadFocus) *catalogItem {
+	if summary == nil || focus == nil || focus.Kind != "artifact" {
+		return nil
+	}
+	targetPath := strings.TrimSpace(focus.ArtifactPath)
+	targetLabel := strings.TrimSpace(focus.ArtifactLabel)
+	for _, item := range openShelfItems(summary) {
+		if targetPath != "" && artifactRelativePath(summary.Dir, item.Path) == targetPath {
+			copy := item
+			return &copy
+		}
+		if targetLabel != "" && normalizeName(item.Label) == normalizeName(targetLabel) {
+			copy := item
+			return &copy
+		}
+	}
+	return nil
+}
+
+func updateThreadFocus(workDir string, focus *threadFocus) {
+	if strings.TrimSpace(workDir) == "" || focus == nil {
+		return
+	}
+	state := loadThreadState(workDir, nil)
+	state.CurrentFocus = focus
+	_ = saveThreadState(workDir, state)
+}
+
+func sameThreadFocus(left, right *threadFocus) bool {
+	if left == nil || right == nil {
+		return left == nil && right == nil
+	}
+	return strings.TrimSpace(left.Kind) == strings.TrimSpace(right.Kind) &&
+		strings.TrimSpace(left.ArtifactPath) == strings.TrimSpace(right.ArtifactPath) &&
+		strings.TrimSpace(left.ArtifactLabel) == strings.TrimSpace(right.ArtifactLabel)
 }

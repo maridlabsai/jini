@@ -196,26 +196,29 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		renderCurrentWorkHelp(stdout, summary)
 	case "status", "show status", "check":
 		renderCheck(stdout, summary)
-	case "1", "continue", "continue current work", "continue this", "resume this", "keep going", "proceed", "go ahead", "next":
-		item := nextUsefulItem(summary)
-		if item == nil {
+	case "resume", "resume this", "continue this":
+		if !renderFocusedContinuation(stdout, summary) {
 			renderCheck(stdout, summary)
 			return 0
 		}
-		renderItem(stdout, item)
+	case "1", "continue", "continue current work", "keep going", "proceed", "go ahead", "next":
+		if !renderNextContinuation(stdout, summary) {
+			renderCheck(stdout, summary)
+			return 0
+		}
 	case "2", "open", "open ready work", "open ready", "open whats ready", "open what's ready", "open what is ready", "show whats ready", "show what's ready", "show what is ready":
 		return runInteractiveOpenShelf(summary, scanner, stdout, stderr)
 	case "show what jini used", "what jini used", "show context", "what did you use", "what shaped this":
+		updateThreadFocus(summary.Dir, &threadFocus{Kind: "context"})
 		renderContextCapsule(stdout, summary)
 	case "see what is still missing", "show what is missing", "missing":
+		updateThreadFocus(summary.Dir, &threadFocus{Kind: "missing"})
 		renderMissingOnly(stdout, summary)
 	case "make it fuller", "fuller", "show more", "expand", "expand this":
-		item := richerUsefulItem(summary)
-		if item == nil {
+		if !renderNextContinuation(stdout, summary) {
 			renderCheck(stdout, summary)
 			return 0
 		}
-		renderItem(stdout, item)
 	case "make it shorter", "shorter", "tighten this", "make this shorter":
 		item, err := applyArtifactTransform(summary, "shorter")
 		if err != nil {
@@ -318,6 +321,7 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		fmt.Fprintln(stdout, "Nothing was deleted.")
 		fmt.Fprintln(stdout, "Type `Start new work` to switch focus without removing this work.")
 	case "plan this first", "plan first", "plan", "requirements", "design", "help me plan this":
+		updateThreadFocus(summary.Dir, &threadFocus{Kind: "plan"})
 		renderPlanFirst(stdout, summary)
 	case "3", "new", "start new", "start something new", "start something else", "start new work":
 		if scanner == nil {
@@ -335,6 +339,7 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 				fmt.Fprintf(stderr, "Could not record artifact open: %v\n", err)
 				return 1
 			}
+			updateThreadFocus(summary.Dir, &threadFocus{Kind: "artifact", ArtifactPath: artifactRelativePath(summary.Dir, item.Path), ArtifactLabel: item.Label})
 			renderItem(stdout, item)
 			return 0
 		}
@@ -1811,6 +1816,7 @@ func runOpen(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "Could not record artifact open: %v\n", err)
 		return 1
 	}
+	updateThreadFocus(summary.Dir, &threadFocus{Kind: "artifact", ArtifactPath: artifactRelativePath(summary.Dir, item.Path), ArtifactLabel: item.Label})
 	content, err := os.ReadFile(item.Path)
 	if err != nil {
 		fmt.Fprintf(stderr, "Could not read %q: %v\n", item.Label, err)
@@ -2721,19 +2727,7 @@ func renderPostResultContext(w io.Writer, summary *workSummary, item *catalogIte
 }
 
 func richerUsefulItem(summary *workSummary) *catalogItem {
-	if summary == nil {
-		return nil
-	}
-	if len(summary.Views) > 1 {
-		return &summary.Views[1]
-	}
-	if len(summary.Details) > 0 {
-		return &summary.Details[0]
-	}
-	if len(summary.Exports) > 0 {
-		return &summary.Exports[0]
-	}
-	return nil
+	return nextUsefulItem(summary)
 }
 
 func openShelfItems(summary *workSummary) []catalogItem {
@@ -2795,8 +2789,55 @@ func runInteractiveOpenShelf(summary *workSummary, scanner *bufio.Scanner, stdou
 		fmt.Fprintf(stderr, "Could not record artifact open: %v\n", err)
 		return 1
 	}
+	updateThreadFocus(summary.Dir, &threadFocus{Kind: "artifact", ArtifactPath: artifactRelativePath(summary.Dir, item.Path), ArtifactLabel: item.Label})
 	renderItem(stdout, item)
 	return 0
+}
+
+func renderFocusedContinuation(w io.Writer, summary *workSummary) bool {
+	if summary == nil {
+		return false
+	}
+	state := loadThreadState(summary.Dir, summary)
+	if state.CurrentFocus != nil {
+		switch state.CurrentFocus.Kind {
+		case "artifact":
+			if item := focusedArtifactItem(summary, state.CurrentFocus); item != nil {
+				updateThreadFocus(summary.Dir, state.CurrentFocus)
+				renderItem(w, item)
+				return true
+			}
+		case "missing":
+			updateThreadFocus(summary.Dir, &threadFocus{Kind: "missing"})
+			renderMissingOnly(w, summary)
+			return true
+		case "context":
+			updateThreadFocus(summary.Dir, &threadFocus{Kind: "context"})
+			renderContextCapsule(w, summary)
+			return true
+		case "plan":
+			updateThreadFocus(summary.Dir, &threadFocus{Kind: "plan"})
+			renderPlanFirst(w, summary)
+			return true
+		}
+	}
+	if item := currentArtifactItem(summary); item != nil {
+		renderItem(w, item)
+		return true
+	}
+	return false
+}
+
+func renderNextContinuation(w io.Writer, summary *workSummary) bool {
+	if summary == nil {
+		return false
+	}
+	if item := nextUsefulItem(summary); item != nil {
+		updateThreadFocus(summary.Dir, &threadFocus{Kind: "artifact", ArtifactPath: artifactRelativePath(summary.Dir, item.Path), ArtifactLabel: item.Label})
+		renderItem(w, item)
+		return true
+	}
+	return false
 }
 
 func postResultWorkingWith(items []string) []string {
@@ -2828,28 +2869,31 @@ func postResultAlsoReady(items []catalogItem, primary *catalogItem) []string {
 
 func handlePostResultAction(action string, summary *workSummary, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
 	switch normalizeName(action) {
-	case "keep going", "1", "continue", "proceed", "go ahead", "next":
-		item := nextUsefulItem(summary)
-		if item == nil {
+	case "resume", "resume this", "continue this":
+		if !renderFocusedContinuation(stdout, summary) {
 			renderCheck(stdout, summary)
 			return 0
 		}
-		renderItem(stdout, item)
+	case "keep going", "1", "continue", "proceed", "go ahead", "next":
+		if !renderNextContinuation(stdout, summary) {
+			renderCheck(stdout, summary)
+			return 0
+		}
 	case "open whats ready", "open what's ready", "open what is ready", "show whats ready", "show what's ready", "show what is ready", "2":
 		return runInteractiveOpenShelf(summary, scanner, stdout, stderr)
 	case "status", "show status", "check":
 		renderCheck(stdout, summary)
 	case "show what jini used", "what jini used", "show context", "what did you use", "what shaped this":
+		updateThreadFocus(summary.Dir, &threadFocus{Kind: "context"})
 		renderContextCapsule(stdout, summary)
 	case "see what is still missing", "show what is missing", "missing", "3":
+		updateThreadFocus(summary.Dir, &threadFocus{Kind: "missing"})
 		renderMissingOnly(stdout, summary)
 	case "make it fuller", "fuller", "show more", "expand", "expand this", "4":
-		item := richerUsefulItem(summary)
-		if item == nil {
+		if !renderNextContinuation(stdout, summary) {
 			renderCheck(stdout, summary)
 			return 0
 		}
-		renderItem(stdout, item)
 	case "make it shorter", "shorter", "tighten this", "make this shorter":
 		item, err := applyArtifactTransform(summary, "shorter")
 		if err != nil {
@@ -2889,6 +2933,7 @@ func handlePostResultAction(action string, summary *workSummary, scanner *bufio.
 		fmt.Fprintln(stdout)
 		renderItem(stdout, item)
 	case "plan this first", "plan first", "plan", "help me plan this", "5":
+		updateThreadFocus(summary.Dir, &threadFocus{Kind: "plan"})
 		renderPlanFirst(stdout, summary)
 	case "start something new", "start new work", "new", "6":
 		renderNewWorkLauncher(stdout)
@@ -2902,6 +2947,7 @@ func handlePostResultAction(action string, summary *workSummary, scanner *bufio.
 				fmt.Fprintf(stderr, "Could not record artifact open: %v\n", err)
 				return 1
 			}
+			updateThreadFocus(summary.Dir, &threadFocus{Kind: "artifact", ArtifactPath: artifactRelativePath(summary.Dir, item.Path), ArtifactLabel: item.Label})
 			renderItem(stdout, item)
 			return 0
 		}
@@ -2911,16 +2957,38 @@ func handlePostResultAction(action string, summary *workSummary, scanner *bufio.
 }
 
 func nextUsefulItem(summary *workSummary) *catalogItem {
+	if summary == nil {
+		return nil
+	}
+	items := openShelfItems(summary)
+	if len(items) == 0 {
+		return nil
+	}
+	state := loadThreadState(summary.Dir, summary)
+	if state.CurrentFocus != nil && state.CurrentFocus.Kind == "artifact" {
+		for index, item := range items {
+			if artifactRelativePath(summary.Dir, item.Path) == strings.TrimSpace(state.CurrentFocus.ArtifactPath) ||
+				normalizeName(item.Label) == normalizeName(state.CurrentFocus.ArtifactLabel) {
+				if index+1 < len(items) {
+					copy := items[index+1]
+					return &copy
+				}
+				return nil
+			}
+		}
+	}
 	preferred := []string{"owners-and-due-points", "missing-pieces-before-build", "next-actions", "task-list"}
 	for _, id := range preferred {
 		if item := findViewByID(summary, id); item != nil {
 			return item
 		}
 	}
-	if len(summary.Views) == 0 {
-		return nil
+	if len(items) > 1 {
+		copy := items[1]
+		return &copy
 	}
-	return &summary.Views[0]
+	copy := items[0]
+	return &copy
 }
 
 func findViewByID(summary *workSummary, id string) *catalogItem {
@@ -3206,6 +3274,11 @@ func renderCurrentWorkPrompt(w io.Writer, summary *workSummary) {
 		fmt.Fprintf(w, "- %s\n", summary.Thread.Goal)
 	}
 	if summary != nil {
+		if strings.TrimSpace(summary.Thread.ResumeTarget) != "" {
+			fmt.Fprintln(w)
+			fmt.Fprintln(w, "Resume")
+			fmt.Fprintf(w, "- %s\n", summary.Thread.ResumeTarget)
+		}
 		if other := otherActiveWorkSummaries(summary); len(other) > 0 {
 			fmt.Fprintln(w)
 			fmt.Fprintln(w, "Other active work")

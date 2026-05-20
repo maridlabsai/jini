@@ -1540,8 +1540,8 @@ func TestCurrentWorkInteractivePunctuatedReadyCommandOpensShelf(t *testing.T) {
 	}
 }
 
-func TestCurrentWorkInteractiveContinuationAliasesOpenNextUsefulSurface(t *testing.T) {
-	cases := []string{"continue this\n", "resume this\n", "next\n"}
+func TestCurrentWorkInteractiveResumeAliasesOpenFocusedSurface(t *testing.T) {
+	cases := []string{"continue this\n", "resume this\n"}
 	for _, line := range cases {
 		t.Run(strings.TrimSpace(line), func(t *testing.T) {
 			stateDir := t.TempDir()
@@ -1557,13 +1557,32 @@ func TestCurrentWorkInteractiveContinuationAliasesOpenNextUsefulSurface(t *testi
 			}
 
 			out := stdout.String()
-			if !strings.Contains(out, "Owners and Due Points") {
-				t.Fatalf("expected continuation alias to open next useful surface, got:\n%s", out)
+			if !strings.Contains(out, "Sendable Follow-up") {
+				t.Fatalf("expected resume alias to reopen focused surface, got:\n%s", out)
 			}
 			if strings.Contains(out, "Working Draft") {
 				t.Fatalf("expected continuation alias not to start new work, got:\n%s", out)
 			}
 		})
+	}
+}
+
+func TestCurrentWorkInteractiveNextAliasOpensNextUsefulSurface(t *testing.T) {
+	stateDir := t.TempDir()
+	packDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("next\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	if !strings.Contains(out, "Owners and Due Points") {
+		t.Fatalf("expected next to open next useful surface, got:\n%s", out)
 	}
 }
 
@@ -1608,6 +1627,34 @@ func TestCurrentWorkInteractiveLauncherIsCompactByDefault(t *testing.T) {
 	} {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("expected compact launcher not to contain %q, got:\n%s", unwanted, out)
+		}
+	}
+}
+
+func TestCurrentWorkPromptShowsResumeHintAfterFocusChanges(t *testing.T) {
+	stateDir := t.TempDir()
+	packDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	if exitCode := app.RunInteractive(nil, strings.NewReader("Show what's ready\n2\n"), io.Discard, io.Discard); exitCode != 0 {
+		t.Fatalf("expected selection to succeed, got %d", exitCode)
+	}
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader(""), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Resume",
+		"Owners and Due Points",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected prompt to contain %q after focus change, got:\n%s", want, out)
 		}
 	}
 }
@@ -1744,6 +1791,84 @@ func TestCurrentWorkReadyShelfSelectionOpensArtifactByName(t *testing.T) {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
+	}
+}
+
+func TestCurrentWorkResumeReopensSelectedReadyArtifact(t *testing.T) {
+	stateDir := t.TempDir()
+	packDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	if exitCode := app.RunInteractive(nil, strings.NewReader("Show what's ready\n2\n"), io.Discard, io.Discard); exitCode != 0 {
+		t.Fatalf("expected selection to succeed, got %d", exitCode)
+	}
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("resume this\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	if !strings.Contains(out, "Owners and Due Points") {
+		t.Fatalf("expected resume to reopen selected artifact, got:\n%s", out)
+	}
+}
+
+func TestCurrentWorkResumeReopensMissingSurface(t *testing.T) {
+	stateDir := t.TempDir()
+	packDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	if exitCode := app.RunInteractive(nil, strings.NewReader("Show what is missing\n"), io.Discard, io.Discard); exitCode != 0 {
+		t.Fatalf("expected missing view to succeed, got %d", exitCode)
+	}
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("resume this\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	if !strings.Contains(out, "Still missing") {
+		t.Fatalf("expected resume to reopen missing surface, got:\n%s", out)
+	}
+}
+
+func TestCurrentWorkTransformUsesFocusedArtifact(t *testing.T) {
+	stateDir := t.TempDir()
+	packDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	if exitCode := app.RunInteractive(nil, strings.NewReader("Show what's ready\n2\n"), io.Discard, io.Discard); exitCode != 0 {
+		t.Fatalf("expected selection to succeed, got %d", exitCode)
+	}
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("Make it shorter\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected focused transform to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	if !strings.Contains(out, "Owners and Due Points") || !strings.Contains(out, "## Short version") {
+		t.Fatalf("expected focused transform to target selected artifact, got:\n%s", out)
+	}
+
+	followup := mustReadFile(t, filepath.Join(packDir, "views", "followup.md"))
+	if strings.Contains(followup, "## Short version") {
+		t.Fatalf("expected primary follow-up artifact to remain unchanged, got:\n%s", followup)
+	}
+	owners := mustReadFile(t, filepath.Join(packDir, "views", "tasks.md"))
+	if !strings.Contains(owners, "## Short version") {
+		t.Fatalf("expected selected artifact to be rewritten, got:\n%s", owners)
 	}
 }
 

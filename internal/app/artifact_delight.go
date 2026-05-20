@@ -185,6 +185,11 @@ func currentArtifactItem(summary *workSummary) *catalogItem {
 	if summary == nil {
 		return nil
 	}
+	if state := loadThreadState(summary.Dir, summary); state.CurrentFocus != nil {
+		if item := focusedArtifactItem(summary, state.CurrentFocus); item != nil {
+			return item
+		}
+	}
 	if item := firstResultItem(summary); item != nil {
 		return item
 	}
@@ -549,6 +554,12 @@ func updateThreadArtifactState(workDir, label, action string) {
 		return
 	}
 	state.CurrentTurn.ArtifactsUpdated = dedupeStrings(append(state.CurrentTurn.ArtifactsUpdated, label))
+	if state.CurrentFocus == nil || strings.TrimSpace(state.CurrentFocus.Kind) == "" {
+		state.CurrentFocus = &threadFocus{Kind: "artifact", ArtifactLabel: label}
+	} else {
+		state.CurrentFocus.Kind = "artifact"
+		state.CurrentFocus.ArtifactLabel = label
+	}
 	if strings.TrimSpace(action) != "" {
 		state.CurrentTurn.JustFinished = dedupeStrings(append(state.CurrentTurn.JustFinished, action))
 	}
