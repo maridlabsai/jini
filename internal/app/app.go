@@ -165,7 +165,7 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 	switch normalizeName(action) {
 	case "help", "?", "status", "show help":
 		renderCurrentWorkHelp(stdout, summary)
-	case "1", "continue", "continue current work", "keep going":
+	case "1", "continue", "continue current work", "keep going", "proceed", "go ahead", "next":
 		item := nextUsefulItem(summary)
 		if item == nil {
 			renderCheck(stdout, summary)
@@ -235,6 +235,10 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		}
 		return runNewWorkIntakeWithScanner(scanner, stdout, stderr)
 	default:
+		if isAcknowledgementOnly(action) {
+			renderCurrentWorkNoop(stdout)
+			return 0
+		}
 		if scanner != nil && strings.TrimSpace(action) != "" {
 			return startNewWorkFromRawInput(action, scanner, stdout, stderr)
 		}
@@ -630,6 +634,12 @@ func runNewWorkIntakeWithScanner(session *bufio.Scanner, stdout, stderr io.Write
 			fmt.Fprintln(stdout)
 			continue
 		}
+		if isAcknowledgementOnly(firstRaw) || isBareContinuationIntent(firstRaw) {
+			fmt.Fprintln(stdout)
+			renderNewWorkNoop(stdout)
+			fmt.Fprintln(stdout)
+			continue
+		}
 		if handled, exitCode := maybeHandleProviderSetupIntent(firstRaw, session, stdout, stderr); handled {
 			if exitCode != 0 {
 				fmt.Fprintln(stdout)
@@ -759,6 +769,24 @@ func resolveStarterChoice(raw string) (starterChoice, error) {
 func isGreetingOnly(raw string) bool {
 	switch normalizeName(raw) {
 	case "hello", "hi", "hey", "hey there", "hello there", "good morning", "good afternoon", "good evening", "morning", "evening":
+		return true
+	default:
+		return false
+	}
+}
+
+func isAcknowledgementOnly(raw string) bool {
+	switch normalizeName(raw) {
+	case "thanks", "thank you", "thx", "ok", "okay", "k", "cool", "got it", "sounds good", "yes", "yep", "yeah", "no", "nope", "done":
+		return true
+	default:
+		return false
+	}
+}
+
+func isBareContinuationIntent(raw string) bool {
+	switch normalizeName(raw) {
+	case "continue", "proceed", "go ahead", "keep going", "next":
 		return true
 	default:
 		return false
@@ -2564,6 +2592,16 @@ func renderPostResultActions(w io.Writer, summary *workSummary, item *catalogIte
 	renderPostResultContext(w, summary, item)
 }
 
+func renderNewWorkNoop(w io.Writer) {
+	fmt.Fprintln(w, "Nothing to do yet.")
+	fmt.Fprintln(w, "Paste the work when you're ready.")
+}
+
+func renderCurrentWorkNoop(w io.Writer) {
+	fmt.Fprintln(w, "Nothing changed.")
+	fmt.Fprintln(w, "Use `keep going`, `show what's ready`, or paste a new request.")
+}
+
 func renderPostResultContext(w io.Writer, summary *workSummary, item *catalogItem) {
 	if summary == nil {
 		return
@@ -2624,7 +2662,7 @@ func postResultAlsoReady(items []catalogItem, primary *catalogItem) []string {
 
 func handlePostResultAction(action string, summary *workSummary, stdout, stderr io.Writer) int {
 	switch normalizeName(action) {
-	case "keep going", "1", "continue":
+	case "keep going", "1", "continue", "proceed", "go ahead", "next":
 		item := nextUsefulItem(summary)
 		if item == nil {
 			renderCheck(stdout, summary)
@@ -2640,6 +2678,10 @@ func handlePostResultAction(action string, summary *workSummary, stdout, stderr 
 	case "start something new", "start new work", "new", "5":
 		renderNewWorkLauncher(stdout)
 	default:
+		if isAcknowledgementOnly(action) {
+			renderCurrentWorkNoop(stdout)
+			return 0
+		}
 		renderCheck(stdout, summary)
 	}
 	return 0

@@ -1207,6 +1207,39 @@ func TestInteractiveLauncherGreetingDoesNotCreateWork(t *testing.T) {
 	}
 }
 
+func TestInteractiveLauncherSocialAckDoesNotCreateWork(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("thanks\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Nothing to do yet.",
+		"Paste the work when you're ready.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+	for _, unwanted := range []string{
+		"Your first draft is ready.",
+		"First Useful Pass",
+		"Goal",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("did not expect output to contain %q, got:\n%s", unwanted, out)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(stateDir, "current-work.json")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("expected no current work file after social ack, got err=%v", err)
+	}
+}
+
 func TestInteractiveLauncherRunsMeetingPostResultActions(t *testing.T) {
 	cases := []struct {
 		name            string
@@ -1216,6 +1249,11 @@ func TestInteractiveLauncherRunsMeetingPostResultActions(t *testing.T) {
 		{
 			name:            "keep going opens the next useful meeting surface",
 			action:          "Keep going",
+			wantAfterAction: "Owners and Due Points",
+		},
+		{
+			name:            "proceed opens the next useful meeting surface",
+			action:          "proceed",
 			wantAfterAction: "Owners and Due Points",
 		},
 		{
@@ -1243,7 +1281,11 @@ func TestInteractiveLauncherRunsMeetingPostResultActions(t *testing.T) {
 			if out == baseline {
 				t.Fatalf("expected %q to be handled as a real action, but output matched the no-action run:\n%s", tc.action, out)
 			}
-			requireStringAfter(t, out, tc.action, tc.wantAfterAction)
+			if strings.Contains(out, tc.action) {
+				requireStringAfter(t, out, tc.action, tc.wantAfterAction)
+			} else if !strings.Contains(out, tc.wantAfterAction) {
+				t.Fatalf("expected output to contain %q for action %q, got:\n%s", tc.wantAfterAction, tc.action, out)
+			}
 			for _, unwanted := range []string{"coming soon", "not implemented"} {
 				if strings.Contains(strings.ToLower(out), unwanted) {
 					t.Fatalf("expected real action, got placeholder %q in:\n%s", unwanted, out)
@@ -1408,6 +1450,59 @@ func TestCurrentWorkInteractiveKeepGoingOpensNextUsefulSurface(t *testing.T) {
 	out := stdout.String()
 	if !strings.Contains(out, "Owners and Due Points") {
 		t.Fatalf("expected keep going to open next useful surface, got:\n%s", out)
+	}
+}
+
+func TestCurrentWorkInteractiveProceedOpensNextUsefulSurface(t *testing.T) {
+	stateDir := t.TempDir()
+	packDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("proceed\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	if !strings.Contains(out, "Owners and Due Points") {
+		t.Fatalf("expected proceed to open next useful surface, got:\n%s", out)
+	}
+	if strings.Contains(out, "First Useful Pass: Proceed") {
+		t.Fatalf("expected proceed not to start literal work, got:\n%s", out)
+	}
+}
+
+func TestCurrentWorkInteractiveSocialAckDoesNotStartNewWork(t *testing.T) {
+	stateDir := t.TempDir()
+	packDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("thanks\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Nothing changed.",
+		"Use `keep going`, `show what's ready`, or paste a new request.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, "First Useful Pass: Thanks") {
+		t.Fatalf("expected thanks not to start literal work, got:\n%s", out)
+	}
+	current := readCurrentWork(t, stateDir)
+	if current["title"] != "Weekly Product Review" {
+		t.Fatalf("expected current work to remain unchanged, got %#v", current)
 	}
 }
 
