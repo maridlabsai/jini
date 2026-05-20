@@ -20,6 +20,7 @@ type threadFocus struct {
 	Kind          string `json:"kind"`
 	ArtifactPath  string `json:"artifact_path,omitempty"`
 	ArtifactLabel string `json:"artifact_label,omitempty"`
+	AskID         string `json:"ask_id,omitempty"`
 }
 
 type threadAsk struct {
@@ -412,9 +413,21 @@ func threadFocusLabel(summary *workSummary, focus *threadFocus) string {
 		return "What Jini used"
 	case "plan":
 		return "Plan this first"
+	case "ask":
+		return firstNonEmpty(strings.TrimSpace(summary.Thread.Need), "Pending decision")
 	default:
 		return ""
 	}
+}
+
+func focusedThreadAsk(state savedThreadState, focus *threadFocus) *threadAsk {
+	if focus == nil || focus.Kind != "ask" || state.ActiveAsk == nil {
+		return nil
+	}
+	if strings.TrimSpace(focus.AskID) == "" || strings.TrimSpace(focus.AskID) == strings.TrimSpace(state.ActiveAsk.AskID) {
+		return state.ActiveAsk
+	}
+	return nil
 }
 
 func focusedArtifactItem(summary *workSummary, focus *threadFocus) *catalogItem {
@@ -440,7 +453,11 @@ func updateThreadFocus(workDir string, focus *threadFocus) {
 	if strings.TrimSpace(workDir) == "" || focus == nil {
 		return
 	}
-	state := loadThreadState(workDir, nil)
+	var summary *workSummary
+	if loaded, err := loadWorkSummary(workDir, nil); err == nil {
+		summary = loaded
+	}
+	state := loadThreadState(workDir, summary)
 	state.CurrentFocus = focus
 	_ = saveThreadState(workDir, state)
 }
@@ -451,7 +468,8 @@ func sameThreadFocus(left, right *threadFocus) bool {
 	}
 	return strings.TrimSpace(left.Kind) == strings.TrimSpace(right.Kind) &&
 		strings.TrimSpace(left.ArtifactPath) == strings.TrimSpace(right.ArtifactPath) &&
-		strings.TrimSpace(left.ArtifactLabel) == strings.TrimSpace(right.ArtifactLabel)
+		strings.TrimSpace(left.ArtifactLabel) == strings.TrimSpace(right.ArtifactLabel) &&
+		strings.TrimSpace(left.AskID) == strings.TrimSpace(right.AskID)
 }
 
 func resolveActiveAskAction(workDir string, summary *workSummary, action string) (string, bool, error) {

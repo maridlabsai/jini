@@ -1410,9 +1410,9 @@ func TestInteractiveLauncherRunsMeetingPostResultActions(t *testing.T) {
 			wantAfterAction: "Owners and Due Points",
 		},
 		{
-			name:            "see missing opens the meeting gap summary",
+			name:            "see missing opens the meeting decision surface",
 			action:          "Show what is missing",
-			wantAfterAction: "Metric and legal-review decision",
+			wantAfterAction: "Pending decision",
 		},
 	}
 
@@ -1460,9 +1460,9 @@ func TestInteractiveLauncherRunsSpecPostResultActions(t *testing.T) {
 			wantAfterAction: "Missing Pieces Before Build",
 		},
 		{
-			name:            "see missing opens the spec gap summary",
+			name:            "see missing opens the spec decision surface",
 			action:          "Show what is missing",
-			wantAfterAction: "Approval",
+			wantAfterAction: "Pending decision",
 		},
 	}
 
@@ -1666,6 +1666,10 @@ func TestCurrentWorkInteractiveMissingChoiceShowsGapSummary(t *testing.T) {
 
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
+	if exitCode := app.RunInteractive(nil, strings.NewReader("skip for now\n"), io.Discard, io.Discard); exitCode != 0 {
+		t.Fatalf("expected blocking ask to be skippable, got %d", exitCode)
+	}
+
 	var stdout bytes.Buffer
 	exitCode := app.RunInteractive(nil, strings.NewReader("Show what is missing\n"), &stdout, &stdout)
 	if exitCode != 0 {
@@ -1824,6 +1828,9 @@ func TestCurrentWorkResumeReopensMissingSurface(t *testing.T) {
 
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
+	if exitCode := app.RunInteractive(nil, strings.NewReader("skip for now\n"), io.Discard, io.Discard); exitCode != 0 {
+		t.Fatalf("expected blocking ask to be skippable, got %d", exitCode)
+	}
 	if exitCode := app.RunInteractive(nil, strings.NewReader("Show what is missing\n"), io.Discard, io.Discard); exitCode != 0 {
 		t.Fatalf("expected missing view to succeed, got %d", exitCode)
 	}
@@ -1837,6 +1844,57 @@ func TestCurrentWorkResumeReopensMissingSurface(t *testing.T) {
 	out := stdout.String()
 	if !strings.Contains(out, "Still missing") {
 		t.Fatalf("expected resume to reopen missing surface, got:\n%s", out)
+	}
+}
+
+func TestCurrentWorkShowMissingWithActiveAskOpensDecisionSurface(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	if exitCode := app.RunInteractive(nil, strings.NewReader("Weekly product review for pricing launch. Need owners, due dates, and open questions.\n"), io.Discard, io.Discard); exitCode != 0 {
+		t.Fatalf("expected starter work to succeed, got %d", exitCode)
+	}
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("Show what is missing\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected active ask surface to open, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{"Pending decision", "Options", "If you skip this"} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected active ask surface to contain %q, got:\n%s", want, out)
+		}
+	}
+
+	current := readCurrentWork(t, stateDir)
+	threadState := mustReadFile(t, filepath.Join(current["pack_dir"].(string), "thread-state.json"))
+	if !strings.Contains(threadState, "\"kind\": \"ask\"") {
+		t.Fatalf("expected current focus to move to ask surface, got:\n%s", threadState)
+	}
+}
+
+func TestCurrentWorkResumeReopensDecisionSurface(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	if exitCode := app.RunInteractive(nil, strings.NewReader("Notifications PRD needs a build-readiness check and handoff call.\n"), io.Discard, io.Discard); exitCode != 0 {
+		t.Fatalf("expected starter work to succeed, got %d", exitCode)
+	}
+	if exitCode := app.RunInteractive(nil, strings.NewReader("Show what is missing\n"), io.Discard, io.Discard); exitCode != 0 {
+		t.Fatalf("expected active ask surface to open, got %d", exitCode)
+	}
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("resume this\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected resume to reopen active ask surface, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	if !strings.Contains(out, "Pending decision") {
+		t.Fatalf("expected resume to reopen pending decision, got:\n%s", out)
 	}
 }
 

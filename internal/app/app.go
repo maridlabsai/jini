@@ -220,6 +220,9 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		updateThreadFocus(summary.Dir, &threadFocus{Kind: "context"})
 		renderContextCapsule(stdout, summary)
 	case "see what is still missing", "show what is missing", "missing":
+		if renderActiveAskSurface(stdout, summary) {
+			return 0
+		}
 		updateThreadFocus(summary.Dir, &threadFocus{Kind: "missing"})
 		renderMissingOnly(stdout, summary)
 	case "make it fuller", "fuller", "show more", "expand", "expand this":
@@ -2805,6 +2808,56 @@ func runInteractiveOpenShelf(summary *workSummary, scanner *bufio.Scanner, stdou
 	return 0
 }
 
+func activeAskFocus(summary *workSummary) *threadFocus {
+	if summary == nil {
+		return nil
+	}
+	state := loadThreadState(summary.Dir, summary)
+	if state.ActiveAsk == nil {
+		return nil
+	}
+	return &threadFocus{Kind: "ask", AskID: state.ActiveAsk.AskID}
+}
+
+func renderActiveAskSurface(w io.Writer, summary *workSummary) bool {
+	if summary == nil {
+		return false
+	}
+	state := loadThreadState(summary.Dir, summary)
+	if state.ActiveAsk == nil {
+		return false
+	}
+	updateThreadFocus(summary.Dir, &threadFocus{Kind: "ask", AskID: state.ActiveAsk.AskID})
+	fmt.Fprintln(w, "Pending decision")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, state.ActiveAsk.Prompt)
+	if strings.TrimSpace(state.ActiveAsk.Reason) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Why this matters")
+		fmt.Fprintln(w, state.ActiveAsk.Reason)
+	}
+	if len(state.ActiveAsk.Options) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Options")
+		for _, item := range state.ActiveAsk.Options {
+			fmt.Fprintf(w, "- %s\n", item)
+		}
+	}
+	if len(state.ActiveAsk.AssumptionsIfSkipped) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "If you skip this")
+		for _, item := range state.ActiveAsk.AssumptionsIfSkipped {
+			fmt.Fprintf(w, "- %s\n", item)
+		}
+	}
+	if strings.TrimSpace(summary.SafeToDo) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Safe right now")
+		fmt.Fprintln(w, summary.SafeToDo)
+	}
+	return true
+}
+
 func renderFocusedContinuation(w io.Writer, summary *workSummary) bool {
 	if summary == nil {
 		return false
@@ -2818,7 +2871,14 @@ func renderFocusedContinuation(w io.Writer, summary *workSummary) bool {
 				renderItem(w, item)
 				return true
 			}
+		case "ask":
+			if focusedThreadAsk(state, state.CurrentFocus) != nil && renderActiveAskSurface(w, summary) {
+				return true
+			}
 		case "missing":
+			if state.ActiveAsk != nil && renderActiveAskSurface(w, summary) {
+				return true
+			}
 			updateThreadFocus(summary.Dir, &threadFocus{Kind: "missing"})
 			renderMissingOnly(w, summary)
 			return true
@@ -2906,6 +2966,9 @@ func handlePostResultAction(action string, summary *workSummary, scanner *bufio.
 		updateThreadFocus(summary.Dir, &threadFocus{Kind: "context"})
 		renderContextCapsule(stdout, summary)
 	case "see what is still missing", "show what is missing", "missing", "3":
+		if renderActiveAskSurface(stdout, summary) {
+			return 0
+		}
 		updateThreadFocus(summary.Dir, &threadFocus{Kind: "missing"})
 		renderMissingOnly(stdout, summary)
 	case "make it fuller", "fuller", "show more", "expand", "expand this", "4":
