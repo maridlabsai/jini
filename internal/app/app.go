@@ -346,8 +346,8 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 			return 0
 		}
 		if item, ok := resolveInteractiveArtifactSelection(summary, action); ok {
-			if err := recordPassiveArtifactObservation(summary.Dir, *item); err != nil {
-				fmt.Fprintf(stderr, "Could not record artifact open: %v\n", err)
+			if err := recordAndFocusArtifactSelection(summary, item); err != nil {
+				fmt.Fprintf(stderr, "Could not open artifact: %v\n", err)
 				return 1
 			}
 			renderThreadSurface(stdout, summary, artifactThreadFocus(summary, item))
@@ -1822,11 +1822,10 @@ func runOpen(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "%v\n", err)
 		return 1
 	}
-	if err := recordPassiveArtifactObservation(summary.Dir, *item); err != nil {
-		fmt.Fprintf(stderr, "Could not record artifact open: %v\n", err)
+	if err := recordAndFocusArtifactSelection(summary, item); err != nil {
+		fmt.Fprintf(stderr, "Could not open artifact: %v\n", err)
 		return 1
 	}
-	focusArtifactSelection(summary, item)
 	content, err := os.ReadFile(item.Path)
 	if err != nil {
 		fmt.Fprintf(stderr, "Could not read %q: %v\n", item.Label, err)
@@ -2792,12 +2791,11 @@ func runInteractiveOpenShelf(summary *workSummary, scanner *bufio.Scanner, stdou
 		fmt.Fprintln(stderr, "Type a number or artifact name to open one.")
 		return 1
 	}
-	if err := recordPassiveArtifactObservation(summary.Dir, *item); err != nil {
-		fmt.Fprintf(stderr, "Could not record artifact open: %v\n", err)
+	if err := recordAndFocusArtifactSelection(summary, item); err != nil {
+		fmt.Fprintf(stderr, "Could not open artifact: %v\n", err)
 		return 1
 	}
-	focusArtifactSelection(summary, item)
-	renderItem(stdout, item)
+	renderThreadSurface(stdout, summary, artifactThreadFocus(summary, item))
 	return 0
 }
 
@@ -2813,6 +2811,17 @@ func focusArtifactSelection(summary *workSummary, item *catalogItem) {
 		return
 	}
 	updateThreadFocus(summary.Dir, artifactThreadFocus(summary, item))
+}
+
+func recordAndFocusArtifactSelection(summary *workSummary, item *catalogItem) error {
+	if summary == nil || item == nil {
+		return nil
+	}
+	if err := recordPassiveArtifactObservation(summary.Dir, *item); err != nil {
+		return err
+	}
+	focusArtifactSelection(summary, item)
+	return nil
 }
 
 func activeAskFocus(summary *workSummary) *threadFocus {
@@ -3094,8 +3103,8 @@ func handlePostResultAction(action string, summary *workSummary, scanner *bufio.
 			return 0
 		}
 		if item, ok := resolveInteractiveArtifactSelection(summary, action); ok {
-			if err := recordPassiveArtifactObservation(summary.Dir, *item); err != nil {
-				fmt.Fprintf(stderr, "Could not record artifact open: %v\n", err)
+			if err := recordAndFocusArtifactSelection(summary, item); err != nil {
+				fmt.Fprintf(stderr, "Could not open artifact: %v\n", err)
 				return 1
 			}
 			renderThreadSurface(stdout, summary, artifactThreadFocus(summary, item))
