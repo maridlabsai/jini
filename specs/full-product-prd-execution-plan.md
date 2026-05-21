@@ -37,7 +37,7 @@ it fails this plan.
 The rewrite already has meaningful pieces in place:
 
 - one human-facing front door centered on `jini`
-- inline route setup with `Use Auto` and strict-route choices
+- inline route setup with `Auto` and strict-route choices
 - route, model, and effort heuristics as first-class policy
 - visible preflight route decision card
 - active-work switching for multiple work items

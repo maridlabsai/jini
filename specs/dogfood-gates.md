@@ -71,7 +71,7 @@ configuration, and usage work.
 - One recommended install command must be obvious.
 - One recommended first run path must be obvious.
 - `jini` must remain the normal front door after install.
-- `Use Auto` must be explained in plain language, not only as system state.
+- `Auto` must be explained in plain language, not only as system state.
 - If a stronger or cheaper route is chosen, Jini must say what it chose and
   why.
 - If a model is chosen, Jini must say which model it chose and why.
@@ -88,7 +88,7 @@ Pass only if all are true:
 
 - One install command is clearly labeled as the normal path.
 - The next exact command after install is clearly `jini`.
-- `Use Auto` is explained as “Jini picks for you” before any tool/provider/model theory.
+- `Auto` is explained as “Jini picks for you” before any tool/provider/model theory.
 - One exact first sentence to type into Jini is shown consistently.
 - It is clear that Jini will not send anything before review.
 - The user does not need env vars to get started.
@@ -182,7 +182,7 @@ For any install/config/usage slice, answer all of these before merge:
 - [ ] Did the full standing persona panel review the current slice?
 - [ ] Did each persona group produce pass/fail criteria rather than only opinions?
 - [ ] Did the docs converge to one recommended first-run path?
-- [ ] Is `Use Auto` explained in plain language?
+- [ ] Is `Auto` explained in plain language?
 - [ ] If Jini saves secrets or routing state, does the user learn that in plain language?
 - [ ] If a route is auto-chosen, does Jini show what it chose and why?
 - [ ] If a model is auto-chosen, does Jini show what it chose and why?

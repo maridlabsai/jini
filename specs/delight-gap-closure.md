@@ -264,9 +264,9 @@ The answer should stay compact and show:
 
 Jini should support natural rewrite shortcuts on the current artifact:
 
-- `Make it shorter`
-- `Make it executive`
-- `Turn this into a checklist`
+- `Shorter`
+- `Executive`
+- `Checklist`
 
 These should feel like immediate refinements of the current artifact, not new
 work records or provider setup flows.
@@ -299,8 +299,8 @@ work records or provider setup flows.
 
 After Jini rewrites an artifact, the user should be able to say:
 
-- `Show versions`
-- `Undo last change`
+- `Versions`
+- `Undo`
 
 This keeps experimentation safe and lowers the fear of asking for a rewrite.
 
@@ -313,8 +313,8 @@ This keeps experimentation safe and lowers the fear of asking for a rewrite.
 #### Pass criteria
 
 - every shortcut rewrite creates a restorable version first
-- `Show versions` is human-readable, not file-system-oriented
-- `Undo last change` restores the prior artifact content in one step
+- `Versions` is human-readable, not file-system-oriented
+- `Undo` restores the prior artifact content in one step
 
 ## Why These Three
 

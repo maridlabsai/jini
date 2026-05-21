@@ -132,11 +132,11 @@ This request fits the local cheap-first path, so Jini kept it on the commercial 
 
 The product should support these concepts:
 
-- `Use Auto`
-- `Use Local SLM`
-- `Use Claude Code`
-- `Use Bedrock Sonnet`
-- `Use Azure OpenAI`
+- `Auto`
+- `Local`
+- `Claude`
+- `Bedrock`
+- `Azure`
 
 And these configuration layers:
 

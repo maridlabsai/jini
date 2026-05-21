@@ -2236,7 +2236,7 @@ func renderSafePermissionsStatus(w io.Writer) {
 func renderRouteCostStatus(w io.Writer) {
 	fmt.Fprintln(w, "Route and cost")
 	fmt.Fprintf(w, "Current route: %s.\n", workingWithLabel(detectProvider()))
-	fmt.Fprintln(w, "Least-expense capable route is the default; use `/doctor` to inspect setup or `Use Auto` to restore automatic routing.")
+	fmt.Fprintln(w, "Least-expense capable route is the default; use `/doctor` to inspect setup or `Auto` to restore automatic routing.")
 }
 
 func renderRouteDecisionCard(w io.Writer, request providerGenerationRequest, decision routeDecision) {
@@ -2301,29 +2301,29 @@ func renderRouteDecisionCard(w io.Writer, request providerGenerationRequest, dec
 	}
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Want a different route?")
-	fmt.Fprintln(w, "Type `Connect Claude`, `Connect Bedrock`, `Connect Azure OpenAI`, `Connect Local SLM`, or `Use Auto`.")
+	fmt.Fprintln(w, "Type `Claude`, `Bedrock`, `Azure`, `Local`, `Preview`, or `Auto`.")
 	fmt.Fprintln(w)
 }
 
 func maybeHandleProviderSetupIntent(raw string, scanner *bufio.Scanner, stdout, stderr io.Writer) (bool, int) {
 	switch normalizeName(raw) {
-	case "use claude code", "connect claude code", "claude code":
+	case "use claude code", "connect claude code", "claude code", "claude":
 		return true, runProviderSetupWizard("claude-code", scanner, stdout, stderr)
-	case "use bedrock sonnet", "connect bedrock sonnet", "bedrock sonnet":
+	case "use bedrock sonnet", "connect bedrock sonnet", "bedrock sonnet", "bedrock":
 		return true, runProviderSetupWizard("bedrock-sonnet", scanner, stdout, stderr)
 	case "use chatgpt", "connect chatgpt", "chatgpt":
 		return true, runProviderSetupWizard("chatgpt", scanner, stdout, stderr)
 	case "use codex", "connect codex", "codex":
 		return true, runProviderSetupWizard("codex", scanner, stdout, stderr)
-	case "use azure openai", "connect azure openai":
+	case "use azure openai", "connect azure openai", "azure":
 		return true, runProviderSetupWizard("azure-openai", scanner, stdout, stderr)
-	case "use claude", "connect claude", "claude", "use anthropic", "anthropic":
+	case "use claude", "connect claude", "use anthropic", "anthropic":
 		return true, runProviderSetupWizard("claude", scanner, stdout, stderr)
-	case "use bedrock", "connect bedrock", "bedrock", "amazon bedrock":
+	case "use bedrock", "connect bedrock", "amazon bedrock":
 		return true, runProviderSetupWizard("bedrock", scanner, stdout, stderr)
-	case "use azure", "connect azure", "azure", "azure openai", "azure open ai":
+	case "use azure", "connect azure", "azure openai", "azure open ai":
 		return true, runProviderSetupWizard("azure-openai", scanner, stdout, stderr)
-	case "use local slm", "connect local slm", "local slm", "local model":
+	case "use local slm", "connect local slm", "local slm", "local model", "local":
 		return true, runProviderSetupWizard("local-slm", scanner, stdout, stderr)
 	case "use auto", "auto", "choose automatically":
 		return true, runProviderSetupWizard("auto", scanner, stdout, stderr)
@@ -2338,7 +2338,7 @@ func runProviderSetupWizard(mode string, scanner *bufio.Scanner, stdout, stderr 
 	fmt.Fprintln(stdout)
 	switch mode {
 	case "claude-code":
-		fmt.Fprintln(stdout, "Connect Claude")
+		fmt.Fprintln(stdout, "Claude")
 		fmt.Fprintln(stdout, "Paste your Anthropic API key. Jini will route this repo through Claude for code work.")
 		key, ok := readPromptLine(scanner, stdout, "Anthropic API key")
 		if !ok || strings.TrimSpace(key) == "" {
@@ -2362,7 +2362,7 @@ func runProviderSetupWizard(mode string, scanner *bufio.Scanner, stdout, stderr 
 			return 1
 		}
 	case "bedrock-sonnet":
-		fmt.Fprintln(stdout, "Connect Bedrock")
+		fmt.Fprintln(stdout, "Bedrock")
 		region, ok := readPromptLine(scanner, stdout, "AWS region (press Enter for us-east-1)")
 		if !ok {
 			return 1
@@ -2387,11 +2387,11 @@ func runProviderSetupWizard(mode string, scanner *bufio.Scanner, stdout, stderr 
 		}
 	case "chatgpt", "codex", "azure-openai":
 		targetLabel := map[string]string{
-			"chatgpt":      "Azure OpenAI",
-			"codex":        "Azure OpenAI",
-			"azure-openai": "Azure OpenAI",
+			"chatgpt":      "Azure",
+			"codex":        "Azure",
+			"azure-openai": "Azure",
 		}[mode]
-		fmt.Fprintf(stdout, "Connect %s\n", targetLabel)
+		fmt.Fprintln(stdout, targetLabel)
 		endpoint, ok := readPromptLine(scanner, stdout, "Azure endpoint")
 		if !ok || strings.TrimSpace(endpoint) == "" {
 			fmt.Fprintln(stderr, targetLabel+" setup needs an endpoint.")
@@ -2422,7 +2422,7 @@ func runProviderSetupWizard(mode string, scanner *bufio.Scanner, stdout, stderr 
 			return 1
 		}
 	case "claude":
-		fmt.Fprintln(stdout, "Connect Claude")
+		fmt.Fprintln(stdout, "Claude")
 		fmt.Fprintln(stdout, "Paste your Anthropic API key. Jini will save it only in this repo's .jini folder.")
 		key, ok := readPromptLine(scanner, stdout, "Anthropic API key")
 		if !ok || strings.TrimSpace(key) == "" {
@@ -2446,7 +2446,7 @@ func runProviderSetupWizard(mode string, scanner *bufio.Scanner, stdout, stderr 
 			return 1
 		}
 	case "bedrock":
-		fmt.Fprintln(stdout, "Connect Amazon Bedrock")
+		fmt.Fprintln(stdout, "Bedrock")
 		region, ok := readPromptLine(scanner, stdout, "AWS region (press Enter for us-east-1)")
 		if !ok {
 			return 1
@@ -2474,7 +2474,7 @@ func runProviderSetupWizard(mode string, scanner *bufio.Scanner, stdout, stderr 
 			return 1
 		}
 	case "auto":
-		fmt.Fprintln(stdout, "Use auto mode")
+		fmt.Fprintln(stdout, "Auto")
 		if err := saveRouterSettings("auto"); err != nil {
 			fmt.Fprintf(stderr, "Could not save auto tool mode: %v\n", err)
 			return 1
@@ -2487,7 +2487,7 @@ func runProviderSetupWizard(mode string, scanner *bufio.Scanner, stdout, stderr 
 			return 1
 		}
 	case "local-slm":
-		fmt.Fprintln(stdout, "Connect Local SLM")
+		fmt.Fprintln(stdout, "Local")
 		fmt.Fprintln(stdout, "Point Jini at an OpenAI-compatible local model server. Jini will keep the exact endpoint in this repo's .jini folder.")
 		endpoint, ok := readPromptLine(scanner, stdout, "Local SLM endpoint")
 		if !ok || strings.TrimSpace(endpoint) == "" {
@@ -2539,7 +2539,7 @@ func runProviderSetupWizard(mode string, scanner *bufio.Scanner, stdout, stderr 
 		}
 		_ = saveLocalRuntimeCapabilities(benchmarkLocalRuntimeCapabilities(context.Background()))
 	case "local-preview":
-		fmt.Fprintln(stdout, "Use local preview")
+		fmt.Fprintln(stdout, "Preview")
 		if err := saveRouterSettings("local-preview"); err != nil {
 			fmt.Fprintf(stderr, "Could not save local preview route: %v\n", err)
 			return 1

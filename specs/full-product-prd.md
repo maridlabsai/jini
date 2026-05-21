@@ -257,7 +257,7 @@ What do you need help finishing?
 Jini shell
 Paste notes or type what you want finished.
 
-If you need setup help, type `Use Auto`.
+If you need setup help, type `Auto`.
 
 Nothing will be sent yet.
 ```
@@ -440,7 +440,7 @@ Primary:
 
 - install-to-first-result success rate
 - first-run completion without docs
-- percent of sessions succeeding through `Use Auto`
+- percent of sessions succeeding through `Auto`
 - percent of sessions where users can identify what is done, missing, and next
 - resume success on existing work
 - multi-project switch success

@@ -93,11 +93,11 @@ jini
   <p>Most people should still start by pasting the work they want finished. Use doctor when setup help is needed, when you need one strict route, or when you are debugging access.</p>
 
   <div class="pill-list">
-    <span>Use Auto</span>
-    <span>Connect Claude</span>
-    <span>Connect Bedrock</span>
-    <span>Connect Azure OpenAI</span>
-    <span>Connect Local SLM</span>
+    <span>Auto</span>
+    <span>Claude</span>
+    <span>Bedrock</span>
+    <span>Azure</span>
+    <span>Local</span>
   </div>
 
   <p>Doctor reports what Jini will use, what auto mode resolved to, and what is missing. It does not print secret values.</p>

@@ -31,7 +31,7 @@ curl -fsSL https://raw.githubusercontent.com/maridlabsai/jini/main/install.sh | 
 jini
 ```
 
-  <p>If setup is missing, Jini should say so in the shell. Then type <code>Use Auto</code>. If your company needs one strict route, use the matching setup path on the <a href="./install.html">Install</a> page instead.</p>
+  <p>If setup is missing, Jini should say so in the shell. Then type <code>Auto</code>. If your company needs one strict route, use the matching setup path on the <a href="./install.html">Install</a> page instead.</p>
 
   <p><code>jini</code> is the front door.</p>
 
@@ -67,7 +67,7 @@ jini
   <div class="pill-list">
     <span>Paste messy notes</span>
     <span>Ask for the outcome you want</span>
-    <span>Use Auto only if setup is missing</span>
+    <span>Auto only if setup is missing</span>
     <span>Open</span>
     <span>Missing</span>
     <span>Plan</span>
@@ -82,7 +82,7 @@ jini
   <h2>If you use Claude</h2>
 
 ```text
-Connect Claude
+Claude
 ```
 
   <p>Jini should ask only for the missing API key, save it in the repo-local <code>.jini</code> folder, and let you continue. If you do not know how to begin, type <code>help me finish this</code> and then say something plain like <code>turn these meeting notes into a follow-up I can send</code>.</p>

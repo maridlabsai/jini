@@ -297,7 +297,7 @@ Paste notes or type what you want finished.
 Working with
 Local preview
 
-If you need setup help, type `Use Auto`.
+If you need setup help, type `Auto`.
 If you are not sure, type `help me finish this`.
 
 Good inputs:
@@ -339,7 +339,7 @@ Why this was chosen
 Auto mode prefers the cheapest suitable planning tool by default.
 
 Change route
-Type `Use Claude Code`, `Use Bedrock Sonnet`, `Use ChatGPT`, `Use Codex`, `Use Azure OpenAI`, or `Use Auto`.
+Type `Claude`, `Bedrock`, `ChatGPT`, `Codex`, `Azure`, `Local`, `Preview`, or `Auto`.
 ```
 
 Rules:
@@ -359,9 +359,9 @@ Trip Plan
 
 Actions
 - Continue
-- Show missing
+- Missing
 - Plan
-- Start new
+- Start
 ```
 
 Rules:

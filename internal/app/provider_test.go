@@ -2391,8 +2391,8 @@ func TestInteractiveLauncherShowsDecisionCardBeforeFirstDraft(t *testing.T) {
 		"Tool",
 		"How chosen",
 		"Want a different route?",
-		"Connect Claude",
-		"Connect Bedrock",
+		"Claude",
+		"Bedrock",
 	} {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("expected first-run output not to expose early route card %q, got:\n%s", unwanted, out)

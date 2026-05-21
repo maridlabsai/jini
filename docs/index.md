@@ -146,7 +146,7 @@ description: Finish messy work with one calm front door, visible progress, and t
 <div class="proof-grid">
   <div class="proof-card">
     <h3>Auto when you want it</h3>
-    <p>Most people should start with <code>jini</code> and, if needed, type <code>Use Auto</code>. Jini picks for you and explains the choice in plain language.</p>
+    <p>Most people should start with <code>jini</code> and, if needed, type <code>Auto</code>. Jini picks for you and explains the choice in plain language.</p>
   </div>
   <div class="proof-card">
     <h3>Strict routes when policy matters</h3>

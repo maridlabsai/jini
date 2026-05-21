@@ -260,9 +260,9 @@ func TestLauncherHelpHidesProviderStateWhenUsingLocalPreview(t *testing.T) {
 		"Local preview",
 		"Need setup help?",
 		"Choose how Jini should work",
-		"Type `Connect Claude`",
-		"Type `Connect Bedrock`",
-		"Type `Connect Azure OpenAI`",
+		"Type `Claude`",
+		"Type `Bedrock`",
+		"Type `Azure`",
 	} {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("expected output not to contain %q, got:\n%s", unwanted, out)
@@ -307,7 +307,7 @@ func TestInteractiveSetupCanSaveClaudeProfileInsideJini(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Connect Claude",
+		"Claude",
 		"Setup saved. Working with Claude API / Claude Sonnet 4.",
 	} {
 		if !strings.Contains(out, want) {
@@ -338,14 +338,14 @@ func TestInteractiveSetupCanSaveClaudeCodeRouteInsideJini(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("Use Claude Code\nsk-test-key\n\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("Claude\nsk-test-key\n\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Connect Claude",
+		"Claude",
 		"Setup saved. Working with Claude Code via Claude API / Claude Sonnet 4.",
 	} {
 		if !strings.Contains(out, want) {
@@ -367,14 +367,14 @@ func TestInteractiveSetupCanSaveLocalSLMInsideJini(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("Connect Local SLM\nhttp://127.0.0.1:11434/v1\nqwen3:8b\n\n\n\n\n\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("Local\nhttp://127.0.0.1:11434/v1\nqwen3:8b\n\n\n\n\n\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Connect Local SLM",
+		"Local",
 		"Setup saved. Working with Local SLM / qwen3:8b.",
 	} {
 		if !strings.Contains(out, want) {

@@ -45,8 +45,8 @@ jini
     </div>
     <div class="step-card">
       <span class="step-number">3</span>
-      <h3>Use Auto if needed</h3>
-      <p>If setup is missing, type <code>Use Auto</code> and let Jini help you connect the best available route.</p>
+      <h3>Auto if needed</h3>
+      <p>If setup is missing, type <code>Auto</code> and let Jini help you connect the best available route.</p>
     </div>
   </div>
 </div>
@@ -57,23 +57,23 @@ jini
 
   <div class="checklist-grid">
     <div class="checklist-card">
-      <h3>Use Auto</h3>
+      <h3>Auto</h3>
       <p>Best for most people. Jini chooses the cheapest suitable route by default and escalates only when the request clearly needs deeper work.</p>
     </div>
     <div class="checklist-card">
-      <h3>Connect Claude</h3>
+      <h3>Claude</h3>
       <p>Best when you already use Anthropic directly and want Claude as the strict route.</p>
     </div>
     <div class="checklist-card">
-      <h3>Connect Bedrock</h3>
+      <h3>Bedrock</h3>
       <p>Best when AWS policy or existing Bedrock access decides the route.</p>
     </div>
     <div class="checklist-card">
-      <h3>Connect Azure OpenAI</h3>
+      <h3>Azure</h3>
       <p>Best when company policy requires Azure OpenAI only.</p>
     </div>
     <div class="checklist-card">
-      <h3>Connect Local SLM</h3>
+      <h3>Local</h3>
       <p>Best when you already run an OpenAI-compatible local model server and want cheap-first local routing.</p>
     </div>
   </div>
