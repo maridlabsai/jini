@@ -25,6 +25,10 @@ The public surface and free-tier requirements across CLI, desktop, and mobile
 live in
 [client-surfaces-and-free-tier.md](./client-surfaces-and-free-tier.md).
 
+The stricter charter for cost optimization, UX quality, and cross-form-factor
+session continuity lives in
+[cross-surface-session-platform-prd.md](./cross-surface-session-platform-prd.md).
+
 The stable engineering framework for major workstreams lives in
 [workstream-technical-framework.md](./workstream-technical-framework.md).
 

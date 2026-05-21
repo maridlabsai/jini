@@ -52,7 +52,41 @@ Users should be able to see:
 
 Efficiency that cannot be explained will not be trusted.
 
-### 5. Fewer Product Ideas, Better Execution
+### 5. UX Second To None
+
+Jini should feel easier than the alternatives, not richer than the alternatives.
+
+Great Jini UX means:
+
+- fewer user decisions
+- faster first useful result
+- clearer next action
+- safer handoff
+- lower interruption cost
+- lower recovery cost
+
+UX polish that adds ceremony, hiding, or ambiguity is a failure.
+
+### 6. Sessions First, Surface Second
+
+Jini should preserve one session across every supported surface:
+
+- macOS
+- Windows
+- mobile
+- CLI
+
+The session is the product object. Each surface is only a view over that same
+object.
+
+Users should be able to:
+
+- see current sessions
+- resume from any supported surface
+- inspect ready and missing state everywhere
+- continue without rebuilding context
+
+### 7. Fewer Product Ideas, Better Execution
 
 Jini should win through clarity and repeatability, not feature count.
 
@@ -84,6 +118,22 @@ Jini should be easy to buy because it is:
 - help and status should not dump unnecessary detail
 - added structure must justify its response-time cost
 
+### UX Discipline
+
+- every primary screen must answer what happened, what is ready, what is
+  missing, and what to do next
+- advanced controls should not leak into the default path
+- the default path should work for non-expert users without provider jargon
+- intelligence should remove decisions, not create them
+
+### Continuity Discipline
+
+- resume must mean the same thing on every surface
+- the current session should be visible before the user is asked to start over
+- switching devices must not require context reconstruction
+- artifacts, route evidence, and ready/missing state must travel with the
+  session
+
 ### Cost Discipline
 
 - local-first when good enough
@@ -99,6 +149,8 @@ Jini should track:
 - time-to-first-useful-result
 - clarification-turn-count
 - resume-cost
+- cross-surface-resume-success-rate
+- recovery-time-after-interruption
 - command-surface-count
 - premium-route-regret-rate
 
@@ -112,3 +164,6 @@ Reject changes that:
 - increase time-to-first-useful-result without a clear user-outcome gain
 - increase premium-route usage without a measurable quality or speed gain
 - add workflow ceremony that users must learn before getting value
+- add a supported surface that cannot resume the same session model
+- add UX complexity that makes route, state, or next action harder to
+  understand
