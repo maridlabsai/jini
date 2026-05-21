@@ -1,5 +1,5 @@
 ---
-title: Simple Guide
+title: Quickstart
 description: The shortest explanation of what Jini is for and what to type first.
 ---
 

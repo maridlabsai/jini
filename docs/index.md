@@ -1,73 +1,169 @@
 ---
 title: Jini
-description: Finish messy work with one calm front door, visible progress, and the cheapest suitable AI route by default.
+description: One shell for AI work. Cheap by default, strong when needed.
 ---
 
 <div class="hero-panel hero-panel-marketing">
-  <p class="hero-kicker">One calm front door for AI work</p>
-  <h1 class="hero-title">From messy work to handoff-ready output.</h1>
-  <p class="hero-summary">Jini helps you finish the awkward middle of work: after the meeting, before the handoff, before the recommendation, before calling something done. It keeps the draft, missing pieces, and next step visible while it chooses the cheapest suitable route by default.</p>
+  <p class="hero-kicker">One shell for AI work</p>
+  <h1 class="hero-title">Cheap by default. Strong when needed.</h1>
+  <p class="hero-summary">Jini gives teams one stable front door for messy work. It keeps progress, artifacts, and the next move visible while it chooses the cheapest suitable route by default.</p>
   <div class="cta-row">
-    <a class="cta-button" href="{{ '/install.html' | relative_url }}">Install Jini</a>
-    <a class="cta-button cta-button-secondary" href="{{ '/examples.html' | relative_url }}">See examples</a>
-    <a class="cta-button cta-button-secondary" href="{{ '/simple.html' | relative_url }}">Simple guide</a>
+    <a class="cta-button" href="{{ '/install.html' | relative_url }}">Install</a>
+    <a class="cta-button cta-button-secondary" href="{{ '/simple.html' | relative_url }}">Quickstart</a>
+    <a class="cta-button cta-button-secondary" href="{{ '/examples.html' | relative_url }}">Examples</a>
   </div>
   <div class="command-block">
-    <span class="command-label">Start in under a minute</span>
+    <span class="command-label">Install once</span>
     <code>curl -fsSL https://raw.githubusercontent.com/maridlabsai/jini/main/install.sh | bash</code>
     <code>jini</code>
   </div>
   <div class="compat-row" aria-label="Supported routes">
-    <span class="compat-pill">Works with Claude</span>
+    <span class="compat-pill">Works with Claude Code</span>
+    <span class="compat-pill">Works with Codex</span>
     <span class="compat-pill">Works with Bedrock</span>
     <span class="compat-pill">Works with Azure OpenAI</span>
-    <span class="compat-pill">Works with Local SLM</span>
+    <span class="compat-pill">Works with Local models</span>
   </div>
 </div>
 
-**In plain words:** Jini helps you turn messy work into something ready to send, hand off, or act on, without making you manage model decisions all day.
+**In plain words:** Jini helps you get from messy input to a usable output without making you babysit models, prompts, or route choices.
 
 <div class="fact-strip">
   <div class="fact-pill">
-    <strong>One front door</strong>
+    <strong>One shell</strong>
     <p>Install once, then start with <code>jini</code>.</p>
   </div>
   <div class="fact-pill">
-    <strong>Cheapest suitable by default</strong>
-    <p>Jini keeps routine work inexpensive and escalates only when depth is justified.</p>
+    <strong>Cheap by default</strong>
+    <p>Routine work stays inexpensive. Escalation happens only when the work justifies it.</p>
   </div>
   <div class="fact-pill">
-    <strong>Visible state</strong>
-    <p>See what is ready, what is missing, and what happens next without status hunting.</p>
+    <strong>Visible outputs</strong>
+    <p>See what is ready, what is missing, and what to open next without status hunting.</p>
   </div>
   <div class="fact-pill">
-    <strong>Safe before send</strong>
-    <p>Jini keeps the work reviewable before anything is treated as final.</p>
+    <strong>Measured routing</strong>
+    <p>Route choice, latency, and local benchmark evidence stay visible instead of hidden behind marketing claims.</p>
   </div>
 </div>
 
-## Why people switch
+## Quickstart
+
+<div class="steps-grid">
+  <div class="step-card">
+    <span class="step-number">1</span>
+    <h3>Install</h3>
+    <p>Run the installer once from any terminal.</p>
+  </div>
+  <div class="step-card">
+    <span class="step-number">2</span>
+    <h3>Run <code>jini</code></h3>
+    <p>That is the front door. You should not need a command tree for normal work.</p>
+  </div>
+  <div class="step-card">
+    <span class="step-number">3</span>
+    <h3>Paste the work</h3>
+    <p>Start from the notes, screenshot, draft, transcript, or rough ask you already have.</p>
+  </div>
+</div>
+
+## Why Jini
 
 <div class="proof-grid">
   <div class="proof-card">
-    <h3>Start from the work you already have</h3>
-    <p>Paste messy notes, a half-finished plan, a screenshot, or a transcript. Jini starts from the real problem instead of making you learn a taxonomy first.</p>
+    <h3>One stable front door</h3>
+    <p>Users learn one shell and one command vocabulary while providers, models, and tools can change underneath.</p>
   </div>
   <div class="proof-card">
-    <h3>Keep one stable thread</h3>
-    <p>You do not have to keep deciding which model to use or where the context went. Jini keeps the work thread, artifacts, and next move visible while the backend can change underneath.</p>
+    <h3>Cheaper by default</h3>
+    <p>Jini keeps routine work on the cheapest suitable route and escalates only when depth, verification, or policy requires it.</p>
   </div>
   <div class="proof-card">
-    <h3>Spend less without thinking about it</h3>
-    <p>Jini defaults to the cheapest suitable route for routine work and only escalates when the request clearly needs more depth or stronger verification.</p>
+    <h3>Resumable work</h3>
+    <p>Artifacts, missing items, and the next step stay attached to the same work object instead of disappearing into chat history.</p>
   </div>
   <div class="proof-card">
-    <h3>Get something you can actually use</h3>
-    <p>The first useful result comes before the summary. Jini gives you the follow-up, readiness check, memo, or itinerary first, then shows what still needs attention.</p>
+    <h3>Outputs you can use</h3>
+    <p>The first useful result should be a follow-up, memo, readiness check, or itinerary, not a prettier status wall.</p>
   </div>
 </div>
 
-## See Jini in motion
+## What Jini writes
+
+<div class="workflow-grid">
+  <div class="workflow-card">
+    <span class="workflow-meta">Deliverables</span>
+    <h3>Usable artifacts</h3>
+    <p>Jini writes the thing you actually need next: a follow-up, memo, readiness check, task list, or recommendation.</p>
+  </div>
+  <div class="workflow-card">
+    <span class="workflow-meta">State</span>
+    <h3>Work you can resume</h3>
+    <p>It keeps the active work, the focused artifact, and the next step attached to the same thread so continuation is cheap.</p>
+  </div>
+  <div class="workflow-card">
+    <span class="workflow-meta">Evidence</span>
+    <h3>Route evidence</h3>
+    <p>Jini exposes command latency, provider state, route cost, and route trend instead of asking you to trust the routing story blindly.</p>
+  </div>
+  <div class="workflow-card">
+    <span class="workflow-meta">Readiness</span>
+    <h3>What is still missing</h3>
+    <p>You can see what is ready now, what still blocks safe handoff, and why the missing parts still matter.</p>
+  </div>
+</div>
+
+## Commands that matter
+
+<div class="checklist-grid">
+  <div class="checklist-card">
+    <h3><code>jini</code></h3>
+    <p>The normal entry point for interactive work.</p>
+  </div>
+  <div class="checklist-card">
+    <h3><code>jini setup</code></h3>
+    <p>Materialize one safe local setup path when explicit setup is needed.</p>
+  </div>
+  <div class="checklist-card">
+    <h3><code>jini doctor</code></h3>
+    <p>Check route setup without exposing secrets.</p>
+  </div>
+  <div class="checklist-card">
+    <h3><code>jini status</code></h3>
+    <p>Show what is active, ready, and still missing.</p>
+  </div>
+  <div class="checklist-card">
+    <h3><code>jini open</code></h3>
+    <p>Open the useful output instead of digging for file paths.</p>
+  </div>
+  <div class="checklist-card">
+    <h3><code>jini metrics</code></h3>
+    <p>See command count, route evidence, and measured latency/cost signals.</p>
+  </div>
+</div>
+
+## Why trust it
+
+<div class="media-grid">
+  <div class="proof-card">
+    <h3>Plain files and visible state</h3>
+    <p>Jini keeps artifacts, work state, and route evidence legible instead of hiding everything in a proprietary cloud memory layer.</p>
+  </div>
+  <div class="proof-card">
+    <h3>Cost and latency are measurable</h3>
+    <p><code>jini metrics</code> reports real command timings and route evidence so efficiency is inspectable, not implied.</p>
+  </div>
+  <div class="proof-card">
+    <h3>Strict routes still exist</h3>
+    <p>If policy requires Claude, Bedrock, Azure, or local-only routing, you can pin that route without losing the same product surface.</p>
+  </div>
+  <div class="proof-card">
+    <h3>Safe before send</h3>
+    <p>The work stays reviewable. Jini keeps what is missing and what is uncertain visible before anything is treated as final.</p>
+  </div>
+</div>
+
+## See real outputs
 
 <div class="media-grid">
   <a class="media-card" href="{{ '/examples.html#meeting-followup' | relative_url }}">
@@ -75,7 +171,7 @@ description: Finish messy work with one calm front door, visible progress, and t
     <div class="media-copy">
       <span class="workflow-meta">After a meeting</span>
       <h3>Turn scattered notes into something you can send.</h3>
-      <p>Get a sendable follow-up, decisions, owners, and open questions without rebuilding the meeting later.</p>
+      <p>Get a sendable follow-up, owners, and open questions without rebuilding the meeting later.</p>
     </div>
   </a>
   <a class="media-card" href="{{ '/examples.html#spec-readiness' | relative_url }}">
@@ -96,73 +192,12 @@ description: Finish messy work with one calm front door, visible progress, and t
   </a>
 </div>
 
-## How it works
-
-<div class="steps-grid">
-  <div class="step-card">
-    <span class="step-number">1</span>
-    <h3>Paste the work</h3>
-    <p>Start with the real mess: notes, comments, screenshots, a transcript, or a rough ask.</p>
-  </div>
-  <div class="step-card">
-    <span class="step-number">2</span>
-    <h3>Jini picks the route</h3>
-    <p>It chooses the cheapest suitable tool, provider, model, and effort level, then shows what it chose and why.</p>
-  </div>
-  <div class="step-card">
-    <span class="step-number">3</span>
-    <h3>Review the result</h3>
-    <p>Get the useful output first, then review what is still missing, what is uncertain, and what to do next.</p>
-  </div>
-</div>
-
-## Built for the awkward middle of work
-
-<div class="workflow-grid">
-  <a class="workflow-card" href="{{ '/examples.html#meeting-followup' | relative_url }}">
-    <span class="workflow-meta">After a meeting</span>
-    <h3>Follow-up, owners, and open questions</h3>
-    <p>Jini helps when the meeting happened but the sendable output does not exist yet.</p>
-  </a>
-  <a class="workflow-card" href="{{ '/examples.html#spec-readiness' | relative_url }}">
-    <span class="workflow-meta">Before a build</span>
-    <h3>Readiness checks and handoff clarity</h3>
-    <p>Use Jini to surface what still blocks a real implementation or approval path.</p>
-  </a>
-  <a class="workflow-card" href="{{ '/examples.html#paris-trip' | relative_url }}">
-    <span class="workflow-meta">Before a trip</span>
-    <h3>Itinerary, costs, and decisions still missing</h3>
-    <p>Jini turns scattered planning into something you can actually act on.</p>
-  </a>
-  <a class="workflow-card" href="{{ '/examples.html#vendor-choice' | relative_url }}">
-    <span class="workflow-meta">Before a choice</span>
-    <h3>Reasoning you can defend later</h3>
-    <p>Keep the evidence and tradeoffs attached to the recommendation instead of losing them in chat history.</p>
-  </a>
-</div>
-
-## Control without cognitive overload
-
-<div class="proof-grid">
-  <div class="proof-card">
-    <h3>Auto when you want it</h3>
-    <p>Most people should start with <code>jini</code> and, if needed, type <code>Auto</code>. Jini picks for you and explains the choice in plain language.</p>
-  </div>
-  <div class="proof-card">
-    <h3>Strict routes when policy matters</h3>
-    <p>If your company requires Claude, Bedrock, Azure OpenAI, or a Local SLM, you can connect that route directly without losing the same work experience.</p>
-  </div>
-  <div class="proof-card">
-    <h3>Visible trust signals</h3>
-    <p>Jini keeps the chosen route, model, continuity, verification depth, missing items, and safe next step visible while you work.</p>
-  </div>
-</div>
-
 <div class="section-card section-card-cta">
   <h2>Start with the one command that matters</h2>
-  <p>Install Jini, run <code>jini</code>, and paste the work you want finished.</p>
+  <p>Install Jini, run <code>jini</code>, and paste the work you want finished. Learn the rest only when the work actually needs it.</p>
   <div class="cta-row">
-    <a class="cta-button" href="{{ '/install.html' | relative_url }}">Install Jini</a>
-    <a class="cta-button cta-button-secondary" href="{{ '/examples.html' | relative_url }}">See examples</a>
+    <a class="cta-button" href="{{ '/install.html' | relative_url }}">Install</a>
+    <a class="cta-button cta-button-secondary" href="{{ '/simple.html' | relative_url }}">Quickstart</a>
+    <a class="cta-button cta-button-secondary" href="{{ '/examples.html' | relative_url }}">Examples</a>
   </div>
 </div>

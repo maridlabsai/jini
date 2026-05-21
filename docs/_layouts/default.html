@@ -22,10 +22,10 @@
 
         <nav class="site-nav" aria-label="Primary">
           <a class="{% if page.url == '/' %}is-active{% endif %}" href="{{ '/' | relative_url }}">Home</a>
-          <a class="{% if page.url == '/simple.html' %}is-active{% endif %}" href="{{ '/simple.html' | relative_url }}">Simple Guide</a>
-          <a class="{% if page.url == '/state-and-artifacts.html' %}is-active{% endif %}" href="{{ '/state-and-artifacts.html' | relative_url }}">What Jini Shows</a>
+          <a class="{% if page.url == '/simple.html' %}is-active{% endif %}" href="{{ '/simple.html' | relative_url }}">Quickstart</a>
+          <a class="{% if page.url == '/state-and-artifacts.html' %}is-active{% endif %}" href="{{ '/state-and-artifacts.html' | relative_url }}">Outputs</a>
           <a class="{% if page.url == '/examples.html' %}is-active{% endif %}" href="{{ '/examples.html' | relative_url }}">Examples</a>
-          <a class="{% if page.url == '/proof.html' %}is-active{% endif %}" href="{{ '/proof.html' | relative_url }}">Proof</a>
+          <a class="{% if page.url == '/proof.html' %}is-active{% endif %}" href="{{ '/proof.html' | relative_url }}">Trust</a>
           <a class="{% if page.url == '/contact.html' %}is-active{% endif %}" href="{{ '/contact.html' | relative_url }}">Contact</a>
           <a class="site-nav-cta {% if page.url == '/install.html' %}is-active{% endif %}" href="{{ '/install.html' | relative_url }}">Install</a>
         </nav>
@@ -41,7 +41,7 @@
           {% endif %}
           <div class="page-intro-links">
             <a href="{{ '/install.html' | relative_url }}">Install</a>
-            <a href="{{ '/simple.html' | relative_url }}">Simple Guide</a>
+            <a href="{{ '/simple.html' | relative_url }}">Quickstart</a>
             <a href="{{ '/examples.html' | relative_url }}">Examples</a>
           </div>
         </section>

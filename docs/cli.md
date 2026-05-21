@@ -84,7 +84,7 @@ jini
     </div>
     <div class="checklist-card">
       <h3><code>jini metrics</code></h3>
-      <p>Shows the lean-platform command count, alias debt, and the current cost and latency proxy scores.</p>
+      <p>Shows the lean-platform command count, command timings, active provider, and measured route cost and trend evidence when available.</p>
     </div>
   </div>
 </div>

@@ -1,6 +1,6 @@
 ---
-title: Proof
-description: The proof is simple: Jini should give you something usable and tell you what still blocks it.
+title: Trust
+description: Trust comes from usable outputs, visible missing pieces, and measurable route evidence.
 ---
 
 <p class="page-lead">The proof is not a theory. It is whether Jini can turn something messy into something usable while keeping the remaining risk visible.</p>

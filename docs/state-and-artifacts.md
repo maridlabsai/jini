@@ -1,6 +1,6 @@
 ---
-title: What Jini Shows
-description: The shortest explanation of what Jini should keep visible while work is moving.
+title: Outputs
+description: The shortest explanation of what Jini writes and keeps visible while work is moving.
 ---
 
 <div class="value-strip">
