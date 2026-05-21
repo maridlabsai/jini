@@ -2636,7 +2636,7 @@ func TestCurrentWorkLocalArtifactAcceptanceRecordsGradedCohortFeedback(t *testin
 	if exitCode != 0 {
 		t.Fatalf("expected local artifact feedback run to succeed, got %d with output:\n%s", exitCode, stdout.String())
 	}
-	if !strings.Contains(stdout.String(), "Saved artifact feedback: accepted-as-is.") {
+	if !strings.Contains(stdout.String(), "Saved artifact feedback: accept.") {
 		t.Fatalf("expected artifact feedback confirmation, got:\n%s", stdout.String())
 	}
 
@@ -2806,7 +2806,7 @@ func TestCurrentWorkLocalArtifactOutcomeRecordsSharedUse(t *testing.T) {
 	if exitCode != 0 {
 		t.Fatalf("expected local artifact outcome run to succeed, got %d with output:\n%s", exitCode, stdout.String())
 	}
-	if !strings.Contains(stdout.String(), "Saved artifact outcome: shared-this.") {
+	if !strings.Contains(stdout.String(), "Saved artifact outcome: share.") {
 		t.Fatalf("expected artifact outcome confirmation, got:\n%s", stdout.String())
 	}
 

@@ -859,7 +859,7 @@ func TestHelpShowsPlainLanguageFeedbackShelfWhenModelContextExists(t *testing.T)
 	if exitCode != 0 {
 		t.Fatalf("expected help surface to succeed, got %d with output:\n%s", exitCode, stdout.String())
 	}
-	if !strings.Contains(stdout.String(), "How did this draft go?") {
+	if !strings.Contains(stdout.String(), "Feedback") {
 		t.Fatalf("expected help surface to show feedback shelf, got:\n%s", stdout.String())
 	}
 	if strings.Contains(stdout.String(), "Tell Jini how this draft went") {
@@ -2057,7 +2057,7 @@ func TestCurrentWorkFocusedOutcomeUsesSelectedArtifact(t *testing.T) {
 		t.Fatalf("expected route feedback path to point at focused artifact, got:\n%s", routeSaved)
 	}
 	threadState := mustReadFile(t, filepath.Join(packDir, "thread-state.json"))
-	if !strings.Contains(threadState, "Shared this") {
+	if !strings.Contains(threadState, "Share") {
 		t.Fatalf("expected thread state to record shared decision, got:\n%s", threadState)
 	}
 }

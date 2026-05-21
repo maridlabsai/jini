@@ -269,54 +269,54 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 			return 1
 		}
 		fmt.Fprintln(stdout, "Saved model feedback: upvoted.")
-	case "accepted as is", "accept as is", "artifact accepted", "accepted":
+	case "accept", "accepted as is", "accept as is", "artifact accepted", "accepted":
 		if err := saveModelFeedback(summary.Dir, "accepted-as-is", currentFeedbackArtifactPath(summary)); err != nil {
 			fmt.Fprintf(stderr, "Could not save artifact feedback: %v\n", err)
 			return 1
 		}
-		recordThreadDecision(summary.Dir, summary, "Approved")
-		fmt.Fprintln(stdout, "Saved artifact feedback: accepted-as-is.")
-	case "needed light edits", "needs light edits", "light edits":
+		recordThreadDecision(summary.Dir, summary, "Accept")
+		fmt.Fprintln(stdout, "Saved artifact feedback: accept.")
+	case "edit", "needed light edits", "needs light edits", "light edits":
 		if err := saveModelFeedback(summary.Dir, "needed-light-edits", currentFeedbackArtifactPath(summary)); err != nil {
 			fmt.Fprintf(stderr, "Could not save artifact feedback: %v\n", err)
 			return 1
 		}
-		recordThreadDecision(summary.Dir, summary, "Needs light edits")
-		fmt.Fprintln(stdout, "Saved artifact feedback: needed-light-edits.")
-	case "used this", "used it", "kept this":
+		recordThreadDecision(summary.Dir, summary, "Edit")
+		fmt.Fprintln(stdout, "Saved artifact feedback: edit.")
+	case "use", "used this", "used it", "kept this":
 		if err := saveArtifactOutcome(summary.Dir, "used-this", currentFeedbackArtifactPath(summary)); err != nil {
 			fmt.Fprintf(stderr, "Could not save artifact outcome: %v\n", err)
 			return 1
 		}
-		recordThreadDecision(summary.Dir, summary, "Used this")
-		fmt.Fprintln(stdout, "Saved artifact outcome: used-this.")
-	case "shared this", "sent this", "forwarded this", "handed this off", "used this to hand off":
+		recordThreadDecision(summary.Dir, summary, "Use")
+		fmt.Fprintln(stdout, "Saved artifact outcome: use.")
+	case "share", "shared this", "sent this", "forwarded this", "handed this off", "used this to hand off":
 		if err := saveArtifactOutcome(summary.Dir, "shared-this", currentFeedbackArtifactPath(summary)); err != nil {
 			fmt.Fprintf(stderr, "Could not save artifact outcome: %v\n", err)
 			return 1
 		}
-		recordThreadDecision(summary.Dir, summary, "Shared this")
-		fmt.Fprintln(stdout, "Saved artifact outcome: shared-this.")
+		recordThreadDecision(summary.Dir, summary, "Share")
+		fmt.Fprintln(stdout, "Saved artifact outcome: share.")
 	case "model downvote", "downvote model", "model was wrong":
 		if err := saveModelFeedback(summary.Dir, "downvoted", ""); err != nil {
 			fmt.Fprintf(stderr, "Could not save model feedback: %v\n", err)
 			return 1
 		}
 		fmt.Fprintln(stdout, "Saved model feedback: downvoted.")
-	case "not useful", "artifact was not useful", "not good enough":
+	case "reject", "not useful", "artifact was not useful", "not good enough":
 		if err := saveModelFeedback(summary.Dir, "not-useful", currentFeedbackArtifactPath(summary)); err != nil {
 			fmt.Fprintf(stderr, "Could not save artifact feedback: %v\n", err)
 			return 1
 		}
-		recordThreadDecision(summary.Dir, summary, "Not useful")
-		fmt.Fprintln(stdout, "Saved artifact feedback: not-useful.")
-	case "replaced this", "rewrote this", "made a new one", "did not use this":
+		recordThreadDecision(summary.Dir, summary, "Reject")
+		fmt.Fprintln(stdout, "Saved artifact feedback: reject.")
+	case "replace", "replaced this", "rewrote this", "made a new one", "did not use this":
 		if err := saveArtifactOutcome(summary.Dir, "replaced-this", currentFeedbackArtifactPath(summary)); err != nil {
 			fmt.Fprintf(stderr, "Could not save artifact outcome: %v\n", err)
 			return 1
 		}
-		recordThreadDecision(summary.Dir, summary, "Replaced this")
-		fmt.Fprintln(stdout, "Saved artifact outcome: replaced-this.")
+		recordThreadDecision(summary.Dir, summary, "Replace")
+		fmt.Fprintln(stdout, "Saved artifact outcome: replace.")
 	case "switch work", "switch", "show active work", "active work", "switch project":
 		return runSwitchWorkPicker(summary, scanner, stdout, stderr)
 	case "doctor", "model":
@@ -2666,13 +2666,14 @@ func renderSelectableWorkList(w io.Writer, heading string, active []*workSummary
 
 func renderArtifactFeedbackChoices(w io.Writer) {
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "How did this draft go?")
-	fmt.Fprintln(w, "- Accepted as is")
-	fmt.Fprintln(w, "- Needed light edits")
-	fmt.Fprintln(w, "- Not useful")
-	fmt.Fprintln(w, "- Shared this")
-	fmt.Fprintln(w, "- Replaced this")
-	fmt.Fprintln(w, "Advanced: `Used this`, `Model upvote`, or `Model downvote`.")
+	fmt.Fprintln(w, "Feedback")
+	fmt.Fprintln(w, "- Accept")
+	fmt.Fprintln(w, "- Edit")
+	fmt.Fprintln(w, "- Use")
+	fmt.Fprintln(w, "- Share")
+	fmt.Fprintln(w, "- Reject")
+	fmt.Fprintln(w, "- Replace")
+	fmt.Fprintln(w, "Advanced: `Model upvote` or `Model downvote`.")
 }
 
 func renderOtherActiveWorkList(w io.Writer, active []*workSummary, includeHint bool) {
@@ -3109,18 +3110,18 @@ func handlePostResultAction(action string, summary *workSummary, scanner *bufio.
 		renderItem(stdout, item)
 	case "plan this first", "plan first", "plan this", "plan", "help me plan this", "5":
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "plan"})
-	case "accepted as is", "accept as is", "artifact accepted", "accepted":
-		return recordArtifactFeedback(summary, "accepted-as-is", "Approved", stdout, stderr)
-	case "needed light edits", "needs light edits", "light edits":
-		return recordArtifactFeedback(summary, "needed-light-edits", "Needs light edits", stdout, stderr)
-	case "used this", "used it", "kept this":
-		return recordArtifactOutcome(summary, "used-this", "Used this", stdout, stderr)
-	case "shared this", "sent this", "forwarded this", "handed this off", "used this to hand off":
-		return recordArtifactOutcome(summary, "shared-this", "Shared this", stdout, stderr)
-	case "not useful", "artifact was not useful", "not good enough":
-		return recordArtifactFeedback(summary, "not-useful", "Not useful", stdout, stderr)
-	case "replaced this", "rewrote this", "made a new one", "did not use this":
-		return recordArtifactOutcome(summary, "replaced-this", "Replaced this", stdout, stderr)
+	case "accept", "accepted as is", "accept as is", "artifact accepted", "accepted":
+		return recordArtifactFeedback(summary, "accepted-as-is", "Accept", stdout, stderr)
+	case "edit", "needed light edits", "needs light edits", "light edits":
+		return recordArtifactFeedback(summary, "needed-light-edits", "Edit", stdout, stderr)
+	case "use", "used this", "used it", "kept this":
+		return recordArtifactOutcome(summary, "used-this", "Use", stdout, stderr)
+	case "share", "shared this", "sent this", "forwarded this", "handed this off", "used this to hand off":
+		return recordArtifactOutcome(summary, "shared-this", "Share", stdout, stderr)
+	case "reject", "not useful", "artifact was not useful", "not good enough":
+		return recordArtifactFeedback(summary, "not-useful", "Reject", stdout, stderr)
+	case "replace", "replaced this", "rewrote this", "made a new one", "did not use this":
+		return recordArtifactOutcome(summary, "replaced-this", "Replace", stdout, stderr)
 	case "start something new", "start new work", "new", "6":
 		renderNewWorkLauncher(stdout)
 	default:
