@@ -1567,6 +1567,31 @@ func TestCurrentWorkInteractiveResumeAliasesOpenFocusedSurface(t *testing.T) {
 	}
 }
 
+func TestCurrentWorkResumeSetsArtifactFocusWhenNoFocusExists(t *testing.T) {
+	stateDir := t.TempDir()
+	packDir := seedTravelWork(t)
+	writeCurrentWork(t, stateDir, packDir, "travel-plan", "example-travel-plan", "7-Day Paris Trip", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("resume this\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "Itinerary") {
+		t.Fatalf("expected resume to open the primary artifact, got:\n%s", stdout.String())
+	}
+
+	current := readCurrentWork(t, stateDir)
+	threadState := mustReadFile(t, filepath.Join(current["pack_dir"].(string), "thread-state.json"))
+	for _, want := range []string{`"kind": "artifact"`, `"artifact_label": "Itinerary"`} {
+		if !strings.Contains(threadState, want) {
+			t.Fatalf("expected resume to persist artifact focus %q, got:\n%s", want, threadState)
+		}
+	}
+}
+
 func TestCurrentWorkInteractiveNextAliasOpensNextUsefulSurface(t *testing.T) {
 	stateDir := t.TempDir()
 	packDir := seedMeetingWork(t)

@@ -3000,8 +3000,7 @@ func renderFocusedContinuation(w io.Writer, summary *workSummary) bool {
 		return true
 	}
 	if item := currentArtifactItem(summary); item != nil {
-		renderItem(w, item)
-		return true
+		return renderThreadSurface(w, summary, artifactThreadFocus(summary, item))
 	}
 	return false
 }
