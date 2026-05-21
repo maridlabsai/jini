@@ -46,12 +46,23 @@ They reject designs that make users:
 - interpret system state before seeing value
 - trust remembered work without visible control
 - learn internal vocabulary before getting help
+- pay premium cost for work that should have stayed cheap
+- restart work because the session cannot resume cleanly on another surface
+- carry route or device theory before they can act
+
+They anchor research on three product truths:
+
+- Jini is a cost optimizer first
+- UX must feel second to none for non-expert and expert users alike
+- the same session should survive across macOS, Windows, mobile, and CLI
 
 Approval condition:
 
 - the first minute feels like relief
 - the user sees value before structure
 - the user always knows what is safe, what is missing, and what to do next
+- continuation is cheaper and less confusing than restart
+- switching surfaces does not force context reconstruction
 
 ### UX Designer
 
@@ -64,12 +75,19 @@ They reject designs that:
 - expose implementation storage or file language
 - use generic output names when a human object name is clearer
 - add a separate explanation screen where inline help would do
+- hide cost posture when it changes user trust or behavior
+- make cross-surface resume feel like separate products instead of one session
+- add copy that explains Jini before it qualifies the buyer
 
 Approval condition:
 
 - the screen flow is one obvious path
 - the first result is centered
 - follow-up actions are few, real, and written in user language
+- the cheapest suitable path is the default path and reads like the default path
+- every surface answers what happened, what is ready, what is missing, and what
+  to do next
+- every supported surface feels like a view over the same session object
 
 ### Program Manager
 
@@ -121,6 +139,8 @@ A product change is not approved until all four roles accept these conditions:
 - natural paste-first intake is supported before strict taxonomy
 - current work is visible, controllable, recoverable, and never switched silently
 - source, assumptions, missing proof, and safe next action are visible
+- route cost posture is legible when it matters
+- supported surfaces preserve one resumable session model
 - launcher-created work is parity-tested or uses shared generation
 - meeting follow-up and plan readiness are bulletproof before broader launcher scope
 - repeated critique from more than one role triggers simplification unless user-outcome proof justifies keeping the surface

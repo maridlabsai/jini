@@ -35,6 +35,9 @@ class DocsHomepageRewriteTests(unittest.TestCase):
             "Raw model shell",
             "Use a raw model shell when you only need a one-off answer.",
             "## What Jini writes",
+            "## Start anywhere. Resume anywhere.",
+            "One session, not four different products",
+            "macOS, Windows, mobile, and CLI",
             "## Commands that matter",
             "Stored locally",
             "Not stored as product magic",
@@ -81,6 +84,7 @@ class DocsHomepageRewriteTests(unittest.TestCase):
             "deliverables, continuation, and explicit risk",
             "It should open deliverables, not storage concepts.",
             "No storage-first labels",
+            "macOS, Windows, mobile, and CLI",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, outputs)

@@ -138,6 +138,27 @@ description: One shell for AI work. Cheap by default, strong when needed.
   </div>
 </div>
 
+## Start anywhere. Resume anywhere.
+
+<div class="proof-grid">
+  <div class="proof-card">
+    <h3>One session, not four different products</h3>
+    <p>Jini should preserve the same session identity across macOS, Windows, mobile, and CLI instead of treating each surface like a separate workflow.</p>
+  </div>
+  <div class="proof-card">
+    <h3>Resume without reconstruction</h3>
+    <p>The latest deliverable, missing items, route evidence, and next action should travel with the session so device switches do not force context rebuilding.</p>
+  </div>
+  <div class="proof-card">
+    <h3>Review on one surface, continue on another</h3>
+    <p>Users should be able to inspect outputs on one device and continue the same work on another without losing the thread.</p>
+  </div>
+  <div class="proof-card">
+    <h3>Cheap continuity</h3>
+    <p>Continuation should be cheaper than restart. Jini should reuse session state before it spends money rebuilding the same context again.</p>
+  </div>
+</div>
+
 ## Commands that matter
 
 <div class="checklist-grid">

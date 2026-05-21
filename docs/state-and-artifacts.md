@@ -31,6 +31,7 @@ description: The shortest explanation of what Jini writes and keeps visible whil
   <span class="section-kicker">Why this matters</span>
   <h2>Outputs are part of the buyability story</h2>
   <p>Jini should feel better than plain chat because it gives teams usable deliverables, visible missing pieces, and a continuation surface they can understand without rebuilding state from scratch.</p>
+  <p>The same output and session model should travel across macOS, Windows, mobile, and CLI. A device switch should not create a second-class copy of the work.</p>
 </div>
 
 <div class="section-card" markdown="1">

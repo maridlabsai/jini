@@ -19,6 +19,7 @@ This PRD should be read alongside:
 - [full-product-prd.md](./full-product-prd.md)
 - [lean-platform-doctrine.md](./lean-platform-doctrine.md)
 - [client-surfaces-and-free-tier.md](./client-surfaces-and-free-tier.md)
+- [cross-surface-session-system-and-dev-design.md](./cross-surface-session-system-and-dev-design.md)
 - [work-state-machine.md](./work-state-machine.md)
 - [artifact-schemas.md](./artifact-schemas.md)
 

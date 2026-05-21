@@ -8,6 +8,13 @@ not to make Jini look like any one competitor. The goal is to make Jini feel
 lighter to start, easier to resume, safer to trust, and richer when work becomes
 too complex for plain terminal text.
 
+This research should be read through one stricter charter:
+
+- Jini is a cost optimizer first
+- Jini UX must be second to none
+- Jini must preserve one resumable session across macOS, Windows, mobile, and
+  CLI
+
 ## Source Set
 
 The research uses current public product documentation and help materials:
@@ -129,6 +136,32 @@ Route selection must optimize for productivity per unit cost. Local and cheaper
 routes should be preferred for drafting, extraction, summarization, and other
 low-risk work. Deep or premium routes should be used when quality, safety,
 context size, or external action risk justifies the cost.
+
+## UX Research And Design Anchor
+
+UX research and UX design should reject any surface that fails one of these
+tests:
+
+- it does not make the cheapest suitable path feel like the normal path
+- it makes users learn product theory before they can act
+- it makes device switching feel like starting over
+- it makes review, readiness, or next action harder to understand
+- it improves internal neatness more than user outcome
+
+The design target is not "feature rich AI UX." The design target is:
+
+- cheaper to finish
+- easier to understand
+- easier to resume
+- safer to hand off
+
+That anchor should govern:
+
+- first-minute research
+- screen-order decisions
+- copy choices
+- continuation design
+- cross-surface parity decisions
 
 ## Required Product Workstreams
 
