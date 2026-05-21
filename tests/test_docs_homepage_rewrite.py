@@ -25,6 +25,8 @@ class DocsHomepageRewriteTests(unittest.TestCase):
             "## What Jini writes",
             "## Commands that matter",
             "## Why trust it",
+            "## What Jini stores",
+            "hidden cloud memory",
             "jini metrics",
         ):
             with self.subTest(marker=marker):

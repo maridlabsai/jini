@@ -163,6 +163,29 @@ description: One shell for AI work. Cheap by default, strong when needed.
   </div>
 </div>
 
+## What Jini stores
+
+<div class="checklist-grid">
+  <div class="checklist-card">
+    <h3>Stored locally</h3>
+    <ul class="compact-list">
+      <li>artifacts like follow-ups, memos, and readiness checks</li>
+      <li>work state so the same thread can resume cleanly</li>
+      <li>route evidence like command timings and local benchmark summaries</li>
+      <li>repo-local setup state under <code>.jini</code> when setup needs to stay simple</li>
+    </ul>
+  </div>
+  <div class="checklist-card">
+    <h3>Not stored as product magic</h3>
+    <ul class="compact-list">
+      <li>hidden cloud memory you cannot inspect</li>
+      <li>opaque routing claims without measurable evidence</li>
+      <li>auto-share behavior that skips review</li>
+      <li>secret values printed back into docs or doctor output</li>
+    </ul>
+  </div>
+</div>
+
 ## See real outputs
 
 <div class="media-grid">

@@ -46,3 +46,32 @@ Open Build-Readiness Check</pre>
 
   <p>If those signals are not obvious, the product still has work to do.</p>
 </div>
+
+<div class="section-card">
+  <span class="section-kicker">Storage boundary</span>
+  <h2>What Jini stores and what it does not</h2>
+  <div class="signal-grid">
+    <div class="signal-card">
+      <h3>What it stores</h3>
+      <ul class="compact-list">
+        <li>artifacts you can open and review</li>
+        <li>work state needed for resume and status</li>
+        <li>route evidence and local benchmark summaries when available</li>
+        <li>repo-local setup state under <code>.jini</code> when setup needs to stay simple</li>
+      </ul>
+    </div>
+    <div class="signal-card">
+      <h3>What it should not hide</h3>
+      <ul class="compact-list">
+        <li>secret values in doctor or docs output</li>
+        <li>hidden cloud memory the user cannot inspect</li>
+        <li>route decisions without visible reasons or metrics</li>
+        <li>automatic send/share behavior that skips review</li>
+      </ul>
+    </div>
+    <div class="signal-card">
+      <h3>Why this matters</h3>
+      <p>Buyability depends on trust. Jini should feel inspectable, reviewable, and cheap to understand before it asks a team to trust routing and stored state.</p>
+    </div>
+  </div>
+</div>
