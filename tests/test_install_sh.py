@@ -124,7 +124,7 @@ class InstallScriptTests(unittest.TestCase):
         self.assertTrue((install_dir / "install-receipt.txt").exists())
 
         launch = subprocess.run(
-            [str(bin_dir / "jini"), "provider", "doctor"],
+            [str(bin_dir / "jini"), "doctor"],
             cwd=REPO_ROOT,
             text=True,
             capture_output=True,

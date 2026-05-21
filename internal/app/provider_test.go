@@ -2419,7 +2419,7 @@ func TestCheckShowsSavedDecisionExplanation(t *testing.T) {
 	}
 
 	var stdout bytes.Buffer
-	exitCode := Run([]string{"check"}, &stdout, &stdout)
+	exitCode := Run([]string{"status"}, &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -2467,7 +2467,7 @@ func TestCurrentWorkCanSaveModelFeedback(t *testing.T) {
 	}
 
 	var stdout bytes.Buffer
-	exitCode := RunInteractive(nil, strings.NewReader("model upvote\n"), &stdout, &stdout)
+	exitCode := RunInteractive(nil, strings.NewReader("upvote\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected model feedback run to succeed, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -2519,7 +2519,7 @@ func TestCurrentWorkLocalModelFeedbackRecordsCohortFeedback(t *testing.T) {
 	}
 
 	var stdout bytes.Buffer
-	exitCode := RunInteractive(nil, strings.NewReader("model upvote\n"), &stdout, &stdout)
+	exitCode := RunInteractive(nil, strings.NewReader("upvote\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected local model feedback run to succeed, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -2547,7 +2547,7 @@ func TestCurrentWorkLocalModelFeedbackRecordsSubtypeSpecificRouteCohortFeedback(
 	}
 
 	var stdout bytes.Buffer
-	exitCode := RunInteractive(nil, strings.NewReader("model upvote\n"), &stdout, &stdout)
+	exitCode := RunInteractive(nil, strings.NewReader("upvote\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected local model feedback run to succeed, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -2632,7 +2632,7 @@ func TestCurrentWorkLocalArtifactAcceptanceRecordsGradedCohortFeedback(t *testin
 	}
 
 	var stdout bytes.Buffer
-	exitCode := RunInteractive(nil, strings.NewReader("accepted as is\n"), &stdout, &stdout)
+	exitCode := RunInteractive(nil, strings.NewReader("accept\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected local artifact feedback run to succeed, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -2707,7 +2707,7 @@ func TestCurrentWorkLocalArtifactAcceptanceTreatsHeaderEditAsCosmetic(t *testing
 	}
 
 	var stdout bytes.Buffer
-	exitCode := RunInteractive(nil, strings.NewReader("accepted as is\n"), &stdout, &stdout)
+	exitCode := RunInteractive(nil, strings.NewReader("accept\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected local artifact feedback run to succeed, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -2767,7 +2767,7 @@ func TestCurrentWorkLocalArtifactAcceptanceTracksCoreDecisionChange(t *testing.T
 	}
 
 	var stdout bytes.Buffer
-	exitCode := RunInteractive(nil, strings.NewReader("accepted as is\n"), &stdout, &stdout)
+	exitCode := RunInteractive(nil, strings.NewReader("accept\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected local artifact feedback run to succeed, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -2802,7 +2802,7 @@ func TestCurrentWorkLocalArtifactOutcomeRecordsSharedUse(t *testing.T) {
 	}
 
 	var stdout bytes.Buffer
-	exitCode := RunInteractive(nil, strings.NewReader("shared this\n"), &stdout, &stdout)
+	exitCode := RunInteractive(nil, strings.NewReader("share\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected local artifact outcome run to succeed, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -2850,7 +2850,7 @@ func TestCurrentWorkLocalArtifactOutcomeRecordsSubtypeSpecificRouteCohortOutcome
 	}
 
 	var stdout bytes.Buffer
-	exitCode := RunInteractive(nil, strings.NewReader("shared this\n"), &stdout, &stdout)
+	exitCode := RunInteractive(nil, strings.NewReader("share\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected screenshot artifact outcome run to succeed, got %d with output:\n%s", exitCode, stdout.String())
 	}

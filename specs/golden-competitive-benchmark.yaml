@@ -215,10 +215,10 @@ scenarios:
         command: ["recommend-execution", "{scenario_root}/research-pack", "--intent", "export", "--format", "json"]
         path: "execution_class"
         equals: "cheap"
-      - id: compact-context-stays-bounded
+      - id: resume-stays-bounded
         command:
           [
-            "compact-context",
+            "resume",
             "{scenario_root}/research-pack",
             "--intent",
             "export",
@@ -309,7 +309,7 @@ scenarios:
       - id: guided-loop-activates-runtime
         command:
           [
-            "execute-flow",
+            "run",
             "{scenario_root}/research-pack",
             "--mode",
             "supervised",
@@ -338,7 +338,7 @@ scenarios:
       - id: guided-loop-applies-local-publish
         command:
           [
-            "execute-flow",
+            "run",
             "{scenario_root}/research-pack",
             "--mode",
             "supervised",
@@ -367,7 +367,7 @@ scenarios:
       - id: guided-loop-selects-codex-runtime
         command:
           [
-            "execute-flow",
+            "run",
             "{scenario_root}/research-pack",
             "--mode",
             "supervised",
@@ -396,7 +396,7 @@ scenarios:
       - id: guided-loop-produces-local-receipts
         command:
           [
-            "execute-flow",
+            "run",
             "{scenario_root}/research-pack",
             "--mode",
             "supervised",
@@ -425,7 +425,7 @@ scenarios:
       - id: guided-loop-reuses-handoff-context
         command:
           [
-            "execute-flow",
+            "run",
             "{scenario_root}/research-pack",
             "--mode",
             "supervised",

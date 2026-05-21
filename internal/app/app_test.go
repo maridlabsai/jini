@@ -14,7 +14,7 @@ import (
 	"github.com/maridlabsai/jini/internal/app"
 )
 
-func TestCheckRendersPlainLanguageCurrentWorkScreen(t *testing.T) {
+func TestStatusRendersPlainLanguageCurrentWorkScreen(t *testing.T) {
 	stateDir := t.TempDir()
 	packDir := seedResearchPRDWork(t)
 	writeCurrentWork(t, stateDir, packDir, "research-prd", "example-research-prd", "Jini Research To PRD", "awaiting_verification", "ready-to-verify")
@@ -22,7 +22,7 @@ func TestCheckRendersPlainLanguageCurrentWorkScreen(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.Run([]string{"check"}, &stdout, &stdout)
+	exitCode := app.Run([]string{"status"}, &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -70,7 +70,7 @@ func TestProviderDoctorDetectsAzureOpenAIWithoutLeakingSecrets(t *testing.T) {
 	t.Setenv("AZURE_OPENAI_API_VERSION", "2024-10-21")
 
 	var stdout bytes.Buffer
-	exitCode := app.Run([]string{"provider", "doctor"}, &stdout, &stdout)
+exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -102,7 +102,7 @@ func TestProviderDoctorDetectsBedrockWithoutLeakingCredentials(t *testing.T) {
 	t.Setenv("BEDROCK_MODEL_ID", "anthropic.claude-3-5-sonnet-20240620-v1:0")
 
 	var stdout bytes.Buffer
-	exitCode := app.Run([]string{"provider", "doctor"}, &stdout, &stdout)
+exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -130,7 +130,7 @@ func TestProviderDoctorReportsMissingRequiredSettings(t *testing.T) {
 	t.Setenv("JINI_PROVIDER", "azure-openai")
 
 	var stdout bytes.Buffer
-	exitCode := app.Run([]string{"provider", "doctor"}, &stdout, &stdout)
+exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
 	if exitCode != 1 {
 		t.Fatalf("expected exit code 1, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -158,7 +158,7 @@ func TestProviderDoctorDetectsAnthropicDirectSetup(t *testing.T) {
 	t.Setenv("JINI_MODEL", "sonnet")
 
 	var stdout bytes.Buffer
-	exitCode := app.Run([]string{"provider", "doctor"}, &stdout, &stdout)
+exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -192,7 +192,7 @@ func TestProviderDoctorAutoChoosesBedrockForSonnet46Alias(t *testing.T) {
 	t.Setenv("AWS_SECRET_ACCESS_KEY", "SECRETEXAMPLE")
 
 	var stdout bytes.Buffer
-	exitCode := app.Run([]string{"provider", "doctor"}, &stdout, &stdout)
+exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -219,7 +219,7 @@ func TestProviderDoctorRejectsSonnet46ShortcutForDirectClaude(t *testing.T) {
 	t.Setenv("JINI_MODEL", "sonnet-4.6")
 
 	var stdout bytes.Buffer
-	exitCode := app.Run([]string{"provider", "doctor"}, &stdout, &stdout)
+exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
 	if exitCode != 1 {
 		t.Fatalf("expected exit code 1, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -300,7 +300,7 @@ func TestInteractiveSetupCanSaveClaudeProfileInsideJini(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("Use Claude\nsk-test-key\n\n"), &stdout, &stdout)
+exitCode := app.RunInteractive(nil, strings.NewReader("Claude\nsk-test-key\n\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -308,7 +308,7 @@ func TestInteractiveSetupCanSaveClaudeProfileInsideJini(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Claude",
-		"Setup saved. Working with Claude API / Claude Sonnet 4.",
+		"Setup saved. Working with Claude Code via Claude API / Claude Sonnet 4.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -324,7 +324,7 @@ func TestInteractiveSetupCanSaveClaudeProfileInsideJini(t *testing.T) {
 	}
 
 	stdout.Reset()
-	exitCode = app.Run([]string{"provider", "doctor"}, &stdout, &stdout)
+exitCode = app.Run([]string{"doctor"}, &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected saved profile to drive provider doctor, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -404,7 +404,7 @@ func TestProviderDoctorShowsAutoToolDecision(t *testing.T) {
 	t.Setenv("ANTHROPIC_API_KEY", "super-secret-key")
 
 	var stdout bytes.Buffer
-	exitCode := app.Run([]string{"provider", "doctor"}, &stdout, &stdout)
+exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -436,7 +436,7 @@ func TestProviderDoctorDetectsLocalSLMWithoutLeakingOptionalKey(t *testing.T) {
 	t.Setenv("JINI_SKIP_LOCAL_BENCHMARK", "1")
 
 	var stdout bytes.Buffer
-	exitCode := app.Run([]string{"provider", "doctor"}, &stdout, &stdout)
+exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -474,7 +474,7 @@ func TestProviderDoctorShowsSubtypeScopedMultimodalLearning(t *testing.T) {
 	writeLocalRuntimeCapabilitiesFixture(t, stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.Run([]string{"provider", "doctor"}, &stdout, &stdout)
+exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -547,7 +547,7 @@ func TestCheckShowsMultimodalLearningBucketsForCurrentWork(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.Run([]string{"check"}, &stdout, &stdout)
+	exitCode := app.Run([]string{"status"}, &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -580,7 +580,7 @@ func TestInteractiveLauncherReportsProviderSetupBeforeCreatingWork(t *testing.T)
 	for _, want := range []string{
 		"Could not start this work",
 		"Provider needs setup.",
-		"Run `jini provider doctor`.",
+		"Run `jini doctor`.",
 		"AZURE_OPENAI_ENDPOINT",
 	} {
 		if !strings.Contains(out, want) {
@@ -592,7 +592,7 @@ func TestInteractiveLauncherReportsProviderSetupBeforeCreatingWork(t *testing.T)
 	}
 }
 
-func TestCheckHandlesStaleCurrentWorkWithoutLeakingPath(t *testing.T) {
+func TestStatusHandlesStaleCurrentWorkWithoutLeakingPath(t *testing.T) {
 	stateDir := t.TempDir()
 	missingPackDir := filepath.Join(t.TempDir(), "deleted-work")
 	writeCurrentWork(t, stateDir, missingPackDir, "research-prd", "stale-work", "Stale Work", "awaiting_verification", "ready-to-verify")
@@ -600,15 +600,16 @@ func TestCheckHandlesStaleCurrentWorkWithoutLeakingPath(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.Run([]string{"check"}, &stdout, &stdout)
-	if exitCode != 1 {
-		t.Fatalf("expected exit code 1, got %d with output:\n%s", exitCode, stdout.String())
+	exitCode := app.Run([]string{"status"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
 
 	out := stdout.String()
 	for _, want := range []string{
 		"Remembered work is no longer available.",
-		"Run `jini` to start something.",
+		"No current work yet.",
+		"Paste what you want finished.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -867,7 +868,7 @@ func TestHelpShowsPlainLanguageFeedbackShelfWhenModelContextExists(t *testing.T)
 	}
 }
 
-func TestCheckHighlightsSpecificMeetingGaps(t *testing.T) {
+func TestStatusHighlightsSpecificMeetingGaps(t *testing.T) {
 	stateDir := t.TempDir()
 	packDir := seedMeetingWork(t)
 	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
@@ -875,7 +876,7 @@ func TestCheckHighlightsSpecificMeetingGaps(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.Run([]string{"check"}, &stdout, &stdout)
+	exitCode := app.Run([]string{"status"}, &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -896,7 +897,7 @@ func TestCheckHighlightsSpecificMeetingGaps(t *testing.T) {
 	}
 }
 
-func TestCheckHighlightsSpecificTravelGaps(t *testing.T) {
+func TestStatusHighlightsSpecificTravelGaps(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
@@ -905,7 +906,7 @@ func TestCheckHighlightsSpecificTravelGaps(t *testing.T) {
 	}
 
 	var stdout bytes.Buffer
-	exitCode := app.Run([]string{"check"}, &stdout, &stdout)
+	exitCode := app.Run([]string{"status"}, &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -1294,7 +1295,7 @@ func TestInteractiveLauncherSocialAckDoesNotCreateWork(t *testing.T) {
 	}
 }
 
-func TestInteractiveLauncherFamiliarSlashCommandsDoNotCreateWork(t *testing.T) {
+func TestInteractiveLauncherRejectsSlashCommands(t *testing.T) {
 	cases := []struct {
 		name string
 		line string
@@ -1303,47 +1304,37 @@ func TestInteractiveLauncherFamiliarSlashCommandsDoNotCreateWork(t *testing.T) {
 		{
 			name: "status",
 			line: "/status\n",
-			want: []string{"No current work yet.", "Paste what you want finished."},
+			want: []string{"Unknown command \"/status\"."},
 		},
 		{
 			name: "doctor",
 			line: "/doctor\n",
-			want: []string{"Provider", "Status"},
+			want: []string{"Unknown command \"/doctor\"."},
 		},
 		{
 			name: "init",
 			line: "/init\n",
-			want: []string{"No init step is required before first value.", "Paste what you want finished."},
-		},
-		{
-			name: "model",
-			line: "/model\n",
-			want: []string{"Provider", "Status"},
+			want: []string{"Unknown command \"/init\"."},
 		},
 		{
 			name: "memory",
 			line: "/memory\n",
-			want: []string{"Memory", "No current work is saved yet."},
+			want: []string{"Unknown command \"/memory\"."},
 		},
 		{
 			name: "permissions",
 			line: "/permissions\n",
-			want: []string{"Permissions", "Nothing has been sent, published, booked, or changed."},
+			want: []string{"Unknown command \"/permissions\"."},
 		},
 		{
 			name: "clear",
 			line: "/clear\n",
-			want: []string{"Nothing to clear yet.", "Paste what you want finished when you're ready."},
+			want: []string{"Unknown command \"/clear\"."},
 		},
 		{
 			name: "route",
 			line: "/route\n",
-			want: []string{"Route and cost", "Least-expense capable route"},
-		},
-		{
-			name: "cost",
-			line: "/cost\n",
-			want: []string{"Route and cost", "Least-expense capable route"},
+			want: []string{"Unknown command \"/route\"."},
 		},
 	}
 
@@ -1354,8 +1345,8 @@ func TestInteractiveLauncherFamiliarSlashCommandsDoNotCreateWork(t *testing.T) {
 
 			var stdout bytes.Buffer
 			exitCode := app.RunInteractive(nil, strings.NewReader(tc.line), &stdout, &stdout)
-			if exitCode != 0 {
-				t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+			if exitCode != 1 {
+				t.Fatalf("expected exit code 1, got %d with output:\n%s", exitCode, stdout.String())
 			}
 
 			out := stdout.String()
@@ -1370,14 +1361,14 @@ func TestInteractiveLauncherFamiliarSlashCommandsDoNotCreateWork(t *testing.T) {
 				}
 			}
 			if _, err := os.Stat(filepath.Join(stateDir, "current-work.json")); !errors.Is(err, os.ErrNotExist) {
-				t.Fatalf("expected no current work file after slash command, got err=%v", err)
+				t.Fatalf("expected no current work file after rejected slash command, got err=%v", err)
 			}
 		})
 	}
 }
 
 func TestInteractiveLauncherHelpWithPunctuationDoesNotCreateWork(t *testing.T) {
-	for _, line := range []string{"what can you do?\n", "help!\n", "/help\n", "?\n"} {
+	for _, line := range []string{"what can you do?\n", "help!\n", "?\n"} {
 		t.Run(strings.TrimSpace(line), func(t *testing.T) {
 			stateDir := t.TempDir()
 			t.Setenv("JINI_STATE_DIR", stateDir)
@@ -1392,7 +1383,7 @@ func TestInteractiveLauncherHelpWithPunctuationDoesNotCreateWork(t *testing.T) {
 			for _, want := range []string{
 				"Jini",
 				"Examples:",
-				"If you need commands, type `help` or `/help`.",
+				"If you need commands, type `help`.",
 			} {
 				if !strings.Contains(out, want) {
 					t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -1447,8 +1438,8 @@ func TestInteractiveLauncherRunsMeetingPostResultActions(t *testing.T) {
 			wantAfterAction: "Owners and Due Points",
 		},
 		{
-			name:            "proceed opens the next useful meeting surface",
-			action:          "proceed",
+			name:            "continue opens the next useful meeting surface",
+			action:          "Continue",
 			wantAfterAction: "Owners and Due Points",
 		},
 		{
@@ -1562,7 +1553,7 @@ func TestCurrentWorkInteractiveChoicesAreReal(t *testing.T) {
 	}
 }
 
-func TestCurrentWorkInteractivePunctuatedReadyCommandOpensShelf(t *testing.T) {
+func TestCurrentWorkInteractiveOpenCommandOpensShelf(t *testing.T) {
 	stateDir := t.TempDir()
 	packDir := seedMeetingWork(t)
 	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
@@ -1570,7 +1561,7 @@ func TestCurrentWorkInteractivePunctuatedReadyCommandOpensShelf(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("show what's ready?\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("open\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -1582,14 +1573,20 @@ func TestCurrentWorkInteractivePunctuatedReadyCommandOpensShelf(t *testing.T) {
 		}
 	}
 	if strings.Contains(out, "Working Draft") {
-		t.Fatalf("expected punctuated ready command not to start work, got:\n%s", out)
+		t.Fatalf("expected open command not to start work, got:\n%s", out)
 	}
 }
 
-func TestCurrentWorkInteractiveResumeAliasesOpenFocusedSurface(t *testing.T) {
-	cases := []string{"continue this\n", "resume this\n"}
-	for _, line := range cases {
-		t.Run(strings.TrimSpace(line), func(t *testing.T) {
+func TestCurrentWorkInteractiveResumeCommandsOpenFocusedSurface(t *testing.T) {
+	cases := []struct {
+		line string
+		want string
+	}{
+		{line: "continue\n", want: "Owners and Due Points"},
+		{line: "resume\n", want: "Sendable Follow-up"},
+	}
+	for _, tc := range cases {
+		t.Run(strings.TrimSpace(tc.line), func(t *testing.T) {
 			stateDir := t.TempDir()
 			packDir := seedMeetingWork(t)
 			writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
@@ -1597,17 +1594,17 @@ func TestCurrentWorkInteractiveResumeAliasesOpenFocusedSurface(t *testing.T) {
 			t.Setenv("JINI_STATE_DIR", stateDir)
 
 			var stdout bytes.Buffer
-			exitCode := app.RunInteractive(nil, strings.NewReader(line), &stdout, &stdout)
+			exitCode := app.RunInteractive(nil, strings.NewReader(tc.line), &stdout, &stdout)
 			if exitCode != 0 {
 				t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 			}
 
 			out := stdout.String()
-			if !strings.Contains(out, "Sendable Follow-up") {
-				t.Fatalf("expected resume alias to reopen focused surface, got:\n%s", out)
+			if !strings.Contains(out, tc.want) {
+				t.Fatalf("expected resume command to reopen focused surface, got:\n%s", out)
 			}
 			if strings.Contains(out, "Working Draft") {
-				t.Fatalf("expected continuation alias not to start new work, got:\n%s", out)
+				t.Fatalf("expected continuation command not to start new work, got:\n%s", out)
 			}
 		})
 	}
@@ -1621,7 +1618,7 @@ func TestCurrentWorkResumeSetsArtifactFocusWhenNoFocusExists(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("resume this\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("resume\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -1638,7 +1635,7 @@ func TestCurrentWorkResumeSetsArtifactFocusWhenNoFocusExists(t *testing.T) {
 	}
 }
 
-func TestCurrentWorkInteractiveNextAliasOpensNextUsefulSurface(t *testing.T) {
+func TestCurrentWorkInteractiveContinueOpensNextUsefulSurface(t *testing.T) {
 	stateDir := t.TempDir()
 	packDir := seedMeetingWork(t)
 	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
@@ -1646,14 +1643,14 @@ func TestCurrentWorkInteractiveNextAliasOpensNextUsefulSurface(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("next\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("continue\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
 
 	out := stdout.String()
 	if !strings.Contains(out, "Owners and Due Points") {
-		t.Fatalf("expected next to open next useful surface, got:\n%s", out)
+		t.Fatalf("expected continue to open next useful surface, got:\n%s", out)
 	}
 }
 
@@ -1760,7 +1757,7 @@ func TestCurrentWorkInteractiveMissingChoiceShowsGapSummary(t *testing.T) {
 	}
 }
 
-func TestCurrentWorkInteractiveKeepGoingOpensNextUsefulSurface(t *testing.T) {
+func TestCurrentWorkInteractiveContinueOpensNextUsefulMeetingSurface(t *testing.T) {
 	stateDir := t.TempDir()
 	packDir := seedMeetingWork(t)
 	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
@@ -1775,11 +1772,11 @@ func TestCurrentWorkInteractiveKeepGoingOpensNextUsefulSurface(t *testing.T) {
 
 	out := stdout.String()
 	if !strings.Contains(out, "Owners and Due Points") {
-		t.Fatalf("expected keep going to open next useful surface, got:\n%s", out)
+		t.Fatalf("expected continue to open next useful surface, got:\n%s", out)
 	}
 }
 
-func TestCurrentWorkInteractiveFullerOpensRicherSurface(t *testing.T) {
+func TestCurrentWorkInteractiveExpandOpensRicherSurface(t *testing.T) {
 	stateDir := t.TempDir()
 	packDir := seedMeetingWork(t)
 	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
@@ -1787,7 +1784,7 @@ func TestCurrentWorkInteractiveFullerOpensRicherSurface(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("Make it fuller\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("expand\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -1795,28 +1792,6 @@ func TestCurrentWorkInteractiveFullerOpensRicherSurface(t *testing.T) {
 	out := stdout.String()
 	if !strings.Contains(out, "Owners and Due Points") {
 		t.Fatalf("expected fuller action to open richer surface, got:\n%s", out)
-	}
-}
-
-func TestCurrentWorkInteractiveProceedOpensNextUsefulSurface(t *testing.T) {
-	stateDir := t.TempDir()
-	packDir := seedMeetingWork(t)
-	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
-
-	t.Setenv("JINI_STATE_DIR", stateDir)
-
-	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("proceed\n"), &stdout, &stdout)
-	if exitCode != 0 {
-		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
-	}
-
-	out := stdout.String()
-	if !strings.Contains(out, "Owners and Due Points") {
-		t.Fatalf("expected proceed to open next useful surface, got:\n%s", out)
-	}
-	if strings.Contains(out, "Working Draft: Proceed") {
-		t.Fatalf("expected proceed not to start literal work, got:\n%s", out)
 	}
 }
 
@@ -1881,7 +1856,7 @@ func TestCurrentWorkResumeReopensSelectedReadyArtifact(t *testing.T) {
 	}
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("resume this\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("resume\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -1909,7 +1884,7 @@ func TestOpenCommandUpdatesFocusedArtifactForResume(t *testing.T) {
 	}
 
 	var stdout bytes.Buffer
-	exitCode = app.RunInteractive(nil, strings.NewReader("resume this\n"), &stdout, &stdout)
+	exitCode = app.RunInteractive(nil, strings.NewReader("resume\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected resume after open command to succeed, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -1933,7 +1908,7 @@ func TestCurrentWorkResumeReopensMissingSurface(t *testing.T) {
 	}
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("resume this\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("resume\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -1984,7 +1959,7 @@ func TestCurrentWorkResumeReopensDecisionSurface(t *testing.T) {
 	}
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("resume this\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("resume\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected resume to reopen active ask surface, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -2047,7 +2022,7 @@ func TestCurrentWorkFocusedOutcomeUsesSelectedArtifact(t *testing.T) {
 	}
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("shared this\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("share\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected focused outcome to succeed, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -2147,7 +2122,7 @@ func TestCurrentWorkInteractiveSocialAckDoesNotStartNewWork(t *testing.T) {
 	}
 }
 
-func TestCurrentWorkInteractiveSlashDoctorDoesNotStartNewWork(t *testing.T) {
+func TestCurrentWorkInteractiveDoctorDoesNotStartNewWork(t *testing.T) {
 	stateDir := t.TempDir()
 	packDir := seedMeetingWork(t)
 	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
@@ -2155,7 +2130,7 @@ func TestCurrentWorkInteractiveSlashDoctorDoesNotStartNewWork(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("/doctor\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("doctor\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -2167,7 +2142,7 @@ func TestCurrentWorkInteractiveSlashDoctorDoesNotStartNewWork(t *testing.T) {
 		}
 	}
 	if strings.Contains(out, "Working Draft: Doctor") {
-		t.Fatalf("expected slash doctor not to start literal work, got:\n%s", out)
+		t.Fatalf("expected doctor not to start literal work, got:\n%s", out)
 	}
 	current := readCurrentWork(t, stateDir)
 	if current["title"] != "Weekly Product Review" {
@@ -2183,37 +2158,27 @@ func TestCurrentWorkInteractiveTacticalCommandsDoNotStartNewWork(t *testing.T) {
 	}{
 		{
 			name: "status",
-			line: "/status\n",
-			want: []string{"Goal", "Weekly Product Review", "Ready now", "Sendable Follow-up"},
-		},
-		{
-			name: "check",
-			line: "check\n",
+			line: "status\n",
 			want: []string{"Goal", "Weekly Product Review", "Ready now", "Sendable Follow-up"},
 		},
 		{
 			name: "memory",
-			line: "/memory\n",
+			line: "memory\n",
 			want: []string{"Memory", "Current work is saved: Weekly Product Review."},
 		},
 		{
 			name: "route",
-			line: "/route\n",
-			want: []string{"Route and cost", "Least-expense capable route"},
-		},
-		{
-			name: "cost",
-			line: "/cost\n",
+			line: "route\n",
 			want: []string{"Route and cost", "Least-expense capable route"},
 		},
 		{
 			name: "permissions",
-			line: "/permissions\n",
+			line: "permissions\n",
 			want: []string{"Permissions", "Nothing has been sent, published, booked, or changed."},
 		},
 		{
 			name: "clear",
-			line: "/clear\n",
+			line: "clear\n",
 			want: []string{"Nothing was deleted.", "Type `Start` to switch focus without removing this work."},
 		},
 	}
@@ -2251,7 +2216,7 @@ func TestCurrentWorkInteractiveTacticalCommandsDoNotStartNewWork(t *testing.T) {
 
 func TestPostResultStatusCommandShowsFullState(t *testing.T) {
 	source := "Weekly product review. Need owners, due dates, and open questions."
-	out := runInteractiveForTest(t, t.TempDir(), source+"\n/status\n")
+	out := runInteractiveForTest(t, t.TempDir(), source+"\nstatus\n")
 
 	for _, want := range []string{
 		"Your first draft is ready.",
@@ -2276,11 +2241,11 @@ func TestInteractiveTacticalSurfacesStayCompact(t *testing.T) {
 		arg         string
 		maxNonEmpty int
 	}{
-		{name: "status", arg: "/status", maxNonEmpty: 3},
-		{name: "memory", arg: "/memory", maxNonEmpty: 3},
-		{name: "permissions", arg: "/permissions", maxNonEmpty: 3},
-		{name: "route", arg: "/route", maxNonEmpty: 3},
-		{name: "help", arg: "/help", maxNonEmpty: 16},
+		{name: "status", arg: "status", maxNonEmpty: 3},
+		{name: "memory", arg: "memory", maxNonEmpty: 3},
+		{name: "permissions", arg: "permissions", maxNonEmpty: 3},
+		{name: "route", arg: "route", maxNonEmpty: 3},
+		{name: "help", arg: "help", maxNonEmpty: 16},
 	}
 
 	for _, tc := range cases {
@@ -2345,7 +2310,7 @@ func TestInteractiveTacticalSurfacesStayWithinLatencySmokeBudget(t *testing.T) {
 				t.Setenv("JINI_STATE_DIR", stateDir)
 
 				var stdout bytes.Buffer
-				if exitCode := app.RunInteractive([]string{"/status"}, nil, &stdout, &stdout); exitCode != 0 {
+				if exitCode := app.RunInteractive([]string{"status"}, nil, &stdout, &stdout); exitCode != 0 {
 					t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 				}
 			},
@@ -2358,7 +2323,7 @@ func TestInteractiveTacticalSurfacesStayWithinLatencySmokeBudget(t *testing.T) {
 				t.Setenv("JINI_STATE_DIR", stateDir)
 
 				var stdout bytes.Buffer
-				if exitCode := app.RunInteractive([]string{"/memory"}, nil, &stdout, &stdout); exitCode != 0 {
+				if exitCode := app.RunInteractive([]string{"memory"}, nil, &stdout, &stdout); exitCode != 0 {
 					t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 				}
 			},
@@ -2373,7 +2338,7 @@ func TestInteractiveTacticalSurfacesStayWithinLatencySmokeBudget(t *testing.T) {
 				t.Setenv("JINI_STATE_DIR", stateDir)
 
 				var stdout bytes.Buffer
-				if exitCode := app.RunInteractive(nil, strings.NewReader("show what's ready?\n"), &stdout, &stdout); exitCode != 0 {
+				if exitCode := app.RunInteractive(nil, strings.NewReader("open\n"), &stdout, &stdout); exitCode != 0 {
 					t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 				}
 			},
@@ -2388,7 +2353,7 @@ func TestInteractiveTacticalSurfacesStayWithinLatencySmokeBudget(t *testing.T) {
 				t.Setenv("JINI_STATE_DIR", stateDir)
 
 				var stdout bytes.Buffer
-				if exitCode := app.RunInteractive(nil, strings.NewReader("make it fuller\n"), &stdout, &stdout); exitCode != 0 {
+				if exitCode := app.RunInteractive(nil, strings.NewReader("expand\n"), &stdout, &stdout); exitCode != 0 {
 					t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 				}
 			},
@@ -2421,19 +2386,16 @@ func TestInteractiveTacticalSurfacesStayWithinLatencySmokeBudget(t *testing.T) {
 	}
 }
 
-func TestTopLevelSlashHelpAliasesAreAccepted(t *testing.T) {
+func TestTopLevelSlashAliasesAreRejected(t *testing.T) {
 	cases := [][]string{
 		{"/help"},
 		{"/doctor"},
-		{"/model"},
 		{"/status"},
 		{"/init"},
 		{"/memory"},
 		{"/permissions"},
 		{"/route"},
-		{"/cost"},
 		{"/new"},
-		{"provider", "/doctor"},
 	}
 	for _, args := range cases {
 		t.Run(strings.Join(args, " "), func(t *testing.T) {
@@ -2442,11 +2404,11 @@ func TestTopLevelSlashHelpAliasesAreAccepted(t *testing.T) {
 
 			var stdout bytes.Buffer
 			exitCode := app.RunInteractive(args, nil, &stdout, &stdout)
-			if exitCode != 0 {
-				t.Fatalf("expected exit code 0 for %v, got %d with output:\n%s", args, exitCode, stdout.String())
+			if exitCode != 1 {
+				t.Fatalf("expected exit code 1 for %v, got %d with output:\n%s", args, exitCode, stdout.String())
 			}
-			if strings.Contains(stdout.String(), "Unknown command") {
-				t.Fatalf("expected familiar slash alias not to be unknown, got:\n%s", stdout.String())
+			if !strings.Contains(stdout.String(), "Unknown command") {
+				t.Fatalf("expected slash alias to be rejected, got:\n%s", stdout.String())
 			}
 		})
 	}
@@ -2802,7 +2764,7 @@ func TestCurrentWorkFreeformInputConfirmsBeforeStartingNewWork(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("plan me a 7 day paris trip\nstart new work\ncouple, around $2500, early October, mixed pace, central hotel area\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("plan me a 7 day paris trip\nstart\ncouple, around $2500, early October, mixed pace, central hotel area\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -2840,7 +2802,7 @@ func TestCurrentWorkFreeformInputCanKeepCurrentWork(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("plan me a 7 day paris trip\nkeep current work\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("plan me a 7 day paris trip\nkeep\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -2855,10 +2817,10 @@ func TestCurrentWorkFreeformInputCanKeepCurrentWork(t *testing.T) {
 		}
 	}
 	if strings.Contains(out, "7 Day Paris Trip") {
-		t.Fatalf("expected keep-current path not to start new work, got:\n%s", out)
+		t.Fatalf("expected keep path not to start new work, got:\n%s", out)
 	}
-	if strings.Contains(out, "Switch project") || strings.Contains(out, "Switch") {
-		t.Fatalf("expected interrupt prompt to hide switch-project when no other work exists, got:\n%s", out)
+	if strings.Contains(out, "Switch") {
+		t.Fatalf("expected interrupt prompt to hide switch when no other work exists, got:\n%s", out)
 	}
 	current := readCurrentWork(t, stateDir)
 	if current["pack_id"] != "meeting-followup" {
@@ -2897,7 +2859,7 @@ func TestCurrentWorkFreeformInputCanSwitchProjectFromInterruptPrompt(t *testing.
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("plan me a 7 day paris trip\nswitch project\n1\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("plan me a 7 day paris trip\nswitch\n1\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -3244,7 +3206,7 @@ func BenchmarkInteractiveNoWorkHelp(b *testing.B) {
 
 	for b.Loop() {
 		var stdout bytes.Buffer
-		if exitCode := app.RunInteractive(nil, strings.NewReader("/help\n"), &stdout, io.Discard); exitCode != 0 {
+		if exitCode := app.RunInteractive(nil, strings.NewReader("help\n"), &stdout, io.Discard); exitCode != 0 {
 			b.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 		}
 	}
@@ -3259,7 +3221,7 @@ func BenchmarkInteractiveCurrentWorkReadyShelf(b *testing.B) {
 
 	for b.Loop() {
 		var stdout bytes.Buffer
-		if exitCode := app.RunInteractive(nil, strings.NewReader("show what's ready?\n"), &stdout, io.Discard); exitCode != 0 {
+		if exitCode := app.RunInteractive(nil, strings.NewReader("open\n"), &stdout, io.Discard); exitCode != 0 {
 			b.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 		}
 	}
@@ -3274,7 +3236,7 @@ func BenchmarkInteractiveCurrentWorkOpenShelfSelection(b *testing.B) {
 
 	for b.Loop() {
 		var stdout bytes.Buffer
-		if exitCode := app.RunInteractive(nil, strings.NewReader("show what's ready?\n2\n"), &stdout, io.Discard); exitCode != 0 {
+		if exitCode := app.RunInteractive(nil, strings.NewReader("open\n2\n"), &stdout, io.Discard); exitCode != 0 {
 			b.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 		}
 	}
@@ -3289,7 +3251,7 @@ func BenchmarkInteractiveCurrentWorkFuller(b *testing.B) {
 
 	for b.Loop() {
 		var stdout bytes.Buffer
-		if exitCode := app.RunInteractive(nil, strings.NewReader("make it fuller\n"), &stdout, io.Discard); exitCode != 0 {
+		if exitCode := app.RunInteractive(nil, strings.NewReader("expand\n"), &stdout, io.Discard); exitCode != 0 {
 			b.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 		}
 	}

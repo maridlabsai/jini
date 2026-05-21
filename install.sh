@@ -357,7 +357,7 @@ command_path=${COMMAND_PATH}
 copy_mode=$([[ ${COPY_BINARY} -eq 1 ]] && printf copy || printf symlink)
 EOF
 
-"${COMMAND_PATH}" provider doctor >/dev/null
+"${COMMAND_PATH}" doctor >/dev/null
 
 say "Installed Jini"
 say "- version: ${VERSION}"

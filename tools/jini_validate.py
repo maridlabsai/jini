@@ -2136,7 +2136,7 @@ def build_publish_readiness() -> dict[str, Any]:
                     ]
                 )
                 for phrase in (
-                    "jini provider doctor",
+                    "jini doctor",
                     "Azure OpenAI",
                     "Amazon Bedrock",
                     "does not print",
@@ -2151,7 +2151,7 @@ def build_publish_readiness() -> dict[str, Any]:
                     ]
                 )
                 for phrase in (
-                    "jini provider doctor",
+                    "jini doctor",
                     "Azure OpenAI",
                     "Amazon Bedrock",
                     "does not print",
@@ -6243,28 +6243,8 @@ def cli_invocation() -> str:
     return "jini"
 
 
-CLI_ALIAS_MAP: dict[str, str] = {
-    "start": "setup",
-    "doctor": "provider",
-    "guide": "get-started",
-    "check": "outcome",
-    "status": "outcome",
-    "example": "try-example",
-    "plan": "recommend-execution",
-    "handoff": "stage-runtime-handoff",
-    "activate": "activate-runtime-target",
-    "run": "execute-flow",
-    "next": "execution-checklist",
-    "resume": "compact-context",
-}
-
-
 def normalize_cli_argv(argv: list[str]) -> list[str]:
-    if not argv:
-        return []
-    normalized = list(argv)
-    normalized[0] = CLI_ALIAS_MAP.get(normalized[0], normalized[0])
-    return normalized
+    return list(argv)
 
 
 def print_cli_overview() -> None:
@@ -6283,7 +6263,7 @@ def print_cli_overview() -> None:
     print()
     print("SCRIPTABLE")
     print(f"  {cli} setup --harness codex")
-    print(f"  {cli} check")
+    print(f"  {cli} status")
     print(f"  {cli} open")
     print(f"  {cli} run --repo /path/to/repo --harness codex")
     print(f"  {cli} doctor")
@@ -15393,7 +15373,7 @@ def main() -> int:
     status_parser.add_argument("path", nargs="?", type=Path)
 
     outcome_parser = subparsers.add_parser(
-        "outcome",
+        "status",
         help="Answer what is done, what happens next, and what is still missing before the work is truly across the line",
     )
     outcome_parser.add_argument("path", nargs="?", type=Path)
@@ -15402,7 +15382,7 @@ def main() -> int:
         "--format",
         choices=["text", "json"],
         default="text",
-        help="Output format for the outcome view",
+        help="Output format for the status view",
     )
 
     artifacts_parser = subparsers.add_parser(
@@ -15572,15 +15552,8 @@ def main() -> int:
     )
 
     provider_parser = subparsers.add_parser(
-        "provider",
+        "doctor",
         help="Inspect backstage model provider configuration without printing secrets",
-    )
-    provider_parser.add_argument(
-        "provider_command",
-        nargs="?",
-        default="doctor",
-        choices=["doctor"],
-        help="Provider action to run",
     )
     provider_parser.add_argument(
         "--format",
@@ -15695,7 +15668,7 @@ def main() -> int:
     )
 
     checklist_parser = subparsers.add_parser(
-        "execution-checklist",
+        "next",
         help="Build a concrete next-step checklist from pack state, repo context, and evidence posture",
     )
     checklist_parser.add_argument("path", nargs="?", type=Path)
@@ -15712,11 +15685,11 @@ def main() -> int:
         "--format",
         choices=["text", "json"],
         default="text",
-        help="Output format for the checklist",
+        help="Output format for the next-step checklist",
     )
 
     compact_context_parser = subparsers.add_parser(
-        "compact-context",
+        "resume",
         help="Emit a compact resume context slice for low-token reloads and memory-aware resumptions",
     )
     compact_context_parser.add_argument("path", nargs="?", type=Path)
@@ -15745,7 +15718,7 @@ def main() -> int:
         "--format",
         choices=["text", "json"],
         default="text",
-        help="Output format for the compact context",
+        help="Output format for the resume context",
     )
 
     adapters_parser = subparsers.add_parser(
@@ -15918,7 +15891,7 @@ def main() -> int:
     )
 
     execute_flow_parser = subparsers.add_parser(
-        "execute-flow",
+        "run",
         help="Run the guided Jini execution loop with compact context reuse, optional runtime activation, and local adapter apply",
     )
     execute_flow_parser.add_argument("path", nargs="?", type=Path)
@@ -15981,7 +15954,7 @@ def main() -> int:
         "--format",
         choices=["text", "json"],
         default="text",
-        help="Output format for the guided flow report",
+        help="Output format for the run report",
     )
 
     policy_review_parser = subparsers.add_parser(
@@ -16980,9 +16953,9 @@ def main() -> int:
         print_pack_status(summary)
         return 1 if summary["validation_errors"] else 0
 
-    if args.command == "outcome":
+    if args.command == "status":
         try:
-            pack_dir = resolve_context_pack_dir(args.path, registry, command_label="outcome")
+            pack_dir = resolve_context_pack_dir(args.path, registry, command_label="status")
             report = build_outcome_view(pack_dir, registry, repo_path=args.repo)
         except (FileNotFoundError, TypeError, ValueError) as exc:
             failing_path = args.path if args.path is not None else Path("<current-work>")
@@ -17215,7 +17188,7 @@ def main() -> int:
             print_setup_result(result)
         return 0 if result.get("status") == "ok" else 1
 
-    if args.command == "provider":
+    if args.command == "doctor":
         report = build_provider_doctor()
         if args.format == "json":
             print(json.dumps(report, indent=2))
@@ -17314,9 +17287,9 @@ def main() -> int:
             print_framework_evolution_backtest(backtest)
         return 0
 
-    if args.command == "execution-checklist":
+    if args.command == "next":
         try:
-            pack_dir = resolve_context_pack_dir(args.path, registry, command_label="execution-checklist")
+            pack_dir = resolve_context_pack_dir(args.path, registry, command_label="next")
             checklist = build_execution_checklist(
                 pack_dir,
                 registry,
@@ -17348,9 +17321,9 @@ def main() -> int:
         )
         return 0
 
-    if args.command == "compact-context":
+    if args.command == "resume":
         try:
-            pack_dir = resolve_context_pack_dir(args.path, registry, command_label="compact-context")
+            pack_dir = resolve_context_pack_dir(args.path, registry, command_label="resume")
             compact = build_compact_context(
                 pack_dir,
                 registry,
@@ -17533,9 +17506,9 @@ def main() -> int:
             print_runtime_activation(activation)
         return 0
 
-    if args.command == "execute-flow":
+    if args.command == "run":
         try:
-            pack_dir = resolve_context_pack_dir(args.path, registry, command_label="execute-flow")
+            pack_dir = resolve_context_pack_dir(args.path, registry, command_label="run")
             report, _flow_path = execute_flow(
                 pack_dir,
                 registry,

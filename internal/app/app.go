@@ -78,15 +78,14 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 			return runLauncher(stdin, stdout, stderr)
 		}
 
-		switch normalizeName(args[0]) {
-		case "help", "h":
+		switch normalizeCommandName(args[0]) {
+		case "help":
 			return runHelp(stdout, stderr)
 		case "status":
 			return runStatus(stdout, stderr)
-		case "doctor", "model":
-			renderInteractiveProviderDoctor(stdout)
-			return 0
-		case "route", "cost":
+		case "doctor":
+			return runProvider(nil, stdout, stderr)
+		case "route":
 			renderRouteCostStatus(stdout)
 			return 0
 		case "memory":
@@ -99,7 +98,7 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 			}
 			renderNoCurrentMemoryStatus(stdout)
 			return 0
-		case "permissions", "permission":
+		case "permissions":
 			renderSafePermissionsStatus(stdout)
 			return 0
 		case "init":
@@ -107,11 +106,9 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 			fmt.Fprintln(stdout)
 			renderNewWorkLauncher(stdout)
 			return 0
-		case "new", "new work":
+		case "new":
 			renderNewWorkLauncher(stdout)
 			return 0
-		case "check":
-			return runCheck(args[1:], stdout, stderr)
 		case "observe":
 			return runObserve(args[1:], stdout, stderr)
 		case "open":
@@ -125,8 +122,6 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 				return 0
 			}
 			return runLauncher(stdin, stdout, stderr)
-		case "provider":
-			return runProvider(args[1:], stdout, stderr)
 		default:
 			fmt.Fprintf(stderr, "Unknown command %q.\n", args[0])
 			fmt.Fprintln(stderr, "Try `jini`, `jini doctor`, or a scriptable command such as `jini status`.")
@@ -191,6 +186,10 @@ func runLauncher(stdin io.Reader, stdout, stderr io.Writer) int {
 }
 
 func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
+	if isSlashCommandInput(action) {
+		fmt.Fprintf(stderr, "Unknown command %q.\n", strings.TrimSpace(action))
+		return 1
+	}
 	if resolution, resolved, err := resolveActiveAskAction(summary.Dir, summary, action); resolved {
 		if err != nil {
 			fmt.Fprintf(stderr, "Could not save the decision: %v\n", err)
@@ -199,33 +198,33 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		fmt.Fprintf(stdout, "Recorded decision: %s.\n", resolution)
 		return 0
 	}
-	switch normalizeName(action) {
-	case "help", "?", "show help":
+	switch normalizeCommandName(action) {
+	case "help":
 		renderCurrentWorkHelp(stdout, summary)
-	case "status", "show status", "check":
+	case "status":
 		renderCheck(stdout, summary)
-	case "resume", "resume this", "continue this":
+	case "resume":
 		if !renderFocusedContinuation(stdout, summary) {
 			renderCheck(stdout, summary)
 			return 0
 		}
-	case "1", "continue", "continue current work", "keep going", "proceed", "go ahead", "next":
+	case "continue":
 		if !renderNextContinuation(stdout, summary) {
 			renderCheck(stdout, summary)
 			return 0
 		}
-	case "2", "open", "open-ready", "open ready work", "open ready", "open whats ready", "open what's ready", "open what is ready", "show whats ready", "show what's ready", "show what is ready":
+	case "open":
 		return runInteractiveOpenShelf(summary, scanner, stdout, stderr)
-	case "context", "show-context", "show what jini used", "what jini used", "show context", "what did you use", "what shaped this":
+	case "context":
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "context"})
-	case "missing", "show-missing", "see what is still missing", "show what is missing", "show missing":
+	case "missing":
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "missing"})
-	case "make it fuller", "fuller", "show more", "expand", "expand this":
+	case "expand":
 		if !renderNextContinuation(stdout, summary) {
 			renderCheck(stdout, summary)
 			return 0
 		}
-	case "shorter", "make it shorter", "tighten this", "make this shorter":
+	case "shorter":
 		item, err := applyArtifactTransform(summary, "shorter")
 		if err != nil {
 			fmt.Fprintf(stderr, "Could not revise the artifact: %v\n", err)
@@ -234,7 +233,7 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		renderItem(stdout, item)
 		fmt.Fprintln(stdout)
 		fmt.Fprintln(stdout, "Saved a restorable version. You can say `Versions` or `Undo`.")
-	case "executive", "make it executive", "executive version", "make this executive":
+	case "executive":
 		item, err := applyArtifactTransform(summary, "executive")
 		if err != nil {
 			fmt.Fprintf(stderr, "Could not revise the artifact: %v\n", err)
@@ -243,7 +242,7 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		renderItem(stdout, item)
 		fmt.Fprintln(stdout)
 		fmt.Fprintln(stdout, "Saved a restorable version. You can say `Versions` or `Undo`.")
-	case "checklist", "turn this into a checklist", "make this a checklist":
+	case "checklist":
 		item, err := applyArtifactTransform(summary, "checklist")
 		if err != nil {
 			fmt.Fprintf(stderr, "Could not revise the artifact: %v\n", err)
@@ -252,9 +251,9 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		renderItem(stdout, item)
 		fmt.Fprintln(stdout)
 		fmt.Fprintln(stdout, "Saved a restorable version. You can say `Versions` or `Undo`.")
-	case "show versions", "show version history", "versions", "history":
+	case "versions":
 		renderArtifactVersions(stdout, summary)
-	case "undo last change", "undo", "restore last change", "revert last change":
+	case "undo":
 		item, err := undoLastArtifactChange(summary)
 		if err != nil {
 			fmt.Fprintf(stderr, "Could not restore the artifact: %v\n", err)
@@ -263,78 +262,78 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		fmt.Fprintln(stdout, "Restored the previous version.")
 		fmt.Fprintln(stdout)
 		renderItem(stdout, item)
-	case "upvote", "model upvote", "upvote model", "model was right":
+	case "upvote":
 		if err := saveModelFeedback(summary.Dir, "upvoted", ""); err != nil {
 			fmt.Fprintf(stderr, "Could not save model feedback: %v\n", err)
 			return 1
 		}
 		fmt.Fprintln(stdout, "Saved model feedback: upvoted.")
-	case "accept", "accepted as is", "accept as is", "artifact accepted", "accepted":
+	case "accept":
 		if err := saveModelFeedback(summary.Dir, "accepted-as-is", currentFeedbackArtifactPath(summary)); err != nil {
 			fmt.Fprintf(stderr, "Could not save artifact feedback: %v\n", err)
 			return 1
 		}
 		recordThreadDecision(summary.Dir, summary, "Accept")
 		fmt.Fprintln(stdout, "Saved artifact feedback: accept.")
-	case "edit", "needed light edits", "needs light edits", "light edits":
+	case "edit":
 		if err := saveModelFeedback(summary.Dir, "needed-light-edits", currentFeedbackArtifactPath(summary)); err != nil {
 			fmt.Fprintf(stderr, "Could not save artifact feedback: %v\n", err)
 			return 1
 		}
 		recordThreadDecision(summary.Dir, summary, "Edit")
 		fmt.Fprintln(stdout, "Saved artifact feedback: edit.")
-	case "use", "used this", "used it", "kept this":
+	case "use":
 		if err := saveArtifactOutcome(summary.Dir, "used-this", currentFeedbackArtifactPath(summary)); err != nil {
 			fmt.Fprintf(stderr, "Could not save artifact outcome: %v\n", err)
 			return 1
 		}
 		recordThreadDecision(summary.Dir, summary, "Use")
 		fmt.Fprintln(stdout, "Saved artifact outcome: use.")
-	case "share", "shared this", "sent this", "forwarded this", "handed this off", "used this to hand off":
+	case "share":
 		if err := saveArtifactOutcome(summary.Dir, "shared-this", currentFeedbackArtifactPath(summary)); err != nil {
 			fmt.Fprintf(stderr, "Could not save artifact outcome: %v\n", err)
 			return 1
 		}
 		recordThreadDecision(summary.Dir, summary, "Share")
 		fmt.Fprintln(stdout, "Saved artifact outcome: share.")
-	case "downvote", "model downvote", "downvote model", "model was wrong":
+	case "downvote":
 		if err := saveModelFeedback(summary.Dir, "downvoted", ""); err != nil {
 			fmt.Fprintf(stderr, "Could not save model feedback: %v\n", err)
 			return 1
 		}
 		fmt.Fprintln(stdout, "Saved model feedback: downvoted.")
-	case "reject", "not useful", "artifact was not useful", "not good enough":
+	case "reject":
 		if err := saveModelFeedback(summary.Dir, "not-useful", currentFeedbackArtifactPath(summary)); err != nil {
 			fmt.Fprintf(stderr, "Could not save artifact feedback: %v\n", err)
 			return 1
 		}
 		recordThreadDecision(summary.Dir, summary, "Reject")
 		fmt.Fprintln(stdout, "Saved artifact feedback: reject.")
-	case "replace", "replaced this", "rewrote this", "made a new one", "did not use this":
+	case "replace":
 		if err := saveArtifactOutcome(summary.Dir, "replaced-this", currentFeedbackArtifactPath(summary)); err != nil {
 			fmt.Fprintf(stderr, "Could not save artifact outcome: %v\n", err)
 			return 1
 		}
 		recordThreadDecision(summary.Dir, summary, "Replace")
 		fmt.Fprintln(stdout, "Saved artifact outcome: replace.")
-	case "switch", "switch-work", "switch work", "show active work", "active work", "switch project":
+	case "switch":
 		return runSwitchWorkPicker(summary, scanner, stdout, stderr)
-	case "doctor", "model":
+	case "doctor":
 		renderInteractiveProviderDoctor(stdout)
-	case "route", "cost":
+	case "route":
 		renderRouteCostStatus(stdout)
 	case "memory":
 		renderCurrentWorkMemoryStatus(stdout, summary)
-	case "permissions", "permission":
+	case "permissions":
 		renderSafePermissionsStatus(stdout)
 	case "init":
 		renderNoInitRequired(stdout)
 	case "clear":
 		fmt.Fprintln(stdout, "Nothing was deleted.")
 		fmt.Fprintln(stdout, "Type `Start` to switch focus without removing this work.")
-	case "plan this first", "plan first", "plan this", "plan", "requirements", "design", "help me plan this":
+	case "plan":
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "plan"})
-	case "3", "start", "start-new", "new", "start new", "start something new", "start something else", "start new work":
+	case "start":
 		if scanner == nil {
 			renderNewWorkLauncher(stdout)
 			return 0
@@ -772,6 +771,10 @@ func runNewWorkIntakeWithScanner(session *bufio.Scanner, stdout, stderr io.Write
 		if !ok {
 			return 0
 		}
+		if isSlashCommandInput(firstRaw) {
+			fmt.Fprintf(stderr, "Unknown command %q.\n", strings.TrimSpace(firstRaw))
+			return 1
+		}
 		if isHelpInput(firstRaw) {
 			fmt.Fprintln(stdout)
 			renderNewWorkLauncher(stdout)
@@ -959,7 +962,7 @@ func isAcknowledgementOnly(raw string) bool {
 
 func isBareContinuationIntent(raw string) bool {
 	switch normalizeName(raw) {
-	case "continue", "proceed", "go ahead", "keep going", "next":
+	case "continue":
 		return true
 	default:
 		return false
@@ -968,7 +971,7 @@ func isBareContinuationIntent(raw string) bool {
 
 func isHelpInput(raw string) bool {
 	switch normalizeName(raw) {
-	case "help", "?", "show help", "examples", "setup help", "what can you do":
+	case "help", "what can you do", "?":
 		return true
 	default:
 		return false
@@ -976,16 +979,16 @@ func isHelpInput(raw string) bool {
 }
 
 func maybeHandleNewWorkUtilityIntent(raw string, stdout io.Writer) (bool, int) {
-	switch normalizeName(raw) {
+	switch normalizeCommandName(raw) {
 	case "status":
 		fmt.Fprintln(stdout)
 		renderNoCurrentWorkStatus(stdout)
 		return true, 0
-	case "doctor", "model":
+	case "doctor":
 		fmt.Fprintln(stdout)
 		renderInteractiveProviderDoctor(stdout)
 		return true, 0
-	case "route", "cost":
+	case "route":
 		fmt.Fprintln(stdout)
 		renderRouteCostStatus(stdout)
 		return true, 0
@@ -993,7 +996,7 @@ func maybeHandleNewWorkUtilityIntent(raw string, stdout io.Writer) (bool, int) {
 		fmt.Fprintln(stdout)
 		renderNoCurrentMemoryStatus(stdout)
 		return true, 0
-	case "permissions", "permission":
+	case "permissions":
 		fmt.Fprintln(stdout)
 		renderSafePermissionsStatus(stdout)
 		return true, 0
@@ -1723,7 +1726,7 @@ func runObserve(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "%v\n", err)
 		return 1
 	}
-	if len(args) == 0 || normalizeName(args[0]) == "status" {
+	if len(args) == 0 || normalizeCommandName(args[0]) == "status" {
 		if err := scanExternalObservations(summary.Dir); err != nil {
 			fmt.Fprintf(stderr, "Could not scan observed files: %v\n", err)
 			return 1
@@ -1731,7 +1734,7 @@ func runObserve(args []string, stdout, stderr io.Writer) int {
 		renderExternalObservationStatus(stdout, summary.Dir)
 		return 0
 	}
-	switch normalizeName(args[0]) {
+	switch normalizeCommandName(args[0]) {
 	case "add":
 		targetPath, connectorID, parseErr := parseObserveAddArgs(args[1:])
 		if parseErr != nil {
@@ -2201,7 +2204,7 @@ func renderNewWorkLauncher(w io.Writer) {
 	fmt.Fprintln(w, "Nothing will be sent yet.")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "If you want help shaping a messy ask, type `I'm not sure`.")
-	fmt.Fprintln(w, "If you need commands, type `help` or `/help`.")
+	fmt.Fprintln(w, "If you need commands, type `help`.")
 }
 
 func renderNewWorkPrompt(w io.Writer) {
@@ -2236,7 +2239,7 @@ func renderSafePermissionsStatus(w io.Writer) {
 func renderRouteCostStatus(w io.Writer) {
 	fmt.Fprintln(w, "Route and cost")
 	fmt.Fprintf(w, "Current route: %s.\n", workingWithLabel(detectProvider()))
-	fmt.Fprintln(w, "Least-expense capable route is the default; use `/doctor` to inspect setup or `Auto` to restore automatic routing.")
+	fmt.Fprintln(w, "Least-expense capable route is the default; use `doctor` to inspect setup or `auto` to restore automatic routing.")
 }
 
 func renderRouteDecisionCard(w io.Writer, request providerGenerationRequest, decision routeDecision) {
@@ -2306,28 +2309,22 @@ func renderRouteDecisionCard(w io.Writer, request providerGenerationRequest, dec
 }
 
 func maybeHandleProviderSetupIntent(raw string, scanner *bufio.Scanner, stdout, stderr io.Writer) (bool, int) {
-	switch normalizeName(raw) {
-	case "use claude code", "connect claude code", "claude code", "claude":
+	switch normalizeCommandName(raw) {
+	case "claude":
 		return true, runProviderSetupWizard("claude-code", scanner, stdout, stderr)
-	case "use bedrock sonnet", "connect bedrock sonnet", "bedrock sonnet", "bedrock":
+	case "bedrock":
 		return true, runProviderSetupWizard("bedrock-sonnet", scanner, stdout, stderr)
-	case "use chatgpt", "connect chatgpt", "chatgpt":
+	case "chatgpt":
 		return true, runProviderSetupWizard("chatgpt", scanner, stdout, stderr)
-	case "use codex", "connect codex", "codex":
+	case "codex":
 		return true, runProviderSetupWizard("codex", scanner, stdout, stderr)
-	case "use azure openai", "connect azure openai", "azure":
+	case "azure":
 		return true, runProviderSetupWizard("azure-openai", scanner, stdout, stderr)
-	case "use claude", "connect claude", "use anthropic", "anthropic":
-		return true, runProviderSetupWizard("claude", scanner, stdout, stderr)
-	case "use bedrock", "connect bedrock", "amazon bedrock":
-		return true, runProviderSetupWizard("bedrock", scanner, stdout, stderr)
-	case "use azure", "connect azure", "azure openai", "azure open ai":
-		return true, runProviderSetupWizard("azure-openai", scanner, stdout, stderr)
-	case "use local slm", "connect local slm", "local slm", "local model", "local":
+	case "local":
 		return true, runProviderSetupWizard("local-slm", scanner, stdout, stderr)
-	case "use auto", "auto", "choose automatically":
+	case "auto":
 		return true, runProviderSetupWizard("auto", scanner, stdout, stderr)
-	case "use local preview", "local preview", "preview", "work offline":
+	case "preview":
 		return true, runProviderSetupWizard("local-preview", scanner, stdout, stderr)
 	default:
 		return false, 0
@@ -2731,13 +2728,13 @@ func confirmCurrentWorkInterruptionAndContinue(summary *workSummary, candidate s
 	}
 	fmt.Fprintln(stdout)
 	switch normalizeName(choice) {
-	case "1", "start", "start-new", "start new work", "start new", "start something new", "new", "switch focus":
+	case "start":
 		return startNewWorkFromRawInput(candidate, scanner, stdout, stderr)
-	case "2", "keep", "keep-current", "keep current work", "keep current", "stay here", "cancel", "never mind":
+	case "keep":
 		fmt.Fprintln(stdout, "Keeping current work.")
 		fmt.Fprintln(stdout, "Use `Continue`, `Open`, or paste a new request when you mean to switch.")
 		return 0
-	case "3", "switch", "switch-work", "switch project", "show active work", "active work":
+	case "switch":
 		return runSwitchWorkPicker(summary, scanner, stdout, stderr)
 	default:
 		if canSwitch {
@@ -3059,6 +3056,10 @@ func postResultAlsoReady(items []catalogItem, primary *catalogItem) []string {
 }
 
 func handlePostResultAction(action string, summary *workSummary, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
+	if isSlashCommandInput(action) {
+		fmt.Fprintf(stderr, "Unknown command %q.\n", strings.TrimSpace(action))
+		return 1
+	}
 	if resolution, resolved, err := resolveActiveAskAction(summary.Dir, summary, action); resolved {
 		if err != nil {
 			fmt.Fprintf(stderr, "Could not save the decision: %v\n", err)
@@ -3067,39 +3068,39 @@ func handlePostResultAction(action string, summary *workSummary, scanner *bufio.
 		fmt.Fprintf(stdout, "Recorded decision: %s.\n", resolution)
 		return 0
 	}
-	switch normalizeName(action) {
-	case "resume", "resume this", "continue this":
+	switch normalizeCommandName(action) {
+	case "resume":
 		if !renderFocusedContinuation(stdout, summary) {
 			renderCheck(stdout, summary)
 			return 0
 		}
-	case "keep going", "1", "continue", "proceed", "go ahead", "next":
+	case "continue":
 		if !renderNextContinuation(stdout, summary) {
 			renderCheck(stdout, summary)
 			return 0
 		}
-	case "open", "open-ready", "open whats ready", "open what's ready", "open what is ready", "show whats ready", "show what's ready", "show what is ready", "2":
+	case "open":
 		return runInteractiveOpenShelf(summary, scanner, stdout, stderr)
-	case "status", "show status", "check":
+	case "status":
 		renderCheck(stdout, summary)
-	case "context", "show-context", "show what jini used", "what jini used", "show context", "what did you use", "what shaped this":
+	case "context":
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "context"})
-	case "missing", "show-missing", "see what is still missing", "show what is missing", "show missing", "3":
+	case "missing":
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "missing"})
-	case "make it fuller", "fuller", "show more", "expand", "expand this", "4":
+	case "expand":
 		if !renderNextContinuation(stdout, summary) {
 			renderCheck(stdout, summary)
 			return 0
 		}
-	case "shorter", "make it shorter", "tighten this", "make this shorter":
+	case "shorter":
 		return renderArtifactTransform(summary, "shorter", stdout, stderr)
-	case "executive", "make it executive", "executive version", "make this executive":
+	case "executive":
 		return renderArtifactTransform(summary, "executive", stdout, stderr)
-	case "checklist", "turn this into a checklist", "make this a checklist":
+	case "checklist":
 		return renderArtifactTransform(summary, "checklist", stdout, stderr)
-	case "show versions", "show version history", "versions", "history":
+	case "versions":
 		renderArtifactVersions(stdout, summary)
-	case "undo last change", "undo", "restore last change", "revert last change":
+	case "undo":
 		item, err := undoLastArtifactChange(summary)
 		if err != nil {
 			fmt.Fprintf(stderr, "Could not restore the artifact: %v\n", err)
@@ -3108,21 +3109,21 @@ func handlePostResultAction(action string, summary *workSummary, scanner *bufio.
 		fmt.Fprintln(stdout, "Restored the previous version.")
 		fmt.Fprintln(stdout)
 		renderItem(stdout, item)
-	case "plan this first", "plan first", "plan this", "plan", "help me plan this", "5":
+	case "plan":
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "plan"})
-	case "accept", "accepted as is", "accept as is", "artifact accepted", "accepted":
+	case "accept":
 		return recordArtifactFeedback(summary, "accepted-as-is", "Accept", stdout, stderr)
-	case "edit", "needed light edits", "needs light edits", "light edits":
+	case "edit":
 		return recordArtifactFeedback(summary, "needed-light-edits", "Edit", stdout, stderr)
-	case "use", "used this", "used it", "kept this":
+	case "use":
 		return recordArtifactOutcome(summary, "used-this", "Use", stdout, stderr)
-	case "share", "shared this", "sent this", "forwarded this", "handed this off", "used this to hand off":
+	case "share":
 		return recordArtifactOutcome(summary, "shared-this", "Share", stdout, stderr)
-	case "reject", "not useful", "artifact was not useful", "not good enough":
+	case "reject":
 		return recordArtifactFeedback(summary, "not-useful", "Reject", stdout, stderr)
-	case "replace", "replaced this", "rewrote this", "made a new one", "did not use this":
+	case "replace":
 		return recordArtifactOutcome(summary, "replaced-this", "Replace", stdout, stderr)
-	case "start something new", "start new work", "new", "6":
+	case "start":
 		renderNewWorkLauncher(stdout)
 	default:
 		if isAcknowledgementOnly(action) {
@@ -3506,9 +3507,9 @@ func renderCurrentWorkHelp(w io.Writer, summary *workSummary) {
 		renderArtifactFeedbackChoices(w)
 	}
 	fmt.Fprintln(w)
-		renderPrimaryActionMenu(w, summary, "Actions", "Open")
+	renderPrimaryActionMenu(w, summary, "Actions", "Open")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Familiar commands also work: `/status`, `/doctor`, `/model`, `/init`, `/memory`, `/permissions`, `/cost`.")
+	fmt.Fprintln(w, "Commands: `status`, `doctor`, `memory`, `permissions`, `route`, `open`, `start`.")
 }
 
 func runActiveWorkLauncher(active []*workSummary, stdin io.Reader, stdout, stderr io.Writer) int {
@@ -3532,8 +3533,8 @@ func renderActiveWorkLauncher(w io.Writer, active []*workSummary) {
 func handleActiveWorkSelection(action string, active []*workSummary, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
 	selection, err := resolveActiveWorkSelection(action, active)
 	if err != nil {
-		switch normalizeName(action) {
-		case "start something new", "start something else", "start new work", "new", "start new":
+		switch normalizeCommandName(action) {
+		case "start":
 			if scanner == nil {
 				renderNewWorkLauncher(stdout)
 				return 0
@@ -3634,7 +3635,7 @@ func otherActiveWorkSummaries(current *workSummary) []*workSummary {
 }
 
 func resolveActiveWorkSelection(action string, active []*workSummary) (*workSummary, error) {
-	normalized := normalizeName(action)
+	normalized := normalizeCommandName(action)
 	for index, item := range active {
 		if normalized == normalizeName(fmt.Sprintf("%d", index+1)) || normalized == normalizeName(item.Title) {
 			return item, nil
@@ -3882,6 +3883,30 @@ func normalizeName(value string) string {
 		}
 	}
 	return strings.Join(strings.Fields(builder.String()), " ")
+}
+
+func normalizeCommandName(value string) string {
+	trimmed := strings.TrimSpace(value)
+	if strings.HasPrefix(trimmed, "/") {
+		return ""
+	}
+	return normalizeName(value)
+}
+
+func isSlashCommandInput(value string) bool {
+	trimmed := strings.TrimSpace(value)
+	if !strings.HasPrefix(trimmed, "/") {
+		return false
+	}
+	if strings.Contains(trimmed[1:], "/") {
+		return false
+	}
+	for _, r := range trimmed[1:] {
+		if !(unicode.IsLetter(r) || unicode.IsDigit(r) || r == '-' || r == '_') {
+			return false
+		}
+	}
+	return len(trimmed) > 1
 }
 
 func containsAny(value string, candidates []string) bool {

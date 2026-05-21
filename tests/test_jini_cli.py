@@ -380,22 +380,20 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("jini status", result.stdout)
         self.assertNotIn("jini open", result.stdout)
 
-    def test_start_alias_still_resolves_to_setup_surface(self) -> None:
+    def test_start_alias_is_rejected(self) -> None:
         prefix = self.tmp / "setup-start-alias"
         result = self.run_cli("start", "--harness", "codex", "--prefix", prefix)
-        self.assert_ok(result)
-        self.assertIn("HARNESS codex", result.stdout)
-        self.assertIn(f"PREFIX  {prefix.resolve()}", result.stdout)
+        self.assertNotEqual(0, result.returncode)
 
-    def test_guide_alias_resolves_to_get_started(self) -> None:
-        result = self.run_cli("guide", "--harness", "codex")
+    def test_get_started_command_reports_beginner_guide(self) -> None:
+        result = self.run_cli("get-started", "--harness", "codex")
         self.assert_ok(result)
         self.assertIn("BEGINNER", result.stdout)
         self.assertIn("jini", result.stdout)
         self.assertIn("entering the Jini shell", result.stdout)
 
-    def test_example_alias_resolves_to_try_example(self) -> None:
-        result = self.run_cli("example", "research-prd", "--format", "json")
+    def test_try_example_command_reports_research_prd(self) -> None:
+        result = self.run_cli("try-example", "research-prd", "--format", "json")
         self.assert_ok(result)
         report = json.loads(result.stdout)
         self.assertEqual("research-prd", report["example_id"])
@@ -403,7 +401,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue(any(item == "jini" for item in report["continue_with"]))
         self.assertTrue(any(item == "Inside Jini: Open" for item in report["continue_with"]))
 
-    def test_next_and_resume_aliases_resolve(self) -> None:
+    def test_next_and_resume_commands_resolve(self) -> None:
         pack_dir = self.compile_research_pack()
 
         next_result = self.run_cli("next", pack_dir, "--format", "json")
@@ -416,9 +414,9 @@ class JiniCliConformanceTests(unittest.TestCase):
         compact = json.loads(resume_result.stdout)
         self.assertEqual("research-prd", compact["pack_id"])
 
-    def test_outcome_view_reports_plain_questions_and_follow_on_commands(self) -> None:
+    def test_status_view_reports_plain_questions_and_follow_on_commands(self) -> None:
         pack_dir = self.compile_research_pack()
-        result = self.run_cli("outcome", pack_dir)
+        result = self.run_cli("status", pack_dir)
         self.assert_ok(result)
         self.assertIn("WHAT IS DONE?", result.stdout)
         self.assertIn("WHAT HAPPENS NEXT?", result.stdout)
@@ -427,15 +425,15 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("jini next ", result.stdout)
         self.assertIn("jini resume ", result.stdout)
 
-    def test_example_sets_current_work_for_pathless_outcome_and_artifacts(self) -> None:
+    def test_example_sets_current_work_for_pathless_status_and_artifacts(self) -> None:
         example_output = self.tmp / "research-example"
-        result = self.run_cli("example", "research-prd", "--output", example_output)
+        result = self.run_cli("try-example", "research-prd", "--output", example_output)
         self.assert_ok(result)
 
-        outcome = self.run_cli("outcome")
-        self.assert_ok(outcome)
-        self.assertIn("WORK   example-research-prd", outcome.stdout)
-        self.assertIn("READY NOW", outcome.stdout)
+        status = self.run_cli("status")
+        self.assert_ok(status)
+        self.assertIn("WORK   example-research-prd", status.stdout)
+        self.assertIn("READY NOW", status.stdout)
 
         artifacts = self.run_cli("artifacts")
         self.assert_ok(artifacts)
@@ -446,8 +444,8 @@ class JiniCliConformanceTests(unittest.TestCase):
     def test_show_artifact_uses_current_work_without_path(self) -> None:
         pack_dir = self.compile_travel_pack()
 
-        outcome = self.run_cli("outcome", pack_dir)
-        self.assert_ok(outcome)
+        status = self.run_cli("status", pack_dir)
+        self.assert_ok(status)
 
         show = self.run_cli("show", "itinerary")
         self.assert_ok(show)
@@ -457,13 +455,13 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(open_result)
         self.assertIn(str((pack_dir / "views" / "itinerary.md").resolve()), open_result.stdout.strip())
 
-    def test_outcome_without_current_work_fails_cleanly(self) -> None:
-        result = self.run_cli("outcome")
+    def test_status_without_current_work_fails_cleanly(self) -> None:
+        result = self.run_cli("status")
         self.assert_error(result)
         self.assertIn("Nothing is in progress yet. Run `jini` to start something", result.stdout)
 
-    def test_outcome_missing_path_returns_friendly_error(self) -> None:
-        result = self.run_cli("outcome", self.tmp / "missing-pack")
+    def test_status_missing_path_returns_friendly_error(self) -> None:
+        result = self.run_cli("status", self.tmp / "missing-pack")
         self.assert_error(result)
         self.assertIn("ERROR Pack path is missing required Jini files", result.stdout)
         self.assertEqual("", result.stderr)
@@ -478,9 +476,9 @@ class JiniCliConformanceTests(unittest.TestCase):
         codex = next(item for item in report["harnesses"] if item["id"] == "codex")
         self.assertEqual("jini", codex["start_command"])
 
-    def test_plan_alias_resolves_to_recommend_execution(self) -> None:
+    def test_recommend_execution_command_reports_pack(self) -> None:
         pack_dir = self.compile_research_pack()
-        result = self.run_cli("plan", pack_dir, "--format", "json")
+        result = self.run_cli("recommend-execution", pack_dir, "--format", "json")
         self.assert_ok(result)
         report = json.loads(result.stdout)
         self.assertEqual("research-prd", report["pack_id"])
@@ -839,7 +837,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(self.run_cli("bind-home", pack_dir, "--home", home))
 
         result = self.run_cli(
-            "compact-context",
+            "resume",
             pack_dir,
             "--max-chars",
             "700",
@@ -907,7 +905,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         home = self.personal_home()
         self.assert_ok(self.run_cli("bootstrap-home", home))
         self.assert_ok(self.run_cli("bind-home", pack_dir, "--home", home))
-        self.assert_ok(self.run_cli("compact-context", pack_dir, "--repo", repo))
+        self.assert_ok(self.run_cli("resume", pack_dir, "--repo", repo))
         self.assert_ok(self.run_cli("run-pack", pack_dir, "--mode", "supervised"))
 
         result = self.run_cli("learning-snapshot", pack_dir, "--format", "json")
@@ -1470,12 +1468,12 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertGreaterEqual(report["summary"]["passed"], 1)
         self.assertFalse((repo / "PWN.sh").exists())
 
-    def test_execution_checklist_surfaces_repo_targets_and_harvest_step(self) -> None:
+    def test_next_surfaces_repo_targets_and_harvest_step(self) -> None:
         pack_dir = self.compile_research_pack()
         repo = self.create_repo_fixture()
 
         result = self.run_cli(
-            "execution-checklist",
+            "next",
             pack_dir,
             "--repo",
             repo,
@@ -1497,7 +1495,7 @@ class JiniCliConformanceTests(unittest.TestCase):
             )
         )
 
-    def test_compact_context_surfaces_latest_harvest_and_unresolved_tasks(self) -> None:
+    def test_resume_surfaces_latest_harvest_and_unresolved_tasks(self) -> None:
         pack_dir = self.compile_research_pack()
         repo = self.create_repo_fixture()
 
@@ -1517,7 +1515,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         )
 
         result = self.run_cli(
-            "compact-context",
+            "resume",
             pack_dir,
             "--repo",
             repo,
@@ -1534,12 +1532,12 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("ready", compact["latest_harvest"]["readiness"])
         self.assertTrue(any("State anchor:" in item for item in compact["resume_items"]))
 
-    def test_compact_context_applies_token_budget_and_trim(self) -> None:
+    def test_resume_applies_token_budget_and_trim(self) -> None:
         pack_dir = self.compile_research_pack()
         repo = self.create_repo_fixture()
 
         result = self.run_cli(
-            "compact-context",
+            "resume",
             pack_dir,
             "--repo",
             repo,
@@ -1655,8 +1653,8 @@ class JiniCliConformanceTests(unittest.TestCase):
         pack_dir = self.compile_research_pack()
         repo = self.create_repo_fixture()
 
-        self.assert_ok(self.run_cli("compact-context", pack_dir, "--repo", repo))
-        self.assert_ok(self.run_cli("execution-checklist", pack_dir, "--repo", repo, "--intent", "verify"))
+        self.assert_ok(self.run_cli("resume", pack_dir, "--repo", repo))
+        self.assert_ok(self.run_cli("next", pack_dir, "--repo", repo, "--intent", "verify"))
         self.assert_ok(
             self.run_cli(
                 "harvest-evidence",
@@ -1688,7 +1686,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         pack_dir = self.compile_research_pack()
         repo = self.create_repo_fixture()
 
-        self.assert_ok(self.run_cli("compact-context", pack_dir, "--repo", repo, "--intent", "verify"))
+        self.assert_ok(self.run_cli("resume", pack_dir, "--repo", repo, "--intent", "verify"))
         self.assert_ok(
             self.run_cli(
                 "harvest-evidence",
@@ -1715,8 +1713,8 @@ class JiniCliConformanceTests(unittest.TestCase):
         pack_dir = self.compile_research_pack()
         repo = self.create_repo_fixture()
 
-        self.assert_ok(self.run_cli("compact-context", pack_dir, "--repo", repo, "--intent", "verify"))
-        self.assert_ok(self.run_cli("execution-checklist", pack_dir, "--repo", repo, "--intent", "verify"))
+        self.assert_ok(self.run_cli("resume", pack_dir, "--repo", repo, "--intent", "verify"))
+        self.assert_ok(self.run_cli("next", pack_dir, "--repo", repo, "--intent", "verify"))
         self.assert_ok(
             self.run_cli(
                 "harvest-evidence",
@@ -1823,7 +1821,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         event_types = [item["event_type"] for item in json.loads(events.stdout)["events"]]
         self.assertIn("activate-runtime-target", event_types)
 
-    def test_execute_flow_collapses_activation_run_and_local_publish(self) -> None:
+    def test_run_collapses_activation_run_and_local_publish(self) -> None:
         pack_dir = self.compile_research_pack()
         repo = self.create_repo_fixture()
         home = self.personal_home()
@@ -1831,7 +1829,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(self.run_cli("bootstrap-home", home))
 
         result = self.run_cli(
-            "execute-flow",
+            "run",
             pack_dir,
             "--mode",
             "supervised",
@@ -1888,8 +1886,8 @@ class JiniCliConformanceTests(unittest.TestCase):
                 "codex",
             )
         )
-        self.assert_ok(self.run_cli("compact-context", pack_dir, "--repo", repo, "--intent", "verify"))
-        self.assert_ok(self.run_cli("execution-checklist", pack_dir, "--repo", repo, "--intent", "verify"))
+        self.assert_ok(self.run_cli("resume", pack_dir, "--repo", repo, "--intent", "verify"))
+        self.assert_ok(self.run_cli("next", pack_dir, "--repo", repo, "--intent", "verify"))
         self.assert_ok(
             self.run_cli(
                 "harvest-evidence",
@@ -2184,17 +2182,14 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("needs setup", report["status"])
         self.assertTrue(any("supported only on Bedrock" in item for item in report["missing"]))
 
-    def test_provider_doctor_compatibility_path_still_works(self) -> None:
+    def test_provider_nested_command_is_rejected(self) -> None:
         env = {
             "JINI_PROVIDER": "claude",
             "ANTHROPIC_API_KEY": "sk-live-secret",
             "JINI_MODEL": "sonnet",
         }
         result = self.run_cli("provider", "doctor", "--format", "json", env=env)
-        self.assert_ok(result)
-        report = json.loads(result.stdout)
-        self.assertEqual("anthropic", report["provider_id"])
-        self.assertEqual("ok", report["status"])
+        self.assertNotEqual(0, result.returncode)
 
     def test_validate_golden_benchmark_reports_jini_against_expanded_competitor_field(self) -> None:
         result = self.run_cli("validate-golden-benchmark", "--format", "json")

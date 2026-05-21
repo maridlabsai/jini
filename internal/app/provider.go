@@ -188,7 +188,7 @@ func generateWithAnthropic(ctx context.Context, request providerGenerationReques
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return "", fmt.Errorf("Claude API request failed with HTTP %d. Run `jini provider doctor` and check the model choice", resp.StatusCode)
+		return "", fmt.Errorf("Claude API request failed with HTTP %d. Run `jini doctor` and check the model choice", resp.StatusCode)
 	}
 
 	var decoded struct {
@@ -219,7 +219,7 @@ func generateWithAzureOpenAI(ctx context.Context, request providerGenerationRequ
 
 	parsed, err := url.Parse(endpoint)
 	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
-		return "", errors.New("Azure OpenAI endpoint is not a valid URL. Run `jini provider doctor`.")
+		return "", errors.New("Azure OpenAI endpoint is not a valid URL. Run `jini doctor`.")
 	}
 	parsed.Path = strings.TrimRight(parsed.Path, "/") + "/openai/deployments/" + url.PathEscape(deployment) + "/chat/completions"
 	query := parsed.Query()
@@ -252,7 +252,7 @@ func generateWithAzureOpenAI(ctx context.Context, request providerGenerationRequ
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return "", fmt.Errorf("Azure OpenAI request failed with HTTP %d. Run `jini provider doctor` and check the deployment", resp.StatusCode)
+		return "", fmt.Errorf("Azure OpenAI request failed with HTTP %d. Run `jini doctor` and check the deployment", resp.StatusCode)
 	}
 
 	var decoded struct {
@@ -322,7 +322,7 @@ func generateWithBedrock(ctx context.Context, request providerGenerationRequest,
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return "", fmt.Errorf("Amazon Bedrock request failed with HTTP %d. Run `jini provider doctor` and check model access", resp.StatusCode)
+		return "", fmt.Errorf("Amazon Bedrock request failed with HTTP %d. Run `jini doctor` and check model access", resp.StatusCode)
 	}
 
 	var decoded struct {
@@ -390,7 +390,7 @@ func generateWithLocalSLM(ctx context.Context, request providerGenerationRequest
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return "", fmt.Errorf("Local SLM request failed with HTTP %d. Run `jini provider doctor` and check the local model endpoint", resp.StatusCode)
+		return "", fmt.Errorf("Local SLM request failed with HTTP %d. Run `jini doctor` and check the local model endpoint", resp.StatusCode)
 	}
 
 	var decoded struct {
@@ -1022,7 +1022,7 @@ func providerSetupError(provider providerConfig) error {
 	if missing == "" {
 		missing = "provider configuration"
 	}
-	return fmt.Errorf("Provider needs setup. Run `jini provider doctor`. Missing: %s", missing)
+	return fmt.Errorf("Provider needs setup. Run `jini doctor`. Missing: %s", missing)
 }
 
 func providerPrimaryView(packID string) (string, string) {

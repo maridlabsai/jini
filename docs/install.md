@@ -90,7 +90,7 @@ jini
 export JINI_PROVIDER=claude
 export ANTHROPIC_API_KEY="paste-your-key-here"
 export JINI_MODEL=sonnet
-jini provider doctor
+jini doctor
 jini
 ```
       <p>Use this when your team already gave you a direct Anthropic key and Claude should be the fixed route.</p>
@@ -103,7 +103,7 @@ export JINI_PROVIDER=bedrock
 export AWS_REGION=us-east-1
 export AWS_PROFILE="your-profile"
 export JINI_MODEL=sonnet-4.6
-jini provider doctor
+jini doctor
 jini
 ```
       <p>Use this when AWS policy or Bedrock access already exists. If you know the exact model id, you can set <code>BEDROCK_MODEL_ID</code> instead.</p>
@@ -117,7 +117,7 @@ export AZURE_OPENAI_ENDPOINT="https://your-resource.openai.azure.com"
 export AZURE_OPENAI_API_KEY="paste-your-key-here"
 export AZURE_OPENAI_DEPLOYMENT="your-deployment-name"
 export AZURE_OPENAI_API_VERSION=2024-10-21
-jini provider doctor
+jini doctor
 jini
 ```
       <p>Use this when your company requires Azure OpenAI only. On Azure, the deployment decides the actual model.</p>
@@ -129,7 +129,7 @@ jini
 export JINI_TOOL=auto
 export JINI_PROVIDER=auto
 export JINI_MODEL=auto
-jini provider doctor
+jini doctor
 jini
 ```
       <p>Use this if you want Jini to choose the cheapest suitable route, model, and effort level for each request.</p>
@@ -143,7 +143,7 @@ export JINI_TOOL=auto
 export JINI_MODEL=auto
 export JINI_LOCAL_SLM_ENDPOINT="http://127.0.0.1:11434/v1"
 export JINI_LOCAL_SLM_MODEL="qwen3:8b"
-jini provider doctor
+jini doctor
 jini
 ```
       <p>Use this when you already run an OpenAI-compatible local model endpoint and want local workhorse routing.</p>
@@ -153,7 +153,7 @@ jini
 
 <div class="section-card" markdown="1">
   <span class="section-kicker">Setup check</span>
-  <h2>What <code>jini provider doctor</code> actually tells you</h2>
+  <h2>What <code>jini doctor</code> actually tells you</h2>
   <div class="signal-grid">
     <div class="signal-card">
       <h3>What it does</h3>
