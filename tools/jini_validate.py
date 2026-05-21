@@ -575,10 +575,21 @@ def build_lean_platform_metrics() -> dict[str, Any]:
                 ),
                 "adapters": adapter_rows,
             }
+    provider_evidence: dict[str, Any] = {
+        "available": False,
+        "provider_id": "",
+        "label": "",
+        "status": "",
+    }
     command_samples: list[dict[str, Any]] = []
     cli_path = ROOT / "tools" / "jini.py"
 
-    def sample_cli(args: list[str], *, env_overrides: dict[str, str] | None = None) -> dict[str, Any]:
+    def sample_cli(
+        args: list[str],
+        *,
+        env_overrides: dict[str, str] | None = None,
+        parse_json_output: bool = False,
+    ) -> dict[str, Any]:
         env = os.environ.copy()
         if env_overrides:
             env.update(env_overrides)
@@ -593,13 +604,19 @@ def build_lean_platform_metrics() -> dict[str, Any]:
             env=env,
         )
         duration_ms = round((time.perf_counter() - started) * 1000, 1)
-        return {
+        sample = {
             "command": " ".join(["jini", *args]),
             "duration_ms": duration_ms,
             "exit_code": int(completed.returncode),
             "stdout_preview": completed.stdout.splitlines()[:3],
             "stderr_preview": completed.stderr.splitlines()[:3],
         }
+        if parse_json_output:
+            try:
+                sample["json_output"] = json.loads(completed.stdout)
+            except json.JSONDecodeError:
+                sample["json_output"] = None
+        return sample
 
     with tempfile.TemporaryDirectory(prefix="jini-metrics-") as tmp_dir:
         tmp_root = Path(tmp_dir)
@@ -612,8 +629,18 @@ def build_lean_platform_metrics() -> dict[str, Any]:
             sample_cli(
                 ["doctor", "--format", "json"],
                 env_overrides={"JINI_PROVIDER": "local-preview"},
+                parse_json_output=True,
             )
         )
+        doctor_sample = command_samples[-1]
+        doctor_payload = doctor_sample.get("json_output", {})
+        if isinstance(doctor_payload, dict):
+            provider_evidence = {
+                "available": bool(str(doctor_payload.get("provider_id", "")).strip()),
+                "provider_id": str(doctor_payload.get("provider_id", "")),
+                "label": str(doctor_payload.get("label", "")),
+                "status": str(doctor_payload.get("status", "")),
+            }
         command_samples.append(
             sample_cli(
                 ["status", "packs/research-prd/examples/research-prd-v1"],
@@ -642,6 +669,7 @@ def build_lean_platform_metrics() -> dict[str, Any]:
         "compatibility_alias_matches": alias_matches,
         "command_samples": command_samples,
         "latency_sample": latency_sample,
+        "provider_evidence": provider_evidence,
         "route_evidence": route_evidence,
         "cost_proxy": {
             "dimension": "token-efficiency",
@@ -683,6 +711,15 @@ def print_lean_platform_metrics(report: dict[str, Any]) -> None:
             f"  - {sample.get('command', '')} | ms={sample.get('duration_ms', 'n/a')} "
             f"| exit={sample.get('exit_code', 'n/a')}"
         )
+    provider_evidence = report.get("provider_evidence", {})
+    print(
+        "PROVIDER "
+        f"available={'yes' if provider_evidence.get('available') else 'no'} "
+        f"id={provider_evidence.get('provider_id', '') or 'n/a'} "
+        f"status={provider_evidence.get('status', '') or 'n/a'}"
+    )
+    if provider_evidence.get("label"):
+        print(f"  label={provider_evidence.get('label')}")
     route_evidence = report.get("route_evidence", {})
     print(
         "ROUTES   "

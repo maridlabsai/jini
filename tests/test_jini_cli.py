@@ -2798,6 +2798,8 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("  - jini doctor --format json", result.stdout)
         self.assertIn("  - jini status packs/research-prd/examples/research-prd-v1", result.stdout)
         self.assertIn("  - jini open prd --from packs/research-prd/examples/research-prd-v1 --print-path", result.stdout)
+        self.assertIn("PROVIDER available=yes id=local-preview status=ok", result.stdout)
+        self.assertIn("  label=Local preview", result.stdout)
         self.assertIn("COST     token-efficiency", result.stdout)
         self.assertIn("LATENCY  delivery-maturity", result.stdout)
 
@@ -2819,6 +2821,10 @@ class JiniCliConformanceTests(unittest.TestCase):
             payload["command_samples"][3]["command"],
         )
         self.assertTrue(all(item["exit_code"] == 0 for item in payload["command_samples"]))
+        self.assertTrue(payload["provider_evidence"]["available"])
+        self.assertEqual("local-preview", payload["provider_evidence"]["provider_id"])
+        self.assertEqual("Local preview", payload["provider_evidence"]["label"])
+        self.assertEqual("ok", payload["provider_evidence"]["status"])
         self.assertFalse(payload["route_evidence"]["available"])
         self.assertEqual(0, payload["route_evidence"]["adapter_count"])
         self.assertEqual("token-efficiency", payload["cost_proxy"]["dimension"])
