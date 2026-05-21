@@ -326,3 +326,126 @@ def build_latency_sample(command_samples: list[dict[str, Any]]) -> dict[str, Any
         "min_ms": round(min(successful_durations), 1) if successful_durations else None,
         "avg_ms": round(sum(successful_durations) / len(successful_durations), 1) if successful_durations else None,
     }
+
+
+def render_lean_platform_metrics(report: dict[str, Any]) -> list[str]:
+    """Render the human-readable lean metrics surface."""
+    lines = [
+        f"STATUS   {report.get('status', 'unknown')}",
+        f"CMDS     {report.get('command_surface_count', 0)}",
+        "TAUGHT",
+    ]
+    for command in report.get("taught_commands", []):
+        lines.append(f"  - {command}")
+    lines.append(f"ALIASES  {report.get('compatibility_alias_count', 0)}")
+    for match in report.get("compatibility_alias_matches", []):
+        lines.append(f"  - {match['alias']} | {match['path']} | count={match['count']}")
+
+    latency_sample = report.get("latency_sample", {})
+    lines.append(
+        "SAMPLES  "
+        f"count={latency_sample.get('sample_count', 0)} "
+        f"ok={latency_sample.get('successful_sample_count', 0)} "
+        f"avg_ms={latency_sample.get('avg_ms', 'n/a')} "
+        f"max_ms={latency_sample.get('max_ms', 'n/a')}"
+    )
+    for sample in report.get("command_samples", []):
+        lines.append(
+            f"  - {sample.get('command', '')} | ms={sample.get('duration_ms', 'n/a')} "
+            f"| exit={sample.get('exit_code', 'n/a')}"
+        )
+
+    provider_evidence = report.get("provider_evidence", {})
+    lines.append(
+        "PROVIDER "
+        f"available={'yes' if provider_evidence.get('available') else 'no'} "
+        f"id={provider_evidence.get('provider_id', '') or 'n/a'} "
+        f"status={provider_evidence.get('status', '') or 'n/a'}"
+    )
+    if provider_evidence.get("label"):
+        lines.append(f"  label={provider_evidence.get('label')}")
+
+    route_evidence = report.get("route_evidence", {})
+    lines.append(
+        "ROUTES   "
+        f"available={'yes' if route_evidence.get('available') else 'no'} "
+        f"adapters={route_evidence.get('adapter_count', 0)} "
+        f"ready={route_evidence.get('ready_adapter_count', 0)}"
+    )
+    if route_evidence.get("local_runtime_class"):
+        lines.append(f"  runtime={route_evidence.get('local_runtime_class')}")
+    if route_evidence.get("captured_at"):
+        lines.append(f"  captured={route_evidence.get('captured_at')}")
+    for adapter in route_evidence.get("adapters", []):
+        lines.append(
+            "  - "
+            f"{adapter.get('adapter_id', '')} | {adapter.get('status', '')} | "
+            f"{adapter.get('latency_ms', 0)}ms | warm={adapter.get('warm_latency_ms', 0)}ms | "
+            f"cold+{adapter.get('cold_start_cost_ms', 0)}ms | "
+            f"{adapter.get('quality_class', '')} | "
+            f"reliability {adapter.get('structured_reliability', '')} | "
+            f"{adapter.get('tokens_per_second', 0):.1f} tok/s"
+        )
+
+    route_trend = report.get("route_trend", {})
+    lines.append(
+        "ROUTETREND "
+        f"available={'yes' if route_trend.get('available') else 'no'} "
+        f"status={route_trend.get('status', 'unknown')} "
+        f"improving={route_trend.get('improving_count', 0)} "
+        f"stable={route_trend.get('stable_count', 0)} "
+        f"regressing={route_trend.get('regressing_count', 0)}"
+    )
+    for item in route_trend.get("adapters", []):
+        lines.append(
+            "  - "
+            f"{item.get('adapter_id', '')} | {item.get('trend', '')} | "
+            f"samples={item.get('sample_count', 0)} | "
+            f"{item.get('latest_latency_ms', 0)}ms | "
+            f"{item.get('latest_tokens_per_second', 0):.1f} tok/s"
+        )
+
+    route_cost = report.get("route_cost", {})
+    lines.append(
+        "ROUTECOST "
+        f"available={'yes' if route_cost.get('available') else 'no'} "
+        f"status={route_cost.get('status', 'unknown')} "
+        f"basis={route_cost.get('basis', 'none')} "
+        f"posture={route_cost.get('posture', 'unknown')}"
+    )
+    if route_cost.get("available"):
+        lines.append(
+            "  "
+            f"ready={route_cost.get('ready_adapter_count', 0)} "
+            f"avg_warm_ms={route_cost.get('avg_ready_warm_latency_ms', 'n/a')} "
+            f"avg_tok_s={route_cost.get('avg_ready_tokens_per_second', 'n/a')}"
+        )
+        cheapest = route_cost.get("cheapest_ready_adapter") or {}
+        if cheapest:
+            lines.append(
+                "  cheapest="
+                f"{cheapest.get('adapter_id', '')} "
+                f"cold+{cheapest.get('cold_start_cost_ms', 0)}ms "
+                f"warm={cheapest.get('warm_latency_ms', 0)}ms "
+                f"tok/s={cheapest.get('tokens_per_second', 0):.1f}"
+            )
+
+    cost_proxy = report.get("cost_proxy", {})
+    lines.append(
+        "COST     "
+        f"{cost_proxy.get('dimension', '')} "
+        f"score={cost_proxy.get('current_score', 'n/a')} "
+        f"target={cost_proxy.get('target_score', 'n/a')} "
+        f"gap={cost_proxy.get('competitive_gap', 'n/a')} "
+        f"state={cost_proxy.get('strength_status', 'n/a')}"
+    )
+    latency_proxy = report.get("latency_proxy", {})
+    lines.append(
+        "LATENCY  "
+        f"{latency_proxy.get('dimension', '')} "
+        f"score={latency_proxy.get('current_score', 'n/a')} "
+        f"target={latency_proxy.get('target_score', 'n/a')} "
+        f"gap={latency_proxy.get('competitive_gap', 'n/a')} "
+        f"state={latency_proxy.get('strength_status', 'n/a')}"
+    )
+    return lines
