@@ -63,6 +63,8 @@ PRODUCT_REWRITE_CONTRACT_PATH = ROOT / "specs" / "product-rewrite-contract.md"
 PUBLIC_REPO_BOUNDARY_PATH = ROOT / "specs" / "public-repo-boundary.md"
 FRICTION_REDUCTION_RESEARCH_PATH = ROOT / "specs" / "friction-reduction-research.md"
 FRICTION_REDUCTION_GATE_PATH = ROOT / "specs" / "friction-reduction-gate.md"
+LEAN_PLATFORM_DOCTRINE_PATH = ROOT / "specs" / "lean-platform-doctrine.md"
+LEAN_PLATFORM_GATE_PATH = ROOT / "specs" / "lean-platform-gate.md"
 DEVICE_CAPABILITY_ROUTING_PATH = ROOT / "specs" / "device-capability-routing.md"
 DEVICE_RUNTIME_GATE_PATH = ROOT / "specs" / "device-runtime-gate.md"
 ADAPTER_CAPABILITY_BENCHMARKING_PATH = ROOT / "specs" / "adapter-capability-benchmarking.md"
@@ -1981,6 +1983,8 @@ def build_publish_readiness() -> dict[str, Any]:
         PUBLIC_REPO_BOUNDARY_PATH,
         FRICTION_REDUCTION_RESEARCH_PATH,
         FRICTION_REDUCTION_GATE_PATH,
+        LEAN_PLATFORM_DOCTRINE_PATH,
+        LEAN_PLATFORM_GATE_PATH,
         ROOT / "distribution" / "install-manifest.yaml",
     ]
     doc_checks = [{"path": display_path(path), "exists": path.exists()} for path in doc_paths]
@@ -2508,6 +2512,65 @@ def build_publish_readiness() -> dict[str, Any]:
         "status": "ok" if all(item["status"] == "ok" for item in friction_reduction_checks) else "warning",
         "checks": friction_reduction_checks,
     }
+    lean_platform_requirements = [
+        {
+            "path": LEAN_PLATFORM_DOCTRINE_PATH,
+            "markers": [
+                "# Lean Platform Doctrine",
+                "Lowest Total Cost To Useful Outcome",
+                "One Stable Surface",
+                "Cheap By Default, Strong When Needed",
+                "Visible Efficiency",
+                "Fewer Product Ideas, Better Execution",
+                "cost-per-successful-task",
+                "time-to-first-useful-result",
+                "resume-cost",
+                "command-surface-count",
+                "compatibility aliases should not be taught",
+            ],
+        },
+        {
+            "path": LEAN_PLATFORM_GATE_PATH,
+            "markers": [
+                "# Lean Platform Gate",
+                "Cost Discipline",
+                "Latency Discipline",
+                "Command-Surface Discipline",
+                "Visible Efficiency",
+                "Buyability",
+                "`lowest-total-cost-to-useful-outcome`",
+                "`one-stable-surface`",
+                "`cheap-by-default`",
+                "`visible-efficiency`",
+                "`fewer-product-ideas-better-execution`",
+                "`cost-per-successful-task`",
+                "`time-to-first-useful-result`",
+                "`resume-cost`",
+                "`command-surface-count`",
+                "`no-compatibility-aliases`",
+            ],
+        },
+    ]
+    lean_platform_checks: list[dict[str, Any]] = []
+    for requirement in lean_platform_requirements:
+        path = requirement["path"]
+        markers = [str(marker) for marker in requirement["markers"]]
+        text = path.read_text(encoding="utf-8") if path.exists() else ""
+        normalized_text = text.lower()
+        missing_markers = [marker for marker in markers if marker.lower() not in normalized_text]
+        lean_platform_checks.append(
+            {
+                "path": display_path(path),
+                "exists": path.exists(),
+                "markers": markers,
+                "missing_markers": missing_markers,
+                "status": "ok" if path.exists() and not missing_markers else "warning",
+            }
+        )
+    lean_platform_gate = {
+        "status": "ok" if all(item["status"] == "ok" for item in lean_platform_checks) else "warning",
+        "checks": lean_platform_checks,
+    }
     open_source_prompt_report = validate_open_source_prompt_corpus()
     public_boundary_report = validate_public_repo_boundary()
 
@@ -2587,6 +2650,12 @@ def build_publish_readiness() -> dict[str, Any]:
             "label": "Competitive friction reduction",
             "status": friction_reduction_gate["status"],
             "checks": friction_reduction_gate["checks"],
+        },
+        {
+            "id": "lean-platform",
+            "label": "Lean platform doctrine",
+            "status": lean_platform_gate["status"],
+            "checks": lean_platform_gate["checks"],
         },
         {
             "id": "open-source-prompt-validation",
