@@ -3522,15 +3522,7 @@ func handleActiveWorkSelection(action string, active []*workSummary, scanner *bu
 		fmt.Fprintf(stderr, "%v\n", err)
 		return 1
 	}
-	if err := saveSummaryAsCurrent(selection); err != nil {
-		fmt.Fprintf(stderr, "Could not switch work: %v\n", err)
-		return 1
-	}
-	fmt.Fprintln(stdout, "Switched to")
-	fmt.Fprintln(stdout, selection.Title)
-	fmt.Fprintln(stdout)
-	renderCheck(stdout, selection)
-	return 0
+	return switchToWorkSelection(selection, stdout, stderr)
 }
 
 func runSwitchWorkPicker(current *workSummary, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
@@ -3553,6 +3545,10 @@ func runSwitchWorkPicker(current *workSummary, scanner *bufio.Scanner, stdout, s
 		fmt.Fprintf(stderr, "%v\n", err)
 		return 1
 	}
+	return switchToWorkSelection(selection, stdout, stderr)
+}
+
+func switchToWorkSelection(selection *workSummary, stdout, stderr io.Writer) int {
 	if err := saveSummaryAsCurrent(selection); err != nil {
 		fmt.Fprintf(stderr, "Could not switch work: %v\n", err)
 		return 1
