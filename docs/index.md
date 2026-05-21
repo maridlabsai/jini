@@ -88,6 +88,29 @@ description: One shell for AI work. Cheap by default, strong when needed.
   </div>
 </div>
 
+## Who Jini is for
+
+<div class="checklist-grid">
+  <div class="checklist-card">
+    <h3>Good fit</h3>
+    <ul class="compact-list">
+      <li>teams that need usable deliverables, not just answers</li>
+      <li>work that has an awkward middle and needs continuation</li>
+      <li>buyers who care about cost, inspectability, and safe handoff</li>
+      <li>people who want one stable shell across multiple providers</li>
+    </ul>
+  </div>
+  <div class="checklist-card">
+    <h3>Not the best fit</h3>
+    <ul class="compact-list">
+      <li>one-shot chat where no continuation or artifact matters</li>
+      <li>users who only want the raw model shell with no extra product layer</li>
+      <li>work where route cost, stored state, and review posture do not matter</li>
+      <li>teams that do not care whether outputs are handoff-safe or inspectable</li>
+    </ul>
+  </div>
+</div>
+
 ## What Jini writes
 
 <div class="workflow-grid">
