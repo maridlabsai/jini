@@ -88,6 +88,20 @@ description: One shell for AI work. Cheap by default, strong when needed.
   </div>
 </div>
 
+## Why not just use a raw model shell
+
+<div class="section-card" markdown="1">
+| Need | Raw model shell | Jini |
+|---|---|---|
+| Start work | Good at first draft | Good at first draft plus stable continuation |
+| Continue later | You reconstruct context from chat or files | Work state, artifacts, and next step stay attached |
+| Keep cost down | You manage route choice manually | Cheapest suitable route is the default |
+| Show trust signals | Usually hidden behind prompt and provider choice | Route reason, metrics, and missing pieces stay visible |
+| Hand off safely | You decide what is final and what is still risky | Jini keeps ready, missing, and review-safe state explicit |
+
+<p>Use a raw model shell when you only need a one-off answer. Use Jini when the work has an awkward middle, needs continuation, or has to be cheap, inspectable, and safe to hand off.</p>
+</div>
+
 ## What Jini writes
 
 <div class="workflow-grid">
