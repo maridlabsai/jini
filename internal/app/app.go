@@ -3063,32 +3063,11 @@ func handlePostResultAction(action string, summary *workSummary, scanner *bufio.
 			return 0
 		}
 	case "make it shorter", "shorter", "tighten this", "make this shorter":
-		item, err := applyArtifactTransform(summary, "shorter")
-		if err != nil {
-			fmt.Fprintf(stderr, "Could not revise the artifact: %v\n", err)
-			return 1
-		}
-		renderItem(stdout, item)
-		fmt.Fprintln(stdout)
-		fmt.Fprintln(stdout, "Saved a restorable version. You can say `Show versions` or `Undo last change`.")
+		return renderArtifactTransform(summary, "shorter", stdout, stderr)
 	case "make it executive", "executive", "executive version", "make this executive":
-		item, err := applyArtifactTransform(summary, "executive")
-		if err != nil {
-			fmt.Fprintf(stderr, "Could not revise the artifact: %v\n", err)
-			return 1
-		}
-		renderItem(stdout, item)
-		fmt.Fprintln(stdout)
-		fmt.Fprintln(stdout, "Saved a restorable version. You can say `Show versions` or `Undo last change`.")
+		return renderArtifactTransform(summary, "executive", stdout, stderr)
 	case "turn this into a checklist", "checklist", "make this a checklist":
-		item, err := applyArtifactTransform(summary, "checklist")
-		if err != nil {
-			fmt.Fprintf(stderr, "Could not revise the artifact: %v\n", err)
-			return 1
-		}
-		renderItem(stdout, item)
-		fmt.Fprintln(stdout)
-		fmt.Fprintln(stdout, "Saved a restorable version. You can say `Show versions` or `Undo last change`.")
+		return renderArtifactTransform(summary, "checklist", stdout, stderr)
 	case "show versions", "show version history", "versions", "history":
 		renderArtifactVersions(stdout, summary)
 	case "undo last change", "undo", "restore last change", "revert last change":
@@ -3103,47 +3082,17 @@ func handlePostResultAction(action string, summary *workSummary, scanner *bufio.
 	case "plan this first", "plan first", "plan", "help me plan this", "5":
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "plan"})
 	case "accepted as is", "accept as is", "artifact accepted", "accepted":
-		if err := saveModelFeedback(summary.Dir, "accepted-as-is", currentFeedbackArtifactPath(summary)); err != nil {
-			fmt.Fprintf(stderr, "Could not save artifact feedback: %v\n", err)
-			return 1
-		}
-		recordThreadDecision(summary.Dir, summary, "Approved")
-		fmt.Fprintln(stdout, "Saved artifact feedback: accepted-as-is.")
+		return recordArtifactFeedback(summary, "accepted-as-is", "Approved", stdout, stderr)
 	case "needed light edits", "needs light edits", "light edits":
-		if err := saveModelFeedback(summary.Dir, "needed-light-edits", currentFeedbackArtifactPath(summary)); err != nil {
-			fmt.Fprintf(stderr, "Could not save artifact feedback: %v\n", err)
-			return 1
-		}
-		recordThreadDecision(summary.Dir, summary, "Needs light edits")
-		fmt.Fprintln(stdout, "Saved artifact feedback: needed-light-edits.")
+		return recordArtifactFeedback(summary, "needed-light-edits", "Needs light edits", stdout, stderr)
 	case "used this", "used it", "kept this":
-		if err := saveArtifactOutcome(summary.Dir, "used-this", currentFeedbackArtifactPath(summary)); err != nil {
-			fmt.Fprintf(stderr, "Could not save artifact outcome: %v\n", err)
-			return 1
-		}
-		recordThreadDecision(summary.Dir, summary, "Used this")
-		fmt.Fprintln(stdout, "Saved artifact outcome: used-this.")
+		return recordArtifactOutcome(summary, "used-this", "Used this", stdout, stderr)
 	case "shared this", "sent this", "forwarded this", "handed this off", "used this to hand off":
-		if err := saveArtifactOutcome(summary.Dir, "shared-this", currentFeedbackArtifactPath(summary)); err != nil {
-			fmt.Fprintf(stderr, "Could not save artifact outcome: %v\n", err)
-			return 1
-		}
-		recordThreadDecision(summary.Dir, summary, "Shared this")
-		fmt.Fprintln(stdout, "Saved artifact outcome: shared-this.")
+		return recordArtifactOutcome(summary, "shared-this", "Shared this", stdout, stderr)
 	case "not useful", "artifact was not useful", "not good enough":
-		if err := saveModelFeedback(summary.Dir, "not-useful", currentFeedbackArtifactPath(summary)); err != nil {
-			fmt.Fprintf(stderr, "Could not save artifact feedback: %v\n", err)
-			return 1
-		}
-		recordThreadDecision(summary.Dir, summary, "Not useful")
-		fmt.Fprintln(stdout, "Saved artifact feedback: not-useful.")
+		return recordArtifactFeedback(summary, "not-useful", "Not useful", stdout, stderr)
 	case "replaced this", "rewrote this", "made a new one", "did not use this":
-		if err := saveArtifactOutcome(summary.Dir, "replaced-this", currentFeedbackArtifactPath(summary)); err != nil {
-			fmt.Fprintf(stderr, "Could not save artifact outcome: %v\n", err)
-			return 1
-		}
-		recordThreadDecision(summary.Dir, summary, "Replaced this")
-		fmt.Fprintln(stdout, "Saved artifact outcome: replaced-this.")
+		return recordArtifactOutcome(summary, "replaced-this", "Replaced this", stdout, stderr)
 	case "start something new", "start new work", "new", "6":
 		renderNewWorkLauncher(stdout)
 	default:
@@ -3160,6 +3109,38 @@ func handlePostResultAction(action string, summary *workSummary, scanner *bufio.
 		}
 		renderCheck(stdout, summary)
 	}
+	return 0
+}
+
+func renderArtifactTransform(summary *workSummary, transform string, stdout, stderr io.Writer) int {
+	item, err := applyArtifactTransform(summary, transform)
+	if err != nil {
+		fmt.Fprintf(stderr, "Could not revise the artifact: %v\n", err)
+		return 1
+	}
+	renderItem(stdout, item)
+	fmt.Fprintln(stdout)
+	fmt.Fprintln(stdout, "Saved a restorable version. You can say `Show versions` or `Undo last change`.")
+	return 0
+}
+
+func recordArtifactFeedback(summary *workSummary, feedback, decision string, stdout, stderr io.Writer) int {
+	if err := saveModelFeedback(summary.Dir, feedback, currentFeedbackArtifactPath(summary)); err != nil {
+		fmt.Fprintf(stderr, "Could not save artifact feedback: %v\n", err)
+		return 1
+	}
+	recordThreadDecision(summary.Dir, summary, decision)
+	fmt.Fprintf(stdout, "Saved artifact feedback: %s.\n", feedback)
+	return 0
+}
+
+func recordArtifactOutcome(summary *workSummary, outcome, decision string, stdout, stderr io.Writer) int {
+	if err := saveArtifactOutcome(summary.Dir, outcome, currentFeedbackArtifactPath(summary)); err != nil {
+		fmt.Fprintf(stderr, "Could not save artifact outcome: %v\n", err)
+		return 1
+	}
+	recordThreadDecision(summary.Dir, summary, decision)
+	fmt.Fprintf(stdout, "Saved artifact outcome: %s.\n", outcome)
 	return 0
 }
 
