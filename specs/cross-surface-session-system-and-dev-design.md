@@ -687,6 +687,137 @@ Minimum acceptance scenarios:
 - add conflict handling
 - expose cross-surface resume proof
 
+## First Runtime Slice
+
+The first runtime slice must prove the charter with the smallest possible
+kernel. It must not attempt to ship the whole platform plan.
+
+### Slice 1 Goal
+
+Make the CLI speak the canonical session model and prove that continuation is
+cheaper than restart.
+
+### Slice 1 Files
+
+Only these new modules should be introduced first:
+
+- `tools/session_core.py`
+- `tools/session_store.py`
+- `tools/session_projection.py`
+- `tools/session_events.py`
+
+The first slice should reuse the current routing surface and artifact rendering
+where possible instead of rebuilding everything at once.
+
+### Slice 1 Data
+
+Only these session fields are mandatory in slice 1:
+
+- `session_id`
+- `title`
+- `goal`
+- `status`
+- `updated_at`
+- `current_artifact_id`
+- `next_step`
+- `review_safe`
+- `share_boundary`
+
+Only these derived projection fields are mandatory in slice 1:
+
+- `ready`
+- `missing`
+- `next`
+- `route.provider_id`
+- `route.reason`
+- `cost_posture.current_path`
+- `cost_posture.continuation_saved_work`
+
+### Slice 1 Commands
+
+Only these CLI flows need to be rebound first:
+
+- `jini`
+- `jini status`
+- `jini resume`
+- `jini open`
+
+`status` and `resume` should become the first public proof that the session
+kernel is real.
+
+## Out Of Scope For Slice 1
+
+Do not build these in the first runtime slice:
+
+- hosted sync transport
+- account identity
+- merge conflict UI
+- mobile-native UI
+- Windows-native UI
+- macOS-native UI
+- broad pack/runtime refactors outside session binding
+- multi-session collaboration
+- advanced route optimization beyond basic continuation reuse evidence
+
+Slice 1 should prove the kernel, not the full product surface.
+
+## Migration From Current Runtime
+
+The new session kernel must replace, not sit beside, the current ad hoc
+current-work truth.
+
+### Current Runtime Inputs
+
+The migration layer should read from existing runtime truth where available:
+
+- current-work pointers
+- artifact pointers
+- work-unit metadata
+- route evidence already emitted by the runtime
+
+### Migration Strategy
+
+1. on first session-kernel access, detect whether canonical session state exists
+2. if not, synthesize a session envelope from current-work/runtime metadata
+3. write canonical session state under `.jini/sessions/<session-id>/`
+4. build `projection.json`
+5. emit a `session_migrated` event
+6. continue serving `status`, `resume`, and `open` from the canonical session
+
+### Migration Rules
+
+- never silently discard existing current-work pointers
+- never force users to re-open or re-scope active work
+- prefer one migrated session over multiple guessed sessions
+- if migration confidence is low, keep the session usable and surface the
+  ambiguity as `missing`, not as a hard failure
+
+## Acceptance Proof For Slice 1
+
+Slice 1 is done only when these proofs pass:
+
+### Runtime Proofs
+
+1. `jini` creates or continues a canonical session
+2. `jini status` reads from canonical session state
+3. `jini resume` reopens the same session without path reconstruction
+4. `jini open` opens the ready artifact from canonical session state
+5. continuation evidence shows reuse before rebuild when prior work exists
+
+### Regression Proofs
+
+1. existing example flows still work
+2. current artifact opening still works
+3. pathless status still works
+4. route evidence still renders
+
+### Developer Proofs
+
+1. session state is inspectable on disk under `.jini/sessions/`
+2. event replay can rebuild projection state
+3. the first slice does not require hosted infrastructure
+4. the first slice does not add surface-specific workflow drift
+
 ## Definition Of Done
 
 The system design is realized only when:

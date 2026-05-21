@@ -37,6 +37,10 @@ class CrossSurfaceSessionSystemDesignDocsTests(unittest.TestCase):
             "route_engine.py",
             "## Testing Strategy",
             "## Delivery Sequence",
+            "## First Runtime Slice",
+            "## Out Of Scope For Slice 1",
+            "## Migration From Current Runtime",
+            "## Acceptance Proof For Slice 1",
             "## Definition Of Done",
         ]
         for marker in required_markers:
@@ -54,6 +58,8 @@ class CrossSurfaceSessionSystemDesignDocsTests(unittest.TestCase):
             "CLI",
             "cheapest suitable route",
             "Continuation should be cheaper than restart",
+            "Make the CLI speak the canonical session model",
+            "`status` and `resume` should become the first public proof",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
