@@ -205,7 +205,7 @@ If any answer is `no`, stop and fix it before merge.
 - [ ] Does Jini expose source, assumptions, missing proof, and provenance enough to match AgentField-style inspectability?
 - [ ] Does Jini preserve its own honest-closure lead by keeping missing truth visible after useful output exists?
 - [ ] Does at least one real post-result continuation path exist in the replacement-critical slice?
-- [ ] Do both replacement-critical flows have real `Keep going` and `See what is still missing` actions before release?
+- [ ] Do both replacement-critical flows have real `Continue` and `Show missing` actions before release?
 
 ### I. Cross-Role Consensus
 

@@ -20,7 +20,7 @@ Make `jini` the real first-run product:
 - ask at most one high-impact clarification before first output when the request
   is too underspecified to produce a good first draft
 - produce the artifact before the long explanation
-- keep `Start new work` and `Keep going` as plain-language actions
+- keep `Start new` and `Continue` as plain-language actions
 
 ## Current-work rules
 
@@ -34,7 +34,7 @@ When work already exists, startup should show a compact resume card:
 - `Blocked`
 
 Detailed rationale such as `Why this matters`, `Options`, or `If you skip this`
-should remain available behind explicit actions like `Show what is missing` or
+should remain available behind explicit actions like `Show missing` or
 `jini check`.
 
 ## Starter design rules

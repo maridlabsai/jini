@@ -303,7 +303,7 @@ If you are not sure, type `help me finish this`.
 Good inputs:
 - Turn meeting notes into something I can send
 - Check whether a plan is ready to hand off
-- Help me plan this
+- Plan
 - I am not sure
 ```
 
@@ -358,10 +358,10 @@ Trip Plan
 [artifact preview]
 
 What do you want to do next?
-- Keep going
-- Show what is missing
-- Help me plan this
-- Start new work
+- Continue
+- Show missing
+- Plan
+- Start new
 ```
 
 Rules:
@@ -422,7 +422,7 @@ Your work
 3. Q3 memo
    Next: review final draft
 
-Type a number to open one, or type `Start new work`.
+Type a number to open one, or type `Start new`.
 ```
 
 Rules:

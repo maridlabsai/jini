@@ -109,7 +109,7 @@ Why first:
 
 - improve first-result quality for the two flagship jobs
 - ensure the first useful object appears before the summary
-- keep continuation real: `Keep going`, `Show what is missing`, `Help me plan this`
+- keep continuation real: `Continue`, `Show missing`, `Plan`
 - keep missing proof, approval gaps, and uncertainty visible
 - align the thread frame and artifact names to the flagship outputs
 

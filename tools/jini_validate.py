@@ -2111,8 +2111,8 @@ def build_publish_readiness() -> dict[str, Any]:
                 phrase in ((ROOT / "docs" / "simple.md").read_text(encoding="utf-8") if (ROOT / "docs" / "simple.md").exists() else "")
                 for phrase in (
                     "`jini` is the front door",
-                    "Show what's ready",
-                    "Help me plan this",
+                    "Open ready",
+                    "Plan",
                 )
             ),
             "status": "ok"
@@ -2120,8 +2120,8 @@ def build_publish_readiness() -> dict[str, Any]:
                 phrase in ((ROOT / "docs" / "simple.md").read_text(encoding="utf-8") if (ROOT / "docs" / "simple.md").exists() else "")
                 for phrase in (
                     "`jini` is the front door",
-                    "Show what's ready",
-                    "Help me plan this",
+                    "Open ready",
+                    "Plan",
                 )
             )
             else "warning",
@@ -2366,8 +2366,8 @@ def build_publish_readiness() -> dict[str, Any]:
                 {
                     "path": PRODUCT_CONSENSUS_PRD_PATH,
                     "markers": [
-                        "`Keep going`",
-                        "`Show what is missing`",
+                        "`Continue`",
+                        "`Show missing`",
                         "Do not show actions that are not implemented.",
                     ],
                 },
@@ -3046,8 +3046,8 @@ def build_public_example_proof(
         "try_command": f"{cli}",
         "continue_with": [
             f"{cli}",
-            "Inside Jini: Show what's ready",
-            "Inside Jini: Show what is missing",
+            "Inside Jini: Open ready",
+            "Inside Jini: Show missing",
             f"{cli} next --intent {str(summary.get('next_operation', 'Verify')).lower()}",
         ],
         "warnings": [*validation_warnings, *compile_warnings],
@@ -6274,10 +6274,10 @@ def print_cli_overview() -> None:
     print(f"  {cli}")
     print()
     print("INSIDE JINI")
-    print("  Keep going")
-    print("  Show what's ready")
-    print("  Show what is missing")
-    print("  Help me plan this")
+    print("  Continue")
+    print("  Open ready")
+    print("  Show missing")
+    print("  Plan")
     print()
     print("SCRIPTABLE")
     print(f"  {cli} check")
