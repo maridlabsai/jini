@@ -3803,7 +3803,7 @@ func summaryWorkingWith(summary *workSummary) string {
 }
 
 func renderOpenShelf(w io.Writer, summary *workSummary) {
-	fmt.Fprintln(w, "Open something ready")
+	fmt.Fprintln(w, "Open a ready item")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Ready now")
 	indexByPath := map[string]int{}

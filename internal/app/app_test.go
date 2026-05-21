@@ -1550,7 +1550,7 @@ func TestCurrentWorkInteractiveChoicesAreReal(t *testing.T) {
 	}
 
 	out := stdout.String()
-	if !strings.Contains(out, "Open something ready") {
+	if !strings.Contains(out, "Open a ready item") {
 		t.Fatalf("expected open shelf after choosing current work option 2, got:\n%s", out)
 	}
 	if !strings.Contains(out, "Sendable Follow-up") {
@@ -1572,7 +1572,7 @@ func TestCurrentWorkInteractivePunctuatedReadyCommandOpensShelf(t *testing.T) {
 	}
 
 	out := stdout.String()
-	for _, want := range []string{"Open something ready", "1. Sendable Follow-up", "Type a number or name to open one"} {
+	for _, want := range []string{"Open a ready item", "1. Sendable Follow-up", "Type a number or name to open one"} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
@@ -1831,7 +1831,7 @@ func TestCurrentWorkReadyShelfSelectionOpensArtifactByNumber(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Open something ready",
+		"Open a ready item",
 		"2. Owners and Due Points",
 		"Owners and Due Points",
 	} {
@@ -1856,7 +1856,7 @@ func TestCurrentWorkReadyShelfSelectionOpensArtifactByName(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Open something ready",
+		"Open a ready item",
 		"Owners and Due Points",
 	} {
 		if !strings.Contains(out, want) {
