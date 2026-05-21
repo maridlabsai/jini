@@ -5,8 +5,8 @@ description: One shell for AI work. Cheap by default, strong when needed.
 
 <div class="hero-panel hero-panel-marketing">
   <p class="hero-kicker">One shell for AI work</p>
-  <h1 class="hero-title">Cheap by default. Strong when needed.</h1>
-  <p class="hero-summary">Jini gives teams one stable front door for messy work. It keeps progress, artifacts, and the next move visible while it chooses the cheapest suitable route by default.</p>
+  <h1 class="hero-title">The lowest-cost shell for work that must resume anywhere.</h1>
+  <p class="hero-summary">Jini is for messy work that has to become a usable deliverable, survive interruption, and stay safe to hand off. It keeps progress, artifacts, and the next move visible while it chooses the cheapest suitable route by default.</p>
   <div class="cta-row">
     <a class="cta-button" href="{{ '/install.html' | relative_url }}">Install</a>
     <a class="cta-button cta-button-secondary" href="{{ '/simple.html' | relative_url }}">Quickstart</a>
@@ -26,20 +26,22 @@ description: One shell for AI work. Cheap by default, strong when needed.
   </div>
 </div>
 
-**In plain words:** Jini helps you get from messy input to a usable output without making you babysit models, prompts, or route choices.
+**In plain words:** Jini helps you get from messy input to a usable output without making you babysit models, prompts, route choices, or device switches.
+
+> If you only need a one-off answer, use a raw model shell. If the work must stay cheap, resumable, and safe to hand off, use Jini.
 
 <div class="fact-strip">
   <div class="fact-pill">
-    <strong>One shell</strong>
-    <p>Install once, then start with <code>jini</code>.</p>
+    <strong>Cost optimizer first</strong>
+    <p>Jini stays on the cheapest suitable route by default and escalates only when the outcome justifies the spend.</p>
   </div>
   <div class="fact-pill">
-    <strong>Cheap by default</strong>
-    <p>Routine work stays inexpensive. Escalation happens only when the work justifies it.</p>
+    <strong>Resume anywhere</strong>
+    <p>The same session should stay visible across CLI, desktop, and mobile instead of disappearing into one surface.</p>
   </div>
   <div class="fact-pill">
-    <strong>Visible outputs</strong>
-    <p>See what is ready, what is missing, and what to open next without status hunting.</p>
+    <strong>Second-to-none UX</strong>
+    <p>See what is ready, what is missing, and what to do next without status hunting or provider jargon.</p>
   </div>
   <div class="fact-pill">
     <strong>Measured routing</strong>

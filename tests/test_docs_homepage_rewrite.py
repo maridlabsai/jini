@@ -21,9 +21,13 @@ class DocsHomepageRewriteTests(unittest.TestCase):
         text = read(HOMEPAGE_PATH)
         for marker in (
             "One shell for AI work",
-            "Cheap by default. Strong when needed.",
+            "The lowest-cost shell for work that must resume anywhere.",
             "Works with Claude Code",
             "Works with Codex",
+            "If you only need a one-off answer, use a raw model shell.",
+            "Cost optimizer first",
+            "Resume anywhere",
+            "Second-to-none UX",
             "## Who Jini is for",
             "Good fit",
             "Not the best fit",
