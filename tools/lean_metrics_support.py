@@ -281,8 +281,6 @@ def collect_core_command_samples(root: Path, cli_path: Path) -> tuple[list[dict[
             "command": " ".join(["jini", *args]),
             "duration_ms": duration_ms,
             "exit_code": int(completed.returncode),
-            "stdout_preview": completed.stdout.splitlines()[:3],
-            "stderr_preview": completed.stderr.splitlines()[:3],
         }
         parsed_json: dict[str, Any] | None = None
         if parse_json_output:

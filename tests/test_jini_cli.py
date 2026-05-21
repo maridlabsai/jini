@@ -2823,6 +2823,8 @@ class JiniCliConformanceTests(unittest.TestCase):
             payload["command_samples"][3]["command"],
         )
         self.assertTrue(all(item["exit_code"] == 0 for item in payload["command_samples"]))
+        self.assertTrue(all("stdout_preview" not in item for item in payload["command_samples"]))
+        self.assertTrue(all("stderr_preview" not in item for item in payload["command_samples"]))
         self.assertTrue(payload["provider_evidence"]["available"])
         self.assertEqual("local-preview", payload["provider_evidence"]["provider_id"])
         self.assertEqual("Local preview", payload["provider_evidence"]["label"])
