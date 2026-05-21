@@ -200,6 +200,35 @@ description: One shell for AI work. Cheap by default, strong when needed.
   </div>
 </div>
 
+## See the product surface
+
+<div class="media-grid">
+  <a class="media-card" href="{{ '/install.html' | relative_url }}">
+    <img src="{{ '/assets/examples/meeting-followup.gif' | relative_url }}" alt="Jini install and first useful output flow">
+    <div class="media-copy">
+      <span class="workflow-meta">Install and first run</span>
+      <h3>Install once, then start with <code>jini</code>.</h3>
+      <p>The surface should get you from install to a first useful artifact without teaching a command tree.</p>
+    </div>
+  </a>
+  <a class="media-card" href="{{ '/state-and-artifacts.html' | relative_url }}">
+    <img src="{{ '/assets/examples/research-prd.gif' | relative_url }}" alt="Jini active work, ready items, and missing items view">
+    <div class="media-copy">
+      <span class="workflow-meta">Active work</span>
+      <h3>Keep ready, missing, and next visible.</h3>
+      <p>Jini should make the current work legible instead of forcing users to reconstruct state from chat and files.</p>
+    </div>
+  </a>
+  <a class="media-card" href="{{ '/cli.html' | relative_url }}">
+    <img src="{{ '/assets/examples/vendor-selection.gif' | relative_url }}" alt="Jini metrics and route evidence surface">
+    <div class="media-copy">
+      <span class="workflow-meta">Metrics and route evidence</span>
+      <h3>Show cost, route, and latency evidence.</h3>
+      <p>The trust story should be inspectable through metrics and route evidence, not hidden behind provider jargon.</p>
+    </div>
+  </a>
+</div>
+
 ## See real outputs
 
 <div class="media-grid">

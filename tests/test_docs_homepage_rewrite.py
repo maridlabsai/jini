@@ -29,6 +29,9 @@ class DocsHomepageRewriteTests(unittest.TestCase):
             "## Commands that matter",
             "## Why trust it",
             "## What Jini stores",
+            "## See the product surface",
+            "Install and first run",
+            "Metrics and route evidence",
             "hidden cloud memory",
             "jini metrics",
         ):
