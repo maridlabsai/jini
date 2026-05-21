@@ -2615,10 +2615,13 @@ func firstResultItem(summary *workSummary) *catalogItem {
 	return &summary.Views[0]
 }
 
-func renderPostResultActions(w io.Writer, summary *workSummary, item *catalogItem) {
-	fmt.Fprintln(w, "What do you want to do next?")
+func renderPrimaryActionMenu(w io.Writer, summary *workSummary, heading, readyAction string) {
+	if strings.TrimSpace(heading) != "" {
+		fmt.Fprintln(w, heading)
+		fmt.Fprintln(w)
+	}
 	fmt.Fprintln(w, "- Keep going")
-	fmt.Fprintln(w, "- Open what's ready")
+	fmt.Fprintf(w, "- %s\n", firstNonEmpty(strings.TrimSpace(readyAction), "Show what's ready"))
 	fmt.Fprintln(w, "- Show what Jini used")
 	fmt.Fprintln(w, "- Show what is missing")
 	fmt.Fprintln(w, "- Make it fuller")
@@ -2629,6 +2632,10 @@ func renderPostResultActions(w io.Writer, summary *workSummary, item *catalogIte
 	}
 	fmt.Fprintln(w, "- Help me plan this")
 	fmt.Fprintln(w, "- Start new work")
+}
+
+func renderPostResultActions(w io.Writer, summary *workSummary, item *catalogItem) {
+	renderPrimaryActionMenu(w, summary, "What do you want to do next?", "Open what's ready")
 	renderPostResultContext(w, summary, item)
 }
 
@@ -3449,20 +3456,7 @@ func renderCurrentWorkPrompt(w io.Writer, summary *workSummary) {
 
 func renderCurrentWorkHelp(w io.Writer, summary *workSummary) {
 	renderCurrentWorkLauncher(w, summary, false)
-	fmt.Fprintln(w, "Choose one")
-	fmt.Fprintln(w)
-	fmt.Fprintln(w, "- Keep going")
-	fmt.Fprintln(w, "- Show what's ready")
-	fmt.Fprintln(w, "- Show what Jini used")
-	fmt.Fprintln(w, "- Show what is missing")
-	fmt.Fprintln(w, "- Make it fuller")
-	fmt.Fprintln(w, "Revision shortcuts: `Make it shorter`, `Make it executive`, `Turn this into a checklist`.")
-	if hasArtifactVersions(summary) {
-		fmt.Fprintln(w, "- Show versions")
-		fmt.Fprintln(w, "- Undo last change")
-	}
-	fmt.Fprintln(w, "- Help me plan this")
-	fmt.Fprintln(w, "- Start new work")
+	renderPrimaryActionMenu(w, summary, "Choose one", "Show what's ready")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Familiar commands also work: `/status`, `/doctor`, `/model`, `/init`, `/memory`, `/permissions`, `/cost`.")
 }
