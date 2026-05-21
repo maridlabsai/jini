@@ -575,6 +575,53 @@ def build_lean_platform_metrics() -> dict[str, Any]:
                 ),
                 "adapters": adapter_rows,
             }
+    ready_route_adapters = [
+        item
+        for item in route_evidence.get("adapters", [])
+        if item.get("status") in {"ok", "degraded"}
+    ]
+    cheapest_ready_adapter = None
+    if ready_route_adapters:
+        cheapest_ready_adapter = min(
+            ready_route_adapters,
+            key=lambda item: (
+                int(item.get("cold_start_cost_ms", 0) or 0),
+                int(item.get("warm_latency_ms", 0) or 0),
+                -float(item.get("tokens_per_second", 0) or 0),
+            ),
+        )
+    route_cost: dict[str, Any] = {
+        "available": bool(ready_route_adapters),
+        "status": "measured" if ready_route_adapters else "unavailable",
+        "basis": "local-runtime-benchmark" if ready_route_adapters else "none",
+        "posture": "zero-external-api-spend" if ready_route_adapters else "unknown",
+        "ready_adapter_count": len(ready_route_adapters),
+        "avg_ready_warm_latency_ms": round(
+            sum(float(item.get("warm_latency_ms", 0) or 0) for item in ready_route_adapters) / len(ready_route_adapters),
+            1,
+        )
+        if ready_route_adapters
+        else None,
+        "avg_ready_tokens_per_second": round(
+            sum(float(item.get("tokens_per_second", 0) or 0) for item in ready_route_adapters)
+            / len(ready_route_adapters),
+            1,
+        )
+        if ready_route_adapters
+        else None,
+        "cheapest_ready_adapter": (
+            {
+                "adapter_id": str(cheapest_ready_adapter.get("adapter_id", "")),
+                "cold_start_cost_ms": int(cheapest_ready_adapter.get("cold_start_cost_ms", 0) or 0),
+                "warm_latency_ms": int(cheapest_ready_adapter.get("warm_latency_ms", 0) or 0),
+                "tokens_per_second": float(cheapest_ready_adapter.get("tokens_per_second", 0) or 0),
+                "quality_class": str(cheapest_ready_adapter.get("quality_class", "")),
+                "structured_reliability": str(cheapest_ready_adapter.get("structured_reliability", "")),
+            }
+            if cheapest_ready_adapter
+            else None
+        ),
+    }
     provider_evidence: dict[str, Any] = {
         "available": False,
         "provider_id": "",
@@ -671,6 +718,7 @@ def build_lean_platform_metrics() -> dict[str, Any]:
         "latency_sample": latency_sample,
         "provider_evidence": provider_evidence,
         "route_evidence": route_evidence,
+        "route_cost": route_cost,
         "cost_proxy": {
             "dimension": "token-efficiency",
             "current_score": token_efficiency.get("current_score"),
@@ -741,6 +789,30 @@ def print_lean_platform_metrics(report: dict[str, Any]) -> None:
             f"reliability {adapter.get('structured_reliability', '')} | "
             f"{adapter.get('tokens_per_second', 0):.1f} tok/s"
         )
+    route_cost = report.get("route_cost", {})
+    print(
+        "ROUTECOST "
+        f"available={'yes' if route_cost.get('available') else 'no'} "
+        f"status={route_cost.get('status', 'unknown')} "
+        f"basis={route_cost.get('basis', 'none')} "
+        f"posture={route_cost.get('posture', 'unknown')}"
+    )
+    if route_cost.get("available"):
+        print(
+            "  "
+            f"ready={route_cost.get('ready_adapter_count', 0)} "
+            f"avg_warm_ms={route_cost.get('avg_ready_warm_latency_ms', 'n/a')} "
+            f"avg_tok_s={route_cost.get('avg_ready_tokens_per_second', 'n/a')}"
+        )
+        cheapest = route_cost.get("cheapest_ready_adapter") or {}
+        if cheapest:
+            print(
+                "  cheapest="
+                f"{cheapest.get('adapter_id', '')} "
+                f"cold+{cheapest.get('cold_start_cost_ms', 0)}ms "
+                f"warm={cheapest.get('warm_latency_ms', 0)}ms "
+                f"tok/s={cheapest.get('tokens_per_second', 0):.1f}"
+            )
     cost_proxy = report.get("cost_proxy", {})
     print(
         "COST     "
@@ -2947,6 +3019,7 @@ def build_publish_readiness() -> dict[str, Any]:
                         "command_surface_count<=5",
                         "compatibility_alias_count==0",
                         "sample_count>0",
+                        "route_cost:measured-or-unavailable",
                         "cost_proxy:token-efficiency",
                         "latency_proxy:delivery-maturity",
                     ],
@@ -15836,7 +15909,7 @@ def main() -> int:
 
     metrics_parser = subparsers.add_parser(
         "metrics",
-        help="Show lean-platform metrics for command surface, alias debt, cost proxy, and latency proxy",
+        help="Show lean-platform metrics for command surface, measured route cost, cost proxy, and latency proxy",
     )
     metrics_parser.add_argument(
         "--format",

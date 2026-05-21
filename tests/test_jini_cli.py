@@ -2800,6 +2800,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("  - jini open prd --from packs/research-prd/examples/research-prd-v1 --print-path", result.stdout)
         self.assertIn("PROVIDER available=yes id=local-preview status=ok", result.stdout)
         self.assertIn("  label=Local preview", result.stdout)
+        self.assertIn("ROUTECOST available=no status=unavailable basis=none posture=unknown", result.stdout)
         self.assertIn("COST     token-efficiency", result.stdout)
         self.assertIn("LATENCY  delivery-maturity", result.stdout)
 
@@ -2825,6 +2826,10 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("local-preview", payload["provider_evidence"]["provider_id"])
         self.assertEqual("Local preview", payload["provider_evidence"]["label"])
         self.assertEqual("ok", payload["provider_evidence"]["status"])
+        self.assertFalse(payload["route_cost"]["available"])
+        self.assertEqual("unavailable", payload["route_cost"]["status"])
+        self.assertEqual("none", payload["route_cost"]["basis"])
+        self.assertEqual("unknown", payload["route_cost"]["posture"])
         self.assertFalse(payload["route_evidence"]["available"])
         self.assertEqual(0, payload["route_evidence"]["adapter_count"])
         self.assertEqual("token-efficiency", payload["cost_proxy"]["dimension"])
@@ -2881,6 +2886,15 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("local-ollama", payload["route_evidence"]["local_runtime_class"])
         self.assertEqual(2, payload["route_evidence"]["adapter_count"])
         self.assertEqual(2, payload["route_evidence"]["ready_adapter_count"])
+        self.assertTrue(payload["route_cost"]["available"])
+        self.assertEqual("measured", payload["route_cost"]["status"])
+        self.assertEqual("local-runtime-benchmark", payload["route_cost"]["basis"])
+        self.assertEqual("zero-external-api-spend", payload["route_cost"]["posture"])
+        self.assertEqual(2, payload["route_cost"]["ready_adapter_count"])
+        self.assertEqual(120.0, payload["route_cost"]["avg_ready_warm_latency_ms"])
+        self.assertEqual(30.4, payload["route_cost"]["avg_ready_tokens_per_second"])
+        self.assertEqual("local-fast", payload["route_cost"]["cheapest_ready_adapter"]["adapter_id"])
+        self.assertEqual(5, payload["route_cost"]["cheapest_ready_adapter"]["cold_start_cost_ms"])
         adapters = {
             item["adapter_id"]: item
             for item in payload["route_evidence"]["adapters"]
