@@ -2634,6 +2634,30 @@ func renderPrimaryActionMenu(w io.Writer, summary *workSummary, heading, readyAc
 	fmt.Fprintln(w, "- Start new work")
 }
 
+func renderCompactCurrentWorkChoices(w io.Writer, canSwitch bool) {
+	fmt.Fprintln(w, "Choose one")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "- Keep going")
+	fmt.Fprintln(w, "- Show what's ready")
+	fmt.Fprintln(w, "- Show what is missing")
+	fmt.Fprintln(w, "- Help me plan this")
+	if canSwitch {
+		fmt.Fprintln(w, "- Switch project")
+	}
+	fmt.Fprintln(w, "- Start new work")
+}
+
+func renderArtifactFeedbackChoices(w io.Writer) {
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Tell Jini how this draft went")
+	fmt.Fprintln(w, "- Accepted as is")
+	fmt.Fprintln(w, "- Needed light edits")
+	fmt.Fprintln(w, "- Not useful")
+	fmt.Fprintln(w, "- Shared this")
+	fmt.Fprintln(w, "- Replaced this")
+	fmt.Fprintln(w, "Advanced: `Used this`, `Model upvote`, or `Model downvote`.")
+}
+
 func renderPostResultActions(w io.Writer, summary *workSummary, item *catalogItem) {
 	renderPrimaryActionMenu(w, summary, "What do you want to do next?", "Open what's ready")
 	renderPostResultContext(w, summary, item)
@@ -3273,26 +3297,10 @@ func renderCurrentWorkLauncher(w io.Writer, summary *workSummary, interactive bo
 			}
 		}
 		fmt.Fprintln(w)
-		fmt.Fprintln(w, "Choose one")
-		fmt.Fprintln(w)
-		fmt.Fprintln(w, "- Keep going")
-		fmt.Fprintln(w, "- Show what's ready")
-		fmt.Fprintln(w, "- Show what is missing")
-		fmt.Fprintln(w, "- Help me plan this")
 		if strings.TrimSpace(summary.Thread.ModelLabel) != "" {
-			fmt.Fprintln(w)
-			fmt.Fprintln(w, "Tell Jini how this draft went")
-			fmt.Fprintln(w, "- Accepted as is")
-			fmt.Fprintln(w, "- Needed light edits")
-			fmt.Fprintln(w, "- Not useful")
-			fmt.Fprintln(w, "- Shared this")
-			fmt.Fprintln(w, "- Replaced this")
-			fmt.Fprintln(w, "Advanced: `Used this`, `Model upvote`, or `Model downvote`.")
+			renderArtifactFeedbackChoices(w)
 		}
-		if len(other) > 0 {
-			fmt.Fprintln(w, "- Switch project")
-		}
-		fmt.Fprintln(w, "- Start new work")
+		renderCompactCurrentWorkChoices(w, len(other) > 0)
 		return
 	}
 	if strings.TrimSpace(summary.Thread.ModelLabel) != "" {
