@@ -2666,7 +2666,7 @@ func renderSelectableWorkList(w io.Writer, heading string, active []*workSummary
 
 func renderArtifactFeedbackChoices(w io.Writer) {
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Tell Jini how this draft went")
+	fmt.Fprintln(w, "How did this draft go?")
 	fmt.Fprintln(w, "- Accepted as is")
 	fmt.Fprintln(w, "- Needed light edits")
 	fmt.Fprintln(w, "- Not useful")
@@ -3500,6 +3500,9 @@ func renderCurrentWorkHelp(w io.Writer, summary *workSummary) {
 		fmt.Fprintln(w)
 		fmt.Fprintln(w, "Resume")
 		fmt.Fprintf(w, "- %s\n", summary.Thread.ResumeTarget)
+	}
+	if strings.TrimSpace(summary.Thread.ModelLabel) != "" {
+		renderArtifactFeedbackChoices(w)
 	}
 	fmt.Fprintln(w)
 	renderPrimaryActionMenu(w, summary, "Choose one", "Show what's ready")

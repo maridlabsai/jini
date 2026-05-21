@@ -837,6 +837,36 @@ func TestHelpHidesCurrentWorkContinuityReason(t *testing.T) {
 	}
 }
 
+func TestHelpShowsPlainLanguageFeedbackShelfWhenModelContextExists(t *testing.T) {
+	stateDir := t.TempDir()
+	packDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+	writeCurrentWorkRoute(t, packDir, map[string]any{
+		"schema_version":       "0.1.0",
+		"context_type":         "JiniWorkRoute",
+		"tool_mode":            "codex",
+		"tool_label":           "Azure writing route",
+		"route_policy":         "Automatic",
+		"model_label":          "gpt-4o-prod",
+		"provider_label":       "Azure OpenAI / gpt-4o-prod",
+		"chosen_automatically": true,
+	})
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("help\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected help surface to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "How did this draft go?") {
+		t.Fatalf("expected help surface to show feedback shelf, got:\n%s", stdout.String())
+	}
+	if strings.Contains(stdout.String(), "Tell Jini how this draft went") {
+		t.Fatalf("expected help surface to avoid product-shaped feedback heading, got:\n%s", stdout.String())
+	}
+}
+
 func TestCheckHighlightsSpecificMeetingGaps(t *testing.T) {
 	stateDir := t.TempDir()
 	packDir := seedMeetingWork(t)
