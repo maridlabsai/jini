@@ -2679,6 +2679,20 @@ func renderArtifactFeedbackChoices(w io.Writer) {
 	fmt.Fprintln(w, "Advanced: `Used this`, `Model upvote`, or `Model downvote`.")
 }
 
+func renderOtherActiveWorkList(w io.Writer, active []*workSummary, includeHint bool) {
+	if len(active) == 0 {
+		return
+	}
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Other active work")
+	for _, item := range active {
+		fmt.Fprintf(w, "- %s\n", item.Title)
+	}
+	if includeHint {
+		fmt.Fprintln(w, "Type `Switch project` to change focus.")
+	}
+}
+
 func renderPostResultActions(w io.Writer, summary *workSummary, item *catalogItem) {
 	renderPrimaryActionMenu(w, summary, "What do you want to do next?", "Open what's ready")
 	renderPostResultContext(w, summary, item)
@@ -3291,13 +3305,7 @@ func renderCurrentWorkLauncher(w io.Writer, summary *workSummary, interactive bo
 			}
 		}
 		other := otherActiveWorkSummaries(summary)
-		if len(other) > 0 {
-			fmt.Fprintln(w)
-			fmt.Fprintln(w, "Other active work")
-			for _, item := range other {
-				fmt.Fprintf(w, "- %s\n", item.Title)
-			}
-		}
+		renderOtherActiveWorkList(w, other, false)
 		fmt.Fprintln(w)
 		if strings.TrimSpace(summary.Thread.ModelLabel) != "" {
 			renderArtifactFeedbackChoices(w)
@@ -3425,14 +3433,7 @@ func renderCurrentWorkLauncher(w io.Writer, summary *workSummary, interactive bo
 			fmt.Fprintf(w, "- %s\n", item)
 		}
 	}
-	other := otherActiveWorkSummaries(summary)
-	if len(other) > 0 {
-		fmt.Fprintln(w)
-		fmt.Fprintln(w, "Other active work")
-		for _, item := range other {
-			fmt.Fprintf(w, "- %s\n", item.Title)
-		}
-	}
+	renderOtherActiveWorkList(w, otherActiveWorkSummaries(summary), false)
 	fmt.Fprintln(w)
 }
 
@@ -3451,14 +3452,7 @@ func renderCurrentWorkPrompt(w io.Writer, summary *workSummary) {
 			fmt.Fprintln(w, "Resume")
 			fmt.Fprintf(w, "- %s\n", summary.Thread.ResumeTarget)
 		}
-		if other := otherActiveWorkSummaries(summary); len(other) > 0 {
-			fmt.Fprintln(w)
-			fmt.Fprintln(w, "Other active work")
-			for _, item := range other {
-				fmt.Fprintf(w, "- %s\n", item.Title)
-			}
-			fmt.Fprintln(w, "Type `Switch project` to change focus.")
-		}
+		renderOtherActiveWorkList(w, otherActiveWorkSummaries(summary), true)
 	}
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Paste a new request, or type `help` to inspect current work.")
