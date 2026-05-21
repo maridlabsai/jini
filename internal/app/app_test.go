@@ -771,14 +771,10 @@ func TestCurrentWorkHelpShowsCurrentWorkRecap(t *testing.T) {
 		"Weekly Product Review",
 		"Working with",
 		"Meeting notes and follow-up tasks",
-		"Just finished",
-		"Doing now",
-		"Up next",
-		"Now",
-		"Turning notes into owners and next steps",
 		"Ready now",
 		"Sendable Follow-up",
-		"Next",
+		"Blocked",
+		"Metric and legal-review decision",
 		"Choose one",
 		"Keep going",
 		"Start new work",
@@ -787,9 +783,23 @@ func TestCurrentWorkHelpShowsCurrentWorkRecap(t *testing.T) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
 	}
+	for _, unwanted := range []string{
+		"Just finished",
+		"Doing now",
+		"Up next",
+		"Now",
+		"AI route",
+		"Continuity",
+		"Why this model",
+		"Why this route",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected help recap to hide %q, got:\n%s", unwanted, out)
+		}
+	}
 }
 
-func TestLauncherShowsCurrentWorkContinuityReason(t *testing.T) {
+func TestHelpHidesCurrentWorkContinuityReason(t *testing.T) {
 	stateDir := t.TempDir()
 	packDir := seedMeetingWork(t)
 	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
@@ -814,13 +824,15 @@ func TestLauncherShowsCurrentWorkContinuityReason(t *testing.T) {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
 
-	out := stdout.String()
-	for _, want := range []string{
+	for _, unwanted := range []string{
 		"Continuity",
 		"Kept the current coding route to preserve context continuity because the quality gap was not material.",
+		"AI route",
+		"gpt-4.1",
+		"Azure OpenAI / gpt-4.1",
 	} {
-		if !strings.Contains(out, want) {
-			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		if strings.Contains(stdout.String(), unwanted) {
+			t.Fatalf("expected help surface to hide %q, got:\n%s", unwanted, stdout.String())
 		}
 	}
 }

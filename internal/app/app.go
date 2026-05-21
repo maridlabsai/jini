@@ -3469,7 +3469,39 @@ func renderCurrentWorkPrompt(w io.Writer, summary *workSummary) {
 }
 
 func renderCurrentWorkHelp(w io.Writer, summary *workSummary) {
-	renderCurrentWorkLauncher(w, summary, false)
+	fmt.Fprintln(w, "Goal")
+	fmt.Fprintln(w, summary.Thread.Goal)
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Working with")
+	for _, item := range summary.Thread.WorkingWith {
+		fmt.Fprintf(w, "- %s\n", item)
+	}
+	if len(summary.Thread.WorkingWith) == 0 {
+		fmt.Fprintln(w, "- Nothing attached yet")
+	}
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Ready now")
+	if len(summary.Thread.ReadyNow) == 0 {
+		fmt.Fprintln(w, "- Nothing is ready yet")
+	} else {
+		for _, item := range summary.Thread.ReadyNow {
+			fmt.Fprintf(w, "- %s\n", item.Label)
+		}
+	}
+	if len(summary.Thread.Blocked) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Blocked")
+		for _, item := range summary.Thread.Blocked {
+			fmt.Fprintf(w, "- %s\n", item)
+		}
+	}
+	renderOtherActiveWorkList(w, otherActiveWorkSummaries(summary), true)
+	if strings.TrimSpace(summary.Thread.ResumeTarget) != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Resume")
+		fmt.Fprintf(w, "- %s\n", summary.Thread.ResumeTarget)
+	}
+	fmt.Fprintln(w)
 	renderPrimaryActionMenu(w, summary, "Choose one", "Show what's ready")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Familiar commands also work: `/status`, `/doctor`, `/model`, `/init`, `/memory`, `/permissions`, `/cost`.")
