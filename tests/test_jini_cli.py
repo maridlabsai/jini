@@ -356,6 +356,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("Open", result.stdout)
         self.assertIn("Plan", result.stdout)
         self.assertIn("SCRIPTABLE", result.stdout)
+        self.assertIn("jini setup --harness codex", result.stdout)
         self.assertIn("jini run --repo /path/to/repo --harness codex", result.stdout)
         self.assertNotIn("usage: jini", result.stdout)
 
@@ -366,9 +367,9 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("clearer next steps", result.stdout)
         self.assertIn("stage-framework-experiment", result.stdout)
 
-    def test_start_alias_runs_setup_surface(self) -> None:
+    def test_setup_command_runs_setup_surface(self) -> None:
         prefix = self.tmp / "setup-codex"
-        result = self.run_cli("start", "--harness", "codex", "--prefix", prefix)
+        result = self.run_cli("setup", "--harness", "codex", "--prefix", prefix)
         self.assert_ok(result)
         self.assertIn("HARNESS codex", result.stdout)
         self.assertIn("STATUS  ok", result.stdout)
@@ -377,6 +378,13 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("jini\n", result.stdout)
         self.assertNotIn("jini check", result.stdout)
         self.assertNotIn("jini open", result.stdout)
+
+    def test_start_alias_still_resolves_to_setup_surface(self) -> None:
+        prefix = self.tmp / "setup-start-alias"
+        result = self.run_cli("start", "--harness", "codex", "--prefix", prefix)
+        self.assert_ok(result)
+        self.assertIn("HARNESS codex", result.stdout)
+        self.assertIn(f"PREFIX  {prefix.resolve()}", result.stdout)
 
     def test_guide_alias_resolves_to_get_started(self) -> None:
         result = self.run_cli("guide", "--harness", "codex")

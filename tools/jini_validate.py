@@ -6280,6 +6280,7 @@ def print_cli_overview() -> None:
     print("  Plan")
     print()
     print("SCRIPTABLE")
+    print(f"  {cli} setup --harness codex")
     print(f"  {cli} check")
     print(f"  {cli} open")
     print(f"  {cli} run --repo /path/to/repo --harness codex")
@@ -15588,7 +15589,7 @@ def main() -> int:
 
     get_started_parser = subparsers.add_parser(
         "get-started",
-        help="Show the longer beginner and power-user guide behind the one-command start path",
+        help="Show the longer beginner and power-user guide behind the one-command front door",
     )
     get_started_parser.add_argument(
         "--target",

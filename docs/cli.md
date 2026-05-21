@@ -67,6 +67,10 @@ jini
   <h2>Commands that stay available for automation and power users</h2>
   <div class="checklist-grid">
     <div class="checklist-card">
+      <h3><code>jini setup</code></h3>
+      <p>Materializes one safe starter setup for a harness when you need an explicit local setup path.</p>
+    </div>
+    <div class="checklist-card">
       <h3><code>jini check</code></h3>
       <p>Shows a calm work summary: what you are working on, what is ready, what is missing, and the next step.</p>
     </div>
