@@ -2811,9 +2811,34 @@ func TestCurrentWorkFreeformInputCanKeepCurrentWork(t *testing.T) {
 	if strings.Contains(out, "7 Day Paris Trip") {
 		t.Fatalf("expected keep-current path not to start new work, got:\n%s", out)
 	}
+	if strings.Contains(out, "Switch project") {
+		t.Fatalf("expected interrupt prompt to hide switch-project when no other work exists, got:\n%s", out)
+	}
 	current := readCurrentWork(t, stateDir)
 	if current["pack_id"] != "meeting-followup" {
 		t.Fatalf("expected current work to remain meeting-followup, got %#v", current)
+	}
+}
+
+func TestCurrentWorkInterruptPromptErrorMatchesAvailableChoices(t *testing.T) {
+	stateDir := t.TempDir()
+	meetingDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, meetingDir, "meeting-followup", "example-meeting-followup", "Meeting Notes With Owners And Due Dates For Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("plan me a 7 day paris trip\nmaybe later\n"), &stdout, &stdout)
+	if exitCode != 1 {
+		t.Fatalf("expected invalid interruption choice to return exit code 1, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	if !strings.Contains(out, "Choose `Start new work` or `Keep current work`.") {
+		t.Fatalf("expected guidance to match shown choices, got:\n%s", out)
+	}
+	if strings.Contains(out, "Switch project") {
+		t.Fatalf("expected invalid-choice guidance not to mention hidden switch-project option, got:\n%s", out)
 	}
 }
 

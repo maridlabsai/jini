@@ -2704,11 +2704,26 @@ func renderCurrentWorkNoop(w io.Writer) {
 	fmt.Fprintln(w, "Use `keep going`, `show what's ready`, or paste a new request.")
 }
 
+func canSwitchFromCurrentWork(summary *workSummary) bool {
+	return len(otherActiveWorkSummaries(summary)) > 0
+}
+
+func renderInterruptionChoices(w io.Writer, canSwitch bool) {
+	fmt.Fprintln(w, "Choose one")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "- Start new work")
+	fmt.Fprintln(w, "- Keep current work")
+	if canSwitch {
+		fmt.Fprintln(w, "- Switch project")
+	}
+}
+
 func confirmCurrentWorkInterruptionAndContinue(summary *workSummary, candidate string, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
 	if scanner == nil {
 		return startNewWorkFromRawInput(candidate, scanner, stdout, stderr)
 	}
-	renderCurrentWorkInterruptionPrompt(stdout, summary, candidate)
+	canSwitch := canSwitchFromCurrentWork(summary)
+	renderCurrentWorkInterruptionPrompt(stdout, summary, candidate, canSwitch)
 	choice, ok := readOptionalInputLine(scanner, stdout)
 	if !ok || strings.TrimSpace(choice) == "" {
 		return 0
@@ -2724,12 +2739,16 @@ func confirmCurrentWorkInterruptionAndContinue(summary *workSummary, candidate s
 	case "3", "switch project", "switch", "show active work", "active work":
 		return runSwitchWorkPicker(summary, scanner, stdout, stderr)
 	default:
-		fmt.Fprintln(stderr, "Choose `Start new work`, `Keep current work`, or `Switch project`.")
+		if canSwitch {
+			fmt.Fprintln(stderr, "Choose `Start new work`, `Keep current work`, or `Switch project`.")
+		} else {
+			fmt.Fprintln(stderr, "Choose `Start new work` or `Keep current work`.")
+		}
 		return 1
 	}
 }
 
-func renderCurrentWorkInterruptionPrompt(w io.Writer, summary *workSummary, candidate string) {
+func renderCurrentWorkInterruptionPrompt(w io.Writer, summary *workSummary, candidate string, canSwitch bool) {
 	fmt.Fprintln(w, "This looks like new work.")
 	if summary != nil && strings.TrimSpace(summary.Title) != "" {
 		fmt.Fprintf(w, "Current work stays saved: %s.\n", summary.Title)
@@ -2740,11 +2759,7 @@ func renderCurrentWorkInterruptionPrompt(w io.Writer, summary *workSummary, cand
 		fmt.Fprintf(w, "- %s\n", compactPreview(candidate, 140))
 	}
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Choose one")
-	fmt.Fprintln(w)
-	fmt.Fprintln(w, "- Start new work")
-	fmt.Fprintln(w, "- Keep current work")
-	fmt.Fprintln(w, "- Switch project")
+	renderInterruptionChoices(w, canSwitch)
 }
 
 func renderCurrentWorkMemoryStatus(w io.Writer, summary *workSummary) {
