@@ -218,7 +218,7 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		return runInteractiveOpenShelf(summary, scanner, stdout, stderr)
 	case "show what jini used", "what jini used", "show context", "what did you use", "what shaped this":
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "context"})
-	case "see what is still missing", "show what is missing", "missing":
+	case "see what is still missing", "show what is missing", "show missing", "missing":
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "missing"})
 	case "make it fuller", "fuller", "show more", "expand", "expand this":
 		if !renderNextContinuation(stdout, summary) {
@@ -2619,7 +2619,7 @@ func renderPrimaryActionMenu(w io.Writer, summary *workSummary, heading, readyAc
 	fmt.Fprintln(w, "- Keep going")
 	fmt.Fprintf(w, "- %s\n", firstNonEmpty(strings.TrimSpace(readyAction), "Show what's ready"))
 	fmt.Fprintln(w, "- Show context")
-	fmt.Fprintln(w, "- Show what is missing")
+	fmt.Fprintln(w, "- Show missing")
 	fmt.Fprintln(w, "- Make it fuller")
 	fmt.Fprintln(w, "Revision shortcuts: `Make it shorter`, `Make it executive`, `Turn this into a checklist`.")
 	if hasArtifactVersions(summary) {
@@ -2635,7 +2635,7 @@ func renderCompactCurrentWorkChoices(w io.Writer, canSwitch bool) {
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "- Keep going")
 	fmt.Fprintln(w, "- Show what's ready")
-	fmt.Fprintln(w, "- Show what is missing")
+	fmt.Fprintln(w, "- Show missing")
 	fmt.Fprintln(w, "- Plan this")
 	if canSwitch {
 		fmt.Fprintln(w, "- Switch project")
@@ -3083,7 +3083,7 @@ func handlePostResultAction(action string, summary *workSummary, scanner *bufio.
 		renderCheck(stdout, summary)
 	case "show what jini used", "what jini used", "show context", "what did you use", "what shaped this":
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "context"})
-	case "see what is still missing", "show what is missing", "missing", "3":
+	case "see what is still missing", "show what is missing", "show missing", "missing", "3":
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "missing"})
 	case "make it fuller", "fuller", "show more", "expand", "expand this", "4":
 		if !renderNextContinuation(stdout, summary) {
@@ -3273,7 +3273,7 @@ func renderPlanFirst(w io.Writer, summary *workSummary) {
 	fmt.Fprintln(w, "Run")
 	fmt.Fprintln(w, "- Keep going")
 	fmt.Fprintln(w, "- Show what's ready")
-	fmt.Fprintln(w, "- Show what is missing")
+	fmt.Fprintln(w, "- Show missing")
 }
 
 func renderCurrentWorkLauncher(w io.Writer, summary *workSummary, interactive bool) {

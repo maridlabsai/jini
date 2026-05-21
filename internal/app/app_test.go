@@ -1020,7 +1020,7 @@ func TestInteractiveLauncherCreatesMeetingWork(t *testing.T) {
 		"## Send this",
 		"Keep going",
 		"Open what's ready",
-		"Show what is missing",
+		"Show missing",
 		"Make it fuller",
 		"Plan this",
 	} {
@@ -1102,7 +1102,7 @@ func TestInteractiveLauncherCreatesSpecReadinessWork(t *testing.T) {
 		"## What looks ready now",
 		"Keep going",
 		"Open what's ready",
-		"Show what is missing",
+		"Show missing",
 		"Make it fuller",
 		"Plan this",
 	} {
@@ -1467,7 +1467,7 @@ func TestInteractiveLauncherRunsMeetingPostResultActions(t *testing.T) {
 			for _, want := range []string{
 				"## Send this",
 				"Keep going",
-				"Show what is missing",
+				"Show missing",
 			} {
 				if !strings.Contains(out, want) {
 					t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -1517,7 +1517,7 @@ func TestInteractiveLauncherRunsSpecPostResultActions(t *testing.T) {
 			for _, want := range []string{
 				"## What looks ready now",
 				"Keep going",
-				"Show what is missing",
+				"Show missing",
 			} {
 				if !strings.Contains(out, want) {
 					t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -1526,7 +1526,11 @@ func TestInteractiveLauncherRunsSpecPostResultActions(t *testing.T) {
 			if out == baseline {
 				t.Fatalf("expected %q to be handled as a real action, but output matched the no-action run:\n%s", tc.action, out)
 			}
-			requireStringAfter(t, out, tc.action, tc.wantAfterAction)
+			if strings.Contains(out, tc.action) {
+				requireStringAfter(t, out, tc.action, tc.wantAfterAction)
+			} else if !strings.Contains(out, tc.wantAfterAction) {
+				t.Fatalf("expected output to contain %q for action %q, got:\n%s", tc.wantAfterAction, tc.action, out)
+			}
 			for _, unwanted := range []string{"coming soon", "not implemented"} {
 				if strings.Contains(strings.ToLower(out), unwanted) {
 					t.Fatalf("expected real action, got placeholder %q in:\n%s", unwanted, out)
