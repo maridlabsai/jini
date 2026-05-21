@@ -529,6 +529,64 @@ def build_lean_platform_metrics() -> dict[str, Any]:
     }
     token_efficiency = dimensions.get("token-efficiency", {})
     delivery_maturity = dimensions.get("delivery-maturity", {})
+    command_samples: list[dict[str, Any]] = []
+    cli_path = ROOT / "tools" / "jini.py"
+
+    def sample_cli(args: list[str], *, env_overrides: dict[str, str] | None = None) -> dict[str, Any]:
+        env = os.environ.copy()
+        if env_overrides:
+            env.update(env_overrides)
+        started = time.perf_counter()
+        completed = subprocess.run(
+            [sys.executable, str(cli_path), *args],
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            env=env,
+        )
+        duration_ms = round((time.perf_counter() - started) * 1000, 1)
+        return {
+            "command": " ".join(["jini", *args]),
+            "duration_ms": duration_ms,
+            "exit_code": int(completed.returncode),
+            "stdout_preview": completed.stdout.splitlines()[:3],
+            "stderr_preview": completed.stderr.splitlines()[:3],
+        }
+
+    with tempfile.TemporaryDirectory(prefix="jini-metrics-") as tmp_dir:
+        tmp_root = Path(tmp_dir)
+        command_samples.append(
+            sample_cli(
+                ["setup", "--harness", "codex", "--prefix", str(tmp_root / "setup-prefix")],
+            )
+        )
+        command_samples.append(
+            sample_cli(
+                ["doctor", "--format", "json"],
+                env_overrides={"JINI_PROVIDER": "local-preview"},
+            )
+        )
+        command_samples.append(
+            sample_cli(
+                ["status", "packs/research-prd/examples/research-prd-v1"],
+            )
+        )
+        command_samples.append(
+            sample_cli(
+                ["open", "prd", "--from", "packs/research-prd/examples/research-prd-v1", "--print-path"],
+            )
+        )
+
+    successful_durations = [float(item["duration_ms"]) for item in command_samples if int(item["exit_code"]) == 0]
+    latency_sample = {
+        "sample_count": len(command_samples),
+        "successful_sample_count": len(successful_durations),
+        "max_ms": round(max(successful_durations), 1) if successful_durations else None,
+        "min_ms": round(min(successful_durations), 1) if successful_durations else None,
+        "avg_ms": round(sum(successful_durations) / len(successful_durations), 1) if successful_durations else None,
+    }
 
     return {
         "generated_at": now_utc(),
@@ -536,6 +594,8 @@ def build_lean_platform_metrics() -> dict[str, Any]:
         "command_surface_count": len(taught_commands),
         "compatibility_alias_count": sum(int(item["count"]) for item in alias_matches),
         "compatibility_alias_matches": alias_matches,
+        "command_samples": command_samples,
+        "latency_sample": latency_sample,
         "cost_proxy": {
             "dimension": "token-efficiency",
             "current_score": token_efficiency.get("current_score"),
@@ -563,6 +623,19 @@ def print_lean_platform_metrics(report: dict[str, Any]) -> None:
     print(f"ALIASES  {report.get('compatibility_alias_count', 0)}")
     for match in report.get("compatibility_alias_matches", []):
         print(f"  - {match['alias']} | {match['path']} | count={match['count']}")
+    latency_sample = report.get("latency_sample", {})
+    print(
+        "SAMPLES  "
+        f"count={latency_sample.get('sample_count', 0)} "
+        f"ok={latency_sample.get('successful_sample_count', 0)} "
+        f"avg_ms={latency_sample.get('avg_ms', 'n/a')} "
+        f"max_ms={latency_sample.get('max_ms', 'n/a')}"
+    )
+    for sample in report.get("command_samples", []):
+        print(
+            f"  - {sample.get('command', '')} | ms={sample.get('duration_ms', 'n/a')} "
+            f"| exit={sample.get('exit_code', 'n/a')}"
+        )
     cost_proxy = report.get("cost_proxy", {})
     print(
         "COST     "
@@ -2768,6 +2841,7 @@ def build_publish_readiness() -> dict[str, Any]:
                     "markers": [
                         "command_surface_count<=5",
                         "compatibility_alias_count==0",
+                        "sample_count>0",
                         "cost_proxy:token-efficiency",
                         "latency_proxy:delivery-maturity",
                     ],

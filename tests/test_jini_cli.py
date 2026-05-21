@@ -2793,6 +2793,11 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("  - setup", result.stdout)
         self.assertIn("  - status", result.stdout)
         self.assertIn("ALIASES  0", result.stdout)
+        self.assertIn("SAMPLES  count=4 ok=4", result.stdout)
+        self.assertIn("  - jini setup --harness codex", result.stdout)
+        self.assertIn("  - jini doctor --format json", result.stdout)
+        self.assertIn("  - jini status packs/research-prd/examples/research-prd-v1", result.stdout)
+        self.assertIn("  - jini open prd --from packs/research-prd/examples/research-prd-v1 --print-path", result.stdout)
         self.assertIn("COST     token-efficiency", result.stdout)
         self.assertIn("LATENCY  delivery-maturity", result.stdout)
 
@@ -2804,6 +2809,16 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual(5, payload["command_surface_count"])
         self.assertEqual(0, payload["compatibility_alias_count"])
         self.assertEqual(["doctor", "metrics", "open", "setup", "status"], payload["taught_commands"])
+        self.assertEqual(4, payload["latency_sample"]["sample_count"])
+        self.assertEqual(4, payload["latency_sample"]["successful_sample_count"])
+        self.assertTrue(payload["command_samples"][0]["command"].startswith("jini setup --harness codex --prefix "))
+        self.assertEqual("jini doctor --format json", payload["command_samples"][1]["command"])
+        self.assertEqual("jini status packs/research-prd/examples/research-prd-v1", payload["command_samples"][2]["command"])
+        self.assertEqual(
+            "jini open prd --from packs/research-prd/examples/research-prd-v1 --print-path",
+            payload["command_samples"][3]["command"],
+        )
+        self.assertTrue(all(item["exit_code"] == 0 for item in payload["command_samples"]))
         self.assertEqual("token-efficiency", payload["cost_proxy"]["dimension"])
         self.assertEqual("delivery-maturity", payload["latency_proxy"]["dimension"])
 
