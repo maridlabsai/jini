@@ -1821,11 +1821,7 @@ func runOpen(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "%v\n", err)
 		return 1
 	}
-	if err := renderSelectedArtifact(stdout, summary, item); err != nil {
-		fmt.Fprintf(stderr, "Could not open artifact: %v\n", err)
-		return 1
-	}
-	return 0
+	return openArtifactItem(summary, item, stdout, stderr)
 }
 
 func resolveSummary(args []string) (*workSummary, error) {
@@ -2847,11 +2843,7 @@ func runInteractiveOpenShelf(summary *workSummary, scanner *bufio.Scanner, stdou
 		fmt.Fprintln(stderr, "Type a number or artifact name to open one.")
 		return 1
 	}
-	if err := renderSelectedArtifact(stdout, summary, item); err != nil {
-		fmt.Fprintf(stderr, "Could not open artifact: %v\n", err)
-		return 1
-	}
-	return 0
+	return openArtifactItem(summary, item, stdout, stderr)
 }
 
 func artifactThreadFocus(summary *workSummary, item *catalogItem) *threadFocus {
@@ -2885,6 +2877,14 @@ func renderSelectedArtifact(w io.Writer, summary *workSummary, item *catalogItem
 	}
 	renderThreadSurface(w, summary, artifactThreadFocus(summary, item))
 	return nil
+}
+
+func openArtifactItem(summary *workSummary, item *catalogItem, stdout, stderr io.Writer) int {
+	if err := renderSelectedArtifact(stdout, summary, item); err != nil {
+		fmt.Fprintf(stderr, "Could not open artifact: %v\n", err)
+		return 1
+	}
+	return 0
 }
 
 func activeAskFocus(summary *workSummary) *threadFocus {
@@ -3115,11 +3115,7 @@ func handlePostResultAction(action string, summary *workSummary, scanner *bufio.
 			return 0
 		}
 		if item, ok := resolveInteractiveArtifactSelection(summary, action); ok {
-			if err := renderSelectedArtifact(stdout, summary, item); err != nil {
-				fmt.Fprintf(stderr, "Could not open artifact: %v\n", err)
-				return 1
-			}
-			return 0
+			return openArtifactItem(summary, item, stdout, stderr)
 		}
 		renderCheck(stdout, summary)
 	}
