@@ -743,8 +743,8 @@ func TestLauncherStartsAsCompactShellWhenCurrentWorkExists(t *testing.T) {
 		"Need",
 		"Why this matters",
 		"Continue current work",
-		"Open what's ready",
-		"Start something new",
+		"Open ready",
+		"Start new",
 	} {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("expected bare launcher to hide default work detail %q, got:\n%s", unwanted, out)
@@ -776,8 +776,8 @@ func TestCurrentWorkHelpShowsCurrentWorkRecap(t *testing.T) {
 		"Blocked",
 		"Metric and legal-review decision",
 		"Choose one",
-		"Keep going",
-		"Start new work",
+		"Continue",
+		"Start new",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -1018,11 +1018,11 @@ func TestInteractiveLauncherCreatesMeetingWork(t *testing.T) {
 		"Paste what you want finished.",
 		"Sendable Follow-up",
 		"## Send this",
-		"Keep going",
-		"Open what's ready",
+		"Continue",
+		"Open ready",
 		"Show missing",
-		"Make it fuller",
-		"Plan this",
+		"Expand",
+		"Plan",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -1100,11 +1100,11 @@ func TestInteractiveLauncherCreatesSpecReadinessWork(t *testing.T) {
 		"Paste what you want finished.",
 		"Build-Readiness Check",
 		"## What looks ready now",
-		"Keep going",
-		"Open what's ready",
+		"Continue",
+		"Open ready",
 		"Show missing",
-		"Make it fuller",
-		"Plan this",
+		"Expand",
+		"Plan",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -1466,7 +1466,7 @@ func TestInteractiveLauncherRunsMeetingPostResultActions(t *testing.T) {
 			out := runInteractiveForTest(t, t.TempDir(), source+"\n"+tc.action+"\n")
 			for _, want := range []string{
 				"## Send this",
-				"Keep going",
+				"Continue",
 				"Show missing",
 			} {
 				if !strings.Contains(out, want) {
@@ -1516,7 +1516,7 @@ func TestInteractiveLauncherRunsSpecPostResultActions(t *testing.T) {
 			out := runInteractiveForTest(t, t.TempDir(), source+"\n"+tc.action+"\n")
 			for _, want := range []string{
 				"## What looks ready now",
-				"Keep going",
+				"Continue",
 				"Show missing",
 			} {
 				if !strings.Contains(out, want) {
@@ -1554,7 +1554,7 @@ func TestCurrentWorkInteractiveChoicesAreReal(t *testing.T) {
 	}
 
 	out := stdout.String()
-	if !strings.Contains(out, "Open a ready item") {
+	if !strings.Contains(out, "Open ready") {
 		t.Fatalf("expected open shelf after choosing current work option 2, got:\n%s", out)
 	}
 	if !strings.Contains(out, "Sendable Follow-up") {
@@ -1576,7 +1576,7 @@ func TestCurrentWorkInteractivePunctuatedReadyCommandOpensShelf(t *testing.T) {
 	}
 
 	out := stdout.String()
-	for _, want := range []string{"Open a ready item", "1. Sendable Follow-up", "Type a number or name to open one"} {
+	for _, want := range []string{"Open ready", "1. Sendable Follow-up", "Type a number or name to open one"} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
@@ -1835,7 +1835,7 @@ func TestCurrentWorkReadyShelfSelectionOpensArtifactByNumber(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Open a ready item",
+		"Open ready",
 		"2. Owners and Due Points",
 		"Owners and Due Points",
 	} {
@@ -1860,7 +1860,7 @@ func TestCurrentWorkReadyShelfSelectionOpensArtifactByName(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Open a ready item",
+		"Open ready",
 		"Owners and Due Points",
 	} {
 		if !strings.Contains(out, want) {
@@ -2132,7 +2132,7 @@ func TestCurrentWorkInteractiveSocialAckDoesNotStartNewWork(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Nothing changed.",
-		"Use `keep going`, `show what's ready`, or paste a new request.",
+		"Use `Continue`, `Open ready`, or paste a new request.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -2214,7 +2214,7 @@ func TestCurrentWorkInteractiveTacticalCommandsDoNotStartNewWork(t *testing.T) {
 		{
 			name: "clear",
 			line: "/clear\n",
-			want: []string{"Nothing was deleted.", "Type `Start new work` to switch focus without removing this work."},
+			want: []string{"Nothing was deleted.", "Type `Start new` to switch focus without removing this work."},
 		},
 	}
 
@@ -2467,7 +2467,7 @@ func TestCurrentWorkCanEnterPlanFirstMode(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Plan this",
+		"Plan",
 		"Goal",
 		"Requirements",
 		"Design",
@@ -2773,7 +2773,7 @@ func TestInteractiveLauncherCanSwitchBetweenActiveProjects(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Switch project",
+		"Switch work",
 		"1. 7-Day Paris Trip",
 		"Switched to",
 		"7-Day Paris Trip",
@@ -2811,7 +2811,7 @@ func TestCurrentWorkFreeformInputConfirmsBeforeStartingNewWork(t *testing.T) {
 	for _, want := range []string{
 		"This looks like new work.",
 		"Current work stays saved",
-		"Start new work",
+		"Start new",
 		"Your first draft is ready.",
 		"7 Day Paris Trip",
 		"Itinerary",
@@ -2857,7 +2857,7 @@ func TestCurrentWorkFreeformInputCanKeepCurrentWork(t *testing.T) {
 	if strings.Contains(out, "7 Day Paris Trip") {
 		t.Fatalf("expected keep-current path not to start new work, got:\n%s", out)
 	}
-	if strings.Contains(out, "Switch project") {
+	if strings.Contains(out, "Switch project") || strings.Contains(out, "Switch work") {
 		t.Fatalf("expected interrupt prompt to hide switch-project when no other work exists, got:\n%s", out)
 	}
 	current := readCurrentWork(t, stateDir)
@@ -2880,10 +2880,10 @@ func TestCurrentWorkInterruptPromptErrorMatchesAvailableChoices(t *testing.T) {
 	}
 
 	out := stdout.String()
-	if !strings.Contains(out, "Choose `Start new work` or `Keep current work`.") {
+	if !strings.Contains(out, "Choose `Start new` or `Keep current`.") {
 		t.Fatalf("expected guidance to match shown choices, got:\n%s", out)
 	}
-	if strings.Contains(out, "Switch project") {
+	if strings.Contains(out, "Switch project") || strings.Contains(out, "Switch work") {
 		t.Fatalf("expected invalid-choice guidance not to mention hidden switch-project option, got:\n%s", out)
 	}
 }
@@ -2905,7 +2905,7 @@ func TestCurrentWorkFreeformInputCanSwitchProjectFromInterruptPrompt(t *testing.
 	out := stdout.String()
 	for _, want := range []string{
 		"This looks like new work.",
-		"Switch project",
+		"Switch work",
 		"Switched to",
 		"7-Day Paris Trip",
 	} {

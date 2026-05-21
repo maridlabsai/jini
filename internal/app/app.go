@@ -331,7 +331,7 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		renderNoInitRequired(stdout)
 	case "clear":
 		fmt.Fprintln(stdout, "Nothing was deleted.")
-		fmt.Fprintln(stdout, "Type `Start new work` to switch focus without removing this work.")
+		fmt.Fprintln(stdout, "Type `Start new` to switch focus without removing this work.")
 	case "plan this first", "plan first", "plan this", "plan", "requirements", "design", "help me plan this":
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "plan"})
 	case "3", "new", "start new", "start something new", "start something else", "start new work":
@@ -910,7 +910,7 @@ func resolveStarterChoice(raw string) (starterChoice, error) {
 	case "3", "i am not sure", "i'm not sure", "i’m not sure", "im not sure", "i m not sure", "not sure", "unsure", "help me finish this":
 		return starterChoice{PackID: "auto", ChoiceLabel: "I am not sure", DefaultName: "Working Draft", State: "decided"}, nil
 	case "plan this first", "plan first":
-		return starterChoice{PackID: "auto", ChoiceLabel: "Plan this first", DefaultName: "Plan First", State: "modeled"}, nil
+		return starterChoice{PackID: "auto", ChoiceLabel: "Plan", DefaultName: "Plan", State: "modeled"}, nil
 	}
 	for _, packID := range starterPackMenuOrder {
 		profile, ok := starterProfileForPack(packID)
@@ -2616,36 +2616,36 @@ func renderPrimaryActionMenu(w io.Writer, summary *workSummary, heading, readyAc
 		fmt.Fprintln(w, heading)
 		fmt.Fprintln(w)
 	}
-	fmt.Fprintln(w, "- Keep going")
-	fmt.Fprintf(w, "- %s\n", firstNonEmpty(strings.TrimSpace(readyAction), "Show what's ready"))
+	fmt.Fprintln(w, "- Continue")
+	fmt.Fprintf(w, "- %s\n", firstNonEmpty(strings.TrimSpace(readyAction), "Open ready"))
 	fmt.Fprintln(w, "- Show context")
 	fmt.Fprintln(w, "- Show missing")
-	fmt.Fprintln(w, "- Make it fuller")
+	fmt.Fprintln(w, "- Expand")
 	fmt.Fprintln(w, "Revision shortcuts: `Make it shorter`, `Make it executive`, `Turn this into a checklist`.")
 	if hasArtifactVersions(summary) {
 		fmt.Fprintln(w, "- Show versions")
 		fmt.Fprintln(w, "- Undo last change")
 	}
-	fmt.Fprintln(w, "- Plan this")
-	fmt.Fprintln(w, "- Start new work")
+	fmt.Fprintln(w, "- Plan")
+	fmt.Fprintln(w, "- Start new")
 }
 
 func renderCompactCurrentWorkChoices(w io.Writer, canSwitch bool) {
 	fmt.Fprintln(w, "Choose one")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "- Keep going")
-	fmt.Fprintln(w, "- Show what's ready")
+	fmt.Fprintln(w, "- Continue")
+	fmt.Fprintln(w, "- Open ready")
 	fmt.Fprintln(w, "- Show missing")
-	fmt.Fprintln(w, "- Plan this")
+	fmt.Fprintln(w, "- Plan")
 	if canSwitch {
-		fmt.Fprintln(w, "- Switch project")
+		fmt.Fprintln(w, "- Switch work")
 	}
-	fmt.Fprintln(w, "- Start new work")
+	fmt.Fprintln(w, "- Start new")
 }
 
 func renderWorkSwitchChoices(w io.Writer, includeStartNew bool) {
 	if includeStartNew {
-		fmt.Fprintln(w, "Type a number to open one, or type `Start something new`.")
+		fmt.Fprintln(w, "Type a number to open one, or type `Start new`.")
 		return
 	}
 	fmt.Fprintln(w, "Type a number or title to switch.")
@@ -2685,12 +2685,12 @@ func renderOtherActiveWorkList(w io.Writer, active []*workSummary, includeHint b
 		fmt.Fprintf(w, "- %s\n", item.Title)
 	}
 	if includeHint {
-		fmt.Fprintln(w, "Type `Switch project` to change focus.")
+		fmt.Fprintln(w, "Type `Switch work` to change focus.")
 	}
 }
 
 func renderPostResultActions(w io.Writer, summary *workSummary, item *catalogItem) {
-	renderPrimaryActionMenu(w, summary, "What do you want to do next?", "Open what's ready")
+	renderPrimaryActionMenu(w, summary, "What do you want to do next?", "Open ready")
 	renderPostResultContext(w, summary, item)
 }
 
@@ -2701,7 +2701,7 @@ func renderNewWorkNoop(w io.Writer) {
 
 func renderCurrentWorkNoop(w io.Writer) {
 	fmt.Fprintln(w, "Nothing changed.")
-	fmt.Fprintln(w, "Use `keep going`, `show what's ready`, or paste a new request.")
+	fmt.Fprintln(w, "Use `Continue`, `Open ready`, or paste a new request.")
 }
 
 func canSwitchFromCurrentWork(summary *workSummary) bool {
@@ -2711,10 +2711,10 @@ func canSwitchFromCurrentWork(summary *workSummary) bool {
 func renderInterruptionChoices(w io.Writer, canSwitch bool) {
 	fmt.Fprintln(w, "Choose one")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "- Start new work")
-	fmt.Fprintln(w, "- Keep current work")
+	fmt.Fprintln(w, "- Start new")
+	fmt.Fprintln(w, "- Keep current")
 	if canSwitch {
-		fmt.Fprintln(w, "- Switch project")
+		fmt.Fprintln(w, "- Switch work")
 	}
 }
 
@@ -2734,15 +2734,15 @@ func confirmCurrentWorkInterruptionAndContinue(summary *workSummary, candidate s
 		return startNewWorkFromRawInput(candidate, scanner, stdout, stderr)
 	case "2", "keep current work", "keep current", "stay here", "cancel", "never mind":
 		fmt.Fprintln(stdout, "Keeping current work.")
-		fmt.Fprintln(stdout, "Use `keep going`, `show what's ready`, or paste a new request when you mean to switch.")
+		fmt.Fprintln(stdout, "Use `Continue`, `Open ready`, or paste a new request when you mean to switch.")
 		return 0
 	case "3", "switch project", "switch", "show active work", "active work":
 		return runSwitchWorkPicker(summary, scanner, stdout, stderr)
 	default:
 		if canSwitch {
-			fmt.Fprintln(stderr, "Choose `Start new work`, `Keep current work`, or `Switch project`.")
+			fmt.Fprintln(stderr, "Choose `Start new`, `Keep current`, or `Switch work`.")
 		} else {
-			fmt.Fprintln(stderr, "Choose `Start new work` or `Keep current work`.")
+			fmt.Fprintln(stderr, "Choose `Start new` or `Keep current`.")
 		}
 		return 1
 	}
@@ -3246,7 +3246,7 @@ func renderMissingOnly(w io.Writer, summary *workSummary) {
 }
 
 func renderPlanFirst(w io.Writer, summary *workSummary) {
-	fmt.Fprintln(w, "Plan this")
+	fmt.Fprintln(w, "Plan")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Goal")
 	fmt.Fprintf(w, "- Finish %s without hiding what is missing.\n", summary.Title)
@@ -3271,8 +3271,8 @@ func renderPlanFirst(w io.Writer, summary *workSummary) {
 	fmt.Fprintln(w, "- Then continue only if the next action is safe.")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Run")
-	fmt.Fprintln(w, "- Keep going")
-	fmt.Fprintln(w, "- Show what's ready")
+	fmt.Fprintln(w, "- Continue")
+	fmt.Fprintln(w, "- Open ready")
 	fmt.Fprintln(w, "- Show missing")
 }
 
@@ -3505,7 +3505,7 @@ func renderCurrentWorkHelp(w io.Writer, summary *workSummary) {
 		renderArtifactFeedbackChoices(w)
 	}
 	fmt.Fprintln(w)
-	renderPrimaryActionMenu(w, summary, "Choose one", "Show what's ready")
+	renderPrimaryActionMenu(w, summary, "Choose one", "Open ready")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Familiar commands also work: `/status`, `/doctor`, `/model`, `/init`, `/memory`, `/permissions`, `/cost`.")
 }
@@ -3551,7 +3551,7 @@ func runSwitchWorkPicker(current *workSummary, scanner *bufio.Scanner, stdout, s
 		fmt.Fprintln(stdout, "No other active work right now.")
 		return 0
 	}
-	renderSelectableWorkList(stdout, "Switch project", other, false)
+	renderSelectableWorkList(stdout, "Switch work", other, false)
 	if scanner == nil {
 		return 0
 	}
@@ -3803,7 +3803,7 @@ func summaryWorkingWith(summary *workSummary) string {
 }
 
 func renderOpenShelf(w io.Writer, summary *workSummary) {
-	fmt.Fprintln(w, "Open a ready item")
+	fmt.Fprintln(w, "Open ready")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Ready now")
 	indexByPath := map[string]int{}
