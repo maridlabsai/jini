@@ -82,6 +82,10 @@ jini
       <h3><code>jini doctor</code></h3>
       <p>Local setup check for Claude, Bedrock, Azure OpenAI, Local SLM, or local preview.</p>
     </div>
+    <div class="checklist-card">
+      <h3><code>jini metrics</code></h3>
+      <p>Shows the lean-platform command count, alias debt, and the current cost and latency proxy scores.</p>
+    </div>
   </div>
 </div>
 
