@@ -6245,6 +6245,7 @@ def cli_invocation() -> str:
 
 CLI_ALIAS_MAP: dict[str, str] = {
     "start": "setup",
+    "doctor": "provider",
     "guide": "get-started",
     "check": "outcome",
     "example": "try-example",
@@ -6284,7 +6285,7 @@ def print_cli_overview() -> None:
     print(f"  {cli} check")
     print(f"  {cli} open")
     print(f"  {cli} run --repo /path/to/repo --harness codex")
-    print(f"  {cli} provider doctor")
+    print(f"  {cli} doctor")
     print()
     print("MORE")
     print(f"  {cli} help --all")

@@ -358,6 +358,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("SCRIPTABLE", result.stdout)
         self.assertIn("jini setup --harness codex", result.stdout)
         self.assertIn("jini run --repo /path/to/repo --harness codex", result.stdout)
+        self.assertIn("jini doctor", result.stdout)
         self.assertNotIn("usage: jini", result.stdout)
 
     def test_help_all_shows_full_parser_surface(self) -> None:
@@ -2090,7 +2091,7 @@ class JiniCliConformanceTests(unittest.TestCase):
                 "AZURE_OPENAI_API_VERSION": "2024-10-21",
             }
         )
-        result = self.run_cli("provider", "doctor", "--format", "json", env=env)
+        result = self.run_cli("doctor", "--format", "json", env=env)
         self.assert_ok(result)
 
         report = json.loads(result.stdout)
@@ -2111,7 +2112,7 @@ class JiniCliConformanceTests(unittest.TestCase):
                 "BEDROCK_MODEL_ID": "anthropic.claude-3-5-sonnet-20240620-v1:0",
             }
         )
-        result = self.run_cli("provider", "doctor", "--format", "json", env=env)
+        result = self.run_cli("doctor", "--format", "json", env=env)
         self.assert_ok(result)
 
         report = json.loads(result.stdout)
@@ -2131,7 +2132,7 @@ class JiniCliConformanceTests(unittest.TestCase):
                 "JINI_MODEL": "sonnet",
             }
         )
-        result = self.run_cli("provider", "doctor", "--format", "json", env=env)
+        result = self.run_cli("doctor", "--format", "json", env=env)
         self.assert_ok(result)
 
         report = json.loads(result.stdout)
@@ -2152,7 +2153,7 @@ class JiniCliConformanceTests(unittest.TestCase):
                 "AWS_PROFILE": "work-profile",
             }
         )
-        result = self.run_cli("provider", "doctor", "--format", "json", env=env)
+        result = self.run_cli("doctor", "--format", "json", env=env)
         self.assert_ok(result)
 
         report = json.loads(result.stdout)
@@ -2175,13 +2176,25 @@ class JiniCliConformanceTests(unittest.TestCase):
                 "ANTHROPIC_API_KEY": "super-secret-key",
             }
         )
-        result = self.run_cli("provider", "doctor", "--format", "json", env=env)
+        result = self.run_cli("doctor", "--format", "json", env=env)
         self.assertNotEqual(0, result.returncode)
 
         report = json.loads(result.stdout)
         self.assertEqual("anthropic", report["provider_id"])
         self.assertEqual("needs setup", report["status"])
         self.assertTrue(any("supported only on Bedrock" in item for item in report["missing"]))
+
+    def test_provider_doctor_compatibility_path_still_works(self) -> None:
+        env = {
+            "JINI_PROVIDER": "claude",
+            "ANTHROPIC_API_KEY": "sk-live-secret",
+            "JINI_MODEL": "sonnet",
+        }
+        result = self.run_cli("provider", "doctor", "--format", "json", env=env)
+        self.assert_ok(result)
+        report = json.loads(result.stdout)
+        self.assertEqual("anthropic", report["provider_id"])
+        self.assertEqual("ok", report["status"])
 
     def test_validate_golden_benchmark_reports_jini_against_expanded_competitor_field(self) -> None:
         result = self.run_cli("validate-golden-benchmark", "--format", "json")

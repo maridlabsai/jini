@@ -129,7 +129,7 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 			return runProvider(args[1:], stdout, stderr)
 		default:
 			fmt.Fprintf(stderr, "Unknown command %q.\n", args[0])
-			fmt.Fprintln(stderr, "Try `jini`, `jini provider doctor`, or a scriptable command such as `jini check`.")
+			fmt.Fprintln(stderr, "Try `jini`, `jini doctor`, or a scriptable command such as `jini check`.")
 			return 1
 		}
 	})
@@ -388,7 +388,7 @@ type providerConfig struct {
 func runProvider(args []string, stdout, stderr io.Writer) int {
 	if len(args) > 0 && normalizeName(args[0]) != "doctor" {
 		fmt.Fprintf(stderr, "Unknown provider command %q.\n", args[0])
-		fmt.Fprintln(stderr, "Try `jini provider doctor`.")
+		fmt.Fprintln(stderr, "Try `jini doctor`.")
 		return 1
 	}
 	if shouldRefreshLocalBenchmarkForDoctor() {

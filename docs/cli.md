@@ -79,7 +79,7 @@ jini
       <p>Opens useful outputs like a follow-up, memo, or check instead of internal file paths.</p>
     </div>
     <div class="checklist-card">
-      <h3><code>jini provider doctor</code></h3>
+      <h3><code>jini doctor</code></h3>
       <p>Local setup check for Claude, Bedrock, Azure OpenAI, Local SLM, or local preview.</p>
     </div>
   </div>
@@ -87,10 +87,10 @@ jini
 
 <div class="section-card" markdown="1">
   <span class="section-kicker">Setup check</span>
-  <h2>What <code>provider doctor</code> is for</h2>
+  <h2>What <code>doctor</code> is for</h2>
 
 ```bash
-jini provider doctor
+jini doctor
 jini
 ```
 
