@@ -88,20 +88,6 @@ description: One shell for AI work. Cheap by default, strong when needed.
   </div>
 </div>
 
-## Why not just use a raw model shell
-
-<div class="section-card" markdown="1">
-| Need | Raw model shell | Jini |
-|---|---|---|
-| Start work | Good at first draft | Good at first draft plus stable continuation |
-| Continue later | You reconstruct context from chat or files | Work state, artifacts, and next step stay attached |
-| Keep cost down | You manage route choice manually | Cheapest suitable route is the default |
-| Show trust signals | Usually hidden behind prompt and provider choice | Route reason, metrics, and missing pieces stay visible |
-| Hand off safely | You decide what is final and what is still risky | Jini keeps ready, missing, and review-safe state explicit |
-
-<p>Use a raw model shell when you only need a one-off answer. Use Jini when the work has an awkward middle, needs continuation, or has to be cheap, inspectable, and safe to hand off.</p>
-</div>
-
 ## What Jini writes
 
 <div class="workflow-grid">
@@ -156,47 +142,36 @@ description: One shell for AI work. Cheap by default, strong when needed.
   </div>
 </div>
 
-## Why trust it
+## Why buy Jini
 
-<div class="media-grid">
+<div class="section-card" markdown="1">
+| Need | Raw model shell | Jini |
+|---|---|---|
+| Continue work later | You reconstruct context from chat or files | Work state, artifacts, and next step stay attached |
+| Keep cost down | You manage route choice manually | Cheapest suitable route is the default |
+| Trust the route | Prompt/provider choices are usually opaque | Route reason, metrics, and missing pieces stay visible |
+| Hand off safely | You decide what is final and what is still risky | Jini keeps ready, missing, and review-safe state explicit |
+| Inspect stored state | Hidden memory may be unclear | Artifacts, work state, and route evidence stay legible |
+
+<p>Use a raw model shell when you only need a one-off answer. Use Jini when the work has an awkward middle, needs continuation, or has to be cheap, inspectable, and safe to hand off.</p>
+</div>
+
+<div class="proof-grid">
   <div class="proof-card">
     <h3>Plain files and visible state</h3>
     <p>Jini keeps artifacts, work state, and route evidence legible instead of hiding everything in a proprietary cloud memory layer.</p>
   </div>
   <div class="proof-card">
-    <h3>Cost and latency are measurable</h3>
-    <p><code>jini metrics</code> reports real command timings and route evidence so efficiency is inspectable, not implied.</p>
-  </div>
-  <div class="proof-card">
-    <h3>Strict routes still exist</h3>
-    <p>If policy requires Claude, Bedrock, Azure, or local-only routing, you can pin that route without losing the same product surface.</p>
-  </div>
-  <div class="proof-card">
-    <h3>Safe before send</h3>
-    <p>The work stays reviewable. Jini keeps what is missing and what is uncertain visible before anything is treated as final.</p>
-  </div>
-</div>
-
-## What Jini stores
-
-<div class="checklist-grid">
-  <div class="checklist-card">
     <h3>Stored locally</h3>
-    <ul class="compact-list">
-      <li>artifacts like follow-ups, memos, and readiness checks</li>
-      <li>work state so the same thread can resume cleanly</li>
-      <li>route evidence like command timings and local benchmark summaries</li>
-      <li>repo-local setup state under <code>.jini</code> when setup needs to stay simple</li>
-    </ul>
+    <p>Artifacts, resume state, route evidence, and repo-local setup state under <code>.jini</code> stay inspectable when the product needs to remember something.</p>
   </div>
-  <div class="checklist-card">
+  <div class="proof-card">
     <h3>Not stored as product magic</h3>
-    <ul class="compact-list">
-      <li>hidden cloud memory you cannot inspect</li>
-      <li>opaque routing claims without measurable evidence</li>
-      <li>auto-share behavior that skips review</li>
-      <li>secret values printed back into docs or doctor output</li>
-    </ul>
+    <p>No hidden cloud memory, no opaque routing claims without measurable evidence, no auto-share behavior that skips review, and no secrets echoed back into docs or doctor output.</p>
+  </div>
+  <div class="proof-card">
+    <h3>Measured trust signals</h3>
+    <p><code>jini metrics</code> reports command timings and route evidence so efficiency is inspectable, not implied. Strict routes still exist when policy requires them.</p>
   </div>
 </div>
 
