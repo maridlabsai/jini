@@ -65,6 +65,7 @@ FRICTION_REDUCTION_RESEARCH_PATH = ROOT / "specs" / "friction-reduction-research
 FRICTION_REDUCTION_GATE_PATH = ROOT / "specs" / "friction-reduction-gate.md"
 LEAN_PLATFORM_DOCTRINE_PATH = ROOT / "specs" / "lean-platform-doctrine.md"
 LEAN_PLATFORM_GATE_PATH = ROOT / "specs" / "lean-platform-gate.md"
+CLI_DOC_PATH = ROOT / "docs" / "cli.md"
 DEVICE_CAPABILITY_ROUTING_PATH = ROOT / "specs" / "device-capability-routing.md"
 DEVICE_RUNTIME_GATE_PATH = ROOT / "specs" / "device-runtime-gate.md"
 ADAPTER_CAPABILITY_BENCHMARKING_PATH = ROOT / "specs" / "adapter-capability-benchmarking.md"
@@ -93,6 +94,20 @@ PUBLIC_BOUNDARY_REFERENCE_PATTERNS = (
     re.compile(r"\./20[0-9][0-9]-[0-9]{2}-[0-9]{2}-[^\s)\"']+"),
 )
 OPEN_SOURCE_PROMPT_LICENSES = {"Apache-2.0", "CC0-1.0", "MIT"}
+TAUGHT_COMMAND_PATTERN = re.compile(r"<h3><code>jini ([^<]+)</code></h3>")
+FORBIDDEN_PUBLIC_COMMAND_ALIASES = (
+    "jini provider doctor",
+    "jini check",
+    "jini start",
+)
+LEAN_PLATFORM_ALIAS_SCAN_PATHS = (
+    ROOT / "README.md",
+    ROOT / "docs" / "cli.md",
+    ROOT / "docs" / "install.md",
+    ROOT / "docs" / "simple.md",
+    PRODUCT_REWRITE_CONTRACT_PATH,
+    ROOT / "specs" / "launcher-intake-design.md",
+)
 PUBLIC_EXAMPLE_SPECS: dict[str, dict[str, Any]] = {
     "meeting-followup": {
         "label": "Meeting Follow-up",
@@ -479,6 +494,93 @@ def print_competitive_kpi_summary(summary: dict[str, Any]) -> None:
         next_steps = item.get("next_build_steps", [])
         if next_steps:
             print(f"    next: {next_steps[0]}")
+
+
+def build_lean_platform_metrics() -> dict[str, Any]:
+    cli_doc = CLI_DOC_PATH.read_text(encoding="utf-8") if CLI_DOC_PATH.exists() else ""
+    taught_commands = sorted(
+        {
+            match.group(1).strip()
+            for match in TAUGHT_COMMAND_PATTERN.finditer(cli_doc)
+            if match.group(1).strip()
+        }
+    )
+
+    alias_matches: list[dict[str, Any]] = []
+    for path in LEAN_PLATFORM_ALIAS_SCAN_PATHS:
+        text = path.read_text(encoding="utf-8") if path.exists() else ""
+        normalized = text.lower()
+        for alias in FORBIDDEN_PUBLIC_COMMAND_ALIASES:
+            count = len(re.findall(rf"\b{re.escape(alias)}\b", normalized))
+            if count:
+                alias_matches.append(
+                    {
+                        "path": display_path(path),
+                        "alias": alias,
+                        "count": count,
+                    }
+                )
+
+    summary = build_competitive_kpi_summary(load_competitive_kpis(), limit=None)
+    dimensions = {
+        str(item.get("id", "")): item
+        for item in summary.get("dimensions", [])
+        if isinstance(item, dict)
+    }
+    token_efficiency = dimensions.get("token-efficiency", {})
+    delivery_maturity = dimensions.get("delivery-maturity", {})
+
+    return {
+        "generated_at": now_utc(),
+        "taught_commands": taught_commands,
+        "command_surface_count": len(taught_commands),
+        "compatibility_alias_count": sum(int(item["count"]) for item in alias_matches),
+        "compatibility_alias_matches": alias_matches,
+        "cost_proxy": {
+            "dimension": "token-efficiency",
+            "current_score": token_efficiency.get("current_score"),
+            "target_score": token_efficiency.get("target_score"),
+            "competitive_gap": token_efficiency.get("competitive_gap"),
+            "strength_status": token_efficiency.get("strength_status"),
+        },
+        "latency_proxy": {
+            "dimension": "delivery-maturity",
+            "current_score": delivery_maturity.get("current_score"),
+            "target_score": delivery_maturity.get("target_score"),
+            "competitive_gap": delivery_maturity.get("competitive_gap"),
+            "strength_status": delivery_maturity.get("strength_status"),
+        },
+        "status": "ok" if not alias_matches and len(taught_commands) <= 5 else "warning",
+    }
+
+
+def print_lean_platform_metrics(report: dict[str, Any]) -> None:
+    print(f"STATUS   {report.get('status', 'unknown')}")
+    print(f"CMDS     {report.get('command_surface_count', 0)}")
+    print("TAUGHT")
+    for command in report.get("taught_commands", []):
+        print(f"  - {command}")
+    print(f"ALIASES  {report.get('compatibility_alias_count', 0)}")
+    for match in report.get("compatibility_alias_matches", []):
+        print(f"  - {match['alias']} | {match['path']} | count={match['count']}")
+    cost_proxy = report.get("cost_proxy", {})
+    print(
+        "COST     "
+        f"{cost_proxy.get('dimension', '')} "
+        f"score={cost_proxy.get('current_score', 'n/a')} "
+        f"target={cost_proxy.get('target_score', 'n/a')} "
+        f"gap={cost_proxy.get('competitive_gap', 'n/a')} "
+        f"state={cost_proxy.get('strength_status', 'n/a')}"
+    )
+    latency_proxy = report.get("latency_proxy", {})
+    print(
+        "LATENCY  "
+        f"{latency_proxy.get('dimension', '')} "
+        f"score={latency_proxy.get('current_score', 'n/a')} "
+        f"target={latency_proxy.get('target_score', 'n/a')} "
+        f"gap={latency_proxy.get('competitive_gap', 'n/a')} "
+        f"state={latency_proxy.get('strength_status', 'n/a')}"
+    )
 
 
 def golden_benchmark_report_dir() -> Path:
@@ -2571,6 +2673,7 @@ def build_publish_readiness() -> dict[str, Any]:
         "status": "ok" if all(item["status"] == "ok" for item in lean_platform_checks) else "warning",
         "checks": lean_platform_checks,
     }
+    lean_platform_metrics = build_lean_platform_metrics()
     open_source_prompt_report = validate_open_source_prompt_corpus()
     public_boundary_report = validate_public_repo_boundary()
 
@@ -2654,8 +2757,25 @@ def build_publish_readiness() -> dict[str, Any]:
         {
             "id": "lean-platform",
             "label": "Lean platform doctrine",
-            "status": lean_platform_gate["status"],
-            "checks": lean_platform_gate["checks"],
+            "status": "ok"
+            if lean_platform_gate["status"] == "ok" and lean_platform_metrics.get("status") == "ok"
+            else "warning",
+            "checks": [
+                *lean_platform_gate["checks"],
+                {
+                    "path": "runtime:lean-platform-metrics",
+                    "exists": True,
+                    "markers": [
+                        "command_surface_count<=5",
+                        "compatibility_alias_count==0",
+                        "cost_proxy:token-efficiency",
+                        "latency_proxy:delivery-maturity",
+                    ],
+                    "missing_markers": [],
+                    "status": lean_platform_metrics.get("status", "warning"),
+                    "measurement": lean_platform_metrics,
+                },
+            ],
         },
         {
             "id": "open-source-prompt-validation",
@@ -15535,6 +15655,17 @@ def main() -> int:
         help="Output format for the scorecard",
     )
 
+    metrics_parser = subparsers.add_parser(
+        "metrics",
+        help="Show lean-platform metrics for command surface, alias debt, cost proxy, and latency proxy",
+    )
+    metrics_parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for the metrics report",
+    )
+
     publish_readiness_parser = subparsers.add_parser(
         "publish-readiness",
         help="Summarize whether Jini is lean, documented, and productized enough for wider publication",
@@ -17168,6 +17299,18 @@ def main() -> int:
         else:
             print_competitive_kpi_summary(summary)
         return 0
+
+    if args.command == "metrics":
+        try:
+            report = build_lean_platform_metrics()
+        except (FileNotFoundError, KeyError, TypeError, ValueError) as exc:
+            print(f"ERROR {exc}")
+            return 1
+        if args.format == "json":
+            print(json.dumps(report, indent=2))
+        else:
+            print_lean_platform_metrics(report)
+        return 0 if report.get("status") == "ok" else 1
 
     if args.command == "publish-readiness":
         try:

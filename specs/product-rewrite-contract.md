@@ -81,7 +81,7 @@ Primary human-facing entry:
 Scriptable commands:
 
 - `jini run`
-- `jini check`
+- `jini status`
 - `jini open`
 
 Human-facing docs should center `jini` first.

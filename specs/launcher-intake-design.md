@@ -35,7 +35,7 @@ When work already exists, startup should show a compact resume card:
 
 Detailed rationale such as `Why this matters`, `Options`, or `If you skip this`
 should remain available behind explicit actions like `Missing` or
-`jini check`.
+`jini status`.
 
 ## Starter design rules
 

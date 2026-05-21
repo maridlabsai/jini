@@ -2782,6 +2782,30 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("BEST   Aider (9.0)", result.stdout)
         self.assertIn("low-token reloads", result.stdout)
 
+    def test_metrics_reports_canonical_surface_without_alias_debt(self) -> None:
+        result = self.run_cli("metrics")
+        self.assert_ok(result)
+        self.assertIn("STATUS   ok", result.stdout)
+        self.assertIn("CMDS     4", result.stdout)
+        self.assertIn("  - doctor", result.stdout)
+        self.assertIn("  - open", result.stdout)
+        self.assertIn("  - setup", result.stdout)
+        self.assertIn("  - status", result.stdout)
+        self.assertIn("ALIASES  0", result.stdout)
+        self.assertIn("COST     token-efficiency", result.stdout)
+        self.assertIn("LATENCY  delivery-maturity", result.stdout)
+
+    def test_metrics_json_reports_counts_and_zero_aliases(self) -> None:
+        result = self.run_cli("metrics", "--format", "json")
+        self.assert_ok(result)
+        payload = json.loads(result.stdout)
+        self.assertEqual("ok", payload["status"])
+        self.assertEqual(4, payload["command_surface_count"])
+        self.assertEqual(0, payload["compatibility_alias_count"])
+        self.assertEqual(["doctor", "open", "setup", "status"], payload["taught_commands"])
+        self.assertEqual("token-efficiency", payload["cost_proxy"]["dimension"])
+        self.assertEqual("delivery-maturity", payload["latency_proxy"]["dimension"])
+
 
 if __name__ == "__main__":
     unittest.main()

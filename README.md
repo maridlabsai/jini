@@ -74,8 +74,8 @@ If you are not sure how to start, type:
 help me finish this
 ```
 
-`jini check`, `jini open`, and `jini run` still exist for scripts and power
-users. They are not the normal user model.
+`jini setup`, `jini status`, `jini open`, `jini doctor`, and `jini run` still
+exist for scripts and power users. They are not the normal user model.
 
 If multiple projects are already in flight, Jini should show `Active work`
 first, let you pick one, and keep sibling work visible under `Other active work`
@@ -152,7 +152,7 @@ Supported provider choices:
 For setup or troubleshooting:
 
 ```bash
-jini provider doctor
+jini doctor
 ```
 
 The doctor tells you what Jini will use, what `auto` resolved to, what is
@@ -174,7 +174,7 @@ folder so the next run can stay simple. Do not commit `.jini`.
 JINI_PROVIDER=claude
 ANTHROPIC_API_KEY=...
 JINI_MODEL=sonnet
-jini provider doctor
+jini doctor
 ```
 
 `JINI_MODEL=sonnet` resolves to Claude Sonnet 4 on the direct Claude API.
@@ -186,7 +186,7 @@ JINI_PROVIDER=bedrock
 AWS_REGION=us-east-1
 AWS_PROFILE=...
 JINI_MODEL=sonnet-4.6
-jini provider doctor
+jini doctor
 ```
 
 `JINI_MODEL=sonnet-4.6` resolves to Claude Sonnet 4.6 on Bedrock. You can also
@@ -200,7 +200,7 @@ AZURE_OPENAI_ENDPOINT=...
 AZURE_OPENAI_API_KEY=...
 AZURE_OPENAI_DEPLOYMENT=...
 JINI_MODEL=sonnet
-jini provider doctor
+jini doctor
 ```
 
 On Azure, the deployment decides the actual model. `JINI_MODEL` is only a user
@@ -214,7 +214,7 @@ JINI_TOOL=auto
 JINI_MODEL=auto
 JINI_LOCAL_SLM_ENDPOINT=http://127.0.0.1:11434/v1
 JINI_LOCAL_SLM_MODEL=qwen3:8b
-jini provider doctor
+jini doctor
 ```
 
 Optional local profile overrides:
@@ -234,7 +234,7 @@ that profile when the Jini/OS/runtime shape drifts, and uses backend readiness
 plus the device profile to decide whether `fast`, `workhorse`, `deep`, or
 `multimodal` is actually suitable.
 
-When you run `jini provider doctor` on a Local SLM setup, Jini also records a
+When you run `jini doctor` on a Local SLM setup, Jini also records a
 small measured capability report for the local profiles. That report captures
 real request success, warm latency, cold-start cost, token throughput, and
 structured-output reliability so auto routing can prefer the fastest
@@ -281,7 +281,7 @@ normal work loads to learn from reuse or substantive replacement there too.
 JINI_TOOL=auto
 JINI_PROVIDER=auto
 JINI_MODEL=auto
-jini provider doctor
+jini doctor
 ```
 
 If you ask for `JINI_MODEL=sonnet-4.6` with `JINI_TOOL=auto`, Jini prefers a
