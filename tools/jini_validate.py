@@ -539,6 +539,147 @@ def build_lean_platform_metrics() -> dict[str, Any]:
             return "stable"
         return ""
 
+    def load_route_report() -> tuple[dict[str, Any], dict[str, Any]]:
+        local_route_path = session_state_root() / "local-runtime-capabilities.json"
+        route_evidence: dict[str, Any] = {
+            "available": False,
+            "path": display_path(local_route_path),
+            "captured_at": "",
+            "local_runtime_class": "",
+            "adapter_count": 0,
+            "ready_adapter_count": 0,
+            "adapters": [],
+        }
+        payload: dict[str, Any] = {}
+        if local_route_path.exists():
+            try:
+                loaded = json.loads(local_route_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                loaded = {}
+            if isinstance(loaded, dict):
+                payload = loaded
+                adapter_rows: list[dict[str, Any]] = []
+                raw_adapters = payload.get("adapters", {})
+                if isinstance(raw_adapters, dict):
+                    for adapter_id, row in sorted(raw_adapters.items()):
+                        if not isinstance(row, dict):
+                            continue
+                        adapter_rows.append(
+                            {
+                                "adapter_id": str(adapter_id),
+                                "status": str(row.get("status", "")),
+                                "latency_ms": int(row.get("latency_ms", 0) or 0),
+                                "warm_latency_ms": int(row.get("warm_latency_ms", 0) or 0),
+                                "cold_start_cost_ms": int(row.get("cold_start_cost_ms", 0) or 0),
+                                "tokens_per_second": float(row.get("tokens_per_second", 0) or 0),
+                                "quality_class": str(row.get("quality_class", "")),
+                                "structured_reliability": str(row.get("structured_reliability", "")),
+                                "benchmarked_at": str(row.get("benchmarked_at", "")),
+                            }
+                        )
+                route_evidence = {
+                    "available": bool(adapter_rows),
+                    "path": display_path(local_route_path),
+                    "captured_at": str(payload.get("captured_at", "")),
+                    "local_runtime_class": str(payload.get("local_runtime_class", "")),
+                    "adapter_count": len(adapter_rows),
+                    "ready_adapter_count": sum(
+                        1 for item in adapter_rows if item.get("status") in {"ok", "degraded"}
+                    ),
+                    "adapters": adapter_rows,
+                }
+        return route_evidence, payload
+
+    def build_route_trend(route_evidence: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:
+        route_trend_rows: list[dict[str, Any]] = []
+        raw_history = payload.get("history", {})
+        if isinstance(raw_history, dict):
+            adapter_lookup = {
+                str(item.get("adapter_id", "")): item
+                for item in route_evidence.get("adapters", [])
+                if str(item.get("adapter_id", "")).strip()
+            }
+            for adapter_id, entries in sorted(raw_history.items()):
+                if not isinstance(entries, list):
+                    continue
+                adapter_row = adapter_lookup.get(str(adapter_id))
+                if not adapter_row:
+                    continue
+                comparable_history = [item for item in entries if isinstance(item, dict)]
+                trend = route_history_trend(adapter_row, comparable_history)
+                if not trend:
+                    continue
+                route_trend_rows.append(
+                    {
+                        "adapter_id": str(adapter_id),
+                        "trend": trend,
+                        "sample_count": len(comparable_history),
+                        "latest_latency_ms": int(adapter_row.get("latency_ms", 0) or 0),
+                        "latest_tokens_per_second": float(adapter_row.get("tokens_per_second", 0) or 0),
+                    }
+                )
+        return {
+            "available": bool(route_trend_rows),
+            "status": "measured" if route_trend_rows else "unavailable",
+            "improving_count": sum(1 for item in route_trend_rows if item.get("trend") == "recovered"),
+            "stable_count": sum(1 for item in route_trend_rows if item.get("trend") == "stable"),
+            "regressing_count": sum(
+                1
+                for item in route_trend_rows
+                if item.get("trend") in {"slower", "slower-watch", "throughput-down", "throughput-watch"}
+            ),
+            "adapters": route_trend_rows,
+        }
+
+    def build_route_cost(route_evidence: dict[str, Any]) -> dict[str, Any]:
+        ready_route_adapters = [
+            item
+            for item in route_evidence.get("adapters", [])
+            if item.get("status") in {"ok", "degraded"}
+        ]
+        cheapest_ready_adapter = None
+        if ready_route_adapters:
+            cheapest_ready_adapter = min(
+                ready_route_adapters,
+                key=lambda item: (
+                    int(item.get("cold_start_cost_ms", 0) or 0),
+                    int(item.get("warm_latency_ms", 0) or 0),
+                    -float(item.get("tokens_per_second", 0) or 0),
+                ),
+            )
+        return {
+            "available": bool(ready_route_adapters),
+            "status": "measured" if ready_route_adapters else "unavailable",
+            "basis": "local-runtime-benchmark" if ready_route_adapters else "none",
+            "posture": "zero-external-api-spend" if ready_route_adapters else "unknown",
+            "ready_adapter_count": len(ready_route_adapters),
+            "avg_ready_warm_latency_ms": round(
+                sum(float(item.get("warm_latency_ms", 0) or 0) for item in ready_route_adapters) / len(ready_route_adapters),
+                1,
+            )
+            if ready_route_adapters
+            else None,
+            "avg_ready_tokens_per_second": round(
+                sum(float(item.get("tokens_per_second", 0) or 0) for item in ready_route_adapters)
+                / len(ready_route_adapters),
+                1,
+            )
+            if ready_route_adapters
+            else None,
+            "cheapest_ready_adapter": (
+                {
+                    "adapter_id": str(cheapest_ready_adapter.get("adapter_id", "")),
+                    "cold_start_cost_ms": int(cheapest_ready_adapter.get("cold_start_cost_ms", 0) or 0),
+                    "warm_latency_ms": int(cheapest_ready_adapter.get("warm_latency_ms", 0) or 0),
+                    "tokens_per_second": float(cheapest_ready_adapter.get("tokens_per_second", 0) or 0),
+                    "quality_class": str(cheapest_ready_adapter.get("quality_class", "")),
+                    "structured_reliability": str(cheapest_ready_adapter.get("structured_reliability", "")),
+                }
+                if cheapest_ready_adapter
+                else None
+            ),
+        }
+
     cli_doc = CLI_DOC_PATH.read_text(encoding="utf-8") if CLI_DOC_PATH.exists() else ""
     taught_commands = sorted(
         {
@@ -571,147 +712,9 @@ def build_lean_platform_metrics() -> dict[str, Any]:
     }
     token_efficiency = dimensions.get("token-efficiency", {})
     delivery_maturity = dimensions.get("delivery-maturity", {})
-    local_route_path = session_state_root() / "local-runtime-capabilities.json"
-    route_evidence: dict[str, Any] = {
-        "available": False,
-        "path": display_path(local_route_path),
-        "captured_at": "",
-        "local_runtime_class": "",
-        "adapter_count": 0,
-        "ready_adapter_count": 0,
-        "adapters": [],
-    }
-    if local_route_path.exists():
-        try:
-            payload = json.loads(local_route_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            payload = {}
-        if isinstance(payload, dict):
-            adapter_rows: list[dict[str, Any]] = []
-            raw_adapters = payload.get("adapters", {})
-            if isinstance(raw_adapters, dict):
-                for adapter_id, row in sorted(raw_adapters.items()):
-                    if not isinstance(row, dict):
-                        continue
-                    adapter_rows.append(
-                        {
-                            "adapter_id": str(adapter_id),
-                            "status": str(row.get("status", "")),
-                            "latency_ms": int(row.get("latency_ms", 0) or 0),
-                            "warm_latency_ms": int(row.get("warm_latency_ms", 0) or 0),
-                            "cold_start_cost_ms": int(row.get("cold_start_cost_ms", 0) or 0),
-                            "tokens_per_second": float(row.get("tokens_per_second", 0) or 0),
-                            "quality_class": str(row.get("quality_class", "")),
-                            "structured_reliability": str(row.get("structured_reliability", "")),
-                            "benchmarked_at": str(row.get("benchmarked_at", "")),
-                        }
-                    )
-            route_evidence = {
-                "available": bool(adapter_rows),
-                "path": display_path(local_route_path),
-                "captured_at": str(payload.get("captured_at", "")),
-                "local_runtime_class": str(payload.get("local_runtime_class", "")),
-                "adapter_count": len(adapter_rows),
-                "ready_adapter_count": sum(
-                    1 for item in adapter_rows if item.get("status") in {"ok", "degraded"}
-                ),
-                "adapters": adapter_rows,
-            }
-    route_trend_rows: list[dict[str, Any]] = []
-    if local_route_path.exists():
-        try:
-            payload = json.loads(local_route_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            payload = {}
-        if isinstance(payload, dict):
-            raw_history = payload.get("history", {})
-            if isinstance(raw_history, dict):
-                adapter_lookup = {
-                    str(item.get("adapter_id", "")): item
-                    for item in route_evidence.get("adapters", [])
-                    if str(item.get("adapter_id", "")).strip()
-                }
-                for adapter_id, entries in sorted(raw_history.items()):
-                    if not isinstance(entries, list):
-                        continue
-                    adapter_row = adapter_lookup.get(str(adapter_id))
-                    if not adapter_row:
-                        continue
-                    comparable_history = [
-                        item for item in entries
-                        if isinstance(item, dict)
-                    ]
-                    trend = route_history_trend(adapter_row, comparable_history)
-                    if not trend:
-                        continue
-                    route_trend_rows.append(
-                        {
-                            "adapter_id": str(adapter_id),
-                            "trend": trend,
-                            "sample_count": len(comparable_history),
-                            "latest_latency_ms": int(adapter_row.get("latency_ms", 0) or 0),
-                            "latest_tokens_per_second": float(adapter_row.get("tokens_per_second", 0) or 0),
-                        }
-                    )
-    route_trend = {
-        "available": bool(route_trend_rows),
-        "status": "measured" if route_trend_rows else "unavailable",
-        "improving_count": sum(1 for item in route_trend_rows if item.get("trend") == "recovered"),
-        "stable_count": sum(1 for item in route_trend_rows if item.get("trend") == "stable"),
-        "regressing_count": sum(
-            1
-            for item in route_trend_rows
-            if item.get("trend") in {"slower", "slower-watch", "throughput-down", "throughput-watch"}
-        ),
-        "adapters": route_trend_rows,
-    }
-    ready_route_adapters = [
-        item
-        for item in route_evidence.get("adapters", [])
-        if item.get("status") in {"ok", "degraded"}
-    ]
-    cheapest_ready_adapter = None
-    if ready_route_adapters:
-        cheapest_ready_adapter = min(
-            ready_route_adapters,
-            key=lambda item: (
-                int(item.get("cold_start_cost_ms", 0) or 0),
-                int(item.get("warm_latency_ms", 0) or 0),
-                -float(item.get("tokens_per_second", 0) or 0),
-            ),
-        )
-    route_cost: dict[str, Any] = {
-        "available": bool(ready_route_adapters),
-        "status": "measured" if ready_route_adapters else "unavailable",
-        "basis": "local-runtime-benchmark" if ready_route_adapters else "none",
-        "posture": "zero-external-api-spend" if ready_route_adapters else "unknown",
-        "ready_adapter_count": len(ready_route_adapters),
-        "avg_ready_warm_latency_ms": round(
-            sum(float(item.get("warm_latency_ms", 0) or 0) for item in ready_route_adapters) / len(ready_route_adapters),
-            1,
-        )
-        if ready_route_adapters
-        else None,
-        "avg_ready_tokens_per_second": round(
-            sum(float(item.get("tokens_per_second", 0) or 0) for item in ready_route_adapters)
-            / len(ready_route_adapters),
-            1,
-        )
-        if ready_route_adapters
-        else None,
-        "cheapest_ready_adapter": (
-            {
-                "adapter_id": str(cheapest_ready_adapter.get("adapter_id", "")),
-                "cold_start_cost_ms": int(cheapest_ready_adapter.get("cold_start_cost_ms", 0) or 0),
-                "warm_latency_ms": int(cheapest_ready_adapter.get("warm_latency_ms", 0) or 0),
-                "tokens_per_second": float(cheapest_ready_adapter.get("tokens_per_second", 0) or 0),
-                "quality_class": str(cheapest_ready_adapter.get("quality_class", "")),
-                "structured_reliability": str(cheapest_ready_adapter.get("structured_reliability", "")),
-            }
-            if cheapest_ready_adapter
-            else None
-        ),
-    }
+    route_evidence, route_payload = load_route_report()
+    route_trend = build_route_trend(route_evidence, route_payload)
+    route_cost = build_route_cost(route_evidence)
     provider_evidence: dict[str, Any] = {
         "available": False,
         "provider_id": "",
@@ -726,7 +729,7 @@ def build_lean_platform_metrics() -> dict[str, Any]:
         *,
         env_overrides: dict[str, str] | None = None,
         parse_json_output: bool = False,
-    ) -> dict[str, Any]:
+    ) -> tuple[dict[str, Any], dict[str, Any] | None]:
         env = os.environ.copy()
         if env_overrides:
             env.update(env_overrides)
@@ -748,29 +751,28 @@ def build_lean_platform_metrics() -> dict[str, Any]:
             "stdout_preview": completed.stdout.splitlines()[:3],
             "stderr_preview": completed.stderr.splitlines()[:3],
         }
+        parsed_json: dict[str, Any] | None = None
         if parse_json_output:
             try:
-                sample["json_output"] = json.loads(completed.stdout)
+                loaded = json.loads(completed.stdout)
             except json.JSONDecodeError:
-                sample["json_output"] = None
-        return sample
+                loaded = None
+            if isinstance(loaded, dict):
+                parsed_json = loaded
+        return sample, parsed_json
 
     with tempfile.TemporaryDirectory(prefix="jini-metrics-") as tmp_dir:
         tmp_root = Path(tmp_dir)
-        command_samples.append(
-            sample_cli(
-                ["setup", "--harness", "codex", "--prefix", str(tmp_root / "setup-prefix")],
-            )
+        sample, _ = sample_cli(
+            ["setup", "--harness", "codex", "--prefix", str(tmp_root / "setup-prefix")],
         )
-        command_samples.append(
-            sample_cli(
-                ["doctor", "--format", "json"],
-                env_overrides={"JINI_PROVIDER": "local-preview"},
-                parse_json_output=True,
-            )
+        command_samples.append(sample)
+        doctor_sample, doctor_payload = sample_cli(
+            ["doctor", "--format", "json"],
+            env_overrides={"JINI_PROVIDER": "local-preview"},
+            parse_json_output=True,
         )
-        doctor_sample = command_samples[-1]
-        doctor_payload = doctor_sample.get("json_output", {})
+        command_samples.append(doctor_sample)
         if isinstance(doctor_payload, dict):
             provider_evidence = {
                 "available": bool(str(doctor_payload.get("provider_id", "")).strip()),
@@ -778,16 +780,14 @@ def build_lean_platform_metrics() -> dict[str, Any]:
                 "label": str(doctor_payload.get("label", "")),
                 "status": str(doctor_payload.get("status", "")),
             }
-        command_samples.append(
-            sample_cli(
-                ["status", "packs/research-prd/examples/research-prd-v1"],
-            )
+        sample, _ = sample_cli(
+            ["status", "packs/research-prd/examples/research-prd-v1"],
         )
-        command_samples.append(
-            sample_cli(
-                ["open", "prd", "--from", "packs/research-prd/examples/research-prd-v1", "--print-path"],
-            )
+        command_samples.append(sample)
+        sample, _ = sample_cli(
+            ["open", "prd", "--from", "packs/research-prd/examples/research-prd-v1", "--print-path"],
         )
+        command_samples.append(sample)
 
     successful_durations = [float(item["duration_ms"]) for item in command_samples if int(item["exit_code"]) == 0]
     latency_sample = {

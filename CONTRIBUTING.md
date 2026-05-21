@@ -17,8 +17,15 @@ Thanks for the interest.
 Run the current CLI suite before sending changes:
 
 ```bash
-python3 tools/jini.py --help
-python3 -m unittest tests/test_jini_cli.py -v
+make test-cli
+make test-docs
+make readiness
+```
+
+If you want the full public regression lane, use:
+
+```bash
+make test
 ```
 
 If you change docs, examples, or install metadata, make sure command names,
