@@ -497,6 +497,48 @@ def print_competitive_kpi_summary(summary: dict[str, Any]) -> None:
 
 
 def build_lean_platform_metrics() -> dict[str, Any]:
+    def quality_rank(value: str) -> int:
+        normalized = str(value or "").strip().lower()
+        return {"unknown": 0, "weak": 1, "usable": 2, "strong": 3}.get(normalized, 0)
+
+    def reliability_rank(value: str) -> int:
+        normalized = str(value or "").strip().lower()
+        return {"unknown": 0, "fragile": 1, "usable": 2, "strong": 3}.get(normalized, 0)
+
+    def route_history_trend(adapter_row: dict[str, Any], history: list[dict[str, Any]]) -> str:
+        if len(history) < 2:
+            return ""
+        latest = history[-1]
+        previous = history[:-1]
+        row_stamp = str(adapter_row.get("benchmarked_at", "")).strip()
+        latest_stamp = str(latest.get("benchmarked_at", "")).strip()
+        if row_stamp and latest_stamp and row_stamp != latest_stamp:
+            return ""
+        latency_samples = [float(item.get("latency_ms", 0) or 0) for item in previous if float(item.get("latency_ms", 0) or 0) > 0]
+        tps_samples = [float(item.get("tokens_per_second", 0) or 0) for item in previous if float(item.get("tokens_per_second", 0) or 0) > 0]
+        avg_latency = (sum(latency_samples) / len(latency_samples)) if latency_samples else 0.0
+        avg_tps = (sum(tps_samples) / len(tps_samples)) if tps_samples else 0.0
+        latest_latency = float(latest.get("latency_ms", 0) or 0)
+        latest_tps = float(latest.get("tokens_per_second", 0) or 0)
+        latest_status = str(latest.get("status", "")).strip().lower()
+        latest_quality = str(latest.get("quality_class", "")).strip().lower()
+        latest_reliability = str(latest.get("structured_reliability", "")).strip().lower()
+        if avg_latency > 0 and latest_latency >= avg_latency * 1.7:
+            return "slower"
+        if avg_tps > 0 and latest_tps > 0 and latest_tps <= avg_tps * 0.55:
+            return "throughput-down"
+        previous_had_issues = any(
+            str(item.get("status", "")).strip().lower() in {"failed", "degraded"}
+            or quality_rank(str(item.get("quality_class", ""))) < quality_rank("usable")
+            or reliability_rank(str(item.get("structured_reliability", ""))) < reliability_rank("usable")
+            for item in previous
+        )
+        if previous_had_issues and latest_status == "ok" and latest_quality == "strong" and latest_reliability == "strong":
+            return "recovered"
+        if latest_status == "ok" and latest_quality == "strong" and latest_reliability == "strong":
+            return "stable"
+        return ""
+
     cli_doc = CLI_DOC_PATH.read_text(encoding="utf-8") if CLI_DOC_PATH.exists() else ""
     taught_commands = sorted(
         {
@@ -575,6 +617,54 @@ def build_lean_platform_metrics() -> dict[str, Any]:
                 ),
                 "adapters": adapter_rows,
             }
+    route_trend_rows: list[dict[str, Any]] = []
+    if local_route_path.exists():
+        try:
+            payload = json.loads(local_route_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            payload = {}
+        if isinstance(payload, dict):
+            raw_history = payload.get("history", {})
+            if isinstance(raw_history, dict):
+                adapter_lookup = {
+                    str(item.get("adapter_id", "")): item
+                    for item in route_evidence.get("adapters", [])
+                    if str(item.get("adapter_id", "")).strip()
+                }
+                for adapter_id, entries in sorted(raw_history.items()):
+                    if not isinstance(entries, list):
+                        continue
+                    adapter_row = adapter_lookup.get(str(adapter_id))
+                    if not adapter_row:
+                        continue
+                    comparable_history = [
+                        item for item in entries
+                        if isinstance(item, dict)
+                    ]
+                    trend = route_history_trend(adapter_row, comparable_history)
+                    if not trend:
+                        continue
+                    route_trend_rows.append(
+                        {
+                            "adapter_id": str(adapter_id),
+                            "trend": trend,
+                            "sample_count": len(comparable_history),
+                            "latest_latency_ms": int(adapter_row.get("latency_ms", 0) or 0),
+                            "latest_tokens_per_second": float(adapter_row.get("tokens_per_second", 0) or 0),
+                        }
+                    )
+    route_trend = {
+        "available": bool(route_trend_rows),
+        "status": "measured" if route_trend_rows else "unavailable",
+        "improving_count": sum(1 for item in route_trend_rows if item.get("trend") == "recovered"),
+        "stable_count": sum(1 for item in route_trend_rows if item.get("trend") == "stable"),
+        "regressing_count": sum(
+            1
+            for item in route_trend_rows
+            if item.get("trend") in {"slower", "slower-watch", "throughput-down", "throughput-watch"}
+        ),
+        "adapters": route_trend_rows,
+    }
     ready_route_adapters = [
         item
         for item in route_evidence.get("adapters", [])
@@ -718,6 +808,7 @@ def build_lean_platform_metrics() -> dict[str, Any]:
         "latency_sample": latency_sample,
         "provider_evidence": provider_evidence,
         "route_evidence": route_evidence,
+        "route_trend": route_trend,
         "route_cost": route_cost,
         "cost_proxy": {
             "dimension": "token-efficiency",
@@ -788,6 +879,23 @@ def print_lean_platform_metrics(report: dict[str, Any]) -> None:
             f"{adapter.get('quality_class', '')} | "
             f"reliability {adapter.get('structured_reliability', '')} | "
             f"{adapter.get('tokens_per_second', 0):.1f} tok/s"
+        )
+    route_trend = report.get("route_trend", {})
+    print(
+        "ROUTETREND "
+        f"available={'yes' if route_trend.get('available') else 'no'} "
+        f"status={route_trend.get('status', 'unknown')} "
+        f"improving={route_trend.get('improving_count', 0)} "
+        f"stable={route_trend.get('stable_count', 0)} "
+        f"regressing={route_trend.get('regressing_count', 0)}"
+    )
+    for item in route_trend.get("adapters", []):
+        print(
+            "  - "
+            f"{item.get('adapter_id', '')} | {item.get('trend', '')} | "
+            f"samples={item.get('sample_count', 0)} | "
+            f"{item.get('latest_latency_ms', 0)}ms | "
+            f"{item.get('latest_tokens_per_second', 0):.1f} tok/s"
         )
     route_cost = report.get("route_cost", {})
     print(
@@ -3019,6 +3127,7 @@ def build_publish_readiness() -> dict[str, Any]:
                         "command_surface_count<=5",
                         "compatibility_alias_count==0",
                         "sample_count>0",
+                        "route_trend:measured-or-unavailable",
                         "route_cost:measured-or-unavailable",
                         "cost_proxy:token-efficiency",
                         "latency_proxy:delivery-maturity",

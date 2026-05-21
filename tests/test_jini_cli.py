@@ -2800,6 +2800,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("  - jini open prd --from packs/research-prd/examples/research-prd-v1 --print-path", result.stdout)
         self.assertIn("PROVIDER available=yes id=local-preview status=ok", result.stdout)
         self.assertIn("  label=Local preview", result.stdout)
+        self.assertIn("ROUTETREND available=no status=unavailable improving=0 stable=0 regressing=0", result.stdout)
         self.assertIn("ROUTECOST available=no status=unavailable basis=none posture=unknown", result.stdout)
         self.assertIn("COST     token-efficiency", result.stdout)
         self.assertIn("LATENCY  delivery-maturity", result.stdout)
@@ -2826,6 +2827,11 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("local-preview", payload["provider_evidence"]["provider_id"])
         self.assertEqual("Local preview", payload["provider_evidence"]["label"])
         self.assertEqual("ok", payload["provider_evidence"]["status"])
+        self.assertFalse(payload["route_trend"]["available"])
+        self.assertEqual("unavailable", payload["route_trend"]["status"])
+        self.assertEqual(0, payload["route_trend"]["improving_count"])
+        self.assertEqual(0, payload["route_trend"]["stable_count"])
+        self.assertEqual(0, payload["route_trend"]["regressing_count"])
         self.assertFalse(payload["route_cost"]["available"])
         self.assertEqual("unavailable", payload["route_cost"]["status"])
         self.assertEqual("none", payload["route_cost"]["basis"])
@@ -2873,6 +2879,66 @@ class JiniCliConformanceTests(unittest.TestCase):
                     "benchmarked_at": "2026-05-21T19:00:00Z",
                 },
             },
+            "history": {
+                "local-workhorse": [
+                    {
+                        "model_id": "qwen3:8b",
+                        "status": "failed",
+                        "latency_ms": 320,
+                        "tokens_per_second": 16.0,
+                        "quality_class": "weak",
+                        "structured_reliability": "usable",
+                        "benchmarked_at": "2026-05-21T18:40:00Z",
+                    },
+                    {
+                        "model_id": "qwen3:8b",
+                        "status": "degraded",
+                        "latency_ms": 260,
+                        "tokens_per_second": 19.0,
+                        "quality_class": "usable",
+                        "structured_reliability": "usable",
+                        "benchmarked_at": "2026-05-21T18:50:00Z",
+                    },
+                    {
+                        "model_id": "qwen3:8b",
+                        "status": "ok",
+                        "latency_ms": 180,
+                        "tokens_per_second": 22.5,
+                        "quality_class": "strong",
+                        "structured_reliability": "strong",
+                        "benchmarked_at": "2026-05-21T19:00:00Z",
+                    },
+                ],
+                "local-fast": [
+                    {
+                        "model_id": "phi4-mini",
+                        "status": "ok",
+                        "latency_ms": 40,
+                        "tokens_per_second": 41.0,
+                        "quality_class": "usable",
+                        "structured_reliability": "usable",
+                        "benchmarked_at": "2026-05-21T18:40:00Z",
+                    },
+                    {
+                        "model_id": "phi4-mini",
+                        "status": "ok",
+                        "latency_ms": 48,
+                        "tokens_per_second": 39.0,
+                        "quality_class": "usable",
+                        "structured_reliability": "usable",
+                        "benchmarked_at": "2026-05-21T18:50:00Z",
+                    },
+                    {
+                        "model_id": "phi4-mini",
+                        "status": "degraded",
+                        "latency_ms": 95,
+                        "tokens_per_second": 38.2,
+                        "quality_class": "usable",
+                        "structured_reliability": "usable",
+                        "benchmarked_at": "2026-05-21T19:00:00Z",
+                    },
+                ],
+            },
         }
         (state_root / "local-runtime-capabilities.json").write_text(
             json.dumps(report),
@@ -2895,6 +2961,17 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual(30.4, payload["route_cost"]["avg_ready_tokens_per_second"])
         self.assertEqual("local-fast", payload["route_cost"]["cheapest_ready_adapter"]["adapter_id"])
         self.assertEqual(5, payload["route_cost"]["cheapest_ready_adapter"]["cold_start_cost_ms"])
+        self.assertTrue(payload["route_trend"]["available"])
+        self.assertEqual("measured", payload["route_trend"]["status"])
+        self.assertEqual(1, payload["route_trend"]["improving_count"])
+        self.assertEqual(0, payload["route_trend"]["stable_count"])
+        self.assertEqual(1, payload["route_trend"]["regressing_count"])
+        trend_rows = {
+            item["adapter_id"]: item
+            for item in payload["route_trend"]["adapters"]
+        }
+        self.assertEqual("recovered", trend_rows["local-workhorse"]["trend"])
+        self.assertEqual("slower", trend_rows["local-fast"]["trend"])
         adapters = {
             item["adapter_id"]: item
             for item in payload["route_evidence"]["adapters"]
