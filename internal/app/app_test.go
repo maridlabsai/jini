@@ -2928,6 +2928,18 @@ func TestPostResultCanShowWhatJiniUsed(t *testing.T) {
 	}
 }
 
+func TestPostResultMenuUsesShowContextLabel(t *testing.T) {
+	stateDir := t.TempDir()
+	out := runInteractiveForTest(t, stateDir, "7 day paris trip\ncouple, around $2500, early October, mixed pace, central hotel area, Versailles optional\n")
+
+	if !strings.Contains(out, "Show context") {
+		t.Fatalf("expected post-result menu to use Show context label, got:\n%s", out)
+	}
+	if strings.Contains(out, "Show what Jini used") {
+		t.Fatalf("expected post-result menu to avoid older product-teaching label, got:\n%s", out)
+	}
+}
+
 func TestPostResultCanMakeItShorterAndUndoLastChange(t *testing.T) {
 	stateDir := t.TempDir()
 	out := runInteractiveForTest(t, stateDir, "Weekly product review for pricing launch. Need owners, due dates, and open questions.\nMake it shorter\n")

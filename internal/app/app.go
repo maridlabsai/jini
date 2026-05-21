@@ -2618,7 +2618,7 @@ func renderPrimaryActionMenu(w io.Writer, summary *workSummary, heading, readyAc
 	}
 	fmt.Fprintln(w, "- Keep going")
 	fmt.Fprintf(w, "- %s\n", firstNonEmpty(strings.TrimSpace(readyAction), "Show what's ready"))
-	fmt.Fprintln(w, "- Show what Jini used")
+	fmt.Fprintln(w, "- Show context")
 	fmt.Fprintln(w, "- Show what is missing")
 	fmt.Fprintln(w, "- Make it fuller")
 	fmt.Fprintln(w, "Revision shortcuts: `Make it shorter`, `Make it executive`, `Turn this into a checklist`.")
