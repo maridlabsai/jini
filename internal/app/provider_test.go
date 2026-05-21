@@ -2380,7 +2380,7 @@ func TestInteractiveLauncherShowsDecisionCardBeforeFirstDraft(t *testing.T) {
 		"Your first draft is ready.",
 		"Itinerary",
 		"Provider Paris",
-		"Show context",
+		"Context",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)

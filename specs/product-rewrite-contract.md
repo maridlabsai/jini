@@ -91,10 +91,10 @@ Older command families should stay out of the human-facing surface.
 Inside `jini`, the public actions are plain-language shell actions:
 
 - `Continue`
-- `Open ready`
-- `Show missing`
+- `Open`
+- `Missing`
 - `Plan`
-- `Start new`
+- `Start`
 
 When the problem needs planning, `Plan` moves the work into a
 Kiro-like sequence:
@@ -152,9 +152,9 @@ Rules:
 After the first result, Jini should offer:
 
 - `Continue`
-- `Show missing`
+- `Missing`
 - `Plan`
-- `Start new`
+- `Start`
 
 ## Work Summary Screen
 
@@ -279,7 +279,7 @@ For meeting follow-up and plan/spec readiness, these actions are required in
 Phase 1:
 
 - `Continue`
-- `Show missing`
+- `Missing`
 
 Both must be real. They must not be placeholders.
 

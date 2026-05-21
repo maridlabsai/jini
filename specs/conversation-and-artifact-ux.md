@@ -422,7 +422,7 @@ Your work
 3. Q3 memo
    Next: review final draft
 
-Type a number to open one, or type `Start new`.
+Type a number to open one, or type `Start`.
 ```
 
 Rules:

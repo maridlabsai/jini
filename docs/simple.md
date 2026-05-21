@@ -68,10 +68,10 @@ jini
     <span>Paste messy notes</span>
     <span>Ask for the outcome you want</span>
     <span>Use Auto only if setup is missing</span>
-    <span>Open ready</span>
-    <span>Show missing</span>
+    <span>Open</span>
+    <span>Missing</span>
     <span>Plan</span>
-    <span>Switch work</span>
+    <span>Switch</span>
   </div>
 
   <p>Before Jini starts a new piece of work, it should show a short decision card with the route, model, effort level, and reason. When you choose <code>Plan</code>, it should slow down and structure the work into goal, requirements, design, steps, and run.</p>

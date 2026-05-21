@@ -67,7 +67,7 @@ func TestRenderPolicyForMeetingFirstResultUsesCompactCLIWithoutChangingTruth(t *
 	if request.Density != "compact" {
 		t.Fatalf("expected compact density, got %q", request.Density)
 	}
-	for _, want := range []string{"Continue", "Show missing", "Plan", "Start new"} {
+	for _, want := range []string{"Continue", "Missing", "Plan", "Start"} {
 		if !slices.Contains(request.AvailableActions, want) {
 			t.Fatalf("expected render action %q in %#v", want, request.AvailableActions)
 		}

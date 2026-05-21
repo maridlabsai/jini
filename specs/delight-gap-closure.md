@@ -80,9 +80,9 @@ active, Jini should pause and show a compact interrupt card:
 
 - current work title
 - incoming request preview
-- `Start new`
-- `Keep current`
-- `Switch work`
+- `Start`
+- `Keep`
+- `Switch`
 
 The old work stays saved unless the user explicitly switches.
 
@@ -90,8 +90,8 @@ The old work stays saved unless the user explicitly switches.
 
 - intercept fallback freeform input in current-work mode before a new work unit
   is created
-- preserve the raw request so `Start new` can continue without retyping
-- route `Switch work` through the existing active-work picker
+- preserve the raw request so `Start` can continue without retyping
+- route `Switch` through the existing active-work picker
 - keep the interrupt card generic and independent of pack-specific behavior
 
 #### Pass criteria
@@ -117,7 +117,7 @@ they want.
 
 #### UX design
 
-When the user chooses `Open ready`, Jini should
+When the user chooses `Open`, Jini should
 show a numbered shelf and let the next input open an item directly by:
 
 - number
@@ -225,8 +225,8 @@ making the artifact feel more inspectable, more revisable, and safer to revise.
 
 Jini should let the user ask:
 
-- `Show context`
-- `Show context`
+- `Context`
+- `Context`
 - `What did you use`
 
 The answer should stay compact and show:

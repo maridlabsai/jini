@@ -353,7 +353,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("START HERE", result.stdout)
         self.assertIn("jini\n", result.stdout)
         self.assertIn("INSIDE JINI", result.stdout)
-        self.assertIn("Open ready", result.stdout)
+        self.assertIn("Open", result.stdout)
         self.assertIn("Plan", result.stdout)
         self.assertIn("SCRIPTABLE", result.stdout)
         self.assertIn("jini run --repo /path/to/repo --harness codex", result.stdout)
@@ -392,7 +392,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("research-prd", report["example_id"])
         self.assertTrue(any("next " in item for item in report["continue_with"]))
         self.assertTrue(any(item == "jini" for item in report["continue_with"]))
-        self.assertTrue(any(item == "Inside Jini: Open ready" for item in report["continue_with"]))
+        self.assertTrue(any(item == "Inside Jini: Open" for item in report["continue_with"]))
 
     def test_next_and_resume_aliases_resolve(self) -> None:
         pack_dir = self.compile_research_pack()
@@ -2292,7 +2292,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue(report["evidence_summary"]["present"])
         self.assertTrue(any("verification becomes a visible stage" in item.lower() for item in report["daily_value"]))
         self.assertTrue(any("jini next " in item for item in report["continue_with"]))
-        self.assertTrue(any(item == "Inside Jini: Open ready" for item in report["continue_with"]))
+        self.assertTrue(any(item == "Inside Jini: Open" for item in report["continue_with"]))
 
     def test_try_example_generates_meeting_followup_into_requested_output(self) -> None:
         output = self.tmp / "example-meeting-followup"

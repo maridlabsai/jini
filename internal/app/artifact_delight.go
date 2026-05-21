@@ -143,7 +143,7 @@ func renderArtifactVersions(w io.Writer, summary *workSummary) {
 		fmt.Fprintf(w, "%d. Before %s\n", index+1, entry.ActionLabel)
 	}
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Type `Undo last change` to restore the latest version.")
+	fmt.Fprintln(w, "Type `Undo` to restore the latest version.")
 }
 
 func undoLastArtifactChange(summary *workSummary) (*catalogItem, error) {
@@ -177,7 +177,7 @@ func undoLastArtifactChange(summary *workSummary) (*catalogItem, error) {
 		return nil, err
 	}
 	_ = os.Remove(snapshotPath)
-	updateThreadArtifactState(summary.Dir, item.Label, "Undo last change")
+	updateThreadArtifactState(summary.Dir, item.Label, "Undo")
 	return item, nil
 }
 
@@ -288,11 +288,11 @@ func artifactRelativePath(workDir, path string) string {
 func artifactTransformLabel(mode string) string {
 	switch normalizeName(mode) {
 	case "shorter":
-		return "Make it shorter"
+		return "Shorter"
 	case "executive":
-		return "Make it executive"
+		return "Executive"
 	case "checklist":
-		return "Turn this into a checklist"
+		return "Checklist"
 	default:
 		return "Revise this artifact"
 	}

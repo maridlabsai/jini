@@ -2111,7 +2111,7 @@ def build_publish_readiness() -> dict[str, Any]:
                 phrase in ((ROOT / "docs" / "simple.md").read_text(encoding="utf-8") if (ROOT / "docs" / "simple.md").exists() else "")
                 for phrase in (
                     "`jini` is the front door",
-                    "Open ready",
+                    "Open",
                     "Plan",
                 )
             ),
@@ -2120,7 +2120,7 @@ def build_publish_readiness() -> dict[str, Any]:
                 phrase in ((ROOT / "docs" / "simple.md").read_text(encoding="utf-8") if (ROOT / "docs" / "simple.md").exists() else "")
                 for phrase in (
                     "`jini` is the front door",
-                    "Open ready",
+                    "Open",
                     "Plan",
                 )
             )
@@ -2367,7 +2367,7 @@ def build_publish_readiness() -> dict[str, Any]:
                     "path": PRODUCT_CONSENSUS_PRD_PATH,
                     "markers": [
                         "`Continue`",
-                        "`Show missing`",
+                        "`Missing`",
                         "Do not show actions that are not implemented.",
                     ],
                 },
@@ -3046,8 +3046,8 @@ def build_public_example_proof(
         "try_command": f"{cli}",
         "continue_with": [
             f"{cli}",
-            "Inside Jini: Open ready",
-            "Inside Jini: Show missing",
+            "Inside Jini: Open",
+            "Inside Jini: Missing",
             f"{cli} next --intent {str(summary.get('next_operation', 'Verify')).lower()}",
         ],
         "warnings": [*validation_warnings, *compile_warnings],
@@ -6275,8 +6275,8 @@ def print_cli_overview() -> None:
     print()
     print("INSIDE JINI")
     print("  Continue")
-    print("  Open ready")
-    print("  Show missing")
+    print("  Open")
+    print("  Missing")
     print("  Plan")
     print()
     print("SCRIPTABLE")

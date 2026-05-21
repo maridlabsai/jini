@@ -105,9 +105,9 @@ missing.
 After the first result, show only real actions:
 
 - `Continue`
-- `Show missing`
+- `Missing`
 - `Plan`
-- `Start new`
+- `Start`
 
 Do not show actions that are not implemented.
 
@@ -175,7 +175,7 @@ The product shape is approved only when all four roles accept it:
 - plan/spec readiness creates a clear build-readiness result
 - first result appears before summary
 - current-work choices are either real or hidden
-- meeting follow-up and plan/spec readiness include real `Continue` and `Show missing` actions
+- meeting follow-up and plan/spec readiness include real `Continue` and `Missing` actions
 - launcher-created work uses shared generation or has golden parity fixtures before it ships or expands
 - golden parity fixtures for new and old work exist before cutover
 - repeated multi-role critique is resolved by simplification, not carried forward as known UX debt

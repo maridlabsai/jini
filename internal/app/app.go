@@ -214,18 +214,18 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 			renderCheck(stdout, summary)
 			return 0
 		}
-	case "2", "open", "open ready work", "open ready", "open whats ready", "open what's ready", "open what is ready", "show whats ready", "show what's ready", "show what is ready":
+	case "2", "open", "open-ready", "open ready work", "open ready", "open whats ready", "open what's ready", "open what is ready", "show whats ready", "show what's ready", "show what is ready":
 		return runInteractiveOpenShelf(summary, scanner, stdout, stderr)
-	case "show what jini used", "what jini used", "show context", "what did you use", "what shaped this":
+	case "context", "show-context", "show what jini used", "what jini used", "show context", "what did you use", "what shaped this":
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "context"})
-	case "see what is still missing", "show what is missing", "show missing", "missing":
+	case "missing", "show-missing", "see what is still missing", "show what is missing", "show missing":
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "missing"})
 	case "make it fuller", "fuller", "show more", "expand", "expand this":
 		if !renderNextContinuation(stdout, summary) {
 			renderCheck(stdout, summary)
 			return 0
 		}
-	case "make it shorter", "shorter", "tighten this", "make this shorter":
+	case "shorter", "make it shorter", "tighten this", "make this shorter":
 		item, err := applyArtifactTransform(summary, "shorter")
 		if err != nil {
 			fmt.Fprintf(stderr, "Could not revise the artifact: %v\n", err)
@@ -233,8 +233,8 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		}
 		renderItem(stdout, item)
 		fmt.Fprintln(stdout)
-		fmt.Fprintln(stdout, "Saved a restorable version. You can say `Show versions` or `Undo last change`.")
-	case "make it executive", "executive", "executive version", "make this executive":
+		fmt.Fprintln(stdout, "Saved a restorable version. You can say `Versions` or `Undo`.")
+	case "executive", "make it executive", "executive version", "make this executive":
 		item, err := applyArtifactTransform(summary, "executive")
 		if err != nil {
 			fmt.Fprintf(stderr, "Could not revise the artifact: %v\n", err)
@@ -242,8 +242,8 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		}
 		renderItem(stdout, item)
 		fmt.Fprintln(stdout)
-		fmt.Fprintln(stdout, "Saved a restorable version. You can say `Show versions` or `Undo last change`.")
-	case "turn this into a checklist", "checklist", "make this a checklist":
+		fmt.Fprintln(stdout, "Saved a restorable version. You can say `Versions` or `Undo`.")
+	case "checklist", "turn this into a checklist", "make this a checklist":
 		item, err := applyArtifactTransform(summary, "checklist")
 		if err != nil {
 			fmt.Fprintf(stderr, "Could not revise the artifact: %v\n", err)
@@ -251,7 +251,7 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		}
 		renderItem(stdout, item)
 		fmt.Fprintln(stdout)
-		fmt.Fprintln(stdout, "Saved a restorable version. You can say `Show versions` or `Undo last change`.")
+		fmt.Fprintln(stdout, "Saved a restorable version. You can say `Versions` or `Undo`.")
 	case "show versions", "show version history", "versions", "history":
 		renderArtifactVersions(stdout, summary)
 	case "undo last change", "undo", "restore last change", "revert last change":
@@ -263,7 +263,7 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		fmt.Fprintln(stdout, "Restored the previous version.")
 		fmt.Fprintln(stdout)
 		renderItem(stdout, item)
-	case "model upvote", "upvote model", "model was right":
+	case "upvote", "model upvote", "upvote model", "model was right":
 		if err := saveModelFeedback(summary.Dir, "upvoted", ""); err != nil {
 			fmt.Fprintf(stderr, "Could not save model feedback: %v\n", err)
 			return 1
@@ -297,7 +297,7 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		}
 		recordThreadDecision(summary.Dir, summary, "Share")
 		fmt.Fprintln(stdout, "Saved artifact outcome: share.")
-	case "model downvote", "downvote model", "model was wrong":
+	case "downvote", "model downvote", "downvote model", "model was wrong":
 		if err := saveModelFeedback(summary.Dir, "downvoted", ""); err != nil {
 			fmt.Fprintf(stderr, "Could not save model feedback: %v\n", err)
 			return 1
@@ -317,7 +317,7 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		}
 		recordThreadDecision(summary.Dir, summary, "Replace")
 		fmt.Fprintln(stdout, "Saved artifact outcome: replace.")
-	case "switch work", "switch", "show active work", "active work", "switch project":
+	case "switch", "switch-work", "switch work", "show active work", "active work", "switch project":
 		return runSwitchWorkPicker(summary, scanner, stdout, stderr)
 	case "doctor", "model":
 		renderInteractiveProviderDoctor(stdout)
@@ -331,10 +331,10 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		renderNoInitRequired(stdout)
 	case "clear":
 		fmt.Fprintln(stdout, "Nothing was deleted.")
-		fmt.Fprintln(stdout, "Type `Start new` to switch focus without removing this work.")
+		fmt.Fprintln(stdout, "Type `Start` to switch focus without removing this work.")
 	case "plan this first", "plan first", "plan this", "plan", "requirements", "design", "help me plan this":
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "plan"})
-	case "3", "new", "start new", "start something new", "start something else", "start new work":
+	case "3", "start", "start-new", "new", "start new", "start something new", "start something else", "start new work":
 		if scanner == nil {
 			renderNewWorkLauncher(stdout)
 			return 0
@@ -2617,35 +2617,35 @@ func renderPrimaryActionMenu(w io.Writer, summary *workSummary, heading, readyAc
 		fmt.Fprintln(w)
 	}
 	fmt.Fprintln(w, "- Continue")
-	fmt.Fprintf(w, "- %s\n", firstNonEmpty(strings.TrimSpace(readyAction), "Open ready"))
-	fmt.Fprintln(w, "- Show context")
-	fmt.Fprintln(w, "- Show missing")
+	fmt.Fprintf(w, "- %s\n", firstNonEmpty(strings.TrimSpace(readyAction), "Open"))
+	fmt.Fprintln(w, "- Context")
+	fmt.Fprintln(w, "- Missing")
 	fmt.Fprintln(w, "- Expand")
-	fmt.Fprintln(w, "Revision shortcuts: `Make it shorter`, `Make it executive`, `Turn this into a checklist`.")
+	fmt.Fprintln(w, "Revision shortcuts: `Shorter`, `Executive`, `Checklist`.")
 	if hasArtifactVersions(summary) {
-		fmt.Fprintln(w, "- Show versions")
-		fmt.Fprintln(w, "- Undo last change")
+		fmt.Fprintln(w, "- Versions")
+		fmt.Fprintln(w, "- Undo")
 	}
 	fmt.Fprintln(w, "- Plan")
-	fmt.Fprintln(w, "- Start new")
+	fmt.Fprintln(w, "- Start")
 }
 
 func renderCompactCurrentWorkChoices(w io.Writer, canSwitch bool) {
 	fmt.Fprintln(w, "Actions")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "- Continue")
-	fmt.Fprintln(w, "- Open ready")
-	fmt.Fprintln(w, "- Show missing")
+	fmt.Fprintln(w, "- Open")
+	fmt.Fprintln(w, "- Missing")
 	fmt.Fprintln(w, "- Plan")
 	if canSwitch {
-		fmt.Fprintln(w, "- Switch work")
+		fmt.Fprintln(w, "- Switch")
 	}
-	fmt.Fprintln(w, "- Start new")
+	fmt.Fprintln(w, "- Start")
 }
 
 func renderWorkSwitchChoices(w io.Writer, includeStartNew bool) {
 	if includeStartNew {
-		fmt.Fprintln(w, "Type a number to open one, or type `Start new`.")
+		fmt.Fprintln(w, "Type a number to open one, or type `Start`.")
 		return
 	}
 	fmt.Fprintln(w, "Type a number or title to switch.")
@@ -2673,7 +2673,7 @@ func renderArtifactFeedbackChoices(w io.Writer) {
 	fmt.Fprintln(w, "- Share")
 	fmt.Fprintln(w, "- Reject")
 	fmt.Fprintln(w, "- Replace")
-	fmt.Fprintln(w, "Advanced: `Model upvote` or `Model downvote`.")
+	fmt.Fprintln(w, "Advanced: `Upvote` or `Downvote`.")
 }
 
 func renderOtherActiveWorkList(w io.Writer, active []*workSummary, includeHint bool) {
@@ -2686,12 +2686,12 @@ func renderOtherActiveWorkList(w io.Writer, active []*workSummary, includeHint b
 		fmt.Fprintf(w, "- %s\n", item.Title)
 	}
 	if includeHint {
-		fmt.Fprintln(w, "Type `Switch work` to change focus.")
+		fmt.Fprintln(w, "Type `Switch` to change focus.")
 	}
 }
 
 func renderPostResultActions(w io.Writer, summary *workSummary, item *catalogItem) {
-	renderPrimaryActionMenu(w, summary, "Actions", "Open ready")
+	renderPrimaryActionMenu(w, summary, "Actions", "Open")
 	renderPostResultContext(w, summary, item)
 }
 
@@ -2702,7 +2702,7 @@ func renderNewWorkNoop(w io.Writer) {
 
 func renderCurrentWorkNoop(w io.Writer) {
 	fmt.Fprintln(w, "Nothing changed.")
-	fmt.Fprintln(w, "Use `Continue`, `Open ready`, or paste a new request.")
+	fmt.Fprintln(w, "Use `Continue`, `Open`, or paste a new request.")
 }
 
 func canSwitchFromCurrentWork(summary *workSummary) bool {
@@ -2712,10 +2712,10 @@ func canSwitchFromCurrentWork(summary *workSummary) bool {
 func renderInterruptionChoices(w io.Writer, canSwitch bool) {
 	fmt.Fprintln(w, "Actions")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "- Start new")
-	fmt.Fprintln(w, "- Keep current")
+	fmt.Fprintln(w, "- Start")
+	fmt.Fprintln(w, "- Keep")
 	if canSwitch {
-		fmt.Fprintln(w, "- Switch work")
+		fmt.Fprintln(w, "- Switch")
 	}
 }
 
@@ -2731,28 +2731,28 @@ func confirmCurrentWorkInterruptionAndContinue(summary *workSummary, candidate s
 	}
 	fmt.Fprintln(stdout)
 	switch normalizeName(choice) {
-	case "1", "start new work", "start new", "start something new", "new", "switch focus":
+	case "1", "start", "start-new", "start new work", "start new", "start something new", "new", "switch focus":
 		return startNewWorkFromRawInput(candidate, scanner, stdout, stderr)
-	case "2", "keep current work", "keep current", "stay here", "cancel", "never mind":
+	case "2", "keep", "keep-current", "keep current work", "keep current", "stay here", "cancel", "never mind":
 		fmt.Fprintln(stdout, "Keeping current work.")
-		fmt.Fprintln(stdout, "Use `Continue`, `Open ready`, or paste a new request when you mean to switch.")
+		fmt.Fprintln(stdout, "Use `Continue`, `Open`, or paste a new request when you mean to switch.")
 		return 0
-	case "3", "switch project", "switch", "show active work", "active work":
+	case "3", "switch", "switch-work", "switch project", "show active work", "active work":
 		return runSwitchWorkPicker(summary, scanner, stdout, stderr)
 	default:
 		if canSwitch {
-			fmt.Fprintln(stderr, "Choose `Start new`, `Keep current`, or `Switch work`.")
+			fmt.Fprintln(stderr, "Choose `Start`, `Keep`, or `Switch`.")
 		} else {
-			fmt.Fprintln(stderr, "Choose `Start new` or `Keep current`.")
+			fmt.Fprintln(stderr, "Choose `Start` or `Keep`.")
 		}
 		return 1
 	}
 }
 
 func renderCurrentWorkInterruptionPrompt(w io.Writer, summary *workSummary, candidate string, canSwitch bool) {
-	fmt.Fprintln(w, "This looks like new work.")
+	fmt.Fprintln(w, "New work")
 	if summary != nil && strings.TrimSpace(summary.Title) != "" {
-		fmt.Fprintf(w, "Current work stays saved: %s.\n", summary.Title)
+		fmt.Fprintf(w, "Current: %s.\n", summary.Title)
 	}
 	if strings.TrimSpace(candidate) != "" {
 		fmt.Fprintln(w)
@@ -3078,24 +3078,24 @@ func handlePostResultAction(action string, summary *workSummary, scanner *bufio.
 			renderCheck(stdout, summary)
 			return 0
 		}
-	case "open whats ready", "open what's ready", "open what is ready", "show whats ready", "show what's ready", "show what is ready", "2":
+	case "open", "open-ready", "open whats ready", "open what's ready", "open what is ready", "show whats ready", "show what's ready", "show what is ready", "2":
 		return runInteractiveOpenShelf(summary, scanner, stdout, stderr)
 	case "status", "show status", "check":
 		renderCheck(stdout, summary)
-	case "show what jini used", "what jini used", "show context", "what did you use", "what shaped this":
+	case "context", "show-context", "show what jini used", "what jini used", "show context", "what did you use", "what shaped this":
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "context"})
-	case "see what is still missing", "show what is missing", "show missing", "missing", "3":
+	case "missing", "show-missing", "see what is still missing", "show what is missing", "show missing", "3":
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "missing"})
 	case "make it fuller", "fuller", "show more", "expand", "expand this", "4":
 		if !renderNextContinuation(stdout, summary) {
 			renderCheck(stdout, summary)
 			return 0
 		}
-	case "make it shorter", "shorter", "tighten this", "make this shorter":
+	case "shorter", "make it shorter", "tighten this", "make this shorter":
 		return renderArtifactTransform(summary, "shorter", stdout, stderr)
-	case "make it executive", "executive", "executive version", "make this executive":
+	case "executive", "make it executive", "executive version", "make this executive":
 		return renderArtifactTransform(summary, "executive", stdout, stderr)
-	case "turn this into a checklist", "checklist", "make this a checklist":
+	case "checklist", "turn this into a checklist", "make this a checklist":
 		return renderArtifactTransform(summary, "checklist", stdout, stderr)
 	case "show versions", "show version history", "versions", "history":
 		renderArtifactVersions(stdout, summary)
@@ -3145,7 +3145,7 @@ func renderArtifactTransform(summary *workSummary, transform string, stdout, std
 	}
 	renderItem(stdout, item)
 	fmt.Fprintln(stdout)
-	fmt.Fprintln(stdout, "Saved a restorable version. You can say `Show versions` or `Undo last change`.")
+	fmt.Fprintln(stdout, "Saved a restorable version. You can say `Versions` or `Undo`.")
 	return 0
 }
 
@@ -3273,8 +3273,8 @@ func renderPlanFirst(w io.Writer, summary *workSummary) {
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Run")
 	fmt.Fprintln(w, "- Continue")
-	fmt.Fprintln(w, "- Open ready")
-	fmt.Fprintln(w, "- Show missing")
+	fmt.Fprintln(w, "- Open")
+	fmt.Fprintln(w, "- Missing")
 }
 
 func renderCurrentWorkLauncher(w io.Writer, summary *workSummary, interactive bool) {
@@ -3506,7 +3506,7 @@ func renderCurrentWorkHelp(w io.Writer, summary *workSummary) {
 		renderArtifactFeedbackChoices(w)
 	}
 	fmt.Fprintln(w)
-		renderPrimaryActionMenu(w, summary, "Actions", "Open ready")
+		renderPrimaryActionMenu(w, summary, "Actions", "Open")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Familiar commands also work: `/status`, `/doctor`, `/model`, `/init`, `/memory`, `/permissions`, `/cost`.")
 }
@@ -3552,7 +3552,7 @@ func runSwitchWorkPicker(current *workSummary, scanner *bufio.Scanner, stdout, s
 		fmt.Fprintln(stdout, "No other active work right now.")
 		return 0
 	}
-	renderSelectableWorkList(stdout, "Switch work", other, false)
+	renderSelectableWorkList(stdout, "Switch", other, false)
 	if scanner == nil {
 		return 0
 	}
@@ -3804,7 +3804,7 @@ func summaryWorkingWith(summary *workSummary) string {
 }
 
 func renderOpenShelf(w io.Writer, summary *workSummary) {
-	fmt.Fprintln(w, "Open ready")
+	fmt.Fprintln(w, "Open")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Ready now")
 	indexByPath := map[string]int{}

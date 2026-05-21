@@ -156,7 +156,7 @@ Other active work
 </div>
 
 <div class="section-card" markdown="1">
-  <h2>What “Open ready” Should Feel Like</h2>
+  <h2>What “Open” Should Feel Like</h2>
 
   <p>It should open deliverables, not storage concepts.</p>
 

@@ -743,8 +743,8 @@ func TestLauncherStartsAsCompactShellWhenCurrentWorkExists(t *testing.T) {
 		"Need",
 		"Why this matters",
 		"Continue",
-		"Open ready",
-		"Start new",
+		"Open",
+		"Start",
 	} {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("expected bare launcher to hide default work detail %q, got:\n%s", unwanted, out)
@@ -777,7 +777,7 @@ func TestCurrentWorkHelpShowsCurrentWorkRecap(t *testing.T) {
 		"Metric and legal-review decision",
 		"Actions",
 		"Continue",
-		"Start new",
+		"Start",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -1019,8 +1019,8 @@ func TestInteractiveLauncherCreatesMeetingWork(t *testing.T) {
 		"Sendable Follow-up",
 		"## Send this",
 		"Continue",
-		"Open ready",
-		"Show missing",
+		"Open",
+		"Missing",
 		"Expand",
 		"Plan",
 	} {
@@ -1101,8 +1101,8 @@ func TestInteractiveLauncherCreatesSpecReadinessWork(t *testing.T) {
 		"Build-Readiness Check",
 		"## What looks ready now",
 		"Continue",
-		"Open ready",
-		"Show missing",
+		"Open",
+		"Missing",
 		"Expand",
 		"Plan",
 	} {
@@ -1453,7 +1453,7 @@ func TestInteractiveLauncherRunsMeetingPostResultActions(t *testing.T) {
 		},
 		{
 			name:            "see missing opens the meeting decision surface",
-			action:          "Show missing",
+			action:          "Missing",
 			wantAfterAction: "Pending decision",
 		},
 	}
@@ -1467,7 +1467,7 @@ func TestInteractiveLauncherRunsMeetingPostResultActions(t *testing.T) {
 			for _, want := range []string{
 				"## Send this",
 				"Continue",
-				"Show missing",
+				"Missing",
 			} {
 				if !strings.Contains(out, want) {
 					t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -1503,7 +1503,7 @@ func TestInteractiveLauncherRunsSpecPostResultActions(t *testing.T) {
 		},
 		{
 			name:            "see missing opens the spec decision surface",
-			action:          "Show missing",
+			action:          "Missing",
 			wantAfterAction: "Pending decision",
 		},
 	}
@@ -1517,7 +1517,7 @@ func TestInteractiveLauncherRunsSpecPostResultActions(t *testing.T) {
 			for _, want := range []string{
 				"## What looks ready now",
 				"Continue",
-				"Show missing",
+				"Missing",
 			} {
 				if !strings.Contains(out, want) {
 					t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -1548,13 +1548,13 @@ func TestCurrentWorkInteractiveChoicesAreReal(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("Open ready\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("open\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
 
 	out := stdout.String()
-	if !strings.Contains(out, "Open ready") {
+	if !strings.Contains(out, "Open") {
 		t.Fatalf("expected open shelf after choosing current work option 2, got:\n%s", out)
 	}
 	if !strings.Contains(out, "Sendable Follow-up") {
@@ -1576,7 +1576,7 @@ func TestCurrentWorkInteractivePunctuatedReadyCommandOpensShelf(t *testing.T) {
 	}
 
 	out := stdout.String()
-	for _, want := range []string{"Open ready", "1. Sendable Follow-up", "Type a number or name to open one"} {
+	for _, want := range []string{"Open", "1. Sendable Follow-up", "Type a number or name to open one"} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
@@ -1709,7 +1709,7 @@ func TestCurrentWorkPromptShowsResumeHintAfterFocusChanges(t *testing.T) {
 
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
-	if exitCode := app.RunInteractive(nil, strings.NewReader("Open ready\n2\n"), io.Discard, io.Discard); exitCode != 0 {
+	if exitCode := app.RunInteractive(nil, strings.NewReader("open\n2\n"), io.Discard, io.Discard); exitCode != 0 {
 		t.Fatalf("expected selection to succeed, got %d", exitCode)
 	}
 
@@ -1742,7 +1742,7 @@ func TestCurrentWorkInteractiveMissingChoiceShowsGapSummary(t *testing.T) {
 	}
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("Show missing\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("missing\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -1828,14 +1828,14 @@ func TestCurrentWorkReadyShelfSelectionOpensArtifactByNumber(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("Open ready\n2\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("open\n2\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Open ready",
+		"Open",
 		"2. Owners and Due Points",
 		"Owners and Due Points",
 	} {
@@ -1853,14 +1853,14 @@ func TestCurrentWorkReadyShelfSelectionOpensArtifactByName(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("Open what's ready\nOwners and Due Points\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("open\nOwners and Due Points\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Open ready",
+		"Open",
 		"Owners and Due Points",
 	} {
 		if !strings.Contains(out, want) {
@@ -1876,7 +1876,7 @@ func TestCurrentWorkResumeReopensSelectedReadyArtifact(t *testing.T) {
 
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
-	if exitCode := app.RunInteractive(nil, strings.NewReader("Open ready\n2\n"), io.Discard, io.Discard); exitCode != 0 {
+	if exitCode := app.RunInteractive(nil, strings.NewReader("open\n2\n"), io.Discard, io.Discard); exitCode != 0 {
 		t.Fatalf("expected selection to succeed, got %d", exitCode)
 	}
 
@@ -1928,7 +1928,7 @@ func TestCurrentWorkResumeReopensMissingSurface(t *testing.T) {
 	if exitCode := app.RunInteractive(nil, strings.NewReader("skip for now\n"), io.Discard, io.Discard); exitCode != 0 {
 		t.Fatalf("expected blocking ask to be skippable, got %d", exitCode)
 	}
-	if exitCode := app.RunInteractive(nil, strings.NewReader("Show missing\n"), io.Discard, io.Discard); exitCode != 0 {
+	if exitCode := app.RunInteractive(nil, strings.NewReader("missing\n"), io.Discard, io.Discard); exitCode != 0 {
 		t.Fatalf("expected missing view to succeed, got %d", exitCode)
 	}
 
@@ -1953,7 +1953,7 @@ func TestCurrentWorkShowMissingWithActiveAskOpensDecisionSurface(t *testing.T) {
 	}
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("Show missing\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("missing\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected active ask surface to open, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -1979,7 +1979,7 @@ func TestCurrentWorkResumeReopensDecisionSurface(t *testing.T) {
 	if exitCode := app.RunInteractive(nil, strings.NewReader("Notifications PRD needs a build-readiness check and handoff call.\n"), io.Discard, io.Discard); exitCode != 0 {
 		t.Fatalf("expected starter work to succeed, got %d", exitCode)
 	}
-	if exitCode := app.RunInteractive(nil, strings.NewReader("Show missing\n"), io.Discard, io.Discard); exitCode != 0 {
+	if exitCode := app.RunInteractive(nil, strings.NewReader("missing\n"), io.Discard, io.Discard); exitCode != 0 {
 		t.Fatalf("expected active ask surface to open, got %d", exitCode)
 	}
 
@@ -2002,12 +2002,12 @@ func TestCurrentWorkTransformUsesFocusedArtifact(t *testing.T) {
 
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
-	if exitCode := app.RunInteractive(nil, strings.NewReader("Open ready\n2\n"), io.Discard, io.Discard); exitCode != 0 {
+	if exitCode := app.RunInteractive(nil, strings.NewReader("open\n2\n"), io.Discard, io.Discard); exitCode != 0 {
 		t.Fatalf("expected selection to succeed, got %d", exitCode)
 	}
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("Make it shorter\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("shorter\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected focused transform to succeed, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -2042,7 +2042,7 @@ func TestCurrentWorkFocusedOutcomeUsesSelectedArtifact(t *testing.T) {
 
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
-	if exitCode := app.RunInteractive(nil, strings.NewReader("Open ready\n2\n"), io.Discard, io.Discard); exitCode != 0 {
+	if exitCode := app.RunInteractive(nil, strings.NewReader("open\n2\n"), io.Discard, io.Discard); exitCode != 0 {
 		t.Fatalf("expected selection to succeed, got %d", exitCode)
 	}
 
@@ -2132,7 +2132,7 @@ func TestCurrentWorkInteractiveSocialAckDoesNotStartNewWork(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Nothing changed.",
-		"Use `Continue`, `Open ready`, or paste a new request.",
+		"Use `Continue`, `Open`, or paste a new request.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -2214,7 +2214,7 @@ func TestCurrentWorkInteractiveTacticalCommandsDoNotStartNewWork(t *testing.T) {
 		{
 			name: "clear",
 			line: "/clear\n",
-			want: []string{"Nothing was deleted.", "Type `Start new` to switch focus without removing this work."},
+			want: []string{"Nothing was deleted.", "Type `Start` to switch focus without removing this work."},
 		},
 	}
 
@@ -2308,7 +2308,7 @@ func TestCurrentWorkTacticalSurfacesStayCompact(t *testing.T) {
 		maxLines int
 	}{
 		{name: "fuller", input: "Make it fuller\n", maxLines: 14},
-		{name: "ready shelf", input: "Open ready\n", maxLines: 16},
+		{name: "ready shelf", input: "open\n", maxLines: 16},
 		{name: "interrupt prompt", input: "plan me a 7 day paris trip\n", maxLines: 14},
 	}
 
@@ -2766,14 +2766,14 @@ func TestInteractiveLauncherCanSwitchBetweenActiveProjects(t *testing.T) {
 
 	t.Setenv("JINI_STATE_DIR", stateDir)
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("Switch work\n1\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("switch\n1\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Switch work",
+		"Switch",
 		"1. 7-Day Paris Trip",
 		"Switched to",
 		"7-Day Paris Trip",
@@ -2809,9 +2809,9 @@ func TestCurrentWorkFreeformInputConfirmsBeforeStartingNewWork(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"This looks like new work.",
-		"Current work stays saved",
-		"Start new",
+		"New work",
+		"Current:",
+		"Start",
 		"Your first draft is ready.",
 		"7 Day Paris Trip",
 		"Itinerary",
@@ -2847,7 +2847,7 @@ func TestCurrentWorkFreeformInputCanKeepCurrentWork(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"This looks like new work.",
+		"New work",
 		"Keeping current work.",
 	} {
 		if !strings.Contains(out, want) {
@@ -2857,7 +2857,7 @@ func TestCurrentWorkFreeformInputCanKeepCurrentWork(t *testing.T) {
 	if strings.Contains(out, "7 Day Paris Trip") {
 		t.Fatalf("expected keep-current path not to start new work, got:\n%s", out)
 	}
-	if strings.Contains(out, "Switch project") || strings.Contains(out, "Switch work") {
+	if strings.Contains(out, "Switch project") || strings.Contains(out, "Switch") {
 		t.Fatalf("expected interrupt prompt to hide switch-project when no other work exists, got:\n%s", out)
 	}
 	current := readCurrentWork(t, stateDir)
@@ -2880,10 +2880,10 @@ func TestCurrentWorkInterruptPromptErrorMatchesAvailableChoices(t *testing.T) {
 	}
 
 	out := stdout.String()
-	if !strings.Contains(out, "Choose `Start new` or `Keep current`.") {
+	if !strings.Contains(out, "Choose `Start` or `Keep`.") {
 		t.Fatalf("expected guidance to match shown choices, got:\n%s", out)
 	}
-	if strings.Contains(out, "Switch project") || strings.Contains(out, "Switch work") {
+	if strings.Contains(out, "Switch project") || strings.Contains(out, "Switch") {
 		t.Fatalf("expected invalid-choice guidance not to mention hidden switch-project option, got:\n%s", out)
 	}
 }
@@ -2904,8 +2904,8 @@ func TestCurrentWorkFreeformInputCanSwitchProjectFromInterruptPrompt(t *testing.
 
 	out := stdout.String()
 	for _, want := range []string{
-		"This looks like new work.",
-		"Switch work",
+		"New work",
+		"Switch",
 		"Switched to",
 		"7-Day Paris Trip",
 	} {
@@ -2946,7 +2946,7 @@ func TestInteractiveLauncherShowsAttachmentInputChipForTextFile(t *testing.T) {
 
 func TestPostResultCanShowWhatJiniUsed(t *testing.T) {
 	stateDir := t.TempDir()
-	out := runInteractiveForTest(t, stateDir, "7 day paris trip\ncouple, around $2500, early October, mixed pace, central hotel area, Versailles optional\nShow context\n")
+	out := runInteractiveForTest(t, stateDir, "7 day paris trip\ncouple, around $2500, early October, mixed pace, central hotel area, Versailles optional\ncontext\n")
 
 	for _, want := range []string{
 		"Context",
@@ -2966,7 +2966,7 @@ func TestResumeHintUsesContextLabelAfterOpeningContextSurface(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
-	if exitCode := app.RunInteractive(nil, strings.NewReader("7 day paris trip\ncouple, around $2500, early October, mixed pace, central hotel area, Versailles optional\nShow context\n"), io.Discard, io.Discard); exitCode != 0 {
+	if exitCode := app.RunInteractive(nil, strings.NewReader("7 day paris trip\ncouple, around $2500, early October, mixed pace, central hotel area, Versailles optional\ncontext\n"), io.Discard, io.Discard); exitCode != 0 {
 		t.Fatalf("expected context action to succeed, got %d", exitCode)
 	}
 
@@ -2987,8 +2987,8 @@ func TestPostResultMenuUsesShowContextLabel(t *testing.T) {
 	stateDir := t.TempDir()
 	out := runInteractiveForTest(t, stateDir, "7 day paris trip\ncouple, around $2500, early October, mixed pace, central hotel area, Versailles optional\n")
 
-	if !strings.Contains(out, "Show context") {
-		t.Fatalf("expected post-result menu to use Show context label, got:\n%s", out)
+	if !strings.Contains(out, "Context") {
+		t.Fatalf("expected post-result menu to use Context label, got:\n%s", out)
 	}
 	if strings.Contains(out, "Show what Jini used") {
 		t.Fatalf("expected post-result menu to avoid older product-teaching label, got:\n%s", out)
@@ -2997,7 +2997,7 @@ func TestPostResultMenuUsesShowContextLabel(t *testing.T) {
 
 func TestPostResultCanMakeItShorterAndUndoLastChange(t *testing.T) {
 	stateDir := t.TempDir()
-	out := runInteractiveForTest(t, stateDir, "Weekly product review for pricing launch. Need owners, due dates, and open questions.\nMake it shorter\n")
+	out := runInteractiveForTest(t, stateDir, "Weekly product review for pricing launch. Need owners, due dates, and open questions.\nshorter\n")
 
 	for _, want := range []string{
 		"Sendable Follow-up",
@@ -3005,8 +3005,8 @@ func TestPostResultCanMakeItShorterAndUndoLastChange(t *testing.T) {
 		"## Still to confirm",
 		"## Next move",
 		"Saved a restorable version.",
-		"Show versions",
-		"Undo last change",
+		"Versions",
+		"Undo",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected shorter transform output to contain %q, got:\n%s", want, out)
@@ -3020,18 +3020,18 @@ func TestPostResultCanMakeItShorterAndUndoLastChange(t *testing.T) {
 		t.Fatalf("expected transformed artifact to be saved, got:\n%s", shortened)
 	}
 
-	versionsOut := runInteractiveForTest(t, stateDir, "Show versions\n")
+	versionsOut := runInteractiveForTest(t, stateDir, "versions\n")
 	for _, want := range []string{
 		"Versions",
-		"Make it shorter",
-		"Undo last change",
+		"Shorter",
+		"Undo",
 	} {
 		if !strings.Contains(versionsOut, want) {
 			t.Fatalf("expected versions output to contain %q, got:\n%s", want, versionsOut)
 		}
 	}
 
-	undoOut := runInteractiveForTest(t, stateDir, "Undo last change\n")
+	undoOut := runInteractiveForTest(t, stateDir, "undo\n")
 	for _, want := range []string{
 		"Restored the previous version.",
 		"## Send this note",
@@ -3052,7 +3052,7 @@ func TestPostResultCanMakeItShorterAndUndoLastChange(t *testing.T) {
 
 func TestPostResultCanMakeItExecutive(t *testing.T) {
 	stateDir := t.TempDir()
-	out := runInteractiveForTest(t, stateDir, "Notifications PRD needs a build-readiness check and handoff call.\nMake it executive\n")
+	out := runInteractiveForTest(t, stateDir, "Notifications PRD needs a build-readiness check and handoff call.\nexecutive\n")
 
 	for _, want := range []string{
 		"Build-Readiness Check",
@@ -3068,7 +3068,7 @@ func TestPostResultCanMakeItExecutive(t *testing.T) {
 
 func TestPostResultUsesSharedStructuredCheckTransformProfileForShorter(t *testing.T) {
 	stateDir := t.TempDir()
-	out := runInteractiveForTest(t, stateDir, "Notifications PRD needs a build-readiness check and handoff call.\nMake it shorter\n")
+	out := runInteractiveForTest(t, stateDir, "Notifications PRD needs a build-readiness check and handoff call.\nshorter\n")
 
 	for _, want := range []string{
 		"Build-Readiness Check",
@@ -3084,7 +3084,7 @@ func TestPostResultUsesSharedStructuredCheckTransformProfileForShorter(t *testin
 
 func TestPostResultCanTurnArtifactIntoChecklist(t *testing.T) {
 	stateDir := t.TempDir()
-	out := runInteractiveForTest(t, stateDir, "Weekly product review for pricing launch. Need owners, due dates, and open questions.\nTurn this into a checklist\n")
+	out := runInteractiveForTest(t, stateDir, "Weekly product review for pricing launch. Need owners, due dates, and open questions.\nchecklist\n")
 
 	for _, want := range []string{
 		"Sendable Follow-up",

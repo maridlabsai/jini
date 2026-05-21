@@ -23,11 +23,11 @@ jini
   <h2>Main in-shell actions</h2>
   <div class="pill-list">
     <span>Continue</span>
-    <span>Open ready</span>
-    <span>Show missing</span>
+    <span>Open</span>
+    <span>Missing</span>
     <span>Plan</span>
-    <span>Switch work</span>
-    <span>Start new</span>
+    <span>Switch</span>
+    <span>Start</span>
   </div>
 
   <p><code>Plan</code> is the structured mode. Use it when the work is still fuzzy and you want Jini to turn it into goal, requirements, design, steps, and run.</p>
