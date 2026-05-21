@@ -2647,6 +2647,27 @@ func renderCompactCurrentWorkChoices(w io.Writer, canSwitch bool) {
 	fmt.Fprintln(w, "- Start new work")
 }
 
+func renderWorkSwitchChoices(w io.Writer, includeStartNew bool) {
+	if includeStartNew {
+		fmt.Fprintln(w, "Type a number to open one, or type `Start something new`.")
+		return
+	}
+	fmt.Fprintln(w, "Type a number or title to switch.")
+}
+
+func renderSelectableWorkList(w io.Writer, heading string, active []*workSummary, includeStartNew bool) {
+	if strings.TrimSpace(heading) != "" {
+		fmt.Fprintln(w, heading)
+		fmt.Fprintln(w)
+	}
+	for index, item := range active {
+		fmt.Fprintf(w, "%d. %s\n", index+1, item.Title)
+		fmt.Fprintf(w, "   Next: %s\n", item.NextStep)
+	}
+	fmt.Fprintln(w)
+	renderWorkSwitchChoices(w, includeStartNew)
+}
+
 func renderArtifactFeedbackChoices(w io.Writer) {
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Tell Jini how this draft went")
@@ -3484,14 +3505,7 @@ func runActiveWorkLauncher(active []*workSummary, stdin io.Reader, stdout, stder
 }
 
 func renderActiveWorkLauncher(w io.Writer, active []*workSummary) {
-	fmt.Fprintln(w, "Active work")
-	fmt.Fprintln(w)
-	for index, item := range active {
-		fmt.Fprintf(w, "%d. %s\n", index+1, item.Title)
-		fmt.Fprintf(w, "   Next: %s\n", item.NextStep)
-	}
-	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Type a number to open one, or type `Start something new`.")
+	renderSelectableWorkList(w, "Active work", active, true)
 }
 
 func handleActiveWorkSelection(action string, active []*workSummary, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
@@ -3525,12 +3539,7 @@ func runSwitchWorkPicker(current *workSummary, scanner *bufio.Scanner, stdout, s
 		fmt.Fprintln(stdout, "No other active work right now.")
 		return 0
 	}
-	fmt.Fprintln(stdout, "Switch project")
-	fmt.Fprintln(stdout)
-	for index, item := range other {
-		fmt.Fprintf(stdout, "%d. %s\n", index+1, item.Title)
-		fmt.Fprintf(stdout, "   Next: %s\n", item.NextStep)
-	}
+	renderSelectableWorkList(stdout, "Switch project", other, false)
 	if scanner == nil {
 		return 0
 	}
