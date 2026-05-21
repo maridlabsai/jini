@@ -8,6 +8,8 @@ ROOT = Path(__file__).resolve().parents[1]
 HOMEPAGE_PATH = ROOT / "docs" / "index.md"
 LAYOUT_PATH = ROOT / "docs" / "_layouts" / "default.html"
 PLAN_PATH = ROOT / "specs" / "docs-homepage-rewrite-plan.md"
+TRUST_PATH = ROOT / "docs" / "proof.md"
+OUTPUTS_PATH = ROOT / "docs" / "state-and-artifacts.md"
 
 
 def read(path: Path) -> str:
@@ -56,6 +58,25 @@ class DocsHomepageRewriteTests(unittest.TestCase):
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
+
+    def test_supporting_pages_use_buyability_language(self) -> None:
+        trust = read(TRUST_PATH)
+        outputs = read(OUTPUTS_PATH)
+        for marker in (
+            "cheap to inspect",
+            "What a buyer should be able to verify quickly",
+            "Inspectability instead of product magic",
+        ):
+            with self.subTest(marker=marker):
+                self.assertIn(marker, trust)
+        for marker in (
+            "Outputs are part of the buyability story",
+            "deliverables, continuation, and explicit risk",
+            "It should open deliverables, not storage concepts.",
+            "No storage-first labels",
+        ):
+            with self.subTest(marker=marker):
+                self.assertIn(marker, outputs)
 
 
 if __name__ == "__main__":

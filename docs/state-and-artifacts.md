@@ -27,6 +27,12 @@ description: The shortest explanation of what Jini writes and keeps visible whil
   </div>
 </div>
 
+<div class="section-card">
+  <span class="section-kicker">Why this matters</span>
+  <h2>Outputs are part of the buyability story</h2>
+  <p>Jini should feel better than plain chat because it gives teams usable deliverables, visible missing pieces, and a continuation surface they can understand without rebuilding state from scratch.</p>
+</div>
+
 <div class="section-card" markdown="1">
   <h2>The Command That Matters</h2>
 
@@ -85,7 +91,7 @@ description: The shortest explanation of what Jini writes and keeps visible whil
 <div class="section-card" markdown="1">
   <h2>What The Shell Should Feel Like</h2>
 
-  <p>The shell should read like a working surface, not like a diagnostic panel.</p>
+  <p>The shell should read like a working surface, not like a diagnostic panel. A buyer should be able to see that Jini is organized around deliverables, continuation, and explicit risk rather than model theater.</p>
 
 ```text
 Goal
@@ -158,7 +164,7 @@ Other active work
 <div class="section-card" markdown="1">
   <h2>What “Open” Should Feel Like</h2>
 
-  <p>It should open deliverables, not storage concepts.</p>
+  <p>It should open deliverables, not storage concepts. The product surface should make the useful thing obvious before the user has to care where it lives on disk.</p>
 
   <div class="steps-grid">
     <div class="step-card">
@@ -214,4 +220,23 @@ Other active work
     <li><code>Safe to do</code>: whether anything has already been sent or changed</li>
     <li><code>Other active work</code>: sibling projects the user can switch to without losing context</li>
   </ul>
+</div>
+
+<div class="section-card">
+  <span class="section-kicker">Design rule</span>
+  <h2>What should never happen</h2>
+  <div class="checklist-grid">
+    <div class="checklist-card">
+      <h3>No storage-first labels</h3>
+      <p>Users should not have to think in terms of internal files, folders, or hidden state before they can review useful work.</p>
+    </div>
+    <div class="checklist-card">
+      <h3>No diagnostic-first output</h3>
+      <p>Status and route details matter, but they should support the deliverable instead of replacing it.</p>
+    </div>
+    <div class="checklist-card">
+      <h3>No invisible risk</h3>
+      <p>Anything still missing, uncertain, or blocked should stay near the deliverable instead of being buried behind another step.</p>
+    </div>
+  </div>
 </div>
