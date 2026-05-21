@@ -332,7 +332,7 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 	case "clear":
 		fmt.Fprintln(stdout, "Nothing was deleted.")
 		fmt.Fprintln(stdout, "Type `Start new work` to switch focus without removing this work.")
-	case "plan this first", "plan first", "plan", "requirements", "design", "help me plan this":
+	case "plan this first", "plan first", "plan this", "plan", "requirements", "design", "help me plan this":
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "plan"})
 	case "3", "new", "start new", "start something new", "start something else", "start new work":
 		if scanner == nil {
@@ -2626,7 +2626,7 @@ func renderPrimaryActionMenu(w io.Writer, summary *workSummary, heading, readyAc
 		fmt.Fprintln(w, "- Show versions")
 		fmt.Fprintln(w, "- Undo last change")
 	}
-	fmt.Fprintln(w, "- Help me plan this")
+	fmt.Fprintln(w, "- Plan this")
 	fmt.Fprintln(w, "- Start new work")
 }
 
@@ -2636,7 +2636,7 @@ func renderCompactCurrentWorkChoices(w io.Writer, canSwitch bool) {
 	fmt.Fprintln(w, "- Keep going")
 	fmt.Fprintln(w, "- Show what's ready")
 	fmt.Fprintln(w, "- Show what is missing")
-	fmt.Fprintln(w, "- Help me plan this")
+	fmt.Fprintln(w, "- Plan this")
 	if canSwitch {
 		fmt.Fprintln(w, "- Switch project")
 	}
@@ -3107,7 +3107,7 @@ func handlePostResultAction(action string, summary *workSummary, scanner *bufio.
 		fmt.Fprintln(stdout, "Restored the previous version.")
 		fmt.Fprintln(stdout)
 		renderItem(stdout, item)
-	case "plan this first", "plan first", "plan", "help me plan this", "5":
+	case "plan this first", "plan first", "plan this", "plan", "help me plan this", "5":
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "plan"})
 	case "accepted as is", "accept as is", "artifact accepted", "accepted":
 		return recordArtifactFeedback(summary, "accepted-as-is", "Approved", stdout, stderr)
@@ -3246,7 +3246,7 @@ func renderMissingOnly(w io.Writer, summary *workSummary) {
 }
 
 func renderPlanFirst(w io.Writer, summary *workSummary) {
-	fmt.Fprintln(w, "Help me plan this")
+	fmt.Fprintln(w, "Plan this")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Goal")
 	fmt.Fprintf(w, "- Finish %s without hiding what is missing.\n", summary.Title)

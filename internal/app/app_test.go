@@ -1022,7 +1022,7 @@ func TestInteractiveLauncherCreatesMeetingWork(t *testing.T) {
 		"Open what's ready",
 		"Show what is missing",
 		"Make it fuller",
-		"Help me plan this",
+		"Plan this",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -1104,7 +1104,7 @@ func TestInteractiveLauncherCreatesSpecReadinessWork(t *testing.T) {
 		"Open what's ready",
 		"Show what is missing",
 		"Make it fuller",
-		"Help me plan this",
+		"Plan this",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -2463,7 +2463,7 @@ func TestCurrentWorkCanEnterPlanFirstMode(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Help me plan this",
+		"Plan this",
 		"Goal",
 		"Requirements",
 		"Design",
