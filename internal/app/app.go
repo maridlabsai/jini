@@ -129,7 +129,7 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 			return runProvider(args[1:], stdout, stderr)
 		default:
 			fmt.Fprintf(stderr, "Unknown command %q.\n", args[0])
-			fmt.Fprintln(stderr, "Try `jini`, `jini doctor`, or a scriptable command such as `jini check`.")
+			fmt.Fprintln(stderr, "Try `jini`, `jini doctor`, or a scriptable command such as `jini status`.")
 			return 1
 		}
 	})
@@ -2766,7 +2766,7 @@ func renderCurrentWorkInterruptionPrompt(w io.Writer, summary *workSummary, cand
 func renderCurrentWorkMemoryStatus(w io.Writer, summary *workSummary) {
 	fmt.Fprintln(w, "Memory")
 	fmt.Fprintf(w, "Current work is saved: %s.\n", summary.Title)
-	fmt.Fprintln(w, "Type `check` for the full work state, blockers, route, and ready artifacts.")
+	fmt.Fprintln(w, "Type `status` for the full work state, blockers, route, and ready artifacts.")
 }
 
 func renderPostResultContext(w io.Writer, summary *workSummary, item *catalogItem) {
@@ -2797,7 +2797,7 @@ func renderPostResultContext(w io.Writer, summary *workSummary, item *catalogIte
 		}
 	}
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Saved. Type `check` for full status.")
+	fmt.Fprintln(w, "Saved. Type `status` for full status.")
 }
 
 func richerUsefulItem(summary *workSummary) *catalogItem {

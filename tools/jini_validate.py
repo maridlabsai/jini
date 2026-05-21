@@ -2831,7 +2831,7 @@ def build_get_started_guide(
         "trust_path": beginner_trust_path,
         "notes": [
             "Bundle-level detail is intentionally hidden from the beginner path.",
-            "`jini check` and `jini open` stay available for scripts and power users, but the normal user path starts with `jini`.",
+            "`jini status` and `jini open` stay available for scripts and power users, but the normal user path starts with `jini`.",
             "If you want the manual trust path, use `jini guide --harness ...` or `jini plan-install ...`.",
         ],
     }
@@ -2843,7 +2843,7 @@ def build_get_started_guide(
         "target": selected_target,
         "commands": [
             f"{cli} harnesses",
-            f"{cli} check",
+            f"{cli} status",
             f"{cli} open",
             f"{cli} run --repo /path/to/repo --harness {selected_target} --activate-runtime --consent write --consent publish",
         ],
@@ -6248,6 +6248,7 @@ CLI_ALIAS_MAP: dict[str, str] = {
     "doctor": "provider",
     "guide": "get-started",
     "check": "outcome",
+    "status": "outcome",
     "example": "try-example",
     "plan": "recommend-execution",
     "handoff": "stage-runtime-handoff",

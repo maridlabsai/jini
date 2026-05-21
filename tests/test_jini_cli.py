@@ -377,7 +377,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn(f"PREFIX  {prefix.resolve()}", result.stdout)
         self.assertIn("READY", result.stdout)
         self.assertIn("jini\n", result.stdout)
-        self.assertNotIn("jini check", result.stdout)
+        self.assertNotIn("jini status", result.stdout)
         self.assertNotIn("jini open", result.stdout)
 
     def test_start_alias_still_resolves_to_setup_surface(self) -> None:
@@ -2293,7 +2293,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertFalse(any("catalog-bundles" in item for item in guide["beginner_path"]["commands"]))
         self.assertFalse(any("show-kpis" in item for item in guide["beginner_path"]["commands"]))
         self.assertTrue(any("harnesses" in item for item in guide["power_user_path"]["commands"]))
-        self.assertTrue(any(item == "jini check" for item in guide["power_user_path"]["commands"]))
+        self.assertTrue(any(item == "jini status" for item in guide["power_user_path"]["commands"]))
         self.assertTrue(any(item == "jini open" for item in guide["power_user_path"]["commands"]))
         self.assertTrue(guide["shared_model"])
 
