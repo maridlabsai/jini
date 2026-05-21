@@ -388,14 +388,14 @@ func routeVisibility(envelope semanticEnvelope) string {
 func renderActionsForMode(mode string) []string {
 	switch mode {
 	case "first_result":
-		return []string{"Keep going", "Show what is missing", "Help me plan this", "Start new work"}
+		return []string{"Continue", "Show missing", "Plan", "Start new"}
 	case "work_summary", "multi_thread_home":
-		return []string{"Continue current work", "Open what is ready", "Start new work"}
+		return []string{"Continue", "Open ready", "Start new"}
 	case "ask":
-		return []string{"Answer ask", "Skip for now", "Show what is ready"}
+		return []string{"Answer", "Skip", "Open ready"}
 	case "recovery":
-		return []string{"Show what is ready", "Start new work"}
+		return []string{"Open ready", "Start new"}
 	default:
-		return []string{"Keep going", "Show what is missing", "Start new work"}
+		return []string{"Continue", "Show missing", "Start new"}
 	}
 }

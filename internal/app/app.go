@@ -2631,7 +2631,7 @@ func renderPrimaryActionMenu(w io.Writer, summary *workSummary, heading, readyAc
 }
 
 func renderCompactCurrentWorkChoices(w io.Writer, canSwitch bool) {
-	fmt.Fprintln(w, "Choose one")
+	fmt.Fprintln(w, "Actions")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "- Continue")
 	fmt.Fprintln(w, "- Open ready")
@@ -2690,7 +2690,7 @@ func renderOtherActiveWorkList(w io.Writer, active []*workSummary, includeHint b
 }
 
 func renderPostResultActions(w io.Writer, summary *workSummary, item *catalogItem) {
-	renderPrimaryActionMenu(w, summary, "What do you want to do next?", "Open ready")
+	renderPrimaryActionMenu(w, summary, "Actions", "Open ready")
 	renderPostResultContext(w, summary, item)
 }
 
@@ -2709,7 +2709,7 @@ func canSwitchFromCurrentWork(summary *workSummary) bool {
 }
 
 func renderInterruptionChoices(w io.Writer, canSwitch bool) {
-	fmt.Fprintln(w, "Choose one")
+	fmt.Fprintln(w, "Actions")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "- Start new")
 	fmt.Fprintln(w, "- Keep current")
@@ -3505,7 +3505,7 @@ func renderCurrentWorkHelp(w io.Writer, summary *workSummary) {
 		renderArtifactFeedbackChoices(w)
 	}
 	fmt.Fprintln(w)
-	renderPrimaryActionMenu(w, summary, "Choose one", "Open ready")
+		renderPrimaryActionMenu(w, summary, "Actions", "Open ready")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Familiar commands also work: `/status`, `/doctor`, `/model`, `/init`, `/memory`, `/permissions`, `/cost`.")
 }

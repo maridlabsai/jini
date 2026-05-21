@@ -357,7 +357,7 @@ Trip Plan
 
 [artifact preview]
 
-What do you want to do next?
+Actions
 - Continue
 - Show missing
 - Plan

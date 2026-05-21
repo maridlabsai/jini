@@ -22,15 +22,15 @@ jini
   <span class="section-kicker">Inside Jini</span>
   <h2>Main in-shell actions</h2>
   <div class="pill-list">
-    <span>Keep going</span>
-    <span>Show what's ready</span>
-    <span>Show what is missing</span>
-    <span>Help me plan this</span>
-    <span>Switch project</span>
-    <span>Start new work</span>
+    <span>Continue</span>
+    <span>Open ready</span>
+    <span>Show missing</span>
+    <span>Plan</span>
+    <span>Switch work</span>
+    <span>Start new</span>
   </div>
 
-  <p><code>Help me plan this</code> is the structured mode. Use it when the work is still fuzzy and you want Jini to turn it into goal, requirements, design, steps, and run.</p>
+  <p><code>Plan</code> is the structured mode. Use it when the work is still fuzzy and you want Jini to turn it into goal, requirements, design, steps, and run.</p>
 </div>
 
 <div class="section-card" markdown="1">

@@ -129,7 +129,7 @@ The note is usable now, but it becomes truly sendable only when ownership and ti
 Options
 - Add missing owner
 - Add due date
-- Skip for now
+- Skip
 
 If you skip this
 - Jini will keep the follow-up in draft form and leave missing owner or date gaps visible.
@@ -156,7 +156,7 @@ Other active work
 </div>
 
 <div class="section-card" markdown="1">
-  <h2>What “Show what's ready” Should Feel Like</h2>
+  <h2>What “Open ready” Should Feel Like</h2>
 
   <p>It should open deliverables, not storage concepts.</p>
 

@@ -225,7 +225,7 @@ making the artifact feel more inspectable, more revisable, and safer to revise.
 
 Jini should let the user ask:
 
-- `Show what Jini used`
+- `Show context`
 - `Show context`
 - `What did you use`
 

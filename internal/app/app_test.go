@@ -742,7 +742,7 @@ func TestLauncherStartsAsCompactShellWhenCurrentWorkExists(t *testing.T) {
 		"Doing now",
 		"Need",
 		"Why this matters",
-		"Continue current work",
+		"Continue",
 		"Open ready",
 		"Start new",
 	} {
@@ -775,7 +775,7 @@ func TestCurrentWorkHelpShowsCurrentWorkRecap(t *testing.T) {
 		"Sendable Follow-up",
 		"Blocked",
 		"Metric and legal-review decision",
-		"Choose one",
+		"Actions",
 		"Continue",
 		"Start new",
 	} {
@@ -1443,7 +1443,7 @@ func TestInteractiveLauncherRunsMeetingPostResultActions(t *testing.T) {
 	}{
 		{
 			name:            "keep going opens the next useful meeting surface",
-			action:          "Keep going",
+			action:          "Continue",
 			wantAfterAction: "Owners and Due Points",
 		},
 		{
@@ -1453,7 +1453,7 @@ func TestInteractiveLauncherRunsMeetingPostResultActions(t *testing.T) {
 		},
 		{
 			name:            "see missing opens the meeting decision surface",
-			action:          "Show what is missing",
+			action:          "Show missing",
 			wantAfterAction: "Pending decision",
 		},
 	}
@@ -1498,12 +1498,12 @@ func TestInteractiveLauncherRunsSpecPostResultActions(t *testing.T) {
 	}{
 		{
 			name:            "keep going opens the next useful spec surface",
-			action:          "Keep going",
+			action:          "Continue",
 			wantAfterAction: "Missing Pieces Before Build",
 		},
 		{
 			name:            "see missing opens the spec decision surface",
-			action:          "Show what is missing",
+			action:          "Show missing",
 			wantAfterAction: "Pending decision",
 		},
 	}
@@ -1548,7 +1548,7 @@ func TestCurrentWorkInteractiveChoicesAreReal(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("Show what's ready\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("Open ready\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -1687,7 +1687,7 @@ func TestCurrentWorkInteractiveLauncherIsCompactByDefault(t *testing.T) {
 		"AI route",
 		"Up next",
 		"Ready now",
-		"Choose one",
+		"Actions",
 		"Need",
 		"Why this matters",
 		"Options",
@@ -1709,7 +1709,7 @@ func TestCurrentWorkPromptShowsResumeHintAfterFocusChanges(t *testing.T) {
 
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
-	if exitCode := app.RunInteractive(nil, strings.NewReader("Show what's ready\n2\n"), io.Discard, io.Discard); exitCode != 0 {
+	if exitCode := app.RunInteractive(nil, strings.NewReader("Open ready\n2\n"), io.Discard, io.Discard); exitCode != 0 {
 		t.Fatalf("expected selection to succeed, got %d", exitCode)
 	}
 
@@ -1742,7 +1742,7 @@ func TestCurrentWorkInteractiveMissingChoiceShowsGapSummary(t *testing.T) {
 	}
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("Show what is missing\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("Show missing\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -1768,7 +1768,7 @@ func TestCurrentWorkInteractiveKeepGoingOpensNextUsefulSurface(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("Keep going\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("Continue\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -1828,7 +1828,7 @@ func TestCurrentWorkReadyShelfSelectionOpensArtifactByNumber(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("Show what's ready\n2\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("Open ready\n2\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -1876,7 +1876,7 @@ func TestCurrentWorkResumeReopensSelectedReadyArtifact(t *testing.T) {
 
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
-	if exitCode := app.RunInteractive(nil, strings.NewReader("Show what's ready\n2\n"), io.Discard, io.Discard); exitCode != 0 {
+	if exitCode := app.RunInteractive(nil, strings.NewReader("Open ready\n2\n"), io.Discard, io.Discard); exitCode != 0 {
 		t.Fatalf("expected selection to succeed, got %d", exitCode)
 	}
 
@@ -1928,7 +1928,7 @@ func TestCurrentWorkResumeReopensMissingSurface(t *testing.T) {
 	if exitCode := app.RunInteractive(nil, strings.NewReader("skip for now\n"), io.Discard, io.Discard); exitCode != 0 {
 		t.Fatalf("expected blocking ask to be skippable, got %d", exitCode)
 	}
-	if exitCode := app.RunInteractive(nil, strings.NewReader("Show what is missing\n"), io.Discard, io.Discard); exitCode != 0 {
+	if exitCode := app.RunInteractive(nil, strings.NewReader("Show missing\n"), io.Discard, io.Discard); exitCode != 0 {
 		t.Fatalf("expected missing view to succeed, got %d", exitCode)
 	}
 
@@ -1953,7 +1953,7 @@ func TestCurrentWorkShowMissingWithActiveAskOpensDecisionSurface(t *testing.T) {
 	}
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("Show what is missing\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("Show missing\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected active ask surface to open, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -1979,7 +1979,7 @@ func TestCurrentWorkResumeReopensDecisionSurface(t *testing.T) {
 	if exitCode := app.RunInteractive(nil, strings.NewReader("Notifications PRD needs a build-readiness check and handoff call.\n"), io.Discard, io.Discard); exitCode != 0 {
 		t.Fatalf("expected starter work to succeed, got %d", exitCode)
 	}
-	if exitCode := app.RunInteractive(nil, strings.NewReader("Show what is missing\n"), io.Discard, io.Discard); exitCode != 0 {
+	if exitCode := app.RunInteractive(nil, strings.NewReader("Show missing\n"), io.Discard, io.Discard); exitCode != 0 {
 		t.Fatalf("expected active ask surface to open, got %d", exitCode)
 	}
 
@@ -2002,7 +2002,7 @@ func TestCurrentWorkTransformUsesFocusedArtifact(t *testing.T) {
 
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
-	if exitCode := app.RunInteractive(nil, strings.NewReader("Show what's ready\n2\n"), io.Discard, io.Discard); exitCode != 0 {
+	if exitCode := app.RunInteractive(nil, strings.NewReader("Open ready\n2\n"), io.Discard, io.Discard); exitCode != 0 {
 		t.Fatalf("expected selection to succeed, got %d", exitCode)
 	}
 
@@ -2042,7 +2042,7 @@ func TestCurrentWorkFocusedOutcomeUsesSelectedArtifact(t *testing.T) {
 
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
-	if exitCode := app.RunInteractive(nil, strings.NewReader("Show what's ready\n2\n"), io.Discard, io.Discard); exitCode != 0 {
+	if exitCode := app.RunInteractive(nil, strings.NewReader("Open ready\n2\n"), io.Discard, io.Discard); exitCode != 0 {
 		t.Fatalf("expected selection to succeed, got %d", exitCode)
 	}
 
@@ -2308,7 +2308,7 @@ func TestCurrentWorkTacticalSurfacesStayCompact(t *testing.T) {
 		maxLines int
 	}{
 		{name: "fuller", input: "Make it fuller\n", maxLines: 14},
-		{name: "ready shelf", input: "Show what's ready\n", maxLines: 16},
+		{name: "ready shelf", input: "Open ready\n", maxLines: 16},
 		{name: "interrupt prompt", input: "plan me a 7 day paris trip\n", maxLines: 14},
 	}
 
@@ -2460,7 +2460,7 @@ func TestCurrentWorkCanEnterPlanFirstMode(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("Help me plan this\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("Plan\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -2766,7 +2766,7 @@ func TestInteractiveLauncherCanSwitchBetweenActiveProjects(t *testing.T) {
 
 	t.Setenv("JINI_STATE_DIR", stateDir)
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("Switch project\n1\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("Switch work\n1\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -2946,7 +2946,7 @@ func TestInteractiveLauncherShowsAttachmentInputChipForTextFile(t *testing.T) {
 
 func TestPostResultCanShowWhatJiniUsed(t *testing.T) {
 	stateDir := t.TempDir()
-	out := runInteractiveForTest(t, stateDir, "7 day paris trip\ncouple, around $2500, early October, mixed pace, central hotel area, Versailles optional\nShow what Jini used\n")
+	out := runInteractiveForTest(t, stateDir, "7 day paris trip\ncouple, around $2500, early October, mixed pace, central hotel area, Versailles optional\nShow context\n")
 
 	for _, want := range []string{
 		"Context",

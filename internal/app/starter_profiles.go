@@ -117,7 +117,7 @@ var starterPackProfiles = map[string]starterPackProfile{
 				AskID:   "confirm-owners-and-dates",
 				Prompt:  "Confirm any missing owner or due date before sending this follow-up.",
 				Reason:  "The note is usable now, but it becomes truly sendable only when ownership and timing are explicit.",
-				Options: []string{"Add missing owner", "Add due date", "Skip for now"},
+				Options: []string{"Add missing owner", "Add due date", "Skip"},
 				AssumptionsIfSkipped: []string{
 					"Jini will keep the follow-up in draft form and leave missing owner or date gaps visible.",
 				},
@@ -170,7 +170,7 @@ var starterPackProfiles = map[string]starterPackProfile{
 				AskID:   "confirm-approval-and-first-slice",
 				Prompt:  "Name the approval owner and confirm the first implementation slice.",
 				Reason:  "The readiness check is useful now, but build should not start until approval and the first slice are explicit.",
-				Options: []string{"Set approval owner", "Set first slice", "Skip for now"},
+				Options: []string{"Set approval owner", "Set first slice", "Skip"},
 				AssumptionsIfSkipped: []string{
 					"Jini will keep approval and first-slice gaps visible instead of treating the plan as build-ready.",
 				},
@@ -299,7 +299,7 @@ var starterPackProfiles = map[string]starterPackProfile{
 					break
 				}
 			}
-			options = append(options, "Skip for now")
+			options = append(options, "Skip")
 			return &threadAsk{
 				AskID:   "confirm-trip-basics",
 				Prompt:  "Confirm the highest-impact trip details before booking from this draft.",
@@ -684,7 +684,7 @@ func starterAsk(summary *workSummary, source string) *threadAsk {
 		AskID:   "confirm-blocking-detail",
 		Prompt:  inferNeed(summary.Missing),
 		Reason:  "This is the highest-impact missing detail before Jini can strengthen the next draft.",
-		Options: []string{"Answer now", "Skip for now"},
+		Options: []string{"Answer", "Skip"},
 		AssumptionsIfSkipped: []string{
 			"Jini will keep the missing detail visible and avoid pretending the work is complete.",
 		},
