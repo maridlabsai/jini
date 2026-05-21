@@ -529,6 +529,52 @@ def build_lean_platform_metrics() -> dict[str, Any]:
     }
     token_efficiency = dimensions.get("token-efficiency", {})
     delivery_maturity = dimensions.get("delivery-maturity", {})
+    local_route_path = session_state_root() / "local-runtime-capabilities.json"
+    route_evidence: dict[str, Any] = {
+        "available": False,
+        "path": display_path(local_route_path),
+        "captured_at": "",
+        "local_runtime_class": "",
+        "adapter_count": 0,
+        "ready_adapter_count": 0,
+        "adapters": [],
+    }
+    if local_route_path.exists():
+        try:
+            payload = json.loads(local_route_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            payload = {}
+        if isinstance(payload, dict):
+            adapter_rows: list[dict[str, Any]] = []
+            raw_adapters = payload.get("adapters", {})
+            if isinstance(raw_adapters, dict):
+                for adapter_id, row in sorted(raw_adapters.items()):
+                    if not isinstance(row, dict):
+                        continue
+                    adapter_rows.append(
+                        {
+                            "adapter_id": str(adapter_id),
+                            "status": str(row.get("status", "")),
+                            "latency_ms": int(row.get("latency_ms", 0) or 0),
+                            "warm_latency_ms": int(row.get("warm_latency_ms", 0) or 0),
+                            "cold_start_cost_ms": int(row.get("cold_start_cost_ms", 0) or 0),
+                            "tokens_per_second": float(row.get("tokens_per_second", 0) or 0),
+                            "quality_class": str(row.get("quality_class", "")),
+                            "structured_reliability": str(row.get("structured_reliability", "")),
+                            "benchmarked_at": str(row.get("benchmarked_at", "")),
+                        }
+                    )
+            route_evidence = {
+                "available": bool(adapter_rows),
+                "path": display_path(local_route_path),
+                "captured_at": str(payload.get("captured_at", "")),
+                "local_runtime_class": str(payload.get("local_runtime_class", "")),
+                "adapter_count": len(adapter_rows),
+                "ready_adapter_count": sum(
+                    1 for item in adapter_rows if item.get("status") in {"ok", "degraded"}
+                ),
+                "adapters": adapter_rows,
+            }
     command_samples: list[dict[str, Any]] = []
     cli_path = ROOT / "tools" / "jini.py"
 
@@ -596,6 +642,7 @@ def build_lean_platform_metrics() -> dict[str, Any]:
         "compatibility_alias_matches": alias_matches,
         "command_samples": command_samples,
         "latency_sample": latency_sample,
+        "route_evidence": route_evidence,
         "cost_proxy": {
             "dimension": "token-efficiency",
             "current_score": token_efficiency.get("current_score"),
@@ -635,6 +682,27 @@ def print_lean_platform_metrics(report: dict[str, Any]) -> None:
         print(
             f"  - {sample.get('command', '')} | ms={sample.get('duration_ms', 'n/a')} "
             f"| exit={sample.get('exit_code', 'n/a')}"
+        )
+    route_evidence = report.get("route_evidence", {})
+    print(
+        "ROUTES   "
+        f"available={'yes' if route_evidence.get('available') else 'no'} "
+        f"adapters={route_evidence.get('adapter_count', 0)} "
+        f"ready={route_evidence.get('ready_adapter_count', 0)}"
+    )
+    if route_evidence.get("local_runtime_class"):
+        print(f"  runtime={route_evidence.get('local_runtime_class')}")
+    if route_evidence.get("captured_at"):
+        print(f"  captured={route_evidence.get('captured_at')}")
+    for adapter in route_evidence.get("adapters", []):
+        print(
+            "  - "
+            f"{adapter.get('adapter_id', '')} | {adapter.get('status', '')} | "
+            f"{adapter.get('latency_ms', 0)}ms | warm={adapter.get('warm_latency_ms', 0)}ms | "
+            f"cold+{adapter.get('cold_start_cost_ms', 0)}ms | "
+            f"{adapter.get('quality_class', '')} | "
+            f"reliability {adapter.get('structured_reliability', '')} | "
+            f"{adapter.get('tokens_per_second', 0):.1f} tok/s"
         )
     cost_proxy = report.get("cost_proxy", {})
     print(

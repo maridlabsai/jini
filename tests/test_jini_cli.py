@@ -2819,8 +2819,71 @@ class JiniCliConformanceTests(unittest.TestCase):
             payload["command_samples"][3]["command"],
         )
         self.assertTrue(all(item["exit_code"] == 0 for item in payload["command_samples"]))
+        self.assertFalse(payload["route_evidence"]["available"])
+        self.assertEqual(0, payload["route_evidence"]["adapter_count"])
         self.assertEqual("token-efficiency", payload["cost_proxy"]["dimension"])
         self.assertEqual("delivery-maturity", payload["latency_proxy"]["dimension"])
+
+    def test_metrics_json_surfaces_local_route_evidence_when_present(self) -> None:
+        state_root = self.tmp / ".jini"
+        state_root.mkdir(parents=True, exist_ok=True)
+        report = {
+            "schema_version": "0.4.0",
+            "context_type": "JiniLocalRuntimeCapabilities",
+            "captured_at": "2026-05-21T19:00:00Z",
+            "jini_version": "0.1.0",
+            "capability_registry_version": "test",
+            "device_probe_fingerprint": "test-fingerprint",
+            "local_endpoint_signature": "local-endpoint",
+            "local_runtime_class": "local-ollama",
+            "adapters": {
+                "local-workhorse": {
+                    "adapter_id": "local-workhorse",
+                    "model_id": "qwen3:8b",
+                    "status": "ok",
+                    "latency_ms": 180,
+                    "warm_latency_ms": 150,
+                    "cold_start_cost_ms": 30,
+                    "tokens_per_second": 22.5,
+                    "quality_class": "strong",
+                    "structured_reliability": "strong",
+                    "benchmarked_at": "2026-05-21T19:00:00Z",
+                },
+                "local-fast": {
+                    "adapter_id": "local-fast",
+                    "model_id": "phi4-mini",
+                    "status": "degraded",
+                    "latency_ms": 95,
+                    "warm_latency_ms": 90,
+                    "cold_start_cost_ms": 5,
+                    "tokens_per_second": 38.2,
+                    "quality_class": "usable",
+                    "structured_reliability": "usable",
+                    "benchmarked_at": "2026-05-21T19:00:00Z",
+                },
+            },
+        }
+        (state_root / "local-runtime-capabilities.json").write_text(
+            json.dumps(report),
+            encoding="utf-8",
+        )
+
+        result = self.run_cli("metrics", "--format", "json")
+        self.assert_ok(result)
+        payload = json.loads(result.stdout)
+        self.assertTrue(payload["route_evidence"]["available"])
+        self.assertEqual("local-ollama", payload["route_evidence"]["local_runtime_class"])
+        self.assertEqual(2, payload["route_evidence"]["adapter_count"])
+        self.assertEqual(2, payload["route_evidence"]["ready_adapter_count"])
+        adapters = {
+            item["adapter_id"]: item
+            for item in payload["route_evidence"]["adapters"]
+        }
+        self.assertEqual(2, len(adapters))
+        self.assertEqual(180, adapters["local-workhorse"]["latency_ms"])
+        self.assertEqual("strong", adapters["local-workhorse"]["structured_reliability"])
+        self.assertEqual(95, adapters["local-fast"]["latency_ms"])
+        self.assertEqual("usable", adapters["local-fast"]["structured_reliability"])
 
 
 if __name__ == "__main__":
