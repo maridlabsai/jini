@@ -44,25 +44,13 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for older Python
 
 try:
     from .lean_metrics_support import (
-        build_latency_sample,
-        build_route_cost,
-        build_route_trend,
-        collect_core_command_samples,
-        collect_taught_commands,
-        load_route_report,
+        build_lean_platform_report,
         render_lean_platform_metrics,
-        scan_public_aliases,
     )
 except ImportError:  # pragma: no cover - script execution path
     from lean_metrics_support import (
-        build_latency_sample,
-        build_route_cost,
-        build_route_trend,
-        collect_core_command_samples,
-        collect_taught_commands,
-        load_route_report,
+        build_lean_platform_report,
         render_lean_platform_metrics,
-        scan_public_aliases,
     )
 
 
@@ -520,54 +508,25 @@ def print_competitive_kpi_summary(summary: dict[str, Any]) -> None:
 
 
 def build_lean_platform_metrics() -> dict[str, Any]:
-    taught_commands = collect_taught_commands(CLI_DOC_PATH, TAUGHT_COMMAND_PATTERN)
-    alias_matches = scan_public_aliases(
-        LEAN_PLATFORM_ALIAS_SCAN_PATHS,
-        FORBIDDEN_PUBLIC_COMMAND_ALIASES,
-        display_path,
-    )
     summary = build_competitive_kpi_summary(load_competitive_kpis(), limit=None)
     dimensions = {
         str(item.get("id", "")): item
         for item in summary.get("dimensions", [])
         if isinstance(item, dict)
     }
-    token_efficiency = dimensions.get("token-efficiency", {})
-    delivery_maturity = dimensions.get("delivery-maturity", {})
-    route_evidence, route_payload = load_route_report(session_state_root(), display_path)
-    route_trend = build_route_trend(route_evidence, route_payload)
-    route_cost = build_route_cost(route_evidence)
-    command_samples, provider_evidence = collect_core_command_samples(ROOT, ROOT / "tools" / "jini.py")
-    latency_sample = build_latency_sample(command_samples)
-
-    return {
-        "generated_at": now_utc(),
-        "taught_commands": taught_commands,
-        "command_surface_count": len(taught_commands),
-        "compatibility_alias_count": sum(int(item["count"]) for item in alias_matches),
-        "compatibility_alias_matches": alias_matches,
-        "command_samples": command_samples,
-        "latency_sample": latency_sample,
-        "provider_evidence": provider_evidence,
-        "route_evidence": route_evidence,
-        "route_trend": route_trend,
-        "route_cost": route_cost,
-        "cost_proxy": {
-            "dimension": "token-efficiency",
-            "current_score": token_efficiency.get("current_score"),
-            "target_score": token_efficiency.get("target_score"),
-            "competitive_gap": token_efficiency.get("competitive_gap"),
-            "strength_status": token_efficiency.get("strength_status"),
-        },
-        "latency_proxy": {
-            "dimension": "delivery-maturity",
-            "current_score": delivery_maturity.get("current_score"),
-            "target_score": delivery_maturity.get("target_score"),
-            "competitive_gap": delivery_maturity.get("competitive_gap"),
-            "strength_status": delivery_maturity.get("strength_status"),
-        },
-        "status": "ok" if not alias_matches and len(taught_commands) <= 5 else "warning",
-    }
+    return build_lean_platform_report(
+        generated_at=now_utc(),
+        root=ROOT,
+        cli_path=ROOT / "tools" / "jini.py",
+        cli_doc_path=CLI_DOC_PATH,
+        taught_command_pattern=TAUGHT_COMMAND_PATTERN,
+        scan_paths=LEAN_PLATFORM_ALIAS_SCAN_PATHS,
+        forbidden_aliases=FORBIDDEN_PUBLIC_COMMAND_ALIASES,
+        session_state_root=session_state_root(),
+        display_path=display_path,
+        token_efficiency=dimensions.get("token-efficiency", {}),
+        delivery_maturity=dimensions.get("delivery-maturity", {}),
+    )
 
 
 def print_lean_platform_metrics(report: dict[str, Any]) -> None:

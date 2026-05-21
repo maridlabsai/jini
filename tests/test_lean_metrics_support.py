@@ -1,3 +1,4 @@
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -102,6 +103,36 @@ class LeanMetricsSupportTests(unittest.TestCase):
         self.assertIn("ROUTECOST available=yes status=measured basis=local-runtime-benchmark posture=zero-external-api-spend", lines)
         self.assertTrue(any("local-fast | recovered" in line for line in lines))
         self.assertTrue(any("cheapest=local-fast" in line for line in lines))
+
+    def test_build_lean_platform_report_assembles_surface_and_status(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            cli_doc = root / "cli.md"
+            cli_doc.write_text("<h3><code>jini doctor</code></h3>\n<h3><code>jini status</code></h3>\n", encoding="utf-8")
+            cli_entry = root / "jini.py"
+            cli_entry.write_text("# placeholder\n", encoding="utf-8")
+
+            report = lean_metrics_support.build_lean_platform_report(
+                generated_at="2026-05-21T00:00:00Z",
+                root=root,
+                cli_path=cli_entry,
+                cli_doc_path=cli_doc,
+                taught_command_pattern=re.compile(r"<h3><code>jini ([^<]+)</code></h3>"),
+                scan_paths=(cli_doc,),
+                forbidden_aliases=("jini check",),
+                session_state_root=root,
+                display_path=lambda path: str(path),
+                token_efficiency={"current_score": 8.8, "target_score": 9.0, "competitive_gap": 0.2, "strength_status": "trailing"},
+                delivery_maturity={"current_score": 8.9, "target_score": 9.0, "competitive_gap": 0.0, "strength_status": "leading"},
+            )
+
+        self.assertEqual("2026-05-21T00:00:00Z", report["generated_at"])
+        self.assertEqual(["doctor", "status"], report["taught_commands"])
+        self.assertEqual(0, report["compatibility_alias_count"])
+        self.assertIn("latency_sample", report)
+        self.assertIn("provider_evidence", report)
+        self.assertIn("route_cost", report)
+        self.assertEqual("ok", report["status"])
 
     def test_build_latency_sample_uses_only_successful_durations(self) -> None:
         sample = lean_metrics_support.build_latency_sample(

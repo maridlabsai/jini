@@ -328,6 +328,58 @@ def build_latency_sample(command_samples: list[dict[str, Any]]) -> dict[str, Any
     }
 
 
+def build_lean_platform_report(
+    *,
+    generated_at: str,
+    root: Path,
+    cli_path: Path,
+    cli_doc_path: Path,
+    taught_command_pattern: Pattern[str],
+    scan_paths: tuple[Path, ...],
+    forbidden_aliases: tuple[str, ...],
+    session_state_root: Path,
+    display_path: Callable[[Path], str],
+    token_efficiency: dict[str, Any],
+    delivery_maturity: dict[str, Any],
+) -> dict[str, Any]:
+    """Assemble the full lean-platform metrics report."""
+    taught_commands = collect_taught_commands(cli_doc_path, taught_command_pattern)
+    alias_matches = scan_public_aliases(scan_paths, forbidden_aliases, display_path)
+    route_evidence, route_payload = load_route_report(session_state_root, display_path)
+    route_trend = build_route_trend(route_evidence, route_payload)
+    route_cost = build_route_cost(route_evidence)
+    command_samples, provider_evidence = collect_core_command_samples(root, cli_path)
+    latency_sample = build_latency_sample(command_samples)
+    return {
+        "generated_at": generated_at,
+        "taught_commands": taught_commands,
+        "command_surface_count": len(taught_commands),
+        "compatibility_alias_count": sum(int(item["count"]) for item in alias_matches),
+        "compatibility_alias_matches": alias_matches,
+        "command_samples": command_samples,
+        "latency_sample": latency_sample,
+        "provider_evidence": provider_evidence,
+        "route_evidence": route_evidence,
+        "route_trend": route_trend,
+        "route_cost": route_cost,
+        "cost_proxy": {
+            "dimension": "token-efficiency",
+            "current_score": token_efficiency.get("current_score"),
+            "target_score": token_efficiency.get("target_score"),
+            "competitive_gap": token_efficiency.get("competitive_gap"),
+            "strength_status": token_efficiency.get("strength_status"),
+        },
+        "latency_proxy": {
+            "dimension": "delivery-maturity",
+            "current_score": delivery_maturity.get("current_score"),
+            "target_score": delivery_maturity.get("target_score"),
+            "competitive_gap": delivery_maturity.get("competitive_gap"),
+            "strength_status": delivery_maturity.get("strength_status"),
+        },
+        "status": "ok" if not alias_matches and len(taught_commands) <= 5 else "warning",
+    }
+
+
 def render_lean_platform_metrics(report: dict[str, Any]) -> list[str]:
     """Render the human-readable lean metrics surface."""
     lines = [
