@@ -25,7 +25,7 @@ type artifactVersionEntry struct {
 }
 
 func renderContextCapsule(w io.Writer, summary *workSummary) {
-	fmt.Fprintln(w, "What Jini used")
+	fmt.Fprintln(w, "Context")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "From you")
 	inputs := []string{}

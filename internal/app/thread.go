@@ -410,7 +410,7 @@ func threadFocusLabel(summary *workSummary, focus *threadFocus) string {
 	case "missing":
 		return "What is missing"
 	case "context":
-		return "What Jini used"
+		return "Context"
 	case "plan":
 		return "Plan this first"
 	case "ask":

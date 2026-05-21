@@ -2915,7 +2915,7 @@ func TestPostResultCanShowWhatJiniUsed(t *testing.T) {
 	out := runInteractiveForTest(t, stateDir, "7 day paris trip\ncouple, around $2500, early October, mixed pace, central hotel area, Versailles optional\nShow what Jini used\n")
 
 	for _, want := range []string{
-		"What Jini used",
+		"Context",
 		"From you",
 		"Your request: 7 day paris trip",
 		"Clarified scope: couple, around $2500, early October, mixed pace, central hotel area, Versailles optional",
@@ -2925,6 +2925,27 @@ func TestPostResultCanShowWhatJiniUsed(t *testing.T) {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
+	}
+}
+
+func TestResumeHintUsesContextLabelAfterOpeningContextSurface(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	if exitCode := app.RunInteractive(nil, strings.NewReader("7 day paris trip\ncouple, around $2500, early October, mixed pace, central hotel area, Versailles optional\nShow context\n"), io.Discard, io.Discard); exitCode != 0 {
+		t.Fatalf("expected context action to succeed, got %d", exitCode)
+	}
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader(""), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected prompt after context focus to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "Context") {
+		t.Fatalf("expected prompt resume hint to use Context label, got:\n%s", stdout.String())
+	}
+	if strings.Contains(stdout.String(), "What Jini used") {
+		t.Fatalf("expected prompt not to use older context label, got:\n%s", stdout.String())
 	}
 }
 
