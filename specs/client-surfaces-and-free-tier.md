@@ -127,6 +127,31 @@ That means:
 The free tier must not be a fake evaluation shell that becomes useless without
 hosted spend.
 
+## Open Version Value Proposition
+
+The open version should be valuable even if a user never pays Jini.
+
+The open version should give users:
+
+- one stable shell across supported surfaces
+- local SLM and BYO control
+- structural token savings that work across providers and tools
+- artifact-first continuation
+- compact resume and status views
+- checkpoints, projections, and visible route proof
+
+The open version should adopt the common efficiency patterns that serious tools
+already converge on:
+
+- context compaction
+- lazy context loading
+- checkpointed resume
+- artifact reuse instead of transcript replay
+- subtask isolation where the runtime can support it
+
+These are table stakes for a trustworthy open shell and should not be treated
+as paid lock-in.
+
 ## Public Upgrade Logic
 
 The public repo should explain the upgrade ladder in product terms without
@@ -134,20 +159,36 @@ turning into a pricing page.
 
 The stable public story is:
 
-- free gives real local and BYO use
+- free gives real local and BYO use plus structural savings
 - hosted proof-of-value may exist without making free deceptive
-- paid product adds hosted convenience, continuity, shared work, and
-  governance
+- paid product adds adaptive optimization, limit avoidance, auto recovery, and
+  stronger continuity convenience
 - paid services and support are separate from paid product capability
+
+## Upgrade Trigger
+
+The user should upgrade only when the open version is already useful and the
+commercial layer can clearly save more money or interruption than it costs.
+
+In plain language:
+
+- use open Jini when local, BYO, and structural efficiency are enough
+- pay for Jini when provider limits, throttles, and route decisions are the
+  expensive part
+- do not pay just to unlock basic session continuity or basic shell use
+
+The product should never depend on a weak free tier to force conversion.
 
 ## Commercial Boundary
 
 The commercial layer may monetize:
 
-- hosted routing
+- provider-specific optimization
+- learned routing and compression policy
+- subscription-limit forecasting
+- preemptive throttle avoidance
+- automatic fallback and resume
 - sync and continuity convenience
-- background execution
-- premium connectors
 - shared team workflows
 - governance and enterprise controls
 
@@ -155,6 +196,7 @@ The public layer must continue to define:
 
 - free access to the surfaces
 - free local/BYO operation
+- free structural efficiency patterns
 - public install and proof path
 
 ## Continuity Rule
