@@ -12477,6 +12477,68 @@ def build_outcome_view(
     }
 
 
+def build_outcome_view_from_projection(
+    context: dict[str, Any],
+    *,
+    repo_path: Path | None = None,
+) -> dict[str, Any]:
+    projection = context.get("projection", {}) or {}
+    ready_now = []
+    for item in projection.get("ready", []):
+        artifact_id = str(item.get("id", "")).strip()
+        if not artifact_id:
+            continue
+        ready_now.append(
+            {
+                "id": artifact_id,
+                "label": str(item.get("label", "")).strip(),
+                "show_command": f"{cli_invocation()} show {artifact_id}",
+            }
+        )
+
+    next_operation = str(projection.get("next", "")).strip() or "inspect-session"
+    next_command = f"{cli_invocation()} next"
+    resume_command = f"{cli_invocation()} resume"
+    if repo_path is not None:
+        repo_display = display_path(repo_path)
+        next_command = f"{next_command} --repo {repo_display}"
+        resume_command = f"{resume_command} --repo {repo_display}"
+    next_command = f"{next_command} --intent {next_operation.lower()}"
+    resume_command = f"{resume_command} --intent {next_operation.lower()} --max-chars 900"
+
+    task_done = len(ready_now)
+    continuation_saved_work = bool(projection.get("cost_posture", {}).get("continuation_saved_work"))
+    done_text = "Work has already been captured in session artifacts." if continuation_saved_work else "No completed artifact evidence is stored yet."
+    return {
+        "schema_version": "0.1.0",
+        "view_type": "JiniOutcomeView",
+        "pack_id": str(context.get("pack_id", "")),
+        "pack_dir": display_path(Path(str(context.get("pack_dir", "")))),
+        "work_unit_id": str(context.get("work_unit_id", "")),
+        "title": str(context.get("title", "")),
+        "health": "session-only",
+        "state": str(context.get("state", "")),
+        "next_operation": next_operation,
+        "task_summary": {
+            "done": task_done,
+            "total": task_done,
+            "unresolved": len(projection.get("missing", [])),
+        },
+        "questions": {
+            "what_is_done": done_text,
+            "what_happens_next": next_operation,
+            "what_is_still_missing_now": list(projection.get("missing", [])),
+            "what_is_still_missing_later": [],
+        },
+        "ready_now": ready_now,
+        "continue_with": [next_command, resume_command],
+        "validation_errors": [],
+        "validation_warnings": [
+            "Pack files are unavailable, so this status view is coming from the saved session projection."
+        ],
+    }
+
+
 def print_outcome_view(report: dict[str, Any]) -> None:
     print(f"WORK   {report.get('work_unit_id', '')}")
     print(f"TITLE  {report.get('title', '')}")
@@ -12510,6 +12572,11 @@ def print_outcome_view(report: dict[str, Any]) -> None:
         print("READY NOW")
         for item in ready_now:
             print(f"  {item.get('id', ''):<14} -> {item.get('show_command', '')}")
+    if report.get("validation_warnings"):
+        print()
+        print("NOTES")
+        for item in report.get("validation_warnings", []):
+            print(f"  - {item}")
     if report.get("validation_errors"):
         print()
         print("FIX FIRST")
@@ -17167,6 +17234,17 @@ def main() -> int:
             pack_dir = resolve_context_pack_dir(args.path, registry, command_label="status")
             report = build_outcome_view(pack_dir, registry, repo_path=args.repo)
         except (FileNotFoundError, TypeError, ValueError) as exc:
+            if args.path is None:
+                context = load_current_session_context()
+                if context is not None:
+                    remembered_pack = Path(str(context.get("pack_dir", ""))).expanduser()
+                    if remembered_pack and not remembered_pack.exists():
+                        report = build_outcome_view_from_projection(context, repo_path=args.repo)
+                        if args.format == "json":
+                            print(json.dumps(report, indent=2))
+                        else:
+                            print_outcome_view(report)
+                        return 0
             failing_path = args.path if args.path is not None else Path("<current-work>")
             print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
             return 1
