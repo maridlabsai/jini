@@ -5,6 +5,8 @@ description: Install Jini once, then use `jini`.
 
 <p class="page-lead">The normal path should be simple: install once, run <code>jini</code>, paste the work you want finished.</p>
 
+<p class="page-lead">If you want a non-CLI surface, the commercial desktop and mobile apps should be free downloads. The $1/month Commercial License unlocks the optimizer and limit-aware continuity features inside those apps.</p>
+
 <div class="section-card" markdown="1">
   <span class="section-kicker">Recommended</span>
   <h2>Install once from any terminal</h2>

@@ -47,6 +47,10 @@ description: One shell for AI work. Cheap by default, strong when needed.
     <strong>Measured routing</strong>
     <p>Route choice, latency, and local benchmark evidence stay visible instead of hidden behind marketing claims.</p>
   </div>
+  <div class="fact-pill">
+    <strong>Apps, not just CLI</strong>
+    <p>macOS, Windows, iOS, and Android downloads widen access. The $1/month commercial subscription unlocks the optimizer and limit-avoidance layer.</p>
+  </div>
 </div>
 
 ## Quickstart
@@ -156,6 +160,23 @@ description: One shell for AI work. Cheap by default, strong when needed.
   <div class="proof-card">
     <h3>Cheap continuity</h3>
     <p>Continuation should be cheaper than restart. Jini should reuse session state before it spends money rebuilding the same context again.</p>
+  </div>
+</div>
+
+## Desktop and mobile apps
+
+<div class="checklist-grid">
+  <div class="checklist-card">
+    <h3>Free downloads</h3>
+    <p>Commercial desktop and mobile apps should be free to download on macOS, Windows, iOS, and Android so more people can review and resume the same session.</p>
+  </div>
+  <div class="checklist-card">
+    <h3>Paid optimizer</h3>
+    <p>The $1/month Commercial License unlocks provider-limit forecasting, throttle avoidance, automatic fallback, and automatic resume after throttles.</p>
+  </div>
+  <div class="checklist-card">
+    <h3>One session model</h3>
+    <p>CLI, desktop, and mobile should all expose the same ready, missing, next, and renewal-proof posture instead of becoming separate products.</p>
   </div>
 </div>
 
