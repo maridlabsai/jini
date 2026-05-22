@@ -34,6 +34,11 @@ class CommercialDocsTests(unittest.TestCase):
             "What downloads are free",
             "What the $1 license unlocks",
             "Commercial app surfaces",
+            "Distribution and payment status",
+            "planned as direct website downloads",
+            "planned as a free App Store companion app",
+            "planned as a free Play Store companion app",
+            "Payment integration is not live yet.",
             "Why people keep renewing each month",
             "provider headroom preserved",
         ):

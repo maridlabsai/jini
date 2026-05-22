@@ -42,6 +42,17 @@ The commercial apps should help a wider user base without turning Jini into a di
 </div>
 
 <div class="section-card" markdown="1">
+## Distribution and payment status
+
+- **macOS and Windows:** planned as direct website downloads
+- **iOS:** planned as a free App Store companion app
+- **Android:** planned as a free Play Store companion app
+- **Commercial License activation:** planned through account entitlement, starting with website checkout
+
+Payment integration is not live yet. The current product work defines the shared entitlement model and distribution plan, but not a production checkout or store-billing pipeline.
+</div>
+
+<div class="section-card" markdown="1">
 ## Why people keep renewing each month
 
 The subscription has to prove itself with runtime evidence:
