@@ -12539,6 +12539,81 @@ def build_outcome_view_from_projection(
     }
 
 
+def build_compact_context_from_projection(
+    context: dict[str, Any],
+    *,
+    intent: str | None = None,
+    repo_path: Path | None = None,
+    max_chars: int = 1200,
+) -> dict[str, Any]:
+    projection = context.get("projection", {}) or {}
+    chosen_intent = (intent or projection.get("next") or "resume-session").strip().lower()
+    ready = list(projection.get("ready", []))
+    missing = list(projection.get("missing", []))
+    resume_items = [
+        f"Session anchor: `{context.get('state', '')}` with next operation `{projection.get('next', '')}`.",
+    ]
+    if ready:
+        resume_items.append(
+            "Ready artifacts: " + ", ".join(str(item.get("id", "")).strip() for item in ready[:4] if str(item.get("id", "")).strip())
+        )
+    if missing:
+        resume_items.append("Missing now: " + ", ".join(str(item).strip() for item in missing[:4] if str(item).strip()))
+    route_reason = str(projection.get("route", {}).get("reason", "")).strip()
+    if route_reason:
+        resume_items.append(f"Route evidence: {route_reason}")
+    resume_items.append("Pack files are unavailable, so this resume is using the saved session projection.")
+
+    compact = {
+        "schema_version": "0.1.0",
+        "context_type": "JiniCompactContext",
+        "generated_at": now_utc(),
+        "pack_id": str(context.get("pack_id", "")),
+        "work_unit_id": str(context.get("work_unit_id", "")),
+        "intent": chosen_intent,
+        "state": str(context.get("state", "")),
+        "health": "session-only",
+        "execution_class": "projection-resume",
+        "next_operation": str(projection.get("next", "")),
+        "recent_artifacts": [
+            {
+                "artifact_type": str(item.get("label", "")).strip() or "artifact",
+                "path": str(item.get("resolved_path", "")).strip(),
+                "status": "ready",
+                "revision": 1,
+            }
+            for item in ready[:4]
+        ],
+        "resume_items": resume_items,
+        "stale_signals": ["saved session projection is being used because the original pack path is unavailable."],
+        "home_memory": [],
+        "freshness": [],
+        "unresolved_tasks": [{"task": str(item).strip(), "status": "pending"} for item in missing[:4] if str(item).strip()],
+        "repo_root": display_path(repo_path) if repo_path is not None else "",
+        "repo_actions": [],
+        "steering": [],
+        "runtime_target": {
+            "selected": "session-projection",
+            "fallbacks": [],
+        },
+        "latest_run": None,
+        "latest_harvest": None,
+    }
+    estimated_chars = len(json.dumps(compact, sort_keys=True))
+    if estimated_chars > max_chars and len(compact["resume_items"]) > 2:
+        compact["resume_items"] = compact["resume_items"][:2]
+        estimated_chars = len(json.dumps(compact, sort_keys=True))
+    compact["token_budget"] = {
+        "max_chars": max_chars,
+        "estimated_tokens_before_trim": estimate_tokens(compact),
+        "estimated_tokens": estimate_tokens(compact),
+        "estimated_chars": estimated_chars,
+        "trimmed": estimated_chars > max_chars,
+        "compression_ratio": 1.0,
+    }
+    return compact
+
+
 def print_outcome_view(report: dict[str, Any]) -> None:
     print(f"WORK   {report.get('work_unit_id', '')}")
     print(f"TITLE  {report.get('title', '')}")
@@ -17634,6 +17709,22 @@ def main() -> int:
                 max_chars=args.max_chars,
             )
         except (FileNotFoundError, TypeError, ValueError) as exc:
+            if args.path is None:
+                context = load_current_session_context()
+                if context is not None:
+                    remembered_pack = Path(str(context.get("pack_dir", ""))).expanduser()
+                    if remembered_pack and not remembered_pack.exists():
+                        compact = build_compact_context_from_projection(
+                            context,
+                            intent=args.intent,
+                            repo_path=args.repo,
+                            max_chars=args.max_chars,
+                        )
+                        if args.format == "json":
+                            print(json.dumps(compact, indent=2))
+                        else:
+                            print_compact_context(compact)
+                        return 0
             failing_path = args.path if args.path is not None else Path("<current-work>")
             print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
             return 1

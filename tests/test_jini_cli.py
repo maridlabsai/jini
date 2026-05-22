@@ -496,6 +496,20 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue(report["ready_now"])
         self.assertIn("saved session projection", report["validation_warnings"][0])
 
+    def test_pathless_resume_falls_back_to_saved_session_projection_when_pack_is_missing(self) -> None:
+        pack_dir = self.compile_travel_pack()
+        shutil.rmtree(pack_dir)
+        current_work = self.tmp / ".jini" / "current-work.json"
+        current_work.unlink()
+
+        result = self.run_cli("resume", "--format", "json")
+        self.assert_ok(result)
+        compact = json.loads(result.stdout)
+        self.assertEqual("projection-resume", compact["execution_class"])
+        self.assertEqual("test-travel-pack", compact["work_unit_id"])
+        self.assertTrue(compact["resume_items"])
+        self.assertIn("saved session projection", compact["stale_signals"][0])
+
     def test_status_without_current_work_fails_cleanly(self) -> None:
         result = self.run_cli("status")
         self.assert_error(result)
