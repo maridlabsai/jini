@@ -5,7 +5,7 @@ description: Install Jini once, then use `jini`.
 
 <p class="page-lead">The normal path should be simple: install once, run <code>jini</code>, paste the work you want finished.</p>
 
-<p class="page-lead">If you want a non-CLI surface, the commercial desktop and mobile apps should be free downloads. The $1/month Commercial License unlocks the optimizer and limit-aware continuity features inside those apps.</p>
+<p class="page-lead">Today the CLI is the only installable surface. Desktop and mobile app shells are preview-only, not publicly downloadable yet, and planned to be free to download once released. Planned pricing for the Commercial License is $1/month once checkout and entitlement activation are live.</p>
 
 <div class="section-card" markdown="1">
   <span class="section-kicker">Recommended</span>

@@ -19,8 +19,10 @@ class CommercialDocsTests(unittest.TestCase):
         text = read(HOMEPAGE_PATH)
         for marker in (
             "Apps, not just CLI",
-            "macOS, Windows, iOS, and Android downloads",
+            "Only the CLI is installable now",
             "## Desktop and mobile apps",
+            "## Current availability",
+            "Commercial License checkout | Planned. Not live yet",
             "$1/month Commercial License",
         ):
             with self.subTest(marker=marker):
@@ -29,15 +31,15 @@ class CommercialDocsTests(unittest.TestCase):
     def test_commercial_page_states_open_downloads_and_paid_optimizer(self) -> None:
         text = read(COMMERCIAL_PATH)
         for marker in (
-            "Desktop and mobile app shells are planned as free downloads.",
+            "Today only the CLI is installable.",
             "$1/month Commercial License",
             "What downloads are free",
             "What the $1 license unlocks",
             "Commercial app surfaces",
             "Distribution and payment status",
-            "planned as direct website downloads",
-            "planned as a free App Store companion app",
-            "planned as a free Play Store companion app",
+            "| macOS app shell | Preview only. Not downloadable yet | Buy on the website, then sign in |",
+            "| iOS companion app | Preview only. Not on the App Store yet | Sign in with an existing paid account |",
+            "| Commercial License checkout | Planned. Not live yet | Website checkout + account entitlement |",
             "Payment integration is not live yet.",
             "not yet release-ready for direct public store rollout",
             "Why people keep renewing each month",
@@ -48,8 +50,9 @@ class CommercialDocsTests(unittest.TestCase):
 
     def test_install_page_points_to_non_cli_apps(self) -> None:
         text = read(INSTALL_PATH)
-        self.assertIn("commercial desktop and mobile apps should be free downloads", text)
-        self.assertIn("$1/month Commercial License", text)
+        self.assertIn("Today the CLI is the only installable surface.", text)
+        self.assertIn("preview-only, not publicly downloadable yet", text)
+        self.assertIn("Commercial License is $1/month once checkout and entitlement activation are live", text)
 
 
 if __name__ == "__main__":

@@ -1,9 +1,9 @@
 ---
 title: Commercial
-description: The core shell stays open. Desktop/mobile app shells are planned as free downloads. The $1/month Commercial License unlocks optimizer and limit-aware resume features.
+description: The core shell stays open. Desktop/mobile app shells are preview-only today and planned to be free downloads once released. Planned pricing for the Commercial License is $1/month.
 ---
 
-<p class="page-lead">The core Jini shell stays open. Desktop and mobile app shells are planned as free downloads. The $1/month Commercial License unlocks the adaptive optimizer: provider-limit forecasting, throttle avoidance, automatic fallback, and auto-resume.</p>
+<p class="page-lead">The core Jini shell stays open. Today only the CLI is installable. Desktop and mobile app shells are preview-only today, planned to be free downloads once released, and planned to pair with a $1/month Commercial License once checkout and entitlement activation are live.</p>
 
 <div class="checklist-grid">
   <div class="checklist-card">
@@ -12,11 +12,11 @@ description: The core shell stays open. Desktop/mobile app shells are planned as
   </div>
   <div class="checklist-card">
     <h3>What downloads are free</h3>
-    <p>macOS, Windows, iOS, and Android app shells are planned as free downloads so users can review and resume the same session anywhere once release blockers are cleared.</p>
+    <p>macOS, Windows, iOS, and Android app shells are planned to be free downloads so users can review and resume the same session anywhere once release blockers are cleared.</p>
   </div>
   <div class="checklist-card">
     <h3>What the $1 license unlocks</h3>
-    <p>Commercial cost optimization, provider-limit forecasting, throttle avoidance, automatic fallback, and automatic resume after limits or throttles hit.</p>
+    <p>Planned Commercial License features: cost optimization, provider-limit forecasting, throttle avoidance, automatic fallback, and automatic resume after limits or throttles hit.</p>
   </div>
 </div>
 
@@ -44,10 +44,14 @@ The commercial apps should help a wider user base without turning Jini into a di
 <div class="section-card" markdown="1">
 ## Distribution and payment status
 
-- **macOS and Windows:** planned as direct website downloads
-- **iOS:** planned as a free App Store companion app
-- **Android:** planned as a free Play Store companion app
-- **Commercial License activation:** planned through account entitlement, starting with website checkout
+| Surface | Status | Planned activation |
+|---|---|---|
+| CLI | Available now | None |
+| macOS app shell | Preview only. Not downloadable yet | Buy on the website, then sign in |
+| Windows app shell | Preview only. Not downloadable yet | Buy on the website, then sign in |
+| iOS companion app | Preview only. Not on the App Store yet | Sign in with an existing paid account |
+| Android companion app | Preview only. Not on the Play Store yet | Sign in with an existing paid account |
+| Commercial License checkout | Planned. Not live yet | Website checkout + account entitlement |
 
 Payment integration is not live yet. The current product work defines the shared entitlement model and distribution plan, but not a production checkout or store-billing pipeline.
 

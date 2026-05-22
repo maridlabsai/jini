@@ -49,7 +49,7 @@ description: The most dependable, cost-effective, and frictionless platform for 
   </div>
   <div class="fact-pill">
     <strong>Apps, not just CLI</strong>
-    <p>macOS, Windows, iOS, and Android downloads widen access. The $1/month commercial subscription unlocks the optimizer and limit-avoidance layer.</p>
+    <p>Desktop and mobile app shells are part of the direction, but preview-only today. Only the CLI is installable now.</p>
   </div>
 </div>
 
@@ -167,17 +167,32 @@ description: The most dependable, cost-effective, and frictionless platform for 
 
 <div class="checklist-grid">
   <div class="checklist-card">
-    <h3>Free downloads</h3>
-    <p>Commercial desktop and mobile apps should be free to download on macOS, Windows, iOS, and Android so more people can review and resume the same session.</p>
+    <h3>Today</h3>
+    <p>The CLI is the only installable surface right now. Desktop and mobile app shells are still preview-only and not publicly downloadable yet.</p>
   </div>
   <div class="checklist-card">
-    <h3>Paid optimizer</h3>
-    <p>The $1/month Commercial License unlocks provider-limit forecasting, throttle avoidance, automatic fallback, and automatic resume after throttles.</p>
+    <h3>Planned free downloads</h3>
+    <p>macOS, Windows, iOS, and Android app shells are planned to be free to download once release blockers are cleared.</p>
   </div>
   <div class="checklist-card">
-    <h3>One session model</h3>
-    <p>CLI, desktop, and mobile should all expose the same ready, missing, next, and renewal-proof posture instead of becoming separate products.</p>
+    <h3>Planned paid layer</h3>
+    <p>Planned pricing for the $1/month Commercial License covers provider-limit forecasting, throttle avoidance, automatic fallback, and automatic resume once checkout is live.</p>
   </div>
+</div>
+
+<div class="section-card" markdown="1">
+## Current availability
+
+| Surface | Status |
+|---|---|
+| CLI | Available now |
+| macOS app shell | Preview only. Not downloadable yet |
+| Windows app shell | Preview only. Not downloadable yet |
+| iOS companion app | Preview only. Not on the App Store yet |
+| Android companion app | Preview only. Not on the Play Store yet |
+| Commercial License checkout | Planned. Not live yet |
+
+<p>Desktop launch plan: buy on the website, then sign in to unlock paid features. Mobile launch plan: sign in with an existing paid account. Mobile should not be the first place users subscribe.</p>
 </div>
 
 ## Commands that matter
