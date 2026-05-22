@@ -17,6 +17,18 @@ not here.
 That includes pricing strategy, GTM plans, customer-specific rollout notes,
 internal gate reviews, candid competitive notes, and commercialization drafts.
 
+Commercial desktop/mobile app implementation also belongs in the private
+commercial repo, not here.
+
+That includes:
+
+- app-shell source code
+- native wrapper projects
+- host manifests
+- storefront submission assets
+- signed packaging/release automation
+- mobile-specific auth, sync, push, and entitlement code
+
 ## Forbidden In The Public Repo
 
 The public repo must not contain:
@@ -25,6 +37,7 @@ The public repo must not contain:
 - commercialization docs such as `COMMERCIAL.md`
 - internal business directories like `commercial/`, `gtm/`, or `sales/`
 - candid internal review writeups that are not stable public doctrine
+- desktop/mobile app implementation directories or generated app bundles
 
 ## Allowed In The Public Repo
 
@@ -35,6 +48,8 @@ The public repo may contain:
 - public install and usage docs
 - public benchmark harnesses and scorecards
 - public examples and tests
+- public docs that describe the commercial apps and their distribution posture,
+  as long as app implementation code stays private
 
 The distinction is:
 

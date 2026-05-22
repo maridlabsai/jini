@@ -20,6 +20,16 @@ description: The core shell stays open. Desktop/mobile app shells are preview-on
   </div>
 </div>
 
+<div class="section-card" markdown="1">
+## What is not open source
+
+The app downloads can be free without making the app implementation public.
+
+- desktop/mobile app source code lives in the commercial repo only
+- native wrappers, host manifests, release automation, and store-delivery code stay private
+- the public repo may describe the app surfaces, but it should not ship the app code itself
+</div>
+
 <div class="checklist-grid">
   <div class="checklist-card">
     <h3>The rule</h3>

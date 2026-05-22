@@ -36,6 +36,8 @@ class CommercialDocsTests(unittest.TestCase):
             "$1/month Commercial License",
             "What downloads are free",
             "What the $1 license unlocks",
+            "What is not open source",
+            "desktop/mobile app source code lives in the commercial repo only",
             "Distribution rule of thumb",
             "distribute directly from the website first when platform policy allows it",
             "Commercial app surfaces",

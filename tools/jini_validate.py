@@ -103,6 +103,7 @@ PUBLIC_BOUNDARY_FORBIDDEN_GLOBS = (
     "gtm/**",
     "sales/**",
     "internal/**",
+    "apps/**",
     "specs/20[0-9][0-9]-*.md",
 )
 PUBLIC_BOUNDARY_REFERENCE_PATTERNS = (
