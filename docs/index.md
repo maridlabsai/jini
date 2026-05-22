@@ -168,7 +168,7 @@ description: The most dependable, cost-effective, and frictionless platform for 
 <div class="checklist-grid">
   <div class="checklist-card">
     <h3>Today</h3>
-    <p>The CLI is the only installable surface right now. Desktop and mobile app shells are still preview-only and not publicly downloadable yet.</p>
+    <p>The CLI is the only installable surface right now. Desktop and mobile app shells are still preview-only and not publicly downloadable yet. When those apps ship, desktop and Android should distribute directly first where policy allows, while iOS remains App Store constrained.</p>
   </div>
   <div class="checklist-card">
     <h3>Planned free downloads</h3>
@@ -189,10 +189,10 @@ description: The most dependable, cost-effective, and frictionless platform for 
 | macOS app shell | Preview only. Not downloadable yet |
 | Windows app shell | Preview only. Not downloadable yet |
 | iOS companion app | Preview only. Not on the App Store yet |
-| Android companion app | Preview only. Not on the Play Store yet |
+| Android companion app | Preview only. Not downloadable yet. Direct-first when policy allows |
 | Commercial License checkout | Planned. Not live yet |
 
-<p>Desktop launch plan: buy on the website, then sign in to unlock paid features. Mobile launch plan: sign in with an existing paid account. Mobile should not be the first place users subscribe.</p>
+<p>Desktop launch plan: buy on the website, then sign in to unlock paid features. Android should prefer direct download first where policy allows, with store distribution secondary. iOS remains store-constrained. Mobile should not be the first place users subscribe.</p>
 </div>
 
 ## Commands that matter

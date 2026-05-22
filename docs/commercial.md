@@ -32,6 +32,15 @@ description: The core shell stays open. Desktop/mobile app shells are preview-on
 </div>
 
 <div class="section-card" markdown="1">
+## Distribution rule of thumb
+
+- distribute directly from the website first when platform policy allows it and store fees do not buy something essential
+- keep macOS and Windows direct-first
+- keep Android direct-first when policy allows, with Play Store secondary only if trust or reach justify it
+- accept that iOS remains App Store constrained
+</div>
+
+<div class="section-card" markdown="1">
 ## Commercial app surfaces
 
 - **macOS and Windows:** deeper review, artifact opening, session continuation, and renewal-proof inspection
@@ -50,12 +59,12 @@ The commercial apps should help a wider user base without turning Jini into a di
 | macOS app shell | Preview only. Not downloadable yet | Buy on the website, then sign in |
 | Windows app shell | Preview only. Not downloadable yet | Buy on the website, then sign in |
 | iOS companion app | Preview only. Not on the App Store yet | Sign in with an existing paid account |
-| Android companion app | Preview only. Not on the Play Store yet | Sign in with an existing paid account |
+| Android companion app | Preview only. Not downloadable yet. Direct-first when policy allows, with Play Store secondary | Sign in with an existing paid account |
 | Commercial License checkout | Planned. Not live yet | Website checkout + account entitlement |
 
 Payment integration is not live yet. The current product work defines the shared entitlement model and distribution plan, but not a production checkout or store-billing pipeline.
 
-Current posture: preview and planning slices are implemented, but the apps are not yet release-ready for direct public store rollout.
+Current posture: preview and planning slices are implemented, but the apps are not yet release-ready for direct public download or store rollout.
 </div>
 
 <div class="section-card" markdown="1">

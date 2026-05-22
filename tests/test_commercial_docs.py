@@ -22,6 +22,7 @@ class CommercialDocsTests(unittest.TestCase):
             "Only the CLI is installable now",
             "## Desktop and mobile apps",
             "## Current availability",
+            "desktop and Android should distribute directly first where policy allows",
             "Commercial License checkout | Planned. Not live yet",
             "$1/month Commercial License",
         ):
@@ -35,13 +36,16 @@ class CommercialDocsTests(unittest.TestCase):
             "$1/month Commercial License",
             "What downloads are free",
             "What the $1 license unlocks",
+            "Distribution rule of thumb",
+            "distribute directly from the website first when platform policy allows it",
             "Commercial app surfaces",
             "Distribution and payment status",
             "| macOS app shell | Preview only. Not downloadable yet | Buy on the website, then sign in |",
             "| iOS companion app | Preview only. Not on the App Store yet | Sign in with an existing paid account |",
+            "| Android companion app | Preview only. Not downloadable yet. Direct-first when policy allows, with Play Store secondary | Sign in with an existing paid account |",
             "| Commercial License checkout | Planned. Not live yet | Website checkout + account entitlement |",
             "Payment integration is not live yet.",
-            "not yet release-ready for direct public store rollout",
+            "not yet release-ready for direct public download or store rollout",
             "Why people keep renewing each month",
             "provider headroom preserved",
         ):
@@ -52,6 +56,7 @@ class CommercialDocsTests(unittest.TestCase):
         text = read(INSTALL_PATH)
         self.assertIn("Today the CLI is the only installable surface.", text)
         self.assertIn("preview-only, not publicly downloadable yet", text)
+        self.assertIn("Desktop and Android should distribute directly first where policy allows", text)
         self.assertIn("Commercial License is $1/month once checkout and entitlement activation are live", text)
 
 
