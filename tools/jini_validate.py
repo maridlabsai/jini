@@ -47,11 +47,17 @@ try:
         build_lean_platform_report,
         render_lean_platform_metrics,
     )
+    from .session_core import build_canonical_session
+    from .session_projection import build_session_projection
+    from .session_store import SessionStore
 except ImportError:  # pragma: no cover - script execution path
     from lean_metrics_support import (
         build_lean_platform_report,
         render_lean_platform_metrics,
     )
+    from session_core import build_canonical_session
+    from session_projection import build_session_projection
+    from session_store import SessionStore
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -6147,6 +6153,9 @@ def current_work_context_path() -> Path:
 
 
 def load_current_work_context() -> dict[str, Any] | None:
+    session_context = load_current_session_context()
+    if session_context is not None:
+        return session_context
     path = current_work_context_path()
     if not path.exists():
         return None
@@ -6162,13 +6171,58 @@ def load_current_work_context() -> dict[str, Any] | None:
     return payload
 
 
+def load_current_session_context() -> dict[str, Any] | None:
+    store = SessionStore(session_state_root())
+    pointer = store.load_current_pointer()
+    if pointer is None:
+        return None
+    pack_dir = str(pointer.get("pack_dir", "")).strip()
+    session_id = str(pointer.get("session_id", "")).strip()
+    if not pack_dir or not session_id:
+        return None
+    session = store.load_session(session_id)
+    projection = store.load_projection(session_id) or {}
+    payload = dict(pointer)
+    if session is not None:
+        payload["title"] = session.title
+        payload["state"] = session.status
+        payload["work_unit_id"] = session.work_unit_id
+    payload["projection"] = projection
+    return payload
+
+
 def remember_current_work(pack_dir: Path, registry: dict[str, Any], *, source: str) -> dict[str, Any]:
     resolved = pack_dir.expanduser().resolve()
     summary = summarise_pack(resolved, registry)
+    artifact_catalog = build_artifact_catalog(resolved, registry)
+    updated_at = now_utc()
+    projection = build_session_projection(
+        session_id=str(summary.get("work_unit", {}).get("work_unit_id", "")),
+        pack_dir=resolved,
+        summary=summary,
+        artifact_catalog=artifact_catalog,
+        updated_at=updated_at,
+    )
+    current_artifact_id = ""
+    if projection.get("ready"):
+        current_artifact_id = str(projection["ready"][0].get("id", ""))
+    session = build_canonical_session(
+        pack_dir=resolved,
+        work_unit_id=str(summary.get("work_unit", {}).get("work_unit_id", "")),
+        title=str(summary.get("work_unit", {}).get("title", "")),
+        status=str(summary.get("work_unit", {}).get("current_state", "")),
+        updated_at=updated_at,
+        current_artifact_id=current_artifact_id,
+        next_step=str(summary.get("next_operation", "")),
+        review_safe=not bool(summary.get("validation_errors")),
+    )
+    projection["session_id"] = session.session_id
+    store = SessionStore(session_state_root())
+    store.save(session, projection=projection, source=source)
     payload = {
         "schema_version": "0.1.0",
         "context_type": "JiniCurrentWork",
-        "updated_at": now_utc(),
+        "updated_at": updated_at,
         "source": source,
         "pack_dir": str(resolved),
         "pack_id": str(summary.get("pack_id", "")),
@@ -6176,6 +6230,7 @@ def remember_current_work(pack_dir: Path, registry: dict[str, Any], *, source: s
         "title": str(summary.get("work_unit", {}).get("title", "")),
         "state": str(summary.get("work_unit", {}).get("current_state", "")),
         "health": str(summary.get("health", "")),
+        "session_id": session.session_id,
     }
     current_work_context_path().write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     return payload

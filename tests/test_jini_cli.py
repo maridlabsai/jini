@@ -441,6 +441,20 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("prd", artifacts.stdout)
         self.assertIn("tasks", artifacts.stdout)
 
+    def test_compile_pack_creates_canonical_session_files(self) -> None:
+        pack_dir = self.compile_research_pack()
+        session_dir = self.tmp / ".jini" / "sessions" / "test-research-pack"
+        self.assertTrue((session_dir / "session.yaml").exists())
+        self.assertTrue((session_dir / "projection.json").exists())
+        self.assertTrue((session_dir / "events.ndjson").exists())
+
+        session_doc = yaml.safe_load((session_dir / "session.yaml").read_text(encoding="utf-8"))
+        self.assertEqual("test-research-pack", session_doc["session_id"])
+        self.assertEqual(str(pack_dir.resolve()), session_doc["pack_dir"])
+        projection_doc = json.loads((session_dir / "projection.json").read_text(encoding="utf-8"))
+        self.assertEqual("test-research-pack", projection_doc["session_id"])
+        self.assertIn("ready", projection_doc)
+
     def test_show_artifact_uses_current_work_without_path(self) -> None:
         pack_dir = self.compile_travel_pack()
 
@@ -450,6 +464,19 @@ class JiniCliConformanceTests(unittest.TestCase):
         show = self.run_cli("show", "itinerary")
         self.assert_ok(show)
         self.assertIn("# Itinerary: Test Travel Pack", show.stdout)
+
+        open_result = self.run_cli("open", "itinerary", "--print-path")
+        self.assert_ok(open_result)
+        self.assertIn(str((pack_dir / "views" / "itinerary.md").resolve()), open_result.stdout.strip())
+
+    def test_pathless_status_and_open_can_resume_from_canonical_session_pointer(self) -> None:
+        pack_dir = self.compile_travel_pack()
+        current_work = self.tmp / ".jini" / "current-work.json"
+        current_work.unlink()
+
+        status = self.run_cli("status")
+        self.assert_ok(status)
+        self.assertIn("WORK   test-travel-pack", status.stdout)
 
         open_result = self.run_cli("open", "itinerary", "--print-path")
         self.assert_ok(open_result)
