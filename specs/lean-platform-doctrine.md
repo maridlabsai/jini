@@ -2,6 +2,18 @@
 
 Jini should be a lean, efficient, cost-saving platform that teams want to buy because it is easy to learn, easy to govern, and hard to replace.
 
+## Mission
+
+Jini exists to be the most dependable, cost-effective, and frictionless
+platform for automating complex AI workflows across any environment.
+
+That mission should be judged literally:
+
+- dependable under interruption, throttling, and device switching
+- cost-effective across local, BYO, and hosted routes
+- frictionless for expert and non-expert users alike
+- platform-wide across CLI, desktop, mobile, and governed environments
+
 ## Core Principles
 
 ### 1. Lowest Total Cost To Useful Outcome
@@ -25,6 +37,7 @@ Jini should present one stable surface:
 - one work model
 - one continuation model
 - one command vocabulary
+- one mission across any environment
 
 Users should not need to learn separate product dialects for setup, runtime, or review.
 

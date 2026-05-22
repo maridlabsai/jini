@@ -1,12 +1,12 @@
 ---
 title: Jini
-description: One shell for AI work. Cheap by default, strong when needed.
+description: The most dependable, cost-effective, and frictionless platform for automating complex AI workflows across any environment.
 ---
 
 <div class="hero-panel hero-panel-marketing">
   <p class="hero-kicker">One shell for AI work</p>
   <h1 class="hero-title">The lowest-cost shell for work that must resume anywhere.</h1>
-  <p class="hero-summary">Jini is for messy work that has to become a usable deliverable, survive interruption, and stay safe to hand off. It keeps progress, artifacts, and the next move visible while it chooses the cheapest suitable route by default.</p>
+  <p class="hero-summary">Jini aims to be the most dependable, cost-effective, and frictionless platform for automating complex AI workflows across any environment. It turns messy work into usable deliverables, survives interruption, and keeps progress, artifacts, and the next move visible while choosing the cheapest suitable route by default.</p>
   <div class="cta-row">
     <a class="cta-button" href="{{ '/install.html' | relative_url }}">Install</a>
     <a class="cta-button cta-button-secondary" href="{{ '/simple.html' | relative_url }}">Quickstart</a>

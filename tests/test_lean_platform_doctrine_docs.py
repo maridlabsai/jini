@@ -55,6 +55,9 @@ class LeanPlatformDoctrineDocsTests(unittest.TestCase):
         text = read(DOCTRINE_PATH)
         required_markers = [
             "# Lean Platform Doctrine",
+            "## Mission",
+            "the most dependable, cost-effective, and frictionless",
+            "automating complex AI workflows across any environment",
             "## Core Principles",
             "### 1. Lowest Total Cost To Useful Outcome",
             "### 2. One Stable Surface",

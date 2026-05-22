@@ -10,6 +10,11 @@ as ready for implementation or public positioning.
 The goal is consensus on the user experience, not agreement that the design is
 architecturally tidy.
 
+The mission standard behind that review is fixed:
+
+Jini should become the most dependable, cost-effective, and frictionless
+platform for automating complex AI workflows across any environment.
+
 When two or more review roles independently raise the same user-friction issue,
 the default action is not debate. The default action is to remove, demote, or
 simplify the offending surface unless there is explicit evidence that keeping it
@@ -55,6 +60,7 @@ They anchor research on three product truths:
 - Jini is a cost optimizer first
 - UX must feel second to none for non-expert and expert users alike
 - the same session should survive across macOS, Windows, mobile, and CLI
+- the platform must stay dependable and frictionless across any environment
 
 Approval condition:
 

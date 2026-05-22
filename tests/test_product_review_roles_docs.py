@@ -20,6 +20,8 @@ class ProductReviewRolesDocsTests(unittest.TestCase):
             "Jini is a cost optimizer first",
             "UX must feel second to none",
             "the same session should survive across macOS, Windows, mobile, and CLI",
+            "the most dependable, cost-effective, and frictionless",
+            "dependable and frictionless across any environment",
             "pay premium cost for work that should have stayed cheap",
             "restart work because the session cannot resume cleanly on another surface",
             "hide cost posture when it changes user trust or behavior",

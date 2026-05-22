@@ -22,6 +22,7 @@ class DocsHomepageRewriteTests(unittest.TestCase):
         for marker in (
             "One shell for AI work",
             "The lowest-cost shell for work that must resume anywhere.",
+            "the most dependable, cost-effective, and frictionless platform for automating complex AI workflows across any environment",
             "Works with Claude Code",
             "Works with Codex",
             "If you only need a one-off answer, use a raw model shell.",
