@@ -1,9 +1,9 @@
 ---
 title: Commercial
-description: The core shell stays open. Desktop/mobile downloads are free. The $1/month Commercial License unlocks optimizer and limit-aware resume features.
+description: The core shell stays open. Desktop/mobile app shells are planned as free downloads. The $1/month Commercial License unlocks optimizer and limit-aware resume features.
 ---
 
-<p class="page-lead">The core Jini shell stays open. Desktop and mobile apps are free downloads. The $1/month Commercial License unlocks the adaptive optimizer: provider-limit forecasting, throttle avoidance, automatic fallback, and auto-resume.</p>
+<p class="page-lead">The core Jini shell stays open. Desktop and mobile app shells are planned as free downloads. The $1/month Commercial License unlocks the adaptive optimizer: provider-limit forecasting, throttle avoidance, automatic fallback, and auto-resume.</p>
 
 <div class="checklist-grid">
   <div class="checklist-card">
@@ -12,7 +12,7 @@ description: The core shell stays open. Desktop/mobile downloads are free. The $
   </div>
   <div class="checklist-card">
     <h3>What downloads are free</h3>
-    <p>macOS, Windows, iOS, and Android app shells should be free to download so users can review and resume the same session anywhere.</p>
+    <p>macOS, Windows, iOS, and Android app shells are planned as free downloads so users can review and resume the same session anywhere once release blockers are cleared.</p>
   </div>
   <div class="checklist-card">
     <h3>What the $1 license unlocks</h3>
@@ -50,6 +50,8 @@ The commercial apps should help a wider user base without turning Jini into a di
 - **Commercial License activation:** planned through account entitlement, starting with website checkout
 
 Payment integration is not live yet. The current product work defines the shared entitlement model and distribution plan, but not a production checkout or store-billing pipeline.
+
+Current posture: preview and planning slices are implemented, but the apps are not yet release-ready for direct public store rollout.
 </div>
 
 <div class="section-card" markdown="1">

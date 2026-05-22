@@ -29,7 +29,7 @@ class CommercialDocsTests(unittest.TestCase):
     def test_commercial_page_states_open_downloads_and_paid_optimizer(self) -> None:
         text = read(COMMERCIAL_PATH)
         for marker in (
-            "Desktop and mobile apps are free downloads.",
+            "Desktop and mobile app shells are planned as free downloads.",
             "$1/month Commercial License",
             "What downloads are free",
             "What the $1 license unlocks",
@@ -39,6 +39,7 @@ class CommercialDocsTests(unittest.TestCase):
             "planned as a free App Store companion app",
             "planned as a free Play Store companion app",
             "Payment integration is not live yet.",
+            "not yet release-ready for direct public store rollout",
             "Why people keep renewing each month",
             "provider headroom preserved",
         ):
