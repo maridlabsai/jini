@@ -18,13 +18,14 @@ class CommercialDocsTests(unittest.TestCase):
     def test_homepage_mentions_non_cli_apps_and_subscription_boundary(self) -> None:
         text = read(HOMEPAGE_PATH)
         for marker in (
-            "Apps, not just CLI",
+            "Free orchestration core",
             "Only the CLI is installable now",
-            "## Desktop and mobile apps",
+            "## Free app surfaces, when ready",
             "## Current availability",
-            "desktop and Android should distribute directly first where policy allows",
+            "Desktop and Android should distribute directly first where policy allows",
             "Commercial License checkout | Planned. Not live yet",
             "$1/month Commercial License",
+            "What stays free vs what becomes paid",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
@@ -32,23 +33,25 @@ class CommercialDocsTests(unittest.TestCase):
     def test_commercial_page_states_open_downloads_and_paid_optimizer(self) -> None:
         text = read(COMMERCIAL_PATH)
         for marker in (
-            "Today only the CLI is installable.",
-            "$1/month Commercial License",
-            "What downloads are free",
+            "The shell stays free.",
             "What the $1 license unlocks",
+            "What stays free",
+            "What downloads are free",
+            "## The short version",
             "What is not open source",
             "desktop/mobile app source code lives in the commercial repo only",
             "Distribution rule of thumb",
             "distribute directly from the website first when platform policy allows it",
-            "Commercial app surfaces",
-            "Distribution and payment status",
+            "## Free app surfaces, when ready",
+            "## Current readiness and payment status",
             "| macOS app shell | Preview only. Not downloadable yet | Buy on the website, then sign in |",
             "| iOS companion app | Preview only. Not on the App Store yet | Sign in with an existing paid account |",
             "| Android companion app | Preview only. Not downloadable yet. Direct-first when policy allows, with Play Store secondary | Sign in with an existing paid account |",
             "| Commercial License checkout | Planned. Not live yet | Website checkout + account entitlement |",
             "Payment integration is not live yet.",
             "not yet release-ready for direct public download or store rollout",
-            "Why people keep renewing each month",
+            "What the paid layer must prove before renewal",
+            "month-to-date token savings",
             "provider headroom preserved",
         ):
             with self.subTest(marker=marker):

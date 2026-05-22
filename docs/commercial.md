@@ -1,14 +1,14 @@
 ---
 title: Commercial
-description: The core shell stays open. Desktop/mobile app shells are preview-only today and planned to be free downloads once released. Planned pricing for the Commercial License is $1/month.
+description: The shell stays free. Planned app downloads stay free. The paid layer should exist only when Jini can prove it saves money or keeps work moving.
 ---
 
-<p class="page-lead">The core Jini shell stays open. Today only the CLI is installable. Desktop and mobile app shells are preview-only today, planned to be free downloads once released, and planned to pair with a $1/month Commercial License once checkout and entitlement activation are live.</p>
+<p class="page-lead">Jini should be easy to adopt and hard to overpay for. The shell stays free. Planned app downloads stay free. The paid layer should exist only when Jini can show real savings or continuity proof that a team would miss without it.</p>
 
 <div class="checklist-grid">
   <div class="checklist-card">
-    <h3>What stays open</h3>
-    <p>CLI, runtime, docs, examples, tests, local SLM use, BYO provider use, compaction, checkpointed resume, and projection-first continuity stay in the public product surface.</p>
+    <h3>What stays free</h3>
+    <p>CLI, runtime, docs, examples, tests, local SLM use, BYO provider use, resumable work state, and inspectable artifacts stay in the public product surface.</p>
   </div>
   <div class="checklist-card">
     <h3>What downloads are free</h3>
@@ -16,8 +16,16 @@ description: The core shell stays open. Desktop/mobile app shells are preview-on
   </div>
   <div class="checklist-card">
     <h3>What the $1 license unlocks</h3>
-    <p>Planned Commercial License features: cost optimization, provider-limit forecasting, throttle avoidance, automatic fallback, and automatic resume after limits or throttles hit.</p>
+    <p>Planned Commercial License features: provider-limit forecasting, throttle avoidance, automatic fallback, and automatic resume after limits or throttles hit.</p>
   </div>
+</div>
+
+<div class="section-card" markdown="1">
+## The short version
+
+- use the free shell when you want one stable place to run and resume work
+- expect planned desktop and mobile apps to be free downloads when they are actually ready
+- pay only if Jini can prove that it saved money or prevented stalled work
 </div>
 
 <div class="section-card" markdown="1">
@@ -33,11 +41,11 @@ The app downloads can be free without making the app implementation public.
 <div class="checklist-grid">
   <div class="checklist-card">
     <h3>The rule</h3>
-    <p><strong>Do not charge for access to the open shell or for downloading the apps. Charge for the adaptive optimizer and the provider-aware continuity layer.</strong></p>
+    <p><strong>Do not charge for the shell. Do not charge for app downloads. Charge only for the cost-saver and continuity layer that proves its value at runtime.</strong></p>
   </div>
   <div class="checklist-card">
     <h3>Why upgrade</h3>
-    <p>Upgrade when you routinely get close to provider limits, want 30-50% token savings, and need Jini to keep work moving automatically when hosted tools throttle or hit subscription ceilings.</p>
+    <p>Upgrade when provider limits, throttles, or expensive routes are a real operating problem and you want Jini to keep work moving automatically instead of forcing manual babysitting.</p>
   </div>
 </div>
 
@@ -51,7 +59,7 @@ The app downloads can be free without making the app implementation public.
 </div>
 
 <div class="section-card" markdown="1">
-## Commercial app surfaces
+## Free app surfaces, when ready
 
 - **macOS and Windows:** deeper review, artifact opening, session continuation, and renewal-proof inspection
 - **iOS and Android:** quick session review, approval/defer flows, and interruption-safe continuation
@@ -61,7 +69,7 @@ The commercial apps should help a wider user base without turning Jini into a di
 </div>
 
 <div class="section-card" markdown="1">
-## Distribution and payment status
+## Current readiness and payment status
 
 | Surface | Status | Planned activation |
 |---|---|---|
@@ -78,9 +86,9 @@ Current posture: preview and planning slices are implemented, but the apps are n
 </div>
 
 <div class="section-card" markdown="1">
-## Why people keep renewing each month
+## What the paid layer must prove before renewal
 
-The subscription has to prove itself with runtime evidence:
+If the paid layer is worth keeping, it should show evidence that the free shell alone could not provide:
 
 - month-to-date token savings
 - provider headroom preserved

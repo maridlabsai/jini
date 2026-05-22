@@ -20,32 +20,34 @@ class DocsHomepageRewriteTests(unittest.TestCase):
     def test_homepage_keeps_clear_install_compatibility_and_trust_markers(self) -> None:
         text = read(HOMEPAGE_PATH)
         for marker in (
-            "One shell for AI work",
-            "The lowest-cost shell for work that must resume anywhere.",
-            "the most dependable, cost-effective, and frictionless platform for automating complex AI workflows across any environment",
+            "Free shell for AI work",
+            "Use Jini free across providers now. Pay only when it proves it saves money.",
+            "The core shell stays open.",
             "Works with Claude Code",
             "Works with Codex",
             "If you only need a one-off answer, use a raw model shell.",
-            "Cost optimizer first",
-            "Resume anywhere",
-            "Second-to-none UX",
+            "Free orchestration core",
+            "Cross-provider by default",
+            "Pay only for proof",
             "## Who Jini is for",
             "Good fit",
             "Not the best fit",
-            "## Why buy Jini",
-            "Raw model shell",
-            "Use a raw model shell when you only need a one-off answer.",
+            "## Free now. Paid later only if it earns it.",
+            "What stays free",
+            "What becomes paid",
             "## What Jini writes",
             "## Start anywhere. Resume anywhere.",
             "One session, not four different products",
             "macOS, Windows, mobile, and CLI",
+            "## Free app surfaces, when ready",
             "## Commands that matter",
             "Stored locally",
             "Not stored as product magic",
+            "## What stays free vs what becomes paid",
             "## See the product surface",
             "Install and first run",
             "Metrics and route evidence",
-            "hidden cloud memory",
+            "planned app downloads once those surfaces are release-ready",
             "jini metrics",
         ):
             with self.subTest(marker=marker):
@@ -74,9 +76,10 @@ class DocsHomepageRewriteTests(unittest.TestCase):
         trust = read(TRUST_PATH)
         outputs = read(OUTPUTS_PATH)
         for marker in (
-            "cheap to inspect",
+            "free shell should make its value obvious",
             "What a buyer should be able to verify quickly",
             "Inspectability instead of product magic",
+            "What the paid layer should prove before renewal",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, trust)

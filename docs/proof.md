@@ -1,13 +1,13 @@
 ---
 title: Trust
-description: Trust comes from usable outputs, visible missing pieces, and measurable route evidence.
+description: Free value should be obvious quickly. Paid value should be visible as savings, recovered work, and route evidence before anyone is asked to renew.
 ---
 
-<p class="page-lead">Trust is whether Jini gives you something usable, keeps the remaining risk visible, and stays cheap to inspect before your team has to rely on it.</p>
+<p class="page-lead">Proof has two jobs. First, the free shell should make its value obvious fast. Second, any paid layer should prove that it saved money or prevented stalled work before anyone is asked to renew.</p>
 
 <div class="section-card">
-  <span class="section-kicker">The core test</span>
-  <h2>What proof should look like</h2>
+  <span class="section-kicker">Free value</span>
+  <h2>What the free shell should make obvious</h2>
   <div class="shell-panel">
 <pre>You're working on
 Research to PRD handoff
@@ -27,7 +27,7 @@ Open Build-Readiness Check</pre>
 </div>
 
 <div class="section-card">
-  <span class="section-kicker">User trust</span>
+  <span class="section-kicker">First-minute trust</span>
   <h2>What a buyer should be able to verify quickly</h2>
   <div class="checklist-grid">
     <div class="checklist-card">
@@ -45,6 +45,29 @@ Open Build-Readiness Check</pre>
   </div>
 
   <p>If those signals are not obvious, the product still has work to do.</p>
+</div>
+
+<div class="section-card">
+  <span class="section-kicker">Renewal proof</span>
+  <h2>What the paid layer should prove before renewal</h2>
+  <div class="proof-grid">
+    <div class="proof-card">
+      <h3>Month-to-date savings</h3>
+      <p>The paid layer should show that cheaper routing or compaction actually reduced spend, not just that the feature exists.</p>
+    </div>
+    <div class="proof-card">
+      <h3>Provider headroom preserved</h3>
+      <p>Users should be able to see when Jini kept work away from subscription ceilings, provider limits, or expensive emergency routes.</p>
+    </div>
+    <div class="proof-card">
+      <h3>Throttles avoided or recovered</h3>
+      <p>The story should include where fallback or recovery kept work moving after a hosted tool stalled, throttled, or became unavailable.</p>
+    </div>
+    <div class="proof-card">
+      <h3>Sessions resumed without babysitting</h3>
+      <p>The strongest paid proof is simple: the work kept moving and the user did not have to manually reconstruct state.</p>
+    </div>
+  </div>
 </div>
 
 <div class="section-card">

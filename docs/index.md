@@ -1,12 +1,12 @@
 ---
 title: Jini
-description: The most dependable, cost-effective, and frictionless platform for automating complex AI workflows across any environment.
+description: Free orchestration for AI work across providers today. Pay only when Jini can prove it saves money or keeps work moving.
 ---
 
 <div class="hero-panel hero-panel-marketing">
-  <p class="hero-kicker">One shell for AI work</p>
-  <h1 class="hero-title">The lowest-cost shell for work that must resume anywhere.</h1>
-  <p class="hero-summary">Jini aims to be the most dependable, cost-effective, and frictionless platform for automating complex AI workflows across any environment. It turns messy work into usable deliverables, survives interruption, and keeps progress, artifacts, and the next move visible while choosing the cheapest suitable route by default.</p>
+  <p class="hero-kicker">Free shell for AI work</p>
+  <h1 class="hero-title">Use Jini free across providers now. Pay only when it proves it saves money.</h1>
+  <p class="hero-summary">Jini turns rough input into usable output, keeps active work visible, and gives you one shell for work that may span Claude Code, Codex, Bedrock, Azure OpenAI, or local models. The core shell stays open. Planned desktop and mobile apps are free downloads when released. The paid layer is only the cost-saver: provider-limit forecasting, throttle avoidance, fallback, and automatic resume once that layer is live.</p>
   <div class="cta-row">
     <a class="cta-button" href="{{ '/install.html' | relative_url }}">Install</a>
     <a class="cta-button cta-button-secondary" href="{{ '/simple.html' | relative_url }}">Quickstart</a>
@@ -26,30 +26,30 @@ description: The most dependable, cost-effective, and frictionless platform for 
   </div>
 </div>
 
-**In plain words:** Jini helps you get from messy input to a usable output without making you babysit models, prompts, route choices, or device switches.
+**In plain words:** Jini is the free orchestration shell. The paid layer only starts to matter if Jini can measurably keep costs down or keep work moving.
 
-> If you only need a one-off answer, use a raw model shell. If the work must stay cheap, resumable, and safe to hand off, use Jini.
+> If you only need a one-off answer, use a raw model shell. If the work needs continuation, usable artifacts, or cheaper routing, use Jini.
 
 <div class="fact-strip">
   <div class="fact-pill">
-    <strong>Cost optimizer first</strong>
-    <p>Jini stays on the cheapest suitable route by default and escalates only when the outcome justifies the spend.</p>
+    <strong>Free orchestration core</strong>
+    <p>CLI, local models, BYO providers, resumable work state, and inspectable artifacts stay in the open shell.</p>
   </div>
   <div class="fact-pill">
-    <strong>Resume anywhere</strong>
-    <p>The same session should stay visible across CLI, desktop, and mobile instead of disappearing into one surface.</p>
+    <strong>Cross-provider by default</strong>
+    <p>One shell can sit over Claude Code, Codex, Bedrock, Azure OpenAI, and local models without forcing a new workflow each time.</p>
   </div>
   <div class="fact-pill">
-    <strong>Second-to-none UX</strong>
-    <p>See what is ready, what is missing, and what to do next without status hunting or provider jargon.</p>
+    <strong>Planned free apps</strong>
+    <p>macOS, Windows, iOS, and Android app shells are planned as free downloads once release blockers are cleared.</p>
   </div>
   <div class="fact-pill">
-    <strong>Measured routing</strong>
-    <p>Route choice, latency, and local benchmark evidence stay visible instead of hidden behind marketing claims.</p>
+    <strong>Pay only for proof</strong>
+    <p>The paid layer should earn its keep through token savings, headroom preserved, throttles avoided, and work resumed automatically.</p>
   </div>
   <div class="fact-pill">
-    <strong>Apps, not just CLI</strong>
-    <p>Desktop and mobile app shells are part of the direction, but preview-only today. Only the CLI is installable now.</p>
+    <strong>Only the CLI is installable now</strong>
+    <p>Desktop and mobile app shells are part of the direction, but still preview-only today and not publicly downloadable yet.</p>
   </div>
 </div>
 
@@ -73,15 +73,15 @@ description: The most dependable, cost-effective, and frictionless platform for 
   </div>
 </div>
 
-## Why Jini
+## Why teams keep Jini around
 
 <div class="proof-grid">
   <div class="proof-card">
     <h3>One stable front door</h3>
-    <p>Users learn one shell and one command vocabulary while providers, models, and tools can change underneath.</p>
+    <p>Users learn one shell and one set of actions while providers, models, and tools can change underneath.</p>
   </div>
   <div class="proof-card">
-    <h3>Cheaper by default</h3>
+    <h3>Cheaper routing by default</h3>
     <p>Jini keeps routine work on the cheapest suitable route and escalates only when depth, verification, or policy requires it.</p>
   </div>
   <div class="proof-card">
@@ -93,6 +93,31 @@ description: The most dependable, cost-effective, and frictionless platform for 
     <p>The first useful result should be a follow-up, memo, readiness check, or itinerary, not a prettier status wall.</p>
   </div>
 </div>
+
+## Free now. Paid later only if it earns it.
+
+<div class="checklist-grid">
+  <div class="checklist-card">
+    <h3>What stays free</h3>
+    <ul class="compact-list">
+      <li>the CLI and core orchestration shell</li>
+      <li>local models and BYO provider use</li>
+      <li>artifacts, resumable work state, and visible route choices</li>
+      <li>planned app downloads once those surfaces are release-ready</li>
+    </ul>
+  </div>
+  <div class="checklist-card">
+    <h3>What becomes paid</h3>
+    <ul class="compact-list">
+      <li>provider-limit forecasting</li>
+      <li>throttle avoidance and automatic fallback</li>
+      <li>automatic resume after limits or hosted-tool interruptions</li>
+      <li>renewal proof that shows savings and continuity actually happened</li>
+    </ul>
+  </div>
+</div>
+
+<p>The paid layer should not exist as a generic upgrade tax. It should exist only when Jini can prove it saved money or prevented stalled work.</p>
 
 ## Who Jini is for
 
@@ -163,16 +188,16 @@ description: The most dependable, cost-effective, and frictionless platform for 
   </div>
 </div>
 
-## Desktop and mobile apps
+## Free app surfaces, when ready
 
 <div class="checklist-grid">
   <div class="checklist-card">
     <h3>Today</h3>
-    <p>The CLI is the only installable surface right now. Desktop and mobile app shells are still preview-only and not publicly downloadable yet. When those apps ship, desktop and Android should distribute directly first where policy allows, while iOS remains App Store constrained.</p>
+    <p>The CLI is the only installable surface right now. Desktop and mobile app shells are still preview-only and not publicly downloadable yet.</p>
   </div>
   <div class="checklist-card">
     <h3>Planned free downloads</h3>
-    <p>macOS, Windows, iOS, and Android app shells are planned to be free to download once release blockers are cleared.</p>
+    <p>macOS, Windows, iOS, and Android app shells are planned to be free to download once release blockers are cleared. Desktop and Android should distribute directly first where policy allows, while iOS remains App Store constrained.</p>
   </div>
   <div class="checklist-card">
     <h3>Planned paid layer</h3>
@@ -224,18 +249,19 @@ description: The most dependable, cost-effective, and frictionless platform for 
   </div>
 </div>
 
-## Why buy Jini
+## What stays free vs what becomes paid
 
 <div class="section-card" markdown="1">
-| Need | Raw model shell | Jini |
+| Need | Free Jini shell | Planned paid layer |
 |---|---|---|
-| Continue work later | You reconstruct context from chat or files | Work state, artifacts, and next step stay attached |
-| Keep cost down | You manage route choice manually | Cheapest suitable route is the default |
-| Trust the route | Prompt/provider choices are usually opaque | Route reason, metrics, and missing pieces stay visible |
-| Hand off safely | You decide what is final and what is still risky | Jini keeps ready, missing, and review-safe state explicit |
-| Inspect stored state | Hidden memory may be unclear | Artifacts, work state, and route evidence stay legible |
+| Start and finish work | Included | Not required |
+| Use local models or your own provider accounts | Included | Not required |
+| Keep work resumable and inspectable | Included | Not required |
+| Forecast provider limits before they hit | Not included | Planned |
+| Avoid throttles with automatic fallback | Not included | Planned |
+| Resume automatically after interruptions | Manual today | Planned |
 
-<p>Use a raw model shell when you only need a one-off answer. Use Jini when the work has an awkward middle, needs continuation, or has to be cheap, inspectable, and safe to hand off.</p>
+<p>Free Jini should already be enough to start, finish, and resume serious work. The paid layer should only exist to save money or keep work moving when providers become the bottleneck.</p>
 </div>
 
 <div class="proof-grid">
@@ -253,7 +279,7 @@ description: The most dependable, cost-effective, and frictionless platform for 
   </div>
   <div class="proof-card">
     <h3>Measured trust signals</h3>
-    <p><code>jini metrics</code> reports command timings and route evidence so efficiency is inspectable, not implied. Strict routes still exist when policy requires them.</p>
+    <p><code>jini metrics</code> reports command timings and route evidence so efficiency is inspectable, not implied. Strict routes still exist when policy requires them. The paid layer should eventually show month-to-date savings, headroom preserved, throttles avoided, and sessions resumed.</p>
   </div>
 </div>
 
