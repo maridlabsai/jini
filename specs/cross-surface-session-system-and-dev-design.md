@@ -20,6 +20,7 @@ Read this with:
 
 - [cross-surface-session-platform-prd.md](./cross-surface-session-platform-prd.md)
 - [lean-platform-doctrine.md](./lean-platform-doctrine.md)
+- [engineering-principles.md](./engineering-principles.md)
 - [client-surfaces-and-free-tier.md](./client-surfaces-and-free-tier.md)
 - [work-state-machine.md](./work-state-machine.md)
 - [artifact-schemas.md](./artifact-schemas.md)
@@ -130,6 +131,26 @@ Routing and cost engine
 - route evidence recorder
 - premium escalation policy
 ```
+
+## Developer Structure Rules
+
+The system should be implemented with explicit SOLID and OOP boundaries.
+
+Required shape:
+
+- session store uses a storage-focused contract and does not own routing
+- projection code derives view state and does not mutate persistence directly
+- routing uses strategy-style policy objects instead of giant mode switches
+- surface integration stays behind adapter-style boundaries
+- bundle and manifest construction uses factory-style builders
+- top-level user flows use facade-style orchestration over narrower services
+
+Implementation defaults:
+
+- composition over inheritance
+- narrow interfaces over wide utility objects
+- immutable or value-style objects for contracts wherever possible
+- no hidden globals as the source of session or route truth
 
 ## Canonical Session Object
 

@@ -117,6 +117,17 @@ Jini should be easy to buy because it is:
 
 ## Operating Rules
 
+### Engineering Discipline
+
+- implementation should follow SOLID by default
+- stable domain objects should use explicit OOP boundaries instead of ambient
+  mutable state
+- prefer composition over inheritance
+- use adapter, strategy, factory, facade, and value-object patterns where they
+  reduce coupling and repetition
+- reject god objects, mixed-responsibility modules, and giant mode-switch
+  branches in core workflow code
+
 ### Command-Surface Discipline
 
 - taught commands must be canonical
