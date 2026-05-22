@@ -6,6 +6,30 @@ description: Free value should be obvious quickly. Paid value should be visible 
 <p class="page-lead">Proof has two jobs. First, the free shell should make its value obvious fast. Second, any paid layer should prove that it saved money or prevented stalled work before anyone is asked to renew.</p>
 
 <div class="section-card">
+  <span class="section-kicker">Public proof snapshot</span>
+  <h2>What the public story should show in one screen</h2>
+  <div class="proof-grid">
+    <div class="proof-card">
+      <h3>Free orchestration proof</h3>
+      <p><strong>5 surfaces</strong></p>
+      <p>One continuity story across CLI plus four planned desktop and mobile surfaces.</p>
+    </div>
+    <div class="proof-card">
+      <h3>Paid savings proof</h3>
+      <p><strong>41% savings</strong></p>
+      <p>A public demo is acceptable only when it is tied to measurable token savings and a visible renewal story.</p>
+    </div>
+    <div class="proof-card">
+      <h3>Interruption recovery proof</h3>
+      <p><strong>1 auto resume</strong></p>
+      <p>The paid layer should prove that work recovered without the user rebuilding state by hand.</p>
+    </div>
+  </div>
+
+  <p>Public proof is acceptable only when it clearly marks preview posture and current release limits.</p>
+</div>
+
+<div class="section-card">
   <span class="section-kicker">Free value</span>
   <h2>What the free shell should make obvious</h2>
   <div class="shell-panel">
