@@ -1242,6 +1242,40 @@
   transform: translateY(-50%) rotate(45deg);
 }
 
+.proof-signal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.95rem;
+  margin-top: 1.2rem;
+}
+
+.proof-signal-card {
+  position: relative;
+  overflow: hidden;
+  padding: 1rem 1rem 1.05rem;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top right, rgba(29, 78, 216, 0.09), transparent 32%),
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 0 14px 34px rgba(8, 17, 40, 0.05);
+}
+
+.proof-signal-value {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: clamp(1.7rem, 4vw, 2.3rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+}
+
+.proof-signal-card p {
+  margin: 0;
+  color: #344054;
+}
+
 .offer-frame {
   background:
     radial-gradient(circle at top left, rgba(15, 118, 110, 0.08), transparent 24%),

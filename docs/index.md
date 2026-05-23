@@ -154,6 +154,21 @@ description: Free orchestration for AI work across providers today. Pay only whe
 </div>
 </div>
 
+<div class="section-card section-card-soft proof-signal-panel" markdown="1">
+## Proof signals, not hype
+
+<p class="page-lead">The trust story should show a few concrete signals quickly: how broad the free surface is, whether the paid layer actually saves money, and whether interruption recovery is real.</p>
+
+<div class="proof-signal-grid">
+  {% for card in site.data.public_proof.proof_cards %}
+  <div class="proof-signal-card">
+    <span class="proof-signal-value">{{ card.value }}</span>
+    <p>{{ card.label }}</p>
+  </div>
+  {% endfor %}
+</div>
+</div>
+
 <div class="section-card section-card-story" markdown="1">
 ## Why teams keep Jini around
 
