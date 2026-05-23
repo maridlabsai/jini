@@ -64,7 +64,7 @@ class DocsHomepageRewriteTests(unittest.TestCase):
         for marker in (
             "Quickstart",
             "Outputs",
-            "Trust",
+            "Proof",
             "Command Catalog",
             "Free shell now. Paid only if it earns it.",
             "30-day trial",
