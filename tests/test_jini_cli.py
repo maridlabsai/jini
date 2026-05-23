@@ -374,6 +374,14 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("usage: jini", result.stdout)
         self.assertNotIn("stage-framework-experiment", result.stdout)
 
+    def test_commands_shows_public_command_inventory(self) -> None:
+        result = self.run_cli("commands")
+        self.assert_ok(result)
+        self.assertIn("Public command inventory", result.stdout)
+        self.assertIn("GET STARTED", result.stdout)
+        self.assertIn("jini try-example research-prd", result.stdout)
+        self.assertIn("jini help --admin", result.stdout)
+
     def test_help_admin_shows_internal_inventory(self) -> None:
         result = self.run_cli("help", "--admin")
         self.assert_ok(result)

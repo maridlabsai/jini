@@ -17386,6 +17386,9 @@ def main() -> int:
             print_admin_command_inventory()
             return 0
         argv = admin_argv
+    if argv[0] == "commands":
+        print_public_command_inventory()
+        return 0
     if argv[0] in {"-h", "--help"}:
         if "--admin" in argv[1:]:
             print_admin_command_inventory()
