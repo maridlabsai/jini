@@ -57,43 +57,45 @@ description: Free orchestration for AI work across providers today. Pay only whe
   </div>
 </div>
 
-<div class="fact-strip">
-  <div class="fact-pill">
-    <strong>Free orchestration core</strong>
-    <p>CLI, local models, BYO providers, resumable work state, and inspectable artifacts stay in the open shell.</p>
-  </div>
-  <div class="fact-pill">
-    <strong>Cross-provider by default</strong>
-    <p>One shell can sit over Claude Code, Codex, Bedrock, Azure OpenAI, and local models without forcing a new workflow each time.</p>
-  </div>
-  <div class="fact-pill">
-    <strong>Free apps when live</strong>
-    <p>macOS, Windows, iOS, and Android are being prepared as free app downloads, with live status called out explicitly in the availability block below.</p>
-  </div>
-  <div class="fact-pill">
-    <strong>Pay only for proof</strong>
-    <p>The paid layer should earn its keep through token savings, headroom preserved, throttles avoided, and work resumed automatically. Start with a 30-day free trial, then pay only if the proof is real.</p>
-  </div>
-  <div class="fact-pill">
-    <strong>CLI is live now</strong>
-    <p>The CLI is the live surface today. Desktop and mobile are still in release preparation, and the availability block below is the source of truth for what users can actually download.</p>
-  </div>
-</div>
+<div class="section-card offer-frame" markdown="1">
+  ## Pricing promise
 
-<div class="section-card" markdown="1">
-## Pricing promise
-
-Jini should make the free shell useful enough to keep real work moving. The
-paid layer should show up only after a 30-day free trial, and only if the
-runtime can show route savings, headroom preserved, throttles avoided, or work
-resumed automatically.
-
-That means the homepage promise is simple:
-
-- free shell first
-- proof before payment
-- paywall before downgrade
-- tighter free-mode limits after downgrade, but still enough room to stay productive
+  <span class="section-kicker">Choose the layer</span>
+  <h2>Most people only need to decide between three things.</h2>
+  <div class="offer-grid">
+    <div class="offer-card offer-card-plain">
+      <span class="workflow-meta">Direct answer</span>
+      <h3>Raw model shell</h3>
+      <p>Best when the work is one-shot and no continuation or artifact matters after the answer.</p>
+      <ul class="compact-list">
+        <li>fastest path to a single answer</li>
+        <li>no resumable work state</li>
+        <li>you rebuild context next time</li>
+      </ul>
+    </div>
+    <div class="offer-card offer-card-core">
+      <span class="workflow-meta">Default choice</span>
+      <h3>Free Jini shell</h3>
+      <p><strong>Free orchestration core</strong> for real work that needs usable outputs, visible state, and continuation.</p>
+      <ul class="compact-list">
+        <li><strong>Cross-provider by default</strong></li>
+        <li>local models and BYO providers stay available</li>
+        <li><strong>CLI is live now</strong></li>
+        <li>free app downloads when each surface is live</li>
+      </ul>
+    </div>
+    <div class="offer-card offer-card-paid">
+      <span class="workflow-meta">Only after proof</span>
+      <h3>Paid optimizer</h3>
+      <p><strong>Pay only for proof</strong>: the paid layer should earn its keep through savings, headroom preserved, throttles avoided, and work resumed automatically.</p>
+      <ul class="compact-list">
+        <li>starts with a 30-day free trial</li>
+        <li>proof before payment</li>
+        <li>paywall before downgrade</li>
+        <li>tighter free-mode limits after downgrade, but still enough room to stay productive</li>
+      </ul>
+    </div>
+  </div>
 </div>
 
 <div class="section-card quickstart-panel" markdown="1">
