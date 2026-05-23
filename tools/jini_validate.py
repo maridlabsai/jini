@@ -6795,7 +6795,6 @@ def print_cli_overview() -> None:
     print(f"  {cli} setup --harness codex")
     print(f"  {cli} status")
     print(f"  {cli} open")
-    print(f"  {cli} run --repo /path/to/repo --harness codex")
     print(f"  {cli} doctor")
     print()
     print("COMMAND CATALOG")
