@@ -249,22 +249,24 @@
 
 .hero-title {
   margin: 0;
-  font-size: clamp(2rem, 5vw, 3.4rem);
-  line-height: 1.04;
+  max-width: 13ch;
+  font-size: clamp(2.35rem, 5.6vw, 4rem);
+  line-height: 0.98;
   letter-spacing: -0.03em;
 }
 
 .hero-summary {
-  max-width: 56rem;
-  margin: 0.8rem 0 0;
-  font-size: 1.08rem;
-  line-height: 1.65;
+  max-width: 54rem;
+  margin: 1rem 0 0;
+  font-size: 1.12rem;
+  line-height: 1.72;
   color: #344054;
 }
 
 .hero-panel-marketing {
   overflow: hidden;
   position: relative;
+  padding: 1.95rem 1.7rem 2rem;
   border-color: rgba(29, 78, 216, 0.16);
   background:
     radial-gradient(circle at top right, rgba(29, 78, 216, 0.16), transparent 28%),
@@ -415,10 +417,10 @@
 }
 
 .section-card {
-  margin: 1.2rem 0 1.8rem;
-  padding: 1.15rem 1.2rem 1.25rem;
+  margin: 1.35rem 0 2rem;
+  padding: 1.35rem 1.4rem 1.45rem;
   border: 1px solid rgba(148, 163, 184, 0.24);
-  border-radius: 22px;
+  border-radius: 26px;
   background:
     radial-gradient(circle at top right, rgba(29, 78, 216, 0.05), transparent 34%),
     linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
@@ -467,6 +469,14 @@
 .section-card h3,
 .section-card h4 {
   margin-top: 0;
+}
+
+.section-card h2 {
+  max-width: 16ch;
+  margin-bottom: 0.5rem;
+  font-size: clamp(1.55rem, 3vw, 2.2rem);
+  line-height: 1.06;
+  letter-spacing: -0.025em;
 }
 
 .on-this-page {
@@ -525,7 +535,7 @@
 .workflow-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
+  gap: 1.1rem;
   margin: 1.5rem 0 2rem;
 }
 
@@ -626,8 +636,8 @@
 .proof-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
-  margin: 1.25rem 0 2rem;
+  gap: 1.1rem;
+  margin: 1.35rem 0 2rem;
 }
 
 .proof-card {
@@ -680,8 +690,8 @@
 .media-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-  margin: 1.25rem 0 2rem;
+  gap: 1.15rem;
+  margin: 1.35rem 0 2rem;
 }
 
 .media-grid-featured .media-card:first-child {
@@ -689,7 +699,7 @@
 }
 
 .media-grid-featured .media-card:first-child img {
-  aspect-ratio: 16 / 8;
+  aspect-ratio: 16 / 7;
 }
 
 .media-grid-story .media-card {
@@ -734,10 +744,11 @@
   aspect-ratio: 16 / 10;
   object-fit: cover;
   background: #e5e7eb;
+  filter: saturate(1.03) contrast(1.02);
 }
 
 .media-copy {
-  padding: 1rem 1rem 1.1rem;
+  padding: 1.05rem 1.05rem 1.15rem;
 }
 
 .media-copy h3 {
@@ -752,7 +763,7 @@
 }
 
 .media-grid-featured .media-card:first-child .media-copy {
-  padding: 1.15rem 1.15rem 1.2rem;
+  padding: 1.3rem 1.3rem 1.35rem;
 }
 
 .media-grid-featured .media-card:first-child .media-copy h3 {
@@ -855,8 +866,9 @@
 
 .page-lead {
   margin: 0 0 1.1rem;
-  font-size: 1.08rem;
-  line-height: 1.68;
+  max-width: 52rem;
+  font-size: 1.12rem;
+  line-height: 1.74;
   color: #344054;
 }
 
@@ -1310,5 +1322,11 @@
 
   .page-intro-card {
     padding: 1rem;
+  }
+
+  .hero-panel-marketing,
+  .section-card {
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
 }
