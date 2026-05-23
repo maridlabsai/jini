@@ -86,9 +86,9 @@ If you are not sure how to start, type:
 help me finish this
 ```
 
-`jini setup`, `jini status`, `jini open`, `jini doctor`, `jini metrics`, and
-`jini run` still exist for scripts and power users. They are not the normal
-user model.
+If you need the public command list, use `jini commands`. If you need the
+deeper operator or developer surface, use `jini admin help`. Those paths exist
+to support the product, not replace the normal `jini` front door.
 
 If multiple projects are already in flight, Jini should show `Active work`
 first, let you pick one, and keep sibling work visible under `Other active work`

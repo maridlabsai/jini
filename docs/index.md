@@ -269,20 +269,16 @@ That means the homepage promise is simple:
     <p>The normal entry point for interactive work.</p>
   </div>
   <div class="checklist-card">
-    <h3><code>jini setup</code></h3>
-    <p>Materialize one safe local setup path when explicit setup is needed.</p>
+    <h3><code>jini commands</code></h3>
+    <p>See the small public command catalog without dropping into the deeper operator surface.</p>
   </div>
   <div class="checklist-card">
     <h3><code>jini doctor</code></h3>
-    <p>Check route setup without exposing secrets.</p>
+    <p>Check route setup without exposing secrets when setup help is actually needed.</p>
   </div>
   <div class="checklist-card">
-    <h3><code>jini status</code></h3>
-    <p>Show what is active, ready, and still missing.</p>
-  </div>
-  <div class="checklist-card">
-    <h3><code>jini open</code></h3>
-    <p>Open the useful output instead of digging for file paths.</p>
+    <h3><code>jini admin help</code></h3>
+    <p>Show the deeper operator and developer inventory only when you actually need it.</p>
   </div>
   <div class="checklist-card">
     <h3><code>jini metrics</code></h3>
