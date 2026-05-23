@@ -32,8 +32,8 @@ class WebsiteExecutionTrackerDocsTests(unittest.TestCase):
             self.assertIn(row, text)
 
         required_next_cuts = [
-            "Tighten the homepage visual system and supporting CSS so the product landing feels less docs-derived",
             "Add tighter plan comparison and clearer subscription value framing",
+            "Add tighter plan comparison and clearer subscription value framing to the commercial page",
             "Replace checked-in proof payloads with sanitized live proof ingestion",
             "Add live surface badges and release-packet links when app delivery becomes real",
         ]

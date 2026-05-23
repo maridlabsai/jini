@@ -9,7 +9,7 @@ being treated as a side effect of app or billing work.
 
 | Surface | Status | What is real now | Next cut |
 | --- | --- | --- | --- |
-| Homepage | In progress | Product landing now leads with decision framing, pricing promise, tested proof, and preview-honest app posture | Tighten the homepage visual system and supporting CSS so the product landing feels less docs-derived |
+| Homepage | In progress | Product landing now leads with decision framing, pricing promise, tested proof, preview-honest app posture, and a stronger shared visual system | Add tighter plan comparison and clearer subscription value framing to the commercial page |
 | Commercial page | In progress | Free-vs-paid split and availability table are explicit | Add tighter plan comparison and clearer subscription value framing |
 | Proof page | In progress | Website-ready proof payload and visual proof deck exist | Replace checked-in proof payloads with sanitized live proof ingestion |
 | Install page | In progress | CLI install is clear, app posture is honest, and the current-surface matrix exists | Add live surface badges and release-packet links when app delivery becomes real |
