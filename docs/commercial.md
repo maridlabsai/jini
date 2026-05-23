@@ -1,9 +1,9 @@
 ---
 title: Commercial
-description: The shell stays free. Planned app downloads stay free. The paid layer should exist only when Jini can prove it saves money or keeps work moving.
+description: The shell stays free. App downloads stay free when live. The paid layer should exist only when Jini can prove it saves money or keeps work moving.
 ---
 
-<p class="page-lead">Jini should be easy to adopt and hard to overpay for. The shell stays free. Planned app downloads stay free. The paid layer should exist only when Jini can show real savings or continuity proof that a team would miss without it.</p>
+<p class="page-lead">Jini should be easy to adopt and hard to overpay for. The shell stays free. App downloads stay free when each surface is live. The paid layer should exist only when Jini can show real savings or continuity proof that a team would miss without it.</p>
 
 <div class="checklist-grid">
   <div class="checklist-card">
@@ -12,11 +12,11 @@ description: The shell stays free. Planned app downloads stay free. The paid lay
   </div>
   <div class="checklist-card">
     <h3>What downloads are free</h3>
-    <p>macOS, Windows, iOS, and Android app shells are planned to be free downloads so users can review and resume the same session anywhere once release blockers are cleared.</p>
+    <p>macOS, Windows, iOS, and Android app downloads stay free whenever those surfaces are live so users can review and resume the same session anywhere.</p>
   </div>
   <div class="checklist-card">
     <h3>What the $1 license unlocks</h3>
-    <p>Planned Commercial License features: provider-limit forecasting, throttle avoidance, automatic fallback, and automatic resume after limits or throttles hit. Everyone should get a 30-day free trial before asking for the $1/month subscription.</p>
+    <p>The Commercial License unlocks provider-limit forecasting, throttle avoidance, automatic fallback, and automatic resume after limits or throttles hit. Everyone should get a 30-day free trial before asking for the $1/month subscription.</p>
   </div>
 </div>
 
@@ -24,7 +24,7 @@ description: The shell stays free. Planned app downloads stay free. The paid lay
 ## The short version
 
 - use the free shell when you want one stable place to run and resume work
-- expect planned desktop and mobile apps to be free downloads when they are actually ready
+- expect desktop and mobile apps to be free downloads when each surface is actually live
 - start with a 30-day free trial of the commercial optimizer
 - pay only if Jini can prove that it saved money or prevented stalled work
 </div>
@@ -90,7 +90,7 @@ If those conditions are not true, the free shell should remain enough.
 </div>
 
 <div class="section-card" markdown="1">
-## Free app surfaces, when ready
+## Free app surfaces, once live
 
 - **macOS and Windows:** deeper review, artifact opening, session continuation, and renewal-proof inspection
 - **iOS and Android:** quick session review, approval/defer flows, and interruption-safe continuation
@@ -114,7 +114,7 @@ The commercial apps should help a wider user base without turning Jini into a di
 | {{ surface.name }} | {{ surface.badge }} | {{ surface.current_state }} | {{ surface.activation }} |
 {% endfor %}
 
-Payment integration is not live yet. The current product work defines the shared entitlement model and distribution plan, but not a production checkout or store-billing pipeline.
+Checkout is not live yet. The current product work defines the shared entitlement model and distribution plan, but not a production checkout or store-billing pipeline.
 
 Current posture: preview and planning slices are implemented, but the apps are not yet release-ready for direct public download or store rollout.
 

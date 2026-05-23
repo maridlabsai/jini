@@ -6,7 +6,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <div class="hero-panel hero-panel-marketing">
   <p class="hero-kicker">Free shell for AI work</p>
   <h1 class="hero-title">Use Jini free across providers now. Pay only when it proves it saves money.</h1>
-  <p class="hero-summary">Jini turns rough input into usable output, keeps active work visible, and gives you one shell for work that may span Claude Code, Codex, Bedrock, Azure OpenAI, or local models. The core shell stays open. Planned desktop and mobile apps are free downloads when released. The paid layer is only the cost-saver: provider-limit forecasting, throttle avoidance, fallback, and automatic resume, with a 30-day free trial before the $1/month subscription is even presented.</p>
+  <p class="hero-summary">Jini turns rough input into usable output, keeps active work visible, and gives you one shell for work that may span Claude Code, Codex, Bedrock, Azure OpenAI, or local models. The core shell stays open. Desktop and mobile are the next release surfaces, and each app download stays free when that surface is live. The paid layer is only the cost-saver: provider-limit forecasting, throttle avoidance, fallback, and automatic resume, with a 30-day free trial before the $1/month subscription is even presented.</p>
   <div class="cta-row">
     <a class="cta-button" href="{{ '/install.html' | relative_url }}">Install</a>
     <a class="cta-button cta-button-secondary" href="{{ '/simple.html' | relative_url }}">Quickstart</a>
@@ -59,16 +59,16 @@ description: Free orchestration for AI work across providers today. Pay only whe
     <p>One shell can sit over Claude Code, Codex, Bedrock, Azure OpenAI, and local models without forcing a new workflow each time.</p>
   </div>
   <div class="fact-pill">
-    <strong>Planned free apps</strong>
-    <p>macOS, Windows, iOS, and Android app shells are planned as free downloads once release blockers are cleared.</p>
+    <strong>Free apps when live</strong>
+    <p>macOS, Windows, iOS, and Android are being prepared as free app downloads, with live status called out explicitly in the availability block below.</p>
   </div>
   <div class="fact-pill">
     <strong>Pay only for proof</strong>
     <p>The paid layer should earn its keep through token savings, headroom preserved, throttles avoided, and work resumed automatically. Start with a 30-day free trial, then pay only if the proof is real.</p>
   </div>
   <div class="fact-pill">
-    <strong>Only the CLI is installable now</strong>
-    <p>Desktop and mobile app shells are part of the direction, but still preview-only today and not publicly downloadable yet.</p>
+    <strong>CLI is live now</strong>
+    <p>The CLI is the live surface today. Desktop and mobile are still in release preparation, and the availability block below is the source of truth for what users can actually download.</p>
   </div>
 </div>
 
@@ -138,7 +138,7 @@ That means the homepage promise is simple:
       <li>the CLI and core orchestration shell</li>
       <li>local models and BYO provider use</li>
       <li>artifacts, resumable work state, and visible route choices</li>
-      <li>planned app downloads once those surfaces are release-ready</li>
+      <li>free app downloads once each surface is live</li>
     </ul>
   </div>
   <div class="checklist-card">
@@ -224,20 +224,20 @@ That means the homepage promise is simple:
   </div>
 </div>
 
-## Free app surfaces, when ready
+## Cross-surface rollout
 
 <div class="checklist-grid">
   <div class="checklist-card">
     <h3>Today</h3>
-    <p>The CLI is the only installable surface right now. Desktop and mobile app shells are still preview-only and not publicly downloadable yet.</p>
+    <p>The CLI is the live installable surface right now. Desktop and mobile are still in release preparation and not yet publicly downloadable.</p>
   </div>
   <div class="checklist-card">
-    <h3>Planned free downloads</h3>
-    <p>macOS, Windows, iOS, and Android app shells are planned to be free to download once release blockers are cleared. Desktop and Android should distribute directly first where policy allows, while iOS remains App Store constrained.</p>
+    <h3>Free downloads when live</h3>
+    <p>macOS, Windows, iOS, and Android stay free to download when each surface is ready. Desktop and Android should distribute directly first where policy allows, while iOS remains App Store constrained.</p>
   </div>
   <div class="checklist-card">
-    <h3>Planned paid layer</h3>
-    <p>Planned pricing for the Commercial License starts with a 30-day free trial and becomes $1/month for provider-limit forecasting, throttle avoidance, automatic fallback, and automatic resume once checkout is live.</p>
+    <h3>Paid only after proof</h3>
+    <p>The Commercial License starts with a 30-day free trial and becomes $1/month for provider-limit forecasting, throttle avoidance, automatic fallback, and automatic resume once checkout is live.</p>
   </div>
 </div>
 

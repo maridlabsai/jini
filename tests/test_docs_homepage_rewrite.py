@@ -44,7 +44,7 @@ class DocsHomepageRewriteTests(unittest.TestCase):
             "## Start anywhere. Resume anywhere.",
             "One session, not four different products",
             "macOS, Windows, mobile, and CLI",
-            "## Free app surfaces, when ready",
+            "## Cross-surface rollout",
             "## Commands that matter",
             "Stored locally",
             "Not stored as product magic",
@@ -52,7 +52,7 @@ class DocsHomepageRewriteTests(unittest.TestCase):
             "## See the product surface",
             "Install and first run",
             "Metrics and route evidence",
-            "planned app downloads once those surfaces are release-ready",
+            "free app downloads once each surface is live",
             "jini metrics",
         ):
             with self.subTest(marker=marker):

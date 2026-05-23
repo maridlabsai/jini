@@ -5,7 +5,7 @@ description: Install Jini once, then use `jini`.
 
 <p class="page-lead">The normal path should be simple: install once, run <code>jini</code>, paste the work you want finished.</p>
 
-<p class="page-lead">Today the CLI is the only installable surface. Desktop and mobile app shells are preview-only, not publicly downloadable yet, and planned to be free to download once released. Desktop and Android should distribute directly first where policy allows, while iOS remains App Store constrained. Planned pricing for the Commercial License starts with a 30-day free trial and becomes $1/month once checkout and entitlement activation are live.</p>
+<p class="page-lead">The CLI is the live installable surface today. Desktop and mobile are the next release surfaces, stay free to download when live, and are not publicly downloadable yet. Desktop and Android should distribute directly first where policy allows, while iOS remains App Store constrained. Commercial pricing starts with a 30-day free trial and becomes $1/month once checkout and entitlement activation are live.</p>
 
 <div class="section-card" markdown="1">
   <span class="section-kicker">Current availability</span>
@@ -17,7 +17,7 @@ description: Install Jini once, then use `jini`.
 | {{ surface.name }} | {{ surface.current_state }} | {{ surface.next_step }} |
 {% endfor %}
 
-  <p>The honest short version: install the CLI today. Treat every non-CLI surface as preview-only until the release packet for that surface says it is live.</p>
+  <p>The honest short version: install the CLI today. Use this availability matrix as the source of truth for every non-CLI surface until the release packet says that surface is live.</p>
 
   <p>This availability matrix is fed from <code>docs/_data/public_surfaces.json</code>, a sanitized snapshot built from the commercial release packets.</p>
 </div>

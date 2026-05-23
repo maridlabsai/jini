@@ -15,7 +15,7 @@ description: Free value should be obvious quickly. Paid value should be visible 
       <h3>{{ card.label }}</h3>
       <p><strong>{{ card.value }}</strong></p>
       {% if forloop.index0 == 0 %}
-      <p>One continuity story across CLI plus four planned desktop and mobile surfaces.</p>
+      <p>One continuity story across CLI, desktop, and mobile surfaces instead of four disconnected product stories.</p>
       {% elsif forloop.index0 == 1 %}
       <p>A public demo is acceptable only when it is tied to measurable token savings, a visible 30-day trial story, and a visible renewal story.</p>
       {% else %}

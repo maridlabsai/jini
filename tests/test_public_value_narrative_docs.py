@@ -35,7 +35,7 @@ class PublicValueNarrativeDocsTests(unittest.TestCase):
         for marker in (
             "Jini should be easy to adopt and hard to overpay for.",
             "The shell stays free.",
-            "Planned app downloads stay free.",
+            "App downloads stay free when each surface is live.",
             "paywall prompt should appear before downgrade",
             "## Free shell vs paid optimizer",
             "when the proof can be shown before payment, not explained after payment",

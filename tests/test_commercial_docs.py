@@ -19,8 +19,8 @@ class CommercialDocsTests(unittest.TestCase):
         text = read(HOMEPAGE_PATH)
         for marker in (
             "Free orchestration core",
-            "Only the CLI is installable now",
-            "## Free app surfaces, when ready",
+            "CLI is live now",
+            "## Cross-surface rollout",
             "## Current availability",
             "Desktop and Android should distribute directly first where policy allows",
             "{% for surface in site.data.public_surfaces.surfaces %}",
@@ -51,12 +51,12 @@ class CommercialDocsTests(unittest.TestCase):
             "distribute directly from the website first when platform policy allows it",
             "When the paid layer earns the right to exist",
             "when the proof can be shown before payment, not explained after payment",
-            "## Free app surfaces, when ready",
+            "## Free app surfaces, once live",
             "## Current readiness and payment status",
             "{% for surface in site.data.public_surfaces.surfaces %}",
             "| {{ surface.name }} | {{ surface.badge }} | {{ surface.current_state }} | {{ surface.activation }} |",
             "docs/_data/public_surfaces.json",
-            "Payment integration is not live yet.",
+            "Checkout is not live yet.",
             "not yet release-ready for direct public download or store rollout",
             "What the paid layer must prove before renewal",
             "month-to-date token savings",
@@ -67,10 +67,10 @@ class CommercialDocsTests(unittest.TestCase):
 
     def test_install_page_points_to_non_cli_apps(self) -> None:
         text = read(INSTALL_PATH)
-        self.assertIn("Today the CLI is the only installable surface.", text)
-        self.assertIn("preview-only, not publicly downloadable yet", text)
+        self.assertIn("The CLI is the live installable surface today.", text)
+        self.assertIn("not publicly downloadable yet", text)
         self.assertIn("Desktop and Android should distribute directly first where policy allows", text)
-        self.assertIn("Commercial License starts with a 30-day free trial and becomes $1/month once checkout and entitlement activation are live", text)
+        self.assertIn("Commercial pricing starts with a 30-day free trial and becomes $1/month once checkout and entitlement activation are live", text)
         self.assertIn("<h2>What you get today</h2>", text)
         self.assertIn("{% for surface in site.data.public_surfaces.surfaces %}", text)
         self.assertIn("| {{ surface.name }} | {{ surface.current_state }} | {{ surface.next_step }} |", text)
