@@ -382,6 +382,18 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("capture-evidence", result.stdout)
         self.assertNotIn("usage: jini", result.stdout)
 
+    def test_admin_help_alias_shows_internal_inventory(self) -> None:
+        result = self.run_cli("admin", "help")
+        self.assert_ok(result)
+        self.assertIn("Admin and developer command inventory", result.stdout)
+        self.assertIn("stage-framework-experiment", result.stdout)
+        self.assertIn("capture-evidence", result.stdout)
+
+    def test_admin_namespace_routes_internal_command(self) -> None:
+        result = self.run_cli("admin", "list-schemas")
+        self.assert_ok(result)
+        self.assertIn("work-unit ->", result.stdout)
+
     def test_setup_command_runs_setup_surface(self) -> None:
         prefix = self.tmp / "setup-codex"
         result = self.run_cli("setup", "--harness", "codex", "--prefix", prefix)

@@ -17380,6 +17380,12 @@ def main() -> int:
     if not argv:
         print_cli_overview()
         return 0
+    if argv[0] == "admin":
+        admin_argv = argv[1:]
+        if not admin_argv or admin_argv[0] in {"-h", "--help", "help"}:
+            print_admin_command_inventory()
+            return 0
+        argv = admin_argv
     if argv[0] in {"-h", "--help"}:
         if "--admin" in argv[1:]:
             print_admin_command_inventory()
