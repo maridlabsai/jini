@@ -30,6 +30,7 @@ class PublicCliDocsTests(unittest.TestCase):
     def test_cli_guide_promotes_commands_as_public_catalog(self) -> None:
         text = read(CLI_PATH)
         for marker in (
+            "title: Command Catalog",
             "Command catalog",
             "jini commands",
             "small product-facing command catalog",

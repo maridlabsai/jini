@@ -1,5 +1,5 @@
 ---
-title: CLI Guide
+title: Command Catalog
 description: The small public command surface and the setup check that sits behind it.
 ---
 

@@ -128,6 +128,6 @@ Claude
   <div class="page-intro-links">
     <a href="./examples.html">Examples</a>
     <a href="./install.html">Install</a>
-    <a href="./cli.html">CLI Guide</a>
+    <a href="./cli.html">Command Catalog</a>
   </div>
 </div>
