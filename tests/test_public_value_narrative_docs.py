@@ -37,6 +37,8 @@ class PublicValueNarrativeDocsTests(unittest.TestCase):
             "The shell stays free.",
             "Planned app downloads stay free.",
             "paywall prompt should appear before downgrade",
+            "## Free shell vs paid optimizer",
+            "when the proof can be shown before payment, not explained after payment",
             "Do not charge for the shell.",
             "Do not charge for app downloads.",
             "Charge only for the cost-saver and continuity layer that proves its value at runtime.",

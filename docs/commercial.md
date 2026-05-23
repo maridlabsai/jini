@@ -30,6 +30,25 @@ description: The shell stays free. Planned app downloads stay free. The paid lay
 </div>
 
 <div class="section-card" markdown="1">
+## Free shell vs paid optimizer
+
+| Need | Free shell | Paid optimizer |
+|---|---|---|
+| Start and finish work | Included | Not required |
+| Use local models and your own provider accounts | Included | Not required |
+| Keep work resumable and inspectable | Included | Not required |
+| Planned app downloads when released | Included | Not required |
+| Predict provider limits before they block work | Not included | Included after the 30-day free trial |
+| Avoid throttles automatically | Not included | Included after the 30-day free trial |
+| Fall back and resume automatically | Not included | Included after the 30-day free trial |
+| Measured savings and continuity proof | Basic route evidence | Included after the 30-day free trial |
+
+The comparison should stay blunt: the free shell must already be useful, and
+the paid layer should exist only where automation, continuity, and savings are
+meaningfully better than manual babysitting.
+</div>
+
+<div class="section-card" markdown="1">
 ## What is not open source
 
 The app downloads can be free without making the app implementation public.
@@ -48,6 +67,17 @@ The app downloads can be free without making the app implementation public.
     <h3>Why upgrade</h3>
     <p>Upgrade when provider limits, throttles, or expensive routes are a real operating problem and you want Jini to keep work moving automatically instead of forcing manual babysitting. The paywall prompt should appear before downgrade, not after the account is already squeezed into constrained free mode.</p>
   </div>
+</div>
+
+<div class="section-card" markdown="1">
+## When the paid layer earns the right to exist
+
+- when throttles or provider limits regularly interrupt active work
+- when route cost has become an operating problem instead of a background concern
+- when the user would otherwise need manual fallback and manual resume steps
+- when the proof can be shown before payment, not explained after payment
+
+If those conditions are not true, the free shell should remain enough.
 </div>
 
 <div class="section-card" markdown="1">

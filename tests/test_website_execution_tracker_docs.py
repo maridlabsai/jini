@@ -32,10 +32,10 @@ class WebsiteExecutionTrackerDocsTests(unittest.TestCase):
             self.assertIn(row, text)
 
         required_next_cuts = [
-            "Add tighter plan comparison and clearer subscription value framing",
             "Add tighter plan comparison and clearer subscription value framing to the commercial page",
             "Replace checked-in proof payloads with sanitized live proof ingestion",
             "Add live surface badges and release-packet links when app delivery becomes real",
+            "Add release-packet links and surface badges when app delivery becomes real",
         ]
         for item in required_next_cuts:
             self.assertIn(item, text)
