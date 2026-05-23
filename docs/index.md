@@ -371,6 +371,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 
 <div class="media-grid media-grid-featured">
   <a class="media-card" href="{{ '/install.html' | relative_url }}">
+    <span class="media-window-chrome" aria-hidden="true"></span>
     <img src="{{ '/assets/examples/meeting-followup.gif' | relative_url }}" alt="Jini install and first useful output flow">
     <div class="media-copy">
       <span class="workflow-meta">Install and first run</span>
@@ -379,6 +380,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
     </div>
   </a>
   <a class="media-card" href="{{ '/state-and-artifacts.html' | relative_url }}">
+    <span class="media-window-chrome" aria-hidden="true"></span>
     <img src="{{ '/assets/examples/research-prd.gif' | relative_url }}" alt="Jini active work, ready items, and missing items view">
     <div class="media-copy">
       <span class="workflow-meta">Active work</span>
@@ -387,6 +389,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
     </div>
   </a>
   <a class="media-card" href="{{ '/cli.html' | relative_url }}">
+    <span class="media-window-chrome" aria-hidden="true"></span>
     <img src="{{ '/assets/examples/vendor-selection.gif' | relative_url }}" alt="Jini metrics and route evidence surface">
     <div class="media-copy">
       <span class="workflow-meta">Metrics and route evidence</span>
@@ -404,6 +407,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 
 <div class="media-grid media-grid-story">
   <a class="media-card" href="{{ '/examples.html#meeting-followup' | relative_url }}">
+    <span class="media-window-chrome" aria-hidden="true"></span>
     <img src="{{ '/assets/examples/meeting-followup.gif' | relative_url }}" alt="Jini turning meeting notes into a sendable follow-up">
     <div class="media-copy">
       <span class="workflow-meta">After a meeting</span>
@@ -412,6 +416,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
     </div>
   </a>
   <a class="media-card" href="{{ '/examples.html#spec-readiness' | relative_url }}">
+    <span class="media-window-chrome" aria-hidden="true"></span>
     <img src="{{ '/assets/examples/research-prd.gif' | relative_url }}" alt="Jini checking whether a plan is ready to hand off">
     <div class="media-copy">
       <span class="workflow-meta">Before a handoff</span>
@@ -420,6 +425,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
     </div>
   </a>
   <a class="media-card" href="{{ '/examples.html#vendor-choice' | relative_url }}">
+    <span class="media-window-chrome" aria-hidden="true"></span>
     <img src="{{ '/assets/examples/vendor-selection.gif' | relative_url }}" alt="Jini preparing a recommendation memo from a vendor comparison">
     <div class="media-copy">
       <span class="workflow-meta">Before a decision</span>
