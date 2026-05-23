@@ -3329,7 +3329,7 @@ def build_get_started_guide(
             f"{cli} run --repo /path/to/repo --harness {selected_target} --activate-runtime --consent write --consent publish",
         ],
         "notes": [
-            "Use `jini help --all` when you need the deeper command inventory.",
+            "Use `jini help --admin` when you need the deeper command inventory.",
         ],
     }
     guide = {
@@ -6800,7 +6800,114 @@ def print_cli_overview() -> None:
     print()
     print("DEEPER TOOLS")
     print(f"  {cli} help --all")
+    print(f"  {cli} help --admin")
     print(f"  {cli} <command> --help")
+
+
+PUBLIC_HELP_GROUPS: list[tuple[str, list[tuple[str, str]]]] = [
+    (
+        "GET STARTED",
+        [
+            ("jini", "Open the shell and start from the work you want finished."),
+            ("jini setup --harness codex", "Connect a preferred harness when you need a fixed route."),
+            ("jini doctor", "Check what route and setup Jini can use safely."),
+            ("jini get-started --harness codex", "Show the smallest safe path for a chosen harness."),
+            ("jini try-example research-prd", "Materialize a public example and inspect the result."),
+        ],
+    ),
+    (
+        "WORK WITH JINI",
+        [
+            ("jini status", "See what is done, what is next, and what is still missing."),
+            ("jini open", "Open the current artifact or human-facing view."),
+            ("jini show", "Print an artifact or ready-now view in the terminal."),
+            ("jini next", "Show the next step and follow-on commands."),
+            ("jini resume", "Re-enter the latest active work cheaply."),
+            ("jini run --repo /path/to/repo --harness codex", "Execute the work on a chosen harness with explicit consent."),
+        ],
+    ),
+    (
+        "INSPECT ROUTING",
+        [
+            ("jini harnesses", "List the supported harness routes."),
+            ("jini metrics", "Show the taught command surface and route evidence posture."),
+        ],
+    ),
+]
+
+
+ADMIN_HELP_GROUPS: list[tuple[str, list[tuple[str, str]]]] = [
+    (
+        "PACK AND VALIDATION",
+        [
+            ("list-schemas", "Schema registry inspection."),
+            ("list-packs", "Pack inventory."),
+            ("catalog-packs", "Pack catalog and profile metadata."),
+            ("validate", "Single file validation."),
+            ("validate-pack", "Pack directory validation."),
+            ("status-pack", "Low-level pack state summary."),
+            ("init-pack / compile-pack / bootstrap-pack", "Pack scaffolding and bootstrap flows."),
+            ("advance-pack", "Linear pack-state transition control."),
+        ],
+    ),
+    (
+        "ROUTING AND RUNTIME",
+        [
+            ("recommend-execution", "Execution posture recommendation."),
+            ("show-adapters / resolve-adapter / adapter-matrix / adapter-conformance", "Adapter inspection and conformance."),
+            ("routing-backtest / review-policy / stage-policy-candidate / approve-policy-candidate / rollback-policy-candidate", "Routing policy analysis and rollout."),
+            ("stage-runtime-handoff / activate-runtime-target", "Runtime target staging and activation."),
+            ("show-learning-events / learning-snapshot", "Runtime and learning evidence inspection."),
+        ],
+    ),
+    (
+        "INSTALL AND OPERATIONS",
+        [
+            ("plan-install / install-bundles / update-bundles / uninstall-bundles", "Bundle installation lifecycle."),
+            ("doctor-install / catalog-bundles", "Install health and inventory."),
+            ("bootstrap-home / bootstrap-steering / bind-home / append-memory / dream-memory / memory-status", "Personal OS and memory operations."),
+            ("list-tools / list-routines / run-routine / repo-map / show-steering", "Operator utilities."),
+        ],
+    ),
+    (
+        "PUBLISHING AND EVIDENCE",
+        [
+            ("run-pack", "Autonomous pack execution."),
+            ("export-tasks / sync-tasks / export-issues / export-wiki", "Export surfaces."),
+            ("publish-issues / publish-wiki / apply-publish-plan / execute-publish-plan", "Publishing flows."),
+            ("capture-evidence / harvest-evidence / capture-output / capture-approval / capture-publication", "Evidence and approval capture."),
+            ("stage-framework-experiment / record-framework-outcome / backtest-framework-evolution", "Framework experimentation."),
+        ],
+    ),
+]
+
+
+def print_public_command_inventory() -> None:
+    cli = cli_invocation()
+    print(f"Jini CLI {load_version()}")
+    print("Public command inventory")
+    print()
+    for heading, commands in PUBLIC_HELP_GROUPS:
+        print(heading)
+        for command, description in commands:
+            print(f"  {command}")
+            print(f"    {description}")
+        print()
+    print("ADMIN")
+    print(f"  {cli} help --admin")
+    print("    Show the operator and developer command inventory.")
+
+
+def print_admin_command_inventory() -> None:
+    print(f"Jini CLI {load_version()}")
+    print("Admin and developer command inventory")
+    print()
+    for heading, commands in ADMIN_HELP_GROUPS:
+        print(heading)
+        for command, description in commands:
+            print(f"  {command}")
+            print(f"    {description}")
+        print()
 
 
 def resolve_display_path(path_text: str) -> Path:
@@ -17274,14 +17381,18 @@ def main() -> int:
         print_cli_overview()
         return 0
     if argv[0] in {"-h", "--help"}:
-        if "--all" in argv[1:]:
-            parser.print_help()
+        if "--admin" in argv[1:]:
+            print_admin_command_inventory()
+        elif "--all" in argv[1:]:
+            print_public_command_inventory()
         else:
             print_cli_overview()
         return 0
     if argv[0] == "help":
-        if "--all" in argv[1:]:
-            parser.print_help()
+        if "--admin" in argv[1:]:
+            print_admin_command_inventory()
+        elif "--all" in argv[1:]:
+            print_public_command_inventory()
         else:
             print_cli_overview()
         return 0

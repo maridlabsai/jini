@@ -364,12 +364,23 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("jini doctor", result.stdout)
         self.assertNotIn("usage: jini", result.stdout)
 
-    def test_help_all_shows_full_parser_surface(self) -> None:
+    def test_help_all_shows_public_command_inventory(self) -> None:
         result = self.run_cli("help", "--all")
         self.assert_ok(result)
-        self.assertIn("usage: jini", result.stdout)
-        self.assertIn("clearer next steps", result.stdout)
+        self.assertIn("Public command inventory", result.stdout)
+        self.assertIn("WORK WITH JINI", result.stdout)
+        self.assertIn("jini status", result.stdout)
+        self.assertIn("jini help --admin", result.stdout)
+        self.assertNotIn("usage: jini", result.stdout)
+        self.assertNotIn("stage-framework-experiment", result.stdout)
+
+    def test_help_admin_shows_internal_inventory(self) -> None:
+        result = self.run_cli("help", "--admin")
+        self.assert_ok(result)
+        self.assertIn("Admin and developer command inventory", result.stdout)
         self.assertIn("stage-framework-experiment", result.stdout)
+        self.assertIn("capture-evidence", result.stdout)
+        self.assertNotIn("usage: jini", result.stdout)
 
     def test_setup_command_runs_setup_surface(self) -> None:
         prefix = self.tmp / "setup-codex"
