@@ -16,7 +16,7 @@ description: The shell stays free. Planned app downloads stay free. The paid lay
   </div>
   <div class="checklist-card">
     <h3>What the $1 license unlocks</h3>
-    <p>Planned Commercial License features: provider-limit forecasting, throttle avoidance, automatic fallback, and automatic resume after limits or throttles hit.</p>
+    <p>Planned Commercial License features: provider-limit forecasting, throttle avoidance, automatic fallback, and automatic resume after limits or throttles hit. Everyone should get a 30-day free trial before asking for the $1/month subscription.</p>
   </div>
 </div>
 
@@ -25,6 +25,7 @@ description: The shell stays free. Planned app downloads stay free. The paid lay
 
 - use the free shell when you want one stable place to run and resume work
 - expect planned desktop and mobile apps to be free downloads when they are actually ready
+- start with a 30-day free trial of the commercial optimizer
 - pay only if Jini can prove that it saved money or prevented stalled work
 </div>
 
@@ -41,11 +42,11 @@ The app downloads can be free without making the app implementation public.
 <div class="checklist-grid">
   <div class="checklist-card">
     <h3>The rule</h3>
-    <p><strong>Do not charge for the shell. Do not charge for app downloads. Charge only for the cost-saver and continuity layer that proves its value at runtime.</strong></p>
+    <p><strong>Do not charge for the shell. Do not charge for app downloads. Give everyone a 30-day free trial before asking for the $1/month subscription. Charge only for the cost-saver and continuity layer that proves its value at runtime.</strong></p>
   </div>
   <div class="checklist-card">
     <h3>Why upgrade</h3>
-    <p>Upgrade when provider limits, throttles, or expensive routes are a real operating problem and you want Jini to keep work moving automatically instead of forcing manual babysitting.</p>
+    <p>Upgrade when provider limits, throttles, or expensive routes are a real operating problem and you want Jini to keep work moving automatically instead of forcing manual babysitting. The paywall prompt should appear before downgrade, not after the account is already squeezed into constrained free mode.</p>
   </div>
 </div>
 
@@ -74,11 +75,11 @@ The commercial apps should help a wider user base without turning Jini into a di
 | Surface | Status | Planned activation |
 |---|---|---|
 | CLI | Available now | None |
-| macOS app shell | Preview only. Not downloadable yet | Buy on the website, then sign in |
-| Windows app shell | Preview only. Not downloadable yet | Buy on the website, then sign in |
+| macOS app shell | Preview only. Not downloadable yet | Start with a 30-day free trial, then buy on the website and sign in |
+| Windows app shell | Preview only. Not downloadable yet | Start with a 30-day free trial, then buy on the website and sign in |
 | iOS companion app | Preview only. Not on the App Store yet | Sign in with an existing paid account |
 | Android companion app | Preview only. Not downloadable yet. Direct-first when policy allows, with Play Store secondary | Sign in with an existing paid account |
-| Commercial License checkout | Planned. Not live yet | Website checkout + account entitlement |
+| Commercial License checkout | Planned. Not live yet | Start with a 30-day free trial, then website checkout + account entitlement |
 
 Payment integration is not live yet. The current product work defines the shared entitlement model and distribution plan, but not a production checkout or store-billing pipeline.
 

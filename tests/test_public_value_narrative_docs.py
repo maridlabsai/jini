@@ -21,6 +21,7 @@ class PublicValueNarrativeDocsTests(unittest.TestCase):
             "Use Jini free across providers now. Pay only when it proves it saves money.",
             "Jini is the free orchestration shell.",
             "The paid layer only starts to matter if Jini can measurably keep costs down or keep work moving.",
+            "30-day free trial",
             "## Free now. Paid later only if it earns it.",
             "The paid layer should not exist as a generic upgrade tax.",
         ):
@@ -33,6 +34,7 @@ class PublicValueNarrativeDocsTests(unittest.TestCase):
             "Jini should be easy to adopt and hard to overpay for.",
             "The shell stays free.",
             "Planned app downloads stay free.",
+            "paywall prompt should appear before downgrade",
             "Do not charge for the shell.",
             "Do not charge for app downloads.",
             "Charge only for the cost-saver and continuity layer that proves its value at runtime.",
@@ -49,6 +51,7 @@ class PublicValueNarrativeDocsTests(unittest.TestCase):
             "41% savings",
             "1 auto resume",
             "Public proof is acceptable only when it clearly marks preview posture and current release limits.",
+            "before anyone is asked to pay or renew",
             "What the paid layer should prove before renewal",
             "Month-to-date savings",
             "Provider headroom preserved",

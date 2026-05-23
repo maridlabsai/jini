@@ -6,7 +6,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <div class="hero-panel hero-panel-marketing">
   <p class="hero-kicker">Free shell for AI work</p>
   <h1 class="hero-title">Use Jini free across providers now. Pay only when it proves it saves money.</h1>
-  <p class="hero-summary">Jini turns rough input into usable output, keeps active work visible, and gives you one shell for work that may span Claude Code, Codex, Bedrock, Azure OpenAI, or local models. The core shell stays open. Planned desktop and mobile apps are free downloads when released. The paid layer is only the cost-saver: provider-limit forecasting, throttle avoidance, fallback, and automatic resume once that layer is live.</p>
+  <p class="hero-summary">Jini turns rough input into usable output, keeps active work visible, and gives you one shell for work that may span Claude Code, Codex, Bedrock, Azure OpenAI, or local models. The core shell stays open. Planned desktop and mobile apps are free downloads when released. The paid layer is only the cost-saver: provider-limit forecasting, throttle avoidance, fallback, and automatic resume, with a 30-day free trial before the $1/month subscription is even presented.</p>
   <div class="cta-row">
     <a class="cta-button" href="{{ '/install.html' | relative_url }}">Install</a>
     <a class="cta-button cta-button-secondary" href="{{ '/simple.html' | relative_url }}">Quickstart</a>
@@ -45,7 +45,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
   </div>
   <div class="fact-pill">
     <strong>Pay only for proof</strong>
-    <p>The paid layer should earn its keep through token savings, headroom preserved, throttles avoided, and work resumed automatically.</p>
+    <p>The paid layer should earn its keep through token savings, headroom preserved, throttles avoided, and work resumed automatically. Start with a 30-day free trial, then pay only if the proof is real.</p>
   </div>
   <div class="fact-pill">
     <strong>Only the CLI is installable now</strong>
@@ -109,6 +109,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
   <div class="checklist-card">
     <h3>What becomes paid</h3>
     <ul class="compact-list">
+      <li>starts with a 30-day free trial before the paywall appears</li>
       <li>provider-limit forecasting</li>
       <li>throttle avoidance and automatic fallback</li>
       <li>automatic resume after limits or hosted-tool interruptions</li>
@@ -117,7 +118,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
   </div>
 </div>
 
-<p>The paid layer should not exist as a generic upgrade tax. It should exist only when Jini can prove it saved money or prevented stalled work.</p>
+<p>The paid layer should not exist as a generic upgrade tax. It should exist only when Jini can prove it saved money or prevented stalled work, and the paywall should appear before the account is downgraded back to tighter free-mode limits.</p>
 
 ## Who Jini is for
 
@@ -201,7 +202,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
   </div>
   <div class="checklist-card">
     <h3>Planned paid layer</h3>
-    <p>Planned pricing for the $1/month Commercial License covers provider-limit forecasting, throttle avoidance, automatic fallback, and automatic resume once checkout is live.</p>
+    <p>Planned pricing for the Commercial License starts with a 30-day free trial and becomes $1/month for provider-limit forecasting, throttle avoidance, automatic fallback, and automatic resume once checkout is live.</p>
   </div>
 </div>
 

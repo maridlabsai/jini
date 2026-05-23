@@ -24,7 +24,8 @@ class CommercialDocsTests(unittest.TestCase):
             "## Current availability",
             "Desktop and Android should distribute directly first where policy allows",
             "Commercial License checkout | Planned. Not live yet",
-            "$1/month Commercial License",
+            "30-day free trial",
+            "$1/month subscription",
             "What stays free vs what becomes paid",
         ):
             with self.subTest(marker=marker):
@@ -34,6 +35,7 @@ class CommercialDocsTests(unittest.TestCase):
         text = read(COMMERCIAL_PATH)
         for marker in (
             "The shell stays free.",
+            "30-day free trial before asking for the $1/month subscription",
             "What the $1 license unlocks",
             "What stays free",
             "What downloads are free",
@@ -44,10 +46,10 @@ class CommercialDocsTests(unittest.TestCase):
             "distribute directly from the website first when platform policy allows it",
             "## Free app surfaces, when ready",
             "## Current readiness and payment status",
-            "| macOS app shell | Preview only. Not downloadable yet | Buy on the website, then sign in |",
+            "| macOS app shell | Preview only. Not downloadable yet | Start with a 30-day free trial, then buy on the website and sign in |",
             "| iOS companion app | Preview only. Not on the App Store yet | Sign in with an existing paid account |",
             "| Android companion app | Preview only. Not downloadable yet. Direct-first when policy allows, with Play Store secondary | Sign in with an existing paid account |",
-            "| Commercial License checkout | Planned. Not live yet | Website checkout + account entitlement |",
+            "| Commercial License checkout | Planned. Not live yet | Start with a 30-day free trial, then website checkout + account entitlement |",
             "Payment integration is not live yet.",
             "not yet release-ready for direct public download or store rollout",
             "What the paid layer must prove before renewal",
@@ -62,7 +64,7 @@ class CommercialDocsTests(unittest.TestCase):
         self.assertIn("Today the CLI is the only installable surface.", text)
         self.assertIn("preview-only, not publicly downloadable yet", text)
         self.assertIn("Desktop and Android should distribute directly first where policy allows", text)
-        self.assertIn("Commercial License is $1/month once checkout and entitlement activation are live", text)
+        self.assertIn("Commercial License starts with a 30-day free trial and becomes $1/month once checkout and entitlement activation are live", text)
         self.assertIn("<h2>What you get today</h2>", text)
         self.assertIn("| CLI | Installable now on macOS and Linux |", text)
         self.assertIn("| macOS app shell | Preview only. Not downloadable yet |", text)

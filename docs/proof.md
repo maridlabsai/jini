@@ -3,7 +3,7 @@ title: Trust
 description: Free value should be obvious quickly. Paid value should be visible as savings, recovered work, and route evidence before anyone is asked to renew.
 ---
 
-<p class="page-lead">Proof has two jobs. First, the free shell should make its value obvious fast. Second, any paid layer should prove that it saved money or prevented stalled work before anyone is asked to renew.</p>
+<p class="page-lead">Proof has two jobs. First, the free shell should make its value obvious fast. Second, any paid layer should prove that it saved money or prevented stalled work before anyone is asked to pay or renew.</p>
 
 <div class="section-card">
   <span class="section-kicker">Public proof snapshot</span>
@@ -17,7 +17,7 @@ description: Free value should be obvious quickly. Paid value should be visible 
     <div class="proof-card">
       <h3>Paid savings proof</h3>
       <p><strong>41% savings</strong></p>
-      <p>A public demo is acceptable only when it is tied to measurable token savings and a visible renewal story.</p>
+      <p>A public demo is acceptable only when it is tied to measurable token savings, a visible 30-day trial story, and a visible renewal story.</p>
     </div>
     <div class="proof-card">
       <h3>Interruption recovery proof</h3>
@@ -74,6 +74,7 @@ Open Build-Readiness Check</pre>
 <div class="section-card">
   <span class="section-kicker">Renewal proof</span>
   <h2>What the paid layer should prove before renewal</h2>
+  <p>The same proof should already be visible during the 30-day free trial, before the paywall is presented and before the account is downgraded back to constrained free mode.</p>
   <div class="proof-grid">
     <div class="proof-card">
       <h3>Month-to-date savings</h3>
