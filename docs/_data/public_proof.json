@@ -1,0 +1,60 @@
+{
+  "product": "Jini public proof snapshot",
+  "proof_posture": "public-proof-not-production-readiness",
+  "hero": {
+    "eyebrow": "Visual proof",
+    "headline": "The most dependable, cost-effective, and frictionless platform for automating complex AI workflows across any environment.",
+    "body": "Show free orchestration first, then show the paid layer only where it proves savings, continuity, and interruption recovery."
+  },
+  "proof_cards": [
+    {
+      "label": "Free cross-platform orchestration proof",
+      "value": "5 surfaces"
+    },
+    {
+      "label": "Paid subscription-efficiency proof",
+      "value": "41% savings"
+    },
+    {
+      "label": "Interruption recovery proof",
+      "value": "1 auto resumes"
+    }
+  ],
+  "sections": [
+    {
+      "id": "free-cross-platform-story",
+      "headline": "Free cross-platform orchestration proof",
+      "bullets": [
+        "The same orchestration contract spans CLI, desktop, and mobile surfaces.",
+        "App shell downloads remain free to inspect when platform delivery is live.",
+        "Local SLM and BYO provider paths remain part of the open-core/free baseline."
+      ]
+    },
+    {
+      "id": "paid-savings-story",
+      "headline": "30-day trial, then $1/month subscription-savings proof",
+      "bullets": [
+        "month-to-date token savings",
+        "provider headroom preserved",
+        "throttles avoided",
+        "sessions resumed without manual intervention"
+      ]
+    },
+    {
+      "id": "trust-boundary-story",
+      "headline": "Trust boundary and launch honesty",
+      "bullets": [
+        "Public proof is acceptable only when it clearly marks preview posture and current release limits.",
+        "Do not claim live payment, live store rollout, or signed-download readiness before those lanes are real.",
+        "Keep measurable route and savings evidence attached to every paid-value claim."
+      ]
+    }
+  ],
+  "trust_rules": [
+    "Do not present mocked telemetry as live proof.",
+    "Do not claim public download or store availability before the release packet says it is live.",
+    "Do not claim savings without a measurable route and renewal story.",
+    "Do not hide preview posture when the apps are not release-ready."
+  ],
+  "source_contract": "sanitized-commercial-proof-bundle"
+}

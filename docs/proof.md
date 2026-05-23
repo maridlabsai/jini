@@ -6,27 +6,26 @@ description: Free value should be obvious quickly. Paid value should be visible 
 <p class="page-lead">Proof has two jobs. First, the free shell should make its value obvious fast. Second, any paid layer should prove that it saved money or prevented stalled work before anyone is asked to pay or renew.</p>
 
 <div class="section-card">
-  <span class="section-kicker">Public proof snapshot</span>
-  <h2>What the public story should show in one screen</h2>
+  <span class="section-kicker">{{ site.data.public_proof.hero.eyebrow }}</span>
+  <h2>{{ site.data.public_proof.hero.headline }}</h2>
+  <p>{{ site.data.public_proof.hero.body }}</p>
   <div class="proof-grid">
+    {% for card in site.data.public_proof.proof_cards %}
     <div class="proof-card">
-      <h3>Free orchestration proof</h3>
-      <p><strong>5 surfaces</strong></p>
+      <h3>{{ card.label }}</h3>
+      <p><strong>{{ card.value }}</strong></p>
+      {% if forloop.index0 == 0 %}
       <p>One continuity story across CLI plus four planned desktop and mobile surfaces.</p>
-    </div>
-    <div class="proof-card">
-      <h3>Paid savings proof</h3>
-      <p><strong>41% savings</strong></p>
+      {% elsif forloop.index0 == 1 %}
       <p>A public demo is acceptable only when it is tied to measurable token savings, a visible 30-day trial story, and a visible renewal story.</p>
-    </div>
-    <div class="proof-card">
-      <h3>Interruption recovery proof</h3>
-      <p><strong>1 auto resume</strong></p>
+      {% else %}
       <p>The paid layer should prove that work recovered without the user rebuilding state by hand.</p>
+      {% endif %}
     </div>
+    {% endfor %}
   </div>
 
-  <p>Public proof is acceptable only when it clearly marks preview posture and current release limits.</p>
+  <p>{{ site.data.public_proof.sections[2].bullets[0] }}</p>
 </div>
 
 <div class="section-card">
@@ -92,6 +91,20 @@ Open Build-Readiness Check</pre>
       <h3>Sessions resumed without babysitting</h3>
       <p>The strongest paid proof is simple: the work kept moving and the user did not have to manually reconstruct state.</p>
     </div>
+  </div>
+</div>
+
+<div class="section-card">
+  <span class="section-kicker">Sanitized ingestion</span>
+  <h2>How public proof should be fed</h2>
+  <p>The public site should ingest a sanitized proof snapshot, not hand-edited marketing claims. This page now reads from <code>docs/_data/public_proof.json</code>, which should be produced from the commercial proof bundle through a public-safe sync step.</p>
+  <div class="proof-grid">
+    {% for section in site.data.public_proof.sections %}
+    <div class="proof-card">
+      <h3>{{ section.headline }}</h3>
+      <p>{{ section.bullets[0] }}</p>
+    </div>
+    {% endfor %}
   </div>
 </div>
 

@@ -50,17 +50,19 @@ class PublicValueNarrativeDocsTests(unittest.TestCase):
         text = read(PROOF_PATH)
         for marker in (
             "First, the free shell should make its value obvious fast.",
-            "Public proof snapshot",
-            "5 surfaces",
-            "41% savings",
-            "1 auto resume",
-            "Public proof is acceptable only when it clearly marks preview posture and current release limits.",
+            "{{ site.data.public_proof.hero.eyebrow }}",
+            "{{ site.data.public_proof.hero.headline }}",
+            "{{ site.data.public_proof.hero.body }}",
+            "{{ card.value }}",
+            "{{ site.data.public_proof.sections[2].bullets[0] }}",
             "before anyone is asked to pay or renew",
             "What the paid layer should prove before renewal",
             "Month-to-date savings",
             "Provider headroom preserved",
             "Throttles avoided or recovered",
             "Sessions resumed without babysitting",
+            "How public proof should be fed",
+            "docs/_data/public_proof.json",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)

@@ -33,7 +33,7 @@ class WebsiteExecutionTrackerDocsTests(unittest.TestCase):
 
         required_next_cuts = [
             "Add tighter plan comparison and clearer subscription value framing to the commercial page",
-            "Replace checked-in proof payloads with sanitized live proof ingestion",
+            "Replace checked-in sanitized proof snapshots with live ingestion once telemetry is ready",
             "Add live surface badges and release-packet links when app delivery becomes real",
             "Add release-packet links and surface badges when app delivery becomes real",
         ]
