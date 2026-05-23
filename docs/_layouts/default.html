@@ -16,19 +16,27 @@
         <a class="site-brand site-brand-link" href="{{ '/' | relative_url }}" aria-label="Jini home">
           <img class="site-brand-mark" src="{{ '/assets/brand/jini-mark-512.png' | relative_url }}" alt="" aria-hidden="true">
           <div class="site-brand-copy">
+            <p class="site-brand-eyebrow">Free shell now. Paid only if it earns it.</p>
             <p class="site-brand-tagline">Less rework. Faster handoffs. Clear next steps.</p>
           </div>
         </a>
 
-        <nav class="site-nav" aria-label="Primary">
-          <a class="{% if page.url == '/' %}is-active{% endif %}" href="{{ '/' | relative_url }}">Home</a>
-          <a class="{% if page.url == '/simple.html' %}is-active{% endif %}" href="{{ '/simple.html' | relative_url }}">Quickstart</a>
-          <a class="{% if page.url == '/state-and-artifacts.html' %}is-active{% endif %}" href="{{ '/state-and-artifacts.html' | relative_url }}">Outputs</a>
-          <a class="{% if page.url == '/examples.html' %}is-active{% endif %}" href="{{ '/examples.html' | relative_url }}">Examples</a>
-          <a class="{% if page.url == '/proof.html' %}is-active{% endif %}" href="{{ '/proof.html' | relative_url }}">Trust</a>
-          <a class="{% if page.url == '/contact.html' %}is-active{% endif %}" href="{{ '/contact.html' | relative_url }}">Contact</a>
-          <a class="site-nav-cta {% if page.url == '/install.html' %}is-active{% endif %}" href="{{ '/install.html' | relative_url }}">Install</a>
-        </nav>
+        <div class="site-nav-stack">
+          <div class="site-signal-row" aria-label="Product posture">
+            <span class="site-signal-pill">Free shell</span>
+            <span class="site-signal-pill">30-day trial</span>
+            <span class="site-signal-pill">$1 after proof</span>
+          </div>
+          <nav class="site-nav" aria-label="Primary">
+            <a class="{% if page.url == '/' %}is-active{% endif %}" href="{{ '/' | relative_url }}">Home</a>
+            <a class="{% if page.url == '/simple.html' %}is-active{% endif %}" href="{{ '/simple.html' | relative_url }}">Quickstart</a>
+            <a class="{% if page.url == '/state-and-artifacts.html' %}is-active{% endif %}" href="{{ '/state-and-artifacts.html' | relative_url }}">Outputs</a>
+            <a class="{% if page.url == '/examples.html' %}is-active{% endif %}" href="{{ '/examples.html' | relative_url }}">Examples</a>
+            <a class="{% if page.url == '/proof.html' %}is-active{% endif %}" href="{{ '/proof.html' | relative_url }}">Trust</a>
+            <a class="{% if page.url == '/contact.html' %}is-active{% endif %}" href="{{ '/contact.html' | relative_url }}">Contact</a>
+            <a class="site-nav-cta {% if page.url == '/install.html' %}is-active{% endif %}" href="{{ '/install.html' | relative_url }}">Install</a>
+          </nav>
+        </div>
       </header>
 
       <main id="main-content">
@@ -52,7 +60,8 @@
 
       <footer class="site-footer">
         <div>
-          <p>Less rework. Faster handoffs. Clear next steps.</p>
+          <p class="site-footer-tagline">Less rework. Faster handoffs. Clear next steps.</p>
+          <p class="site-footer-summary">Free shell first. Commercial only after a 30-day trial and only if the proof says the optimizer pays for itself.</p>
         </div>
         <div class="site-footer-links">
           <a href="{{ '/examples.html' | relative_url }}">Examples</a>

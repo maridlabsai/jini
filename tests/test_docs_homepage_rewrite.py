@@ -61,7 +61,15 @@ class DocsHomepageRewriteTests(unittest.TestCase):
 
     def test_layout_uses_product_facing_nav_labels(self) -> None:
         text = read(LAYOUT_PATH)
-        for marker in ("Quickstart", "Outputs", "Trust", "Command Catalog"):
+        for marker in (
+            "Quickstart",
+            "Outputs",
+            "Trust",
+            "Command Catalog",
+            "Free shell now. Paid only if it earns it.",
+            "30-day trial",
+            "$1 after proof",
+        ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
 
