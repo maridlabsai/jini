@@ -32,7 +32,6 @@ class WebsiteExecutionTrackerDocsTests(unittest.TestCase):
             self.assertIn(row, text)
 
         required_next_cuts = [
-            "Add current surface badges and release-packet-fed status to the public app story",
             "Replace checked-in sanitized proof snapshots with live ingestion once telemetry is ready",
             "Add public links to live release packets when public downloads actually exist",
         ]

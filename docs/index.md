@@ -244,16 +244,21 @@ That means the homepage promise is simple:
 <div class="section-card" markdown="1">
 ## Current availability
 
-| Surface | Status |
-|---|---|
-| CLI | Available now |
-| macOS app shell | Preview only. Not downloadable yet |
-| Windows app shell | Preview only. Not downloadable yet |
-| iOS companion app | Preview only. Not on the App Store yet |
-| Android companion app | Preview only. Not downloadable yet. Direct-first when policy allows |
-| Commercial License checkout | Planned. Not live yet |
+<div class="pill-list">
+  {% for surface in site.data.public_surfaces.surfaces %}
+  <span>{{ surface.name }}: {{ surface.badge }}</span>
+  {% endfor %}
+</div>
+
+| Surface | Status | Current state |
+|---|---|---|
+{% for surface in site.data.public_surfaces.surfaces %}
+| {{ surface.name }} | {{ surface.badge }} | {{ surface.current_state }} |
+{% endfor %}
 
 <p>Desktop launch plan: buy on the website, then sign in to unlock paid features. Android should prefer direct download first where policy allows, with store distribution secondary. iOS remains store-constrained. Mobile should not be the first place users subscribe.</p>
+
+<p>This homepage status block is fed from <code>docs/_data/public_surfaces.json</code>, a sanitized snapshot built from the commercial release packets.</p>
 </div>
 
 ## Commands that matter
