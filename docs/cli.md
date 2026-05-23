@@ -26,7 +26,7 @@ jini
 jini commands
 ```
 
-  <p>Use this when you want the small product-facing command catalog. If you need the deeper operator and developer inventory, use <code>jini admin help</code> instead of treating the full internal parser as the public surface.</p>
+  <p>Use this when you want the small product-facing command catalog. If you maintain routes, bundles, or release plumbing, use <code>jini admin help</code> instead of treating the full internal parser as the public surface.</p>
 </div>
 
 <div class="section-card" markdown="1">
