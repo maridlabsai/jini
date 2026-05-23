@@ -167,6 +167,20 @@ description: Free orchestration for AI work across providers today. Pay only whe
   </div>
   {% endfor %}
 </div>
+
+<div class="proof-story-grid">
+  {% for section in site.data.public_proof.sections %}
+  <div class="proof-story-card">
+    <span class="workflow-meta">Proof story {{ forloop.index }}</span>
+    <h3>{{ section.headline }}</h3>
+    <ul class="compact-list">
+      {% for bullet in section.bullets %}
+      <li>{{ bullet }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endfor %}
+</div>
 </div>
 
 <div class="section-card section-card-story" markdown="1">
