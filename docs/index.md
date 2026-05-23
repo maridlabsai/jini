@@ -122,9 +122,12 @@ description: Free orchestration for AI work across providers today. Pay only whe
 </div>
 </div>
 
+<div class="section-card section-card-story" markdown="1">
 ## Why teams keep Jini around
 
-<div class="proof-grid">
+<p class="page-lead">Jini should earn its place by lowering switching cost, keeping work resumable, and making route decisions inspectable instead of magical.</p>
+
+<div class="proof-grid proof-grid-story">
   <div class="proof-card">
     <h3>One stable front door</h3>
     <p>Users learn one shell and one set of actions while providers, models, and tools can change underneath.</p>
@@ -142,8 +145,12 @@ description: Free orchestration for AI work across providers today. Pay only whe
     <p>The first useful result should be a follow-up, memo, readiness check, or itinerary, not a prettier status wall.</p>
   </div>
 </div>
+</div>
 
+<div class="section-card section-card-story" markdown="1">
 ## Free now. Paid later only if it earns it.
+
+<p class="page-lead">The free shell should already be enough to finish serious work. The paid layer only deserves to exist when it can show real savings or keep work from stalling.</p>
 
 <div class="checklist-grid">
   <div class="checklist-card">
@@ -167,9 +174,13 @@ description: Free orchestration for AI work across providers today. Pay only whe
   </div>
 </div>
 
-<p>The paid layer should not exist as a generic upgrade tax. It should exist only when Jini can prove it saved money or prevented stalled work, and the paywall should appear before the account is downgraded back to tighter free-mode limits.</p>
+<p class="editorial-note">The paid layer should not exist as a generic upgrade tax. It should exist only when Jini can prove it saved money or prevented stalled work, and the paywall should appear before the account is downgraded back to tighter free-mode limits.</p>
+</div>
 
+<div class="section-card section-card-soft" markdown="1">
 ## Who Jini is for
+
+<p class="page-lead">The product is strongest when the work has an awkward middle: handoff risk, continuity risk, or cost pressure that a raw shell leaves to the user.</p>
 
 <div class="checklist-grid">
   <div class="checklist-card">
@@ -190,6 +201,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <li>teams that do not care whether outputs are handoff-safe or inspectable</li>
     </ul>
   </div>
+</div>
 </div>
 
 ## What Jini writes
