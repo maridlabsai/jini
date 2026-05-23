@@ -22,6 +22,8 @@ class PublicValueNarrativeDocsTests(unittest.TestCase):
             "Jini is the free orchestration shell.",
             "The paid layer only starts to matter if Jini can measurably keep costs down or keep work moving.",
             "30-day free trial",
+            "proof before payment",
+            "paywall before downgrade",
             "## Free now. Paid later only if it earns it.",
             "The paid layer should not exist as a generic upgrade tax.",
         ):

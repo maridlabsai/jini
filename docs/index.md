@@ -30,6 +30,25 @@ description: Free orchestration for AI work across providers today. Pay only whe
 
 > If you only need a one-off answer, use a raw model shell. If the work needs continuation, usable artifacts, or cheaper routing, use Jini.
 
+<div class="checklist-grid">
+  <div class="checklist-card">
+    <h3>Use a raw model shell when</h3>
+    <ul class="compact-list">
+      <li>the work is one-shot and no artifact matters after the answer</li>
+      <li>you do not need route evidence, continuation, or handoff safety</li>
+      <li>you are happy to rebuild context manually next time</li>
+    </ul>
+  </div>
+  <div class="checklist-card">
+    <h3>Use Jini when</h3>
+    <ul class="compact-list">
+      <li>the work needs a usable output, not just a response</li>
+      <li>the same session may cross CLI, desktop, or mobile surfaces</li>
+      <li>cost, throttles, or interruption recovery need to stay visible</li>
+    </ul>
+  </div>
+</div>
+
 <div class="fact-strip">
   <div class="fact-pill">
     <strong>Free orchestration core</strong>
@@ -51,6 +70,22 @@ description: Free orchestration for AI work across providers today. Pay only whe
     <strong>Only the CLI is installable now</strong>
     <p>Desktop and mobile app shells are part of the direction, but still preview-only today and not publicly downloadable yet.</p>
   </div>
+</div>
+
+<div class="section-card" markdown="1">
+## Pricing promise
+
+Jini should make the free shell useful enough to keep real work moving. The
+paid layer should show up only after a 30-day free trial, and only if the
+runtime can show route savings, headroom preserved, throttles avoided, or work
+resumed automatically.
+
+That means the homepage promise is simple:
+
+- free shell first
+- proof before payment
+- paywall before downgrade
+- tighter free-mode limits after downgrade, but still enough room to stay productive
 </div>
 
 ## Quickstart
