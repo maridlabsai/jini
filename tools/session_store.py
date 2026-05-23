@@ -4,14 +4,14 @@ import json
 from pathlib import Path
 from typing import Any
 
-import yaml
-
 try:
     from .session_core import CanonicalSession
     from .session_events import append_session_event
+    from .yaml_compat import YAMLError, safe_load
 except ImportError:  # pragma: no cover - script execution path
     from session_core import CanonicalSession
     from session_events import append_session_event
+    from yaml_compat import YAMLError, safe_load
 
 
 class SessionStore:
@@ -72,8 +72,8 @@ class SessionStore:
         if not session_path.exists():
             return None
         try:
-            payload = yaml.safe_load(session_path.read_text(encoding="utf-8"))
-        except (OSError, yaml.YAMLError):
+            payload = safe_load(session_path.read_text(encoding="utf-8"))
+        except (OSError, YAMLError):
             return None
         if not isinstance(payload, dict):
             return None

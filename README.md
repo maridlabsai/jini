@@ -39,6 +39,9 @@ Desktop and mobile are part of the public product direction, but they should
 not be treated as generally available installs until those surfaces are shipped
 and pass the same work-thread and trust checks as the CLI.
 
+The public website execution tracker lives in
+[docs/website-execution-tracker.md](docs/website-execution-tracker.md).
+
 If you already cloned the repo, the local equivalent is:
 
 ```bash

@@ -6,10 +6,13 @@ import tempfile
 import unittest
 from pathlib import Path
 
-import yaml
-
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from tools.yaml_compat import safe_load
+
+
 CLI = [sys.executable, str(REPO_ROOT / "tools" / "jini.py")]
 CORPUS_PATH = REPO_ROOT / "specs" / "open-source-prompt-validation.yaml"
 
@@ -44,7 +47,7 @@ class OpenSourcePromptValidationTests(unittest.TestCase):
     def load_corpus(self) -> dict:
         self.assertTrue(CORPUS_PATH.exists(), "Open-source prompt validation corpus is missing")
         with CORPUS_PATH.open(encoding="utf-8") as handle:
-            return yaml.safe_load(handle)
+            return safe_load(handle.read())
 
     def test_corpus_tracks_permissive_github_sources(self) -> None:
         corpus = self.load_corpus()

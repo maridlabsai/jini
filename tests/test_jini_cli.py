@@ -8,10 +8,13 @@ import unittest
 from pathlib import Path
 from typing import Optional, Union
 
-import yaml
-
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from tools.yaml_compat import safe_load
+
+
 CLI = [sys.executable, str(REPO_ROOT / "tools" / "jini.py")]
 RESEARCH_EXAMPLE = REPO_ROOT / "packs" / "research-prd" / "examples" / "research-prd-v1"
 
@@ -313,7 +316,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         return json.loads(path.read_text(encoding="utf-8"))
 
     def read_yaml(self, path: Path) -> dict[str, object]:
-        return yaml.safe_load(path.read_text(encoding="utf-8"))
+        return safe_load(path.read_text(encoding="utf-8"))
 
     def resolve_repo_path(self, path: Union[Path, str]) -> Path:
         candidate = Path(path)
@@ -448,7 +451,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue((session_dir / "projection.json").exists())
         self.assertTrue((session_dir / "events.ndjson").exists())
 
-        session_doc = yaml.safe_load((session_dir / "session.yaml").read_text(encoding="utf-8"))
+        session_doc = safe_load((session_dir / "session.yaml").read_text(encoding="utf-8"))
         self.assertEqual("test-research-pack", session_doc["session_id"])
         self.assertEqual(str(pack_dir.resolve()), session_doc["pack_dir"])
         projection_doc = json.loads((session_dir / "projection.json").read_text(encoding="utf-8"))
@@ -1040,7 +1043,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("Should launch success be measured by sign-ups or paid conversion", followup)
         self.assertIn("Do we need legal review before publishing pricing changes", followup)
 
-        work_unit = yaml.safe_load((pack_dir / "work-unit.yaml").read_text(encoding="utf-8"))
+        work_unit = safe_load((pack_dir / "work-unit.yaml").read_text(encoding="utf-8"))
         self.assertEqual("Delivery", work_unit["profile_id"])
         self.assertIn("Business:team-operations", work_unit["active_extensions"])
 

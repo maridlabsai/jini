@@ -4,7 +4,10 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
-import yaml
+try:
+    from .yaml_compat import safe_dump
+except ImportError:  # pragma: no cover - script execution path
+    from yaml_compat import safe_dump
 
 
 def normalize_session_id(raw: str) -> str:
@@ -31,7 +34,7 @@ class CanonicalSession:
         return asdict(self)
 
     def to_yaml(self) -> str:
-        return yaml.safe_dump(self.to_dict(), sort_keys=False)
+        return safe_dump(self.to_dict(), sort_keys=False)
 
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> "CanonicalSession":
