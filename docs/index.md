@@ -267,8 +267,10 @@ description: Free orchestration for AI work across providers today. Pay only whe
   </div>
 </div>
 
-<div class="section-card" markdown="1">
+<div class="section-card section-card-story surface-story" markdown="1">
 ## Current availability
+
+<p class="page-lead">The rollout story should be visible in one place: what you can use now, how the app surfaces are staged, and where the subscription actually enters the flow.</p>
 
 <div class="pill-list">
   {% for surface in site.data.public_surfaces.surfaces %}
@@ -282,35 +284,42 @@ description: Free orchestration for AI work across providers today. Pay only whe
 | {{ surface.name }} | {{ surface.badge }} | {{ surface.current_state }} |
 {% endfor %}
 
-<p>Desktop launch plan: buy on the website, then sign in to unlock paid features. Android should prefer direct download first where policy allows, with store distribution secondary. iOS remains store-constrained. Mobile should not be the first place users subscribe.</p>
+<p class="availability-note">Desktop launch plan: buy on the website, then sign in to unlock paid features. Android should prefer direct download first where policy allows, with store distribution secondary. iOS remains store-constrained. Mobile should not be the first place users subscribe.</p>
 
 <p>This homepage status block is fed from <code>docs/_data/public_surfaces.json</code>, a sanitized snapshot built from the commercial release packets.</p>
 </div>
 
+<div class="section-card section-card-soft command-story" markdown="1">
 ## Commands that matter
 
-<div class="checklist-grid">
-  <div class="checklist-card">
+<p class="page-lead">The front door should stay small. These are the only commands that should matter to most users on day one.</p>
+
+<div class="checklist-grid command-grid">
+  <div class="checklist-card command-card">
     <h3><code>jini</code></h3>
     <p>The normal entry point for interactive work.</p>
   </div>
-  <div class="checklist-card">
+  <div class="checklist-card command-card">
     <h3><code>jini commands</code></h3>
     <p>See the small public command catalog without touching route or bundle maintenance tools.</p>
   </div>
-  <div class="checklist-card">
+  <div class="checklist-card command-card">
     <h3><code>jini metrics</code></h3>
     <p>See command count, route evidence, and measured latency/cost signals.</p>
   </div>
-  <div class="checklist-card">
+  <div class="checklist-card command-card">
     <h3><code>jini doctor</code></h3>
     <p>Check route setup without exposing secrets when setup help is actually needed.</p>
   </div>
 </div>
+</div>
 
+<div class="section-card section-card-story economics-story" markdown="1">
 ## What stays free vs what becomes paid
 
-<div class="section-card" markdown="1">
+<p class="page-lead">The pricing story should be legible without reading product policy docs: what is already included, what remains manual today, and what the paid layer is supposed to prove.</p>
+
+<div class="economics-table" markdown="1">
 | Need | Free Jini shell | Planned paid layer |
 |---|---|---|
 | Start and finish work | Included | Not required |
@@ -323,7 +332,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <p>Free Jini should already be enough to start, finish, and resume serious work. The paid layer should only exist to save money or keep work moving when providers become the bottleneck.</p>
 </div>
 
-<div class="proof-grid">
+<div class="proof-grid proof-grid-story">
   <div class="proof-card">
     <h3>Plain files and visible state</h3>
     <p>Jini keeps artifacts, work state, and route evidence legible instead of hiding everything in a proprietary cloud memory layer.</p>
@@ -340,6 +349,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
     <h3>Measured trust signals</h3>
     <p><code>jini metrics</code> reports command timings and route evidence so efficiency is inspectable, not implied. Strict routes still exist when policy requires them. The paid layer should eventually show month-to-date savings, headroom preserved, throttles avoided, and sessions resumed.</p>
   </div>
+</div>
 </div>
 
 ## See the product surface

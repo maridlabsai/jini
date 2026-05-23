@@ -828,6 +828,10 @@
   color: #344054;
 }
 
+.availability-note {
+  margin-top: 1rem;
+}
+
 .editorial-note {
   margin: 1rem 0 0;
   padding: 0.95rem 1rem 1rem;
@@ -852,6 +856,10 @@
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1rem;
   margin: 1rem 0 1.5rem;
+}
+
+.command-grid {
+  margin-bottom: 0;
 }
 
 .checklist-card {
@@ -895,6 +903,36 @@
   position: relative;
   z-index: 1;
   margin-top: 0.55rem;
+}
+
+.command-card {
+  background:
+    radial-gradient(circle at top right, rgba(29, 78, 216, 0.08), transparent 30%),
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.command-card h3 code {
+  display: inline-block;
+  padding: 0.22rem 0.48rem;
+  border-radius: 999px;
+  background: #eef4ff;
+  color: #1d4ed8;
+}
+
+.surface-story table,
+.economics-table table {
+  margin-top: 0.9rem;
+}
+
+.surface-story table th,
+.surface-story table td,
+.economics-table table th,
+.economics-table table td {
+  vertical-align: top;
+}
+
+.economics-table {
+  margin-bottom: 1.2rem;
 }
 
 .hero-panel-marketing + .checklist-grid .checklist-card {
