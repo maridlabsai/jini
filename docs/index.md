@@ -332,7 +332,9 @@ description: Free orchestration for AI work across providers today. Pay only whe
 
 ## See the product surface
 
-<div class="media-grid">
+<p class="page-lead">Show the product the way a buyer reads it: install path, active work, and visible evidence instead of abstract capability claims.</p>
+
+<div class="media-grid media-grid-featured">
   <a class="media-card" href="{{ '/install.html' | relative_url }}">
     <img src="{{ '/assets/examples/meeting-followup.gif' | relative_url }}" alt="Jini install and first useful output flow">
     <div class="media-copy">
@@ -361,7 +363,9 @@ description: Free orchestration for AI work across providers today. Pay only whe
 
 ## See real outputs
 
-<div class="media-grid">
+<p class="page-lead">The output story should read like actual work, not a gallery of generic screenshots.</p>
+
+<div class="media-grid media-grid-story">
   <a class="media-card" href="{{ '/examples.html#meeting-followup' | relative_url }}">
     <img src="{{ '/assets/examples/meeting-followup.gif' | relative_url }}" alt="Jini turning meeting notes into a sendable follow-up">
     <div class="media-copy">

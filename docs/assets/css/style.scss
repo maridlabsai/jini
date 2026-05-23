@@ -634,6 +634,19 @@
   margin: 1.25rem 0 2rem;
 }
 
+.media-grid-featured .media-card:first-child {
+  grid-column: span 2;
+}
+
+.media-grid-featured .media-card:first-child img {
+  aspect-ratio: 16 / 8;
+}
+
+.media-grid-story .media-card {
+  background:
+    linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+}
+
 .media-card {
   position: relative;
   overflow: hidden;
@@ -682,6 +695,18 @@
 .media-copy p {
   margin: 0;
   color: #344054;
+}
+
+.media-grid-featured .media-card:first-child .media-copy {
+  padding: 1.15rem 1.15rem 1.2rem;
+}
+
+.media-grid-featured .media-card:first-child .media-copy h3 {
+  font-size: 1.18rem;
+}
+
+.media-grid-featured .media-card:first-child .media-copy p {
+  font-size: 1rem;
 }
 
 .steps-grid {
@@ -1154,6 +1179,14 @@
 
   .workflow-card code {
     white-space: normal;
+  }
+
+  .media-grid-featured .media-card:first-child {
+    grid-column: auto;
+  }
+
+  .media-grid-featured .media-card:first-child img {
+    aspect-ratio: 16 / 10;
   }
 
   .page-intro-card {
