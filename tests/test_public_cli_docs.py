@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 README_PATH = ROOT / "README.md"
 CLI_PATH = ROOT / "docs" / "cli.md"
 INSTALL_PATH = ROOT / "docs" / "install.md"
+SIMPLE_PATH = ROOT / "docs" / "simple.md"
 
 
 def read(path: Path) -> str:
@@ -39,6 +40,16 @@ class PublicCliDocsTests(unittest.TestCase):
 
     def test_install_page_uses_same_public_vs_admin_boundary(self) -> None:
         text = read(INSTALL_PATH)
+        for marker in (
+            "jini commands",
+            "small public command list",
+            "jini admin help",
+        ):
+            with self.subTest(marker=marker):
+                self.assertIn(marker, text)
+
+    def test_quickstart_uses_same_public_vs_admin_boundary(self) -> None:
+        text = read(SIMPLE_PATH)
         for marker in (
             "jini commands",
             "small public command list",

@@ -35,6 +35,8 @@ jini
 
   <p><code>jini</code> is the front door.</p>
 
+  <p>If you want the small public command list before you start, run <code>jini commands</code>. If you need the deeper operator or developer inventory, use <code>jini admin help</code>.</p>
+
 `jini` is the front door.
 </div>
 
