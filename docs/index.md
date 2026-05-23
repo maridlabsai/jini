@@ -122,6 +122,38 @@ description: Free orchestration for AI work across providers today. Pay only whe
 </div>
 </div>
 
+<div class="section-card section-card-story continuity-strip-panel" markdown="1">
+## One thread across surfaces
+
+<p class="page-lead">The product should feel like one continuous work object, not four unrelated apps that happen to share a name.</p>
+
+<div class="continuity-strip" role="img" aria-label="Jini continuity from CLI to desktop to mobile to handoff">
+  <div class="continuity-node">
+    <span class="continuity-label">CLI now</span>
+    <strong>Start the work</strong>
+    <p>Install, run <code>jini</code>, and get to the first useful artifact fast.</p>
+  </div>
+  <div class="continuity-link" aria-hidden="true"></div>
+  <div class="continuity-node">
+    <span class="continuity-label">Desktop next</span>
+    <strong>Review the state</strong>
+    <p>Keep ready items, missing items, and route evidence visible on a larger surface.</p>
+  </div>
+  <div class="continuity-link" aria-hidden="true"></div>
+  <div class="continuity-node">
+    <span class="continuity-label">Mobile follow</span>
+    <strong>Continue anywhere</strong>
+    <p>Pick the same session back up without rebuilding the work from memory.</p>
+  </div>
+  <div class="continuity-link" aria-hidden="true"></div>
+  <div class="continuity-node continuity-node-accent">
+    <span class="continuity-label">Result</span>
+    <strong>Ship the handoff</strong>
+    <p>Leave behind a follow-up, readiness call, or recommendation someone else can use.</p>
+  </div>
+</div>
+</div>
+
 <div class="section-card section-card-story" markdown="1">
 ## Why teams keep Jini around
 

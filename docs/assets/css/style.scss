@@ -1165,6 +1165,83 @@
     linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
 }
 
+.continuity-strip-panel {
+  overflow: hidden;
+  position: relative;
+}
+
+.continuity-strip {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr) 44px minmax(0, 1fr) 44px minmax(0, 1fr);
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 1.2rem;
+}
+
+.continuity-node {
+  position: relative;
+  min-height: 100%;
+  padding: 1rem 1rem 1.05rem;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top right, rgba(29, 78, 216, 0.08), transparent 32%),
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 0 14px 32px rgba(8, 17, 40, 0.05);
+}
+
+.continuity-node strong {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 1.02rem;
+  line-height: 1.25;
+  color: #0f172a;
+}
+
+.continuity-node p {
+  margin: 0;
+  color: #344054;
+}
+
+.continuity-node-accent {
+  background:
+    radial-gradient(circle at top right, rgba(14, 116, 144, 0.12), transparent 30%),
+    linear-gradient(180deg, #ffffff 0%, #eefaf8 100%);
+}
+
+.continuity-label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.7rem;
+  margin-bottom: 0.55rem;
+  padding: 0 0.6rem;
+  border-radius: 999px;
+  background: #eef4ff;
+  color: #1d4ed8;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.continuity-link {
+  position: relative;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(29, 78, 216, 0.22) 0%, rgba(14, 116, 144, 0.5) 100%);
+}
+
+.continuity-link::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -1px;
+  width: 10px;
+  height: 10px;
+  border-top: 2px solid rgba(14, 116, 144, 0.5);
+  border-right: 2px solid rgba(14, 116, 144, 0.5);
+  transform: translateY(-50%) rotate(45deg);
+}
+
 .offer-frame {
   background:
     radial-gradient(circle at top left, rgba(15, 118, 110, 0.08), transparent 24%),
@@ -1344,5 +1421,23 @@
   .section-card {
     padding-left: 1rem;
     padding-right: 1rem;
+  }
+
+  .continuity-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .continuity-link {
+    width: 2px;
+    height: 24px;
+    margin: 0 auto;
+    background: linear-gradient(180deg, rgba(29, 78, 216, 0.22) 0%, rgba(14, 116, 144, 0.5) 100%);
+  }
+
+  .continuity-link::after {
+    top: auto;
+    right: 50%;
+    bottom: -1px;
+    transform: translateX(50%) rotate(135deg);
   }
 }
