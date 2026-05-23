@@ -898,6 +898,48 @@
   margin: 1rem 0 1.5rem;
 }
 
+.hero-decision-frame {
+  overflow: hidden;
+  position: relative;
+}
+
+.hero-decision-frame::before {
+  content: "";
+  position: absolute;
+  inset: -3rem auto auto -3rem;
+  width: 10rem;
+  height: 10rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(29, 78, 216, 0.1) 0%, rgba(29, 78, 216, 0) 72%);
+  pointer-events: none;
+}
+
+.quote-strip {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 1rem;
+  padding: 1rem 1.05rem 1.05rem;
+  border: 1px solid rgba(29, 78, 216, 0.16);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(232, 240, 255, 0.64) 0%, rgba(248, 250, 252, 0.96) 100%);
+}
+
+.quote-strip strong {
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.quote-strip p {
+  margin: 0;
+  color: #344054;
+}
+
+.quickstart-panel {
+  background:
+    radial-gradient(circle at top right, rgba(29, 78, 216, 0.06), transparent 28%),
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
 .signal-card {
   padding: 1rem;
   border: 1px solid #d8dee4;

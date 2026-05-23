@@ -26,26 +26,34 @@ description: Free orchestration for AI work across providers today. Pay only whe
   </div>
 </div>
 
-**In plain words:** Jini is the free orchestration shell. The paid layer only starts to matter if Jini can measurably keep costs down or keep work moving.
-
-> If you only need a one-off answer, use a raw model shell. If the work needs continuation, usable artifacts, or cheaper routing, use Jini.
-
-<div class="checklist-grid">
-  <div class="checklist-card">
-    <h3>Use a raw model shell when</h3>
-    <ul class="compact-list">
-      <li>the work is one-shot and no artifact matters after the answer</li>
-      <li>you do not need route evidence, continuation, or handoff safety</li>
-      <li>you are happy to rebuild context manually next time</li>
-    </ul>
+<div class="section-card hero-decision-frame" markdown="1">
+  <span class="section-kicker">Decision frame</span>
+  <h2>Start with the free shell. Add the paid layer only if the proof is real.</h2>
+  <div class="signal-grid">
+    <div class="signal-card">
+      <h3>In plain words</h3>
+      <p>Jini is the free orchestration shell. The paid layer only starts to matter if Jini can measurably keep costs down or keep work moving.</p>
+    </div>
+    <div class="signal-card">
+      <h3>Use a raw model shell when</h3>
+      <ul class="compact-list">
+        <li>the work is one-shot and no artifact matters after the answer</li>
+        <li>you do not need route evidence, continuation, or handoff safety</li>
+        <li>you are happy to rebuild context manually next time</li>
+      </ul>
+    </div>
+    <div class="signal-card">
+      <h3>Use Jini when</h3>
+      <ul class="compact-list">
+        <li>the work needs a usable output, not just a response</li>
+        <li>the same session may cross CLI, desktop, or mobile surfaces</li>
+        <li>cost, throttles, or interruption recovery need to stay visible</li>
+      </ul>
+    </div>
   </div>
-  <div class="checklist-card">
-    <h3>Use Jini when</h3>
-    <ul class="compact-list">
-      <li>the work needs a usable output, not just a response</li>
-      <li>the same session may cross CLI, desktop, or mobile surfaces</li>
-      <li>cost, throttles, or interruption recovery need to stay visible</li>
-    </ul>
+  <div class="quote-strip">
+    <strong>If you only need a one-off answer, use a raw model shell.</strong>
+    <p>If the work needs continuation, usable artifacts, or cheaper routing, use Jini.</p>
   </div>
 </div>
 
@@ -88,7 +96,10 @@ That means the homepage promise is simple:
 - tighter free-mode limits after downgrade, but still enough room to stay productive
 </div>
 
+<div class="section-card quickstart-panel" markdown="1">
 ## Quickstart
+
+<p class="page-lead">Install once, run <code>jini</code>, and paste the work you want finished. The normal path should feel that small.</p>
 
 <div class="steps-grid">
   <div class="step-card">
@@ -106,6 +117,7 @@ That means the homepage promise is simple:
     <h3>Paste the work</h3>
     <p>Start from the notes, screenshot, draft, transcript, or rough ask you already have.</p>
   </div>
+</div>
 </div>
 
 ## Why teams keep Jini around
