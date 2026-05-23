@@ -12,7 +12,7 @@ being treated as a side effect of app or billing work.
 | Homepage | In progress | Productized docs surface with tested proof and preview-honest app framing | Convert homepage from docs-first information architecture to a dedicated product landing visual system |
 | Commercial page | In progress | Free-vs-paid split and availability table are explicit | Add tighter plan comparison and clearer subscription value framing |
 | Proof page | In progress | Website-ready proof payload and visual proof deck exist | Replace checked-in proof payloads with sanitized live proof ingestion |
-| Install page | In progress | CLI install is clear and app posture is honest | Add a sharper “what you get today” matrix for CLI vs desktop vs mobile |
+| Install page | In progress | CLI install is clear, app posture is honest, and the current-surface matrix exists | Add live surface badges and release-packet links when app delivery becomes real |
 
 ## Website Done Criteria
 
@@ -27,4 +27,3 @@ being treated as a side effect of app or billing work.
 - live public proof telemetry is not wired yet
 - commercial checkout is still control-plane work, not a live website flow
 - app delivery is still preview-only, so website promise boundaries must stay strict
-

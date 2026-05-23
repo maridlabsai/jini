@@ -35,7 +35,7 @@ class WebsiteExecutionTrackerDocsTests(unittest.TestCase):
             "Convert homepage from docs-first information architecture to a dedicated product landing visual system",
             "Add tighter plan comparison and clearer subscription value framing",
             "Replace checked-in proof payloads with sanitized live proof ingestion",
-            "Add a sharper “what you get today” matrix for CLI vs desktop vs mobile",
+            "Add live surface badges and release-packet links when app delivery becomes real",
         ]
         for item in required_next_cuts:
             self.assertIn(item, text)

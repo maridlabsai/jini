@@ -63,6 +63,10 @@ class CommercialDocsTests(unittest.TestCase):
         self.assertIn("preview-only, not publicly downloadable yet", text)
         self.assertIn("Desktop and Android should distribute directly first where policy allows", text)
         self.assertIn("Commercial License is $1/month once checkout and entitlement activation are live", text)
+        self.assertIn("<h2>What you get today</h2>", text)
+        self.assertIn("| CLI | Installable now on macOS and Linux |", text)
+        self.assertIn("| macOS app shell | Preview only. Not downloadable yet |", text)
+        self.assertIn("| Commercial License | Planned. Not live yet |", text)
 
 
 if __name__ == "__main__":
