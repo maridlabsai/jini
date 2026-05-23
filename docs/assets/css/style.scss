@@ -439,6 +439,26 @@
     linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
 }
 
+.showcase-story {
+  overflow: hidden;
+  position: relative;
+}
+
+.showcase-story::after {
+  content: "";
+  position: absolute;
+  inset: auto -3rem -3rem auto;
+  width: 11rem;
+  height: 11rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(14, 116, 144, 0.1) 0%, rgba(14, 116, 144, 0) 72%);
+  pointer-events: none;
+}
+
+.output-story {
+  position: relative;
+}
+
 .section-card > *:last-child {
   margin-bottom: 0;
 }
@@ -675,6 +695,10 @@
 .media-grid-story .media-card {
   background:
     linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+}
+
+.output-story .media-grid-story {
+  margin-bottom: 0;
 }
 
 .media-card {

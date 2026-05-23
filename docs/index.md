@@ -364,9 +364,10 @@ description: Free orchestration for AI work across providers today. Pay only whe
 </div>
 </div>
 
+<div class="section-card section-card-story showcase-story" markdown="1">
 ## See the product surface
 
-<p class="page-lead">Show the product the way a buyer reads it: install path, active work, and visible evidence instead of abstract capability claims.</p>
+<p class="page-lead">Once the operating model is clear, the next question is whether the surface actually feels usable. Show install, active work, and visible evidence before asking for belief.</p>
 
 <div class="media-grid media-grid-featured">
   <a class="media-card" href="{{ '/install.html' | relative_url }}">
@@ -394,10 +395,12 @@ description: Free orchestration for AI work across providers today. Pay only whe
     </div>
   </a>
 </div>
+</div>
 
+<div class="section-card section-card-soft output-story" markdown="1">
 ## See real outputs
 
-<p class="page-lead">The output story should read like actual work, not a gallery of generic screenshots.</p>
+<p class="page-lead">The proof of the interface is the work it leaves behind. The output story should read like actual work, not a gallery of generic screenshots.</p>
 
 <div class="media-grid media-grid-story">
   <a class="media-card" href="{{ '/examples.html#meeting-followup' | relative_url }}">
@@ -424,6 +427,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <p>Get an output you can explain later instead of a conclusion you have to reconstruct from memory.</p>
     </div>
   </a>
+</div>
 </div>
 
 <div class="section-card section-card-cta">
