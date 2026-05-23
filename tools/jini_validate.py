@@ -6798,8 +6798,10 @@ def print_cli_overview() -> None:
     print(f"  {cli} run --repo /path/to/repo --harness codex")
     print(f"  {cli} doctor")
     print()
-    print("DEEPER TOOLS")
-    print(f"  {cli} help --all")
+    print("COMMAND CATALOG")
+    print(f"  {cli} commands")
+    print()
+    print("ADMIN TOOLS")
     print(f"  {cli} help --admin")
     print(f"  {cli} <command> --help")
 

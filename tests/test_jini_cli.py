@@ -362,6 +362,9 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("jini setup --harness codex", result.stdout)
         self.assertIn("jini run --repo /path/to/repo --harness codex", result.stdout)
         self.assertIn("jini doctor", result.stdout)
+        self.assertIn("COMMAND CATALOG", result.stdout)
+        self.assertIn("jini commands", result.stdout)
+        self.assertIn("ADMIN TOOLS", result.stdout)
         self.assertNotIn("usage: jini", result.stdout)
 
     def test_help_all_shows_public_command_inventory(self) -> None:

@@ -19,6 +19,17 @@ jini
 </div>
 
 <div class="section-card" markdown="1">
+  <span class="section-kicker">Command catalog</span>
+  <h2>See the public command surface without the internal inventory</h2>
+
+```bash
+jini commands
+```
+
+  <p>Use this when you want the small product-facing command catalog. If you need the deeper operator and developer inventory, use <code>jini admin help</code> instead of treating the full internal parser as the public surface.</p>
+</div>
+
+<div class="section-card" markdown="1">
   <span class="section-kicker">Inside Jini</span>
   <h2>Main in-shell actions</h2>
   <div class="pill-list">
@@ -137,7 +148,7 @@ jini
 
 <div class="section-card section-card-cta" markdown="1">
   <h2>The public rule</h2>
-  <p>The normal path is still small: install once, run <code>jini</code>, paste the work you want finished. The rest of the CLI exists to support that experience, not replace it.</p>
+  <p>The normal path is still small: install once, run <code>jini</code>, paste the work you want finished. When you need a public command list, use <code>jini commands</code>. The rest of the CLI exists to support that experience, not replace it.</p>
   <div class="page-intro-links">
     <a href="./install.html">Install</a>
     <a href="./simple.html">Simple Guide</a>

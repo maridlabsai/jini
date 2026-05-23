@@ -56,6 +56,15 @@ jini
 
 That opens Jini.
 
+If you want the small public command catalog without dropping into the shell,
+run:
+
+```bash
+jini commands
+```
+
+If you need the deeper operator or developer inventory, use `jini admin help`.
+
 Inside the shell you can work naturally:
 
 - paste messy notes

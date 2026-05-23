@@ -66,6 +66,8 @@ jini
       <p>If setup is missing, type <code>Auto</code> and let Jini help you connect the best available route.</p>
     </div>
   </div>
+
+  <p>If you want the small public command list before doing anything else, run <code>jini commands</code>. If you need the deeper operator inventory, use <code>jini admin help</code>.</p>
 </div>
 
 <div class="section-card" markdown="1">
