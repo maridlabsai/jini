@@ -34,6 +34,8 @@ class PublicCliDocsTests(unittest.TestCase):
             "jini commands",
             "small product-facing command catalog",
             "jini admin help",
+            "Support commands when Jini points you there",
+            "not because they are navigating a command tree by hand",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)

@@ -75,8 +75,8 @@ jini commands
 
 <div class="section-card" markdown="1">
   <span class="section-kicker">Catalog entries</span>
-  <h2>Public commands outside the shell</h2>
-  <p>These are still part of the public command catalog. They support the product front door; they are not a separate product model.</p>
+  <h2>Support commands when Jini points you there</h2>
+  <p>These are still part of the public command catalog. They support the product front door, and most people should reach them because Jini asked for one of them, not because they are navigating a command tree by hand.</p>
   <div class="checklist-grid">
     <div class="checklist-card">
       <h3><code>jini setup</code></h3>
@@ -84,7 +84,7 @@ jini commands
     </div>
     <div class="checklist-card">
       <h3><code>jini status</code></h3>
-      <p>Shows a calm work summary: what you are working on, what is ready, what is missing, and the next step.</p>
+      <p>Shows a calm work summary when you want the current work state outside the shell.</p>
     </div>
     <div class="checklist-card">
       <h3><code>jini open</code></h3>
@@ -92,7 +92,7 @@ jini commands
     </div>
     <div class="checklist-card">
       <h3><code>jini doctor</code></h3>
-      <p>Local setup check for Claude, Bedrock, Azure OpenAI, Local SLM, or local preview.</p>
+      <p>Local setup check when Jini needs route help or you are debugging access.</p>
     </div>
     <div class="checklist-card">
       <h3><code>jini metrics</code></h3>
