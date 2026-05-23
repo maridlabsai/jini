@@ -204,9 +204,12 @@ description: Free orchestration for AI work across providers today. Pay only whe
 </div>
 </div>
 
+<div class="section-card section-card-story workflow-story" markdown="1">
 ## What Jini writes
 
-<div class="workflow-grid">
+<p class="page-lead">The product should be judged by what it actually leaves behind: usable deliverables, resumable state, and visible evidence when the work needs a second pass.</p>
+
+<div class="workflow-grid workflow-grid-story">
   <div class="workflow-card">
     <span class="workflow-meta">Deliverables</span>
     <h3>Usable artifacts</h3>
@@ -228,10 +231,14 @@ description: Free orchestration for AI work across providers today. Pay only whe
     <p>You can see what is ready now, what still blocks safe handoff, and why the missing parts still matter.</p>
   </div>
 </div>
+</div>
 
+<div class="section-card section-card-soft continuity-story" markdown="1">
 ## Start anywhere. Resume anywhere.
 
-<div class="proof-grid">
+<p class="page-lead">Cross-surface continuity only matters if it lowers restart cost. The session should stay intact while the device changes around it.</p>
+
+<div class="proof-grid proof-grid-story">
   <div class="proof-card">
     <h3>One session, not four different products</h3>
     <p>Jini should preserve the same session identity across macOS, Windows, mobile, and CLI instead of treating each surface like a separate workflow.</p>
@@ -249,22 +256,27 @@ description: Free orchestration for AI work across providers today. Pay only whe
     <p>Continuation should be cheaper than restart. Jini should reuse session state before it spends money rebuilding the same context again.</p>
   </div>
 </div>
+</div>
 
+<div class="section-card section-card-story rollout-story" markdown="1">
 ## Cross-surface rollout
 
-<div class="checklist-grid">
-  <div class="checklist-card">
+<p class="page-lead">The surface rollout should feel coordinated: what is live now, what download posture each platform gets, and when the subscription enters the flow.</p>
+
+<div class="checklist-grid rollout-grid">
+  <div class="checklist-card rollout-card">
     <h3>Today</h3>
     <p>The CLI is the live installable surface right now. Desktop and mobile are still in release preparation and not yet publicly downloadable.</p>
   </div>
-  <div class="checklist-card">
+  <div class="checklist-card rollout-card">
     <h3>Free downloads when live</h3>
     <p>macOS, Windows, iOS, and Android stay free to download when each surface is ready. Desktop and Android should distribute directly first where policy allows, while iOS remains App Store constrained.</p>
   </div>
-  <div class="checklist-card">
+  <div class="checklist-card rollout-card">
     <h3>Paid only after proof</h3>
     <p>The Commercial License starts with a 30-day free trial and becomes $1/month for provider-limit forecasting, throttle avoidance, automatic fallback, and automatic resume once checkout is live.</p>
   </div>
+</div>
 </div>
 
 <div class="section-card section-card-story surface-story" markdown="1">

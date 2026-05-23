@@ -509,6 +509,14 @@
   margin: 1.5rem 0 2rem;
 }
 
+.workflow-grid-story .workflow-card:first-child {
+  grid-column: span 2;
+}
+
+.workflow-grid-story .workflow-card:first-child h3 {
+  font-size: 1.15rem;
+}
+
 .workflow-card {
   position: relative;
   overflow: hidden;
@@ -862,6 +870,10 @@
   margin-bottom: 0;
 }
 
+.rollout-grid {
+  margin-bottom: 0;
+}
+
 .checklist-card {
   position: relative;
   overflow: hidden;
@@ -917,6 +929,12 @@
   border-radius: 999px;
   background: #eef4ff;
   color: #1d4ed8;
+}
+
+.rollout-card {
+  background:
+    radial-gradient(circle at top right, rgba(14, 116, 144, 0.08), transparent 30%),
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
 }
 
 .surface-story table,
@@ -1259,6 +1277,10 @@
   }
 
   .proof-grid-story .proof-card:first-child {
+    grid-column: auto;
+  }
+
+  .workflow-grid-story .workflow-card:first-child {
     grid-column: auto;
   }
 
