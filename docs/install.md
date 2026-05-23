@@ -13,14 +13,13 @@ description: Install Jini once, then use `jini`.
 
 | Surface | Current state | What to expect next |
 | --- | --- | --- |
-| CLI | Installable now on macOS and Linux | This remains the primary shipped surface until desktop and mobile move out of preview |
-| macOS app shell | Preview only. Not downloadable yet | Free direct download once the signed wrapper and notarization lane are real |
-| Windows app shell | Preview only. Not downloadable yet | Free direct download once the signed installer lane is real |
-| iOS companion app | Preview only. Not on the App Store yet | Free app once the real host container and submission lane exist |
-| Android companion app | Preview only. Not downloadable yet | Free direct download first where policy allows, with Play Store secondary |
-| Commercial License | Planned. Not live yet | 30-day free trial first, then $1/month website checkout plus account entitlement once checkout is real |
+{% for surface in site.data.public_surfaces.surfaces %}
+| {{ surface.name }} | {{ surface.current_state }} | {{ surface.next_step }} |
+{% endfor %}
 
   <p>The honest short version: install the CLI today. Treat every non-CLI surface as preview-only until the release packet for that surface says it is live.</p>
+
+  <p>This availability matrix is fed from <code>docs/_data/public_surfaces.json</code>, a sanitized snapshot built from the commercial release packets.</p>
 </div>
 
 <div class="section-card" markdown="1">

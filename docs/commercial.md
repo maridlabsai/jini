@@ -102,18 +102,23 @@ The commercial apps should help a wider user base without turning Jini into a di
 <div class="section-card" markdown="1">
 ## Current readiness and payment status
 
-| Surface | Status | Planned activation |
-|---|---|---|
-| CLI | Available now | None |
-| macOS app shell | Preview only. Not downloadable yet | Start with a 30-day free trial, then buy on the website and sign in |
-| Windows app shell | Preview only. Not downloadable yet | Start with a 30-day free trial, then buy on the website and sign in |
-| iOS companion app | Preview only. Not on the App Store yet | Sign in with an existing paid account |
-| Android companion app | Preview only. Not downloadable yet. Direct-first when policy allows, with Play Store secondary | Sign in with an existing paid account |
-| Commercial License checkout | Planned. Not live yet | Start with a 30-day free trial, then website checkout + account entitlement |
+<div class="pill-list">
+  {% for surface in site.data.public_surfaces.surfaces %}
+  <span>{{ surface.name }}: {{ surface.badge }}</span>
+  {% endfor %}
+</div>
+
+| Surface | Badge | Current state | Planned activation |
+|---|---|---|---|
+{% for surface in site.data.public_surfaces.surfaces %}
+| {{ surface.name }} | {{ surface.badge }} | {{ surface.current_state }} | {{ surface.activation }} |
+{% endfor %}
 
 Payment integration is not live yet. The current product work defines the shared entitlement model and distribution plan, but not a production checkout or store-billing pipeline.
 
 Current posture: preview and planning slices are implemented, but the apps are not yet release-ready for direct public download or store rollout.
+
+This table is fed from <code>docs/_data/public_surfaces.json</code>, which is a sanitized snapshot built from the commercial release packets instead of hand-maintained website copy.
 </div>
 
 <div class="section-card" markdown="1">

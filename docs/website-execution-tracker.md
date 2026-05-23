@@ -9,10 +9,10 @@ being treated as a side effect of app or billing work.
 
 | Surface | Status | What is real now | Next cut |
 | --- | --- | --- | --- |
-| Homepage | In progress | Product landing now leads with decision framing, pricing promise, tested proof, preview-honest app posture, and a stronger shared visual system | Add tighter plan comparison and clearer subscription value framing to the commercial page |
-| Commercial page | In progress | Free-vs-paid split, availability table, and plan comparison are explicit | Add live surface badges and release-packet links when app delivery becomes real |
+| Homepage | In progress | Product landing now leads with decision framing, pricing promise, tested proof, preview-honest app posture, and a stronger shared visual system | Add current surface badges and release-packet-fed status to the public app story |
+| Commercial page | In progress | Free-vs-paid split, plan comparison, and sanitized packet-fed surface badges now replace hand-maintained status rows | Add public links to live release packets when public downloads actually exist |
 | Proof page | In progress | Sanitized public-proof ingestion contract now feeds the page instead of hardcoded snapshot copy | Replace checked-in sanitized proof snapshots with live ingestion once telemetry is ready |
-| Install page | In progress | CLI install is clear, app posture is honest, and the current-surface matrix exists | Add release-packet links and surface badges when app delivery becomes real |
+| Install page | In progress | CLI install is clear and the availability matrix now comes from a sanitized commercial surface snapshot | Add public links to live release packets when public downloads actually exist |
 
 ## Website Done Criteria
 

@@ -51,10 +51,9 @@ class CommercialDocsTests(unittest.TestCase):
             "when the proof can be shown before payment, not explained after payment",
             "## Free app surfaces, when ready",
             "## Current readiness and payment status",
-            "| macOS app shell | Preview only. Not downloadable yet | Start with a 30-day free trial, then buy on the website and sign in |",
-            "| iOS companion app | Preview only. Not on the App Store yet | Sign in with an existing paid account |",
-            "| Android companion app | Preview only. Not downloadable yet. Direct-first when policy allows, with Play Store secondary | Sign in with an existing paid account |",
-            "| Commercial License checkout | Planned. Not live yet | Start with a 30-day free trial, then website checkout + account entitlement |",
+            "{% for surface in site.data.public_surfaces.surfaces %}",
+            "| {{ surface.name }} | {{ surface.badge }} | {{ surface.current_state }} | {{ surface.activation }} |",
+            "docs/_data/public_surfaces.json",
             "Payment integration is not live yet.",
             "not yet release-ready for direct public download or store rollout",
             "What the paid layer must prove before renewal",
@@ -71,9 +70,9 @@ class CommercialDocsTests(unittest.TestCase):
         self.assertIn("Desktop and Android should distribute directly first where policy allows", text)
         self.assertIn("Commercial License starts with a 30-day free trial and becomes $1/month once checkout and entitlement activation are live", text)
         self.assertIn("<h2>What you get today</h2>", text)
-        self.assertIn("| CLI | Installable now on macOS and Linux |", text)
-        self.assertIn("| macOS app shell | Preview only. Not downloadable yet |", text)
-        self.assertIn("| Commercial License | Planned. Not live yet |", text)
+        self.assertIn("{% for surface in site.data.public_surfaces.surfaces %}", text)
+        self.assertIn("| {{ surface.name }} | {{ surface.current_state }} | {{ surface.next_step }} |", text)
+        self.assertIn("docs/_data/public_surfaces.json", text)
 
 
 if __name__ == "__main__":
