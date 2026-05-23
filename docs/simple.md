@@ -33,7 +33,7 @@ jini
 
   <p>If setup is missing, Jini should say so in the shell. Then type <code>Auto</code>. If your company needs one strict route, use the matching setup path on the <a href="./install.html">Install</a> page instead.</p>
 
-  <p><code>jini</code> is the front door. If you want the small public command list before you start, run <code>jini commands</code>. If you need the deeper operator or developer inventory, use <code>jini admin help</code>.</p>
+  <p><code>jini</code> is the front door. If you want the small public command list before you start, run <code>jini commands</code>. If you maintain routes, bundles, or release plumbing, the deeper inventory lives under <code>jini admin help</code>.</p>
 </div>
 
 <div class="section-card" markdown="1">

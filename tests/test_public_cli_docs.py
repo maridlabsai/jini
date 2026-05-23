@@ -22,7 +22,7 @@ class PublicCliDocsTests(unittest.TestCase):
             "jini commands",
             "small public command catalog",
             "jini admin help",
-            "deeper operator or developer surface",
+            "routes, bundles, or release plumbing",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
@@ -47,6 +47,7 @@ class PublicCliDocsTests(unittest.TestCase):
             "jini commands",
             "small public command list",
             "jini admin help",
+            "routes, bundles, or release plumbing",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
@@ -57,6 +58,7 @@ class PublicCliDocsTests(unittest.TestCase):
             "jini commands",
             "small public command list",
             "jini admin help",
+            "routes, bundles, or release plumbing",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)

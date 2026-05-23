@@ -67,7 +67,7 @@ jini
     </div>
   </div>
 
-  <p>If you want the small public command list before doing anything else, run <code>jini commands</code>. If you need the deeper operator inventory, use <code>jini admin help</code>.</p>
+  <p>If you want the small public command list before doing anything else, run <code>jini commands</code>. If you maintain routes, bundles, or release plumbing, the deeper inventory lives under <code>jini admin help</code>.</p>
 </div>
 
 <div class="section-card" markdown="1">

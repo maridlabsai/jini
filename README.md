@@ -63,7 +63,8 @@ run:
 jini commands
 ```
 
-If you need the deeper operator or developer inventory, use `jini admin help`.
+If you maintain routes, bundles, or release plumbing, the deeper inventory
+lives under `jini admin help`.
 
 Inside the shell you can work naturally:
 
@@ -86,8 +87,8 @@ If you are not sure how to start, type:
 help me finish this
 ```
 
-If you need the public command list, use `jini commands`. If you need the
-deeper operator or developer surface, use `jini admin help`. Those paths exist
+If you need the public command list, use `jini commands`. If you maintain
+routes, bundles, or release plumbing, use `jini admin help`. Those paths exist
 to support the product, not replace the normal `jini` front door.
 
 If multiple projects are already in flight, Jini should show `Active work`

@@ -270,19 +270,15 @@ That means the homepage promise is simple:
   </div>
   <div class="checklist-card">
     <h3><code>jini commands</code></h3>
-    <p>See the small public command catalog without dropping into the deeper operator surface.</p>
-  </div>
-  <div class="checklist-card">
-    <h3><code>jini doctor</code></h3>
-    <p>Check route setup without exposing secrets when setup help is actually needed.</p>
-  </div>
-  <div class="checklist-card">
-    <h3><code>jini admin help</code></h3>
-    <p>Show the deeper operator and developer inventory only when you actually need it.</p>
+    <p>See the small public command catalog without touching route or bundle maintenance tools.</p>
   </div>
   <div class="checklist-card">
     <h3><code>jini metrics</code></h3>
     <p>See command count, route evidence, and measured latency/cost signals.</p>
+  </div>
+  <div class="checklist-card">
+    <h3><code>jini doctor</code></h3>
+    <p>Check route setup without exposing secrets when setup help is actually needed.</p>
   </div>
 </div>
 

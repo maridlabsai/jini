@@ -47,7 +47,6 @@ class DocsHomepageRewriteTests(unittest.TestCase):
             "## Cross-surface rollout",
             "## Commands that matter",
             "jini commands",
-            "jini admin help",
             "Stored locally",
             "Not stored as product magic",
             "## What stays free vs what becomes paid",
