@@ -74,8 +74,9 @@ jini commands
 </div>
 
 <div class="section-card" markdown="1">
-  <span class="section-kicker">Scriptable surface</span>
-  <h2>Commands that stay available for automation and power users</h2>
+  <span class="section-kicker">Catalog entries</span>
+  <h2>Public commands outside the shell</h2>
+  <p>These are still part of the public command catalog. They support the product front door; they are not a separate product model.</p>
   <div class="checklist-grid">
     <div class="checklist-card">
       <h3><code>jini setup</code></h3>
