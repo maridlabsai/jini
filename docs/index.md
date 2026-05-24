@@ -147,9 +147,9 @@ description: Free orchestration for AI work across providers today. Pay only whe
 </div>
 
 <div class="section-card section-card-soft proof-signal-panel" markdown="1">
-## Proof signals, not hype
+## Proof, kept brief
 
-<p class="page-lead">The trust story should show a few concrete signals quickly: how broad the free surface is, whether the paid layer actually saves money, and whether interruption recovery is real.</p>
+<p class="page-lead">Trust should support the pitch, not bury it. Show the key signals, make the release posture explicit, then get back to the work.</p>
 
 <div class="proof-hero-card">
   <span class="proof-hero-kicker">{{ site.data.public_proof.hero.eyebrow }}</span>
@@ -182,24 +182,9 @@ description: Free orchestration for AI work across providers today. Pay only whe
   {% endfor %}
 </div>
 
-<div class="proof-story-grid">
-  {% for section in site.data.public_proof.sections %}
-  <div class="proof-story-card">
-    <span class="workflow-meta">Proof story {{ forloop.index }}</span>
-    <h3>{{ section.headline }}</h3>
-    <ul class="compact-list">
-      {% for bullet in section.bullets %}
-      <li>{{ bullet }}</li>
-      {% endfor %}
-    </ul>
-  </div>
-  {% endfor %}
-</div>
-
-<div class="truth-rule-strip" aria-label="Jini public proof truth rules">
-  {% for rule in site.data.public_proof.trust_rules %}
-  <span class="truth-rule-pill">{{ rule }}</span>
-  {% endfor %}
+<div class="quote-strip">
+  <strong>Free first. Paid only if the savings story is measurable.</strong>
+  <p>No live store claims before release. No fake telemetry. No hidden preview posture.</p>
 </div>
 </div>
 
