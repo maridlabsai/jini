@@ -83,20 +83,20 @@
       "reuse_note": "Same current capture as the state panel, reused because it shows ready/missing posture directly."
     },
     {
-      "capture_id": "capture-vendor-selection",
-      "capture_kind": "current-public-example",
-      "capture_source": "examples/vendor-choice",
+      "capture_id": "capture-decision-panel",
+      "capture_kind": "checked-in-public-illustration",
+      "capture_source": "assets/story/jini-decision-panel.svg",
       "tone": "decision",
       "href": "/examples.html#vendor-choice",
       "tags": ["Decision", "Tradeoffs", "Recommendation"],
-      "image": "/assets/examples/vendor-selection.gif",
-      "alt": "Jini preparing a recommendation memo from a vendor comparison",
+      "image": "/assets/story/jini-decision-panel.svg",
+      "alt": "Illustrated Jini decision panel showing a recommendation memo, tradeoffs, and open questions",
       "artifacts": ["Recommendation memo", "Tradeoff table", "Questions still open"],
       "workflow_meta": "Before a decision",
       "title": "Keep the reasoning attached to the recommendation.",
       "body": "Get an output you can explain later instead of a conclusion you have to reconstruct from memory.",
-      "truth_note": "Example artifact from the public vendor-choice scenario.",
-      "reuse_note": "Same current capture as the metrics panel, reused because it shows tradeoffs and route posture together."
+      "truth_note": "Checked-in public illustration. Decision-output posture only, not a live provider comparison or billing panel.",
+      "reuse_note": "Unique checked-in illustration used here so the output lane depends less on the reused example capture set."
     },
     {
       "capture_id": "capture-incident-response",
