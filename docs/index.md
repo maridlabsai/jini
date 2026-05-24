@@ -194,36 +194,24 @@ description: Free orchestration for AI work across providers today. Pay only whe
     <h3>What is still missing</h3>
     <p>You can see what is ready now, what still blocks safe handoff, and why the missing parts still matter.</p>
   </div>
+</div>
+
+<div class="proof-grid proof-grid-story">
   <div class="proof-card">
     <h3>One session, not four different products</h3>
     <p>Jini should preserve the same session identity across macOS, Windows, mobile, and CLI instead of treating each surface like a separate workflow.</p>
   </div>
   <div class="proof-card">
     <h3>Resume without reconstruction</h3>
-    <p>The latest deliverable, missing items, route evidence, and next action should travel with the session so device switches do not force context rebuilding.</p>
+    <p>The latest deliverable, missing items, route evidence, and next action should travel with the session so device switches do not force context rebuilding. Review on one surface, continue on another, and keep continuation cheaper than restart.</p>
   </div>
-  <div class="proof-card">
-    <h3>Review on one surface, continue on another</h3>
-    <p>Users should be able to inspect outputs on one device and continue the same work on another without losing the thread.</p>
-  </div>
-  <div class="proof-card">
-    <h3>Cheap continuity</h3>
-    <p>Continuation should be cheaper than restart. Jini should reuse session state before it spends money rebuilding the same context again.</p>
-  </div>
-</div>
-
-<div class="proof-grid proof-grid-story">
   <div class="proof-card">
     <h3>One stable front door</h3>
-    <p>Users learn one shell and one set of actions while providers, models, and tools can change underneath.</p>
+    <p>Users learn one shell and one set of actions while providers, models, and tools can change underneath. Jini keeps routine work on the cheapest suitable route and exposes <code>jini metrics</code> when the cost and route story matters.</p>
   </div>
   <div class="proof-card">
-    <h3>Cheaper routing by default</h3>
-    <p>Jini keeps routine work on the cheapest suitable route and escalates only when depth, verification, or policy requires it.</p>
-  </div>
-  <div class="proof-card">
-    <h3>Outputs you can use</h3>
-    <p>The first useful result should be a follow-up, memo, readiness check, or itinerary, not a prettier status wall.</p>
+    <h3>Stored locally, not as product magic</h3>
+    <p>The first useful result should be a follow-up, memo, readiness check, or itinerary, not a prettier status wall. Artifacts, resume state, and route evidence stay inspectable instead of hiding in a proprietary cloud memory layer.</p>
   </div>
 </div>
 
@@ -332,8 +320,8 @@ description: Free orchestration for AI work across providers today. Pay only whe
 
 <div class="proof-grid proof-grid-story">
   <div class="proof-card">
-    <h3>Plain files and visible state</h3>
-    <p>Jini keeps artifacts, work state, and route evidence legible instead of hiding everything in a proprietary cloud memory layer.</p>
+    <h3>Today and later stay explicit</h3>
+    <p>The CLI is the live installable surface now. Desktop and mobile stay free to download when each surface is ready, and the paid layer only starts when checkout is live and the savings story can be measured.</p>
   </div>
   <div class="proof-card">
     <h3>Stored locally, not as product magic</h3>
