@@ -54,7 +54,9 @@ class DocsHomepageRewriteTests(unittest.TestCase):
             "## See the product surface",
             "site.data.showcase_media.product_surface_cards",
             "site.data.showcase_media.output_cards",
+            "site.data.proof_carousel.slides",
             "capture id and source",
+            "checked-in proof carousel slides from the repo",
             "free app downloads once each surface is live",
             "jini metrics",
         ):

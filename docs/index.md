@@ -165,6 +165,22 @@ description: Free orchestration for AI work across providers today. Pay only whe
   <p>{{ site.data.public_proof.hero.body }}</p>
 </div>
 
+<p class="editorial-note proof-carousel-note">These are checked-in proof carousel slides from the repo, not mocked app-store shots or implied live-release screenshots.</p>
+
+<div class="proof-carousel-grid">
+  {% for slide in site.data.proof_carousel.slides %}
+  <div class="proof-carousel-card">
+    <img src="{{ slide.image | relative_url }}" alt="{{ slide.alt }}">
+    <div class="proof-carousel-copy">
+      <span class="workflow-meta">{{ slide.eyebrow }}</span>
+      <h3>{{ slide.title }}</h3>
+      <p>{{ slide.body }}</p>
+      <p class="proof-carousel-truth">{{ slide.truth_note }}</p>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
 <div class="proof-signal-grid">
   {% for card in site.data.public_proof.proof_cards %}
   <div class="proof-signal-card">

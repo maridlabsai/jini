@@ -1,0 +1,31 @@
+{
+  "slides": [
+    {
+      "id": "proof-slide-week-two",
+      "image": "/assets/proof/jini-proof-slide-1.svg",
+      "alt": "Jini proof slide about being built for week two rather than the first impressive answer",
+      "eyebrow": "Proof slide 1",
+      "title": "Built for week two, not the first demo answer",
+      "body": "A checked-in narrative asset from the repo's proof carousel. It explains the product posture without pretending the apps are already store-live.",
+      "truth_note": "Checked-in proof carousel slide. Product posture only, not a live release screenshot."
+    },
+    {
+      "id": "proof-slide-not-verified",
+      "image": "/assets/proof/jini-proof-slide-3.svg",
+      "alt": "Jini proof slide showing a work item that is done but still awaiting verification",
+      "eyebrow": "Proof slide 2",
+      "title": "Done is still different from verified",
+      "body": "This is a checked-in proof slide built from the repo's workflow story: green tasks do not automatically mean the work can legally or operationally advance.",
+      "truth_note": "Checked-in proof carousel slide. Workflow proof only, not a mocked checkout or telemetry panel."
+    },
+    {
+      "id": "proof-slide-what-survives",
+      "image": "/assets/proof/jini-proof-slide-4.svg",
+      "alt": "Jini proof slide showing state, evidence, handoff, and discipline surviving across work",
+      "eyebrow": "Proof slide 3",
+      "title": "State, evidence, handoff, and discipline survive the trip",
+      "body": "A checked-in repo visual about what continuity actually means in Jini: not four apps, but one durable work object that keeps its proof attached.",
+      "truth_note": "Checked-in proof carousel slide. Continuity concept only, not a claim that every release surface is already live."
+    }
+  ]
+}
