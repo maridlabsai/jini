@@ -258,12 +258,6 @@ description: Free orchestration for AI work across providers today. Pay only whe
   <strong>Free first. Paid only if the savings story is measurable.</strong>
   <p>No live store claims before release. No fake telemetry. No hidden preview posture.</p>
 </div>
-</div>
-
-<div class="section-card section-card-story" markdown="1">
-## Where you can use it now
-
-<p class="page-lead">Keep rollout truth, download posture, and activation timing in one place so the homepage reads like a current release brief instead of a promise stack.</p>
 
 <div class="checklist-grid rollout-grid">
   <div class="checklist-card rollout-card">
@@ -293,7 +287,12 @@ description: Free orchestration for AI work across providers today. Pay only whe
 {% endfor %}
 
 <p class="availability-note">Desktop launch plan: buy on the website, then sign in to unlock paid features. Android should prefer direct download first where policy allows, with store distribution secondary. iOS remains store-constrained. Mobile should not be the first place users subscribe.</p>
+</div>
 
+<div class="section-card section-card-story" markdown="1">
+## Where you can use it now
+
+<p class="page-lead">The rollout brief now sits with the proof story above. Keep this section only as the explicit source note and current release boundary.</p>
 <p>This homepage status block is fed from <code>docs/_data/public_surfaces.json</code>, a sanitized snapshot built from the commercial release packets.</p>
 
 ## Small front door. Clear paid boundary.
