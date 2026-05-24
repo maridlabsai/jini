@@ -506,6 +506,15 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <p>Get an output you can explain later instead of a conclusion you have to reconstruct from memory.</p>
     </div>
   </a>
+  <a class="media-card" href="{{ '/examples.html#incident-closure' | relative_url }}">
+    <span class="media-window-chrome" aria-hidden="true"></span>
+    <img src="{{ '/assets/examples/incident-response.gif' | relative_url }}" alt="Jini separating incident closure from follow-up work that still remains">
+    <div class="media-copy">
+      <span class="workflow-meta">Before real closure</span>
+      <h3>Separate the fix from the aftercare.</h3>
+      <p>Keep remaining risks, follow-up owners, and closure work visible instead of declaring the work done too early.</p>
+    </div>
+  </a>
 </div>
 </div>
 
