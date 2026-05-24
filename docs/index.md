@@ -24,6 +24,32 @@ description: Free orchestration for AI work across providers today. Pay only whe
     <span class="compat-pill">Works with Azure OpenAI</span>
     <span class="compat-pill">Works with Local models</span>
   </div>
+  <div class="hero-scene">
+    <div class="hero-scene-card hero-scene-card-live">
+      <span class="hero-scene-label">Live now</span>
+      <strong>CLI thread</strong>
+      <p>Paste rough work into <code>jini</code>, keep route evidence visible, and leave with a usable next artifact instead of a chat dead-end.</p>
+      <span class="hero-scene-chip">installable today</span>
+    </div>
+    <div class="hero-scene-connector" aria-hidden="true">
+      <span></span>
+    </div>
+    <div class="hero-scene-card hero-scene-card-future">
+      <span class="hero-scene-label">Next surfaces</span>
+      <strong>Desktop and mobile continuity</strong>
+      <p>Carry the same thread forward as each app surface comes online instead of starting over from scratch.</p>
+      <span class="hero-scene-chip">when each surface is live</span>
+    </div>
+    <div class="hero-scene-connector" aria-hidden="true">
+      <span></span>
+    </div>
+    <div class="hero-scene-card hero-scene-card-output">
+      <span class="hero-scene-label">What leaves the thread</span>
+      <strong>Sendable output</strong>
+      <p>Follow-up, readiness check, or decision memo with enough reasoning attached that someone else can act on it.</p>
+      <span class="hero-scene-chip">artifact first</span>
+    </div>
+  </div>
 </div>
 
 <div class="section-card hero-decision-frame" markdown="1">
