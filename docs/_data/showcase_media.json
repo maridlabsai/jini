@@ -1,20 +1,20 @@
 {
   "product_surface_cards": [
     {
-      "capture_id": "capture-meeting-followup",
-      "capture_kind": "current-public-example",
-      "capture_source": "examples/meeting-followup",
+      "capture_id": "capture-install-panel",
+      "capture_kind": "checked-in-public-illustration",
+      "capture_source": "assets/story/jini-install-panel.svg",
       "tone": "install",
       "href": "/install.html",
       "tags": ["CLI", "Install", "First artifact"],
-      "image": "/assets/examples/meeting-followup.gif",
-      "alt": "Jini install and first useful output flow",
+      "image": "/assets/story/jini-install-panel.svg",
+      "alt": "Illustrated Jini install panel showing first run checks and a first useful artifact",
       "artifacts": ["Install complete", "jini running", "First useful artifact"],
       "workflow_meta": "Install and first run",
       "title": "Install once, then start with <code>jini</code>.",
       "body": "The surface should get you from install to a first useful artifact without teaching a command tree.",
-      "truth_note": "Current example capture. No live checkout or signed desktop-release claim.",
-      "reuse_note": "Shared current capture reused here to illustrate install-to-first-artifact posture."
+      "truth_note": "Checked-in public illustration. Install posture only, with no live checkout or signed desktop-release claim.",
+      "reuse_note": "Unique checked-in illustration used here so the product-surface lane depends less on the reused example capture set."
     },
     {
       "capture_id": "capture-research-prd",
