@@ -16,7 +16,7 @@ def load_carousel_data() -> dict:
 class ProofCarouselContractTests(unittest.TestCase):
     def test_carousel_exposes_checked_in_truth_safe_slides(self) -> None:
         data = load_carousel_data()
-        self.assertEqual(len(data["slides"]), 4)
+        self.assertEqual(len(data["slides"]), 5)
         for slide in data["slides"]:
             with self.subTest(slide=slide["id"]):
                 self.assertIn("image", slide)

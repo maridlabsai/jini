@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900" role="img" aria-labelledby="title desc">
+  <title id="title">Jini proof slide about artifacts carrying their reasoning</title>
+  <desc id="desc">A checked-in proof slide showing a sendable artifact, its attached evidence, and the next action so the output remains explainable later.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f7fbff"/>
+      <stop offset="100%" stop-color="#eef4ff"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#34d399"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#0f172a" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <rect width="1400" height="900" rx="36" fill="url(#bg)"/>
+
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text x="108" y="122" font-size="22" font-weight="700" letter-spacing="2" fill="#1d4ed8">PROOF SLIDE 5</text>
+    <text x="108" y="188" font-size="72" font-weight="700" fill="#0f172a">The artifact should keep its reasoning attached</text>
+    <text x="108" y="246" font-size="30" fill="#475569">What leaves the thread should still explain itself later: the output, the evidence, and the next safe action.</text>
+
+    <g filter="url(#shadow)">
+      <rect x="108" y="320" width="1184" height="468" rx="34" fill="#ffffff"/>
+      <rect x="146" y="360" width="430" height="388" rx="28" fill="url(#panel)"/>
+      <rect x="612" y="360" width="300" height="388" rx="28" fill="#f8fbff" stroke="#dbeafe"/>
+      <rect x="948" y="360" width="306" height="388" rx="28" fill="#f6fffb" stroke="#bbf7d0"/>
+    </g>
+
+    <text x="182" y="416" font-size="20" font-weight="700" fill="#93c5fd">SENDABLE ARTIFACT</text>
+    <text x="182" y="468" font-size="38" font-weight="700" fill="#f8fafc">Ready to hand off</text>
+    <text x="182" y="514" font-size="22" fill="#cbd5e1">follow-up, readiness check, or decision memo</text>
+    <rect x="182" y="554" width="352" height="118" rx="22" fill="#020617" opacity="0.7"/>
+    <text x="210" y="600" font-size="20" fill="#e2e8f0">owners and decisions visible</text>
+    <text x="210" y="636" font-size="20" fill="#e2e8f0">open questions preserved</text>
+
+    <text x="646" y="416" font-size="20" font-weight="700" fill="#1d4ed8">ATTACHED EVIDENCE</text>
+    <text x="646" y="468" font-size="32" font-weight="700" fill="#0f172a">Why it says that</text>
+    <text x="646" y="518" font-size="20" fill="#475569">route posture</text>
+    <text x="646" y="554" font-size="20" fill="#475569">missing inputs</text>
+    <text x="646" y="590" font-size="20" fill="#475569">verification state</text>
+    <rect x="646" y="634" width="232" height="16" rx="8" fill="url(#accent)"/>
+
+    <text x="982" y="416" font-size="20" font-weight="700" fill="#0f766e">NEXT SAFE ACTION</text>
+    <text x="982" y="468" font-size="32" font-weight="700" fill="#0f172a">What to do next</text>
+    <text x="982" y="518" font-size="20" fill="#475569">send now</text>
+    <text x="982" y="554" font-size="20" fill="#475569">ask for one missing approval</text>
+    <text x="982" y="590" font-size="20" fill="#475569">refresh one route check</text>
+  </g>
+</svg>
