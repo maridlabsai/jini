@@ -444,66 +444,28 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <p class="editorial-note">These frames are current example captures from the shipped CLI and public example set. They show interface shape and artifact posture, not live checkout, store rollout, or signed-download completion.</p>
 
 <div class="media-grid media-grid-featured">
-  <a class="media-card media-card-tone-install" href="{{ '/install.html' | relative_url }}">
+  {% for card in site.data.showcase_media.product_surface_cards %}
+  <a class="media-card media-card-tone-{{ card.tone }}" href="{{ card.href | relative_url }}">
     <span class="media-window-chrome" aria-hidden="true"></span>
     <span class="media-overlay-tags" aria-hidden="true">
-      <span>CLI</span>
-      <span>Install</span>
-      <span>First artifact</span>
+      {% for tag in card.tags %}
+      <span>{{ tag }}</span>
+      {% endfor %}
     </span>
-    <img src="{{ '/assets/examples/meeting-followup.gif' | relative_url }}" alt="Jini install and first useful output flow">
+    <img src="{{ card.image | relative_url }}" alt="{{ card.alt }}">
     <div class="media-artifact-stack" aria-hidden="true">
-      <span>Install complete</span>
-      <span>jini running</span>
-      <span>First useful artifact</span>
+      {% for artifact in card.artifacts %}
+      <span>{{ artifact }}</span>
+      {% endfor %}
     </div>
     <div class="media-copy">
-      <span class="workflow-meta">Install and first run</span>
-      <h3>Install once, then start with <code>jini</code>.</h3>
-      <p>The surface should get you from install to a first useful artifact without teaching a command tree.</p>
-      <p class="media-truth-note">Current example capture. No live checkout or signed desktop-release claim.</p>
+      <span class="workflow-meta">{{ card.workflow_meta }}</span>
+      <h3>{{ card.title }}</h3>
+      <p>{{ card.body }}</p>
+      <p class="media-truth-note">{{ card.truth_note }}</p>
     </div>
   </a>
-  <a class="media-card media-card-tone-state" href="{{ '/state-and-artifacts.html' | relative_url }}">
-    <span class="media-window-chrome" aria-hidden="true"></span>
-    <span class="media-overlay-tags" aria-hidden="true">
-      <span>State</span>
-      <span>Ready</span>
-      <span>Missing</span>
-    </span>
-    <img src="{{ '/assets/examples/research-prd.gif' | relative_url }}" alt="Jini active work, ready items, and missing items view">
-    <div class="media-artifact-stack" aria-hidden="true">
-      <span>Ready items</span>
-      <span>Missing items</span>
-      <span>Next step</span>
-    </div>
-    <div class="media-copy">
-      <span class="workflow-meta">Active work</span>
-      <h3>Keep ready, missing, and next visible.</h3>
-      <p>Jini should make the current work legible instead of forcing users to reconstruct state from chat and files.</p>
-      <p class="media-truth-note">Current example capture. Session state and artifact posture only, not a public app-download claim.</p>
-    </div>
-  </a>
-  <a class="media-card media-card-tone-metrics" href="{{ '/cli.html' | relative_url }}">
-    <span class="media-window-chrome" aria-hidden="true"></span>
-    <span class="media-overlay-tags" aria-hidden="true">
-      <span>Metrics</span>
-      <span>Route cost</span>
-      <span>Latency</span>
-    </span>
-    <img src="{{ '/assets/examples/vendor-selection.gif' | relative_url }}" alt="Jini metrics and route evidence surface">
-    <div class="media-artifact-stack" aria-hidden="true">
-      <span>Route evidence</span>
-      <span>Latency</span>
-      <span>Cost posture</span>
-    </div>
-    <div class="media-copy">
-      <span class="workflow-meta">Metrics and route evidence</span>
-      <h3>Show cost, route, and latency evidence.</h3>
-      <p>The trust story should be inspectable through metrics and route evidence, not hidden behind provider jargon.</p>
-      <p class="media-truth-note">Current example capture. Route evidence shown here is interface proof, not live paid-savings telemetry.</p>
-    </div>
-  </a>
+  {% endfor %}
 </div>
 </div>
 
@@ -514,86 +476,28 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <p class="editorial-note">These are example artifacts from the public scenario set. They are meant to show deliverable shape and continuity, not hidden customer data or fictional production outcomes.</p>
 
 <div class="media-grid media-grid-story">
-  <a class="media-card media-card-tone-followup" href="{{ '/examples.html#meeting-followup' | relative_url }}">
+  {% for card in site.data.showcase_media.output_cards %}
+  <a class="media-card media-card-tone-{{ card.tone }}" href="{{ card.href | relative_url }}">
     <span class="media-window-chrome" aria-hidden="true"></span>
     <span class="media-overlay-tags" aria-hidden="true">
-      <span>Meeting</span>
-      <span>Follow-up</span>
-      <span>Owners</span>
+      {% for tag in card.tags %}
+      <span>{{ tag }}</span>
+      {% endfor %}
     </span>
-    <img src="{{ '/assets/examples/meeting-followup.gif' | relative_url }}" alt="Jini turning meeting notes into a sendable follow-up">
+    <img src="{{ card.image | relative_url }}" alt="{{ card.alt }}">
     <div class="media-artifact-stack" aria-hidden="true">
-      <span>Sendable follow-up</span>
-      <span>Owners and due points</span>
-      <span>Task list</span>
+      {% for artifact in card.artifacts %}
+      <span>{{ artifact }}</span>
+      {% endfor %}
     </div>
     <div class="media-copy">
-      <span class="workflow-meta">After a meeting</span>
-      <h3>Turn scattered notes into something you can send.</h3>
-      <p>Get a sendable follow-up, owners, and open questions without rebuilding the meeting later.</p>
-      <p class="media-truth-note">Example artifact from the public meeting-follow-up scenario.</p>
+      <span class="workflow-meta">{{ card.workflow_meta }}</span>
+      <h3>{{ card.title }}</h3>
+      <p>{{ card.body }}</p>
+      <p class="media-truth-note">{{ card.truth_note }}</p>
     </div>
   </a>
-  <a class="media-card media-card-tone-readiness" href="{{ '/examples.html#spec-readiness' | relative_url }}">
-    <span class="media-window-chrome" aria-hidden="true"></span>
-    <span class="media-overlay-tags" aria-hidden="true">
-      <span>Spec</span>
-      <span>Readiness</span>
-      <span>Handoff</span>
-    </span>
-    <img src="{{ '/assets/examples/research-prd.gif' | relative_url }}" alt="Jini checking whether a plan is ready to hand off">
-    <div class="media-artifact-stack" aria-hidden="true">
-      <span>Build-readiness check</span>
-      <span>Handoff brief</span>
-      <span>Missing pieces before build</span>
-    </div>
-    <div class="media-copy">
-      <span class="workflow-meta">Before a handoff</span>
-      <h3>Check whether a plan is actually ready.</h3>
-      <p>See what is safe, what is missing, and what still blocks a real handoff.</p>
-      <p class="media-truth-note">Example artifact from the public spec-readiness scenario.</p>
-    </div>
-  </a>
-  <a class="media-card media-card-tone-decision" href="{{ '/examples.html#vendor-choice' | relative_url }}">
-    <span class="media-window-chrome" aria-hidden="true"></span>
-    <span class="media-overlay-tags" aria-hidden="true">
-      <span>Decision</span>
-      <span>Tradeoffs</span>
-      <span>Recommendation</span>
-    </span>
-    <img src="{{ '/assets/examples/vendor-selection.gif' | relative_url }}" alt="Jini preparing a recommendation memo from a vendor comparison">
-    <div class="media-artifact-stack" aria-hidden="true">
-      <span>Recommendation memo</span>
-      <span>Tradeoff table</span>
-      <span>Questions still open</span>
-    </div>
-    <div class="media-copy">
-      <span class="workflow-meta">Before a decision</span>
-      <h3>Keep the reasoning attached to the recommendation.</h3>
-      <p>Get an output you can explain later instead of a conclusion you have to reconstruct from memory.</p>
-      <p class="media-truth-note">Example artifact from the public vendor-choice scenario.</p>
-    </div>
-  </a>
-  <a class="media-card media-card-tone-incident" href="{{ '/examples.html#incident-closure' | relative_url }}">
-    <span class="media-window-chrome" aria-hidden="true"></span>
-    <span class="media-overlay-tags" aria-hidden="true">
-      <span>Incident</span>
-      <span>Closure</span>
-      <span>Aftercare</span>
-    </span>
-    <img src="{{ '/assets/examples/incident-response.gif' | relative_url }}" alt="Jini separating incident closure from follow-up work that still remains">
-    <div class="media-artifact-stack" aria-hidden="true">
-      <span>Closure checklist</span>
-      <span>Remaining risks</span>
-      <span>Follow-up owners</span>
-    </div>
-    <div class="media-copy">
-      <span class="workflow-meta">Before real closure</span>
-      <h3>Separate the fix from the aftercare.</h3>
-      <p>Keep remaining risks, follow-up owners, and closure work visible instead of declaring the work done too early.</p>
-      <p class="media-truth-note">Example artifact from the public incident-closure scenario.</p>
-    </div>
-  </a>
+  {% endfor %}
 </div>
 </div>
 

@@ -1,0 +1,90 @@
+{
+  "product_surface_cards": [
+    {
+      "tone": "install",
+      "href": "/install.html",
+      "tags": ["CLI", "Install", "First artifact"],
+      "image": "/assets/examples/meeting-followup.gif",
+      "alt": "Jini install and first useful output flow",
+      "artifacts": ["Install complete", "jini running", "First useful artifact"],
+      "workflow_meta": "Install and first run",
+      "title": "Install once, then start with <code>jini</code>.",
+      "body": "The surface should get you from install to a first useful artifact without teaching a command tree.",
+      "truth_note": "Current example capture. No live checkout or signed desktop-release claim."
+    },
+    {
+      "tone": "state",
+      "href": "/state-and-artifacts.html",
+      "tags": ["State", "Ready", "Missing"],
+      "image": "/assets/examples/research-prd.gif",
+      "alt": "Jini active work, ready items, and missing items view",
+      "artifacts": ["Ready items", "Missing items", "Next step"],
+      "workflow_meta": "Active work",
+      "title": "Keep ready, missing, and next visible.",
+      "body": "Jini should make the current work legible instead of forcing users to reconstruct state from chat and files.",
+      "truth_note": "Current example capture. Session state and artifact posture only, not a public app-download claim."
+    },
+    {
+      "tone": "metrics",
+      "href": "/cli.html",
+      "tags": ["Metrics", "Route cost", "Latency"],
+      "image": "/assets/examples/vendor-selection.gif",
+      "alt": "Jini metrics and route evidence surface",
+      "artifacts": ["Route evidence", "Latency", "Cost posture"],
+      "workflow_meta": "Metrics and route evidence",
+      "title": "Show cost, route, and latency evidence.",
+      "body": "The trust story should be inspectable through metrics and route evidence, not hidden behind provider jargon.",
+      "truth_note": "Current example capture. Route evidence shown here is interface proof, not live paid-savings telemetry."
+    }
+  ],
+  "output_cards": [
+    {
+      "tone": "followup",
+      "href": "/examples.html#meeting-followup",
+      "tags": ["Meeting", "Follow-up", "Owners"],
+      "image": "/assets/examples/meeting-followup.gif",
+      "alt": "Jini turning meeting notes into a sendable follow-up",
+      "artifacts": ["Sendable follow-up", "Owners and due points", "Task list"],
+      "workflow_meta": "After a meeting",
+      "title": "Turn scattered notes into something you can send.",
+      "body": "Get a sendable follow-up, owners, and open questions without rebuilding the meeting later.",
+      "truth_note": "Example artifact from the public meeting-follow-up scenario."
+    },
+    {
+      "tone": "readiness",
+      "href": "/examples.html#spec-readiness",
+      "tags": ["Spec", "Readiness", "Handoff"],
+      "image": "/assets/examples/research-prd.gif",
+      "alt": "Jini checking whether a plan is ready to hand off",
+      "artifacts": ["Build-readiness check", "Handoff brief", "Missing pieces before build"],
+      "workflow_meta": "Before a handoff",
+      "title": "Check whether a plan is actually ready.",
+      "body": "See what is safe, what is missing, and what still blocks a real handoff.",
+      "truth_note": "Example artifact from the public spec-readiness scenario."
+    },
+    {
+      "tone": "decision",
+      "href": "/examples.html#vendor-choice",
+      "tags": ["Decision", "Tradeoffs", "Recommendation"],
+      "image": "/assets/examples/vendor-selection.gif",
+      "alt": "Jini preparing a recommendation memo from a vendor comparison",
+      "artifacts": ["Recommendation memo", "Tradeoff table", "Questions still open"],
+      "workflow_meta": "Before a decision",
+      "title": "Keep the reasoning attached to the recommendation.",
+      "body": "Get an output you can explain later instead of a conclusion you have to reconstruct from memory.",
+      "truth_note": "Example artifact from the public vendor-choice scenario."
+    },
+    {
+      "tone": "incident",
+      "href": "/examples.html#incident-closure",
+      "tags": ["Incident", "Closure", "Aftercare"],
+      "image": "/assets/examples/incident-response.gif",
+      "alt": "Jini separating incident closure from follow-up work that still remains",
+      "artifacts": ["Closure checklist", "Remaining risks", "Follow-up owners"],
+      "workflow_meta": "Before real closure",
+      "title": "Separate the fix from the aftercare.",
+      "body": "Keep remaining risks, follow-up owners, and closure work visible instead of declaring the work done too early.",
+      "truth_note": "Example artifact from the public incident-closure scenario."
+    }
+  ]
+}

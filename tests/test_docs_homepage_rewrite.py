@@ -10,6 +10,7 @@ LAYOUT_PATH = ROOT / "docs" / "_layouts" / "default.html"
 PLAN_PATH = ROOT / "specs" / "docs-homepage-rewrite-plan.md"
 TRUST_PATH = ROOT / "docs" / "proof.md"
 OUTPUTS_PATH = ROOT / "docs" / "state-and-artifacts.md"
+SHOWCASE_DATA_PATH = ROOT / "docs" / "_data" / "showcase_media.json"
 
 
 def read(path: Path) -> str:
@@ -51,20 +52,29 @@ class DocsHomepageRewriteTests(unittest.TestCase):
             "Not stored as product magic",
             "## What stays free vs what becomes paid",
             "## See the product surface",
+            "site.data.showcase_media.product_surface_cards",
+            "site.data.showcase_media.output_cards",
+            "free app downloads once each surface is live",
+            "jini metrics",
+        ):
+            with self.subTest(marker=marker):
+                self.assertIn(marker, text)
+
+    def test_showcase_data_carries_homepage_media_copy_and_truth_notes(self) -> None:
+        text = read(SHOWCASE_DATA_PATH)
+        for marker in (
             "Install and first run",
             "Metrics and route evidence",
-            "Current example capture. No live checkout or signed desktop-release claim.",
-            "Current example capture. Route evidence shown here is interface proof, not live paid-savings telemetry.",
             "Sendable follow-up",
             "Build-readiness check",
             "Recommendation memo",
             "Closure checklist",
+            "Current example capture. No live checkout or signed desktop-release claim.",
+            "Current example capture. Route evidence shown here is interface proof, not live paid-savings telemetry.",
             "Example artifact from the public meeting-follow-up scenario.",
             "Example artifact from the public spec-readiness scenario.",
             "Example artifact from the public vendor-choice scenario.",
             "Example artifact from the public incident-closure scenario.",
-            "free app downloads once each surface is live",
-            "jini metrics",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
