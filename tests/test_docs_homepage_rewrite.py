@@ -65,6 +65,17 @@ class DocsHomepageRewriteTests(unittest.TestCase):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
 
+    def test_homepage_merges_old_standalone_sections_into_fewer_stops(self) -> None:
+        text = read(HOMEPAGE_PATH)
+        for marker in (
+            "## Quickstart",
+            "## One thread across surfaces",
+            "## Why teams keep Jini around",
+            "## See real outputs",
+        ):
+            with self.subTest(marker=marker):
+                self.assertNotIn(marker, text)
+
     def test_showcase_data_carries_homepage_media_copy_and_truth_notes(self) -> None:
         text = read(SHOWCASE_DATA_PATH)
         for marker in (
