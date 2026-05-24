@@ -27,8 +27,8 @@ description: Free orchestration for AI work across providers today. Pay only whe
 </div>
 
 <div class="section-card hero-decision-frame" markdown="1">
-  <span class="section-kicker">Three flagship jobs</span>
-  <h2>Jini should be best when the work has to leave chat with a usable artifact, a cleaner handoff, and reasoning you can still explain later.</h2>
+  <span class="section-kicker">Choose the lightest layer that still leaves behind usable work.</span>
+  <h2>Jini earns the right to exist when the work has to leave chat with a sendable artifact, a safer handoff, and reasoning you can still explain later.</h2>
   <div class="signal-grid">
     <div class="signal-card">
       <h3>After the meeting</h3>
@@ -47,10 +47,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
     <strong>If you only need a one-off answer, use a raw model shell.</strong>
     <p>If the work needs a sendable artifact, a safer handoff, or reasoning you can still explain later, use Jini.</p>
   </div>
-
-  ## Three ways to work
-
-  <p class="page-lead">The buying decision should stay simple: use the raw shell for one-shot answers, the free Jini shell for real work, and the paid layer only after it can prove it saved money or kept work moving.</p>
+  <p class="page-lead">Use the raw shell for one-shot answers, the free Jini shell for real work, and the paid layer only after it can prove it saved money or kept work moving.</p>
 
   <div class="offer-grid">
     <div class="offer-card offer-card-plain">
