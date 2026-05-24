@@ -33,20 +33,20 @@
       "reuse_note": "Shared current capture reused here to show state legibility before a handoff-specific reading."
     },
     {
-      "capture_id": "capture-vendor-selection",
-      "capture_kind": "current-public-example",
-      "capture_source": "examples/vendor-choice",
+      "capture_id": "capture-route-evidence-panel",
+      "capture_kind": "checked-in-public-illustration",
+      "capture_source": "assets/story/jini-route-evidence-panel.svg",
       "tone": "metrics",
       "href": "/cli.html",
       "tags": ["Metrics", "Route cost", "Latency"],
-      "image": "/assets/examples/vendor-selection.gif",
-      "alt": "Jini metrics and route evidence surface",
+      "image": "/assets/story/jini-route-evidence-panel.svg",
+      "alt": "Illustrated Jini route evidence panel showing cost posture, latency, and provider state",
       "artifacts": ["Route evidence", "Latency", "Cost posture"],
       "workflow_meta": "Metrics and route evidence",
       "title": "Show cost, route, and latency evidence.",
       "body": "The trust story should be inspectable through metrics and route evidence, not hidden behind provider jargon.",
-      "truth_note": "Current example capture. Route evidence shown here is interface proof, not live paid-savings telemetry.",
-      "reuse_note": "Shared current capture reused here to show route evidence and later again for decision output shape."
+      "truth_note": "Checked-in public illustration. Route evidence shown here is product posture only, not live paid-savings telemetry.",
+      "reuse_note": "Unique checked-in illustration used here so the product-surface lane depends less on the reused example capture set."
     }
   ],
   "output_cards": [

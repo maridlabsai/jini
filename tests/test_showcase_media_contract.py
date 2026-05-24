@@ -25,7 +25,10 @@ class ShowcaseMediaContractTests(unittest.TestCase):
                     self.assertIn("capture_source", card)
                     self.assertIn("truth_note", card)
                     self.assertIn("reuse_note", card)
-                    self.assertEqual(card["capture_kind"], "current-public-example")
+                    self.assertIn(
+                        card["capture_kind"],
+                        {"current-public-example", "checked-in-public-illustration"},
+                    )
 
     def test_every_card_points_at_a_checked_in_example_asset(self) -> None:
         data = load_showcase_data()
@@ -51,7 +54,7 @@ class ShowcaseMediaContractTests(unittest.TestCase):
                 kinds = {card["capture_kind"] for card in cards}
                 self.assertEqual(len(images), 1)
                 self.assertEqual(len(sources), 1)
-                self.assertEqual(kinds, {"current-public-example"})
+                self.assertEqual(len(kinds), 1)
 
     def test_reused_captures_are_explicitly_marked_as_reused(self) -> None:
         data = load_showcase_data()

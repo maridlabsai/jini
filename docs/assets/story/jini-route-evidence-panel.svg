@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Jini route evidence panel illustration</title>
+  <desc id="desc">An illustrated panel showing route evidence, latency, cost posture, and provider state as visible product surfaces.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f7fbff"/>
+      <stop offset="100%" stop-color="#eef6ff"/>
+    </linearGradient>
+    <linearGradient id="barA" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </linearGradient>
+    <linearGradient id="barB" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0f766e"/>
+      <stop offset="100%" stop-color="#34d399"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#0f172a" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="760" rx="36" fill="url(#bg)"/>
+  <g filter="url(#shadow)" font-family="Arial, Helvetica, sans-serif">
+    <rect x="74" y="74" width="1052" height="612" rx="32" fill="#ffffff"/>
+    <rect x="74" y="74" width="1052" height="54" rx="32" fill="#f8fbff"/>
+    <circle cx="122" cy="101" r="8" fill="#f87171"/>
+    <circle cx="150" cy="101" r="8" fill="#fbbf24"/>
+    <circle cx="178" cy="101" r="8" fill="#34d399"/>
+
+    <text x="116" y="178" font-size="18" font-weight="700" letter-spacing="1.4" fill="#1d4ed8">ROUTE EVIDENCE</text>
+    <text x="116" y="230" font-size="44" font-weight="700" fill="#0f172a">Metrics should stay inspectable</text>
+    <text x="116" y="270" font-size="23" fill="#475569">Latency, cost posture, and provider state shown as product surface, not hidden logic.</text>
+
+    <rect x="116" y="320" width="332" height="158" rx="24" fill="#f8fbff" stroke="#dbeafe"/>
+    <text x="144" y="360" font-size="18" font-weight="700" fill="#0f172a">Route cost posture</text>
+    <rect x="144" y="386" width="258" height="16" rx="8" fill="url(#barA)"/>
+    <text x="144" y="432" font-size="18" fill="#475569">cheap route first</text>
+    <text x="144" y="462" font-size="18" fill="#475569">escalate only when depth is needed</text>
+
+    <rect x="474" y="320" width="282" height="158" rx="24" fill="#f6fffb" stroke="#ccfbf1"/>
+    <text x="502" y="360" font-size="18" font-weight="700" fill="#0f172a">Latency and headroom</text>
+    <rect x="502" y="386" width="210" height="16" rx="8" fill="url(#barB)"/>
+    <text x="502" y="432" font-size="18" fill="#475569">command timings visible</text>
+    <text x="502" y="462" font-size="18" fill="#475569">provider headroom preserved</text>
+
+    <rect x="782" y="320" width="298" height="158" rx="24" fill="#fafaff" stroke="#e0e7ff"/>
+    <text x="810" y="360" font-size="18" font-weight="700" fill="#0f172a">Provider state</text>
+    <text x="810" y="404" font-size="18" fill="#475569">Claude Code</text>
+    <text x="988" y="404" font-size="18" font-weight="700" fill="#15803d">ready</text>
+    <text x="810" y="438" font-size="18" fill="#475569">Azure OpenAI</text>
+    <text x="978" y="438" font-size="18" font-weight="700" fill="#1d4ed8">available</text>
+    <text x="810" y="472" font-size="18" fill="#475569">Local models</text>
+    <text x="964" y="472" font-size="18" font-weight="700" fill="#0f766e">usable</text>
+
+    <rect x="116" y="520" width="964" height="116" rx="26" fill="#0f172a"/>
+    <text x="148" y="566" font-size="20" font-weight="700" fill="#f8fafc">Product claim</text>
+    <text x="148" y="604" font-size="21" fill="#cbd5e1">The trust story should be measurable in the interface itself, not postponed to a future billing explanation.</text>
+  </g>
+</svg>
