@@ -888,6 +888,12 @@
   height: auto;
 }
 
+.showcase-illustration-frame-output {
+  background:
+    radial-gradient(circle at top left, rgba(14, 116, 144, 0.08), transparent 26%),
+    linear-gradient(180deg, #ffffff 0%, #f6fffc 100%);
+}
+
 .showcase-story .media-grid-featured {
   grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.9fr);
   align-items: start;

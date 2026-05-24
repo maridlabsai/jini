@@ -313,6 +313,10 @@ description: Free orchestration for AI work across providers today. Pay only whe
 
 <p class="page-lead">The output story should read like finished work, not a gallery of generic screenshots.</p>
 <p class="editorial-note">These are example artifacts from the public scenario set. They are meant to show deliverable shape and continuity, not hidden customer data or fictional production outcomes.</p>
+<div class="showcase-illustration-frame showcase-illustration-frame-output">
+  <img src="{{ '/assets/story/jini-output-strip.svg' | relative_url }}" alt="Jini storyboard showing a follow-up, readiness check, and recommendation memo leaving the thread">
+</div>
+<p class="editorial-note">This is a second checked-in storyboard illustration built from the current public examples. It is a product-story visual, not a customer capture or implied live enterprise workflow.</p>
 
 <div class="media-grid media-grid-story">
   {% for card in site.data.showcase_media.output_cards %}
