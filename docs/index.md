@@ -4,13 +4,13 @@ description: Free orchestration for AI work across providers today. Pay only whe
 ---
 
 <div class="hero-panel hero-panel-marketing">
-  <p class="hero-kicker">Free shell for AI work</p>
-  <h1 class="hero-title">Use Jini free across providers now. Pay only when it proves it saves money.</h1>
-  <p class="hero-summary">Jini turns rough input into usable output, keeps active work visible, and gives you one shell for work that may span Claude Code, Codex, Bedrock, Azure OpenAI, or local models. The core shell stays open. Desktop and mobile are the next release surfaces, and each app download stays free when that surface is live. The paid layer is only the cost-saver: provider-limit forecasting, throttle avoidance, fallback, and automatic resume, with a planned 30-day free trial before the $1/month subscription is presented once checkout is live.</p>
+  <p class="hero-kicker">AI work that has to survive week two</p>
+  <h1 class="hero-title">Turn messy AI work into something you can actually send.</h1>
+  <p class="hero-summary">Jini turns rough notes, transcripts, screenshots, and drafts into follow-ups, readiness checks, and decision memos that survive handoff. The core shell stays open. It works across Claude Code, Codex, Bedrock, Azure OpenAI, and local models. Desktop and mobile are the next release surfaces, and each app download stays free when that surface is live. The paid layer stays narrow: it only enters when Jini can prove it saved money or kept work moving.</p>
   <div class="cta-row">
-    <a class="cta-button" href="{{ '/install.html' | relative_url }}">Install</a>
+    <a class="cta-button" href="{{ '/install.html' | relative_url }}">Install Free</a>
+    <a class="cta-button cta-button-secondary" href="{{ '/examples.html' | relative_url }}">See Examples</a>
     <a class="cta-button cta-button-secondary" href="{{ '/simple.html' | relative_url }}">Quickstart</a>
-    <a class="cta-button cta-button-secondary" href="{{ '/examples.html' | relative_url }}">Examples</a>
   </div>
   <div class="command-block">
     <span class="command-label">Install once</span>
@@ -27,41 +27,33 @@ description: Free orchestration for AI work across providers today. Pay only whe
 </div>
 
 <div class="section-card hero-decision-frame" markdown="1">
-  <span class="section-kicker">Decision frame</span>
-  <h2>Start with the free shell. Add the paid layer only if the proof is real.</h2>
+  <span class="section-kicker">Three flagship jobs</span>
+  <h2>Jini should be great when the work has to leave chat and survive handoff.</h2>
   <div class="signal-grid">
     <div class="signal-card">
-      <h3>In plain words</h3>
-      <p>Jini is the free orchestration shell. The paid layer only starts to matter if Jini can measurably keep costs down or keep work moving.</p>
+      <h3>After the meeting</h3>
+      <p>Turn messy notes into a sendable follow-up with owners, decisions, and open questions someone else can act on.</p>
     </div>
     <div class="signal-card">
-      <h3>Use a raw model shell when</h3>
-      <ul class="compact-list">
-        <li>the work is one-shot and no artifact matters after the answer</li>
-        <li>you do not need route evidence, continuation, or handoff safety</li>
-        <li>you are happy to rebuild context manually next time</li>
-      </ul>
+      <h3>Before the handoff</h3>
+      <p>Check whether a plan, spec, or task bundle is actually ready before someone else has to build on top of it.</p>
     </div>
     <div class="signal-card">
-      <h3>Use Jini when</h3>
-      <ul class="compact-list">
-        <li>the work needs a usable output, not just a response</li>
-        <li>the same session may cross CLI, desktop, or mobile surfaces</li>
-        <li>cost, throttles, or interruption recovery need to stay visible</li>
-      </ul>
+      <h3>Before the decision</h3>
+      <p>Keep the reasoning, tradeoffs, and unanswered questions attached to the recommendation instead of buried in chat history.</p>
     </div>
   </div>
   <div class="quote-strip">
     <strong>If you only need a one-off answer, use a raw model shell.</strong>
-    <p>If the work needs continuation, usable artifacts, or cheaper routing, use Jini.</p>
+    <p>If the work needs a sendable artifact, a safer handoff, or reasoning you can still explain later, use Jini.</p>
   </div>
 </div>
 
 <div class="section-card offer-frame" markdown="1">
-  ## Pricing promise
+  ## Three ways to work
 
   <span class="section-kicker">Choose the layer</span>
-  <h2>Most people only need to decide between three things.</h2>
+  <h2>Most people only need to choose between a raw shell, the free Jini shell, and the paid optimizer.</h2>
   <div class="offer-grid">
     <div class="offer-card offer-card-plain">
       <span class="workflow-meta">Direct answer</span>
@@ -89,7 +81,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <h3>Paid optimizer</h3>
       <p><strong>Pay only for proof</strong>: the paid layer should earn its keep through savings, headroom preserved, throttles avoided, and work resumed automatically.</p>
       <ul class="compact-list">
-        <li>planned 30-day free trial when checkout is live</li>
+        <li>planned 30-day free trial, then the $1/month subscription when checkout is live</li>
         <li>proof before payment</li>
         <li>paywall before downgrade</li>
         <li>tighter free-mode limits after downgrade, but still enough room to stay productive</li>

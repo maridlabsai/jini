@@ -18,9 +18,12 @@ class PublicValueNarrativeDocsTests(unittest.TestCase):
     def test_homepage_leads_with_free_shell_and_paid_proof_split(self) -> None:
         text = read(HOMEPAGE_PATH)
         for marker in (
-            "Use Jini free across providers now. Pay only when it proves it saves money.",
-            "Jini is the free orchestration shell.",
-            "The paid layer only starts to matter if Jini can measurably keep costs down or keep work moving.",
+            "Turn messy AI work into something you can actually send.",
+            "Jini turns rough notes, transcripts, screenshots, and drafts into follow-ups, readiness checks, and decision memos that survive handoff.",
+            "The paid layer stays narrow: it only enters when Jini can prove it saved money or kept work moving.",
+            "After the meeting",
+            "Before the handoff",
+            "Before the decision",
             "planned 30-day free trial",
             "proof before payment",
             "paywall before downgrade",
