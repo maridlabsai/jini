@@ -848,6 +848,32 @@
   text-transform: uppercase;
 }
 
+.media-artifact-stack {
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 4;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.media-artifact-stack span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.8rem;
+  padding: 0.26rem 0.62rem 0.3rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 22px rgba(8, 17, 40, 0.12);
+  color: #0f172a;
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
 .media-card-tone-install .media-overlay-tags span {
   background: rgba(8, 47, 73, 0.76);
 }
@@ -874,6 +900,34 @@
 
 .media-card-tone-incident .media-overlay-tags span {
   background: rgba(124, 45, 18, 0.76);
+}
+
+.media-card-tone-install .media-artifact-stack span {
+  background: rgba(240, 249, 255, 0.94);
+}
+
+.media-card-tone-state .media-artifact-stack span {
+  background: rgba(236, 253, 245, 0.94);
+}
+
+.media-card-tone-metrics .media-artifact-stack span {
+  background: rgba(239, 246, 255, 0.94);
+}
+
+.media-card-tone-followup .media-artifact-stack span {
+  background: rgba(239, 246, 255, 0.94);
+}
+
+.media-card-tone-readiness .media-artifact-stack span {
+  background: rgba(240, 253, 244, 0.94);
+}
+
+.media-card-tone-decision .media-artifact-stack span {
+  background: rgba(245, 243, 255, 0.94);
+}
+
+.media-card-tone-incident .media-artifact-stack span {
+  background: rgba(255, 247, 237, 0.94);
 }
 
 .media-copy {

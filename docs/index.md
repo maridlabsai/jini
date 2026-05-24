@@ -451,6 +451,11 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <span>First artifact</span>
     </span>
     <img src="{{ '/assets/examples/meeting-followup.gif' | relative_url }}" alt="Jini install and first useful output flow">
+    <div class="media-artifact-stack" aria-hidden="true">
+      <span>Install complete</span>
+      <span>jini running</span>
+      <span>First useful artifact</span>
+    </div>
     <div class="media-copy">
       <span class="workflow-meta">Install and first run</span>
       <h3>Install once, then start with <code>jini</code>.</h3>
@@ -465,6 +470,11 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <span>Missing</span>
     </span>
     <img src="{{ '/assets/examples/research-prd.gif' | relative_url }}" alt="Jini active work, ready items, and missing items view">
+    <div class="media-artifact-stack" aria-hidden="true">
+      <span>Ready items</span>
+      <span>Missing items</span>
+      <span>Next step</span>
+    </div>
     <div class="media-copy">
       <span class="workflow-meta">Active work</span>
       <h3>Keep ready, missing, and next visible.</h3>
@@ -479,6 +489,11 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <span>Latency</span>
     </span>
     <img src="{{ '/assets/examples/vendor-selection.gif' | relative_url }}" alt="Jini metrics and route evidence surface">
+    <div class="media-artifact-stack" aria-hidden="true">
+      <span>Route evidence</span>
+      <span>Latency</span>
+      <span>Cost posture</span>
+    </div>
     <div class="media-copy">
       <span class="workflow-meta">Metrics and route evidence</span>
       <h3>Show cost, route, and latency evidence.</h3>
@@ -502,6 +517,11 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <span>Owners</span>
     </span>
     <img src="{{ '/assets/examples/meeting-followup.gif' | relative_url }}" alt="Jini turning meeting notes into a sendable follow-up">
+    <div class="media-artifact-stack" aria-hidden="true">
+      <span>Sendable follow-up</span>
+      <span>Owners and due points</span>
+      <span>Task list</span>
+    </div>
     <div class="media-copy">
       <span class="workflow-meta">After a meeting</span>
       <h3>Turn scattered notes into something you can send.</h3>
@@ -516,6 +536,11 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <span>Handoff</span>
     </span>
     <img src="{{ '/assets/examples/research-prd.gif' | relative_url }}" alt="Jini checking whether a plan is ready to hand off">
+    <div class="media-artifact-stack" aria-hidden="true">
+      <span>Build-readiness check</span>
+      <span>Handoff brief</span>
+      <span>Missing pieces before build</span>
+    </div>
     <div class="media-copy">
       <span class="workflow-meta">Before a handoff</span>
       <h3>Check whether a plan is actually ready.</h3>
@@ -530,6 +555,11 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <span>Recommendation</span>
     </span>
     <img src="{{ '/assets/examples/vendor-selection.gif' | relative_url }}" alt="Jini preparing a recommendation memo from a vendor comparison">
+    <div class="media-artifact-stack" aria-hidden="true">
+      <span>Recommendation memo</span>
+      <span>Tradeoff table</span>
+      <span>Questions still open</span>
+    </div>
     <div class="media-copy">
       <span class="workflow-meta">Before a decision</span>
       <h3>Keep the reasoning attached to the recommendation.</h3>
@@ -544,6 +574,11 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <span>Aftercare</span>
     </span>
     <img src="{{ '/assets/examples/incident-response.gif' | relative_url }}" alt="Jini separating incident closure from follow-up work that still remains">
+    <div class="media-artifact-stack" aria-hidden="true">
+      <span>Closure checklist</span>
+      <span>Remaining risks</span>
+      <span>Follow-up owners</span>
+    </div>
     <div class="media-copy">
       <span class="workflow-meta">Before real closure</span>
       <h3>Separate the fix from the aftercare.</h3>
