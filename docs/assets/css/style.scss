@@ -585,6 +585,11 @@
 .showcase-story {
   overflow: hidden;
   position: relative;
+  padding-top: 1.6rem;
+  background:
+    radial-gradient(circle at top left, rgba(29, 78, 216, 0.06), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(14, 116, 144, 0.08), transparent 28%),
+    linear-gradient(180deg, #fbfdff 0%, #f6faff 100%);
 }
 
 .showcase-story::after {
@@ -835,6 +840,42 @@
   margin: 1.35rem 0 2rem;
 }
 
+.showcase-story .media-grid-featured,
+.showcase-story .media-grid-story {
+  position: relative;
+}
+
+.showcase-story .media-grid-featured::before,
+.showcase-story .media-grid-story::before {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.7rem;
+  margin-bottom: 0.9rem;
+  padding: 0 0.62rem;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.showcase-story .media-grid-featured::before {
+  content: "Product surface";
+  background: rgba(29, 78, 216, 0.08);
+  color: #1d4ed8;
+}
+
+.showcase-story .media-grid-story::before {
+  content: "Sendable artifacts";
+  background: rgba(14, 116, 144, 0.08);
+  color: #0f766e;
+}
+
+.showcase-story .media-grid-featured {
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.9fr);
+  align-items: start;
+}
+
 .media-grid-featured .media-card:first-child {
   grid-column: span 2;
 }
@@ -846,6 +887,18 @@
 .media-grid-story .media-card {
   background:
     linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+}
+
+.showcase-story .media-grid-story {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.showcase-story .media-grid-story .media-card:first-child {
+  grid-column: span 2;
+}
+
+.showcase-story .media-grid-story .media-card:first-child img {
+  aspect-ratio: 16 / 8;
 }
 
 .output-story .media-grid-story {
@@ -1118,6 +1171,18 @@
 
 .media-grid-featured .media-card:first-child .media-copy p {
   font-size: 1rem;
+}
+
+.showcase-story .media-grid-story .media-card:first-child .media-copy {
+  padding: 1.2rem 1.2rem 1.28rem;
+}
+
+.showcase-story .media-grid-story .media-card:first-child .media-copy h3 {
+  font-size: 1.15rem;
+}
+
+.showcase-story .media-grid-story .media-card:first-child .media-copy p {
+  font-size: 0.99rem;
 }
 
 .media-window-chrome {
@@ -1708,17 +1773,27 @@
 
 .proof-carousel-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 1rem;
   margin-top: 1rem;
 }
 
 .proof-carousel-card {
   overflow: hidden;
+  grid-column: span 2;
   border: 1px solid rgba(148, 163, 184, 0.24);
   border-radius: 28px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 251, 255, 0.94) 100%);
   box-shadow: 0 18px 38px rgba(8, 17, 40, 0.06);
+}
+
+.proof-carousel-card:first-child {
+  grid-column: span 4;
+  background:
+    radial-gradient(circle at top right, rgba(56, 189, 248, 0.14), transparent 28%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.94) 100%);
+  border-color: rgba(15, 23, 42, 0.16);
+  box-shadow: 0 26px 56px rgba(8, 17, 40, 0.16);
 }
 
 .proof-carousel-card img {
@@ -1726,6 +1801,11 @@
   width: 100%;
   height: auto;
   background: #e2e8f0;
+}
+
+.proof-carousel-card:first-child img {
+  aspect-ratio: 16 / 8;
+  object-fit: cover;
 }
 
 .proof-carousel-copy {
@@ -1740,10 +1820,51 @@
   margin: 0;
 }
 
+.proof-carousel-card:first-child .proof-carousel-copy {
+  padding: 1.15rem 1.2rem 1.28rem;
+}
+
+.proof-carousel-card:first-child .proof-carousel-copy h3 {
+  color: #f8fafc;
+  font-size: 1.2rem;
+}
+
+.proof-carousel-card:first-child .proof-carousel-copy p,
+.proof-carousel-card:first-child .workflow-meta {
+  color: rgba(226, 232, 240, 0.9);
+}
+
 .proof-carousel-truth {
   margin-top: 0.72rem !important;
   color: #475569;
   font-size: 0.92rem;
+}
+
+.proof-carousel-card:first-child .proof-carousel-truth {
+  color: rgba(191, 219, 254, 0.92);
+}
+
+@media screen and (max-width: 960px) {
+  .showcase-story .media-grid-featured,
+  .showcase-story .media-grid-story {
+    grid-template-columns: 1fr;
+  }
+
+  .showcase-story .media-grid-story .media-card:first-child,
+  .media-grid-featured .media-card:first-child,
+  .proof-carousel-card,
+  .proof-carousel-card:first-child {
+    grid-column: auto;
+  }
+
+  .showcase-story .media-grid-story .media-card:first-child img,
+  .media-grid-featured .media-card:first-child img {
+    aspect-ratio: 16 / 10;
+  }
+
+  .proof-carousel-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .proof-signal-card {
