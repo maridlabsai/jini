@@ -734,6 +734,76 @@
   z-index: 2;
 }
 
+.media-card-tone-install {
+  background:
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.14), transparent 34%),
+    linear-gradient(180deg, #f7fbff 0%, #ffffff 16%);
+}
+
+.media-card-tone-state {
+  background:
+    radial-gradient(circle at top left, rgba(45, 212, 191, 0.14), transparent 34%),
+    linear-gradient(180deg, #f7fffd 0%, #ffffff 16%);
+}
+
+.media-card-tone-metrics {
+  background:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.14), transparent 34%),
+    linear-gradient(180deg, #f8fbff 0%, #ffffff 16%);
+}
+
+.media-card-tone-followup {
+  background:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.12), transparent 34%),
+    linear-gradient(180deg, #f8fbff 0%, #ffffff 18%);
+}
+
+.media-card-tone-readiness {
+  background:
+    radial-gradient(circle at top left, rgba(52, 211, 153, 0.12), transparent 34%),
+    linear-gradient(180deg, #f8fffc 0%, #ffffff 18%);
+}
+
+.media-card-tone-decision {
+  background:
+    radial-gradient(circle at top left, rgba(129, 140, 248, 0.12), transparent 34%),
+    linear-gradient(180deg, #fafaff 0%, #ffffff 18%);
+}
+
+.media-card-tone-incident {
+  background:
+    radial-gradient(circle at top left, rgba(251, 146, 60, 0.14), transparent 34%),
+    linear-gradient(180deg, #fffaf5 0%, #ffffff 18%);
+}
+
+.media-card-tone-install::before {
+  background: linear-gradient(90deg, #0ea5e9 0%, #38bdf8 50%, #2dd4bf 100%);
+}
+
+.media-card-tone-state::before {
+  background: linear-gradient(90deg, #0f766e 0%, #14b8a6 50%, #22c55e 100%);
+}
+
+.media-card-tone-metrics::before {
+  background: linear-gradient(90deg, #1d4ed8 0%, #3b82f6 50%, #0ea5e9 100%);
+}
+
+.media-card-tone-followup::before {
+  background: linear-gradient(90deg, #2563eb 0%, #60a5fa 50%, #2dd4bf 100%);
+}
+
+.media-card-tone-readiness::before {
+  background: linear-gradient(90deg, #0f766e 0%, #22c55e 52%, #84cc16 100%);
+}
+
+.media-card-tone-decision::before {
+  background: linear-gradient(90deg, #4f46e5 0%, #818cf8 50%, #60a5fa 100%);
+}
+
+.media-card-tone-incident::before {
+  background: linear-gradient(90deg, #ea580c 0%, #f97316 50%, #fbbf24 100%);
+}
+
 .media-card:hover {
   transform: translateY(-2px);
   border-color: rgba(29, 78, 216, 0.26);
@@ -776,6 +846,34 @@
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
+}
+
+.media-card-tone-install .media-overlay-tags span {
+  background: rgba(8, 47, 73, 0.76);
+}
+
+.media-card-tone-state .media-overlay-tags span {
+  background: rgba(4, 47, 46, 0.76);
+}
+
+.media-card-tone-metrics .media-overlay-tags span {
+  background: rgba(23, 37, 84, 0.78);
+}
+
+.media-card-tone-followup .media-overlay-tags span {
+  background: rgba(30, 41, 59, 0.74);
+}
+
+.media-card-tone-readiness .media-overlay-tags span {
+  background: rgba(20, 83, 45, 0.74);
+}
+
+.media-card-tone-decision .media-overlay-tags span {
+  background: rgba(49, 46, 129, 0.76);
+}
+
+.media-card-tone-incident .media-overlay-tags span {
+  background: rgba(124, 45, 18, 0.76);
 }
 
 .media-copy {

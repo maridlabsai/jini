@@ -443,7 +443,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <p class="page-lead">Once the operating model is clear, the next question is whether the surface actually feels usable. Show install, active work, and visible evidence before asking for belief.</p>
 
 <div class="media-grid media-grid-featured">
-  <a class="media-card" href="{{ '/install.html' | relative_url }}">
+  <a class="media-card media-card-tone-install" href="{{ '/install.html' | relative_url }}">
     <span class="media-window-chrome" aria-hidden="true"></span>
     <span class="media-overlay-tags" aria-hidden="true">
       <span>CLI</span>
@@ -457,7 +457,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <p>The surface should get you from install to a first useful artifact without teaching a command tree.</p>
     </div>
   </a>
-  <a class="media-card" href="{{ '/state-and-artifacts.html' | relative_url }}">
+  <a class="media-card media-card-tone-state" href="{{ '/state-and-artifacts.html' | relative_url }}">
     <span class="media-window-chrome" aria-hidden="true"></span>
     <span class="media-overlay-tags" aria-hidden="true">
       <span>State</span>
@@ -471,7 +471,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <p>Jini should make the current work legible instead of forcing users to reconstruct state from chat and files.</p>
     </div>
   </a>
-  <a class="media-card" href="{{ '/cli.html' | relative_url }}">
+  <a class="media-card media-card-tone-metrics" href="{{ '/cli.html' | relative_url }}">
     <span class="media-window-chrome" aria-hidden="true"></span>
     <span class="media-overlay-tags" aria-hidden="true">
       <span>Metrics</span>
@@ -494,7 +494,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <p class="page-lead">The proof of the interface is the work it leaves behind. The output story should read like actual work, not a gallery of generic screenshots.</p>
 
 <div class="media-grid media-grid-story">
-  <a class="media-card" href="{{ '/examples.html#meeting-followup' | relative_url }}">
+  <a class="media-card media-card-tone-followup" href="{{ '/examples.html#meeting-followup' | relative_url }}">
     <span class="media-window-chrome" aria-hidden="true"></span>
     <span class="media-overlay-tags" aria-hidden="true">
       <span>Meeting</span>
@@ -508,7 +508,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <p>Get a sendable follow-up, owners, and open questions without rebuilding the meeting later.</p>
     </div>
   </a>
-  <a class="media-card" href="{{ '/examples.html#spec-readiness' | relative_url }}">
+  <a class="media-card media-card-tone-readiness" href="{{ '/examples.html#spec-readiness' | relative_url }}">
     <span class="media-window-chrome" aria-hidden="true"></span>
     <span class="media-overlay-tags" aria-hidden="true">
       <span>Spec</span>
@@ -522,7 +522,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <p>See what is safe, what is missing, and what still blocks a real handoff.</p>
     </div>
   </a>
-  <a class="media-card" href="{{ '/examples.html#vendor-choice' | relative_url }}">
+  <a class="media-card media-card-tone-decision" href="{{ '/examples.html#vendor-choice' | relative_url }}">
     <span class="media-window-chrome" aria-hidden="true"></span>
     <span class="media-overlay-tags" aria-hidden="true">
       <span>Decision</span>
@@ -536,7 +536,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <p>Get an output you can explain later instead of a conclusion you have to reconstruct from memory.</p>
     </div>
   </a>
-  <a class="media-card" href="{{ '/examples.html#incident-closure' | relative_url }}">
+  <a class="media-card media-card-tone-incident" href="{{ '/examples.html#incident-closure' | relative_url }}">
     <span class="media-window-chrome" aria-hidden="true"></span>
     <span class="media-overlay-tags" aria-hidden="true">
       <span>Incident</span>
