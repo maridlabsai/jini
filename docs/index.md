@@ -159,6 +159,12 @@ description: Free orchestration for AI work across providers today. Pay only whe
 
 <p class="page-lead">The trust story should show a few concrete signals quickly: how broad the free surface is, whether the paid layer actually saves money, and whether interruption recovery is real.</p>
 
+<div class="proof-hero-card">
+  <span class="proof-hero-kicker">{{ site.data.public_proof.hero.eyebrow }}</span>
+  <h3>{{ site.data.public_proof.hero.headline }}</h3>
+  <p>{{ site.data.public_proof.hero.body }}</p>
+</div>
+
 <div class="proof-signal-grid">
   {% for card in site.data.public_proof.proof_cards %}
   <div class="proof-signal-card">
