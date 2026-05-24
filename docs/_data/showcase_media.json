@@ -17,20 +17,20 @@
       "reuse_note": "Unique checked-in illustration used here so the product-surface lane depends less on the reused example capture set."
     },
     {
-      "capture_id": "capture-research-prd",
-      "capture_kind": "current-public-example",
-      "capture_source": "examples/spec-readiness",
+      "capture_id": "capture-state-panel",
+      "capture_kind": "checked-in-public-illustration",
+      "capture_source": "assets/story/jini-state-panel.svg",
       "tone": "state",
       "href": "/state-and-artifacts.html",
       "tags": ["State", "Ready", "Missing"],
-      "image": "/assets/examples/research-prd.gif",
-      "alt": "Jini active work, ready items, and missing items view",
+      "image": "/assets/story/jini-state-panel.svg",
+      "alt": "Illustrated Jini active work panel showing ready items, missing items, and the next step",
       "artifacts": ["Ready items", "Missing items", "Next step"],
       "workflow_meta": "Active work",
       "title": "Keep ready, missing, and next visible.",
       "body": "Jini should make the current work legible instead of forcing users to reconstruct state from chat and files.",
-      "truth_note": "Current example capture. Session state and artifact posture only, not a public app-download claim.",
-      "reuse_note": "Shared current capture reused here to show state legibility before a handoff-specific reading."
+      "truth_note": "Checked-in public illustration. Session state and artifact posture only, not a public app-download claim.",
+      "reuse_note": "Unique checked-in illustration used here so the product-surface lane depends less on the reused example capture set."
     },
     {
       "capture_id": "capture-route-evidence-panel",
