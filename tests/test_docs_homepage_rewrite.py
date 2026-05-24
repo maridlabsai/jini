@@ -53,6 +53,10 @@ class DocsHomepageRewriteTests(unittest.TestCase):
             "## See the product surface",
             "Install and first run",
             "Metrics and route evidence",
+            "Sendable follow-up",
+            "Build-readiness check",
+            "Recommendation memo",
+            "Closure checklist",
             "free app downloads once each surface is live",
             "jini metrics",
         ):
