@@ -92,13 +92,86 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <p><strong>Pay only for proof</strong>: when checkout is live, the planned 30-day free trial should come before the $1/month subscription, and only after Jini can show savings, preserved headroom, or recovered work.</p>
     </div>
   </div>
-  <p class="editorial-note">Best fit when the work needs a sendable artifact, a safer handoff, or reasoning you can still explain later. If you only need one answer, stay in a raw shell.</p>
+<p class="editorial-note">Best fit when the work needs a sendable artifact, a safer handoff, or reasoning you can still explain later. If you only need one answer, stay in a raw shell.</p>
+</div>
+
+<div class="section-card section-card-story showcase-story" markdown="1">
+## See the product surface
+
+<p class="page-lead">Show the product before the rest of the operating brief: first the active surface, then the artifacts that leave the thread.</p>
+<p class="editorial-note">These frames are current example captures from the shipped CLI and public example set. They show interface shape and artifact posture, not live checkout, store rollout, or signed-download completion.</p>
+<p class="editorial-note">Each card carries a capture id and source so reused frames stay explicit and auditable instead of reading like independent screenshots.</p>
+<div class="showcase-illustration-frame">
+  <img src="{{ '/assets/story/jini-showcase-strip.svg' | relative_url }}" alt="Jini storyboard showing the CLI thread, continuity across upcoming surfaces, and sendable output">
+</div>
+<p class="editorial-note">This is a checked-in storyboard illustration built from the current public product posture. It is not a screenshot, store mockup, or claim that unreleased app surfaces are already live.</p>
+
+<div class="media-grid media-grid-featured">
+  {% for card in site.data.showcase_media.product_surface_cards %}
+  <a class="media-card media-card-tone-{{ card.tone }}" href="{{ card.href | relative_url }}">
+    <span class="media-window-chrome" aria-hidden="true"></span>
+    <span class="media-overlay-tags" aria-hidden="true">
+      {% for tag in card.tags %}
+      <span>{{ tag }}</span>
+      {% endfor %}
+    </span>
+    <img src="{{ card.image | relative_url }}" alt="{{ card.alt }}">
+    <div class="media-artifact-stack" aria-hidden="true">
+      {% for artifact in card.artifacts %}
+      <span>{{ artifact }}</span>
+      {% endfor %}
+    </div>
+    <div class="media-copy">
+      <span class="workflow-meta">{{ card.workflow_meta }}</span>
+      <h3>{{ card.title }}</h3>
+      <p>{{ card.body }}</p>
+      <p class="media-capture-note"><strong>{{ card.capture_id }}</strong> · {{ card.capture_kind }} · {{ card.capture_source }}</p>
+      <p class="media-truth-note">{{ card.truth_note }}</p>
+      <p class="media-reuse-note">{{ card.reuse_note }}</p>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+
+<p class="page-lead">The output story should read like finished work, not a gallery of generic screenshots.</p>
+<p class="editorial-note">These are example artifacts from the public scenario set. They are meant to show deliverable shape and continuity, not hidden customer data or fictional production outcomes.</p>
+<div class="showcase-illustration-frame showcase-illustration-frame-output">
+  <img src="{{ '/assets/story/jini-output-strip.svg' | relative_url }}" alt="Jini storyboard showing a follow-up, readiness check, and recommendation memo leaving the thread">
+</div>
+<p class="editorial-note">This is a second checked-in storyboard illustration built from the current public examples. It is a product-story visual, not a customer capture or implied live enterprise workflow.</p>
+
+<div class="media-grid media-grid-story">
+  {% for card in site.data.showcase_media.output_cards %}
+  <a class="media-card media-card-tone-{{ card.tone }}" href="{{ card.href | relative_url }}">
+    <span class="media-window-chrome" aria-hidden="true"></span>
+    <span class="media-overlay-tags" aria-hidden="true">
+      {% for tag in card.tags %}
+      <span>{{ tag }}</span>
+      {% endfor %}
+    </span>
+    <img src="{{ card.image | relative_url }}" alt="{{ card.alt }}">
+    <div class="media-artifact-stack" aria-hidden="true">
+      {% for artifact in card.artifacts %}
+      <span>{{ artifact }}</span>
+      {% endfor %}
+    </div>
+    <div class="media-copy">
+      <span class="workflow-meta">{{ card.workflow_meta }}</span>
+      <h3>{{ card.title }}</h3>
+      <p>{{ card.body }}</p>
+      <p class="media-capture-note"><strong>{{ card.capture_id }}</strong> · {{ card.capture_kind }} · {{ card.capture_source }}</p>
+      <p class="media-truth-note">{{ card.truth_note }}</p>
+      <p class="media-reuse-note">{{ card.reuse_note }}</p>
+    </div>
+  </a>
+  {% endfor %}
+</div>
 </div>
 
 <div class="section-card section-card-story" markdown="1">
 ## What Jini leaves behind
 
-<p class="page-lead">The product should be judged by what it actually leaves behind: usable deliverables, resumable state, visible evidence, and work that survives a device switch without reconstruction.</p>
+<p class="page-lead">After the surface and outputs are visible, judge the product by what it actually leaves behind: usable deliverables, resumable state, visible evidence, and work that survives a device switch without reconstruction.</p>
 
 <div class="workflow-grid workflow-grid-story">
   <div class="workflow-card">
@@ -270,79 +343,6 @@ description: Free orchestration for AI work across providers today. Pay only whe
     <h3>Measured trust signals</h3>
     <p><code>jini metrics</code> reports command timings and route evidence so efficiency is inspectable, not implied. Strict routes still exist when policy requires them. The paid layer should eventually show month-to-date savings, headroom preserved, throttles avoided, and sessions resumed.</p>
   </div>
-</div>
-</div>
-
-<div class="section-card section-card-story showcase-story" markdown="1">
-## See the product surface
-
-<p class="page-lead">Once the operating model is clear, show the surface in two moves: what active work looks like, then what the finished outputs actually look like.</p>
-<p class="editorial-note">These frames are current example captures from the shipped CLI and public example set. They show interface shape and artifact posture, not live checkout, store rollout, or signed-download completion.</p>
-<p class="editorial-note">Each card carries a capture id and source so reused frames stay explicit and auditable instead of reading like independent screenshots.</p>
-<div class="showcase-illustration-frame">
-  <img src="{{ '/assets/story/jini-showcase-strip.svg' | relative_url }}" alt="Jini storyboard showing the CLI thread, continuity across upcoming surfaces, and sendable output">
-</div>
-<p class="editorial-note">This is a checked-in storyboard illustration built from the current public product posture. It is not a screenshot, store mockup, or claim that unreleased app surfaces are already live.</p>
-
-<div class="media-grid media-grid-featured">
-  {% for card in site.data.showcase_media.product_surface_cards %}
-  <a class="media-card media-card-tone-{{ card.tone }}" href="{{ card.href | relative_url }}">
-    <span class="media-window-chrome" aria-hidden="true"></span>
-    <span class="media-overlay-tags" aria-hidden="true">
-      {% for tag in card.tags %}
-      <span>{{ tag }}</span>
-      {% endfor %}
-    </span>
-    <img src="{{ card.image | relative_url }}" alt="{{ card.alt }}">
-    <div class="media-artifact-stack" aria-hidden="true">
-      {% for artifact in card.artifacts %}
-      <span>{{ artifact }}</span>
-      {% endfor %}
-    </div>
-    <div class="media-copy">
-      <span class="workflow-meta">{{ card.workflow_meta }}</span>
-      <h3>{{ card.title }}</h3>
-      <p>{{ card.body }}</p>
-      <p class="media-capture-note"><strong>{{ card.capture_id }}</strong> · {{ card.capture_kind }} · {{ card.capture_source }}</p>
-      <p class="media-truth-note">{{ card.truth_note }}</p>
-      <p class="media-reuse-note">{{ card.reuse_note }}</p>
-    </div>
-  </a>
-  {% endfor %}
-</div>
-
-<p class="page-lead">The output story should read like finished work, not a gallery of generic screenshots.</p>
-<p class="editorial-note">These are example artifacts from the public scenario set. They are meant to show deliverable shape and continuity, not hidden customer data or fictional production outcomes.</p>
-<div class="showcase-illustration-frame showcase-illustration-frame-output">
-  <img src="{{ '/assets/story/jini-output-strip.svg' | relative_url }}" alt="Jini storyboard showing a follow-up, readiness check, and recommendation memo leaving the thread">
-</div>
-<p class="editorial-note">This is a second checked-in storyboard illustration built from the current public examples. It is a product-story visual, not a customer capture or implied live enterprise workflow.</p>
-
-<div class="media-grid media-grid-story">
-  {% for card in site.data.showcase_media.output_cards %}
-  <a class="media-card media-card-tone-{{ card.tone }}" href="{{ card.href | relative_url }}">
-    <span class="media-window-chrome" aria-hidden="true"></span>
-    <span class="media-overlay-tags" aria-hidden="true">
-      {% for tag in card.tags %}
-      <span>{{ tag }}</span>
-      {% endfor %}
-    </span>
-    <img src="{{ card.image | relative_url }}" alt="{{ card.alt }}">
-    <div class="media-artifact-stack" aria-hidden="true">
-      {% for artifact in card.artifacts %}
-      <span>{{ artifact }}</span>
-      {% endfor %}
-    </div>
-    <div class="media-copy">
-      <span class="workflow-meta">{{ card.workflow_meta }}</span>
-      <h3>{{ card.title }}</h3>
-      <p>{{ card.body }}</p>
-      <p class="media-capture-note"><strong>{{ card.capture_id }}</strong> · {{ card.capture_kind }} · {{ card.capture_source }}</p>
-      <p class="media-truth-note">{{ card.truth_note }}</p>
-      <p class="media-reuse-note">{{ card.reuse_note }}</p>
-    </div>
-  </a>
-  {% endfor %}
 </div>
 </div>
 
