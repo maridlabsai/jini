@@ -441,6 +441,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 ## See the product surface
 
 <p class="page-lead">Once the operating model is clear, the next question is whether the surface actually feels usable. Show install, active work, and visible evidence before asking for belief.</p>
+<p class="editorial-note">These frames are current example captures from the shipped CLI and public example set. They show interface shape and artifact posture, not live checkout, store rollout, or signed-download completion.</p>
 
 <div class="media-grid media-grid-featured">
   <a class="media-card media-card-tone-install" href="{{ '/install.html' | relative_url }}">
@@ -460,6 +461,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <span class="workflow-meta">Install and first run</span>
       <h3>Install once, then start with <code>jini</code>.</h3>
       <p>The surface should get you from install to a first useful artifact without teaching a command tree.</p>
+      <p class="media-truth-note">Current example capture. No live checkout or signed desktop-release claim.</p>
     </div>
   </a>
   <a class="media-card media-card-tone-state" href="{{ '/state-and-artifacts.html' | relative_url }}">
@@ -479,6 +481,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <span class="workflow-meta">Active work</span>
       <h3>Keep ready, missing, and next visible.</h3>
       <p>Jini should make the current work legible instead of forcing users to reconstruct state from chat and files.</p>
+      <p class="media-truth-note">Current example capture. Session state and artifact posture only, not a public app-download claim.</p>
     </div>
   </a>
   <a class="media-card media-card-tone-metrics" href="{{ '/cli.html' | relative_url }}">
@@ -498,6 +501,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <span class="workflow-meta">Metrics and route evidence</span>
       <h3>Show cost, route, and latency evidence.</h3>
       <p>The trust story should be inspectable through metrics and route evidence, not hidden behind provider jargon.</p>
+      <p class="media-truth-note">Current example capture. Route evidence shown here is interface proof, not live paid-savings telemetry.</p>
     </div>
   </a>
 </div>
@@ -507,6 +511,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 ## See real outputs
 
 <p class="page-lead">The proof of the interface is the work it leaves behind. The output story should read like actual work, not a gallery of generic screenshots.</p>
+<p class="editorial-note">These are example artifacts from the public scenario set. They are meant to show deliverable shape and continuity, not hidden customer data or fictional production outcomes.</p>
 
 <div class="media-grid media-grid-story">
   <a class="media-card media-card-tone-followup" href="{{ '/examples.html#meeting-followup' | relative_url }}">
@@ -526,6 +531,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <span class="workflow-meta">After a meeting</span>
       <h3>Turn scattered notes into something you can send.</h3>
       <p>Get a sendable follow-up, owners, and open questions without rebuilding the meeting later.</p>
+      <p class="media-truth-note">Example artifact from the public meeting-follow-up scenario.</p>
     </div>
   </a>
   <a class="media-card media-card-tone-readiness" href="{{ '/examples.html#spec-readiness' | relative_url }}">
@@ -545,6 +551,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <span class="workflow-meta">Before a handoff</span>
       <h3>Check whether a plan is actually ready.</h3>
       <p>See what is safe, what is missing, and what still blocks a real handoff.</p>
+      <p class="media-truth-note">Example artifact from the public spec-readiness scenario.</p>
     </div>
   </a>
   <a class="media-card media-card-tone-decision" href="{{ '/examples.html#vendor-choice' | relative_url }}">
@@ -564,6 +571,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <span class="workflow-meta">Before a decision</span>
       <h3>Keep the reasoning attached to the recommendation.</h3>
       <p>Get an output you can explain later instead of a conclusion you have to reconstruct from memory.</p>
+      <p class="media-truth-note">Example artifact from the public vendor-choice scenario.</p>
     </div>
   </a>
   <a class="media-card media-card-tone-incident" href="{{ '/examples.html#incident-closure' | relative_url }}">
@@ -583,6 +591,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <span class="workflow-meta">Before real closure</span>
       <h3>Separate the fix from the aftercare.</h3>
       <p>Keep remaining risks, follow-up owners, and closure work visible instead of declaring the work done too early.</p>
+      <p class="media-truth-note">Example artifact from the public incident-closure scenario.</p>
     </div>
   </a>
 </div>
