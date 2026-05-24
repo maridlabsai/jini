@@ -442,6 +442,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 
 <p class="page-lead">Once the operating model is clear, the next question is whether the surface actually feels usable. Show install, active work, and visible evidence before asking for belief.</p>
 <p class="editorial-note">These frames are current example captures from the shipped CLI and public example set. They show interface shape and artifact posture, not live checkout, store rollout, or signed-download completion.</p>
+<p class="editorial-note">Each card now carries a capture id and source so reused frames stay explicit and auditable instead of reading like seven independent screenshots.</p>
 
 <div class="media-grid media-grid-featured">
   {% for card in site.data.showcase_media.product_surface_cards %}
@@ -462,7 +463,9 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <span class="workflow-meta">{{ card.workflow_meta }}</span>
       <h3>{{ card.title }}</h3>
       <p>{{ card.body }}</p>
+      <p class="media-capture-note"><strong>{{ card.capture_id }}</strong> · {{ card.capture_kind }} · {{ card.capture_source }}</p>
       <p class="media-truth-note">{{ card.truth_note }}</p>
+      <p class="media-reuse-note">{{ card.reuse_note }}</p>
     </div>
   </a>
   {% endfor %}
@@ -494,7 +497,9 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <span class="workflow-meta">{{ card.workflow_meta }}</span>
       <h3>{{ card.title }}</h3>
       <p>{{ card.body }}</p>
+      <p class="media-capture-note"><strong>{{ card.capture_id }}</strong> · {{ card.capture_kind }} · {{ card.capture_source }}</p>
       <p class="media-truth-note">{{ card.truth_note }}</p>
+      <p class="media-reuse-note">{{ card.reuse_note }}</p>
     </div>
   </a>
   {% endfor %}

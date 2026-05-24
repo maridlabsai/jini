@@ -1,6 +1,9 @@
 {
   "product_surface_cards": [
     {
+      "capture_id": "capture-meeting-followup",
+      "capture_kind": "current-public-example",
+      "capture_source": "examples/meeting-followup",
       "tone": "install",
       "href": "/install.html",
       "tags": ["CLI", "Install", "First artifact"],
@@ -10,9 +13,13 @@
       "workflow_meta": "Install and first run",
       "title": "Install once, then start with <code>jini</code>.",
       "body": "The surface should get you from install to a first useful artifact without teaching a command tree.",
-      "truth_note": "Current example capture. No live checkout or signed desktop-release claim."
+      "truth_note": "Current example capture. No live checkout or signed desktop-release claim.",
+      "reuse_note": "Shared current capture reused here to illustrate install-to-first-artifact posture."
     },
     {
+      "capture_id": "capture-research-prd",
+      "capture_kind": "current-public-example",
+      "capture_source": "examples/spec-readiness",
       "tone": "state",
       "href": "/state-and-artifacts.html",
       "tags": ["State", "Ready", "Missing"],
@@ -22,9 +29,13 @@
       "workflow_meta": "Active work",
       "title": "Keep ready, missing, and next visible.",
       "body": "Jini should make the current work legible instead of forcing users to reconstruct state from chat and files.",
-      "truth_note": "Current example capture. Session state and artifact posture only, not a public app-download claim."
+      "truth_note": "Current example capture. Session state and artifact posture only, not a public app-download claim.",
+      "reuse_note": "Shared current capture reused here to show state legibility before a handoff-specific reading."
     },
     {
+      "capture_id": "capture-vendor-selection",
+      "capture_kind": "current-public-example",
+      "capture_source": "examples/vendor-choice",
       "tone": "metrics",
       "href": "/cli.html",
       "tags": ["Metrics", "Route cost", "Latency"],
@@ -34,11 +45,15 @@
       "workflow_meta": "Metrics and route evidence",
       "title": "Show cost, route, and latency evidence.",
       "body": "The trust story should be inspectable through metrics and route evidence, not hidden behind provider jargon.",
-      "truth_note": "Current example capture. Route evidence shown here is interface proof, not live paid-savings telemetry."
+      "truth_note": "Current example capture. Route evidence shown here is interface proof, not live paid-savings telemetry.",
+      "reuse_note": "Shared current capture reused here to show route evidence and later again for decision output shape."
     }
   ],
   "output_cards": [
     {
+      "capture_id": "capture-meeting-followup",
+      "capture_kind": "current-public-example",
+      "capture_source": "examples/meeting-followup",
       "tone": "followup",
       "href": "/examples.html#meeting-followup",
       "tags": ["Meeting", "Follow-up", "Owners"],
@@ -48,9 +63,13 @@
       "workflow_meta": "After a meeting",
       "title": "Turn scattered notes into something you can send.",
       "body": "Get a sendable follow-up, owners, and open questions without rebuilding the meeting later.",
-      "truth_note": "Example artifact from the public meeting-follow-up scenario."
+      "truth_note": "Example artifact from the public meeting-follow-up scenario.",
+      "reuse_note": "Same current capture as the install panel, reused because it shows the first finished artifact clearly."
     },
     {
+      "capture_id": "capture-research-prd",
+      "capture_kind": "current-public-example",
+      "capture_source": "examples/spec-readiness",
       "tone": "readiness",
       "href": "/examples.html#spec-readiness",
       "tags": ["Spec", "Readiness", "Handoff"],
@@ -60,9 +79,13 @@
       "workflow_meta": "Before a handoff",
       "title": "Check whether a plan is actually ready.",
       "body": "See what is safe, what is missing, and what still blocks a real handoff.",
-      "truth_note": "Example artifact from the public spec-readiness scenario."
+      "truth_note": "Example artifact from the public spec-readiness scenario.",
+      "reuse_note": "Same current capture as the state panel, reused because it shows ready/missing posture directly."
     },
     {
+      "capture_id": "capture-vendor-selection",
+      "capture_kind": "current-public-example",
+      "capture_source": "examples/vendor-choice",
       "tone": "decision",
       "href": "/examples.html#vendor-choice",
       "tags": ["Decision", "Tradeoffs", "Recommendation"],
@@ -72,9 +95,13 @@
       "workflow_meta": "Before a decision",
       "title": "Keep the reasoning attached to the recommendation.",
       "body": "Get an output you can explain later instead of a conclusion you have to reconstruct from memory.",
-      "truth_note": "Example artifact from the public vendor-choice scenario."
+      "truth_note": "Example artifact from the public vendor-choice scenario.",
+      "reuse_note": "Same current capture as the metrics panel, reused because it shows tradeoffs and route posture together."
     },
     {
+      "capture_id": "capture-incident-response",
+      "capture_kind": "current-public-example",
+      "capture_source": "examples/incident-closure",
       "tone": "incident",
       "href": "/examples.html#incident-closure",
       "tags": ["Incident", "Closure", "Aftercare"],
@@ -84,7 +111,8 @@
       "workflow_meta": "Before real closure",
       "title": "Separate the fix from the aftercare.",
       "body": "Keep remaining risks, follow-up owners, and closure work visible instead of declaring the work done too early.",
-      "truth_note": "Example artifact from the public incident-closure scenario."
+      "truth_note": "Example artifact from the public incident-closure scenario.",
+      "reuse_note": "Unique current capture used here because incident closure has its own artifact shape."
     }
   ]
 }

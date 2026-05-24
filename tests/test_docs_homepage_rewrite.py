@@ -54,6 +54,7 @@ class DocsHomepageRewriteTests(unittest.TestCase):
             "## See the product surface",
             "site.data.showcase_media.product_surface_cards",
             "site.data.showcase_media.output_cards",
+            "capture id and source",
             "free app downloads once each surface is live",
             "jini metrics",
         ):
@@ -75,6 +76,15 @@ class DocsHomepageRewriteTests(unittest.TestCase):
             "Example artifact from the public spec-readiness scenario.",
             "Example artifact from the public vendor-choice scenario.",
             "Example artifact from the public incident-closure scenario.",
+            "capture-meeting-followup",
+            "capture-research-prd",
+            "capture-vendor-selection",
+            "capture-incident-response",
+            "current-public-example",
+            "examples/meeting-followup",
+            "examples/spec-readiness",
+            "examples/vendor-choice",
+            "examples/incident-closure",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
