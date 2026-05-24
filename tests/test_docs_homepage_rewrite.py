@@ -52,6 +52,8 @@ class DocsHomepageRewriteTests(unittest.TestCase):
             "No live store claims before release. No fake telemetry. No hidden preview posture.",
             "Stored locally, not as product magic",
             "## See the product surface",
+            "/assets/story/jini-showcase-strip.svg",
+            "checked-in storyboard illustration built from the current public product posture",
             "site.data.showcase_media.product_surface_cards",
             "site.data.showcase_media.output_cards",
             "site.data.proof_carousel.slides",

@@ -279,6 +279,10 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <p class="page-lead">Once the operating model is clear, show the surface in two moves: what active work looks like, then what the finished outputs actually look like.</p>
 <p class="editorial-note">These frames are current example captures from the shipped CLI and public example set. They show interface shape and artifact posture, not live checkout, store rollout, or signed-download completion.</p>
 <p class="editorial-note">Each card carries a capture id and source so reused frames stay explicit and auditable instead of reading like independent screenshots.</p>
+<div class="showcase-illustration-frame">
+  <img src="{{ '/assets/story/jini-showcase-strip.svg' | relative_url }}" alt="Jini storyboard showing the CLI thread, continuity across upcoming surfaces, and sendable output">
+</div>
+<p class="editorial-note">This is a checked-in storyboard illustration built from the current public product posture. It is not a screenshot, store mockup, or claim that unreleased app surfaces are already live.</p>
 
 <div class="media-grid media-grid-featured">
   {% for card in site.data.showcase_media.product_surface_cards %}

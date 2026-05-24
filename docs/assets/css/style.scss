@@ -871,6 +871,23 @@
   color: #0f766e;
 }
 
+.showcase-illustration-frame {
+  overflow: hidden;
+  margin: 1.2rem 0 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at top right, rgba(29, 78, 216, 0.08), transparent 26%),
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 0 22px 48px rgba(8, 17, 40, 0.08);
+}
+
+.showcase-illustration-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 .showcase-story .media-grid-featured {
   grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.9fr);
   align-items: start;
@@ -1848,6 +1865,10 @@
   .showcase-story .media-grid-featured,
   .showcase-story .media-grid-story {
     grid-template-columns: 1fr;
+  }
+
+  .showcase-illustration-frame {
+    border-radius: 24px;
   }
 
   .showcase-story .media-grid-story .media-card:first-child,
