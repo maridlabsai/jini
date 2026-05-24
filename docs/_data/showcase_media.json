@@ -51,20 +51,20 @@
   ],
   "output_cards": [
     {
-      "capture_id": "capture-meeting-followup",
-      "capture_kind": "current-public-example",
-      "capture_source": "examples/meeting-followup",
+      "capture_id": "capture-followup-panel",
+      "capture_kind": "checked-in-public-illustration",
+      "capture_source": "assets/story/jini-followup-panel.svg",
       "tone": "followup",
       "href": "/examples.html#meeting-followup",
       "tags": ["Meeting", "Follow-up", "Owners"],
-      "image": "/assets/examples/meeting-followup.gif",
-      "alt": "Jini turning meeting notes into a sendable follow-up",
+      "image": "/assets/story/jini-followup-panel.svg",
+      "alt": "Illustrated Jini follow-up panel showing a sendable recap, owners, and open questions",
       "artifacts": ["Sendable follow-up", "Owners and due points", "Task list"],
       "workflow_meta": "After a meeting",
       "title": "Turn scattered notes into something you can send.",
       "body": "Get a sendable follow-up, owners, and open questions without rebuilding the meeting later.",
-      "truth_note": "Example artifact from the public meeting-follow-up scenario.",
-      "reuse_note": "Same current capture as the install panel, reused because it shows the first finished artifact clearly."
+      "truth_note": "Checked-in public illustration. Follow-up-output posture only, not a live inbox, mail send, or delivery screenshot.",
+      "reuse_note": "Unique checked-in illustration used here so the output lane depends less on the reused example capture set."
     },
     {
       "capture_id": "capture-research-prd",
