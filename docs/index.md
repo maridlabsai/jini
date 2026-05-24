@@ -445,6 +445,11 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <div class="media-grid media-grid-featured">
   <a class="media-card" href="{{ '/install.html' | relative_url }}">
     <span class="media-window-chrome" aria-hidden="true"></span>
+    <span class="media-overlay-tags" aria-hidden="true">
+      <span>CLI</span>
+      <span>Install</span>
+      <span>First artifact</span>
+    </span>
     <img src="{{ '/assets/examples/meeting-followup.gif' | relative_url }}" alt="Jini install and first useful output flow">
     <div class="media-copy">
       <span class="workflow-meta">Install and first run</span>
@@ -454,6 +459,11 @@ description: Free orchestration for AI work across providers today. Pay only whe
   </a>
   <a class="media-card" href="{{ '/state-and-artifacts.html' | relative_url }}">
     <span class="media-window-chrome" aria-hidden="true"></span>
+    <span class="media-overlay-tags" aria-hidden="true">
+      <span>State</span>
+      <span>Ready</span>
+      <span>Missing</span>
+    </span>
     <img src="{{ '/assets/examples/research-prd.gif' | relative_url }}" alt="Jini active work, ready items, and missing items view">
     <div class="media-copy">
       <span class="workflow-meta">Active work</span>
@@ -463,6 +473,11 @@ description: Free orchestration for AI work across providers today. Pay only whe
   </a>
   <a class="media-card" href="{{ '/cli.html' | relative_url }}">
     <span class="media-window-chrome" aria-hidden="true"></span>
+    <span class="media-overlay-tags" aria-hidden="true">
+      <span>Metrics</span>
+      <span>Route cost</span>
+      <span>Latency</span>
+    </span>
     <img src="{{ '/assets/examples/vendor-selection.gif' | relative_url }}" alt="Jini metrics and route evidence surface">
     <div class="media-copy">
       <span class="workflow-meta">Metrics and route evidence</span>
@@ -481,6 +496,11 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <div class="media-grid media-grid-story">
   <a class="media-card" href="{{ '/examples.html#meeting-followup' | relative_url }}">
     <span class="media-window-chrome" aria-hidden="true"></span>
+    <span class="media-overlay-tags" aria-hidden="true">
+      <span>Meeting</span>
+      <span>Follow-up</span>
+      <span>Owners</span>
+    </span>
     <img src="{{ '/assets/examples/meeting-followup.gif' | relative_url }}" alt="Jini turning meeting notes into a sendable follow-up">
     <div class="media-copy">
       <span class="workflow-meta">After a meeting</span>
@@ -490,6 +510,11 @@ description: Free orchestration for AI work across providers today. Pay only whe
   </a>
   <a class="media-card" href="{{ '/examples.html#spec-readiness' | relative_url }}">
     <span class="media-window-chrome" aria-hidden="true"></span>
+    <span class="media-overlay-tags" aria-hidden="true">
+      <span>Spec</span>
+      <span>Readiness</span>
+      <span>Handoff</span>
+    </span>
     <img src="{{ '/assets/examples/research-prd.gif' | relative_url }}" alt="Jini checking whether a plan is ready to hand off">
     <div class="media-copy">
       <span class="workflow-meta">Before a handoff</span>
@@ -499,6 +524,11 @@ description: Free orchestration for AI work across providers today. Pay only whe
   </a>
   <a class="media-card" href="{{ '/examples.html#vendor-choice' | relative_url }}">
     <span class="media-window-chrome" aria-hidden="true"></span>
+    <span class="media-overlay-tags" aria-hidden="true">
+      <span>Decision</span>
+      <span>Tradeoffs</span>
+      <span>Recommendation</span>
+    </span>
     <img src="{{ '/assets/examples/vendor-selection.gif' | relative_url }}" alt="Jini preparing a recommendation memo from a vendor comparison">
     <div class="media-copy">
       <span class="workflow-meta">Before a decision</span>
@@ -508,6 +538,11 @@ description: Free orchestration for AI work across providers today. Pay only whe
   </a>
   <a class="media-card" href="{{ '/examples.html#incident-closure' | relative_url }}">
     <span class="media-window-chrome" aria-hidden="true"></span>
+    <span class="media-overlay-tags" aria-hidden="true">
+      <span>Incident</span>
+      <span>Closure</span>
+      <span>Aftercare</span>
+    </span>
     <img src="{{ '/assets/examples/incident-response.gif' | relative_url }}" alt="Jini separating incident closure from follow-up work that still remains">
     <div class="media-copy">
       <span class="workflow-meta">Before real closure</span>

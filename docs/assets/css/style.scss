@@ -750,6 +750,34 @@
   border-top: 1px solid rgba(148, 163, 184, 0.14);
 }
 
+.media-overlay-tags {
+  position: absolute;
+  top: 3.25rem;
+  left: 1rem;
+  right: 1rem;
+  z-index: 4;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.media-overlay-tags span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.7rem;
+  padding: 0.22rem 0.58rem 0.24rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  box-shadow: 0 8px 20px rgba(8, 17, 40, 0.2);
+  backdrop-filter: blur(6px);
+  color: rgba(248, 250, 252, 0.96);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
 .media-copy {
   padding: 1.05rem 1.05rem 1.15rem;
 }
