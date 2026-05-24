@@ -181,6 +181,12 @@ description: Free orchestration for AI work across providers today. Pay only whe
   </div>
   {% endfor %}
 </div>
+
+<div class="truth-rule-strip" aria-label="Jini public proof truth rules">
+  {% for rule in site.data.public_proof.trust_rules %}
+  <span class="truth-rule-pill">{{ rule }}</span>
+  {% endfor %}
+</div>
 </div>
 
 <div class="section-card section-card-story" markdown="1">
