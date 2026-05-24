@@ -17,7 +17,7 @@ description: Free value should be obvious quickly. Paid value should be visible 
       {% if forloop.index0 == 0 %}
       <p>One continuity story across CLI, desktop, and mobile surfaces instead of four disconnected product stories.</p>
       {% elsif forloop.index0 == 1 %}
-      <p>A public demo is acceptable only when it is tied to measurable token savings, a visible 30-day trial story, and a visible renewal story.</p>
+      <p>A public demo is acceptable only when it is tied to measurable token savings, a visible trial-and-renewal story, and an explicit preview boundary.</p>
       {% else %}
       <p>The paid layer should prove that work recovered without the user rebuilding state by hand.</p>
       {% endif %}
@@ -73,7 +73,7 @@ Open Build-Readiness Check</pre>
 <div class="section-card">
   <span class="section-kicker">Renewal proof</span>
   <h2>What the paid layer should prove before renewal</h2>
-  <p>The same proof should already be visible during the 30-day free trial, before the paywall is presented and before the account is downgraded back to constrained free mode.</p>
+  <p>The same proof should already be visible during the planned trial once checkout is live, before the paywall is presented and before the account is downgraded back to constrained free mode.</p>
   <div class="proof-grid">
     <div class="proof-card">
       <h3>Month-to-date savings</h3>

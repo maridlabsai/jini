@@ -30,6 +30,19 @@ class PublicSurfaceIngestionTests(unittest.TestCase):
         expected = build_public_surfaces_snapshot(packet_map)
         actual = json.loads(DATA_PATH.read_text(encoding="utf-8"))
         self.assertEqual(actual, expected)
+        activation_by_id = {surface["id"]: surface["activation"] for surface in actual["surfaces"]}
+        self.assertEqual(
+            activation_by_id["mac"],
+            "When checkout is live, start with the planned 30-day free trial, then buy on the website and sign in",
+        )
+        self.assertEqual(
+            activation_by_id["windows"],
+            "When checkout is live, start with the planned 30-day free trial, then buy on the website and sign in",
+        )
+        self.assertEqual(
+            activation_by_id["commercial-license"],
+            "When checkout is live, start with the planned 30-day free trial, then activate website entitlement",
+        )
 
     def test_sync_public_surfaces_script_writes_snapshot(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
@@ -49,6 +62,10 @@ class PublicSurfaceIngestionTests(unittest.TestCase):
             snapshot = json.loads(output_path.read_text(encoding="utf-8"))
             self.assertEqual(snapshot["source_contract"], "sanitized-commercial-release-packets")
             self.assertEqual(snapshot["surfaces"][1]["artifact_name"], "jini-mac.dmg")
+            self.assertEqual(
+                snapshot["surfaces"][3]["next_step"],
+                "Free app once the signed submission and store-delivery lanes are real",
+            )
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <div class="hero-panel hero-panel-marketing">
   <p class="hero-kicker">Free shell for AI work</p>
   <h1 class="hero-title">Use Jini free across providers now. Pay only when it proves it saves money.</h1>
-  <p class="hero-summary">Jini turns rough input into usable output, keeps active work visible, and gives you one shell for work that may span Claude Code, Codex, Bedrock, Azure OpenAI, or local models. The core shell stays open. Desktop and mobile are the next release surfaces, and each app download stays free when that surface is live. The paid layer is only the cost-saver: provider-limit forecasting, throttle avoidance, fallback, and automatic resume, with a 30-day free trial before the $1/month subscription is even presented.</p>
+  <p class="hero-summary">Jini turns rough input into usable output, keeps active work visible, and gives you one shell for work that may span Claude Code, Codex, Bedrock, Azure OpenAI, or local models. The core shell stays open. Desktop and mobile are the next release surfaces, and each app download stays free when that surface is live. The paid layer is only the cost-saver: provider-limit forecasting, throttle avoidance, fallback, and automatic resume, with a planned 30-day free trial before the $1/month subscription is presented once checkout is live.</p>
   <div class="cta-row">
     <a class="cta-button" href="{{ '/install.html' | relative_url }}">Install</a>
     <a class="cta-button cta-button-secondary" href="{{ '/simple.html' | relative_url }}">Quickstart</a>
@@ -89,7 +89,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <h3>Paid optimizer</h3>
       <p><strong>Pay only for proof</strong>: the paid layer should earn its keep through savings, headroom preserved, throttles avoided, and work resumed automatically.</p>
       <ul class="compact-list">
-        <li>starts with a 30-day free trial</li>
+        <li>planned 30-day free trial when checkout is live</li>
         <li>proof before payment</li>
         <li>paywall before downgrade</li>
         <li>tighter free-mode limits after downgrade, but still enough room to stay productive</li>
@@ -238,7 +238,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
   <div class="checklist-card">
     <h3>What becomes paid</h3>
     <ul class="compact-list">
-      <li>starts with a 30-day free trial before the paywall appears</li>
+      <li>planned 30-day free trial once checkout is live, before the paywall appears</li>
       <li>provider-limit forecasting</li>
       <li>throttle avoidance and automatic fallback</li>
       <li>automatic resume after limits or hosted-tool interruptions</li>
@@ -347,7 +347,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
   </div>
   <div class="checklist-card rollout-card">
     <h3>Paid only after proof</h3>
-    <p>The Commercial License starts with a 30-day free trial and becomes $1/month for provider-limit forecasting, throttle avoidance, automatic fallback, and automatic resume once checkout is live.</p>
+    <p>When checkout is live, the Commercial License should begin with the planned 30-day free trial and become $1/month for provider-limit forecasting, throttle avoidance, automatic fallback, and automatic resume.</p>
   </div>
 </div>
 </div>

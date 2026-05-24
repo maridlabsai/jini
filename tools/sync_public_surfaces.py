@@ -49,7 +49,7 @@ def _surface_next_step(packet_id: str) -> str:
     next_steps = {
         "mac": "Free direct download once the signed wrapper and notarization lane is real",
         "windows": "Free direct download once the signed installer lane is real",
-        "ios": "Free app once the real host container and submission lane exist",
+        "ios": "Free app once the signed submission and store-delivery lanes are real",
         "android": "Free direct download first where policy allows, with Play Store secondary",
     }
     return next_steps[packet_id]
@@ -57,10 +57,10 @@ def _surface_next_step(packet_id: str) -> str:
 
 def _surface_activation(packet_id: str) -> str:
     activation = {
-        "mac": "Start with a 30-day free trial, then buy on the website and sign in",
-        "windows": "Start with a 30-day free trial, then buy on the website and sign in",
-        "ios": "Sign in with an existing paid account",
-        "android": "Sign in with an existing paid account",
+        "mac": "When checkout is live, start with the planned 30-day free trial, then buy on the website and sign in",
+        "windows": "When checkout is live, start with the planned 30-day free trial, then buy on the website and sign in",
+        "ios": "When live, sign in with an existing paid account",
+        "android": "When live, sign in with an existing paid account",
     }
     return activation[packet_id]
 
@@ -104,8 +104,8 @@ def build_public_surfaces_snapshot(packet_map: dict[str, dict[str, Any]]) -> dic
             "name": "Commercial License",
             "badge": "Planned",
             "current_state": "Planned. Not live yet",
-            "next_step": "30-day free trial first, then $1/month website checkout plus account entitlement once checkout is real",
-            "activation": "Start with a 30-day free trial, then website checkout + account entitlement",
+            "next_step": "Planned 30-day free trial first, then $1/month website checkout plus account entitlement once checkout is live",
+            "activation": "When checkout is live, start with the planned 30-day free trial, then activate website entitlement",
             "distribution_policy": "website-checkout",
             "release_readiness_status": "planned",
             "artifact_name": "web-checkout",

@@ -16,7 +16,7 @@ description: The shell stays free. App downloads stay free when live. The paid l
   </div>
   <div class="checklist-card">
     <h3>What the $1 license unlocks</h3>
-    <p>The Commercial License unlocks provider-limit forecasting, throttle avoidance, automatic fallback, and automatic resume after limits or throttles hit. Everyone should get a 30-day free trial before asking for the $1/month subscription.</p>
+    <p>When live, the Commercial License unlocks provider-limit forecasting, throttle avoidance, automatic fallback, and automatic resume after limits or throttles hit. Everyone should get the planned 30-day free trial before asking for the $1/month subscription.</p>
   </div>
 </div>
 
@@ -25,7 +25,7 @@ description: The shell stays free. App downloads stay free when live. The paid l
 
 - use the free shell when you want one stable place to run and resume work
 - expect desktop and mobile apps to be free downloads when each surface is actually live
-- start with a 30-day free trial of the commercial optimizer
+- start with the planned 30-day free trial of the commercial optimizer
 - pay only if Jini can prove that it saved money or prevented stalled work
 </div>
 
@@ -38,10 +38,10 @@ description: The shell stays free. App downloads stay free when live. The paid l
 | Use local models and your own provider accounts | Included | Not required |
 | Keep work resumable and inspectable | Included | Not required |
 | Planned app downloads when released | Included | Not required |
-| Predict provider limits before they block work | Not included | Included after the 30-day free trial |
-| Avoid throttles automatically | Not included | Included after the 30-day free trial |
-| Fall back and resume automatically | Not included | Included after the 30-day free trial |
-| Measured savings and continuity proof | Basic route evidence | Included after the 30-day free trial |
+| Predict provider limits before they block work | Not included | Included after the planned 30-day free trial when checkout is live |
+| Avoid throttles automatically | Not included | Included after the planned 30-day free trial when checkout is live |
+| Fall back and resume automatically | Not included | Included after the planned 30-day free trial when checkout is live |
+| Measured savings and continuity proof | Basic route evidence | Included after the planned 30-day free trial when checkout is live |
 
 The comparison should stay blunt: the free shell must already be useful, and
 the paid layer should exist only where automation, continuity, and savings are
@@ -61,7 +61,7 @@ The app downloads can be free without making the app implementation public.
 <div class="checklist-grid">
   <div class="checklist-card">
     <h3>The rule</h3>
-    <p><strong>Do not charge for the shell. Do not charge for app downloads. Give everyone a 30-day free trial before asking for the $1/month subscription. Charge only for the cost-saver and continuity layer that proves its value at runtime.</strong></p>
+    <p><strong>Do not charge for the shell. Do not charge for app downloads. Give everyone the planned 30-day free trial before asking for the $1/month subscription. Charge only for the cost-saver and continuity layer that proves its value at runtime.</strong></p>
   </div>
   <div class="checklist-card">
     <h3>Why upgrade</h3>

@@ -3,21 +3,21 @@
   "proof_posture": "public-proof-not-production-readiness",
   "hero": {
     "eyebrow": "Visual proof",
-    "headline": "The most dependable, cost-effective, and frictionless platform for automating complex AI workflows across any environment.",
+    "headline": "One shell to run, resume, and review work across CLI, desktop, and mobile surfaces.",
     "body": "Show free orchestration first, then show the paid layer only where it proves savings, continuity, and interruption recovery."
   },
   "proof_cards": [
     {
       "label": "Free cross-platform orchestration proof",
-      "value": "5 surfaces"
+      "value": "CLI + 4 app surfaces"
     },
     {
       "label": "Paid subscription-efficiency proof",
-      "value": "41% savings"
+      "value": "Measured before renewal"
     },
     {
       "label": "Interruption recovery proof",
-      "value": "1 auto resumes"
+      "value": "Preview sample only"
     }
   ],
   "sections": [
@@ -32,7 +32,7 @@
     },
     {
       "id": "paid-savings-story",
-      "headline": "30-day trial, then $1/month subscription-savings proof",
+      "headline": "Planned 30-day trial, then $1/month when live",
       "bullets": [
         "month-to-date token savings",
         "provider headroom preserved",
@@ -51,6 +51,7 @@
     }
   ],
   "trust_rules": [
+    "Do not present preview sample values as live telemetry.",
     "Do not present mocked telemetry as live proof.",
     "Do not claim public download or store availability before the release packet says it is live.",
     "Do not claim savings without a measurable route and renewal story.",

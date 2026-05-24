@@ -70,7 +70,7 @@ class CommercialDocsTests(unittest.TestCase):
         self.assertIn("The CLI is the live installable surface today.", text)
         self.assertIn("not publicly downloadable yet", text)
         self.assertIn("Desktop and Android should distribute directly first where policy allows", text)
-        self.assertIn("Commercial pricing starts with a 30-day free trial and becomes $1/month once checkout and entitlement activation are live", text)
+        self.assertIn("Commercial pricing is planned to start with a 30-day free trial and become $1/month once checkout and entitlement activation are live", text)
         self.assertIn("<h2>What you get today</h2>", text)
         self.assertIn("{% for surface in site.data.public_surfaces.surfaces %}", text)
         self.assertIn("| {{ surface.name }} | {{ surface.current_state }} | {{ surface.next_step }} |", text)
