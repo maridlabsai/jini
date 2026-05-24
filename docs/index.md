@@ -241,12 +241,6 @@ description: Free orchestration for AI work across providers today. Pay only whe
 </div>
 
 <p class="editorial-note">The paid layer should not exist as a generic upgrade tax. It should exist only when Jini can prove it saved money or prevented stalled work, and the paywall should appear before the account is downgraded back to tighter free-mode limits.</p>
-</div>
-
-<div class="section-card section-card-soft" markdown="1">
-## Who Jini is for
-
-<p class="page-lead">The product is strongest when the work has an awkward middle: handoff risk, continuity risk, or cost pressure that a raw shell leaves to the user.</p>
 
 <div class="checklist-grid">
   <div class="checklist-card">

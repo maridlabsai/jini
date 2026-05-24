@@ -37,7 +37,6 @@ class DocsHomepageRewriteTests(unittest.TestCase):
             "## Three ways to work",
             "proof before payment",
             "paywall before downgrade",
-            "## Who Jini is for",
             "Good fit",
             "Not the best fit",
             "## Free now. Paid later only if it earns it.",
