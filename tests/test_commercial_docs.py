@@ -20,8 +20,7 @@ class CommercialDocsTests(unittest.TestCase):
         for marker in (
             "Free orchestration core",
             "CLI is live now",
-            "## Cross-surface rollout",
-            "## Current availability",
+            "## Where you can use it now",
             "Desktop and Android should distribute directly first where policy allows",
             "{% for surface in site.data.public_surfaces.surfaces %}",
             "| {{ surface.name }} | {{ surface.badge }} | {{ surface.current_state }} |",

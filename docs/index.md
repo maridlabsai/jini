@@ -265,9 +265,9 @@ description: Free orchestration for AI work across providers today. Pay only whe
 </div>
 
 <div class="section-card section-card-story workflow-story" markdown="1">
-## What Jini writes
+## What Jini leaves behind
 
-<p class="page-lead">The product should be judged by what it actually leaves behind: usable deliverables, resumable state, and visible evidence when the work needs a second pass.</p>
+<p class="page-lead">The product should be judged by what it actually leaves behind: usable deliverables, resumable state, visible evidence, and work that can survive a device switch without reconstruction.</p>
 
 <div class="workflow-grid workflow-grid-story">
   <div class="workflow-card">
@@ -290,15 +290,6 @@ description: Free orchestration for AI work across providers today. Pay only whe
     <h3>What is still missing</h3>
     <p>You can see what is ready now, what still blocks safe handoff, and why the missing parts still matter.</p>
   </div>
-</div>
-</div>
-
-<div class="section-card section-card-soft continuity-story" markdown="1">
-## Start anywhere. Resume anywhere.
-
-<p class="page-lead">Cross-surface continuity only matters if it lowers restart cost. The session should stay intact while the device changes around it.</p>
-
-<div class="proof-grid proof-grid-story">
   <div class="proof-card">
     <h3>One session, not four different products</h3>
     <p>Jini should preserve the same session identity across macOS, Windows, mobile, and CLI instead of treating each surface like a separate workflow.</p>
@@ -319,9 +310,9 @@ description: Free orchestration for AI work across providers today. Pay only whe
 </div>
 
 <div class="section-card section-card-story rollout-story" markdown="1">
-## Cross-surface rollout
+## Where you can use it now
 
-<p class="page-lead">The surface rollout should feel coordinated: what is live now, what download posture each platform gets, and when the subscription enters the flow.</p>
+<p class="page-lead">The rollout story should live in one place: what is live now, how each surface is staged, what download posture each platform gets, and where the subscription actually enters the flow.</p>
 
 <div class="checklist-grid rollout-grid">
   <div class="checklist-card rollout-card">
@@ -337,12 +328,6 @@ description: Free orchestration for AI work across providers today. Pay only whe
     <p>When checkout is live, the Commercial License should begin with the planned 30-day free trial and become $1/month for provider-limit forecasting, throttle avoidance, automatic fallback, and automatic resume.</p>
   </div>
 </div>
-</div>
-
-<div class="section-card section-card-story surface-story" markdown="1">
-## Current availability
-
-<p class="page-lead">The rollout story should be visible in one place: what you can use now, how the app surfaces are staged, and where the subscription actually enters the flow.</p>
 
 <div class="pill-list">
   {% for surface in site.data.public_surfaces.surfaces %}
