@@ -27,7 +27,7 @@ class CommercialDocsTests(unittest.TestCase):
             "docs/_data/public_surfaces.json",
             "30-day free trial",
             "$1/month subscription",
-            "What stays free vs what becomes paid",
+            "## Small front door. Clear paid boundary.",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)

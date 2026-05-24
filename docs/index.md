@@ -346,10 +346,10 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <p>This homepage status block is fed from <code>docs/_data/public_surfaces.json</code>, a sanitized snapshot built from the commercial release packets.</p>
 </div>
 
-<div class="section-card section-card-soft command-story" markdown="1">
-## Commands that matter
+<div class="section-card section-card-story economics-story" markdown="1">
+## Small front door. Clear paid boundary.
 
-<p class="page-lead">The front door should stay small. These are the only commands that should matter to most users on day one.</p>
+<p class="page-lead">Most users should only need a tiny command front door and one clear pricing boundary: what is already included, what remains manual today, and what the paid layer is supposed to prove before it earns a subscription.</p>
 
 <div class="checklist-grid command-grid">
   <div class="checklist-card command-card">
@@ -369,12 +369,6 @@ description: Free orchestration for AI work across providers today. Pay only whe
     <p>Check route setup without exposing secrets when setup help is actually needed.</p>
   </div>
 </div>
-</div>
-
-<div class="section-card section-card-story economics-story" markdown="1">
-## What stays free vs what becomes paid
-
-<p class="page-lead">The pricing story should be legible without reading product policy docs: what is already included, what remains manual today, and what the paid layer is supposed to prove.</p>
 
 <div class="economics-table" markdown="1">
 | Need | Free Jini shell | Planned paid layer |
@@ -395,12 +389,8 @@ description: Free orchestration for AI work across providers today. Pay only whe
     <p>Jini keeps artifacts, work state, and route evidence legible instead of hiding everything in a proprietary cloud memory layer.</p>
   </div>
   <div class="proof-card">
-    <h3>Stored locally</h3>
-    <p>Artifacts, resume state, route evidence, and repo-local setup state under <code>.jini</code> stay inspectable when the product needs to remember something.</p>
-  </div>
-  <div class="proof-card">
-    <h3>Not stored as product magic</h3>
-    <p>No hidden cloud memory, no opaque routing claims without measurable evidence, no auto-share behavior that skips review, and no secrets echoed back into docs or doctor output.</p>
+    <h3>Stored locally, not as product magic</h3>
+    <p>Artifacts, resume state, route evidence, and repo-local setup state under <code>.jini</code> stay inspectable. No hidden cloud memory, no opaque routing claims without measurable evidence, and no auto-share behavior that skips review.</p>
   </div>
   <div class="proof-card">
     <h3>Measured trust signals</h3>
