@@ -292,8 +292,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <div class="section-card section-card-story" markdown="1">
 ## Where you can use it now
 
-<p class="page-lead">The rollout brief now sits with the proof story above. Keep this section only as the explicit source note and current release boundary.</p>
-<p>This homepage status block is fed from <code>docs/_data/public_surfaces.json</code>, a sanitized snapshot built from the commercial release packets.</p>
+<p class="editorial-note">The rollout brief now sits with the proof story above. This closing section keeps the explicit source note and operating boundary only. The homepage status block is fed from <code>docs/_data/public_surfaces.json</code>, a sanitized snapshot built from the commercial release packets.</p>
 
 ## Small front door. Clear paid boundary.
 
@@ -315,21 +314,6 @@ description: Free orchestration for AI work across providers today. Pay only whe
 | Resume automatically after interruptions | Manual today | Planned |
 
 <p>Free Jini should already be enough to start, finish, and resume serious work. The paid layer should only exist to save money or keep work moving when providers become the bottleneck.</p>
-</div>
-
-<div class="proof-grid proof-grid-story">
-  <div class="proof-card">
-    <h3>Today and later stay explicit</h3>
-    <p>The CLI is the live installable surface now. Desktop and mobile stay free to download when each surface is ready, and the paid layer only starts when checkout is live and the savings story can be measured.</p>
-  </div>
-  <div class="proof-card">
-    <h3>Stored locally, not as product magic</h3>
-    <p>Artifacts, resume state, route evidence, and repo-local setup state under <code>.jini</code> stay inspectable. No hidden cloud memory, no opaque routing claims without measurable evidence, and no auto-share behavior that skips review.</p>
-  </div>
-  <div class="proof-card">
-    <h3>Measured trust signals</h3>
-    <p><code>jini metrics</code> reports command timings and route evidence so efficiency is inspectable, not implied. Strict routes still exist when policy requires them. The paid layer should eventually show month-to-date savings, headroom preserved, throttles avoided, and sessions resumed.</p>
-  </div>
 </div>
 </div>
 
