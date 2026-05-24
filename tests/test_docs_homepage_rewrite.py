@@ -39,7 +39,7 @@ class DocsHomepageRewriteTests(unittest.TestCase):
             "paywall before downgrade",
             "Good fit",
             "Not the best fit",
-            "## Free now. Paid later only if it earns it.",
+            "Free now. Paid later only if it earns it.",
             "What stays free",
             "What becomes paid",
             "## What Jini leaves behind",

@@ -191,7 +191,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <div class="section-card section-card-story" markdown="1">
 ## Why teams keep Jini around
 
-<p class="page-lead">Jini should earn its place by lowering switching cost, keeping work resumable, and making route decisions inspectable instead of magical.</p>
+<p class="page-lead">Jini should earn its place by lowering switching cost, keeping work resumable, making route decisions inspectable instead of magical, and staying free until the paid layer can prove it is worth adding.</p>
 
 <div class="proof-grid proof-grid-story">
   <div class="proof-card">
@@ -211,12 +211,9 @@ description: Free orchestration for AI work across providers today. Pay only whe
     <p>The first useful result should be a follow-up, memo, readiness check, or itinerary, not a prettier status wall.</p>
   </div>
 </div>
-</div>
 
-<div class="section-card section-card-story" markdown="1">
-## Free now. Paid later only if it earns it.
-
-<p class="page-lead">The free shell should already be enough to finish serious work. The paid layer only deserves to exist when it can show real savings or keep work from stalling.</p>
+<h3>Free now. Paid later only if it earns it.</h3>
+<p>The free shell should already be enough to finish serious work. The paid layer only deserves to exist when it can show real savings or keep work from stalling.</p>
 
 <div class="checklist-grid">
   <div class="checklist-card">

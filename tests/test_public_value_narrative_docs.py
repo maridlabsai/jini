@@ -27,7 +27,7 @@ class PublicValueNarrativeDocsTests(unittest.TestCase):
             "planned 30-day free trial",
             "proof before payment",
             "paywall before downgrade",
-            "## Free now. Paid later only if it earns it.",
+            "Free now. Paid later only if it earns it.",
             "The paid layer should not exist as a generic upgrade tax.",
         ):
             with self.subTest(marker=marker):
