@@ -67,20 +67,20 @@
       "reuse_note": "Unique checked-in illustration used here so the output lane depends less on the reused example capture set."
     },
     {
-      "capture_id": "capture-research-prd",
-      "capture_kind": "current-public-example",
-      "capture_source": "examples/spec-readiness",
+      "capture_id": "capture-readiness-panel",
+      "capture_kind": "checked-in-public-illustration",
+      "capture_source": "assets/story/jini-readiness-panel.svg",
       "tone": "readiness",
       "href": "/examples.html#spec-readiness",
       "tags": ["Spec", "Readiness", "Handoff"],
-      "image": "/assets/examples/research-prd.gif",
-      "alt": "Jini checking whether a plan is ready to hand off",
+      "image": "/assets/story/jini-readiness-panel.svg",
+      "alt": "Illustrated Jini readiness panel showing what is safe, what is missing, and what still blocks a handoff",
       "artifacts": ["Build-readiness check", "Handoff brief", "Missing pieces before build"],
       "workflow_meta": "Before a handoff",
       "title": "Check whether a plan is actually ready.",
       "body": "See what is safe, what is missing, and what still blocks a real handoff.",
-      "truth_note": "Example artifact from the public spec-readiness scenario.",
-      "reuse_note": "Same current capture as the state panel, reused because it shows ready/missing posture directly."
+      "truth_note": "Checked-in public illustration. Readiness-output posture only, not a live issue tracker, PR gate, or deployment screen.",
+      "reuse_note": "Unique checked-in illustration used here so the output lane depends less on the reused example capture set."
     },
     {
       "capture_id": "capture-decision-panel",
