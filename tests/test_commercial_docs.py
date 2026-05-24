@@ -19,7 +19,7 @@ class CommercialDocsTests(unittest.TestCase):
         text = read(HOMEPAGE_PATH)
         for marker in (
             "Free orchestration core",
-            "CLI is live now",
+            "The CLI is the live installable surface right now.",
             "## Where you can use it now",
             "Desktop and Android should distribute directly first where policy allows",
             "{% for surface in site.data.public_surfaces.surfaces %}",

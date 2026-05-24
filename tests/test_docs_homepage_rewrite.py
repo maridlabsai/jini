@@ -32,16 +32,11 @@ class DocsHomepageRewriteTests(unittest.TestCase):
             "Before the handoff",
             "Before the decision",
             "Free orchestration core",
-            "Cross-provider by default",
-            "Pay only for proof",
             "## Three ways to work",
-            "proof before payment",
-            "paywall before downgrade",
-            "Good fit",
-            "Not the best fit",
-            "Free now. Paid later only if it earns it.",
-            "What stays free",
-            "What becomes paid",
+            "Use the raw shell for one-shot answers.",
+            "Use the free Jini shell when the work has to survive handoff.",
+            "Add the paid optimizer only when the proof can be measured.",
+            "Pay only for proof",
             "## What Jini leaves behind",
             "One session, not four different products",
             "macOS, Windows, mobile, and CLI",
@@ -59,7 +54,7 @@ class DocsHomepageRewriteTests(unittest.TestCase):
             "site.data.proof_carousel.slides",
             "capture id and source",
             "checked-in proof carousel slides from the repo",
-            "free app downloads once each surface is live",
+            "each app download stays free when that surface is live",
             "jini metrics",
         ):
             with self.subTest(marker=marker):
@@ -72,6 +67,11 @@ class DocsHomepageRewriteTests(unittest.TestCase):
             "## One thread across surfaces",
             "## Why teams keep Jini around",
             "## See real outputs",
+            "Free now. Paid later only if it earns it.",
+            "What stays free",
+            "What becomes paid",
+            "Good fit",
+            "Not the best fit",
         ):
             with self.subTest(marker=marker):
                 self.assertNotIn(marker, text)

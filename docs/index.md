@@ -54,38 +54,22 @@ description: Free orchestration for AI work across providers today. Pay only whe
 
   <div class="offer-grid">
     <div class="offer-card offer-card-plain">
-      <span class="workflow-meta">Direct answer</span>
-      <h3>Raw model shell</h3>
-      <p>Best when the work is one-shot and no continuation or artifact matters after the answer.</p>
-      <ul class="compact-list">
-        <li>fastest path to a single answer</li>
-        <li>no resumable work state</li>
-        <li>you rebuild context next time</li>
-      </ul>
+      <span class="workflow-meta">One-shot work</span>
+      <h3>Use the raw shell for one-shot answers.</h3>
+      <p>Fastest path when no artifact, continuation, or handoff matters after the answer lands.</p>
     </div>
     <div class="offer-card offer-card-core">
       <span class="workflow-meta">Default choice</span>
-      <h3>Free Jini shell</h3>
-      <p><strong>Free orchestration core</strong> for work that needs usable outputs, visible state, and continuation instead of another throwaway answer.</p>
-      <ul class="compact-list">
-        <li><strong>Cross-provider by default</strong></li>
-        <li>local models and BYO providers stay available</li>
-        <li><strong>CLI is live now</strong></li>
-        <li>free app downloads once each surface is live</li>
-      </ul>
+      <h3>Use the free Jini shell when the work has to survive handoff.</h3>
+      <p><strong>Free orchestration core</strong> for work that needs a usable artifact, visible route choices, and resumable state instead of another throwaway answer.</p>
     </div>
     <div class="offer-card offer-card-paid">
       <span class="workflow-meta">Only after proof</span>
-      <h3>Paid optimizer</h3>
-      <p><strong>Pay only for proof</strong>: the paid layer should earn its keep through savings, headroom preserved, throttles avoided, and work resumed automatically.</p>
-      <ul class="compact-list">
-        <li>planned 30-day free trial, then the $1/month subscription when checkout is live</li>
-        <li>proof before payment</li>
-        <li>paywall before downgrade</li>
-        <li>tighter free-mode limits after downgrade, but still enough room to stay productive</li>
-      </ul>
+      <h3>Add the paid optimizer only when the proof can be measured.</h3>
+      <p><strong>Pay only for proof</strong>: when checkout is live, the planned 30-day free trial should come before the $1/month subscription, and only after Jini can show savings, preserved headroom, or recovered work.</p>
     </div>
   </div>
+  <p class="editorial-note">Best fit when the work needs a sendable artifact, a safer handoff, or reasoning you can still explain later. If you only need one answer, stay in a raw shell.</p>
 </div>
 
 <div class="section-card section-card-story" markdown="1">
@@ -147,53 +131,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
   </div>
 </div>
 
-<h3>Free now. Paid later only if it earns it.</h3>
-<p>The free shell should already be enough to finish serious work. The paid layer only deserves to exist when it can show real savings or keep work from stalling.</p>
-
-<div class="checklist-grid">
-  <div class="checklist-card">
-    <h3>What stays free</h3>
-    <ul class="compact-list">
-      <li>the CLI and core orchestration shell</li>
-      <li>local models and BYO provider use</li>
-      <li>artifacts, resumable work state, and visible route choices</li>
-      <li>free app downloads once each surface is live</li>
-    </ul>
-  </div>
-  <div class="checklist-card">
-    <h3>What becomes paid</h3>
-    <ul class="compact-list">
-      <li>planned 30-day free trial once checkout is live, before the paywall appears</li>
-      <li>provider-limit forecasting</li>
-      <li>throttle avoidance and automatic fallback</li>
-      <li>automatic resume after limits or hosted-tool interruptions</li>
-      <li>renewal proof that shows savings and continuity actually happened</li>
-    </ul>
-  </div>
-</div>
-
-<p class="editorial-note">The paid layer should not exist as a generic upgrade tax. It should exist only when Jini can prove it saved money or prevented stalled work, and the paywall should appear before the account is downgraded back to tighter free-mode limits.</p>
-
-<div class="checklist-grid">
-  <div class="checklist-card">
-    <h3>Good fit</h3>
-    <ul class="compact-list">
-      <li>teams that need usable deliverables, not just answers</li>
-      <li>work that has an awkward middle and needs continuation</li>
-      <li>buyers who care about cost, inspectability, and safe handoff</li>
-      <li>people who want one stable shell across multiple providers</li>
-    </ul>
-  </div>
-  <div class="checklist-card">
-    <h3>Not the best fit</h3>
-    <ul class="compact-list">
-      <li>one-shot chat where no continuation or artifact matters</li>
-      <li>users who only want the raw model shell with no extra product layer</li>
-      <li>work where route cost, stored state, and review posture do not matter</li>
-      <li>teams that do not care whether outputs are handoff-safe or inspectable</li>
-    </ul>
-  </div>
-</div>
+<p class="editorial-note">The free shell should already be enough to finish serious work. The paid layer should stay later and narrower: only after Jini can prove it saved money or prevented stalled work.</p>
 </div>
 
 <div class="section-card section-card-soft proof-signal-panel" markdown="1">

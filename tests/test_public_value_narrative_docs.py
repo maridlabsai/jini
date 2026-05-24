@@ -24,11 +24,11 @@ class PublicValueNarrativeDocsTests(unittest.TestCase):
             "After the meeting",
             "Before the handoff",
             "Before the decision",
+            "Use the raw shell for one-shot answers.",
+            "Use the free Jini shell when the work has to survive handoff.",
+            "Add the paid optimizer only when the proof can be measured.",
             "planned 30-day free trial",
-            "proof before payment",
-            "paywall before downgrade",
-            "Free now. Paid later only if it earns it.",
-            "The paid layer should not exist as a generic upgrade tax.",
+            "The free shell should already be enough to finish serious work.",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
