@@ -54,7 +54,7 @@ class DocsHomepageRewriteTests(unittest.TestCase):
             "site.data.proof_carousel.slides",
             "capture id and source",
             "checked-in proof carousel slides from the repo",
-            "each app download stays free when that surface is live",
+            "Start in the CLI today, then carry the same work forward as desktop and mobile come online.",
             "jini metrics",
         ):
             with self.subTest(marker=marker):
