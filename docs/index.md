@@ -50,27 +50,26 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <span class="hero-scene-chip">artifact first</span>
     </div>
   </div>
-</div>
+  <div class="hero-decision-frame hero-decision-frame-inline" markdown="1">
+    <h2>Choose the lightest layer that still leaves behind usable work.</h2>
+    <p class="page-lead">If you only need a one-off answer, use a raw model shell. Jini earns the right to exist when the work has to leave chat with a sendable artifact, a safer handoff, and reasoning you can still explain later.</p>
 
-<div class="section-card hero-decision-frame" markdown="1">
-  <h2>Choose the lightest layer that still leaves behind usable work.</h2>
-  <p class="page-lead">If you only need a one-off answer, use a raw model shell. Jini earns the right to exist when the work has to leave chat with a sendable artifact, a safer handoff, and reasoning you can still explain later.</p>
-
-  <div class="offer-grid">
-    <div class="offer-card offer-card-plain">
-      <h3>Use the raw shell for one-shot answers.</h3>
-      <p>Fastest path when the answer can die in the tab.</p>
+    <div class="offer-grid">
+      <div class="offer-card offer-card-plain">
+        <h3>Use the raw shell for one-shot answers.</h3>
+        <p>Fastest path when the answer can die in the tab.</p>
+      </div>
+      <div class="offer-card offer-card-core">
+        <h3>Use the free Jini shell when the work has to survive handoff.</h3>
+        <p><strong>Free orchestration core</strong> for work that needs an artifact, route evidence, or resumable state.</p>
+      </div>
+      <div class="offer-card offer-card-paid">
+        <h3>Add the paid optimizer only when the proof can be measured.</h3>
+        <p><strong>Pay only for proof</strong>: when checkout is live, the planned 30-day free trial should come before the $1/month subscription and only after Jini can show savings, preserved headroom, or recovered work.</p>
+      </div>
     </div>
-    <div class="offer-card offer-card-core">
-      <h3>Use the free Jini shell when the work has to survive handoff.</h3>
-      <p><strong>Free orchestration core</strong> for work that needs an artifact, route evidence, or resumable state.</p>
-    </div>
-    <div class="offer-card offer-card-paid">
-      <h3>Add the paid optimizer only when the proof can be measured.</h3>
-      <p><strong>Pay only for proof</strong>: when checkout is live, the planned 30-day free trial should come before the $1/month subscription and only after Jini can show savings, preserved headroom, or recovered work.</p>
-    </div>
+    <p class="editorial-note"><strong>Flagship jobs:</strong> After the meeting. Before the handoff. Before the decision. If the work does not need one of those artifact-safe outcomes, stay in a raw shell.</p>
   </div>
-  <p class="editorial-note"><strong>Flagship jobs:</strong> After the meeting. Before the handoff. Before the decision. If the work does not need one of those artifact-safe outcomes, stay in a raw shell.</p>
 </div>
 
 <div class="section-card section-card-story showcase-story" markdown="1">

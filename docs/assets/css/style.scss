@@ -1587,7 +1587,8 @@
 .hero-decision-frame {
   overflow: hidden;
   position: relative;
-  margin-top: -0.45rem;
+  margin-top: 1.15rem;
+  padding: 1.1rem 1.15rem 1.15rem;
   border-color: rgba(148, 163, 184, 0.18);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 251, 255, 0.86) 100%);
@@ -1606,7 +1607,7 @@
 
 .hero-decision-frame .page-lead {
   max-width: 54rem;
-  margin-top: 0.75rem;
+  margin-top: 0.55rem;
 }
 
 .hero-decision-frame .quote-strip {
@@ -1629,6 +1630,16 @@
   border-color: rgba(148, 163, 184, 0.2);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.94) 100%);
+}
+
+.hero-panel-marketing .hero-decision-frame {
+  margin-bottom: 0;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 24px;
+}
+
+.hero-panel-marketing .hero-decision-frame::before {
+  width: 5px;
 }
 
 .quote-strip {
