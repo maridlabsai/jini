@@ -24,12 +24,12 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <div class="hero-scene-support-row">
         <span class="hero-scene-label">Next surfaces</span>
         <strong>Desktop and mobile continuity</strong>
-        <p>Carry the same thread forward as each surface comes online.</p>
+        <p>Carry the same thread forward when each surface comes online.</p>
       </div>
       <div class="hero-scene-support-row hero-scene-support-row-output">
         <span class="hero-scene-label">What leaves the thread</span>
         <strong>Sendable output</strong>
-        <p>Follow-up, readiness check, or decision memo someone else can act on.</p>
+        <p>Leave with a follow-up, readiness check, or decision memo someone else can act on.</p>
       </div>
     </div>
   </div>
