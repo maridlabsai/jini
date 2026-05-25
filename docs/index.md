@@ -64,7 +64,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
     </div>
 
     <div class="hero-install-rail">
-      <span class="command-label">Start here</span>
+      <span class="command-label">Run once</span>
       <div class="hero-install-main">
         <code>curl -fsSL https://raw.githubusercontent.com/maridlabsai/jini/main/install.sh | bash</code>
         <code>jini</code>
