@@ -53,41 +53,24 @@ description: Free orchestration for AI work across providers today. Pay only whe
 </div>
 
 <div class="section-card hero-decision-frame" markdown="1">
-  <span class="section-kicker">Choose the lightest layer that still leaves behind usable work.</span>
-  <h2>Jini earns the right to exist when the work has to leave chat with a sendable artifact, a safer handoff, and reasoning you can still explain later.</h2>
-  <p class="page-lead">If you only need a one-off answer, use a raw model shell. If the work needs a sendable artifact, a safer handoff, or reasoning you can still explain later, use Jini. Use the raw shell for one-shot answers, the free Jini shell for real work, and the paid layer only after it can prove it saved money or kept work moving.</p>
-  <div class="signal-grid">
-    <div class="signal-card">
-      <h3>After the meeting</h3>
-      <p>Turn messy notes into a sendable follow-up with owners, decisions, and open questions someone else can act on.</p>
-    </div>
-    <div class="signal-card">
-      <h3>Before the handoff</h3>
-      <p>Check whether a plan, spec, or task bundle is actually ready before someone else has to build on top of it.</p>
-    </div>
-    <div class="signal-card">
-      <h3>Before the decision</h3>
-      <p>Keep the reasoning, tradeoffs, and unanswered questions attached to the recommendation instead of buried in chat history.</p>
-    </div>
-  </div>
+  <h2>Choose the lightest layer that still leaves behind usable work.</h2>
+  <p class="page-lead">If you only need a one-off answer, use a raw model shell. Jini earns the right to exist when the work has to leave chat with a sendable artifact, a safer handoff, and reasoning you can still explain later.</p>
 
   <div class="offer-grid">
     <div class="offer-card offer-card-plain">
-      <span class="workflow-meta">One-shot work</span>
       <h3>Use the raw shell for one-shot answers.</h3>
-      <p>Fastest path when no artifact, continuation, or handoff matters after the answer lands.</p>
+      <p>Fastest path when the answer can die in the tab.</p>
     </div>
     <div class="offer-card offer-card-core">
-      <span class="workflow-meta">Default choice</span>
       <h3>Use the free Jini shell when the work has to survive handoff.</h3>
-      <p><strong>Free orchestration core</strong> for work that needs a usable artifact, visible route choices, and resumable state instead of another throwaway answer.</p>
+      <p><strong>Free orchestration core</strong> for work that needs an artifact, route evidence, or resumable state.</p>
     </div>
     <div class="offer-card offer-card-paid">
-      <span class="workflow-meta">Only after proof</span>
       <h3>Add the paid optimizer only when the proof can be measured.</h3>
-      <p><strong>Pay only for proof</strong>: when checkout is live, the planned 30-day free trial should come before the $1/month subscription, and only after Jini can show savings, preserved headroom, or recovered work.</p>
+      <p><strong>Pay only for proof</strong>: when checkout is live, the planned 30-day free trial should come before the $1/month subscription and only after Jini can show savings, preserved headroom, or recovered work.</p>
     </div>
   </div>
+  <p class="editorial-note"><strong>Flagship jobs:</strong> After the meeting. Before the handoff. Before the decision. If the work does not need one of those artifact-safe outcomes, stay in a raw shell.</p>
 </div>
 
 <div class="section-card section-card-story showcase-story" markdown="1">

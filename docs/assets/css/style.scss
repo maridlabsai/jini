@@ -1606,7 +1606,7 @@
 
 .hero-decision-frame .page-lead {
   max-width: 54rem;
-  margin-top: 1rem;
+  margin-top: 0.75rem;
 }
 
 .hero-decision-frame .quote-strip {
@@ -2046,19 +2046,19 @@
 
 .offer-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
-  margin-top: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.8rem;
+  margin-top: 0.9rem;
 }
 
 .offer-card {
   position: relative;
   overflow: hidden;
-  padding: 1.1rem 1rem 1.15rem;
+  padding: 0.9rem 0.95rem 0.95rem;
   border: 1px solid rgba(148, 163, 184, 0.24);
-  border-radius: 22px;
+  border-radius: 18px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.98) 100%);
-  box-shadow: 0 16px 36px rgba(8, 17, 40, 0.06);
+  box-shadow: 0 10px 24px rgba(8, 17, 40, 0.05);
 }
 
 .offer-card::before {
@@ -2081,9 +2081,9 @@
 }
 
 .offer-card h3 {
-  margin: 0 0 0.45rem;
-  font-size: 1.06rem;
-  line-height: 1.3;
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+  line-height: 1.28;
 }
 
 .offer-card p,
@@ -2091,6 +2091,7 @@
   position: relative;
   z-index: 1;
   margin: 0;
+  font-size: 0.95rem;
   color: #344054;
 }
 
