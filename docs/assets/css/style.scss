@@ -2439,6 +2439,10 @@
     grid-template-columns: 1fr;
   }
 
+  .offer-side-rail {
+    padding-left: 0;
+  }
+
   .offer-card-plain,
   .offer-card-core,
   .offer-card-paid {
@@ -2597,15 +2601,23 @@
 
 .offer-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.34fr) minmax(240px, 0.8fr);
-  align-items: stretch;
-  gap: 0.38rem;
+  grid-template-columns: minmax(0, 1.46fr) minmax(216px, 0.68fr);
+  align-items: start;
+  gap: 0.34rem;
   margin-top: 0.16rem;
   padding: 0.18rem 0;
   border: 0;
   border-radius: 16px;
   background: transparent;
   box-shadow: none;
+}
+
+.offer-side-rail {
+  display: grid;
+  gap: 0.24rem;
+  align-content: start;
+  min-width: 0;
+  padding: 0.02rem 0 0 0.12rem;
 }
 
 .offer-card {
@@ -2641,12 +2653,9 @@
 }
 
 .offer-card-plain {
-  grid-column: 2;
-  grid-row: 1;
   gap: 0.1rem;
-  align-self: end;
-  padding: 0.48rem 0.54rem 0.5rem;
-  opacity: 0.78;
+  padding: 0.42rem 0.48rem 0.44rem;
+  opacity: 0.72;
 }
 
 .offer-card-core::before {
@@ -2654,8 +2663,6 @@
 }
 
 .offer-card-core {
-  grid-column: 1;
-  grid-row: 1 / span 2;
   z-index: 1;
   gap: 0.12rem;
   border-color: rgba(29, 78, 216, 0.18);
@@ -2766,12 +2773,9 @@
 }
 
 .offer-card-paid {
-  grid-column: 2;
-  grid-row: 2;
   gap: 0.1rem;
-  align-self: start;
-  padding: 0.48rem 0.54rem 0.5rem;
-  opacity: 0.8;
+  padding: 0.42rem 0.48rem 0.44rem;
+  opacity: 0.74;
 }
 
 .offer-card-paid .offer-card-eyebrow {
@@ -2786,7 +2790,7 @@
 }
 
 .offer-card-paid .offer-card-note {
-  margin-top: 0.2rem;
+  margin-top: 0.16rem;
   color: #667085;
   font-size: 0.76rem;
   line-height: 1.28;
