@@ -211,6 +211,7 @@ jini
 </div>
 
 <div class="section-card section-card-cta" markdown="1">
+  <span class="section-kicker">Next step</span>
   <h2>Most people should stop here</h2>
   <p>Install Jini, run <code>jini</code>, and paste the work you want finished. Only drop to the strict route blocks when policy or debugging requires it.</p>
   <div class="page-intro-links">

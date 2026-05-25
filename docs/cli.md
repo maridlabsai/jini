@@ -162,6 +162,7 @@ jini
 </div>
 
 <div class="section-card section-card-cta" markdown="1">
+  <span class="section-kicker">Next step</span>
   <h2>The public rule</h2>
   <p>The normal path is still small: install once, run <code>jini</code>, paste the work you want finished. When you need a public command list, use <code>jini commands</code>. The rest of the CLI exists to support that experience, not replace it.</p>
   <div class="page-intro-links">

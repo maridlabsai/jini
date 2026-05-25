@@ -137,6 +137,7 @@ Claude
 </div>
 
 <div class="section-card section-card-cta" markdown="1">
+  <span class="section-kicker">Next step</span>
   <h2>If you only remember one rule</h2>
   <p>Jini should make the work easier to finish. If it makes you think harder about the tool than about the work, it is failing.</p>
   <div class="page-intro-links">
