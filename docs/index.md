@@ -183,7 +183,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <p class="editorial-note">The free shell should already be enough to finish serious work. The paid layer should stay later and narrower: only after Jini can prove it saved money or prevented stalled work.</p>
 </div>
 
-<div class="section-card section-card-soft proof-signal-panel" markdown="1">
+<div class="section-card section-card-soft proof-signal-panel surface-story" markdown="1">
 ## Proof, kept brief
 
 <p class="page-lead">Trust should support the pitch, not bury it. Keep the proof data visible, mark the release posture clearly, then get back to the work.</p>
@@ -241,7 +241,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
   <p>If you need the small public command list, use <code>jini commands</code>. Setup and route debugging exist when the work needs them, but they are support tools, not the product story.</p>
 </div>
 
-<div class="economics-table" markdown="1">
+<div class="economics-table surface-story" markdown="1">
 | Need | Free Jini shell | Planned paid layer |
 |---|---|---|
 | Start and finish work | Included | Not required |

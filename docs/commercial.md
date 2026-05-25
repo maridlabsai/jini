@@ -45,7 +45,7 @@ quick_links:
 <p>Upgrade when provider limits, throttles, or expensive routes are a real operating problem and you want Jini to keep work moving automatically instead of forcing manual babysitting. The paywall prompt should appear before downgrade, not after the account is already squeezed into constrained free mode.</p>
 </div>
 
-<div class="section-card" markdown="1">
+<div class="section-card section-card-soft surface-story" markdown="1">
 ## Free shell vs paid optimizer
 
 | Need | Free shell | Paid optimizer |
@@ -59,9 +59,7 @@ quick_links:
 | Fall back and resume automatically | Not included | Included after the planned 30-day free trial when checkout is live |
 | Measured savings and continuity proof | Basic route evidence | Included after the planned 30-day free trial when checkout is live |
 
-The comparison should stay blunt: the free shell must already be useful, and
-the paid layer should exist only where automation, continuity, and savings are
-meaningfully better than manual babysitting.
+<p class="editorial-note">Keep the comparison blunt: the free shell should already be useful, and the paid layer should only appear where automation, continuity, and savings are meaningfully better than manual babysitting.</p>
 </div>
 
 <div class="section-card" markdown="1">
@@ -86,7 +84,7 @@ If the paid layer is worth keeping, it should show evidence that the free shell 
 If Jini cannot prove that value, it should not expect renewal.
  </div>
 
-<div class="section-card" markdown="1">
+<div class="section-card section-card-soft surface-story" markdown="1">
 ## Current readiness and payment status
 
 ### Distribution rule of thumb
@@ -126,5 +124,5 @@ Checkout is not live yet. The current product work defines the shared entitlemen
 
 Current posture: preview and planning slices are implemented, but the apps are not yet release-ready for direct public download or store rollout.
 
-This table is fed from <code>docs/_data/public_surfaces.json</code>, which is a sanitized snapshot built from the commercial release packets instead of hand-maintained website copy.
+<p class="editorial-note">This table is fed from <code>docs/_data/public_surfaces.json</code>, a sanitized snapshot built from the commercial release packets instead of hand-maintained website copy.</p>
 </div>
