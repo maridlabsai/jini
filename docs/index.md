@@ -155,7 +155,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <div class="section-card section-card-story" markdown="1">
 ## What Jini leaves behind
 
-<p class="page-lead">After the surface and outputs are visible, the remaining question is simple: does Jini leave behind usable work, visible evidence, and continuity that survives handoff without reconstruction?</p>
+<p class="page-lead">After the surface and outputs are visible, the only remaining question is whether Jini leaves behind work, evidence, and continuity that survive handoff without reconstruction.</p>
 
 <div class="workflow-grid workflow-grid-story">
   <div class="workflow-card">
@@ -180,13 +180,16 @@ description: Free orchestration for AI work across providers today. Pay only whe
   </div>
 </div>
 
-<p class="editorial-note">The free shell should already be enough to finish serious work. The paid layer should stay later and narrower: only after Jini can prove it saved money or prevented stalled work.</p>
+<div class="quote-strip">
+  <strong>The free shell should already be enough to finish serious work.</strong>
+  <p>The paid layer should stay later and narrower: only after Jini can prove it saved money or prevented stalled work.</p>
+</div>
 </div>
 
 <div class="section-card section-card-soft proof-signal-panel surface-story" markdown="1">
 ## Proof, kept brief
 
-<p class="page-lead">Trust should support the pitch, not bury it. Keep the proof data visible, mark the release posture clearly, then get back to the work.</p>
+<p class="page-lead">Trust should support the pitch, not bury it. Keep the proof visible, mark the release posture clearly, then get back to the work.</p>
 
 <p class="editorial-note proof-carousel-note">These are checked-in proof carousel slides from the repo, not mocked app-store shots or implied live-release screenshots.</p>
 
@@ -232,7 +235,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <div class="section-card section-card-story" markdown="1">
 ## Where you can use it now
 
-<p class="editorial-note">The homepage status block is fed from <code>docs/_data/public_surfaces.json</code>, a sanitized snapshot built from the commercial release packets. This closing band keeps the explicit source note and the operating boundary in one place.</p>
+<p class="editorial-note">This closing band keeps the source note and the operating boundary in one place. The homepage status block is fed from <code>docs/_data/public_surfaces.json</code>, a sanitized snapshot built from the commercial release packets.</p>
 
 ## Small front door. Clear paid boundary.
 
@@ -251,7 +254,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 | Avoid throttles with automatic fallback | Not included | Planned |
 | Resume automatically after interruptions | Manual today | Planned |
 
-<p>Free Jini should already be enough to start, finish, and resume serious work. The paid layer should only exist to save money or keep work moving when providers become the bottleneck.</p>
+<p class="editorial-note">Free Jini should already be enough to start, finish, and resume serious work. The paid layer should only exist to save money or keep work moving when providers become the bottleneck.</p>
 </div>
 </div>
 
