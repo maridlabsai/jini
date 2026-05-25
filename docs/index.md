@@ -216,12 +216,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
   {% endfor %}
 </div>
 
-<div class="quote-strip">
-  <strong>Free first. Paid only if the savings story is measurable.</strong>
-  <p>No live store claims before release. No fake telemetry. No hidden preview posture.</p>
-</div>
-
-<p class="editorial-note">The CLI is the live installable surface right now. Desktop and mobile remain in release preparation and should stay free to download when each surface is live. Desktop and Android should distribute directly first where policy allows, while the paid layer should begin only after the planned 30-day free trial and measurable proof are real.</p>
+<p class="page-lead proof-boundary-brief"><strong>Free first. Paid only if the savings story is measurable.</strong> No live store claims before release. No fake telemetry. No hidden preview posture.</p>
 
 | Surface | Status | Current state |
 |---|---|---|
@@ -229,7 +224,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 | {{ surface.name }} | {{ surface.badge }} | {{ surface.current_state }} |
 {% endfor %}
 
-<p class="availability-note editorial-note">Desktop launch plan: buy on the website, then sign in to unlock paid features. Android should prefer direct download first where policy allows, with store distribution secondary. iOS remains store-constrained. Mobile should not be the first place users subscribe.</p>
+<p class="availability-note editorial-note">The CLI is the live installable surface right now. Desktop and mobile remain in release preparation and should stay free to download when each surface is live. Desktop and Android should distribute directly first where policy allows, while the paid layer should begin only after the planned 30-day free trial and measurable proof are real. Desktop launch plan: buy on the website, then sign in to unlock paid features. Android should prefer direct download first where policy allows, with store distribution secondary. iOS remains store-constrained. Mobile should not be the first place users subscribe.</p>
 </div>
 
 <div class="section-card section-card-story" markdown="1">
@@ -239,10 +234,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 
 ## Small front door. Clear paid boundary.
 
-<div class="quote-strip">
-  <strong>Start with <code>jini</code>.</strong>
-  <p>If you need the small public command list, use <code>jini commands</code>. Setup and route debugging exist when the work needs them, but they are support tools, not the product story.</p>
-</div>
+<p class="page-lead closing-boundary-brief"><strong>Start with <code>jini</code>.</strong> If you need the small public command list, use <code>jini commands</code>. Setup and route debugging exist when the work needs them, but they are support tools, not the product story.</p>
 
 <div class="economics-table surface-story" markdown="1">
 | Need | Free Jini shell | Planned paid layer |
@@ -253,9 +245,9 @@ description: Free orchestration for AI work across providers today. Pay only whe
 | Forecast provider limits before they hit | Not included | Planned |
 | Avoid throttles with automatic fallback | Not included | Planned |
 | Resume automatically after interruptions | Manual today | Planned |
-
-<p class="editorial-note">Free Jini should already be enough to start, finish, and resume serious work. The paid layer should only exist to save money or keep work moving when providers become the bottleneck.</p>
 </div>
+
+<p class="editorial-note economics-note">Free Jini should already be enough to start, finish, and resume serious work. The paid layer should only exist to save money or keep work moving when providers become the bottleneck.</p>
 </div>
 
 <div class="section-card section-card-cta">

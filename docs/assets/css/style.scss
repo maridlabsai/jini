@@ -1657,6 +1657,17 @@
   margin-top: 1rem;
 }
 
+.proof-boundary-brief,
+.closing-boundary-brief {
+  max-width: 48rem;
+  margin-top: 1.05rem;
+}
+
+.proof-boundary-brief strong,
+.closing-boundary-brief strong {
+  color: #0f172a;
+}
+
 .editorial-note {
   margin: 0.82rem 0 0;
   max-width: 44rem;
@@ -1821,6 +1832,10 @@
 
 .economics-table {
   margin-bottom: 1rem;
+}
+
+.economics-note {
+  max-width: 46rem;
 }
 
 .hero-panel-marketing + .checklist-grid .checklist-card {
