@@ -50,6 +50,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
         <p class="offer-card-note">Fastest path when the answer can die in the tab.</p>
       </div>
       <div class="offer-card offer-card-core">
+        <span class="offer-card-eyebrow offer-card-eyebrow-core">Free orchestration core</span>
         <h3>Use the free Jini shell when the work has to survive handoff.</h3>
         <div class="offer-card-contexts" aria-label="Flagship jobs">
           <span>After the meeting</span>
@@ -57,7 +58,6 @@ description: Free orchestration for AI work across providers today. Pay only whe
           <span>Before the decision</span>
         </div>
         <p>Jini earns the right to exist when the work has to leave chat with a sendable artifact, a safer handoff, and reasoning you can still explain later.</p>
-        <p><strong>Free orchestration core</strong> for work that needs an artifact, route evidence, or resumable state.</p>
       </div>
       <div class="offer-card offer-card-paid">
         <span class="offer-card-eyebrow">Optional add-on</span>

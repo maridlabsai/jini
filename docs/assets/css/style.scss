@@ -2305,6 +2305,7 @@
 
 .offer-card-core {
   z-index: 1;
+  gap: 0.12rem;
   border-color: rgba(29, 78, 216, 0.18);
   background:
     radial-gradient(circle at top right, rgba(29, 78, 216, 0.08), transparent 34%),
@@ -2341,11 +2342,17 @@
   text-transform: uppercase;
 }
 
+.offer-card-eyebrow-core {
+  border-color: rgba(29, 78, 216, 0.14);
+  background: rgba(238, 244, 255, 0.86);
+  color: #1849a9;
+}
+
 .offer-card-contexts {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
-  margin-top: 0.08rem;
+  margin-top: 0.05rem;
 }
 
 .offer-card-contexts span {
