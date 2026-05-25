@@ -213,6 +213,29 @@ description: Free orchestration for AI work across providers today. Pay only whe
   {% endfor %}
 </div>
 
+<div class="trust-architecture-grid">
+  <div class="trust-architecture-card">
+    <span class="workflow-meta">Inspectability</span>
+    <h3>Local by default</h3>
+    <p>Artifacts, resume state, and handoff evidence stay readable instead of disappearing into product magic.</p>
+  </div>
+  <div class="trust-architecture-card">
+    <span class="workflow-meta">Route evidence</span>
+    <h3>Operational truth stays visible</h3>
+    <p>Provider state, command latency, route cost, and route trend stay inspectable when the work needs explanation.</p>
+  </div>
+  <div class="trust-architecture-card">
+    <span class="workflow-meta">Continuity</span>
+    <h3>One thread, not repeated restarts</h3>
+    <p>The same work should survive the move from CLI to later desktop and mobile surfaces without reconstruction.</p>
+  </div>
+  <div class="trust-architecture-card">
+    <span class="workflow-meta">Paid boundary</span>
+    <h3>Optimization must earn its place</h3>
+    <p>The paid layer belongs only where savings, preserved headroom, or interruption recovery can actually be shown.</p>
+  </div>
+</div>
+
 <p class="page-lead proof-boundary-brief"><strong>Free first. Paid only if the savings story is measurable.</strong> No live store claims before release. No fake telemetry. No hidden preview posture.</p>
 
 <div class="release-confidence-band surface-story" markdown="1">

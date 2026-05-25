@@ -2157,6 +2157,48 @@
   margin-top: 1.2rem;
 }
 
+.trust-architecture-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.trust-architecture-card {
+  position: relative;
+  overflow: hidden;
+  padding: 0.95rem 0.96rem 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(249, 251, 254, 0.94) 100%);
+  box-shadow:
+    0 10px 24px rgba(8, 17, 40, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.trust-architecture-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: linear-gradient(180deg, rgba(29, 78, 216, 0.86) 0%, rgba(14, 116, 144, 0.82) 100%);
+}
+
+.trust-architecture-card h3 {
+  margin: 0 0 0.38rem;
+  font-size: 1rem;
+  line-height: 1.28;
+  color: #0f172a;
+}
+
+.trust-architecture-card p {
+  margin: 0;
+  color: #475467;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
 .proof-signal-panel {
   isolation: isolate;
   position: relative;
