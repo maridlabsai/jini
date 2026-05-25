@@ -6,7 +6,8 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <div class="hero-panel hero-panel-marketing">
   <p class="hero-kicker">AI work that has to survive week two</p>
   <h1 class="hero-title">Turn messy AI work into something you can actually send.</h1>
-  <p class="hero-summary">Jini turns rough notes, transcripts, screenshots, and drafts into follow-ups, readiness checks, and decision memos that survive handoff. The core shell stays open. Start in the CLI today, then carry the same work forward as desktop and mobile come online. The paid layer stays narrow: it only enters when Jini can prove it saved money or kept work moving.</p>
+  <p class="hero-summary">Jini turns rough notes, transcripts, screenshots, and drafts into follow-ups, readiness checks, and decision memos that survive handoff.</p>
+  <p class="hero-summary-support">The core shell stays open. Start in the CLI today, then carry the same work forward as desktop and mobile come online.</p>
   <div class="cta-row">
     <a class="cta-button" href="{{ '/install.html' | relative_url }}">Install Free</a>
     <a class="cta-button cta-button-secondary" href="{{ '/examples.html' | relative_url }}">See Examples</a>
@@ -60,6 +61,8 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <span>Before the handoff</span>
       <span>Before the decision</span>
     </div>
+
+    <p class="hero-boundary-note">The paid layer stays narrow: it only enters when Jini can prove it saved money or kept work moving.</p>
 
     <div class="offer-grid">
       <div class="offer-card offer-card-plain">

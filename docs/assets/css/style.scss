@@ -343,6 +343,14 @@
   color: var(--jini-copy);
 }
 
+.hero-summary-support {
+  max-width: 46rem;
+  margin: 0.45rem 0 0;
+  font-size: 0.98rem;
+  line-height: 1.62;
+  color: #526581;
+}
+
 .hero-panel-marketing {
   isolation: isolate;
   overflow: hidden;
@@ -2202,6 +2210,14 @@
   font-size: 0.84rem;
   font-weight: 700;
   box-shadow: 0 8px 18px rgba(8, 17, 40, 0.04);
+}
+
+.hero-boundary-note {
+  max-width: 44rem;
+  margin: 0.75rem 0 0;
+  font-size: 0.92rem;
+  line-height: 1.52;
+  color: #344054;
 }
 
 .offer-grid {
