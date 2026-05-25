@@ -24,6 +24,11 @@ quick_links:
   <p>Jini should feel better than plain chat because it gives teams usable deliverables, visible missing pieces, and a continuation surface they can understand without rebuilding state from scratch. The same output and session model should travel across macOS, Windows, mobile, and CLI. A device switch should not create a second-class copy of the work.</p>
 </div>
 
+<div class="section-card section-card-soft" markdown="1">
+  <span class="section-kicker">Output posture</span>
+  <h2>What good output keeps visible</h2>
+  <p class="page-lead">Before the deeper shell contract, the buyer should be able to see the four basics immediately: legible work, honest AI choice, concrete progress, and visible risk.</p>
+
 <div class="proof-grid">
   <div class="proof-card">
     <h3>Keep The Work Legible</h3>
@@ -41,6 +46,7 @@ quick_links:
     <h3>Keep Risk Visible</h3>
     <p>Show what is ready, what is missing, what is still uncertain, and whether the draft is still safe to review before anything is shared.</p>
   </div>
+</div>
 </div>
 
 <div class="section-card" markdown="1">

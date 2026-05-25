@@ -246,13 +246,15 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  margin: 0 0 1.05rem;
-  padding: 1.18rem 1.14rem 1rem;
-  border: 1px solid var(--jini-stroke);
-  border-radius: 24px;
-  background: linear-gradient(180deg, #ffffff 0%, var(--jini-panel-muted) 100%);
+  margin: 0 0 1.18rem;
+  padding: 1.38rem 1.3rem 1.18rem;
+  border: 1px solid rgba(29, 78, 216, 0.12);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top right, rgba(29, 78, 216, 0.08), transparent 26%),
+    linear-gradient(180deg, #ffffff 0%, var(--jini-panel-muted) 100%);
   box-shadow:
-    var(--jini-shadow-soft),
+    0 20px 46px rgba(8, 17, 40, 0.07),
     inset 0 1px 0 rgba(255, 255, 255, 0.72);
 }
 
@@ -267,17 +269,44 @@
   pointer-events: none;
 }
 
+.page-intro-card::after {
+  content: "";
+  position: absolute;
+  inset: auto -3rem -3rem auto;
+  width: 10rem;
+  height: 10rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(14, 116, 144, 0.1) 0%, rgba(14, 116, 144, 0) 72%);
+  pointer-events: none;
+}
+
 .page-intro-card .site-page-description {
   max-width: 48rem;
-  margin-bottom: 0.8rem;
+  margin-bottom: 0.82rem;
 }
 
 .page-intro-context {
   max-width: 44rem;
-  margin: 0 0 0.95rem;
+  margin: 0 0 0.92rem;
   font-size: 1rem;
   line-height: 1.6;
   color: #0f172a;
+}
+
+.site-page-title {
+  max-width: 14ch;
+  font-family: var(--jini-display-font);
+  font-size: clamp(2rem, 4.2vw, 3rem);
+  line-height: 0.98;
+  letter-spacing: -0.032em;
+  text-wrap: balance;
+}
+
+.site-page-description {
+  max-width: 42rem;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: #344054;
 }
 
 .page-intro-highlights {
@@ -291,14 +320,14 @@
   display: inline-flex;
   align-items: center;
   min-height: 2rem;
-  padding: 0 0.78rem;
-  border: 1px solid rgba(29, 78, 216, 0.16);
+  padding: 0 0.74rem;
+  border: 1px solid rgba(29, 78, 216, 0.12);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 8px 18px rgba(8, 17, 40, 0.04);
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 8px 18px rgba(8, 17, 40, 0.03);
   font-size: 0.88rem;
   font-weight: 700;
-  color: #1849a9;
+  color: #36506c;
 }
 
 .page-intro-links {
@@ -311,11 +340,11 @@
   display: inline-flex;
   align-items: center;
   min-height: 2.1rem;
-  padding: 0 0.8rem;
-  border: 1px solid rgba(29, 78, 216, 0.14);
+  padding: 0 0.82rem;
+  border: 1px solid rgba(29, 78, 216, 0.12);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 8px 18px rgba(8, 17, 40, 0.04);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 18px rgba(8, 17, 40, 0.03);
   color: #344054;
   font-size: 0.92rem;
   font-weight: 600;
@@ -330,7 +359,7 @@
 .page-intro-links a:hover {
   background: #eef4ff;
   color: #1d4ed8;
-  box-shadow: 0 12px 24px rgba(29, 78, 216, 0.1);
+  box-shadow: 0 10px 22px rgba(29, 78, 216, 0.08);
   transform: translateY(-1px);
   text-decoration: none;
 }
@@ -669,10 +698,10 @@
 }
 
 .section-card {
-  margin: 0.9rem 0 1.2rem;
-  padding: 1.28rem 1.3rem 1.32rem;
+  margin: 0.92rem 0 1.18rem;
+  padding: 1.22rem 1.24rem 1.24rem;
   border: 1px solid var(--jini-stroke);
-  border-radius: 28px;
+  border-radius: 24px;
   background: linear-gradient(180deg, var(--jini-panel) 0%, var(--jini-panel-muted) 100%);
   box-shadow: var(--jini-shadow-soft);
 }
@@ -682,7 +711,7 @@
     radial-gradient(circle at top right, rgba(29, 78, 216, 0.04), transparent 28%),
     linear-gradient(180deg, #ffffff 0%, #f9fbfe 100%);
   box-shadow:
-    var(--jini-shadow-card),
+    0 18px 40px rgba(8, 17, 40, 0.07),
     inset 0 1px 0 rgba(255, 255, 255, 0.68);
 }
 
@@ -690,6 +719,9 @@
   background:
     radial-gradient(circle at top left, rgba(29, 78, 216, 0.05), transparent 28%),
     linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  box-shadow:
+    0 14px 32px rgba(8, 17, 40, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.68);
 }
 
 .showcase-story {
@@ -739,7 +771,7 @@
 
 .section-card h2 {
   max-width: 16ch;
-  margin-bottom: 0.38rem;
+  margin-bottom: 0.34rem;
   font-family: var(--jini-display-font);
   font-size: clamp(1.55rem, 3vw, 2.2rem);
   line-height: 1;
@@ -1518,7 +1550,7 @@
   margin: 0 0 0.9rem;
   max-width: 44rem;
   font-size: 1.05rem;
-  line-height: 1.62;
+  line-height: 1.64;
   color: var(--jini-copy);
 }
 

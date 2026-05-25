@@ -18,6 +18,11 @@ quick_links:
 
 <p class="page-lead">Use the public repo when the discussion helps other users too. Use commercial contact when the need is adoption help, implementation, or onboarding.</p>
 
+<div class="section-card section-card-story" markdown="1">
+  <span class="section-kicker">Choose the right lane</span>
+  <h2>Public paths first, paid help when rollout is the problem</h2>
+  <p class="page-lead">The contact page should feel like a routing surface, not a plain support list: public issues for public product work, paid contact only when adoption or implementation is the real need.</p>
+
 <div class="checklist-grid">
   <div class="checklist-card">
     <h3>GitHub Issues</h3>
@@ -31,6 +36,7 @@ quick_links:
     <h3>Commercial support</h3>
     <p>Use commercial contact for implementation, onboarding, or enterprise adoption help.</p>
   </div>
+</div>
 </div>
 
 <div class="section-card">
