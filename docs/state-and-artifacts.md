@@ -207,27 +207,49 @@ Other active work
 
   <h3>What Each Label Should Mean</h3>
 
-  <ul>
-    <li><code>Goal</code>: the thing the user is trying to finish right now</li>
-    <li><code>Working with</code>: the visible inputs for the thread, including text, files, images, audio, or links</li>
-    <li><code>AI route</code>: the tool and provider route Jini is using now</li>
-    <li><code>How chosen</code>: whether the route was automatic, user-locked, or a fallback</li>
-    <li><code>Model</code>: the model Jini chose for this request</li>
-    <li><code>Effort level</code>: how hard Jini judged the request to be</li>
-    <li><code>Why this route</code>: the route policy or user choice behind the decision</li>
-    <li><code>Just finished</code>: the durable changes from the latest turn</li>
-    <li><code>Doing now</code>: the current active step in plain words</li>
-    <li><code>Up next</code>: the next artifact or move Jini expects to take</li>
-    <li><code>Need</code>: the one highest-impact thing Jini still needs</li>
-    <li><code>Why this matters</code>: why Jini is asking for that one thing</li>
-    <li><code>Options</code>: the bounded ways the user can resolve the active ask</li>
-    <li><code>If you skip this</code>: the draft limits or assumptions Jini will preserve if the user does not answer yet</li>
-    <li><code>Ready now</code>: things the user can open and use immediately</li>
-    <li><code>Blocked</code>: blockers that still materially matter</li>
-    <li><code>Not sure about</code>: uncertainty Jini could not safely guess through</li>
-    <li><code>Safe to do</code>: whether anything has already been sent or changed</li>
-    <li><code>Other active work</code>: sibling projects the user can switch to without losing context</li>
-  </ul>
+  <p>The labels only need to answer four questions quickly: what work is active, why this route was chosen, where the work stands, and what is usable right now.</p>
+
+  <div class="checklist-grid">
+    <div class="checklist-card">
+      <h3>Thread context</h3>
+      <ul class="compact-list">
+        <li><code>Goal</code>: the thing the user is trying to finish right now</li>
+        <li><code>Working with</code>: the visible inputs for the thread, including text, files, images, audio, or links</li>
+        <li><code>Other active work</code>: sibling projects the user can switch to without losing context</li>
+      </ul>
+    </div>
+    <div class="checklist-card">
+      <h3>Route context</h3>
+      <ul class="compact-list">
+        <li><code>AI route</code>: the tool and provider route Jini is using now</li>
+        <li><code>How chosen</code>: whether the route was automatic, user-locked, or a fallback</li>
+        <li><code>Model</code>: the model Jini chose for this request</li>
+        <li><code>Effort level</code>: how hard Jini judged the request to be</li>
+        <li><code>Why this route</code>: the route policy or user choice behind the decision</li>
+      </ul>
+    </div>
+    <div class="checklist-card">
+      <h3>Progress and asks</h3>
+      <ul class="compact-list">
+        <li><code>Just finished</code>: the durable changes from the latest turn</li>
+        <li><code>Doing now</code>: the current active step in plain words</li>
+        <li><code>Up next</code>: the next artifact or move Jini expects to take</li>
+        <li><code>Need</code>: the one highest-impact thing Jini still needs</li>
+        <li><code>Why this matters</code>: why Jini is asking for that one thing</li>
+        <li><code>Options</code>: the bounded ways the user can resolve the active ask</li>
+        <li><code>If you skip this</code>: the draft limits or assumptions Jini will preserve if the user does not answer yet</li>
+      </ul>
+    </div>
+    <div class="checklist-card">
+      <h3>Usable output</h3>
+      <ul class="compact-list">
+        <li><code>Ready now</code>: things the user can open and use immediately</li>
+        <li><code>Blocked</code>: blockers that still materially matter</li>
+        <li><code>Not sure about</code>: uncertainty Jini could not safely guess through</li>
+        <li><code>Safe to do</code>: whether anything has already been sent or changed</li>
+      </ul>
+    </div>
+  </div>
 
   <h3>What should never happen</h3>
   <div class="checklist-grid">
