@@ -1,6 +1,20 @@
 ---
 title: Commercial
 description: The shell stays free. App downloads stay free when live. The paid layer should exist only when Jini can prove it saves money or keeps work moving.
+eyebrow: Paid only after proof
+context_line: The commercial story should be blunt: keep adoption cheap, keep downloads free when surfaces are live, and charge only for the optimizer layer that proves measurable value.
+highlights:
+  - Shell stays free
+  - Free downloads when live
+  - Planned 30-day trial
+  - $1 only after proof
+quick_links:
+  - label: Proof
+    href: /proof.html
+  - label: Install
+    href: /install.html
+  - label: Contact
+    href: /contact.html
 ---
 
 <p class="page-lead">Jini should be easy to adopt and hard to overpay for. The shell stays free. App downloads stay free when each surface is live. The paid layer should exist only when Jini can show real savings or continuity proof that a team would miss without it.</p>

@@ -1,6 +1,20 @@
 ---
 title: Outputs
 description: The shortest explanation of what Jini writes and keeps visible while work is moving.
+eyebrow: What leaves the thread
+context_line: Jini should feel useful because it leaves behind work someone can act on, not because it invented one more storage or dashboard layer.
+highlights:
+  - Deliverables
+  - Continuation
+  - Explicit risk
+  - Inspectable state
+quick_links:
+  - label: Examples
+    href: /examples.html
+  - label: Proof
+    href: /proof.html
+  - label: Commercial
+    href: /commercial.html
 ---
 
 <div class="value-strip">

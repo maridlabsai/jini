@@ -1,6 +1,19 @@
 ---
 title: Contact
 description: Use Issues, Discussions, or commercial contact depending on the kind of help you need.
+eyebrow: Get the right path
+context_line: Public questions should help the public product. Paid help should be for rollout, onboarding, and implementation support, not for basic access to the shell.
+highlights:
+  - Issues for bugs
+  - Discussions for workflow questions
+  - Paid help for rollout
+quick_links:
+  - label: Install
+    href: /install.html
+  - label: Examples
+    href: /examples.html
+  - label: Commercial
+    href: /commercial.html
 ---
 
 <p class="page-lead">Use the public repo when the discussion helps other users too. Use commercial contact when the need is adoption help, implementation, or onboarding.</p>

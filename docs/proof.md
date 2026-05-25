@@ -1,6 +1,20 @@
 ---
 title: Trust
 description: Free value should be obvious quickly. Paid value should be visible as savings, recovered work, and route evidence before anyone is asked to renew.
+eyebrow: Trust without ceremony
+context_line: Proof should support the product, not bury it. This page is the explicit trust and renewal boundary for what the public site is allowed to claim.
+highlights:
+  - Free value first
+  - Renewal proof
+  - Preview honesty
+  - No fake telemetry
+quick_links:
+  - label: Commercial
+    href: /commercial.html
+  - label: Install
+    href: /install.html
+  - label: Examples
+    href: /examples.html
 ---
 
 <p class="page-lead">Proof has two jobs. First, the free shell should make its value obvious fast. Second, any paid layer should prove that it saved money or prevented stalled work before anyone is asked to pay or renew.</p>

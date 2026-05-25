@@ -1,6 +1,20 @@
 ---
 title: Examples
 description: Familiar problems shown as real inputs, real outputs, and clear next steps.
+eyebrow: Familiar jobs
+context_line: These examples show the buyer story directly: what the user already has, what they ask for, what artifact leaves the thread, and what happens next.
+highlights:
+  - Real inputs
+  - Sendable follow-up
+  - Readiness check
+  - Recommendation memo
+quick_links:
+  - label: Quickstart
+    href: /simple.html
+  - label: Outputs
+    href: /state-and-artifacts.html
+  - label: Install
+    href: /install.html
 ---
 
 <p class="page-lead">These examples answer the three questions most people actually care about: what they already have, what they ask Jini for, and what they get back next.</p>

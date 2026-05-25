@@ -1,6 +1,20 @@
 ---
 title: Quickstart
 description: The shortest explanation of what Jini is for and what to type first.
+eyebrow: First useful run
+context_line: This page is the shortest path from “what is Jini for?” to “I can tell whether this helps my real work.” It should feel like product motion, not setup ceremony.
+highlights:
+  - One front door
+  - Artifact first
+  - After the meeting
+  - Before the handoff
+quick_links:
+  - label: Install
+    href: /install.html
+  - label: Examples
+    href: /examples.html
+  - label: Outputs
+    href: /state-and-artifacts.html
 ---
 
 <p class="page-lead">Jini is for the awkward middle of work: after the meeting, before the handoff, before the recommendation, and before calling something done. It should reduce stress, not add process.</p>

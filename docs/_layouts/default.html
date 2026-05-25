@@ -42,15 +42,31 @@
       <main id="main-content">
         {% unless page.url == '/' %}
         <section class="page-intro-card">
-          <p class="site-section-label">Jini</p>
+          <p class="site-section-label">{{ page.eyebrow | default: "Jini" }}</p>
           <h1 class="site-page-title">{{ page.title }}</h1>
           {% if page.description %}
           <p class="site-page-description">{{ page.description }}</p>
           {% endif %}
+          {% if page.context_line %}
+          <p class="page-intro-context">{{ page.context_line }}</p>
+          {% endif %}
+          {% if page.highlights %}
+          <div class="page-intro-highlights" aria-label="Page highlights">
+            {% for item in page.highlights %}
+            <span>{{ item }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
           <div class="page-intro-links">
+            {% if page.quick_links %}
+              {% for link in page.quick_links %}
+            <a href="{{ link.href | relative_url }}">{{ link.label }}</a>
+              {% endfor %}
+            {% else %}
             <a href="{{ '/install.html' | relative_url }}">Install</a>
             <a href="{{ '/proof.html' | relative_url }}">Proof</a>
             <a href="{{ '/cli.html' | relative_url }}">Command Catalog</a>
+            {% endif %}
           </div>
         </section>
         {% endunless %}
