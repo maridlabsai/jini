@@ -13,20 +13,17 @@ description: Free orchestration for AI work across providers today. Pay only whe
     <a class="cta-button cta-button-secondary" href="{{ '/simple.html' | relative_url }}">Quickstart</a>
   </div>
   <div class="hero-install-rail">
-    <div class="command-block">
-      <span class="command-label">Install once</span>
+    <span class="command-label">Install once, then run across the routes Jini already supports.</span>
+    <div class="hero-install-main">
       <code>curl -fsSL https://raw.githubusercontent.com/maridlabsai/jini/main/install.sh | bash</code>
       <code>jini</code>
     </div>
-    <div class="compat-row" aria-label="Supported routes">
-      <span class="command-label">Supported routes</span>
-      <div class="compat-pill-row">
-        <span class="compat-pill">Works with Claude Code</span>
-        <span class="compat-pill">Works with Codex</span>
-        <span class="compat-pill">Works with Bedrock</span>
-        <span class="compat-pill">Works with Azure OpenAI</span>
-        <span class="compat-pill">Works with Local models</span>
-      </div>
+    <div class="compat-pill-row" aria-label="Supported routes">
+      <span class="compat-pill">Works with Claude Code</span>
+      <span class="compat-pill">Works with Codex</span>
+      <span class="compat-pill">Works with Bedrock</span>
+      <span class="compat-pill">Works with Azure OpenAI</span>
+      <span class="compat-pill">Works with Local models</span>
     </div>
   </div>
   <div class="hero-scene">
