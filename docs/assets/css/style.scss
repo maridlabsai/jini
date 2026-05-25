@@ -37,6 +37,18 @@
   color: #ffffff;
 }
 
+.screen-reader-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .site-shell-header {
   display: flex;
   align-items: center;
@@ -1764,20 +1776,10 @@
 
 .hero-decision-frame .page-lead {
   max-width: 50rem;
-  margin-top: 0.26rem;
+  margin-top: 0;
   font-size: 0.93rem;
   line-height: 1.48;
   color: #344054;
-}
-
-.hero-decision-kicker {
-  max-width: 32rem;
-  margin: 0;
-  font-size: 0.76rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #1d4ed8;
 }
 
 .hero-decision-frame .hero-install-rail {

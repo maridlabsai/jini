@@ -39,7 +39,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
   </div>
   <div class="hero-decision-frame hero-decision-frame-inline" markdown="1">
     <div class="hero-decision-intro">
-      <p class="hero-decision-kicker">Choose the lightest layer that still leaves behind usable work.</p>
+      <span class="screen-reader-only">Choose the lightest layer that still leaves behind usable work.</span>
       <p class="page-lead">If you only need a one-off answer, use a raw model shell.</p>
       <div class="hero-job-strip" aria-label="Flagship jobs">
         <span>After the meeting</span>
