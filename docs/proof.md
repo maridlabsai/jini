@@ -61,7 +61,8 @@ Open Build-Readiness Check</pre>
   </div>
 
   <p>That is enough for a user to understand the value. Something useful is already ready, the blocker is visible, and the next move is obvious.</p>
-  <h3>What a buyer should be able to verify quickly</h3>
+  <span class="screen-reader-only">What a buyer should be able to verify quickly</span>
+  <p class="page-lead">A buyer should be able to verify the front door, route choice, and draft posture quickly without reading a second operating manual.</p>
   <div class="checklist-grid">
     <div class="checklist-card">
       <h3>What to type</h3>
@@ -116,7 +117,7 @@ Open Build-Readiness Check</pre>
     </div>
     {% endfor %}
   </div>
-  <h3>What Jini stores and what it does not</h3>
+  <p class="page-lead">The trust story should stay inspectable: visible artifacts, visible route evidence, and no hidden cloud-memory magic.</p>
   <div class="signal-grid">
     <div class="signal-card">
       <h3>What it stores</h3>
@@ -141,7 +142,6 @@ Open Build-Readiness Check</pre>
       <p>Buyability depends on trust. Jini should feel inspectable, reviewable, and cheap to understand before it asks a team to trust routing and stored state.</p>
     </div>
   </div>
-  <h3>What should make Jini feel safer than plain chat</h3>
   <div class="proof-grid">
     <div class="proof-card">
       <h3>Deliverables before summaries</h3>

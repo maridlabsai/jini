@@ -19,11 +19,10 @@ quick_links:
 
 <p class="page-lead">The normal path should be simple: install once, run <code>jini</code>, paste the work you want finished.</p>
 
-<p class="page-lead">The CLI is the live installable surface today. Desktop and mobile are the next release surfaces, stay free to download when live, and are not publicly downloadable yet. Desktop and Android should distribute directly first where policy allows, while iOS remains App Store constrained. Commercial pricing is planned to start with a 30-day free trial and become $1/month once checkout and entitlement activation are live.</p>
-
 <div class="section-card" markdown="1">
   <span class="section-kicker">Current availability</span>
   <h2>What you get today</h2>
+  <p>The CLI is the live installable surface today. Desktop and mobile are the next release surfaces, stay free to download when live, and are not publicly downloadable yet. Desktop and Android should distribute directly first where policy allows, while iOS remains App Store constrained. Commercial pricing is planned to start with a 30-day free trial and become $1/month once checkout and entitlement activation are live.</p>
 
 | Surface | Current state | What to expect next |
 | --- | --- | --- |
@@ -31,9 +30,7 @@ quick_links:
 | {{ surface.name }} | {{ surface.current_state }} | {{ surface.next_step }} |
 {% endfor %}
 
-  <p>The honest short version: install the CLI today. Use this availability matrix as the source of truth for every non-CLI surface until the release packet says that surface is live.</p>
-
-  <p>This availability matrix is fed from <code>docs/_data/public_surfaces.json</code>, a sanitized snapshot built from the commercial release packets.</p>
+  <p class="editorial-note">The honest short version: install the CLI today. Use this availability matrix as the source of truth for every non-CLI surface until the release packet says that surface is live. This availability matrix is fed from <code>docs/_data/public_surfaces.json</code>, a sanitized snapshot built from the commercial release packets.</p>
 </div>
 
 <div class="section-card" markdown="1">

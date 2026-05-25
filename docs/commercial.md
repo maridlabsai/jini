@@ -37,21 +37,12 @@ quick_links:
   </div>
 </div>
 
-- use the free shell when you want one stable place to run and resume work
-- expect desktop and mobile apps to be free downloads when each surface is actually live
-- start with the planned 30-day free trial of the commercial optimizer
-- pay only if Jini can prove that it saved money or prevented stalled work
-
-<div class="checklist-grid">
-  <div class="checklist-card">
-    <h3>The rule</h3>
-    <p><strong>Do not charge for the shell. Do not charge for app downloads. Give everyone the planned 30-day free trial before asking for the $1/month subscription. Charge only for the cost-saver and continuity layer that proves its value at runtime.</strong></p>
-  </div>
-  <div class="checklist-card">
-    <h3>Why upgrade</h3>
-    <p>Upgrade when provider limits, throttles, or expensive routes are a real operating problem and you want Jini to keep work moving automatically instead of forcing manual babysitting. The paywall prompt should appear before downgrade, not after the account is already squeezed into constrained free mode.</p>
-  </div>
+<div class="quote-strip">
+  <strong>Do not charge for the shell. Do not charge for app downloads. Give everyone the planned 30-day free trial before asking for the $1/month subscription. Charge only for the cost-saver and continuity layer that proves its value at runtime.</strong>
+  <p>Use the free shell when you want one stable place to run and resume work. Expect desktop and mobile apps to be free downloads when each surface is actually live. Start with the planned 30-day free trial of the commercial optimizer and pay only if Jini can prove that it saved money or prevented stalled work.</p>
 </div>
+
+<p>Upgrade when provider limits, throttles, or expensive routes are a real operating problem and you want Jini to keep work moving automatically instead of forcing manual babysitting. The paywall prompt should appear before downgrade, not after the account is already squeezed into constrained free mode.</p>
 </div>
 
 <div class="section-card" markdown="1">
@@ -82,7 +73,7 @@ meaningfully better than manual babysitting.
 - when the proof can be shown before payment, not explained after payment
 
 If those conditions are not true, the free shell should remain enough.
-### What the paid layer must prove before renewal
+<p class="page-lead"><strong>What the paid layer must prove before renewal</strong></p>
 
 If the paid layer is worth keeping, it should show evidence that the free shell alone could not provide:
 
@@ -112,10 +103,8 @@ If Jini cannot prove that value, it should not expect renewal.
 - **CLI remains first-class:** the apps are another surface over the same session, not a separate product
 
 The commercial apps should help a wider user base without turning Jini into a different workflow for each device class.
-
-### What is not open source
-
-The app downloads can be free without making the app implementation public.
+<p class="page-lead"><strong>What is not open source</strong></p>
+<p>The app downloads can be free without making the app implementation public.</p>
 
 - desktop/mobile app source code lives in the commercial repo only
 - native wrappers, host manifests, release automation, and store-delivery code stay private
