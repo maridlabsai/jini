@@ -1027,36 +1027,36 @@
   display: inline-flex;
   align-items: center;
   min-height: 1.7rem;
-  margin-bottom: 0.9rem;
-  padding: 0 0.62rem;
+  margin-bottom: 0.72rem;
+  padding: 0 0.56rem;
   border-radius: 999px;
-  font-size: 0.74rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
+  font-size: 0.71rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
 .showcase-story .media-grid-featured::before {
   content: "Product surface";
-  background: rgba(29, 78, 216, 0.08);
-  color: #1d4ed8;
+  background: rgba(29, 78, 216, 0.05);
+  color: #486284;
 }
 
 .showcase-story .media-grid-story::before {
   content: "Sendable artifacts";
-  background: rgba(14, 116, 144, 0.08);
-  color: #0f766e;
+  background: rgba(14, 116, 144, 0.05);
+  color: #486284;
 }
 
 .showcase-illustration-frame {
   overflow: hidden;
-  margin: 1rem 0 0.85rem;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  border-radius: 28px;
+  margin: 0.9rem 0 0.72rem;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 22px;
   background:
     linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
   box-shadow:
-    0 18px 40px rgba(8, 17, 40, 0.08),
+    0 12px 28px rgba(8, 17, 40, 0.05),
     inset 0 1px 0 rgba(255, 255, 255, 0.72);
 }
 
@@ -1075,13 +1075,14 @@
 .showcase-story .media-grid-featured {
   grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.9fr);
   align-items: start;
+  gap: 0.88rem;
 }
 
 .media-grid-featured .media-card:first-child {
   grid-column: span 2;
-  border-color: rgba(29, 78, 216, 0.18);
+  border-color: rgba(29, 78, 216, 0.14);
   box-shadow:
-    0 26px 56px rgba(8, 17, 40, 0.12),
+    0 18px 38px rgba(8, 17, 40, 0.09),
     inset 0 1px 0 rgba(255, 255, 255, 0.54);
 }
 
@@ -1096,13 +1097,14 @@
 
 .showcase-story .media-grid-story {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.88rem;
 }
 
 .showcase-story .media-grid-story .media-card:first-child {
   grid-column: span 2;
-  border-color: rgba(14, 116, 144, 0.18);
+  border-color: rgba(14, 116, 144, 0.14);
   box-shadow:
-    0 24px 52px rgba(8, 17, 40, 0.1),
+    0 18px 38px rgba(8, 17, 40, 0.09),
     inset 0 1px 0 rgba(255, 255, 255, 0.54);
 }
 
@@ -1117,14 +1119,14 @@
 .media-card {
   position: relative;
   overflow: hidden;
-  padding-top: 2.7rem;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 22px;
+  padding-top: 2.5rem;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 20px;
   background:
     linear-gradient(180deg, #f8fbff 0%, #ffffff 16%);
   color: inherit;
   text-decoration: none !important;
-  box-shadow: 0 14px 32px rgba(8, 17, 40, 0.07);
+  box-shadow: 0 10px 24px rgba(8, 17, 40, 0.05);
   transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
 }
 
@@ -1208,9 +1210,9 @@
 }
 
 .media-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(29, 78, 216, 0.26);
-  box-shadow: 0 24px 52px rgba(8, 17, 40, 0.13);
+  transform: translateY(-1px);
+  border-color: rgba(29, 78, 216, 0.2);
+  box-shadow: 0 16px 36px rgba(8, 17, 40, 0.09);
 }
 
 .media-card img {
@@ -1334,7 +1336,7 @@
 }
 
 .media-copy {
-  padding: 1rem 1rem 1.08rem;
+  padding: 0.92rem 0.95rem 1rem;
 }
 
 .media-copy h3 {
@@ -1371,7 +1373,7 @@
 }
 
 .media-grid-featured .media-card:first-child .media-copy {
-  padding: 1.3rem 1.3rem 1.35rem;
+  padding: 1.08rem 1.08rem 1.14rem;
 }
 
 .media-grid-featured .media-card:first-child .media-copy h3 {
@@ -1383,7 +1385,7 @@
 }
 
 .showcase-story .media-grid-story .media-card:first-child .media-copy {
-  padding: 1.2rem 1.2rem 1.28rem;
+  padding: 1.02rem 1.02rem 1.1rem;
 }
 
 .showcase-story .media-grid-story .media-card:first-child .media-copy h3 {
@@ -1993,14 +1995,14 @@
   isolation: isolate;
   position: relative;
   overflow: hidden;
-  margin-top: 2.2rem;
-  padding-top: 1.45rem;
-  border-color: rgba(29, 78, 216, 0.16);
+  margin-top: 1.8rem;
+  padding-top: 1.28rem;
+  border-color: rgba(29, 78, 216, 0.12);
   background:
     radial-gradient(circle at top right, rgba(56, 189, 248, 0.06), transparent 22%),
     linear-gradient(180deg, #f9fbff 0%, #f4f8ff 100%);
   box-shadow:
-    0 20px 48px rgba(8, 17, 40, 0.08),
+    0 14px 34px rgba(8, 17, 40, 0.06),
     inset 0 1px 0 rgba(255, 255, 255, 0.68);
 }
 
@@ -2079,28 +2081,28 @@
 .proof-carousel-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 1rem;
-  margin-top: 1rem;
+  gap: 0.88rem;
+  margin-top: 0.88rem;
 }
 
 .proof-carousel-card {
   overflow: hidden;
   grid-column: span 2;
-  border: 1px solid rgba(148, 163, 184, 0.24);
-  border-radius: 28px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 22px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 251, 255, 0.94) 100%);
-  box-shadow: 0 18px 38px rgba(8, 17, 40, 0.06);
+  box-shadow: 0 12px 28px rgba(8, 17, 40, 0.05);
 }
 
 .proof-carousel-card:first-child {
   grid-column: span 4;
   background:
-    radial-gradient(circle at top right, rgba(56, 189, 248, 0.14), transparent 28%),
-    linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.94) 100%);
-  border-color: rgba(15, 23, 42, 0.16);
+    radial-gradient(circle at top right, rgba(56, 189, 248, 0.08), transparent 26%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(243, 248, 255, 0.96) 100%);
+  border-color: rgba(29, 78, 216, 0.14);
   box-shadow:
-    0 28px 62px rgba(8, 17, 40, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    0 18px 40px rgba(8, 17, 40, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.58);
 }
 
 .proof-carousel-card img {
@@ -2132,13 +2134,13 @@
 }
 
 .proof-carousel-card:first-child .proof-carousel-copy h3 {
-  color: #f8fafc;
+  color: #0f172a;
   font-size: 1.2rem;
 }
 
 .proof-carousel-card:first-child .proof-carousel-copy p,
 .proof-carousel-card:first-child .workflow-meta {
-  color: rgba(226, 232, 240, 0.9);
+  color: #344054;
 }
 
 .proof-carousel-truth {
@@ -2148,7 +2150,7 @@
 }
 
 .proof-carousel-card:first-child .proof-carousel-truth {
-  color: rgba(191, 219, 254, 0.92);
+  color: #516074;
 }
 
 @media screen and (max-width: 960px) {
@@ -2219,13 +2221,13 @@
 .proof-signal-card {
   position: relative;
   overflow: hidden;
-  padding: 1rem 1rem 1.05rem;
-  border: 1px solid rgba(148, 163, 184, 0.24);
-  border-radius: 22px;
+  padding: 0.92rem 0.92rem 0.98rem;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 18px;
   background:
     radial-gradient(circle at top right, rgba(29, 78, 216, 0.09), transparent 32%),
     linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-  box-shadow: 0 14px 34px rgba(8, 17, 40, 0.05);
+  box-shadow: 0 10px 24px rgba(8, 17, 40, 0.04);
 }
 
 .proof-signal-value {
