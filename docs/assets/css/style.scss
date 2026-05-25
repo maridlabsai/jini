@@ -508,11 +508,11 @@
 }
 
 .hero-summary-support {
-  max-width: 36rem;
-  margin: 0.4rem 0 0;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  color: #526581;
+  max-width: 31rem;
+  margin: 0.3rem 0 0;
+  font-size: 0.84rem;
+  line-height: 1.42;
+  color: #66758a;
 }
 
 .hero-panel-marketing {
@@ -2433,6 +2433,14 @@
     grid-template-columns: 1fr;
   }
 
+  .offer-card-plain,
+  .offer-card-core,
+  .offer-card-paid {
+    grid-column: auto;
+    grid-row: auto;
+    align-self: stretch;
+  }
+
   .hero-decision-frame .compat-pill-row {
     justify-content: flex-start;
   }
@@ -2583,7 +2591,7 @@
 
 .offer-grid {
   display: grid;
-  grid-template-columns: minmax(0, 0.84fr) minmax(0, 1.24fr) minmax(0, 0.84fr);
+  grid-template-columns: minmax(0, 1.34fr) minmax(240px, 0.8fr);
   align-items: stretch;
   gap: 0.38rem;
   margin-top: 0.16rem;
@@ -2627,9 +2635,12 @@
 }
 
 .offer-card-plain {
+  grid-column: 2;
+  grid-row: 1;
   gap: 0.1rem;
-  padding: 0.52rem 0.58rem 0.56rem;
-  opacity: 0.86;
+  align-self: end;
+  padding: 0.48rem 0.54rem 0.5rem;
+  opacity: 0.78;
 }
 
 .offer-card-core::before {
@@ -2637,6 +2648,8 @@
 }
 
 .offer-card-core {
+  grid-column: 1;
+  grid-row: 1 / span 2;
   z-index: 1;
   gap: 0.12rem;
   border-color: rgba(29, 78, 216, 0.18);
@@ -2644,8 +2657,8 @@
     radial-gradient(circle at top right, rgba(29, 78, 216, 0.08), transparent 34%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.86) 0%, rgba(244, 249, 255, 0.96) 100%);
   box-shadow: 0 18px 34px rgba(8, 17, 40, 0.08);
-  transform: translateY(-3px);
-  padding: 0.7rem 0.78rem 0.76rem;
+  transform: none;
+  padding: 0.76rem 0.84rem 0.82rem;
 }
 
 .offer-card-paid::before {
@@ -2747,9 +2760,12 @@
 }
 
 .offer-card-paid {
+  grid-column: 2;
+  grid-row: 2;
   gap: 0.1rem;
-  padding: 0.52rem 0.58rem 0.56rem;
-  opacity: 0.88;
+  align-self: start;
+  padding: 0.48rem 0.54rem 0.5rem;
+  opacity: 0.8;
 }
 
 .offer-card-paid .offer-card-eyebrow {
