@@ -24,16 +24,12 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <div class="hero-scene-support-row">
         <span class="hero-scene-label">Next surfaces</span>
         <strong>Desktop and mobile continuity</strong>
-        <p>Carry the same thread forward as each app surface comes online instead of starting over from scratch.</p>
+        <p>Carry the same thread forward as each surface comes online.</p>
       </div>
       <div class="hero-scene-support-row hero-scene-support-row-output">
         <span class="hero-scene-label">What leaves the thread</span>
         <strong>Sendable output</strong>
-        <p>Follow-up, readiness check, or decision memo with enough reasoning attached that someone else can act on it.</p>
-      </div>
-      <div class="hero-scene-support-chips">
-        <span class="hero-scene-chip">when each surface is live</span>
-        <span class="hero-scene-chip">artifact first</span>
+        <p>Follow-up, readiness check, or decision memo someone else can act on.</p>
       </div>
     </div>
   </div>
