@@ -183,7 +183,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <p class="editorial-note">The free shell should already be enough to finish serious work. The paid layer should stay later and narrower: only after Jini can prove it saved money or prevented stalled work.</p>
 </div>
 
-<div class="section-card section-card-soft proof-signal-panel surface-story" markdown="1">
+<div class="section-card section-card-soft proof-signal-panel surface-story release-confidence-section" markdown="1">
 ## Proof, kept brief
 
 <p class="page-lead">Trust should support the pitch, not bury it. Keep the proof visible, mark the release posture clearly, then get back to the work.</p>
@@ -215,6 +215,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 
 <p class="page-lead proof-boundary-brief"><strong>Free first. Paid only if the savings story is measurable.</strong> No live store claims before release. No fake telemetry. No hidden preview posture.</p>
 
+<div class="release-confidence-band surface-story" markdown="1">
 | Surface | Status | Current state |
 |---|---|---|
 {% for surface in site.data.public_surfaces.surfaces %}
@@ -223,11 +224,10 @@ description: Free orchestration for AI work across providers today. Pay only whe
 
 <p class="availability-note editorial-note">The CLI is the live installable surface right now. Desktop and mobile remain in release preparation and should stay free to download when each surface is live. Desktop and Android should distribute directly first where policy allows, while the paid layer should begin only after the planned 30-day free trial and measurable proof are real. Desktop launch plan: buy on the website, then sign in to unlock paid features. Android should prefer direct download first where policy allows, with store distribution secondary. iOS remains store-constrained. Mobile should not be the first place users subscribe.</p>
 </div>
+</div>
 
-<div class="section-card section-card-story" markdown="1">
+<div class="section-card section-card-soft release-confidence-followup surface-story" markdown="1">
 ## Where you can use it now
-
-<p class="editorial-note">This closing band keeps the source note and the operating boundary in one place. The homepage status block is fed from <code>docs/_data/public_surfaces.json</code>, a sanitized snapshot built from the commercial release packets.</p>
 
 ## Small front door. Clear paid boundary.
 
@@ -245,6 +245,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 </div>
 
 <p class="editorial-note economics-note">Free Jini should already be enough to start, finish, and resume serious work. The paid layer should only exist to save money or keep work moving when providers become the bottleneck.</p>
+<p class="editorial-note closing-source-note">The homepage status block is fed from <code>docs/_data/public_surfaces.json</code>, a sanitized snapshot built from the commercial release packets.</p>
 </div>
 
 <div class="section-card section-card-cta">
