@@ -14,11 +14,29 @@
 
 .site-shell-body {
   font-family: var(--jini-body-font);
+  overflow-x: clip;
   background:
     radial-gradient(circle at top left, rgba(29, 78, 216, 0.06), transparent 30%),
     radial-gradient(circle at top right, rgba(14, 116, 144, 0.04), transparent 24%),
     linear-gradient(180deg, #f7fbff 0%, #ffffff 28%, #fcfdff 100%);
   color: var(--jini-ink);
+}
+
+.container-lg.px-3.my-5.markdown-body {
+  max-width: min(1360px, calc(100vw - 40px));
+  margin: 0 auto !important;
+  padding: 1rem 1.2rem 2.5rem !important;
+  background: transparent;
+  box-sizing: border-box;
+}
+
+.markdown-body {
+  color: var(--jini-copy);
+}
+
+#main-content {
+  display: grid;
+  gap: 1.1rem;
 }
 
 .skip-link {
@@ -53,9 +71,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  margin: 0 0 2rem;
-  padding: 0.9rem 0 1rem;
+  gap: 0.9rem;
+  margin: 0 0 1.35rem;
+  padding: 0.7rem 0 0.82rem;
   border-bottom: 1px solid #d8dee4;
   position: sticky;
   top: 0;
@@ -226,8 +244,8 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  margin: 0 0 1.65rem;
-  padding: 1.35rem 1.25rem 1.1rem;
+  margin: 0 0 1.15rem;
+  padding: 1.1rem 1.05rem 0.95rem;
   border: 1px solid rgba(29, 78, 216, 0.16);
   border-radius: 22px;
   background:
@@ -318,8 +336,8 @@
 }
 
 .hero-panel {
-  margin: 0 0 1.9rem;
-  padding: 1.6rem 1.45rem;
+  margin: 0 0 1.3rem;
+  padding: 1.28rem 1.18rem;
   border: 1px solid #d8dee4;
   border-radius: 24px;
   background:
@@ -385,8 +403,8 @@
   isolation: isolate;
   overflow: hidden;
   position: relative;
-  margin-bottom: 2.35rem;
-  padding: 1.95rem 1.7rem 2rem;
+  margin-bottom: 1.45rem;
+  padding: 1.45rem 1.28rem 1.5rem;
   border-color: rgba(29, 78, 216, 0.16);
   background:
     radial-gradient(circle at top right, rgba(29, 78, 216, 0.14), transparent 28%),
@@ -518,15 +536,15 @@
 .hero-scene {
   display: grid;
   grid-template-columns: minmax(0, 1.45fr) minmax(280px, 1fr);
-  gap: 0.85rem;
-  margin-top: 1.5rem;
+  gap: 0.72rem;
+  margin-top: 1.1rem;
 }
 
 .hero-scene-card {
   position: relative;
   overflow: hidden;
   min-height: 100%;
-  padding: 1rem 1rem 1.05rem;
+  padding: 0.9rem 0.92rem 0.94rem;
   border: 1px solid rgba(148, 163, 184, 0.24);
   border-radius: 24px;
   box-shadow: 0 14px 28px rgba(8, 17, 40, 0.07);
@@ -542,7 +560,7 @@
 }
 
 .hero-scene-card-primary {
-  padding: 1.2rem 1.15rem 1.25rem;
+  padding: 1.02rem 1rem 1.08rem;
   box-shadow:
     0 22px 44px rgba(8, 17, 40, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.58);
@@ -570,12 +588,12 @@
 
 .hero-scene-support-row {
   position: relative;
-  padding-bottom: 0.95rem;
+  padding-bottom: 0.72rem;
 }
 
 .hero-scene-support-row + .hero-scene-support-row {
-  margin-top: 0.9rem;
-  padding-top: 1rem;
+  margin-top: 0.7rem;
+  padding-top: 0.78rem;
   border-top: 1px solid rgba(14, 116, 144, 0.14);
 }
 
@@ -590,7 +608,7 @@
   display: inline-flex;
   align-items: center;
   min-height: 1.65rem;
-  margin-bottom: 0.55rem;
+  margin-bottom: 0.42rem;
   padding: 0 0.58rem;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.72);
@@ -607,7 +625,7 @@
 
 .hero-scene-card strong {
   display: block;
-  margin-bottom: 0.45rem;
+  margin-bottom: 0.32rem;
   font-size: 1.06rem;
   line-height: 1.25;
   color: #0f172a;
@@ -631,7 +649,7 @@
   display: inline-flex;
   align-items: center;
   min-height: 1.8rem;
-  margin-top: 0.85rem;
+  margin-top: 0.62rem;
   padding: 0 0.62rem;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.82);
@@ -669,8 +687,8 @@
 }
 
 .section-card {
-  margin: 1.35rem 0 2rem;
-  padding: 1.35rem 1.4rem 1.45rem;
+  margin: 0.95rem 0 1.35rem;
+  padding: 1.08rem 1.12rem 1.15rem;
   border: 1px solid rgba(148, 163, 184, 0.24);
   border-radius: 26px;
   background:
@@ -699,7 +717,7 @@
   isolation: isolate;
   overflow: hidden;
   position: relative;
-  padding-top: 1.8rem;
+  padding-top: 1.45rem;
   border-color: rgba(29, 78, 216, 0.18);
   background:
     radial-gradient(circle at top left, rgba(29, 78, 216, 0.06), transparent 28%),
@@ -743,7 +761,7 @@
 
 .section-card h2 {
   max-width: 16ch;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.38rem;
   font-family: var(--jini-display-font);
   font-size: clamp(1.55rem, 3vw, 2.2rem);
   line-height: 1;
@@ -1446,8 +1464,8 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  margin-top: 2rem;
-  padding: 1.55rem 1.25rem 1.35rem;
+  margin-top: 1.3rem;
+  padding: 1.22rem 1.08rem 1.12rem;
   border-color: rgba(29, 78, 216, 0.16);
   background:
     radial-gradient(circle at top right, rgba(29, 78, 216, 0.1), transparent 32%),
@@ -2105,6 +2123,44 @@
 }
 
 @media screen and (max-width: 960px) {
+  .container-lg.px-3.my-5.markdown-body {
+    max-width: min(100vw - 24px, 1100px);
+    padding: 0.9rem 0.9rem 2rem !important;
+  }
+
+  .site-shell-header {
+    flex-direction: column;
+    align-items: stretch;
+    position: static;
+    backdrop-filter: none;
+  }
+
+  .site-nav-stack,
+  .site-signal-row,
+  .site-nav {
+    justify-items: stretch;
+    justify-content: flex-start;
+  }
+
+  .page-intro-card,
+  .hero-panel-marketing,
+  .section-card,
+  .section-card-cta {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .hero-scene,
+  .hero-decision-frame .hero-install-rail,
+  .hero-install-main,
+  .offer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-decision-frame .compat-pill-row {
+    justify-content: flex-start;
+  }
+
   .showcase-story .media-grid-featured,
   .showcase-story .media-grid-story {
     grid-template-columns: 1fr;
@@ -2475,11 +2531,13 @@
 }
 
 @media screen and (max-width: 640px) {
+  .container-lg.px-3.my-5.markdown-body {
+    max-width: calc(100vw - 16px);
+    padding: 0.72rem 0.72rem 1.5rem !important;
+  }
+
   .site-shell-header {
-    flex-direction: column;
-    align-items: stretch;
-    position: static;
-    backdrop-filter: none;
+    gap: 0.72rem;
   }
 
   .site-brand {
@@ -2540,13 +2598,13 @@
   }
 
   .page-intro-card {
-    padding: 1rem;
+    padding: 0.95rem 0.92rem 0.88rem;
   }
 
   .hero-panel-marketing,
   .section-card {
-    padding-left: 1rem;
-    padding-right: 1rem;
+    padding-left: 0.92rem;
+    padding-right: 0.92rem;
   }
 
   .continuity-strip {
@@ -2572,19 +2630,7 @@
     grid-template-columns: 1fr;
   }
 
-  .hero-install-rail {
-    grid-template-columns: 1fr;
-  }
-
-  .hero-install-main {
-    grid-template-columns: 1fr;
-  }
-
-  .offer-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .hero-scene {
-    grid-template-columns: 1fr;
+  .hero-install-main code {
+    font-size: 0.78rem;
   }
 }
