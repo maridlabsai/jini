@@ -55,11 +55,13 @@ description: Free orchestration for AI work across providers today. Pay only whe
           <span>Before the handoff</span>
           <span>Before the decision</span>
         </div>
-        <p>Jini earns the right to exist when the work has to leave chat with a sendable artifact, a safer handoff, and reasoning you can still explain later. <strong>Free orchestration core</strong> for work that needs an artifact, route evidence, or resumable state.</p>
+        <p>Jini earns the right to exist when the work has to leave chat with a sendable artifact, a safer handoff, and reasoning you can still explain later.</p>
+        <p><strong>Free orchestration core</strong> for work that needs an artifact, route evidence, or resumable state.</p>
       </div>
       <div class="offer-card offer-card-paid">
         <h3>Add the paid optimizer only when the proof can be measured.</h3>
-        <p>The paid layer stays narrow: it only enters when Jini can prove it saved money or kept work moving. <strong>Pay only for proof</strong>: when checkout is live, the planned 30-day free trial should come before the $1/month subscription and only after Jini can show savings, preserved headroom, or recovered work.</p>
+        <p>The paid layer stays narrow: it only enters when Jini can prove it saved money or kept work moving.</p>
+        <p><strong>Pay only for proof</strong>: when checkout is live, the planned 30-day free trial should come before the $1/month subscription and only after Jini can show savings, preserved headroom, or recovered work.</p>
       </div>
     </div>
 
