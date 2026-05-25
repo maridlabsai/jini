@@ -55,6 +55,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <div class="section-card hero-decision-frame" markdown="1">
   <span class="section-kicker">Choose the lightest layer that still leaves behind usable work.</span>
   <h2>Jini earns the right to exist when the work has to leave chat with a sendable artifact, a safer handoff, and reasoning you can still explain later.</h2>
+  <p class="page-lead">If you only need a one-off answer, use a raw model shell. If the work needs a sendable artifact, a safer handoff, or reasoning you can still explain later, use Jini. Use the raw shell for one-shot answers, the free Jini shell for real work, and the paid layer only after it can prove it saved money or kept work moving.</p>
   <div class="signal-grid">
     <div class="signal-card">
       <h3>After the meeting</h3>
@@ -69,11 +70,6 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <p>Keep the reasoning, tradeoffs, and unanswered questions attached to the recommendation instead of buried in chat history.</p>
     </div>
   </div>
-  <div class="quote-strip">
-    <strong>If you only need a one-off answer, use a raw model shell.</strong>
-    <p>If the work needs a sendable artifact, a safer handoff, or reasoning you can still explain later, use Jini.</p>
-  </div>
-  <p class="page-lead">Use the raw shell for one-shot answers, the free Jini shell for real work, and the paid layer only after it can prove it saved money or kept work moving.</p>
 
   <div class="offer-grid">
     <div class="offer-card offer-card-plain">
@@ -92,7 +88,6 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <p><strong>Pay only for proof</strong>: when checkout is live, the planned 30-day free trial should come before the $1/month subscription, and only after Jini can show savings, preserved headroom, or recovered work.</p>
     </div>
   </div>
-<p class="editorial-note">Best fit when the work needs a sendable artifact, a safer handoff, or reasoning you can still explain later. If you only need one answer, stay in a raw shell.</p>
 </div>
 
 <div class="section-card section-card-story showcase-story" markdown="1">
