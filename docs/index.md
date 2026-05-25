@@ -152,10 +152,10 @@ description: Free orchestration for AI work across providers today. Pay only whe
 </div>
 </div>
 
-<div class="section-card section-card-story" markdown="1">
+<div class="section-card section-card-story section-card-handoff" markdown="1">
 ## What Jini leaves behind
 
-<p class="page-lead">After the surface and outputs are visible, the only remaining question is whether Jini leaves behind work, evidence, and continuity that survive handoff without reconstruction.</p>
+<p class="page-lead">After the surface is visible, the remaining question is simple: does Jini leave behind work, evidence, and continuity that survive handoff without reconstruction?</p>
 
 <div class="workflow-grid workflow-grid-story">
   <div class="workflow-card">
@@ -180,10 +180,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
   </div>
 </div>
 
-<div class="quote-strip">
-  <strong>The free shell should already be enough to finish serious work.</strong>
-  <p>The paid layer should stay later and narrower: only after Jini can prove it saved money or prevented stalled work.</p>
-</div>
+<p class="editorial-note">The free shell should already be enough to finish serious work. The paid layer should stay later and narrower: only after Jini can prove it saved money or prevented stalled work.</p>
 </div>
 
 <div class="section-card section-card-soft proof-signal-panel surface-story" markdown="1">

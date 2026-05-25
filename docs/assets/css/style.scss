@@ -807,6 +807,26 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.68);
 }
 
+.section-card-handoff {
+  margin-top: 0.58rem;
+  padding-top: 1.04rem;
+  border-color: rgba(148, 163, 184, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(249, 251, 254, 0.96) 100%);
+  box-shadow:
+    0 14px 34px rgba(8, 17, 40, 0.055),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.section-card-handoff .page-lead {
+  max-width: 46rem;
+}
+
+.section-card-handoff .workflow-grid {
+  margin-top: 1.12rem;
+  margin-bottom: 1.24rem;
+}
+
 .section-card-soft {
   background:
     radial-gradient(circle at top left, rgba(29, 78, 216, 0.05), transparent 28%),
