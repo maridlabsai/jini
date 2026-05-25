@@ -149,7 +149,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <div class="section-card section-card-story" markdown="1">
 ## What Jini leaves behind
 
-<p class="page-lead">After the surface and outputs are visible, judge the product by what it actually leaves behind: usable deliverables, resumable state, visible evidence, and work that survives a device switch without reconstruction.</p>
+<p class="page-lead">After the surface and outputs are visible, the remaining question is simple: does Jini leave behind usable work, visible evidence, and continuity that survives handoff without reconstruction?</p>
 
 <div class="workflow-grid workflow-grid-story">
   <div class="workflow-card">
@@ -158,36 +158,17 @@ description: Free orchestration for AI work across providers today. Pay only whe
     <p>Jini writes the thing you actually need next: a follow-up, memo, readiness check, task list, or recommendation.</p>
   </div>
   <div class="workflow-card">
-    <span class="workflow-meta">State</span>
-    <h3>Work you can resume</h3>
-    <p>It keeps the active work, the focused artifact, and the next step attached to the same thread so continuation is cheap.</p>
+    <span class="workflow-meta">Continuity</span>
+    <h3>One session, not four different products</h3>
+    <p>Jini should preserve the same session identity across macOS, Windows, mobile, and CLI so continuation stays cheaper than restart.</p>
   </div>
   <div class="workflow-card">
     <span class="workflow-meta">Evidence</span>
     <h3>Route evidence</h3>
-    <p>Jini exposes command latency, provider state, route cost, and route trend instead of asking you to trust the routing story blindly.</p>
+    <p>Users learn one shell while providers, models, and tools can change underneath. Jini exposes command latency, provider state, route cost, and route trend, and surfaces <code>jini metrics</code> when the cost story matters.</p>
   </div>
   <div class="workflow-card">
-    <span class="workflow-meta">Readiness</span>
-    <h3>What is still missing</h3>
-    <p>You can see what is ready now, what still blocks safe handoff, and why the missing parts still matter.</p>
-  </div>
-</div>
-
-<div class="proof-grid proof-grid-story">
-  <div class="proof-card">
-    <h3>One session, not four different products</h3>
-    <p>Jini should preserve the same session identity across macOS, Windows, mobile, and CLI instead of treating each surface like a separate workflow.</p>
-  </div>
-  <div class="proof-card">
-    <h3>Resume without reconstruction</h3>
-    <p>The latest deliverable, missing items, route evidence, and next action should travel with the session so device switches do not force context rebuilding. Review on one surface, continue on another, and keep continuation cheaper than restart.</p>
-  </div>
-  <div class="proof-card">
-    <h3>One stable front door</h3>
-    <p>Users learn one shell and one set of actions while providers, models, and tools can change underneath. Jini keeps routine work on the cheapest suitable route and exposes <code>jini metrics</code> when the cost and route story matters.</p>
-  </div>
-  <div class="proof-card">
+    <span class="workflow-meta">Boundary</span>
     <h3>Stored locally, not as product magic</h3>
     <p>The first useful result should be a follow-up, memo, readiness check, or itinerary, not a prettier status wall. Artifacts, resume state, and route evidence stay inspectable instead of hiding in a proprietary cloud memory layer.</p>
   </div>
