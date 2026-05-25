@@ -84,8 +84,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 ## See the product surface
 
 <p class="page-lead">Show the product before the rest of the operating brief: first the active surface, then the artifacts that leave the thread.</p>
-<p class="editorial-note">These frames are current example captures from the shipped CLI and public example set. They show interface shape and artifact posture, not live checkout, store rollout, or signed-download completion.</p>
-<p class="editorial-note">Each card carries a capture id and source so reused frames stay explicit and auditable instead of reading like independent screenshots.</p>
+<p class="editorial-note">These frames are current example captures from the shipped CLI and public example set. They show interface shape and artifact posture, not live checkout, store rollout, or signed-download completion. Each card carries a capture id and source so reused frames stay explicit and auditable instead of reading like independent screenshots.</p>
 <div class="showcase-illustration-frame">
   <img src="{{ '/assets/story/jini-showcase-strip.svg' | relative_url }}" alt="Jini storyboard showing the CLI thread, continuity across upcoming surfaces, and sendable output">
 </div>
@@ -227,7 +226,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 | {{ surface.name }} | {{ surface.badge }} | {{ surface.current_state }} |
 {% endfor %}
 
-<p class="availability-note">Desktop launch plan: buy on the website, then sign in to unlock paid features. Android should prefer direct download first where policy allows, with store distribution secondary. iOS remains store-constrained. Mobile should not be the first place users subscribe.</p>
+<p class="availability-note editorial-note">Desktop launch plan: buy on the website, then sign in to unlock paid features. Android should prefer direct download first where policy allows, with store distribution secondary. iOS remains store-constrained. Mobile should not be the first place users subscribe.</p>
 </div>
 
 <div class="section-card section-card-story" markdown="1">
