@@ -33,17 +33,19 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <p>Paste rough work into <code>jini</code>, keep route evidence visible, and leave with a usable next artifact instead of a chat dead-end.</p>
       <span class="hero-scene-chip">installable today</span>
     </div>
-    <div class="hero-scene-side">
-      <div class="hero-scene-card hero-scene-card-future">
+    <div class="hero-scene-card hero-scene-card-support">
+      <div class="hero-scene-support-row">
         <span class="hero-scene-label">Next surfaces</span>
         <strong>Desktop and mobile continuity</strong>
         <p>Carry the same thread forward as each app surface comes online instead of starting over from scratch.</p>
-        <span class="hero-scene-chip">when each surface is live</span>
       </div>
-      <div class="hero-scene-card hero-scene-card-output">
+      <div class="hero-scene-support-row hero-scene-support-row-output">
         <span class="hero-scene-label">What leaves the thread</span>
         <strong>Sendable output</strong>
         <p>Follow-up, readiness check, or decision memo with enough reasoning attached that someone else can act on it.</p>
+      </div>
+      <div class="hero-scene-support-chips">
+        <span class="hero-scene-chip">when each surface is live</span>
         <span class="hero-scene-chip">artifact first</span>
       </div>
     </div>

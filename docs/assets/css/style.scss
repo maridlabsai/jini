@@ -483,11 +483,6 @@
   margin-top: 1.35rem;
 }
 
-.hero-scene-side {
-  display: grid;
-  gap: 0.85rem;
-}
-
 .hero-scene-card {
   position: relative;
   overflow: hidden;
@@ -521,25 +516,32 @@
   background: linear-gradient(90deg, rgba(29, 78, 216, 0.95), rgba(56, 189, 248, 0.78));
 }
 
-.hero-scene-card-future {
+.hero-scene-card-support {
   background:
     radial-gradient(circle at top right, rgba(14, 116, 144, 0.1), transparent 30%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(238, 250, 248, 0.96) 100%);
 }
 
-.hero-scene-card-future::after {
+.hero-scene-card-support::after {
   background: linear-gradient(90deg, rgba(14, 116, 144, 0.9), rgba(45, 212, 191, 0.72));
 }
 
-.hero-scene-card-output {
-  background:
-    radial-gradient(circle at top right, rgba(15, 23, 42, 0.12), transparent 34%),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.96) 100%);
-  border-color: rgba(15, 23, 42, 0.16);
+.hero-scene-support-row {
+  position: relative;
+  padding-bottom: 0.95rem;
 }
 
-.hero-scene-card-output::after {
-  background: linear-gradient(90deg, rgba(251, 191, 36, 0.9), rgba(96, 165, 250, 0.75));
+.hero-scene-support-row + .hero-scene-support-row {
+  margin-top: 0.9rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(14, 116, 144, 0.14);
+}
+
+.hero-scene-support-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.15rem;
 }
 
 .hero-scene-label {
@@ -557,13 +559,8 @@
   text-transform: uppercase;
 }
 
-.hero-scene-card-future .hero-scene-label {
+.hero-scene-card-support .hero-scene-label {
   color: #0f766e;
-}
-
-.hero-scene-card-output .hero-scene-label {
-  background: rgba(148, 163, 184, 0.16);
-  color: rgba(226, 232, 240, 0.92);
 }
 
 .hero-scene-card strong {
@@ -583,11 +580,6 @@
   color: #344054;
 }
 
-.hero-scene-card-output strong,
-.hero-scene-card-output p {
-  color: #f8fafc;
-}
-
 .hero-scene-card code {
   color: inherit;
   background: rgba(255, 255, 255, 0.14);
@@ -604,11 +596,6 @@
   color: #0f172a;
   font-size: 0.78rem;
   font-weight: 700;
-}
-
-.hero-scene-card-output .hero-scene-chip {
-  background: rgba(148, 163, 184, 0.16);
-  color: #e2e8f0;
 }
 
 .fact-strip {
