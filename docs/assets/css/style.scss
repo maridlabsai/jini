@@ -3,10 +3,22 @@
 
 @import "{{ site.theme }}";
 
+:root {
+  --jini-body-font: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+  --jini-display-font: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  --jini-ink: #0f172a;
+  --jini-copy: #344054;
+  --jini-panel: #ffffff;
+  --jini-panel-soft: #f8fbff;
+}
+
 .site-shell-body {
+  font-family: var(--jini-body-font);
   background:
-    radial-gradient(circle at top left, rgba(29, 78, 216, 0.08), transparent 32%),
-    linear-gradient(180deg, #f8fbff 0%, #ffffff 34%);
+    radial-gradient(circle at top left, rgba(29, 78, 216, 0.06), transparent 30%),
+    radial-gradient(circle at top right, rgba(14, 116, 144, 0.04), transparent 24%),
+    linear-gradient(180deg, #f7fbff 0%, #ffffff 28%, #fcfdff 100%);
+  color: var(--jini-ink);
 }
 
 .skip-link {
@@ -250,17 +262,19 @@
 .hero-title {
   margin: 0;
   max-width: 13ch;
+  font-family: var(--jini-display-font);
   font-size: clamp(2.35rem, 5.6vw, 4rem);
-  line-height: 0.98;
-  letter-spacing: -0.03em;
+  line-height: 0.94;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
 }
 
 .hero-summary {
   max-width: 54rem;
   margin: 1rem 0 0;
   font-size: 1.12rem;
-  line-height: 1.72;
-  color: #344054;
+  line-height: 1.68;
+  color: var(--jini-copy);
 }
 
 .hero-panel-marketing {
@@ -271,12 +285,9 @@
   padding: 1.95rem 1.7rem 2rem;
   border-color: rgba(29, 78, 216, 0.16);
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.32) 0 1px, transparent 1px),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0 1px, transparent 1px),
-    radial-gradient(circle at top right, rgba(29, 78, 216, 0.16), transparent 28%),
-    radial-gradient(circle at bottom left, rgba(14, 116, 144, 0.12), transparent 26%),
-    linear-gradient(135deg, #ffffff 0%, #f7fbff 42%, #eef5ff 100%);
-  background-size: 24px 24px, 24px 24px, auto, auto, auto;
+    radial-gradient(circle at top right, rgba(29, 78, 216, 0.14), transparent 28%),
+    radial-gradient(circle at bottom left, rgba(14, 116, 144, 0.1), transparent 24%),
+    linear-gradient(145deg, #ffffff 0%, #f7fbff 46%, #eef5ff 100%);
   box-shadow:
     0 24px 60px rgba(8, 17, 40, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.72),
@@ -575,18 +586,15 @@
   border-radius: 26px;
   background:
     radial-gradient(circle at top right, rgba(29, 78, 216, 0.05), transparent 34%),
-    linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+    linear-gradient(180deg, var(--jini-panel) 0%, #fbfdff 100%);
   box-shadow: 0 14px 34px rgba(8, 17, 40, 0.05);
 }
 
 .section-card-story {
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.24) 0 1px, transparent 1px),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0 1px, transparent 1px),
-    radial-gradient(circle at top right, rgba(29, 78, 216, 0.07), transparent 32%),
-    radial-gradient(circle at bottom left, rgba(14, 116, 144, 0.06), transparent 28%),
+    radial-gradient(circle at top right, rgba(29, 78, 216, 0.06), transparent 30%),
+    radial-gradient(circle at bottom left, rgba(14, 116, 144, 0.05), transparent 26%),
     linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-  background-size: 26px 26px, 26px 26px, auto, auto, auto;
   box-shadow:
     0 18px 42px rgba(8, 17, 40, 0.07),
     inset 0 1px 0 rgba(255, 255, 255, 0.58);
@@ -605,12 +613,9 @@
   padding-top: 1.8rem;
   border-color: rgba(29, 78, 216, 0.18);
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0 1px, transparent 1px),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0 1px, transparent 1px),
     radial-gradient(circle at top left, rgba(29, 78, 216, 0.06), transparent 28%),
     radial-gradient(circle at bottom right, rgba(14, 116, 144, 0.08), transparent 28%),
     linear-gradient(180deg, #fbfdff 0%, #f6faff 100%);
-  background-size: 24px 24px, 24px 24px, auto, auto, auto;
   box-shadow:
     0 24px 56px rgba(8, 17, 40, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.62);
@@ -650,9 +655,11 @@
 .section-card h2 {
   max-width: 16ch;
   margin-bottom: 0.5rem;
+  font-family: var(--jini-display-font);
   font-size: clamp(1.55rem, 3vw, 2.2rem);
-  line-height: 1.06;
-  letter-spacing: -0.025em;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
 }
 
 .on-this-page {
@@ -1353,10 +1360,10 @@
 
 .page-lead {
   margin: 0 0 1.1rem;
-  max-width: 52rem;
+  max-width: 48rem;
   font-size: 1.12rem;
-  line-height: 1.74;
-  color: #344054;
+  line-height: 1.68;
+  color: var(--jini-copy);
 }
 
 .availability-note {
