@@ -12,20 +12,6 @@ description: Free orchestration for AI work across providers today. Pay only whe
     <a class="cta-button cta-button-secondary" href="{{ '/examples.html' | relative_url }}">See Examples</a>
     <a class="cta-button cta-button-secondary" href="{{ '/simple.html' | relative_url }}">Quickstart</a>
   </div>
-  <div class="hero-install-rail">
-    <span class="command-label">Install once, then run across the routes Jini already supports.</span>
-    <div class="hero-install-main">
-      <code>curl -fsSL https://raw.githubusercontent.com/maridlabsai/jini/main/install.sh | bash</code>
-      <code>jini</code>
-    </div>
-    <div class="compat-pill-row" aria-label="Supported routes">
-      <span class="compat-pill">Works with Claude Code</span>
-      <span class="compat-pill">Works with Codex</span>
-      <span class="compat-pill">Works with Bedrock</span>
-      <span class="compat-pill">Works with Azure OpenAI</span>
-      <span class="compat-pill">Works with Local models</span>
-    </div>
-  </div>
   <div class="hero-scene">
     <div class="hero-scene-card hero-scene-card-live hero-scene-card-primary">
       <span class="hero-scene-label">Live now</span>
@@ -53,6 +39,21 @@ description: Free orchestration for AI work across providers today. Pay only whe
   <div class="hero-decision-frame hero-decision-frame-inline" markdown="1">
     <h2>Choose the lightest layer that still leaves behind usable work.</h2>
     <p class="page-lead">If you only need a one-off answer, use a raw model shell. Jini earns the right to exist when the work has to leave chat with a sendable artifact, a safer handoff, and reasoning you can still explain later. If the work does not need one of those artifact-safe outcomes, stay in a raw shell.</p>
+
+    <div class="hero-install-rail">
+      <span class="command-label">Install once, then run across the routes Jini already supports.</span>
+      <div class="hero-install-main">
+        <code>curl -fsSL https://raw.githubusercontent.com/maridlabsai/jini/main/install.sh | bash</code>
+        <code>jini</code>
+      </div>
+      <div class="compat-pill-row" aria-label="Supported routes">
+        <span class="compat-pill">Works with Claude Code</span>
+        <span class="compat-pill">Works with Codex</span>
+        <span class="compat-pill">Works with Bedrock</span>
+        <span class="compat-pill">Works with Azure OpenAI</span>
+        <span class="compat-pill">Works with Local models</span>
+      </div>
+    </div>
 
     <div class="hero-job-strip" aria-label="Flagship jobs">
       <span>After the meeting</span>
