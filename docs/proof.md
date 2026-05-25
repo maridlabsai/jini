@@ -43,7 +43,7 @@ quick_links:
 </div>
 
 <div class="section-card">
-  <span class="section-kicker">Free value</span>
+  <span class="section-kicker">Free value first</span>
   <h2>What the free shell should make obvious</h2>
   <div class="shell-panel">
 <pre>You're working on
@@ -61,11 +61,7 @@ Open Build-Readiness Check</pre>
   </div>
 
   <p>That is enough for a user to understand the value. Something useful is already ready, the blocker is visible, and the next move is obvious.</p>
-</div>
-
-<div class="section-card">
-  <span class="section-kicker">First-minute trust</span>
-  <h2>What a buyer should be able to verify quickly</h2>
+  <h3>What a buyer should be able to verify quickly</h3>
   <div class="checklist-grid">
     <div class="checklist-card">
       <h3>What to type</h3>
@@ -109,7 +105,7 @@ Open Build-Readiness Check</pre>
 </div>
 
 <div class="section-card">
-  <span class="section-kicker">Sanitized ingestion</span>
+  <span class="section-kicker">Public trust posture</span>
   <h2>How public proof should be fed</h2>
   <p>The public site should ingest a sanitized proof snapshot, not hand-edited marketing claims. This page now reads from <code>docs/_data/public_proof.json</code>, which should be produced from the commercial proof bundle through a public-safe sync step.</p>
   <div class="proof-grid">
@@ -120,11 +116,7 @@ Open Build-Readiness Check</pre>
     </div>
     {% endfor %}
   </div>
-</div>
-
-<div class="section-card">
-  <span class="section-kicker">Storage boundary</span>
-  <h2>What Jini stores and what it does not</h2>
+  <h3>What Jini stores and what it does not</h3>
   <div class="signal-grid">
     <div class="signal-card">
       <h3>What it stores</h3>
@@ -149,11 +141,7 @@ Open Build-Readiness Check</pre>
       <p>Buyability depends on trust. Jini should feel inspectable, reviewable, and cheap to understand before it asks a team to trust routing and stored state.</p>
     </div>
   </div>
-</div>
-
-<div class="section-card">
-  <span class="section-kicker">Trust posture</span>
-  <h2>What should make Jini feel safer than plain chat</h2>
+  <h3>What should make Jini feel safer than plain chat</h3>
   <div class="proof-grid">
     <div class="proof-card">
       <h3>Deliverables before summaries</h3>
