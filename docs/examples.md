@@ -180,9 +180,9 @@ quick_links:
   </div>
 </div>
 
-<div class="section-card">
-  <span class="section-kicker">Why this should feel better</span>
-  <h2>What Jini should do better than plain chat</h2>
+<div class="section-card section-card-cta">
+  <h2>Start from a familiar mess</h2>
+  <p>Use the examples as a quick calibration point, then start with <code>jini</code> and paste the work you already have. The output should come before the summary, what is missing should stay visible, and the next move should be obvious. If Jini only gives you a cleaner explanation of the work, it is not good enough.</p>
   <div class="proof-grid">
     <div class="proof-card">
       <h3>Give you something usable quickly</h3>
@@ -197,13 +197,6 @@ quick_links:
       <p>The user should know whether to review, clarify, approve, or continue.</p>
     </div>
   </div>
-
-  <p>If Jini only gives you a cleaner explanation of the work, it is not good enough.</p>
-</div>
-
-<div class="section-card section-card-cta">
-  <h2>Start from a familiar mess</h2>
-  <p>Use the examples as a quick calibration point, then start with <code>jini</code> and paste the work you already have.</p>
   <div class="page-intro-links">
     <a href="./simple.html">Simple Guide</a>
     <a href="./state-and-artifacts.html">What Jini Shows</a>
