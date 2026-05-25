@@ -18,8 +18,10 @@ quick_links:
 ---
 
 <div class="value-strip">
+  <h2>Outputs are part of the buyability story</h2>
   <p><strong>Jini should not make you guess.</strong></p>
   <p>While work is moving, the shell should keep the right context visible: the goal, the current inputs, the chosen route, the current step, what is already usable, and what still needs attention.</p>
+  <p>Jini should feel better than plain chat because it gives teams usable deliverables, visible missing pieces, and a continuation surface they can understand without rebuilding state from scratch. The same output and session model should travel across macOS, Windows, mobile, and CLI. A device switch should not create a second-class copy of the work.</p>
 </div>
 
 <div class="proof-grid">
@@ -39,13 +41,6 @@ quick_links:
     <h3>Keep Risk Visible</h3>
     <p>Show what is ready, what is missing, what is still uncertain, and whether the draft is still safe to review before anything is shared.</p>
   </div>
-</div>
-
-<div class="section-card">
-  <span class="section-kicker">Why this matters</span>
-  <h2>Outputs are part of the buyability story</h2>
-  <p>Jini should feel better than plain chat because it gives teams usable deliverables, visible missing pieces, and a continuation surface they can understand without rebuilding state from scratch.</p>
-  <p>The same output and session model should travel across macOS, Windows, mobile, and CLI. A device switch should not create a second-class copy of the work.</p>
 </div>
 
 <div class="section-card" markdown="1">

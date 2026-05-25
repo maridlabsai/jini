@@ -183,20 +183,10 @@ quick_links:
 <div class="section-card section-card-cta">
   <span class="section-kicker">Next step</span>
   <h2>Start from a familiar mess</h2>
-  <p>Use the examples as a quick calibration point, then start with <code>jini</code> and paste the work you already have. The output should come before the summary, what is missing should stay visible, and the next move should be obvious. If Jini only gives you a cleaner explanation of the work, it is not good enough.</p>
-  <div class="proof-grid">
-    <div class="proof-card">
-      <h3>Give you something usable quickly</h3>
-      <p>The output should come before the summary.</p>
-    </div>
-    <div class="proof-card">
-      <h3>Keep what is missing visible</h3>
-      <p>Missing proof, blockers, and uncertainties should stay nearby instead of getting buried.</p>
-    </div>
-    <div class="proof-card">
-      <h3>Keep the next move obvious</h3>
-      <p>The user should know whether to review, clarify, approve, or continue.</p>
-    </div>
+  <p>Use the examples as a quick calibration point, then start with <code>jini</code> and paste the work you already have.</p>
+  <div class="quote-strip">
+    <strong>The output should come before the summary.</strong>
+    <p>What is missing should stay visible and the next move should be obvious. If Jini only gives you a cleaner explanation of the work, it is not good enough.</p>
   </div>
   <div class="page-intro-links">
     <a href="./simple.html">Quickstart</a>
