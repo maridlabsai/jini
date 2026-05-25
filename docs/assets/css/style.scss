@@ -2314,6 +2314,22 @@
   letter-spacing: -0.01em;
 }
 
+.offer-card-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  min-height: 1.2rem;
+  padding: 0 0.38rem;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.58);
+  color: #667085;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
 .offer-card-contexts {
   display: flex;
   flex-wrap: wrap;
@@ -2360,6 +2376,21 @@
 .offer-card-paid p {
   font-size: 0.8rem;
   line-height: 1.34;
+}
+
+.offer-card-paid {
+  gap: 0.14rem;
+}
+
+.offer-card-paid .offer-card-eyebrow {
+  opacity: 0.9;
+}
+
+.offer-card-paid .offer-card-note {
+  margin-top: 0.2rem;
+  color: #667085;
+  font-size: 0.76rem;
+  line-height: 1.28;
 }
 
 .offer-card ul {

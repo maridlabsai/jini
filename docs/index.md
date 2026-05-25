@@ -59,9 +59,10 @@ description: Free orchestration for AI work across providers today. Pay only whe
         <p><strong>Free orchestration core</strong> for work that needs an artifact, route evidence, or resumable state.</p>
       </div>
       <div class="offer-card offer-card-paid">
+        <span class="offer-card-eyebrow">Optional add-on</span>
         <h3>Add the paid optimizer only when the proof can be measured.</h3>
         <p>The paid layer stays narrow: it only enters when Jini can prove it saved money or kept work moving.</p>
-        <p><strong>Pay only for proof</strong>: when checkout is live, the planned 30-day free trial should come before the $1/month subscription and only after Jini can show savings, preserved headroom, or recovered work.</p>
+        <p class="offer-card-note"><strong>Pay only for proof</strong>: when checkout is live, the planned 30-day free trial should come before the $1/month subscription and only after Jini can show savings, preserved headroom, or recovered work.</p>
       </div>
     </div>
 
