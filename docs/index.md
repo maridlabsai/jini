@@ -38,28 +38,14 @@ description: Free orchestration for AI work across providers today. Pay only whe
     </div>
   </div>
   <div class="hero-decision-frame hero-decision-frame-inline" markdown="1">
-    <h2>Choose the lightest layer that still leaves behind usable work.</h2>
-    <p class="page-lead">If you only need a one-off answer, use a raw model shell. Jini earns the right to exist when the work has to leave chat with a sendable artifact, a safer handoff, and reasoning you can still explain later.</p>
-
-    <div class="hero-install-rail">
-      <span class="command-label">Install once, then run across the routes Jini already supports.</span>
-      <div class="hero-install-main">
-        <code>curl -fsSL https://raw.githubusercontent.com/maridlabsai/jini/main/install.sh | bash</code>
-        <code>jini</code>
+    <div class="hero-decision-intro">
+      <h2>Choose the lightest layer that still leaves behind usable work.</h2>
+      <p class="page-lead">If you only need a one-off answer, use a raw model shell. Jini earns the right to exist when the work has to leave chat with a sendable artifact, a safer handoff, and reasoning you can still explain later.</p>
+      <div class="hero-job-strip" aria-label="Flagship jobs">
+        <span>After the meeting</span>
+        <span>Before the handoff</span>
+        <span>Before the decision</span>
       </div>
-      <div class="compat-pill-row" aria-label="Supported routes">
-        <span class="compat-pill">Works with Claude Code</span>
-        <span class="compat-pill">Works with Codex</span>
-        <span class="compat-pill">Works with Bedrock</span>
-        <span class="compat-pill">Works with Azure OpenAI</span>
-        <span class="compat-pill">Works with Local models</span>
-      </div>
-    </div>
-
-    <div class="hero-job-strip" aria-label="Flagship jobs">
-      <span>After the meeting</span>
-      <span>Before the handoff</span>
-      <span>Before the decision</span>
     </div>
 
     <div class="offer-grid">
@@ -74,6 +60,21 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <div class="offer-card offer-card-paid">
         <h3>Add the paid optimizer only when the proof can be measured.</h3>
         <p>The paid layer stays narrow: it only enters when Jini can prove it saved money or kept work moving. <strong>Pay only for proof</strong>: when checkout is live, the planned 30-day free trial should come before the $1/month subscription and only after Jini can show savings, preserved headroom, or recovered work.</p>
+      </div>
+    </div>
+
+    <div class="hero-install-rail">
+      <span class="command-label">Install once, then run across the routes Jini already supports.</span>
+      <div class="hero-install-main">
+        <code>curl -fsSL https://raw.githubusercontent.com/maridlabsai/jini/main/install.sh | bash</code>
+        <code>jini</code>
+      </div>
+      <div class="compat-pill-row" aria-label="Supported routes">
+        <span class="compat-pill">Works with Claude Code</span>
+        <span class="compat-pill">Works with Codex</span>
+        <span class="compat-pill">Works with Bedrock</span>
+        <span class="compat-pill">Works with Azure OpenAI</span>
+        <span class="compat-pill">Works with Local models</span>
       </div>
     </div>
   </div>

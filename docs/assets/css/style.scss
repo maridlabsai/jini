@@ -1758,6 +1758,10 @@
   pointer-events: none;
 }
 
+.hero-decision-intro {
+  max-width: 50rem;
+}
+
 .hero-decision-frame .page-lead {
   max-width: 50rem;
   margin-top: 0.4rem;
@@ -1774,7 +1778,7 @@
 }
 
 .hero-decision-frame .hero-install-rail {
-  margin-top: 0.72rem;
+  margin-top: 0.62rem;
   border-color: rgba(148, 163, 184, 0.16);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.78) 0%, rgba(244, 248, 255, 0.82) 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.62);
@@ -2229,7 +2233,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
-  margin-top: 0.68rem;
+  margin-top: 0.54rem;
 }
 
 .hero-job-strip span {
@@ -2258,7 +2262,7 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.45rem;
-  margin-top: 0.58rem;
+  margin-top: 0.48rem;
 }
 
 .offer-card {
