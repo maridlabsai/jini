@@ -45,8 +45,9 @@ description: Free orchestration for AI work across providers today. Pay only whe
 
     <div class="offer-grid">
       <div class="offer-card offer-card-plain">
+        <span class="offer-card-eyebrow">Fallback path</span>
         <h3>Use the raw shell for one-shot answers.</h3>
-        <p>Fastest path when the answer can die in the tab.</p>
+        <p class="offer-card-note">Fastest path when the answer can die in the tab.</p>
       </div>
       <div class="offer-card offer-card-core">
         <h3>Use the free Jini shell when the work has to survive handoff.</h3>

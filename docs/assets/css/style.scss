@@ -2288,6 +2288,10 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
 }
 
+.offer-card-plain {
+  opacity: 0.92;
+}
+
 .offer-card-core::before {
   background: linear-gradient(180deg, #1d4ed8 0%, #0f766e 100%);
 }
@@ -2376,6 +2380,20 @@
 .offer-card-paid p {
   font-size: 0.8rem;
   line-height: 1.34;
+}
+
+.offer-card-plain {
+  gap: 0.12rem;
+}
+
+.offer-card-plain .offer-card-eyebrow {
+  opacity: 0.82;
+}
+
+.offer-card-plain .offer-card-note {
+  color: #667085;
+  font-size: 0.77rem;
+  line-height: 1.26;
 }
 
 .offer-card-paid {
