@@ -39,7 +39,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
   </div>
   <div class="hero-decision-frame hero-decision-frame-inline" markdown="1">
     <h2>Choose the lightest layer that still leaves behind usable work.</h2>
-    <p class="page-lead">If you only need a one-off answer, use a raw model shell. Jini earns the right to exist when the work has to leave chat with a sendable artifact, a safer handoff, and reasoning you can still explain later. If the work does not need one of those artifact-safe outcomes, stay in a raw shell.</p>
+    <p class="page-lead">If you only need a one-off answer, use a raw model shell. Jini earns the right to exist when the work has to leave chat with a sendable artifact, a safer handoff, and reasoning you can still explain later.</p>
 
     <div class="hero-install-rail">
       <span class="command-label">Install once, then run across the routes Jini already supports.</span>
