@@ -1598,7 +1598,7 @@
   overflow: hidden;
   position: relative;
   margin-top: 1.15rem;
-  padding: 1.1rem 1.15rem 1.15rem;
+  padding: 0.95rem 1rem 1rem;
   border-color: rgba(148, 163, 184, 0.18);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 251, 255, 0.86) 100%);
@@ -2067,26 +2067,29 @@
 
 .offer-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 0.8rem;
-  margin-top: 0.9rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.8rem;
 }
 
 .offer-card {
   position: relative;
   overflow: hidden;
-  padding: 0.9rem 0.95rem 0.95rem;
+  display: grid;
+  align-content: start;
+  gap: 0.2rem;
+  padding: 0.75rem 0.8rem 0.8rem;
   border: 1px solid rgba(148, 163, 184, 0.24);
-  border-radius: 18px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.98) 100%);
-  box-shadow: 0 10px 24px rgba(8, 17, 40, 0.05);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.94) 100%);
+  box-shadow: none;
 }
 
 .offer-card::before {
   content: "";
   position: absolute;
   inset: 0 auto 0 0;
-  width: 5px;
+  width: 4px;
 }
 
 .offer-card-plain::before {
@@ -2102,9 +2105,9 @@
 }
 
 .offer-card h3 {
-  margin: 0 0 0.35rem;
-  font-size: 1rem;
-  line-height: 1.28;
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.24;
 }
 
 .offer-card p,
@@ -2112,7 +2115,8 @@
   position: relative;
   z-index: 1;
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
+  line-height: 1.48;
   color: #344054;
 }
 
@@ -2264,6 +2268,10 @@
   }
 
   .hero-install-rail {
+    grid-template-columns: 1fr;
+  }
+
+  .offer-grid {
     grid-template-columns: 1fr;
   }
 
