@@ -407,10 +407,14 @@
 
 .hero-scene {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr) 44px minmax(0, 1fr);
-  align-items: center;
+  grid-template-columns: minmax(0, 1.45fr) minmax(280px, 1fr);
   gap: 0.85rem;
   margin-top: 1.35rem;
+}
+
+.hero-scene-side {
+  display: grid;
+  gap: 0.85rem;
 }
 
 .hero-scene-card {
@@ -430,6 +434,10 @@
   height: 0.22rem;
   border-radius: 999px;
   opacity: 0.88;
+}
+
+.hero-scene-card-primary {
+  padding: 1.2rem 1.15rem 1.25rem;
 }
 
 .hero-scene-card-live {
@@ -495,6 +503,10 @@
   color: #0f172a;
 }
 
+.hero-scene-card-primary strong {
+  font-size: 1.18rem;
+}
+
 .hero-scene-card p {
   margin: 0;
   color: #344054;
@@ -526,23 +538,6 @@
 .hero-scene-card-output .hero-scene-chip {
   background: rgba(148, 163, 184, 0.16);
   color: #e2e8f0;
-}
-
-.hero-scene-connector {
-  position: relative;
-  height: 2px;
-  background: linear-gradient(90deg, rgba(29, 78, 216, 0.18) 0%, rgba(14, 116, 144, 0.42) 100%);
-}
-
-.hero-scene-connector span {
-  position: absolute;
-  top: 50%;
-  right: -1px;
-  width: 10px;
-  height: 10px;
-  border-top: 2px solid rgba(14, 116, 144, 0.42);
-  border-right: 2px solid rgba(14, 116, 144, 0.42);
-  transform: translateY(-50%) rotate(45deg);
 }
 
 .fact-strip {
@@ -2274,9 +2269,5 @@
 
   .hero-scene {
     grid-template-columns: 1fr;
-  }
-
-  .hero-scene-connector {
-    display: none;
   }
 }
