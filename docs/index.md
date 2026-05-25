@@ -18,19 +18,19 @@ description: Free orchestration for AI work across providers today. Pay only whe
     <div class="hero-scene-card hero-scene-card-live hero-scene-card-primary">
       <span class="hero-scene-label">Live now</span>
       <strong>CLI thread</strong>
-      <p>Paste rough work into <code>jini</code>, keep route evidence visible, and leave with a usable next artifact instead of a chat dead-end.</p>
+      <p>Paste rough work into <code>jini</code> and leave with a usable next artifact instead of a chat dead-end.</p>
       <span class="hero-scene-chip">installable today</span>
     </div>
     <div class="hero-scene-card hero-scene-card-support">
       <div class="hero-scene-support-row">
         <span class="hero-scene-label">Next surfaces</span>
         <strong>Desktop and mobile continuity</strong>
-        <p>Carry the same thread forward when each surface comes online.</p>
+        <p>Carry the same thread forward when each surface arrives.</p>
       </div>
       <div class="hero-scene-support-row hero-scene-support-row-output">
         <span class="hero-scene-label">What leaves the thread</span>
         <strong>Sendable output</strong>
-        <p>Leave with a follow-up, readiness check, or decision memo someone else can act on.</p>
+        <p>Leave with a follow-up, readiness check, or decision memo.</p>
       </div>
     </div>
   </div>
