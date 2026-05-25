@@ -1764,17 +1764,20 @@
 
 .hero-decision-frame .page-lead {
   max-width: 50rem;
-  margin-top: 0.4rem;
+  margin-top: 0.26rem;
   font-size: 0.93rem;
   line-height: 1.48;
   color: #344054;
 }
 
-.hero-decision-frame h2 {
-  max-width: 24ch;
-  margin-bottom: 0.18rem;
-  font-size: clamp(1.12rem, 1.6vw, 1.34rem);
-  line-height: 1.08;
+.hero-decision-kicker {
+  max-width: 32rem;
+  margin: 0;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1d4ed8;
 }
 
 .hero-decision-frame .hero-install-rail {
