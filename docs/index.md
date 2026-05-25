@@ -62,8 +62,6 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <span>Before the decision</span>
     </div>
 
-    <p class="hero-boundary-note">The paid layer stays narrow: it only enters when Jini can prove it saved money or kept work moving.</p>
-
     <div class="offer-grid">
       <div class="offer-card offer-card-plain">
         <h3>Use the raw shell for one-shot answers.</h3>
@@ -75,7 +73,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
       </div>
       <div class="offer-card offer-card-paid">
         <h3>Add the paid optimizer only when the proof can be measured.</h3>
-        <p><strong>Pay only for proof</strong>: when checkout is live, the planned 30-day free trial should come before the $1/month subscription and only after Jini can show savings, preserved headroom, or recovered work.</p>
+        <p>The paid layer stays narrow: it only enters when Jini can prove it saved money or kept work moving. <strong>Pay only for proof</strong>: when checkout is live, the planned 30-day free trial should come before the $1/month subscription and only after Jini can show savings, preserved headroom, or recovered work.</p>
       </div>
     </div>
   </div>
