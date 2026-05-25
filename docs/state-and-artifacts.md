@@ -209,10 +209,8 @@ Other active work
     <span class="compat-pill">Closure Checklist</span>
     <span class="compat-pill">7 Day Paris Trip</span>
   </div>
-</div>
 
-<div class="section-card" markdown="1">
-  <h2>What Each Label Should Mean</h2>
+  <h3>What Each Label Should Mean</h3>
 
   <ul>
     <li><code>Goal</code>: the thing the user is trying to finish right now</li>
@@ -235,11 +233,8 @@ Other active work
     <li><code>Safe to do</code>: whether anything has already been sent or changed</li>
     <li><code>Other active work</code>: sibling projects the user can switch to without losing context</li>
   </ul>
-</div>
 
-<div class="section-card">
-  <span class="section-kicker">Design rule</span>
-  <h2>What should never happen</h2>
+  <h3>What should never happen</h3>
   <div class="checklist-grid">
     <div class="checklist-card">
       <h3>No storage-first labels</h3>
