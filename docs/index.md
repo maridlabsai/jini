@@ -180,13 +180,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <div class="section-card section-card-soft proof-signal-panel" markdown="1">
 ## Proof, kept brief
 
-<p class="page-lead">Trust should support the pitch, not bury it. Show the key signals, make the release posture explicit, then get back to the work.</p>
-
-<div class="proof-hero-card">
-  <span class="proof-hero-kicker">{{ site.data.public_proof.hero.eyebrow }}</span>
-  <h3>{{ site.data.public_proof.hero.headline }}</h3>
-  <p>{{ site.data.public_proof.hero.body }}</p>
-</div>
+<p class="page-lead">Trust should support the pitch, not bury it. Keep the proof data visible, mark the release posture clearly, then get back to the work.</p>
 
 <p class="editorial-note proof-carousel-note">These are checked-in proof carousel slides from the repo, not mocked app-store shots or implied live-release screenshots.</p>
 
@@ -218,26 +212,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
   <p>No live store claims before release. No fake telemetry. No hidden preview posture.</p>
 </div>
 
-<div class="checklist-grid rollout-grid">
-  <div class="checklist-card rollout-card">
-    <h3>Today</h3>
-    <p>The CLI is the live installable surface right now. Desktop and mobile are still in release preparation and not yet publicly downloadable.</p>
-  </div>
-  <div class="checklist-card rollout-card">
-    <h3>Free downloads when live</h3>
-    <p>macOS, Windows, iOS, and Android stay free to download when each surface is ready. Desktop and Android should distribute directly first where policy allows, while iOS remains App Store constrained.</p>
-  </div>
-  <div class="checklist-card rollout-card">
-    <h3>Paid only after proof</h3>
-    <p>When checkout is live, the Commercial License should begin with the planned 30-day free trial and become $1/month subscription pricing for provider-limit forecasting, throttle avoidance, automatic fallback, and automatic resume.</p>
-  </div>
-</div>
-
-<div class="pill-list">
-  {% for surface in site.data.public_surfaces.surfaces %}
-  <span>{{ surface.name }}: {{ surface.badge }}</span>
-  {% endfor %}
-</div>
+<p class="editorial-note">The CLI is the live installable surface right now. Desktop and mobile remain in release preparation and should stay free to download when each surface is live. Desktop and Android should distribute directly first where policy allows, while the paid layer should begin only after the planned 30-day free trial and measurable proof are real.</p>
 
 | Surface | Status | Current state |
 |---|---|---|
