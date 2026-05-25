@@ -19,6 +19,9 @@ quick_links:
 
 <p class="page-lead">Jini should be easy to adopt and hard to overpay for. The shell stays free. App downloads stay free when each surface is live. The paid layer should exist only when Jini can show real savings or continuity proof that a team would miss without it.</p>
 
+<div class="section-card" markdown="1">
+## The short version
+
 <div class="checklist-grid">
   <div class="checklist-card">
     <h3>What stays free</h3>
@@ -34,13 +37,21 @@ quick_links:
   </div>
 </div>
 
-<div class="section-card" markdown="1">
-## The short version
-
 - use the free shell when you want one stable place to run and resume work
 - expect desktop and mobile apps to be free downloads when each surface is actually live
 - start with the planned 30-day free trial of the commercial optimizer
 - pay only if Jini can prove that it saved money or prevented stalled work
+
+<div class="checklist-grid">
+  <div class="checklist-card">
+    <h3>The rule</h3>
+    <p><strong>Do not charge for the shell. Do not charge for app downloads. Give everyone the planned 30-day free trial before asking for the $1/month subscription. Charge only for the cost-saver and continuity layer that proves its value at runtime.</strong></p>
+  </div>
+  <div class="checklist-card">
+    <h3>Why upgrade</h3>
+    <p>Upgrade when provider limits, throttles, or expensive routes are a real operating problem and you want Jini to keep work moving automatically instead of forcing manual babysitting. The paywall prompt should appear before downgrade, not after the account is already squeezed into constrained free mode.</p>
+  </div>
+</div>
 </div>
 
 <div class="section-card" markdown="1">
@@ -63,27 +74,6 @@ meaningfully better than manual babysitting.
 </div>
 
 <div class="section-card" markdown="1">
-## What is not open source
-
-The app downloads can be free without making the app implementation public.
-
-- desktop/mobile app source code lives in the commercial repo only
-- native wrappers, host manifests, release automation, and store-delivery code stay private
-- the public repo may describe the app surfaces, but it should not ship the app code itself
-</div>
-
-<div class="checklist-grid">
-  <div class="checklist-card">
-    <h3>The rule</h3>
-    <p><strong>Do not charge for the shell. Do not charge for app downloads. Give everyone the planned 30-day free trial before asking for the $1/month subscription. Charge only for the cost-saver and continuity layer that proves its value at runtime.</strong></p>
-  </div>
-  <div class="checklist-card">
-    <h3>Why upgrade</h3>
-    <p>Upgrade when provider limits, throttles, or expensive routes are a real operating problem and you want Jini to keep work moving automatically instead of forcing manual babysitting. The paywall prompt should appear before downgrade, not after the account is already squeezed into constrained free mode.</p>
-  </div>
-</div>
-
-<div class="section-card" markdown="1">
 ## When the paid layer earns the right to exist
 
 - when throttles or provider limits regularly interrupt active work
@@ -92,29 +82,44 @@ The app downloads can be free without making the app implementation public.
 - when the proof can be shown before payment, not explained after payment
 
 If those conditions are not true, the free shell should remain enough.
-</div>
+### What the paid layer must prove before renewal
+
+If the paid layer is worth keeping, it should show evidence that the free shell alone could not provide:
+
+- month-to-date token savings
+- provider headroom preserved
+- throttles avoided
+- throttles auto-recovered
+- sessions resumed without manual babysitting
+
+If Jini cannot prove that value, it should not expect renewal.
+ </div>
 
 <div class="section-card" markdown="1">
-## Distribution rule of thumb
+## Current readiness and payment status
+
+### Distribution rule of thumb
 
 - distribute directly from the website first when platform policy allows it and store fees do not buy something essential
 - keep macOS and Windows direct-first
 - keep Android direct-first when policy allows, with Play Store secondary only if trust or reach justify it
 - accept that iOS remains App Store constrained
-</div>
 
-<div class="section-card" markdown="1">
-## Free app surfaces, once live
+### Free app surfaces, once live
 
 - **macOS and Windows:** deeper review, artifact opening, session continuation, and renewal-proof inspection
 - **iOS and Android:** quick session review, approval/defer flows, and interruption-safe continuation
 - **CLI remains first-class:** the apps are another surface over the same session, not a separate product
 
 The commercial apps should help a wider user base without turning Jini into a different workflow for each device class.
-</div>
 
-<div class="section-card" markdown="1">
-## Current readiness and payment status
+### What is not open source
+
+The app downloads can be free without making the app implementation public.
+
+- desktop/mobile app source code lives in the commercial repo only
+- native wrappers, host manifests, release automation, and store-delivery code stay private
+- the public repo may describe the app surfaces, but it should not ship the app code itself
 
 <div class="pill-list">
   {% for surface in site.data.public_surfaces.surfaces %}
@@ -133,18 +138,4 @@ Checkout is not live yet. The current product work defines the shared entitlemen
 Current posture: preview and planning slices are implemented, but the apps are not yet release-ready for direct public download or store rollout.
 
 This table is fed from <code>docs/_data/public_surfaces.json</code>, which is a sanitized snapshot built from the commercial release packets instead of hand-maintained website copy.
-</div>
-
-<div class="section-card" markdown="1">
-## What the paid layer must prove before renewal
-
-If the paid layer is worth keeping, it should show evidence that the free shell alone could not provide:
-
-- month-to-date token savings
-- provider headroom preserved
-- throttles avoided
-- throttles auto-recovered
-- sessions resumed without manual babysitting
-
-If Jini cannot prove that value, it should not expect renewal.
 </div>
