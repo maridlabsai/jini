@@ -198,8 +198,8 @@ quick_links:
     </div>
   </div>
   <div class="page-intro-links">
-    <a href="./simple.html">Simple Guide</a>
-    <a href="./state-and-artifacts.html">What Jini Shows</a>
+    <a href="./simple.html">Quickstart</a>
+    <a href="./state-and-artifacts.html">Outputs</a>
     <a href="./install.html">Install</a>
   </div>
 </div>

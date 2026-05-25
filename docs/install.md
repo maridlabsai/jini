@@ -214,7 +214,7 @@ jini
   <h2>Most people should stop here</h2>
   <p>Install Jini, run <code>jini</code>, and paste the work you want finished. Only drop to the strict route blocks when policy or debugging requires it.</p>
   <div class="page-intro-links">
-    <a href="./simple.html">Simple Guide</a>
+    <a href="./simple.html">Quickstart</a>
     <a href="./cli.html">Command Catalog</a>
     <a href="./examples.html">Examples</a>
   </div>
