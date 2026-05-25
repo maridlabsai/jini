@@ -336,9 +336,17 @@
 }
 
 .hero-category-claim {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.1rem;
   max-width: 36rem;
-  margin: 0.6rem 0 0;
-  font-size: 0.94rem;
+  margin: 0.7rem 0 0;
+  padding: 0 0.85rem;
+  border: 1px solid rgba(29, 78, 216, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 10px 22px rgba(8, 17, 40, 0.05);
+  font-size: 0.96rem;
   line-height: 1.45;
   font-weight: 700;
   letter-spacing: 0.01em;
@@ -498,7 +506,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1.45fr) minmax(280px, 1fr);
   gap: 0.85rem;
-  margin-top: 1.35rem;
+  margin-top: 1.5rem;
 }
 
 .hero-scene-card {
@@ -508,7 +516,7 @@
   padding: 1rem 1rem 1.05rem;
   border: 1px solid rgba(148, 163, 184, 0.24);
   border-radius: 24px;
-  box-shadow: 0 16px 34px rgba(8, 17, 40, 0.08);
+  box-shadow: 0 14px 28px rgba(8, 17, 40, 0.07);
 }
 
 .hero-scene-card::after {
@@ -522,6 +530,9 @@
 
 .hero-scene-card-primary {
   padding: 1.2rem 1.15rem 1.25rem;
+  box-shadow:
+    0 22px 44px rgba(8, 17, 40, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.58);
 }
 
 .hero-scene-card-live {
@@ -1729,12 +1740,12 @@
 .hero-decision-frame {
   overflow: hidden;
   position: relative;
-  margin-top: 1.15rem;
+  margin-top: 1rem;
   padding: 0.95rem 1rem 1rem;
   border-color: rgba(148, 163, 184, 0.18);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 251, 255, 0.86) 100%);
-  box-shadow: 0 8px 22px rgba(8, 17, 40, 0.04);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.82) 0%, rgba(248, 251, 255, 0.76) 100%);
+  box-shadow: 0 4px 14px rgba(8, 17, 40, 0.03);
 }
 
 .hero-decision-frame::before {
@@ -1750,10 +1761,23 @@
 .hero-decision-frame .page-lead {
   max-width: 54rem;
   margin-top: 0.55rem;
+  font-size: 0.98rem;
+  line-height: 1.58;
+  color: #344054;
+}
+
+.hero-decision-frame h2 {
+  max-width: 22ch;
+  margin-bottom: 0.35rem;
+  font-size: clamp(1.3rem, 2vw, 1.6rem);
+  line-height: 1.04;
 }
 
 .hero-decision-frame .hero-install-rail {
   margin-top: 0.85rem;
+  border-color: rgba(148, 163, 184, 0.16);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78) 0%, rgba(244, 248, 255, 0.82) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.62);
 }
 
 .hero-decision-frame .quote-strip {
@@ -1775,7 +1799,7 @@
 .hero-decision-frame .offer-card {
   border-color: rgba(148, 163, 184, 0.2);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.94) 100%);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.84) 0%, rgba(248, 250, 252, 0.88) 100%);
 }
 
 .hero-panel-marketing .hero-decision-frame {
