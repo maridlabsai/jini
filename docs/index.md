@@ -16,10 +16,9 @@ description: Free orchestration for AI work across providers today. Pay only whe
   </div>
   <div class="hero-scene">
     <div class="hero-scene-card hero-scene-card-live hero-scene-card-primary">
-      <span class="hero-scene-label">Live now</span>
+      <span class="screen-reader-only">Live now</span>
       <strong>CLI thread</strong>
       <p>Paste rough work into <code>jini</code> and leave with a usable next artifact instead of a chat dead-end.</p>
-      <span class="hero-scene-chip">installable today</span>
     </div>
     <div class="hero-scene-card hero-scene-card-support">
       <div class="hero-scene-support-row">

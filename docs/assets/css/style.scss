@@ -557,7 +557,7 @@
 }
 
 .hero-scene-card-primary {
-  padding: 0.94rem 0.96rem 1rem;
+  padding: 0.88rem 0.94rem 0.92rem;
   box-shadow:
     0 22px 44px rgba(8, 17, 40, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.58);
@@ -624,6 +624,7 @@
 
 .hero-scene-card-primary strong {
   font-size: 1.18rem;
+  margin-bottom: 0.18rem;
 }
 
 .hero-scene-card p {
@@ -634,19 +635,6 @@
 .hero-scene-card code {
   color: inherit;
   background: rgba(255, 255, 255, 0.14);
-}
-
-.hero-scene-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.8rem;
-  margin-top: 0.62rem;
-  padding: 0 0.62rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.82);
-  color: #0f172a;
-  font-size: 0.78rem;
-  font-weight: 700;
 }
 
 .fact-strip {
