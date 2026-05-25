@@ -2398,20 +2398,20 @@
 .offer-card-contexts {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
-  margin-top: 0.05rem;
+  gap: 0.28rem;
+  margin-top: 0.02rem;
 }
 
 .offer-card-contexts span {
   display: inline-flex;
   align-items: center;
-  min-height: 1.55rem;
-  padding: 0 0.52rem;
+  min-height: 1.42rem;
+  padding: 0 0.46rem;
   border: 1px solid rgba(29, 78, 216, 0.12);
   border-radius: 999px;
   background: rgba(238, 244, 255, 0.72);
   color: #1849a9;
-  font-size: 0.72rem;
+  font-size: 0.69rem;
   font-weight: 700;
 }
 
@@ -2457,12 +2457,26 @@
   line-height: 1.26;
 }
 
+.offer-card-core .offer-card-note {
+  margin-top: 0.12rem;
+  color: #526071;
+  font-size: 0.79rem;
+  line-height: 1.3;
+}
+
 .offer-card-paid {
   gap: 0.14rem;
 }
 
 .offer-card-paid .offer-card-eyebrow {
   opacity: 0.9;
+}
+
+.offer-card-paid .offer-card-note-support {
+  margin-top: 0.08rem;
+  color: #667085;
+  font-size: 0.77rem;
+  line-height: 1.28;
 }
 
 .offer-card-paid .offer-card-note {
