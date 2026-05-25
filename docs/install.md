@@ -85,7 +85,7 @@ jini
 </div>
 
 <div class="section-card" markdown="1">
-  <span class="section-kicker">Choose your path</span>
+  <span class="section-kicker">Strict route fallback</span>
   <h2>Only use the strict setup blocks when you actually need them</h2>
 
   <div class="checklist-grid">
@@ -110,11 +110,8 @@ jini
       <p>Best when you already run an OpenAI-compatible local model server and want cheap-first local routing.</p>
     </div>
   </div>
-</div>
 
-<div class="section-card" markdown="1">
-  <span class="section-kicker">Copy-paste paths</span>
-  <h2>Strict route setup</h2>
+  <p>The short rule: stay on the normal path unless policy or debugging forces a strict route. When it does, use one of these copy-paste setups and return to <code>jini</code>.</p>
 
   <div class="scenario-grid">
     <div class="scenario-card" markdown="1">
