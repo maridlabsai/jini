@@ -226,11 +226,9 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <div class="section-card section-card-story" markdown="1">
 ## Where you can use it now
 
-<p class="editorial-note">The rollout brief now sits with the proof story above. This closing section keeps the explicit source note and operating boundary only. The homepage status block is fed from <code>docs/_data/public_surfaces.json</code>, a sanitized snapshot built from the commercial release packets.</p>
+<p class="editorial-note">The homepage status block is fed from <code>docs/_data/public_surfaces.json</code>, a sanitized snapshot built from the commercial release packets. This closing band keeps the explicit source note and the operating boundary in one place.</p>
 
 ## Small front door. Clear paid boundary.
-
-<p class="page-lead">Normal work should start with one command, expose evidence when needed, and keep the paid boundary narrow and explicit.</p>
 
 <div class="quote-strip">
   <strong>Start with <code>jini</code>.</strong>
