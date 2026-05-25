@@ -34,6 +34,96 @@
 
 .markdown-body {
   color: var(--jini-copy);
+  font-size: 1rem;
+  line-height: 1.68;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+.markdown-body p,
+.markdown-body ul,
+.markdown-body ol {
+  margin-top: 0;
+  margin-bottom: 0.98rem;
+}
+
+.markdown-body li {
+  margin: 0.18rem 0;
+}
+
+.markdown-body a {
+  color: #1d4ed8;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.14em;
+}
+
+.markdown-body a:hover {
+  color: #1849a9;
+}
+
+.markdown-body strong {
+  color: #0f172a;
+}
+
+.markdown-body h3,
+.markdown-body h4 {
+  letter-spacing: -0.015em;
+  color: #0f172a;
+}
+
+.markdown-body :not(pre) > code {
+  display: inline-block;
+  padding: 0.12rem 0.42rem 0.16rem;
+  border: 1px solid rgba(29, 78, 216, 0.1);
+  border-radius: 999px;
+  background: rgba(238, 244, 255, 0.82);
+  color: #1849a9;
+  font-size: 0.88em;
+  line-height: 1.2;
+}
+
+.markdown-body pre {
+  overflow-x: auto;
+  margin: 1rem 0 1.15rem;
+  padding: 0.92rem 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.96) 0%, rgba(15, 23, 42, 0.9) 100%);
+  box-shadow:
+    0 16px 34px rgba(8, 17, 40, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  color: rgba(241, 245, 249, 0.94);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.markdown-body pre code {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.markdown-body blockquote {
+  margin: 1rem 0 1.15rem;
+  padding: 0.2rem 0 0.2rem 1rem;
+  border-left: 3px solid rgba(29, 78, 216, 0.2);
+  color: #516074;
+}
+
+.markdown-body hr {
+  height: 1px;
+  margin: 1.4rem 0;
+  border: 0;
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.04) 0%, rgba(148, 163, 184, 0.26) 50%, rgba(148, 163, 184, 0.04) 100%);
+}
+
+.markdown-body img:not(.site-brand-mark) {
+  border-radius: 18px;
 }
 
 #main-content {
