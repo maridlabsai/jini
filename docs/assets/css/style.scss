@@ -2280,8 +2280,24 @@
   background: linear-gradient(180deg, #64748b 0%, #94a3b8 100%);
 }
 
+.offer-card-plain,
+.offer-card-paid {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(248, 250, 252, 0.58) 100%);
+  border-color: rgba(148, 163, 184, 0.12);
+}
+
 .offer-card-core::before {
   background: linear-gradient(180deg, #1d4ed8 0%, #0f766e 100%);
+}
+
+.offer-card-core {
+  z-index: 1;
+  border-color: rgba(29, 78, 216, 0.18);
+  background:
+    radial-gradient(circle at top right, rgba(29, 78, 216, 0.08), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.86) 0%, rgba(244, 249, 255, 0.96) 100%);
+  box-shadow: 0 12px 26px rgba(8, 17, 40, 0.06);
+  transform: translateY(-1px);
 }
 
 .offer-card-paid::before {
@@ -2323,6 +2339,13 @@
   font-size: 0.84rem;
   line-height: 1.4;
   color: #344054;
+}
+
+.offer-card-plain h3,
+.offer-card-paid h3,
+.offer-card-plain p,
+.offer-card-paid p {
+  color: #475467;
 }
 
 .offer-card ul {
