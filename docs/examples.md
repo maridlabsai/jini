@@ -195,8 +195,8 @@ quick_links:
     <p>What is missing should stay visible and the next move should be obvious. If Jini only gives you a cleaner explanation of the work, it is not good enough.</p>
   </div>
   <div class="page-intro-links">
-    <a href="./simple.html">Quickstart</a>
-    <a href="./state-and-artifacts.html">Outputs</a>
-    <a href="./install.html">Install</a>
+    <a href="{{ '/simple.html' | relative_url }}">Quickstart</a>
+    <a href="{{ '/state-and-artifacts.html' | relative_url }}">Outputs</a>
+    <a href="{{ '/install.html' | relative_url }}">Install</a>
   </div>
 </div>

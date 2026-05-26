@@ -222,8 +222,8 @@ jini
   <h2>Most people should stop here</h2>
   <p>Install Jini, run <code>jini</code>, and paste the work you want finished. Only drop to the strict route blocks when policy or debugging requires it.</p>
   <div class="page-intro-links">
-    <a href="./simple.html">Quickstart</a>
-    <a href="./cli.html">Command Catalog</a>
-    <a href="./examples.html">Examples</a>
+    <a href="{{ '/simple.html' | relative_url }}">Quickstart</a>
+    <a href="{{ '/cli.html' | relative_url }}">Command Catalog</a>
+    <a href="{{ '/examples.html' | relative_url }}">Examples</a>
   </div>
 </div>

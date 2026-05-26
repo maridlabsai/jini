@@ -160,8 +160,8 @@ jini</code></pre>
   <h2>The public rule</h2>
   <p>The normal path is still small: install once, run <code>jini</code>, paste the work you want finished. When you need a public command list, use <code>jini commands</code>. The rest of the CLI exists to support that experience, not replace it.</p>
   <div class="page-intro-links">
-    <a href="./install.html">Install</a>
-    <a href="./simple.html">Quickstart</a>
-    <a href="./state-and-artifacts.html">Outputs</a>
+    <a href="{{ '/install.html' | relative_url }}">Install</a>
+    <a href="{{ '/simple.html' | relative_url }}">Quickstart</a>
+    <a href="{{ '/state-and-artifacts.html' | relative_url }}">Outputs</a>
   </div>
 </div>

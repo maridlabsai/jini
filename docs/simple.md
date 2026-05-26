@@ -43,7 +43,7 @@ quick_links:
 <pre><code class="language-bash">curl -fsSL https://raw.githubusercontent.com/maridlabsai/jini/main/install.sh | bash
 jini</code></pre>
 
-  <p>If setup is missing, Jini should say so in the shell. Then type <code>Auto</code>. If your company needs one strict route, use the matching setup path on the <a href="./install.html">Install</a> page instead.</p>
+  <p>If setup is missing, Jini should say so in the shell. Then type <code>Auto</code>. If your company needs one strict route, use the matching setup path on the <a href="{{ '/install.html' | relative_url }}">Install</a> page instead.</p>
 
   <p><code>jini</code> is the front door. If you want the small public command list before you start, run <code>jini commands</code>. If you maintain routes, bundles, or release plumbing, the deeper inventory lives under <code>jini admin help</code>.</p>
 </div>
@@ -137,8 +137,8 @@ jini</code></pre>
   <h2>If you only remember one rule</h2>
   <p>Jini should make the work easier to finish. If it makes you think harder about the tool than about the work, it is failing.</p>
   <div class="page-intro-links">
-    <a href="./examples.html">Examples</a>
-    <a href="./install.html">Install</a>
-    <a href="./cli.html">Command Catalog</a>
+    <a href="{{ '/examples.html' | relative_url }}">Examples</a>
+    <a href="{{ '/install.html' | relative_url }}">Install</a>
+    <a href="{{ '/cli.html' | relative_url }}">Command Catalog</a>
   </div>
 </div>
