@@ -274,6 +274,28 @@ main [id] {
   overflow-wrap: anywhere;
 }
 
+.page-intro-highlights span,
+.page-intro-links a,
+.site-footer-links a,
+.pill-list span,
+.pill-list a,
+.compat-pill,
+.site-signal-pill,
+.offer-card-eyebrow,
+.offer-card-contexts span,
+.hero-scene-label,
+.workflow-card code,
+.media-overlay-tags span,
+.media-artifact-stack span,
+.truth-rule-pill {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  text-align: left;
+}
+
 .site-nav {
   display: flex;
   flex-wrap: wrap;
@@ -2643,6 +2665,9 @@ main [id] {
 .truth-rule-pill {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  row-gap: 0.35rem;
   min-height: 2.6rem;
   padding: 0.72rem 1rem 0.76rem;
   border-radius: 999px;

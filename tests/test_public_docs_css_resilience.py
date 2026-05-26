@@ -49,6 +49,18 @@ class PublicDocsCssResilienceTests(unittest.TestCase):
             "Dark shell examples should wrap long tokens safely.",
         )
 
+    def test_ticket_like_ui_surfaces_wrap_and_shrink(self) -> None:
+        self.assertRegex(
+            CSS_TEXT,
+            r"\.page-intro-highlights span,\s*\.page-intro-links a,\s*\.site-footer-links a,\s*\.pill-list span,\s*\.pill-list a,\s*\.compat-pill,\s*\.site-signal-pill,\s*\.offer-card-eyebrow,\s*\.offer-card-contexts span,\s*\.hero-scene-label,\s*\.workflow-card code,\s*\.media-overlay-tags span,\s*\.media-artifact-stack span,\s*\.truth-rule-pill\s*\{[^}]*max-width:\s*100%;[^}]*white-space:\s*normal;[^}]*overflow-wrap:\s*anywhere;[^}]*word-break:\s*break-word;",
+            "Chip, pill, and ticket-like UI across the site should wrap safely instead of forcing horizontal overflow.",
+        )
+        self.assertRegex(
+            CSS_TEXT,
+            r"\.truth-rule-pill\s*\{[^}]*flex-wrap:\s*wrap;[^}]*justify-content:\s*flex-start;",
+            "Long truth-rule pills should be allowed to wrap instead of overflowing their band.",
+        )
+
     def test_dense_grid_children_can_shrink(self) -> None:
         self.assertRegex(
             CSS_TEXT,
