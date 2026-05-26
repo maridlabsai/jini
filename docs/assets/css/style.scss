@@ -159,6 +159,20 @@
   border: 0;
 }
 
+html {
+  scroll-padding-top: 7.6rem;
+}
+
+main [id] {
+  scroll-margin-top: 7.6rem;
+}
+
+.markdown-body img,
+.markdown-body svg {
+  max-width: 100%;
+  height: auto;
+}
+
 .site-shell-header {
   display: flex;
   align-items: center;
@@ -254,6 +268,15 @@
   font-size: 0.82rem;
   font-weight: 700;
   color: #1849a9;
+}
+
+.site-nav a,
+.site-signal-pill,
+.page-intro-links a,
+.page-intro-highlights span,
+.compat-pill,
+.offer-card-contexts span {
+  overflow-wrap: anywhere;
 }
 
 .site-nav {
@@ -622,6 +645,8 @@
   background: rgba(15, 23, 42, 0.78);
   color: rgba(255, 255, 255, 0.96);
   white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   font-size: 0.72rem;
 }
 
@@ -1800,6 +1825,7 @@
   display: block;
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   margin-top: 0.82rem;
   border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 18px;
@@ -2024,6 +2050,19 @@
   margin-top: 0.8rem;
   border-color: rgba(148, 163, 184, 0.2);
   background: linear-gradient(180deg, rgba(248, 250, 252, 0.92) 0%, rgba(255, 255, 255, 0.98) 100%);
+}
+
+.hero-scene > *,
+.offer-grid > *,
+.offer-side-rail > *,
+.hero-install-main > *,
+.media-grid-featured > *,
+.media-grid-story > *,
+.proof-carousel-grid > *,
+.workflow-grid-story > *,
+.proof-grid-story > *,
+.continuity-strip > * {
+  min-width: 0;
 }
 
 .hero-decision-frame .signal-card,
@@ -2835,11 +2874,25 @@
   border-radius: 18px;
   background: rgba(8, 17, 40, 0.96);
   color: #f8fafc;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .shell-panel pre {
   margin: 0;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.markdown-body pre {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.markdown-body pre code {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .compact-list > li + li {
@@ -2847,6 +2900,14 @@
 }
 
 @media screen and (max-width: 640px) {
+  html {
+    scroll-padding-top: 8.8rem;
+  }
+
+  main [id] {
+    scroll-margin-top: 8.8rem;
+  }
+
   .container-lg.px-3.my-5.markdown-body {
     max-width: calc(100vw - 16px);
     padding: 0.72rem 0.72rem 1.5rem !important;
