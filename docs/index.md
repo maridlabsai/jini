@@ -33,7 +33,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
       </div>
     </div>
   </div>
-  <div class="hero-decision-frame hero-decision-frame-inline" markdown="1">
+  <div class="hero-decision-frame hero-decision-frame-inline">
     <div class="hero-decision-intro">
       <span class="screen-reader-only">Choose the lightest layer that still leaves behind usable work.</span>
       <span class="screen-reader-only">If you only need a one-off answer, use a raw model shell.</span>
