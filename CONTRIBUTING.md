@@ -22,6 +22,14 @@ make test-docs
 make readiness
 ```
 
+If you need to verify the public site visually before sending docs or CSS changes,
+use the local preview/build path:
+
+```bash
+make preview-docs
+make build-docs
+```
+
 If you want the full public regression lane, use:
 
 ```bash

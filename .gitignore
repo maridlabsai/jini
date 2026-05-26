@@ -19,3 +19,6 @@ dist/
 learning/
 private/
 .jini/
+docs/.bundle/
+docs/.jekyll-cache/
+docs/_site/
