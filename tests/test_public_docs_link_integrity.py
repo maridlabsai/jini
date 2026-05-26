@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 import unittest
 from pathlib import Path
+from typing import Iterable
 
 
 DOCS_DIR = Path(__file__).resolve().parents[1] / "docs"
@@ -39,6 +40,32 @@ TARGET_MAP = _doc_target_map()
 LINK_RE = re.compile(r"\[[^\]]+\]\(([^)]+)\)|href=\"([^\"]+)\"|src=\"([^\"]+)\"")
 
 
+def _frontmatter_lines(path: Path) -> list[str]:
+    lines = path.read_text().splitlines()
+    if lines[:1] != ["---"]:
+        return []
+    collected: list[str] = []
+    for line in lines[1:]:
+        if line == "---":
+            break
+        collected.append(line)
+    return collected
+
+
+def _quick_link_hrefs(path: Path) -> Iterable[str]:
+    in_quick_links = False
+    for line in _frontmatter_lines(path):
+        if line.startswith("quick_links:"):
+            in_quick_links = True
+            continue
+        if in_quick_links and re.match(r"^[A-Za-z0-9_]+:", line):
+            break
+        if in_quick_links:
+            match = re.search(r"href:\s*(\S+)", line)
+            if match:
+                yield match.group(1).strip()
+
+
 class PublicDocsLinkIntegrityTests(unittest.TestCase):
     def test_public_pages_do_not_use_page_relative_html_routes(self) -> None:
         offenders = []
@@ -69,6 +96,28 @@ class PublicDocsLinkIntegrityTests(unittest.TestCase):
                 if normalized not in TARGET_MAP:
                     unresolved.append(f"{path.name}: {normalized}")
         self.assertFalse(unresolved, "Unresolved local public-doc routes:\n" + "\n".join(unresolved))
+
+    def test_frontmatter_quick_links_use_site_relative_routes(self) -> None:
+        offenders = []
+        for path in DOCS_DIR.glob("*.md"):
+            for href in _quick_link_hrefs(path):
+                if not href.startswith("/"):
+                    offenders.append(f"{path.name}: {href}")
+        self.assertFalse(
+            offenders,
+            "Page quick_links should use site-relative routes:\n" + "\n".join(offenders),
+        )
+
+    def test_frontmatter_quick_links_resolve(self) -> None:
+        unresolved = []
+        for path in DOCS_DIR.glob("*.md"):
+            for href in _quick_link_hrefs(path):
+                if href not in TARGET_MAP:
+                    unresolved.append(f"{path.name}: {href}")
+        self.assertFalse(
+            unresolved,
+            "Page quick_links should resolve to public pages or assets:\n" + "\n".join(unresolved),
+        )
 
 
 if __name__ == "__main__":
