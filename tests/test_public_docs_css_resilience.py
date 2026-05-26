@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 
-CSS_PATH = Path(__file__).resolve().parents[1] / "docs" / "assets" / "css" / "style.scss"
+CSS_PATH = Path(__file__).resolve().parents[1] / "docs" / "assets" / "css" / "style.css"
 CSS_TEXT = CSS_PATH.read_text()
 
 

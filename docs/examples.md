@@ -2,7 +2,7 @@
 title: Examples
 description: Familiar problems shown as real inputs, real outputs, and clear next steps.
 eyebrow: Familiar jobs
-context_line: These examples show the buyer story directly: what the user already has, what they ask for, what artifact leaves the thread, and what happens next.
+context_line: "These examples show the buyer story directly: what the user already has, what they ask for, what artifact leaves the thread, and what happens next."
 highlights:
   - Real inputs
   - Sendable follow-up

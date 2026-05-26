@@ -54,8 +54,15 @@ class DeveloperExperienceDocsTests(unittest.TestCase):
         for marker in (
             "Usage: tools/preview_docs.sh",
             "bundle exec jekyll",
+            "bundle install",
+            "ca-certificates",
             "docker",
             "jekyll/jekyll:4",
+            "vendor/bundle",
+            "JINI_DOCS_EXTRA_CA_CERT",
+            "jini-preview-extra-ca.crt",
+            ".preview-config.local.yml",
+            "exclude:",
             "--dry-run",
             "docs/Gemfile",
             "_config.yml",
@@ -65,7 +72,6 @@ class DeveloperExperienceDocsTests(unittest.TestCase):
 
         for marker in (
             'gem "jekyll"',
-            'gem "jekyll-theme-primer"',
             'gem "webrick"',
         ):
             with self.subTest(marker=marker):

@@ -2,10 +2,10 @@
 title: Command Catalog
 description: The small public command surface and the setup check that sits behind it.
 eyebrow: Keep the shell small
-context_line: The command story should stay simple: one front door for most people, one calm catalog when needed, and deeper plumbing only for operators who actually maintain routes.
+context_line: "The command story should stay simple: one front door for most people, one calm catalog when needed, and deeper plumbing only for operators who actually maintain routes."
 highlights:
-  - Start with `jini`
-  - `jini commands`
+  - "Start with `jini`"
+  - "`jini commands`"
   - Support commands only when needed
   - Admin help for operators
 quick_links:

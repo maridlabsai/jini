@@ -10,7 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SHOWCASE_DATA_PATH = ROOT / "docs" / "_data" / "showcase_media.json"
 DOCS_DIR = ROOT / "docs"
-STYLE_PATH = DOCS_DIR / "assets" / "css" / "style.scss"
+STYLE_PATH = DOCS_DIR / "assets" / "css" / "style.css"
 
 
 def build_public_target_map() -> dict[str, Path]:

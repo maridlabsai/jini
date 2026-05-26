@@ -5,7 +5,7 @@ eyebrow: Live install path
 context_line: The CLI is the public installable surface today. The rest of this page exists to get you to a real first run fast, then show the honest surface boundary for everything else.
 highlights:
   - Install once
-  - Run `jini`
+  - "Run `jini`"
   - CLI live now
   - Desktop and mobile when live
 quick_links:
