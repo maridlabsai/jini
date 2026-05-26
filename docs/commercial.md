@@ -54,9 +54,9 @@ quick_links:
 <table>
   <thead>
     <tr>
-      <th>Need</th>
-      <th>Free shell</th>
-      <th>Paid optimizer</th>
+      <th scope="col">Need</th>
+      <th scope="col">Free shell</th>
+      <th scope="col">Paid optimizer</th>
     </tr>
   </thead>
   <tbody>
@@ -176,10 +176,10 @@ The commercial apps should help a wider user base without turning Jini into a di
 <table>
   <thead>
     <tr>
-      <th>Surface</th>
-      <th>Badge</th>
-      <th>Current state</th>
-      <th>Planned activation</th>
+      <th scope="col">Surface</th>
+      <th scope="col">Badge</th>
+      <th scope="col">Current state</th>
+      <th scope="col">Planned activation</th>
     </tr>
   </thead>
   <tbody>

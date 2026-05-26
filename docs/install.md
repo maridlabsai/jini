@@ -28,9 +28,9 @@ quick_links:
   <table>
     <thead>
       <tr>
-        <th>Surface</th>
-        <th>Current state</th>
-        <th>What to expect next</th>
+        <th scope="col">Surface</th>
+        <th scope="col">Current state</th>
+        <th scope="col">What to expect next</th>
       </tr>
     </thead>
     <tbody>

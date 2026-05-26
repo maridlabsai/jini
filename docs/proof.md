@@ -46,7 +46,7 @@ quick_links:
   <span class="section-kicker">Free value first</span>
   <h2>What the free shell should make obvious</h2>
   <div class="shell-panel">
-<pre>You're working on
+<pre><code>You're working on
 Research to PRD handoff
 
 Ready now
@@ -57,7 +57,7 @@ Still missing
 - Product approval
 
 Next step
-Open Build-Readiness Check</pre>
+Open Build-Readiness Check</code></pre>
   </div>
 
   <p>That is enough for a user to understand the value. Something useful is already ready, the blocker is visible, and the next move is obvious.</p>

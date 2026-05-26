@@ -248,9 +248,9 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <table>
   <thead>
     <tr>
-      <th>Surface</th>
-      <th>Status</th>
-      <th>Current state</th>
+      <th scope="col">Surface</th>
+      <th scope="col">Status</th>
+      <th scope="col">Current state</th>
     </tr>
   </thead>
   <tbody>
@@ -281,9 +281,9 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <table>
   <thead>
     <tr>
-      <th>Need</th>
-      <th>Free Jini shell</th>
-      <th>Planned paid layer</th>
+      <th scope="col">Need</th>
+      <th scope="col">Free Jini shell</th>
+      <th scope="col">Planned paid layer</th>
     </tr>
   </thead>
   <tbody>
