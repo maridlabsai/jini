@@ -21,6 +21,16 @@ class PublicDocsCssResilienceTests(unittest.TestCase):
             r"main\s+\[id\]\s*\{[^}]*scroll-margin-top:\s*7\.6rem;",
             "Anchored sections should offset for the sticky header.",
         )
+        self.assertRegex(
+            CSS_TEXT,
+            r"@media screen and \(max-width:\s*960px\)\s*\{[\s\S]*?html\s*\{[^}]*scroll-padding-top:\s*1\.25rem;",
+            "When the header stops being sticky on smaller widths, anchor jumps should use a much smaller top offset.",
+        )
+        self.assertRegex(
+            CSS_TEXT,
+            r"@media screen and \(max-width:\s*960px\)\s*\{[\s\S]*?main\s+\[id\]\s*\{[^}]*scroll-margin-top:\s*1\.25rem;",
+            "Smaller-width fragment targets should not keep the oversized desktop scroll margin.",
+        )
 
     def test_command_and_code_surfaces_wrap_long_content(self) -> None:
         self.assertRegex(

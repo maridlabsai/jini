@@ -2484,6 +2484,14 @@ main [id] {
 }
 
 @media screen and (max-width: 960px) {
+  html {
+    scroll-padding-top: 1.25rem;
+  }
+
+  main [id] {
+    scroll-margin-top: 1.25rem;
+  }
+
   .container-lg.px-3.my-5.markdown-body {
     max-width: min(100vw - 24px, 1100px);
     padding: 0.8rem 0.82rem 2rem !important;
