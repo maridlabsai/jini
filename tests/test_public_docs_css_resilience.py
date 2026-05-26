@@ -59,13 +59,18 @@ class PublicDocsCssResilienceTests(unittest.TestCase):
     def test_homepage_hero_uses_two_column_desktop_balance(self) -> None:
         self.assertRegex(
             CSS_TEXT,
-            r"@media screen and \(min-width:\s*1080px\)\s*\{[\s\S]*?\.hero-panel-marketing\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*minmax\(0,\s*1\.08fr\)\s*minmax\(360px,\s*0\.92fr\);",
-            "Large-screen homepage hero should use a two-column layout instead of trapping the headline in a narrow single lane.",
+            r"\.hero-title\s*\{[^}]*max-width:\s*16ch;",
+            "Homepage hero title should allow a broader measure before desktop grid kicks in.",
         )
         self.assertRegex(
             CSS_TEXT,
-            r"@media screen and \(min-width:\s*1080px\)\s*\{[\s\S]*?\.hero-scene\s*\{[^}]*grid-column:\s*2;[^}]*grid-template-columns:\s*1fr;",
-            "Large-screen homepage hero scene should move into the right column and stack safely there.",
+            r"@media screen and \(min-width:\s*980px\)\s*\{[\s\S]*?\.hero-panel-marketing\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*minmax\(0,\s*1\.14fr\)\s*minmax\(320px,\s*0\.86fr\);",
+            "Common desktop-width homepage hero should use a two-column layout instead of trapping the headline in a narrow single lane.",
+        )
+        self.assertRegex(
+            CSS_TEXT,
+            r"@media screen and \(min-width:\s*980px\)\s*\{[\s\S]*?\.hero-scene\s*\{[^}]*grid-column:\s*2;[^}]*grid-template-columns:\s*1fr;",
+            "Common desktop-width homepage hero scene should move into the right column and stack safely there.",
         )
 
     def test_scrollable_surfaces_keep_touch_overflow_support(self) -> None:

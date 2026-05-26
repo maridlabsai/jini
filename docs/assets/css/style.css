@@ -492,7 +492,7 @@ main [id] {
 
 .hero-title {
   margin: 0;
-  max-width: 14ch;
+  max-width: 16ch;
   font-family: var(--jini-display-font);
   font-size: clamp(2.35rem, 5.6vw, 4rem);
   line-height: 0.94;
@@ -2438,11 +2438,11 @@ main [id] {
   margin-top: 0.7rem;
 }
 
-@media screen and (min-width: 1080px) {
+@media screen and (min-width: 980px) {
   .hero-panel-marketing {
     display: grid;
-    grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
-    column-gap: 1.35rem;
+    grid-template-columns: minmax(0, 1.14fr) minmax(320px, 0.86fr);
+    column-gap: 1.4rem;
     row-gap: 0.82rem;
     align-items: start;
   }
@@ -2457,15 +2457,15 @@ main [id] {
   }
 
   .hero-title {
-    max-width: 13.6ch;
+    max-width: 15.2ch;
   }
 
   .hero-summary {
-    max-width: 36rem;
+    max-width: 38rem;
   }
 
   .hero-summary-support {
-    max-width: 30rem;
+    max-width: 32rem;
   }
 
   .hero-scene {
