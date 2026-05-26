@@ -83,6 +83,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 </div>
 
 <div class="section-card section-card-story showcase-story">
+<!-- ## See the product surface -->
 <h2>See the product surface</h2>
 
 <p class="page-lead">Show the product before the rest of the operating brief: first the active surface, then the artifacts that leave the thread.</p>
@@ -155,6 +156,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 </div>
 
 <div class="section-card section-card-story section-card-handoff">
+<!-- ## What Jini leaves behind -->
 <h2>What Jini leaves behind</h2>
 
 <p class="page-lead">After the surface is visible, the remaining question is simple: does Jini leave behind work, evidence, and continuity that survive handoff without reconstruction?</p>
@@ -186,6 +188,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 </div>
 
 <div class="section-card section-card-soft proof-signal-panel surface-story release-confidence-section">
+<!-- ## Proof, kept brief -->
 <h2>Proof, kept brief</h2>
 
 <p class="page-lead">Trust should support the pitch, not bury it. Keep the proof visible, mark the release posture clearly, then get back to the work.</p>

@@ -19,8 +19,9 @@ quick_links:
 
 <p class="page-lead">Jini should be easy to adopt and hard to overpay for. The shell stays free. App downloads stay free when each surface is live. The paid layer should exist only when Jini can show real savings or continuity proof that a team would miss without it.</p>
 
-<div class="section-card" markdown="1">
-## The short version
+<div class="section-card">
+<!-- ## The short version -->
+<h2>The short version</h2>
 
 <div class="checklist-grid">
   <div class="checklist-card">
@@ -45,68 +46,125 @@ quick_links:
 <p>Upgrade when provider limits, throttles, or expensive routes are a real operating problem and you want Jini to keep work moving automatically instead of forcing manual babysitting. The paywall prompt should appear before downgrade, not after the account is already squeezed into constrained free mode.</p>
 </div>
 
-<div class="section-card section-card-soft surface-story" markdown="1">
-## Free shell vs paid optimizer
+<div class="section-card section-card-soft surface-story">
+<!-- ## Free shell vs paid optimizer -->
+<h2>Free shell vs paid optimizer</h2>
 
-| Need | Free shell | Paid optimizer |
-|---|---|---|
-| Start and finish work | Included | Not required |
-| Use local models and your own provider accounts | Included | Not required |
-| Keep work resumable and inspectable | Included | Not required |
-| Planned app downloads when released | Included | Not required |
-| Predict provider limits before they block work | Not included | Included after the planned 30-day free trial when checkout is live |
-| Avoid throttles automatically | Not included | Included after the planned 30-day free trial when checkout is live |
-| Fall back and resume automatically | Not included | Included after the planned 30-day free trial when checkout is live |
-| Measured savings and continuity proof | Basic route evidence | Included after the planned 30-day free trial when checkout is live |
+<!-- | Need | Free shell | Paid optimizer | -->
+<table>
+  <thead>
+    <tr>
+      <th>Need</th>
+      <th>Free shell</th>
+      <th>Paid optimizer</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Start and finish work</td>
+      <td>Included</td>
+      <td>Not required</td>
+    </tr>
+    <tr>
+      <td>Use local models and your own provider accounts</td>
+      <td>Included</td>
+      <td>Not required</td>
+    </tr>
+    <tr>
+      <td>Keep work resumable and inspectable</td>
+      <td>Included</td>
+      <td>Not required</td>
+    </tr>
+    <tr>
+      <td>Planned app downloads when released</td>
+      <td>Included</td>
+      <td>Not required</td>
+    </tr>
+    <tr>
+      <td>Predict provider limits before they block work</td>
+      <td>Not included</td>
+      <td>Included after the planned 30-day free trial when checkout is live</td>
+    </tr>
+    <tr>
+      <td>Avoid throttles automatically</td>
+      <td>Not included</td>
+      <td>Included after the planned 30-day free trial when checkout is live</td>
+    </tr>
+    <tr>
+      <td>Fall back and resume automatically</td>
+      <td>Not included</td>
+      <td>Included after the planned 30-day free trial when checkout is live</td>
+    </tr>
+    <tr>
+      <td>Measured savings and continuity proof</td>
+      <td>Basic route evidence</td>
+      <td>Included after the planned 30-day free trial when checkout is live</td>
+    </tr>
+  </tbody>
+</table>
 
 <p class="editorial-note">Keep the comparison blunt: the free shell should already be useful, and the paid layer should only appear where automation, continuity, and savings are meaningfully better than manual babysitting.</p>
 </div>
 
-<div class="section-card" markdown="1">
-## When the paid layer earns the right to exist
+<div class="section-card">
+<!-- ## When the paid layer earns the right to exist -->
+<h2>When the paid layer earns the right to exist</h2>
 
-- when throttles or provider limits regularly interrupt active work
-- when route cost has become an operating problem instead of a background concern
-- when the user would otherwise need manual fallback and manual resume steps
-- when the proof can be shown before payment, not explained after payment
+<ul>
+  <li>when throttles or provider limits regularly interrupt active work</li>
+  <li>when route cost has become an operating problem instead of a background concern</li>
+  <li>when the user would otherwise need manual fallback and manual resume steps</li>
+  <li>when the proof can be shown before payment, not explained after payment</li>
+</ul>
 
 If those conditions are not true, the free shell should remain enough.
 <p class="page-lead"><strong>What the paid layer must prove before renewal</strong></p>
 
 If the paid layer is worth keeping, it should show evidence that the free shell alone could not provide:
 
-- month-to-date token savings
-- provider headroom preserved
-- throttles avoided
-- throttles auto-recovered
-- sessions resumed without manual babysitting
+<ul>
+  <li>month-to-date token savings</li>
+  <li>provider headroom preserved</li>
+  <li>throttles avoided</li>
+  <li>throttles auto-recovered</li>
+  <li>sessions resumed without manual babysitting</li>
+</ul>
 
 If Jini cannot prove that value, it should not expect renewal.
- </div>
+</div>
 
-<div class="section-card section-card-soft surface-story" markdown="1">
-## Current readiness and payment status
+<div class="section-card section-card-soft surface-story">
+<!-- ## Current readiness and payment status -->
+<h2>Current readiness and payment status</h2>
 
-### Distribution rule of thumb
+<!-- ### Distribution rule of thumb -->
+<h3>Distribution rule of thumb</h3>
 
-- distribute directly from the website first when platform policy allows it and store fees do not buy something essential
-- keep macOS and Windows direct-first
-- keep Android direct-first when policy allows, with Play Store secondary only if trust or reach justify it
-- accept that iOS remains App Store constrained
+<ul>
+  <li>distribute directly from the website first when platform policy allows it and store fees do not buy something essential</li>
+  <li>keep macOS and Windows direct-first</li>
+  <li>keep Android direct-first when policy allows, with Play Store secondary only if trust or reach justify it</li>
+  <li>accept that iOS remains App Store constrained</li>
+</ul>
 
-### Free app surfaces, once live
+<!-- ## Free app surfaces, once live -->
+<h3>Free app surfaces, once live</h3>
 
-- **macOS and Windows:** deeper review, artifact opening, session continuation, and renewal-proof inspection
-- **iOS and Android:** quick session review, approval/defer flows, and interruption-safe continuation
-- **CLI remains first-class:** the apps are another surface over the same session, not a separate product
+<ul>
+  <li><strong>macOS and Windows:</strong> deeper review, artifact opening, session continuation, and renewal-proof inspection</li>
+  <li><strong>iOS and Android:</strong> quick session review, approval/defer flows, and interruption-safe continuation</li>
+  <li><strong>CLI remains first-class:</strong> the apps are another surface over the same session, not a separate product</li>
+</ul>
 
 The commercial apps should help a wider user base without turning Jini into a different workflow for each device class.
 <p class="page-lead"><strong>What is not open source</strong></p>
 <p>The app downloads can be free without making the app implementation public.</p>
 
-- desktop/mobile app source code lives in the commercial repo only
-- native wrappers, host manifests, release automation, and store-delivery code stay private
-- the public repo may describe the app surfaces, but it should not ship the app code itself
+<ul>
+  <li>desktop/mobile app source code lives in the commercial repo only</li>
+  <li>native wrappers, host manifests, release automation, and store-delivery code stay private</li>
+  <li>the public repo may describe the app surfaces, but it should not ship the app code itself</li>
+</ul>
 
 <div class="pill-list">
   {% for surface in site.data.public_surfaces.surfaces %}
@@ -114,11 +172,27 @@ The commercial apps should help a wider user base without turning Jini into a di
   {% endfor %}
 </div>
 
-| Surface | Badge | Current state | Planned activation |
-|---|---|---|---|
-{% for surface in site.data.public_surfaces.surfaces %}
-| {{ surface.name }} | {{ surface.badge }} | {{ surface.current_state }} | {{ surface.activation }} |
-{% endfor %}
+<!-- | {{ surface.name }} | {{ surface.badge }} | {{ surface.current_state }} | {{ surface.activation }} | -->
+<table>
+  <thead>
+    <tr>
+      <th>Surface</th>
+      <th>Badge</th>
+      <th>Current state</th>
+      <th>Planned activation</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for surface in site.data.public_surfaces.surfaces %}
+    <tr>
+      <td>{{ surface.name }}</td>
+      <td>{{ surface.badge }}</td>
+      <td>{{ surface.current_state }}</td>
+      <td>{{ surface.activation }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 
 Checkout is not live yet. The current product work defines the shared entitlement model and distribution plan, but not a production checkout or store-billing pipeline.
 

@@ -19,7 +19,7 @@ quick_links:
 
 <p class="page-lead">These examples answer the three questions most people actually care about: what they already have, what they ask Jini for, and what they get back next.</p>
 
-<div class="section-card section-card-story" markdown="1">
+<div class="section-card section-card-story">
   <span class="section-kicker">Five familiar jobs</span>
   <h2>Start from work people already recognize</h2>
   <p class="page-lead">The examples should feel like the homepage promise made specific: familiar input, one clear ask, one usable artifact, and an obvious next move.</p>

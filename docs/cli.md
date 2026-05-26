@@ -21,29 +21,25 @@ quick_links:
 
 <p>You do not need to know Python to use Jini.</p>
 
-<div class="section-card" markdown="1">
+<div class="section-card">
   <span class="section-kicker">Front door</span>
   <h2>Start here</h2>
 
-```bash
-jini
-```
+<pre><code class="language-bash">jini</code></pre>
 
   <p>That should be the normal entry. Jini should either continue the thing you were already working on, show <code>Active work</code> when several projects are in flight, or offer simple choices if nothing is active yet.</p>
 </div>
 
-<div class="section-card" markdown="1">
+<div class="section-card">
   <span class="section-kicker">Command catalog</span>
   <h2>See the public command surface without the internal inventory</h2>
 
-```bash
-jini commands
-```
+<pre><code class="language-bash">jini commands</code></pre>
 
   <p>Use this when you want the small product-facing command catalog. If you maintain routes, bundles, or release plumbing, use <code>jini admin help</code> instead of treating the full internal parser as the public surface.</p>
 </div>
 
-<div class="section-card" markdown="1">
+<div class="section-card">
   <span class="section-kicker">Inside Jini</span>
   <h2>Main in-shell actions</h2>
   <div class="pill-list">
@@ -58,7 +54,7 @@ jini commands
   <p><code>Plan</code> is the structured mode. Use it when the work is still fuzzy and you want Jini to turn it into goal, requirements, design, steps, and run.</p>
 </div>
 
-<div class="section-card" markdown="1">
+<div class="section-card">
   <span class="section-kicker">Decision card</span>
   <h2>What Jini should show before new work starts</h2>
   <div class="signal-grid">
@@ -87,7 +83,7 @@ jini commands
   </div>
 </div>
 
-<div class="section-card" markdown="1">
+<div class="section-card">
   <span class="section-kicker">Catalog entries</span>
   <h2>Support commands when Jini points you there</h2>
   <p>These are still part of the public command catalog. They support the product front door, and most people should reach them because Jini asked for one of them, not because they are navigating a command tree by hand.</p>
@@ -115,14 +111,12 @@ jini commands
   </div>
 </div>
 
-<div class="section-card" markdown="1">
+<div class="section-card">
   <span class="section-kicker">Setup check</span>
   <h2>What <code>doctor</code> is for</h2>
 
-```bash
-jini doctor
-jini
-```
+<pre><code class="language-bash">jini doctor
+jini</code></pre>
 
   <p>Most people should still start by pasting the work they want finished. Use doctor when setup help is needed, when you need one strict route, or when you are debugging access.</p>
 
@@ -137,7 +131,7 @@ jini
   <p>Doctor reports what Jini will use, what auto mode resolved to, and what is missing. It does not print secret values.</p>
 </div>
 
-<div class="section-card" markdown="1">
+<div class="section-card">
   <span class="section-kicker">Local SLM</span>
   <h2>What extra context doctor shows for local routing</h2>
   <div class="signal-grid">
@@ -161,7 +155,7 @@ jini
   </div>
 </div>
 
-<div class="section-card section-card-cta" markdown="1">
+<div class="section-card section-card-cta">
   <span class="section-kicker">Next step</span>
   <h2>The public rule</h2>
   <p>The normal path is still small: install once, run <code>jini</code>, paste the work you want finished. When you need a public command list, use <code>jini commands</code>. The rest of the CLI exists to support that experience, not replace it.</p>

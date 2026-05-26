@@ -24,7 +24,7 @@ quick_links:
   <p>Jini should feel better than plain chat because it gives teams usable deliverables, visible missing pieces, and a continuation surface they can understand without rebuilding state from scratch. The same output and session model should travel across macOS, Windows, mobile, and CLI. A device switch should not create a second-class copy of the work.</p>
 </div>
 
-<div class="section-card section-card-soft" markdown="1">
+<div class="section-card section-card-soft">
   <span class="section-kicker">Output posture</span>
   <h2>What good output keeps visible</h2>
   <p class="page-lead">Before the deeper shell contract, the buyer should be able to see the four basics immediately: legible work, honest AI choice, concrete progress, and visible risk.</p>
@@ -49,19 +49,17 @@ quick_links:
 </div>
 </div>
 
-<div class="section-card" markdown="1">
+<div class="section-card">
   <h2>The Command That Matters</h2>
 
-  ```bash
-  jini
-  ```
+  <pre><code class="language-bash">jini</code></pre>
 
   <p>That should be enough after install. From there, the user should be able to open ready work, see what is missing, or plan first without learning file paths or internal command names.</p>
 
   <p>If more than one project is active, Jini should show <code>Active work</code> first, let the user pick one, and keep the rest visible as sibling work instead of hiding them behind the filesystem.</p>
 </div>
 
-<div class="section-card" markdown="1">
+<div class="section-card">
   <h2>What Should Stay Visible</h2>
 
   <div class="workflow-grid">
@@ -104,13 +102,12 @@ quick_links:
   </div>
 </div>
 
-<div class="section-card" markdown="1">
+<div class="section-card">
   <h2>What The Shell Should Feel Like</h2>
 
   <p>The shell should read like a working surface, not like a diagnostic panel. A buyer should be able to see that Jini is organized around deliverables, continuation, and explicit risk rather than model theater.</p>
 
-```text
-Goal
+<pre><code>Goal
 Weekly product review follow-up
 
 Working with
@@ -171,13 +168,12 @@ Nothing has been sent yet. You can review before sharing.
 
 Other active work
 - Pricing vendor review
-- Paris trip
-```
+- Paris trip</code></pre>
 
   <p>The important part is not only the provider name. The user should also be able to tell whether Jini chose that route automatically or because they forced it, and how much effort Jini judged the request to need before the first draft begins.</p>
 </div>
 
-<div class="section-card" markdown="1">
+<div class="section-card">
   <h2>What “Open” Should Feel Like</h2>
 
   <p>It should open deliverables, not storage concepts. The product surface should make the useful thing obvious before the user has to care where it lives on disk.</p>
