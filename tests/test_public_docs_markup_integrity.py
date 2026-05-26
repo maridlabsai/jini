@@ -101,6 +101,18 @@ class PublicDocsMarkupIntegrityTests(unittest.TestCase):
             f"Public HTML tables should declare header scope for accessibility: {', '.join(bad_pages)}",
         )
 
+    def test_public_explicit_html_tables_use_row_headers(self) -> None:
+        bad_pages = []
+        row_header_re = re.compile(r"<tbody>.*?<tr>\s*<td>", re.DOTALL)
+        for path in PUBLIC_PAGES:
+            text = path.read_text()
+            if row_header_re.search(text):
+                bad_pages.append(path.name)
+        self.assertFalse(
+            bad_pages,
+            f"Public HTML tables should use row headers in the first body cell: {', '.join(bad_pages)}",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

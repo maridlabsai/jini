@@ -256,7 +256,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
   <tbody>
     {% for surface in site.data.public_surfaces.surfaces %}
     <tr>
-      <td>{{ surface.name }}</td>
+      <th scope="row">{{ surface.name }}</th>
       <td>{{ surface.badge }}</td>
       <td>{{ surface.current_state }}</td>
     </tr>
@@ -288,32 +288,32 @@ description: Free orchestration for AI work across providers today. Pay only whe
   </thead>
   <tbody>
     <tr>
-      <td>Start and finish work</td>
+      <th scope="row">Start and finish work</th>
       <td>Included</td>
       <td>Not required</td>
     </tr>
     <tr>
-      <td>Use local models or your own provider accounts</td>
+      <th scope="row">Use local models or your own provider accounts</th>
       <td>Included</td>
       <td>Not required</td>
     </tr>
     <tr>
-      <td>Keep work resumable and inspectable</td>
+      <th scope="row">Keep work resumable and inspectable</th>
       <td>Included</td>
       <td>Not required</td>
     </tr>
     <tr>
-      <td>Forecast provider limits before they hit</td>
+      <th scope="row">Forecast provider limits before they hit</th>
       <td>Not included</td>
       <td>Planned</td>
     </tr>
     <tr>
-      <td>Avoid throttles with automatic fallback</td>
+      <th scope="row">Avoid throttles with automatic fallback</th>
       <td>Not included</td>
       <td>Planned</td>
     </tr>
     <tr>
-      <td>Resume automatically after interruptions</td>
+      <th scope="row">Resume automatically after interruptions</th>
       <td>Manual today</td>
       <td>Planned</td>
     </tr>

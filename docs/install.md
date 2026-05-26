@@ -36,7 +36,7 @@ quick_links:
     <tbody>
       {% for surface in site.data.public_surfaces.surfaces %}
       <tr>
-        <td>{{ surface.name }}</td>
+        <th scope="row">{{ surface.name }}</th>
         <td>{{ surface.current_state }}</td>
         <td>{{ surface.next_step }}</td>
       </tr>

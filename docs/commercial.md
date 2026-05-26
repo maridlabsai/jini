@@ -61,42 +61,42 @@ quick_links:
   </thead>
   <tbody>
     <tr>
-      <td>Start and finish work</td>
+      <th scope="row">Start and finish work</th>
       <td>Included</td>
       <td>Not required</td>
     </tr>
     <tr>
-      <td>Use local models and your own provider accounts</td>
+      <th scope="row">Use local models and your own provider accounts</th>
       <td>Included</td>
       <td>Not required</td>
     </tr>
     <tr>
-      <td>Keep work resumable and inspectable</td>
+      <th scope="row">Keep work resumable and inspectable</th>
       <td>Included</td>
       <td>Not required</td>
     </tr>
     <tr>
-      <td>Planned app downloads when released</td>
+      <th scope="row">Planned app downloads when released</th>
       <td>Included</td>
       <td>Not required</td>
     </tr>
     <tr>
-      <td>Predict provider limits before they block work</td>
+      <th scope="row">Predict provider limits before they block work</th>
       <td>Not included</td>
       <td>Included after the planned 30-day free trial when checkout is live</td>
     </tr>
     <tr>
-      <td>Avoid throttles automatically</td>
+      <th scope="row">Avoid throttles automatically</th>
       <td>Not included</td>
       <td>Included after the planned 30-day free trial when checkout is live</td>
     </tr>
     <tr>
-      <td>Fall back and resume automatically</td>
+      <th scope="row">Fall back and resume automatically</th>
       <td>Not included</td>
       <td>Included after the planned 30-day free trial when checkout is live</td>
     </tr>
     <tr>
-      <td>Measured savings and continuity proof</td>
+      <th scope="row">Measured savings and continuity proof</th>
       <td>Basic route evidence</td>
       <td>Included after the planned 30-day free trial when checkout is live</td>
     </tr>
@@ -185,7 +185,7 @@ The commercial apps should help a wider user base without turning Jini into a di
   <tbody>
     {% for surface in site.data.public_surfaces.surfaces %}
     <tr>
-      <td>{{ surface.name }}</td>
+      <th scope="row">{{ surface.name }}</th>
       <td>{{ surface.badge }}</td>
       <td>{{ surface.current_state }}</td>
       <td>{{ surface.activation }}</td>
