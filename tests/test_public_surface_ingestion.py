@@ -5,6 +5,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from collections import Counter
 from pathlib import Path
 
 
@@ -66,6 +67,46 @@ class PublicSurfaceIngestionTests(unittest.TestCase):
                 snapshot["surfaces"][3]["next_step"],
                 "Free app once the signed submission and store-delivery lanes are real",
             )
+
+    def test_checked_in_public_surfaces_keep_unique_ids_and_valid_packet_refs(self) -> None:
+        snapshot = json.loads(DATA_PATH.read_text(encoding="utf-8"))
+        ids = [surface["id"] for surface in snapshot["surfaces"]]
+        self.assertFalse(
+            [surface_id for surface_id, count in Counter(ids).items() if count > 1],
+            "Public surface ids should be unique",
+        )
+
+        known_packets = {f"{packet_id}.json" for packet_id in ("mac", "windows", "ios", "android")}
+        for surface in snapshot["surfaces"]:
+            packet_reference = surface["packet_reference"]
+            with self.subTest(surface=surface["id"]):
+                if packet_reference is None:
+                    self.assertIn(surface["id"], {"cli", "commercial-license"})
+                else:
+                    self.assertIn(packet_reference, known_packets)
+
+    def test_checked_in_public_surfaces_keep_status_and_badge_pairs_consistent(self) -> None:
+        snapshot = json.loads(DATA_PATH.read_text(encoding="utf-8"))
+        expected_pairs = {
+            "live": "Available now",
+            "blocked": "Preview only",
+            "planned": "Planned",
+        }
+        for surface in snapshot["surfaces"]:
+            with self.subTest(surface=surface["id"]):
+                self.assertEqual(
+                    surface["badge"],
+                    expected_pairs[surface["release_readiness_status"]],
+                )
+                self.assertIn(
+                    surface["distribution_policy"],
+                    {
+                        "direct-shell-install",
+                        "direct-first-when-allowed",
+                        "store-required-by-platform",
+                        "website-checkout",
+                    },
+                )
 
 
 if __name__ == "__main__":
