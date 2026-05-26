@@ -82,8 +82,8 @@ description: Free orchestration for AI work across providers today. Pay only whe
   </div>
 </div>
 
-<div class="section-card section-card-story showcase-story" markdown="1">
-## See the product surface
+<div class="section-card section-card-story showcase-story">
+<h2>See the product surface</h2>
 
 <p class="page-lead">Show the product before the rest of the operating brief: first the active surface, then the artifacts that leave the thread.</p>
 <p class="editorial-note">These frames are current example captures from the shipped CLI and public example set. They show interface shape and artifact posture, not live checkout, store rollout, or signed-download completion. Each card carries a capture id and source so reused frames stay explicit and auditable instead of reading like independent screenshots.</p>
@@ -154,8 +154,8 @@ description: Free orchestration for AI work across providers today. Pay only whe
 </div>
 </div>
 
-<div class="section-card section-card-story section-card-handoff" markdown="1">
-## What Jini leaves behind
+<div class="section-card section-card-story section-card-handoff">
+<h2>What Jini leaves behind</h2>
 
 <p class="page-lead">After the surface is visible, the remaining question is simple: does Jini leave behind work, evidence, and continuity that survive handoff without reconstruction?</p>
 
@@ -185,8 +185,8 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <p class="editorial-note">The free shell should already be enough to finish serious work. The paid layer should stay later and narrower: only after Jini can prove it saved money or prevented stalled work.</p>
 </div>
 
-<div class="section-card section-card-soft proof-signal-panel surface-story release-confidence-section" markdown="1">
-## Proof, kept brief
+<div class="section-card section-card-soft proof-signal-panel surface-story release-confidence-section">
+<h2>Proof, kept brief</h2>
 
 <p class="page-lead">Trust should support the pitch, not bury it. Keep the proof visible, mark the release posture clearly, then get back to the work.</p>
 
@@ -240,33 +240,82 @@ description: Free orchestration for AI work across providers today. Pay only whe
 
 <p class="page-lead proof-boundary-brief"><strong>Free first. Paid only if the savings story is measurable.</strong> No live store claims before release. No fake telemetry. No hidden preview posture.</p>
 
-<div class="release-confidence-band surface-story" markdown="1">
-| Surface | Status | Current state |
-|---|---|---|
-{% for surface in site.data.public_surfaces.surfaces %}
-| {{ surface.name }} | {{ surface.badge }} | {{ surface.current_state }} |
-{% endfor %}
+<div class="release-confidence-band surface-story">
+<!-- | {{ surface.name }} | {{ surface.badge }} | {{ surface.current_state }} | -->
+<table>
+  <thead>
+    <tr>
+      <th>Surface</th>
+      <th>Status</th>
+      <th>Current state</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for surface in site.data.public_surfaces.surfaces %}
+    <tr>
+      <td>{{ surface.name }}</td>
+      <td>{{ surface.badge }}</td>
+      <td>{{ surface.current_state }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 
 <p class="availability-note editorial-note">The CLI is the live installable surface right now. Desktop and mobile remain in release preparation and should stay free to download when each surface is live. Desktop and Android should distribute directly first where policy allows, while the paid layer should begin only after the planned 30-day free trial and measurable proof are real. Desktop launch plan: buy on the website, then sign in to unlock paid features. Android should prefer direct download first where policy allows, with store distribution secondary. iOS remains store-constrained. Mobile should not be the first place users subscribe.</p>
 </div>
 </div>
 
-<div class="section-card section-card-soft release-confidence-followup surface-story" markdown="1">
-## Where you can use it now
+<div class="section-card section-card-soft release-confidence-followup surface-story">
+<!-- ## Where you can use it now -->
+<h2>Where you can use it now</h2>
 
-## Small front door. Clear paid boundary.
+<!-- ## Small front door. Clear paid boundary. -->
+<h3>Small front door. Clear paid boundary.</h3>
 
 <p class="page-lead closing-boundary-brief"><strong>Start with <code>jini</code>.</strong> If you need the small public command list, use <code>jini commands</code>. Setup and route debugging exist when the work needs them, but they are support tools, not the product story.</p>
 
-<div class="economics-table surface-story" markdown="1">
-| Need | Free Jini shell | Planned paid layer |
-|---|---|---|
-| Start and finish work | Included | Not required |
-| Use local models or your own provider accounts | Included | Not required |
-| Keep work resumable and inspectable | Included | Not required |
-| Forecast provider limits before they hit | Not included | Planned |
-| Avoid throttles with automatic fallback | Not included | Planned |
-| Resume automatically after interruptions | Manual today | Planned |
+<div class="economics-table surface-story">
+<table>
+  <thead>
+    <tr>
+      <th>Need</th>
+      <th>Free Jini shell</th>
+      <th>Planned paid layer</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Start and finish work</td>
+      <td>Included</td>
+      <td>Not required</td>
+    </tr>
+    <tr>
+      <td>Use local models or your own provider accounts</td>
+      <td>Included</td>
+      <td>Not required</td>
+    </tr>
+    <tr>
+      <td>Keep work resumable and inspectable</td>
+      <td>Included</td>
+      <td>Not required</td>
+    </tr>
+    <tr>
+      <td>Forecast provider limits before they hit</td>
+      <td>Not included</td>
+      <td>Planned</td>
+    </tr>
+    <tr>
+      <td>Avoid throttles with automatic fallback</td>
+      <td>Not included</td>
+      <td>Planned</td>
+    </tr>
+    <tr>
+      <td>Resume automatically after interruptions</td>
+      <td>Manual today</td>
+      <td>Planned</td>
+    </tr>
+  </tbody>
+</table>
 </div>
 
 <p class="editorial-note economics-note">Free Jini should already be enough to start, finish, and resume serious work. The paid layer should only exist to save money or keep work moving when providers become the bottleneck.</p>
