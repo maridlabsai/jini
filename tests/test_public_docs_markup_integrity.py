@@ -171,6 +171,14 @@ class PublicDocsMarkupIntegrityTests(unittest.TestCase):
             "state-and-artifacts.md should not stack a standalone H3 directly above checklist cards that already carry their own H3 labels.",
         )
 
+    def test_proof_page_does_not_leave_trust_boundary_copy_after_opening_card_grid(self) -> None:
+        text = (DOCS_DIR / "proof.md").read_text()
+        self.assertNotRegex(
+            text,
+            re.compile(r"</div>\s*<p>\{\{\s*site\.data\.public_proof\.sections\[2\]\.bullets\[0\]\s*\}\}</p>", re.DOTALL),
+            "proof.md should not leave the trust-boundary line dangling after the opening proof-card grid.",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

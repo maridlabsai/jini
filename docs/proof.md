@@ -22,6 +22,7 @@ quick_links:
   <h2>{{ site.data.public_proof.hero.headline }}</h2>
   <p class="page-lead">Proof has two jobs. First, the free shell should make its value obvious fast. Second, any paid layer should prove that it saved money or prevented stalled work before anyone is asked to pay or renew.</p>
   <p>{{ site.data.public_proof.hero.body }}</p>
+  <p>{{ site.data.public_proof.sections[2].bullets[0] }}</p>
   <div class="proof-grid">
     {% for card in site.data.public_proof.proof_cards %}
     <div class="proof-card">
@@ -37,8 +38,6 @@ quick_links:
     </div>
     {% endfor %}
   </div>
-
-  <p>{{ site.data.public_proof.sections[2].bullets[0] }}</p>
 </div>
 
 <div class="section-card">
