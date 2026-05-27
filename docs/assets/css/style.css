@@ -943,7 +943,7 @@ main [id] {
 }
 
 .section-card h2 {
-  max-width: 16ch;
+  max-width: 22ch;
   margin-bottom: 0.34rem;
   font-family: var(--jini-display-font);
   font-size: clamp(1.55rem, 3vw, 2.2rem);

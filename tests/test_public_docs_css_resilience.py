@@ -102,6 +102,13 @@ class PublicDocsCssResilienceTests(unittest.TestCase):
             "Desktop subpage intro highlights and quick links should occupy the second column through the shared aside container.",
         )
 
+    def test_section_card_headlines_use_a_broader_measure(self) -> None:
+        self.assertRegex(
+            CSS_TEXT,
+            r"\.section-card h2\s*\{[^}]*max-width:\s*22ch;",
+            "Shared section-card headlines should use a broader measure so desktop content cards do not collapse into narrow left-side stacks.",
+        )
+
     def test_scrollable_surfaces_keep_touch_overflow_support(self) -> None:
         self.assertRegex(
             CSS_TEXT,
