@@ -109,6 +109,13 @@ class PublicDocsCssResilienceTests(unittest.TestCase):
             "Shared section-card headlines should use a broader measure so desktop content cards do not collapse into narrow left-side stacks.",
         )
 
+    def test_proof_hero_uses_a_broader_headline_measure(self) -> None:
+        self.assertRegex(
+            CSS_TEXT,
+            r"\.proof-hero-card h3\s*\{[^}]*max-width:\s*18ch;",
+            "The proof hero should use a broader headline measure so the desktop card does not waste most of its width on a narrow text stack.",
+        )
+
     def test_scrollable_surfaces_keep_touch_overflow_support(self) -> None:
         self.assertRegex(
             CSS_TEXT,
