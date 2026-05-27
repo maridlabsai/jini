@@ -26,6 +26,14 @@ class ContactDocsTests(unittest.TestCase):
             "The contact page should keep the public Discussions path explicit.",
         )
 
+    def test_contact_page_stays_one_routing_surface(self) -> None:
+        text = CONTACT_DOC.read_text(encoding="utf-8")
+        self.assertEqual(
+            text.count('<div class="section-card'),
+            1,
+            "The contact page should stay a single routing surface instead of splitting commercial contact into a redundant second section.",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

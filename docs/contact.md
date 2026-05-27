@@ -36,11 +36,5 @@ quick_links:
     <p>Use <a href="mailto:maridlabsai@gmail.com">commercial contact</a> for implementation, onboarding, or enterprise adoption help.</p>
   </div>
 </div>
-</div>
-
-<div class="section-card">
-  <span class="section-kicker">Commercial</span>
-  <h2>Paid help is for adoption, not basic access</h2>
-  <p>Use commercial contact for implementation help, onboarding, workflow mapping, or enterprise rollout support.</p>
-  <p><strong>Email:</strong> <a href="mailto:maridlabsai@gmail.com"><code>maridlabsai@gmail.com</code></a></p>
+  <p><strong>Commercial route:</strong> <a href="mailto:maridlabsai@gmail.com"><code>maridlabsai@gmail.com</code></a> is for implementation help, onboarding, workflow mapping, and enterprise rollout support, not for basic access to the shell.</p>
 </div>
