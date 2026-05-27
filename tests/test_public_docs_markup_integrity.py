@@ -32,6 +32,15 @@ def _content_lines(path: Path) -> list[str]:
 
 
 class PublicDocsMarkupIntegrityTests(unittest.TestCase):
+    def test_sparse_public_pages_attach_opening_lead_to_first_section(self) -> None:
+        for name in ("contact.md", "proof.md"):
+            lines = _content_lines(DOCS_DIR / name)
+            first_nonempty = next((line.strip() for line in lines if line.strip()), "")
+            self.assertTrue(
+                first_nonempty.startswith("<div class=\"section-card"),
+                f"{name} should attach its opening lead to the first section card instead of leaving a loose paragraph between the intro band and the first section.",
+            )
+
     def test_public_pages_do_not_use_markdown_wrappers(self) -> None:
         for path in PUBLIC_PAGES:
             text = path.read_text()

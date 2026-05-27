@@ -16,12 +16,11 @@ quick_links:
     href: /commercial.html
 ---
 
-<p class="page-lead">Use the public repo when the discussion helps other users too. Use commercial contact when the need is adoption help, implementation, or onboarding.</p>
-
 <div class="section-card section-card-story">
   <span class="section-kicker">Choose the right lane</span>
   <h2>Public paths first, paid help when rollout is the problem</h2>
-  <p class="page-lead">The contact page should feel like a routing surface, not a plain support list: public issues for public product work, paid contact only when adoption or implementation is the real need.</p>
+  <p class="page-lead">Use the public repo when the discussion helps other users too. Use commercial contact when the need is adoption help, implementation, or onboarding.</p>
+  <p>The contact page should feel like a routing surface, not a plain support list: public issues for public product work, paid contact only when adoption or implementation is the real need.</p>
 
 <div class="checklist-grid">
   <div class="checklist-card">
