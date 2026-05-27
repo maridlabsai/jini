@@ -140,18 +140,10 @@ Open Build-Readiness Check</code></pre>
       <p>Buyability depends on trust. Jini should feel inspectable, reviewable, and cheap to understand before it asks a team to trust routing and stored state.</p>
     </div>
   </div>
-  <div class="proof-grid">
-    <div class="proof-card">
-      <h3>Deliverables before summaries</h3>
-      <p>The first useful thing should be a follow-up, memo, checklist, or readiness check, not a status recap.</p>
-    </div>
-    <div class="proof-card">
-      <h3>Inspectability instead of product magic</h3>
-      <p>Users should be able to inspect artifacts, route evidence, and stored state instead of being asked to trust an invisible memory layer.</p>
-    </div>
-    <div class="proof-card">
-      <h3>Review before send</h3>
-      <p>The work should stay reviewable until the user deliberately shares or acts on it.</p>
-    </div>
-  </div>
+  <p class="page-lead">What keeps proof honest is simple: useful work before summaries, inspectability instead of product magic, and review before send.</p>
+  <ul class="compact-list">
+    {% for rule in site.data.public_proof.trust_rules %}
+    <li>{{ rule }}</li>
+    {% endfor %}
+  </ul>
 </div>

@@ -184,6 +184,14 @@ class PublicDocsMarkupIntegrityTests(unittest.TestCase):
             "proof.md should not leave the trust-boundary line dangling after the opening proof-card grid.",
         )
 
+    def test_proof_page_avoids_stacking_signal_and_proof_grids_in_trust_section(self) -> None:
+        text = (DOCS_DIR / "proof.md").read_text()
+        self.assertNotRegex(
+            text,
+            re.compile(r"<div class=\"signal-grid\">.*?</div>\s*<div class=\"proof-grid\">", re.DOTALL),
+            "proof.md should not stack a second proof-card grid directly after the trust signal grid.",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
