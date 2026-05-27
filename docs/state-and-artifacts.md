@@ -207,9 +207,7 @@ Other active work
     <span class="compat-pill">7 Day Paris Trip</span>
   </div>
 
-  <h3>What Each Label Should Mean</h3>
-
-  <p>The labels only need to answer four questions quickly: what work is active, why this route was chosen, where the work stands, and what is usable right now.</p>
+  <p class="page-lead">What each label should mean: the labels only need to answer four questions quickly about active work, route choice, current progress, and usable output.</p>
 
   <div class="checklist-grid">
     <div class="checklist-card">

@@ -170,6 +170,11 @@ class PublicDocsMarkupIntegrityTests(unittest.TestCase):
             re.compile(r"<h3>[^<]+</h3>\s*<div class=\"checklist-grid\">", re.DOTALL),
             "state-and-artifacts.md should not stack a standalone H3 directly above checklist cards that already carry their own H3 labels.",
         )
+        self.assertNotIn(
+            "<h3>What Each Label Should Mean</h3>",
+            text,
+            "state-and-artifacts.md should keep the label-contract intro as supporting copy instead of a competing parent H3.",
+        )
 
     def test_proof_page_does_not_leave_trust_boundary_copy_after_opening_card_grid(self) -> None:
         text = (DOCS_DIR / "proof.md").read_text()
