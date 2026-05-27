@@ -85,6 +85,18 @@ class PublicDocsCssResilienceTests(unittest.TestCase):
             "Common desktop-width homepage hero scene should move into the right column and stack safely there.",
         )
 
+    def test_subpage_intro_uses_desktop_two_column_balance(self) -> None:
+        self.assertRegex(
+            CSS_TEXT,
+            r"@media screen and \(min-width:\s*980px\)\s*\{[\s\S]*?\.page-intro-card\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*minmax\(0,\s*1\.06fr\)\s*minmax\(260px,\s*0\.74fr\);",
+            "Subpage intro bands should use a desktop two-column layout instead of leaving a large empty panel on the right.",
+        )
+        self.assertRegex(
+            CSS_TEXT,
+            r"\.page-intro-card \.page-intro-highlights,\s*\.page-intro-card \.page-intro-links\s*\{[^}]*grid-column:\s*2;",
+            "Desktop subpage intro highlights and quick links should occupy the second column.",
+        )
+
     def test_scrollable_surfaces_keep_touch_overflow_support(self) -> None:
         self.assertRegex(
             CSS_TEXT,

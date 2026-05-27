@@ -2461,6 +2461,32 @@ main [id] {
 }
 
 @media screen and (min-width: 980px) {
+  .page-intro-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1.06fr) minmax(260px, 0.74fr);
+    column-gap: 1.5rem;
+    row-gap: 0.35rem;
+    align-items: start;
+  }
+
+  .page-intro-card .site-section-label,
+  .page-intro-card .site-page-title,
+  .page-intro-card .site-page-description,
+  .page-intro-card .page-intro-context {
+    grid-column: 1;
+  }
+
+  .page-intro-card .page-intro-highlights,
+  .page-intro-card .page-intro-links {
+    grid-column: 2;
+    margin-top: 0.15rem;
+    align-self: start;
+  }
+
+  .page-intro-card .page-intro-highlights {
+    margin-bottom: 0.72rem;
+  }
+
   .hero-panel-marketing {
     display: grid;
     grid-template-columns: minmax(0, 1.14fr) minmax(320px, 0.86fr);
