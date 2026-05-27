@@ -116,6 +116,13 @@ class PublicDocsCssResilienceTests(unittest.TestCase):
             "The proof hero should use a broader headline measure so the desktop card does not waste most of its width on a narrow text stack.",
         )
 
+    def test_dense_docs_grids_settle_to_two_columns_on_common_desktop_widths(self) -> None:
+        self.assertRegex(
+            CSS_TEXT,
+            r"@media screen and \(min-width:\s*980px\) and \(max-width:\s*1240px\)\s*\{[\s\S]*?\.proof-grid,\s*\.signal-grid,\s*\.checklist-grid\s*\{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);",
+            "Dense proof, signal, and checklist grids should settle into two columns at common laptop widths instead of over-packing thin cards.",
+        )
+
     def test_scrollable_surfaces_keep_touch_overflow_support(self) -> None:
         self.assertRegex(
             CSS_TEXT,
