@@ -1,4 +1,4 @@
-updated_at: "2026-05-14"
+updated_at: "2026-05-27"
 target_score: 9.0
 comparison_set:
   - Kiro
@@ -12,6 +12,7 @@ comparison_set:
 notes:
   - AI Hero Studio is tracked as a focused agent platform, not as a full protocol peer.
   - Matt Pocock's multi-target skills installer is treated as a packaging and distribution benchmark.
+  - No replacement-critical score may clear 9.0 while the public docs, built install artifact, and taught command surface disagree.
 dimensions:
   - id: workflow-rigor
     label: Workflow rigor
@@ -49,16 +50,20 @@ dimensions:
       name: Kiro
       score: 8.0
       advantage: Day-to-day execution is faster because repo-aware assistance and the default operator loop are already productized.
-    weakness: Jini now has a real first-run `jini` launcher in the new Go runtime plus the guided `execute-flow`, but broader repo-family defaults, live remote edges, and deeper continue/open/start interactions still need less human interpretation.
+    weakness: Jini now has a real first-run `jini` launcher in the new Go runtime plus the guided `execute-flow`, but broader repo-family defaults, live remote edges, deeper continue/open/start interactions, and public command-contract drift still need less human interpretation.
     conversion_strategy: Preserve governance, but compress operator friction through repo-aware orchestration, workspace steering, compact repo maps, target-ready handoff bundles, guided execution flows, hook-style post-step automation, and benchmark-ready defaults.
     kpi: The benchmark pack can be driven from idea to verification with fewer than five manual control decisions.
     next_build_steps:
+      - Make the public command contract executable and stable: either support the taught aliases or stop teaching them until the install artifact honors them.
+      - Lock two flagship replacement flows so they are visibly better than raw model shells: meeting notes to follow-up, and plan or PRD to readiness check.
       - Extend `execute-flow` with stronger benchmark defaults so fewer flags are needed for common repo families.
       - Extend steering-aware startup, resume, runtime activation, local publish apply, and memory capture across more commands by default.
       - Turn repo-aware detection into stronger default flows for more repo families, especially Python app/server, Rust, Go, and CI-first repos.
       - Expand `harvest-evidence` from bounded local checks into richer stale-evidence detection and promotion gating.
       - Add stop-hook style post-step refresh so status, memory hints, and verification guidance update automatically after major execution steps.
     exit_criteria:
+      - The public docs only teach commands that are exercised against the built install artifact in CI.
+      - Two flagship flows beat raw shell usage on clarity, resumability, and next-step legibility in the benchmark set.
       - The benchmark can be advanced end to end through one guided loop without bespoke human interpretation at every step.
       - CLI guidance points to concrete files or commands instead of generic next states.
       - Time to first useful output is materially closer to Kiro and Aider.
@@ -82,16 +87,18 @@ dimensions:
       name: Matt Pocock Skills Installer
       score: 9.0
       advantage: Multi-target installation is productized with source provenance, compatibility mapping, security posture, symlink strategy, and a clean install receipt.
-    weakness: Jini now has the right trust shape, but installer-grade polish still depends on keeping target-specific behavior probes and upgrade semantics honest as the surface expands.
+    weakness: Jini now has the right trust shape, but installer-grade polish still depends on keeping target-specific behavior probes, upgrade semantics, and installed-command truth honest as the surface expands.
     conversion_strategy: Keep the manifest-driven lifecycle, then sustain bundle coverage, behavioral verification, migration guidance, and target-specific health semantics so install trust scales with real usage.
     kpi: An operator can discover, preview, install, verify, and update Jini capability bundles across supported targets without manual file surgery.
     next_build_steps:
+      - Add install-artifact smoke tests for every taught public command, including help flags and command-catalog entry points.
       - Keep target-specific smoke probes aligned with real target behavior as install and activation surfaces evolve.
       - Expand curated kits and bundle coverage only when they improve discovery more than they increase install choice overload.
       - Deepen provenance, manifest digest, and migration metadata so upgrades remain auditable as bundle coverage grows.
     exit_criteria:
       - A single command can preview and install selected Jini bundles for one or more targets.
       - Curated install kits make common adoption paths obvious without requiring bundle-level repo knowledge.
+      - The installed binary honors the same public command contract that README and docs teach.
       - The install surface shows provenance, compatibility, and permission risk before activation.
       - Universal assets and target-specific shims are clearly separated in the resulting layout.
       - Install, update, uninstall, and verify flows are symmetric and auditable, with receipt and activation state visible in doctor output.
@@ -171,11 +178,13 @@ dimensions:
     conversion_strategy: Save tokens on transport, orchestration, bounded memory, progressive disclosure, ranked compact repo maps, compact local-apply loops, and reloads while keeping reasoning depth where state or profile demands it.
     kpi: The cheapest adequate path is the default path, and expensive reasoning is visibly justified.
     next_build_steps:
+      - Surface route, effort, and cost rationale in the public-safe help and status paths so users can see why the cheap path won or lost.
       - Prefer deterministic exports and cached local artifacts before external model or connector calls.
       - Feed compact-context compression ratios, repo-map size, and execute-flow reuse metrics into routing policy and future learning evaluation instead of only recording them.
       - Expand compact context generation so more intents use low-token reloads by default.
       - Push the same budgeting discipline into recommendation, publish, activation, guided execution, and resume surfaces beyond `compact-context`.
     exit_criteria:
+      - Cheap-path preference is visible in the default shell without reading deep docs.
       - Operators can see why a deeper class was chosen instead of assuming hidden cost.
       - Normal resumptions avoid full-context reloads.
       - Cost reductions come from architecture rather than weaker guardrails.
