@@ -80,11 +80,19 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 
 		switch normalizeCommandName(args[0]) {
 		case "help":
-			return runHelp(stdout, stderr)
+			return runHelp(args[1:], stdout, stderr)
+		case "commands":
+			return runHelp([]string{"--all"}, stdout, stderr)
+		case "admin":
+			return runAdmin(args[1:], stdout, stderr)
+		case "check":
+			return runCheck(args[1:], stdout, stderr)
 		case "status":
 			return runStatus(stdout, stderr)
 		case "doctor":
 			return runProvider(nil, stdout, stderr)
+		case "provider":
+			return runProvider(args[1:], stdout, stderr)
 		case "route":
 			renderRouteCostStatus(stdout)
 			return 0
@@ -423,7 +431,17 @@ func runStatus(stdout, stderr io.Writer) int {
 	return 0
 }
 
-func runHelp(stdout, stderr io.Writer) int {
+func runHelp(args []string, stdout, stderr io.Writer) int {
+	if len(args) > 0 {
+		switch normalizeCommandName(args[0]) {
+		case "all", "commands":
+			renderPublicCommandInventory(stdout)
+			return 0
+		case "admin":
+			renderAdminCommandInventory(stdout)
+			return 0
+		}
+	}
 	current, err := loadCurrentWork()
 	if err == nil && current != nil {
 		summary, loadErr := loadWorkSummary(current.PackDir, current)
@@ -442,6 +460,16 @@ func runHelp(stdout, stderr io.Writer) int {
 	}
 	renderNewWorkLauncher(stdout)
 	return 0
+}
+
+func runAdmin(args []string, stdout, stderr io.Writer) int {
+	if len(args) == 0 || normalizeCommandName(args[0]) == "help" {
+		renderAdminCommandInventory(stdout)
+		return 0
+	}
+	fmt.Fprintf(stderr, "Unknown admin command %q.\n", args[0])
+	fmt.Fprintln(stderr, "Try `jini admin help`.")
+	return 1
 }
 
 func detectProvider() providerConfig {
@@ -2205,6 +2233,39 @@ func renderNewWorkLauncher(w io.Writer) {
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "If you want help shaping a messy ask, type `I'm not sure`.")
 	fmt.Fprintln(w, "If you need commands, type `help`.")
+}
+
+func renderPublicCommandInventory(w io.Writer) {
+	fmt.Fprintln(w, "Public command inventory")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "GET STARTED")
+	fmt.Fprintln(w, "- jini")
+	fmt.Fprintln(w, "- jini help")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "WORK WITH JINI")
+	fmt.Fprintln(w, "- jini check")
+	fmt.Fprintln(w, "- jini status")
+	fmt.Fprintln(w, "- jini open")
+	fmt.Fprintln(w, "- jini doctor")
+	fmt.Fprintln(w, "- jini provider doctor")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "MORE")
+	fmt.Fprintln(w, "- jini help --admin")
+	fmt.Fprintln(w, "- jini admin help")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "This runtime preview keeps the public surface small and inspectable.")
+}
+
+func renderAdminCommandInventory(w io.Writer) {
+	fmt.Fprintln(w, "Admin and developer command inventory")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "- jini provider doctor")
+	fmt.Fprintln(w, "- jini observe status")
+	fmt.Fprintln(w, "- jini observe add <path>")
+	fmt.Fprintln(w, "- jini open <artifact>")
+	fmt.Fprintln(w, "- jini run")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "This runtime preview stays intentionally narrow. Broader release plumbing lives in the source runtime.")
 }
 
 func renderNewWorkPrompt(w io.Writer) {

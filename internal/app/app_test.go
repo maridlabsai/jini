@@ -295,6 +295,128 @@ func TestLauncherHelpHidesAutoModeStateWhenConfigured(t *testing.T) {
 	}
 }
 
+func TestTopLevelHelpFlagShowsLauncherHelp(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"--help"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Paste what you want finished.",
+		"If you need commands, type `help`.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+}
+
+func TestCommandsAliasShowsPublicCommandInventory(t *testing.T) {
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"commands"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Public command inventory",
+		"GET STARTED",
+		"WORK WITH JINI",
+		"jini check",
+		"jini status",
+		"jini open",
+		"jini doctor",
+		"jini provider doctor",
+		"jini admin help",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+}
+
+func TestHelpAllShowsPublicCommandInventory(t *testing.T) {
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"help", "--all"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "Public command inventory") {
+		t.Fatalf("expected public command inventory, got:\n%s", stdout.String())
+	}
+}
+
+func TestAdminHelpAliasShowsAdminInventory(t *testing.T) {
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"admin", "help"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Admin and developer command inventory",
+		"jini provider doctor",
+		"jini observe status",
+		"jini open <artifact>",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+}
+
+func TestProviderDoctorSubcommandMatchesTopLevelDoctor(t *testing.T) {
+	var topLevel bytes.Buffer
+	topExit := app.Run([]string{"doctor"}, &topLevel, &topLevel)
+	if topExit != 0 {
+		t.Fatalf("expected top-level doctor to succeed, got %d with output:\n%s", topExit, topLevel.String())
+	}
+
+	var subcommand bytes.Buffer
+	subExit := app.Run([]string{"provider", "doctor"}, &subcommand, &subcommand)
+	if subExit != 0 {
+		t.Fatalf("expected provider doctor to succeed, got %d with output:\n%s", subExit, subcommand.String())
+	}
+
+	if topLevel.String() != subcommand.String() {
+		t.Fatalf("expected provider doctor to match top-level doctor.\nTOP LEVEL:\n%s\nSUBCOMMAND:\n%s", topLevel.String(), subcommand.String())
+	}
+}
+
+func TestCheckAliasRendersCurrentWorkScreen(t *testing.T) {
+	stateDir := t.TempDir()
+	packDir := seedResearchPRDWork(t)
+	writeCurrentWork(t, stateDir, packDir, "research-prd", "example-research-prd", "Jini Research To PRD", "awaiting_verification", "ready-to-verify")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"check"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Goal",
+		"Jini Research To PRD",
+		"Ready now",
+		"Build-Readiness Check",
+		"Blocked",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+}
+
 func TestInteractiveSetupCanSaveClaudeProfileInsideJini(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)

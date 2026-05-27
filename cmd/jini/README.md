@@ -5,7 +5,13 @@ This directory contains the first Go-based Jini runtime slice.
 Current scope:
 
 - `jini`
+- `jini help`
+- `jini commands`
+- `jini admin help`
 - `jini check`
+- `jini status`
+- `jini doctor`
+- `jini provider doctor`
 - `jini open`
 - `jini run` (launcher alias)
 
