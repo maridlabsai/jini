@@ -82,6 +82,47 @@ class PublicDocsMarkupIntegrityTests(unittest.TestCase):
             issues.extend(f"unclosed <{tag}> from line {line_no}" for tag, line_no in stack)
             self.assertFalse(issues, f"{path.name} has malformed block HTML:\n" + "\n".join(issues))
 
+    def test_public_pages_do_not_leave_bare_prose_inside_html_sections(self) -> None:
+        allowed_prefixes = ("<", "{%", "{{", "<!--")
+        for path in PUBLIC_PAGES:
+            stack: list[str] = []
+            findings: list[str] = []
+            for line_no, raw_line in enumerate(_content_lines(path), 1):
+                line = raw_line.strip()
+                if not line:
+                    continue
+                if line.startswith("```"):
+                    continue
+                if stack and stack[-1] in {"pre", "code"}:
+                    for slash, tag, selfclose in TAG_RE.findall(raw_line):
+                        tag = tag.lower()
+                        if tag in VOID_TAGS or selfclose:
+                            continue
+                        if slash:
+                            if stack and stack[-1] == tag:
+                                stack.pop()
+                        else:
+                            stack.append(tag)
+                    continue
+                for slash, tag, selfclose in TAG_RE.findall(raw_line):
+                    tag = tag.lower()
+                    if tag in VOID_TAGS or selfclose:
+                        continue
+                    if slash:
+                        if stack and stack[-1] == tag:
+                            stack.pop()
+                    else:
+                        stack.append(tag)
+                if not stack:
+                    continue
+                if line.startswith(allowed_prefixes):
+                    continue
+                findings.append(f"{line_no}: {line}")
+            self.assertFalse(
+                findings,
+                f"{path.name} should wrap prose in block tags inside raw HTML sections:\n" + "\n".join(findings),
+            )
+
     def test_public_pre_blocks_wrap_code_tags(self) -> None:
         bad_pages = []
         for path in PUBLIC_PAGES:

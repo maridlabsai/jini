@@ -22,6 +22,17 @@ class PublicDocsTemplateIntegrityTests(unittest.TestCase):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
 
+    def test_default_layout_uses_structured_page_intro_regions(self) -> None:
+        text = LAYOUT_PATH.read_text(encoding="utf-8")
+        for marker in (
+            '<div class="page-intro-main">',
+            '<div class="page-intro-aside">',
+            '<div class="page-intro-highlights" aria-label="Page highlights">',
+            '<div class="page-intro-links">',
+        ):
+            with self.subTest(marker=marker):
+                self.assertIn(marker, text)
+
 
 if __name__ == "__main__":
     unittest.main()

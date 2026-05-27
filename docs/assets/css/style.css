@@ -415,9 +415,21 @@ main [id] {
   margin-bottom: 0.82rem;
 }
 
+.page-intro-main,
+.page-intro-aside {
+  min-width: 0;
+}
+
+.page-intro-aside {
+  display: grid;
+  gap: 0.72rem;
+  align-content: start;
+  margin-top: 0.35rem;
+}
+
 .page-intro-context {
   max-width: 44rem;
-  margin: 0 0 0.92rem;
+  margin: 0;
   font-size: 1rem;
   line-height: 1.6;
   color: #0f172a;
@@ -443,7 +455,7 @@ main [id] {
   display: flex;
   flex-wrap: wrap;
   gap: 0.55rem;
-  margin: 0 0 1rem;
+  margin: 0;
 }
 
 .page-intro-highlights span {
@@ -464,6 +476,7 @@ main [id] {
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
+  margin: 0;
 }
 
 .page-intro-links a {
@@ -2463,28 +2476,33 @@ main [id] {
 @media screen and (min-width: 980px) {
   .page-intro-card {
     display: grid;
-    grid-template-columns: minmax(0, 1.06fr) minmax(260px, 0.74fr);
-    column-gap: 1.5rem;
-    row-gap: 0.35rem;
+    grid-template-columns: minmax(0, 1.08fr) minmax(280px, 0.72fr);
+    column-gap: 1.7rem;
+    row-gap: 0.4rem;
     align-items: start;
   }
 
-  .page-intro-card .site-section-label,
-  .page-intro-card .site-page-title,
-  .page-intro-card .site-page-description,
-  .page-intro-card .page-intro-context {
+  .page-intro-main {
     grid-column: 1;
   }
 
-  .page-intro-card .page-intro-highlights,
-  .page-intro-card .page-intro-links {
+  .page-intro-aside {
     grid-column: 2;
-    margin-top: 0.15rem;
     align-self: start;
+    justify-self: stretch;
+    margin-top: 0.2rem;
   }
 
-  .page-intro-card .page-intro-highlights {
-    margin-bottom: 0.72rem;
+  .page-intro-main .site-page-description {
+    max-width: 34rem;
+  }
+
+  .page-intro-main .page-intro-context {
+    max-width: 31rem;
+  }
+
+  .page-intro-aside .page-intro-links {
+    max-width: 22rem;
   }
 
   .hero-panel-marketing {

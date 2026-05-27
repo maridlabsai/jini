@@ -43,31 +43,36 @@
       <main id="main-content">
         {% unless page.url == '/' %}
         <section class="page-intro-card">
-          <p class="site-section-label">{{ page.eyebrow | default: "Jini" | escape }}</p>
-          <h1 class="site-page-title">{{ page.title | escape }}</h1>
-          {% if page.description %}
-          <p class="site-page-description">{{ page.description | escape }}</p>
-          {% endif %}
-          {% if page.context_line %}
-          <p class="page-intro-context">{{ page.context_line | escape }}</p>
-          {% endif %}
-          {% if page.highlights %}
-          <div class="page-intro-highlights" aria-label="Page highlights">
-            {% for item in page.highlights %}
-            <span>{{ item | escape }}</span>
-            {% endfor %}
-          </div>
-          {% endif %}
-          <div class="page-intro-links">
-            {% if page.quick_links %}
-              {% for link in page.quick_links %}
-            <a href="{{ link.href | relative_url }}">{{ link.label | escape }}</a>
-              {% endfor %}
-            {% else %}
-            <a href="{{ '/install.html' | relative_url }}">Install</a>
-            <a href="{{ '/proof.html' | relative_url }}">Proof</a>
-            <a href="{{ '/cli.html' | relative_url }}">Command Catalog</a>
+          <div class="page-intro-main">
+            <p class="site-section-label">{{ page.eyebrow | default: "Jini" | escape }}</p>
+            <h1 class="site-page-title">{{ page.title | escape }}</h1>
+            {% if page.description %}
+            <p class="site-page-description">{{ page.description | escape }}</p>
             {% endif %}
+            {% if page.context_line %}
+            <p class="page-intro-context">{{ page.context_line | escape }}</p>
+            {% endif %}
+          </div>
+
+          <div class="page-intro-aside">
+            {% if page.highlights %}
+            <div class="page-intro-highlights" aria-label="Page highlights">
+              {% for item in page.highlights %}
+              <span>{{ item | escape }}</span>
+              {% endfor %}
+            </div>
+            {% endif %}
+            <div class="page-intro-links">
+              {% if page.quick_links %}
+                {% for link in page.quick_links %}
+              <a href="{{ link.href | relative_url }}">{{ link.label | escape }}</a>
+                {% endfor %}
+              {% else %}
+              <a href="{{ '/install.html' | relative_url }}">Install</a>
+              <a href="{{ '/proof.html' | relative_url }}">Proof</a>
+              <a href="{{ '/cli.html' | relative_url }}">Command Catalog</a>
+              {% endif %}
+            </div>
           </div>
         </section>
         {% endunless %}

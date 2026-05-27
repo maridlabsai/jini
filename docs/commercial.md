@@ -117,10 +117,10 @@ quick_links:
   <li>when the proof can be shown before payment, not explained after payment</li>
 </ul>
 
-If those conditions are not true, the free shell should remain enough.
+<p>If those conditions are not true, the free shell should remain enough.</p>
 <p class="page-lead"><strong>What the paid layer must prove before renewal</strong></p>
 
-If the paid layer is worth keeping, it should show evidence that the free shell alone could not provide:
+<p>If the paid layer is worth keeping, it should show evidence that the free shell alone could not provide:</p>
 
 <ul>
   <li>month-to-date token savings</li>
@@ -130,7 +130,7 @@ If the paid layer is worth keeping, it should show evidence that the free shell 
   <li>sessions resumed without manual babysitting</li>
 </ul>
 
-If Jini cannot prove that value, it should not expect renewal.
+<p>If Jini cannot prove that value, it should not expect renewal.</p>
 </div>
 
 <div class="section-card section-card-soft surface-story">
@@ -156,7 +156,7 @@ If Jini cannot prove that value, it should not expect renewal.
   <li><strong>CLI remains first-class:</strong> the apps are another surface over the same session, not a separate product</li>
 </ul>
 
-The commercial apps should help a wider user base without turning Jini into a different workflow for each device class.
+<p>The commercial apps should help a wider user base without turning Jini into a different workflow for each device class.</p>
 <p class="page-lead"><strong>What is not open source</strong></p>
 <p>The app downloads can be free without making the app implementation public.</p>
 
@@ -194,9 +194,9 @@ The commercial apps should help a wider user base without turning Jini into a di
   </tbody>
 </table>
 
-Checkout is not live yet. The current product work defines the shared entitlement model and distribution plan, but not a production checkout or store-billing pipeline.
+<p>Checkout is not live yet. The current product work defines the shared entitlement model and distribution plan, but not a production checkout or store-billing pipeline.</p>
 
-Current posture: preview and planning slices are implemented, but the apps are not yet release-ready for direct public download or store rollout.
+<p>Current posture: preview and planning slices are implemented, but the apps are not yet release-ready for direct public download or store rollout.</p>
 
 <p class="editorial-note">This table is fed from <code>docs/_data/public_surfaces.json</code>, a sanitized snapshot built from the commercial release packets instead of hand-maintained website copy.</p>
 </div>

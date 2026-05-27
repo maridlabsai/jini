@@ -88,13 +88,18 @@ class PublicDocsCssResilienceTests(unittest.TestCase):
     def test_subpage_intro_uses_desktop_two_column_balance(self) -> None:
         self.assertRegex(
             CSS_TEXT,
-            r"@media screen and \(min-width:\s*980px\)\s*\{[\s\S]*?\.page-intro-card\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*minmax\(0,\s*1\.06fr\)\s*minmax\(260px,\s*0\.74fr\);",
+            r"@media screen and \(min-width:\s*980px\)\s*\{[\s\S]*?\.page-intro-card\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*minmax\(0,\s*1\.08fr\)\s*minmax\(280px,\s*0\.72fr\);",
             "Subpage intro bands should use a desktop two-column layout instead of leaving a large empty panel on the right.",
         )
         self.assertRegex(
             CSS_TEXT,
-            r"\.page-intro-card \.page-intro-highlights,\s*\.page-intro-card \.page-intro-links\s*\{[^}]*grid-column:\s*2;",
-            "Desktop subpage intro highlights and quick links should occupy the second column.",
+            r"\.page-intro-aside\s*\{[^}]*display:\s*grid;[^}]*gap:\s*0\.72rem;",
+            "Subpage intro cards should use a dedicated aside container so the desktop right column is structurally real instead of relying on loose child placement.",
+        )
+        self.assertRegex(
+            CSS_TEXT,
+            r"@media screen and \(min-width:\s*980px\)\s*\{[\s\S]*?\.page-intro-aside\s*\{[^}]*grid-column:\s*2;",
+            "Desktop subpage intro highlights and quick links should occupy the second column through the shared aside container.",
         )
 
     def test_scrollable_surfaces_keep_touch_overflow_support(self) -> None:
