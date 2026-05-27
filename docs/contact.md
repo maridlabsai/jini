@@ -34,7 +34,7 @@ quick_links:
   </div>
   <div class="checklist-card">
     <h3>Commercial support</h3>
-    <p>Use commercial contact for implementation, onboarding, or enterprise adoption help.</p>
+    <p>Use <a href="mailto:maridlabsai@gmail.com">commercial contact</a> for implementation, onboarding, or enterprise adoption help.</p>
   </div>
 </div>
 </div>
@@ -43,5 +43,5 @@ quick_links:
   <span class="section-kicker">Commercial</span>
   <h2>Paid help is for adoption, not basic access</h2>
   <p>Use commercial contact for implementation help, onboarding, workflow mapping, or enterprise rollout support.</p>
-  <p><strong>Email:</strong> <code>maridlabsai@gmail.com</code></p>
+  <p><strong>Email:</strong> <a href="mailto:maridlabsai@gmail.com"><code>maridlabsai@gmail.com</code></a></p>
 </div>
