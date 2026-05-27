@@ -163,6 +163,14 @@ class PublicDocsMarkupIntegrityTests(unittest.TestCase):
             f"Public HTML tables should use row headers in the first body cell: {', '.join(bad_pages)}",
         )
 
+    def test_outputs_page_avoids_standalone_parent_heading_above_checklist_cards(self) -> None:
+        text = (DOCS_DIR / "state-and-artifacts.md").read_text()
+        self.assertNotRegex(
+            text,
+            re.compile(r"<h3>[^<]+</h3>\s*<div class=\"checklist-grid\">", re.DOTALL),
+            "state-and-artifacts.md should not stack a standalone H3 directly above checklist cards that already carry their own H3 labels.",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

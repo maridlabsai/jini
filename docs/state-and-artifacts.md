@@ -253,7 +253,7 @@ Other active work
     </div>
   </div>
 
-  <h3>What should never happen</h3>
+  <p class="page-lead">What should never happen: storage-first labels, diagnostic-first output, or hidden risk that makes the work harder to review.</p>
   <div class="checklist-grid">
     <div class="checklist-card">
       <h3>No storage-first labels</h3>
