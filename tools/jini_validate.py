@@ -1323,10 +1323,11 @@ def print_lean_platform_metrics(report: dict[str, Any]) -> None:
 
 
 def build_local_runtime_route_snapshot() -> dict[str, Any]:
-    route_evidence, _route_payload = load_route_report(session_state_root(), display_path)
+    route_evidence, route_payload = load_route_report(session_state_root(), display_path)
     return {
         "route_evidence": route_evidence,
         "route_cost": build_route_cost(route_evidence),
+        "route_payload": route_payload,
     }
 
 
@@ -1362,30 +1363,160 @@ def measured_local_route_threshold(execution_class: str) -> int:
     return 2 if execution_class == "cheap" else 3
 
 
+ROUTE_OUTCOME_COUNTERS = {
+    "used-this": "outcome_used",
+    "shared-this": "outcome_shared",
+    "replaced-this": "outcome_replaced",
+    "accepted-as-is": "accepted_as_is",
+    "needed-light-edits": "needed_light_edits",
+    "not-useful": "not_useful",
+    "upvoted": "upvotes",
+    "downvoted": "downvotes",
+}
+
+ROUTE_PASSIVE_OUTCOME_COUNTERS = {
+    "used-this": "passive_reopened",
+    "shared-this": "passive_export_opened",
+    "replaced-this": "passive_replaced_later",
+}
+
+ROUTE_FEEDBACK_COUNTER_KEYS = sorted(
+    set(ROUTE_OUTCOME_COUNTERS.values())
+    | set(ROUTE_PASSIVE_OUTCOME_COUNTERS.values())
+    | {
+        "passive_accepted_as_is",
+        "passive_needed_light_edits",
+        "passive_needed_heavy_edits",
+        "passive_header_only_edits",
+        "passive_core_section_edits",
+        "passive_core_wording_edits",
+        "passive_decision_changes",
+    }
+)
+
+
+def route_feedback_cohort_key(intent: str) -> str:
+    return slugify(intent or "general")
+
+
+def route_feedback_counter_value(row: dict[str, Any], key: str) -> int:
+    try:
+        return int(row.get(key, 0) or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def route_feedback_signal_count(row: dict[str, Any]) -> int:
+    if not isinstance(row, dict):
+        return 0
+    return sum(route_feedback_counter_value(row, key) for key in ROUTE_FEEDBACK_COUNTER_KEYS)
+
+
+def route_feedback_bias(row: dict[str, Any]) -> int:
+    if not isinstance(row, dict):
+        return 0
+    positive = (
+        route_feedback_counter_value(row, "outcome_used") * 4
+        + route_feedback_counter_value(row, "outcome_shared") * 5
+        + route_feedback_counter_value(row, "accepted_as_is") * 3
+        + route_feedback_counter_value(row, "needed_light_edits")
+        + route_feedback_counter_value(row, "upvotes") * 2
+        + route_feedback_counter_value(row, "passive_reopened") * 2
+        + route_feedback_counter_value(row, "passive_export_opened") * 3
+        + route_feedback_counter_value(row, "passive_accepted_as_is") * 2
+        + route_feedback_counter_value(row, "passive_needed_light_edits")
+        + route_feedback_counter_value(row, "passive_header_only_edits")
+    )
+    negative = (
+        route_feedback_counter_value(row, "outcome_replaced") * 7
+        + route_feedback_counter_value(row, "not_useful") * 6
+        + route_feedback_counter_value(row, "downvotes") * 4
+        + route_feedback_counter_value(row, "passive_replaced_later") * 5
+        + route_feedback_counter_value(row, "passive_needed_heavy_edits") * 4
+        + route_feedback_counter_value(row, "passive_core_section_edits") * 2
+        + route_feedback_counter_value(row, "passive_core_wording_edits")
+        + route_feedback_counter_value(row, "passive_decision_changes") * 4
+    )
+    return max(-20, min(20, positive - negative))
+
+
+def route_feedback_row(route_payload: dict[str, Any], adapter_id: str, cohort_key: str) -> dict[str, Any]:
+    feedback = route_payload.get("cohort_feedback", {}) if isinstance(route_payload, dict) else {}
+    if not isinstance(feedback, dict):
+        return {}
+    adapter_feedback = feedback.get(adapter_id, {})
+    if not isinstance(adapter_feedback, dict):
+        return {}
+    row = adapter_feedback.get(cohort_key, {})
+    return row if isinstance(row, dict) else {}
+
+
+def route_feedback_summary_for_adapters(
+    route_payload: dict[str, Any],
+    adapter_ids: list[str],
+    cohort_key: str,
+) -> dict[str, Any]:
+    biases: dict[str, int] = {}
+    signal_counts: dict[str, int] = {}
+    adjusted: list[str] = []
+    for adapter_id in adapter_ids:
+        row = route_feedback_row(route_payload, adapter_id, cohort_key)
+        bias = route_feedback_bias(row)
+        signal_count = route_feedback_signal_count(row)
+        biases[adapter_id] = bias
+        signal_counts[adapter_id] = signal_count
+        if signal_count > 0 and bias != 0:
+            adjusted.append(adapter_id)
+    return {
+        "cohort_key": cohort_key,
+        "biases": biases,
+        "signal_counts": signal_counts,
+        "total_signal_count": sum(signal_counts.values()),
+        "adjusted_adapters": sorted(adjusted),
+    }
+
+
 def select_measured_local_execution_route(
     runtime_guidance: dict[str, Any],
     route_evidence: dict[str, Any],
     route_cost: dict[str, Any],
+    route_payload: dict[str, Any] | None = None,
     *,
     execution_class: str,
+    intent: str = "",
 ) -> dict[str, Any]:
     if not isinstance(route_evidence, dict) or not route_evidence.get("available"):
         return {}
     threshold = measured_local_route_threshold(execution_class)
-    ready_adapters = [
-        item
-        for item in route_evidence.get("adapters", [])
-        if isinstance(item, dict)
-        and str(item.get("status", "")).strip().lower() in {"ok", "degraded"}
-        and route_quality_rank(item.get("quality_class", "")) >= threshold
-        and route_reliability_rank(item.get("structured_reliability", "")) >= threshold
-    ]
+    ready_adapters: list[dict[str, Any]] = []
+    for item in route_evidence.get("adapters", []):
+        if not isinstance(item, dict):
+            continue
+        if str(item.get("status", "")).strip().lower() not in {"ok", "degraded"}:
+            continue
+        if route_quality_rank(item.get("quality_class", "")) < threshold:
+            continue
+        if route_reliability_rank(item.get("structured_reliability", "")) < threshold:
+            continue
+        ready_adapters.append(dict(item))
     if not ready_adapters:
         return {}
+    cohort_key = route_feedback_cohort_key(intent or execution_class)
+    feedback = route_feedback_summary_for_adapters(
+        route_payload or {},
+        [str(item.get("adapter_id", "")).strip() for item in ready_adapters if str(item.get("adapter_id", "")).strip()],
+        cohort_key,
+    )
+    for item in ready_adapters:
+        adapter_id = str(item.get("adapter_id", "")).strip()
+        item["_route_feedback_bias"] = int(feedback["biases"].get(adapter_id, 0))
+        item["_route_feedback_signal_count"] = int(feedback["signal_counts"].get(adapter_id, 0))
 
     if execution_class == "cheap":
         ready_adapters.sort(
             key=lambda item: (
+                1 if int(item.get("_route_feedback_bias", 0) or 0) < 0 else 0,
+                abs(min(0, int(item.get("_route_feedback_bias", 0) or 0))),
                 int(item.get("cold_start_cost_ms", 0) or 0),
                 int(item.get("warm_latency_ms", 0) or 0),
                 -float(item.get("tokens_per_second", 0) or 0),
@@ -1399,6 +1530,7 @@ def select_measured_local_execution_route(
                 -route_quality_rank(item.get("quality_class", "")),
                 -route_reliability_rank(item.get("structured_reliability", "")),
                 1 if str(item.get("status", "")).strip().lower() == "degraded" else 0,
+                -int(item.get("_route_feedback_bias", 0) or 0),
                 int(item.get("warm_latency_ms", 0) or 0),
                 int(item.get("cold_start_cost_ms", 0) or 0),
                 -float(item.get("tokens_per_second", 0) or 0),
@@ -1407,6 +1539,8 @@ def select_measured_local_execution_route(
 
     selected = ready_adapters[0]
     selected_id = str(selected.get("adapter_id", "")).strip()
+    if not selected_id:
+        return {}
     fallback_ids: list[str] = []
     for adapter in ready_adapters[1:]:
         adapter_id = str(adapter.get("adapter_id", "")).strip()
@@ -1429,6 +1563,8 @@ def select_measured_local_execution_route(
         "warm_latency_ms": int(selected.get("warm_latency_ms", 0) or 0),
         "cold_start_cost_ms": int(selected.get("cold_start_cost_ms", 0) or 0),
         "tokens_per_second": float(selected.get("tokens_per_second", 0) or 0),
+        "feedback_bias": int(selected.get("_route_feedback_bias", 0) or 0),
+        "feedback_signal_count": int(selected.get("_route_feedback_signal_count", 0) or 0),
     }
     cheapest = route_cost.get("cheapest_ready_adapter") if isinstance(route_cost, dict) else {}
     cheapest_id = str(cheapest.get("adapter_id", "")).strip() if isinstance(cheapest, dict) else ""
@@ -1439,6 +1575,9 @@ def select_measured_local_execution_route(
         "local_runtime_class": str(route_evidence.get("local_runtime_class", "")).strip(),
         "quality_threshold": "usable" if threshold == 2 else "strong",
         "cheapest_ready_adapter": cheapest_id,
+        "feedback_cohort": cohort_key,
+        "outcome_signal_count": int(feedback["total_signal_count"]),
+        "feedback_adjusted_adapters": feedback["adjusted_adapters"],
     }
 
 
@@ -8676,6 +8815,7 @@ ADMIN_HELP_GROUPS: list[tuple[str, list[tuple[str, str]]]] = [
             ("recommend-execution", "Execution posture recommendation."),
             ("show-adapters / resolve-adapter / adapter-matrix / adapter-conformance", "Adapter inspection and conformance."),
             ("routing-backtest / review-policy / stage-policy-candidate / approve-policy-candidate / rollback-policy-candidate", "Routing policy analysis and rollout."),
+            ("record-route-outcome", "Record measured route outcome feedback for self-correcting local selection."),
             ("stage-runtime-handoff / activate-runtime-target", "Runtime target staging and activation."),
             ("show-learning-events / learning-snapshot", "Runtime and learning evidence inspection."),
         ],
@@ -10925,6 +11065,136 @@ def print_routing_backtest(backtest: dict[str, Any]) -> None:
                 f"  - {item['intent']}: {item['recommended_execution_class']} "
                 f"({item['success_rate']:.3f} over {item['samples']} sample(s))"
             )
+
+
+def local_runtime_capabilities_path() -> Path:
+    return session_state_root() / "local-runtime-capabilities.json"
+
+
+def load_local_runtime_capabilities_payload() -> dict[str, Any]:
+    path = local_runtime_capabilities_path()
+    if not path.exists():
+        return {
+            "schema_version": "0.4.0",
+            "context_type": "JiniLocalRuntimeCapabilities",
+            "captured_at": now_utc(),
+            "local_runtime_class": "",
+            "adapters": {},
+            "cohort_feedback": {},
+        }
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        payload = {}
+    if not isinstance(payload, dict):
+        payload = {}
+    payload.setdefault("schema_version", "0.4.0")
+    payload.setdefault("context_type", "JiniLocalRuntimeCapabilities")
+    payload.setdefault("captured_at", now_utc())
+    payload.setdefault("local_runtime_class", "")
+    payload.setdefault("adapters", {})
+    payload.setdefault("cohort_feedback", {})
+    if not isinstance(payload.get("adapters"), dict):
+        payload["adapters"] = {}
+    if not isinstance(payload.get("cohort_feedback"), dict):
+        payload["cohort_feedback"] = {}
+    return payload
+
+
+def route_outcome_counter(outcome: str, *, passive: bool = False) -> str:
+    normalized = str(outcome or "").strip()
+    if passive:
+        return ROUTE_PASSIVE_OUTCOME_COUNTERS.get(normalized, "")
+    return ROUTE_OUTCOME_COUNTERS.get(normalized, "")
+
+
+def record_route_outcome_feedback(
+    pack_dir: Path,
+    registry: dict[str, Any],
+    *,
+    adapter_id: str,
+    intent: str,
+    outcome: str,
+    reason: str = "",
+    cohort_key: str = "",
+    passive: bool = False,
+) -> dict[str, Any]:
+    adapter_id = adapter_id.strip()
+    if not adapter_id:
+        raise ValueError("record-route-outcome requires a non-empty adapter id")
+    intent = intent.strip().lower()
+    if not intent:
+        raise ValueError("record-route-outcome requires a non-empty intent")
+    counter = route_outcome_counter(outcome, passive=passive)
+    if not counter:
+        raise ValueError(f"Unsupported route outcome {outcome!r}")
+
+    summary = summarise_pack(pack_dir, registry)
+    payload = load_local_runtime_capabilities_payload()
+    adapters = payload.get("adapters", {})
+    if isinstance(adapters, dict) and adapters and adapter_id not in adapters:
+        raise ValueError(f"Adapter {adapter_id!r} is not present in the local runtime capability report")
+    cohort = cohort_key.strip() or route_feedback_cohort_key(intent)
+    feedback = payload.setdefault("cohort_feedback", {})
+    adapter_feedback = feedback.setdefault(adapter_id, {})
+    if not isinstance(adapter_feedback, dict):
+        adapter_feedback = {}
+        feedback[adapter_id] = adapter_feedback
+    row = adapter_feedback.setdefault(cohort, {})
+    if not isinstance(row, dict):
+        row = {}
+        adapter_feedback[cohort] = row
+    row[counter] = route_feedback_counter_value(row, counter) + 1
+    payload["last_feedback_at"] = now_utc()
+
+    path = local_runtime_capabilities_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    event_paths = append_learning_event(
+        "route-outcome-feedback",
+        {
+            "pack_id": summary.get("pack_id", ""),
+            "work_unit_id": summary.get("work_unit", {}).get("work_unit_id", ""),
+            "adapter_id": adapter_id,
+            "intent": intent,
+            "cohort_key": cohort,
+            "outcome": outcome,
+            "counter": counter,
+            "passive": passive,
+            "reason": reason.strip(),
+            "feedback_bias": route_feedback_bias(row),
+            "feedback_signal_count": route_feedback_signal_count(row),
+        },
+        pack_dir=pack_dir,
+    )
+    return {
+        "schema_version": "0.1.0",
+        "feedback_type": "JiniRouteOutcomeFeedback",
+        "recorded_at": payload["last_feedback_at"],
+        "pack_id": summary.get("pack_id", ""),
+        "work_unit_id": summary.get("work_unit", {}).get("work_unit_id", ""),
+        "adapter_id": adapter_id,
+        "intent": intent,
+        "cohort_key": cohort,
+        "outcome": outcome,
+        "counter": counter,
+        "passive": passive,
+        "reason": reason.strip(),
+        "feedback_bias": route_feedback_bias(row),
+        "feedback_signal_count": route_feedback_signal_count(row),
+        "capability_report_path": display_path(path),
+        "event_paths": event_paths,
+    }
+
+
+def print_route_outcome_feedback(feedback: dict[str, Any]) -> None:
+    print(f"ADAPTER {feedback.get('adapter_id', '')}")
+    print(f"INTENT  {feedback.get('intent', '')}")
+    print(f"COHORT  {feedback.get('cohort_key', '')}")
+    print(f"OUTCOME {feedback.get('outcome', '')}")
+    print(f"BIAS    {feedback.get('feedback_bias', 0):+}")
+    print(f"REPORT  {feedback.get('capability_report_path', '')}")
 
 
 def next_runtime_handoff_path(pack_dir: Path, runtime_target_id: str) -> Path:
@@ -14961,11 +15231,14 @@ def recommend_execution(
     route_snapshot = build_local_runtime_route_snapshot()
     route_evidence = route_snapshot["route_evidence"]
     route_cost = route_snapshot["route_cost"]
+    route_payload = route_snapshot.get("route_payload", {})
     execution_route = select_measured_local_execution_route(
         runtime_guidance,
         route_evidence,
         route_cost,
+        route_payload if isinstance(route_payload, dict) else {},
         execution_class=execution_class,
+        intent=chosen_intent,
     )
     if execution_route:
         runtime_guidance["execution_route"] = execution_route
@@ -20017,6 +20290,33 @@ def main() -> int:
         help="Output format for the routing backtest",
     )
 
+    route_outcome_parser = subparsers.add_parser(
+        "record-route-outcome",
+        help="Record measured route outcome feedback so local routing can self-correct",
+    )
+    route_outcome_parser.add_argument("path", type=Path, help="Pack path associated with the route outcome")
+    route_outcome_parser.add_argument("--adapter-id", required=True, help="Local runtime adapter id that produced the outcome")
+    route_outcome_parser.add_argument("--intent", required=True, help="Intent that selected the route, for example export")
+    route_outcome_parser.add_argument(
+        "--outcome",
+        required=True,
+        choices=sorted(set(ROUTE_OUTCOME_COUNTERS) | set(ROUTE_PASSIVE_OUTCOME_COUNTERS)),
+        help="Observed outcome signal for the selected route",
+    )
+    route_outcome_parser.add_argument("--cohort-key", help="Optional explicit cohort key; defaults to the intent")
+    route_outcome_parser.add_argument("--reason", default="", help="Optional short reason for the recorded outcome")
+    route_outcome_parser.add_argument(
+        "--passive",
+        action="store_true",
+        help="Record the signal as passive workflow observation instead of explicit feedback",
+    )
+    route_outcome_parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for the route outcome feedback receipt",
+    )
+
     handoff_parser = subparsers.add_parser(
         "stage-runtime-handoff",
         help="Persist a runtime-ready handoff bundle with compact context, checklist, adapter target, and install preview",
@@ -21994,6 +22294,28 @@ def main() -> int:
             print(json.dumps(backtest, indent=2))
         else:
             print_routing_backtest(backtest)
+        return 0
+
+    if args.command == "record-route-outcome":
+        try:
+            pack_dir = resolve_context_pack_dir(args.path, registry, command_label="record-route-outcome")
+            feedback = record_route_outcome_feedback(
+                pack_dir,
+                registry,
+                adapter_id=args.adapter_id,
+                intent=args.intent,
+                outcome=args.outcome,
+                reason=args.reason,
+                cohort_key=args.cohort_key or "",
+                passive=bool(args.passive),
+            )
+        except (FileNotFoundError, TypeError, ValueError, KeyError) as exc:
+            print(f"ERROR {format_pack_surface_error(args.path, exc)}")
+            return 1
+        if args.format == "json":
+            print(json.dumps(feedback, indent=2))
+        else:
+            print_route_outcome_feedback(feedback)
         return 0
 
     if args.command == "stage-runtime-handoff":

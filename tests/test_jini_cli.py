@@ -759,6 +759,90 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("local-fast", resume_readout["route_evidence"]["cheapest_ready_adapter"])
         self.assertEqual("local-fast", resume_readout["route_evidence"]["selected_ready_adapter"])
 
+    def test_route_outcome_feedback_self_corrects_measured_local_selection(self) -> None:
+        pack_dir = self.compile_research_pack()
+        state_root = self.tmp / ".jini"
+        state_root.mkdir(parents=True, exist_ok=True)
+        capabilities_path = state_root / "local-runtime-capabilities.json"
+        capabilities_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.4.0",
+                    "context_type": "JiniLocalRuntimeCapabilities",
+                    "captured_at": "2026-05-21T19:00:00Z",
+                    "local_runtime_class": "local-ollama",
+                    "adapters": {
+                        "local-workhorse": {
+                            "status": "ok",
+                            "latency_ms": 190,
+                            "warm_latency_ms": 160,
+                            "cold_start_cost_ms": 30,
+                            "tokens_per_second": 22.5,
+                            "quality_class": "usable",
+                            "structured_reliability": "usable",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        },
+                        "local-fast": {
+                            "status": "ok",
+                            "latency_ms": 85,
+                            "warm_latency_ms": 70,
+                            "cold_start_cost_ms": 5,
+                            "tokens_per_second": 40.0,
+                            "quality_class": "usable",
+                            "structured_reliability": "usable",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        },
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        baseline = self.run_cli("recommend-execution", pack_dir, "--intent", "export", "--format", "json")
+        self.assert_ok(baseline)
+        self.assertEqual(
+            "local-fast",
+            json.loads(baseline.stdout)["runtime_guidance"]["execution_route"]["selected"]["id"],
+        )
+
+        feedback = self.run_cli(
+            "record-route-outcome",
+            pack_dir,
+            "--adapter-id",
+            "local-fast",
+            "--intent",
+            "export",
+            "--outcome",
+            "replaced-this",
+            "--reason",
+            "Needed a full rewrite before use.",
+            "--format",
+            "json",
+        )
+        self.assert_ok(feedback)
+        feedback_payload = json.loads(feedback.stdout)
+        self.assertEqual("JiniRouteOutcomeFeedback", feedback_payload["feedback_type"])
+        self.assertEqual("local-fast", feedback_payload["adapter_id"])
+        self.assertEqual("export", feedback_payload["cohort_key"])
+        self.assertEqual(-7, feedback_payload["feedback_bias"])
+
+        saved = self.read_json(capabilities_path)
+        self.assertEqual(1, saved["cohort_feedback"]["local-fast"]["export"]["outcome_replaced"])
+
+        corrected = self.run_cli("recommend-execution", pack_dir, "--intent", "export", "--format", "json")
+        self.assert_ok(corrected)
+        execution_route = json.loads(corrected.stdout)["runtime_guidance"]["execution_route"]
+        self.assertEqual("local-workhorse", execution_route["selected"]["id"])
+        self.assertEqual("export", execution_route["feedback_cohort"])
+        self.assertEqual(1, execution_route["outcome_signal_count"])
+        self.assertIn("local-fast", execution_route["feedback_adjusted_adapters"])
+
+        events = self.run_cli("show-learning-events", pack_dir, "--event-type", "route-outcome-feedback", "--format", "json")
+        self.assert_ok(events)
+        event = json.loads(events.stdout)["events"][-1]
+        self.assertEqual("local-fast", event["adapter_id"])
+        self.assertEqual("replaced-this", event["outcome"])
+
     def test_status_surfaces_turn_record_and_progress_frame(self) -> None:
         pack_dir = self.compile_research_pack()
 
