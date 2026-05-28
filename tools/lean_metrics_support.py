@@ -281,6 +281,8 @@ def collect_core_command_samples(root: Path, cli_path: Path) -> tuple[list[dict[
             "command": " ".join(["jini", *args]),
             "duration_ms": duration_ms,
             "exit_code": int(completed.returncode),
+            "stdout_chars": len(completed.stdout or ""),
+            "stderr_chars": len(completed.stderr or ""),
         }
         parsed_json: dict[str, Any] | None = None
         if parse_json_output:
@@ -311,6 +313,12 @@ def collect_core_command_samples(root: Path, cli_path: Path) -> tuple[list[dict[
             }
         sample, _ = sample_cli(["status", "packs/research-prd/examples/research-prd-v1"])
         command_samples.append(sample)
+        sample, _ = sample_cli(["continue", "--from", "packs/research-prd/examples/research-prd-v1"])
+        command_samples.append(sample)
+        sample, _ = sample_cli(
+            ["resume", "packs/research-prd/examples/research-prd-v1", "--format", "json", "--max-chars", "900"]
+        )
+        command_samples.append(sample)
     return command_samples, provider_evidence
 
 
@@ -323,6 +331,52 @@ def build_latency_sample(command_samples: list[dict[str, Any]]) -> dict[str, Any
         "max_ms": round(max(successful_durations), 1) if successful_durations else None,
         "min_ms": round(min(successful_durations), 1) if successful_durations else None,
         "avg_ms": round(sum(successful_durations) / len(successful_durations), 1) if successful_durations else None,
+    }
+
+
+def build_resume_cost_sample(command_samples: list[dict[str, Any]]) -> dict[str, Any]:
+    """Measure the relative output cost of the continue and resume recovery paths."""
+    continue_sample = next(
+        (item for item in command_samples if str(item.get("command", "")).startswith("jini continue ")),
+        None,
+    )
+    resume_sample = next(
+        (item for item in command_samples if str(item.get("command", "")).startswith("jini resume ")),
+        None,
+    )
+    if not isinstance(continue_sample, dict) or not isinstance(resume_sample, dict):
+        return {
+            "available": False,
+            "status": "unavailable",
+            "continue_output_chars": None,
+            "resume_output_chars": None,
+            "resume_to_continue_ratio": None,
+            "cheaper_surface": "",
+        }
+
+    continue_chars = int(continue_sample.get("stdout_chars", 0) or 0)
+    resume_chars = int(resume_sample.get("stdout_chars", 0) or 0)
+    continue_ok = int(continue_sample.get("exit_code", 1)) == 0
+    resume_ok = int(resume_sample.get("exit_code", 1)) == 0
+    if not continue_ok or not resume_ok:
+        return {
+            "available": False,
+            "status": "degraded",
+            "continue_output_chars": continue_chars,
+            "resume_output_chars": resume_chars,
+            "resume_to_continue_ratio": None,
+            "cheaper_surface": "",
+        }
+
+    ratio = round((resume_chars / continue_chars), 2) if continue_chars > 0 else None
+    cheaper_surface = "resume" if resume_chars <= continue_chars else "continue"
+    return {
+        "available": True,
+        "status": "measured",
+        "continue_output_chars": continue_chars,
+        "resume_output_chars": resume_chars,
+        "resume_to_continue_ratio": ratio,
+        "cheaper_surface": cheaper_surface,
     }
 
 
@@ -348,6 +402,7 @@ def build_lean_platform_report(
     route_cost = build_route_cost(route_evidence)
     command_samples, provider_evidence = collect_core_command_samples(root, cli_path)
     latency_sample = build_latency_sample(command_samples)
+    resume_cost = build_resume_cost_sample(command_samples)
     return {
         "generated_at": generated_at,
         "taught_commands": taught_commands,
@@ -356,6 +411,7 @@ def build_lean_platform_report(
         "compatibility_alias_matches": alias_matches,
         "command_samples": command_samples,
         "latency_sample": latency_sample,
+        "resume_cost": resume_cost,
         "provider_evidence": provider_evidence,
         "route_evidence": route_evidence,
         "route_trend": route_trend,
@@ -404,6 +460,17 @@ def render_lean_platform_metrics(report: dict[str, Any]) -> list[str]:
             f"  - {sample.get('command', '')} | ms={sample.get('duration_ms', 'n/a')} "
             f"| exit={sample.get('exit_code', 'n/a')}"
         )
+
+    resume_cost = report.get("resume_cost", {})
+    lines.append(
+        "RESUME   "
+        f"available={'yes' if resume_cost.get('available') else 'no'} "
+        f"status={resume_cost.get('status', 'unknown')} "
+        f"continue_chars={resume_cost.get('continue_output_chars', 'n/a')} "
+        f"resume_chars={resume_cost.get('resume_output_chars', 'n/a')} "
+        f"ratio={resume_cost.get('resume_to_continue_ratio', 'n/a')} "
+        f"cheaper={resume_cost.get('cheaper_surface', 'n/a') or 'n/a'}"
+    )
 
     provider_evidence = report.get("provider_evidence", {})
     lines.append(

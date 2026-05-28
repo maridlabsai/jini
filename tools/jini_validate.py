@@ -3555,9 +3555,9 @@ def build_public_example_proof(
         "try_command": f"{cli}",
         "continue_with": [
             f"{cli}",
+            "Inside Jini: Continue",
             "Inside Jini: Open",
-            "Inside Jini: Missing",
-            f"{cli} next --intent {str(summary.get('next_operation', 'Verify')).lower()}",
+            f"{cli} continue",
         ],
         "warnings": [*validation_warnings, *compile_warnings],
     }

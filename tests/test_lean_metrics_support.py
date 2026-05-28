@@ -29,6 +29,14 @@ class LeanMetricsSupportTests(unittest.TestCase):
                 "command_samples": [
                     {"command": "jini doctor --format json", "duration_ms": 100.0, "exit_code": 0}
                 ],
+                "resume_cost": {
+                    "available": True,
+                    "status": "measured",
+                    "continue_output_chars": 1200,
+                    "resume_output_chars": 420,
+                    "resume_to_continue_ratio": 0.35,
+                    "cheaper_surface": "resume",
+                },
                 "provider_evidence": {
                     "available": True,
                     "provider_id": "local-preview",
@@ -105,6 +113,7 @@ class LeanMetricsSupportTests(unittest.TestCase):
         self.assertIn("STATUS   ok", lines)
         self.assertIn("TAUGHT", lines)
         self.assertIn("PROVIDER available=yes id=local-preview status=ok", lines)
+        self.assertIn("RESUME   available=yes status=measured continue_chars=1200 resume_chars=420 ratio=0.35 cheaper=resume", lines)
         self.assertIn("ROUTECOST available=yes status=measured basis=local-runtime-benchmark posture=zero-external-api-spend", lines)
         self.assertTrue(any("local-fast | recovered" in line for line in lines))
         self.assertTrue(any("cheapest=local-fast" in line for line in lines))
@@ -135,6 +144,7 @@ class LeanMetricsSupportTests(unittest.TestCase):
         self.assertEqual(["doctor", "status"], report["taught_commands"])
         self.assertEqual(0, report["compatibility_alias_count"])
         self.assertIn("latency_sample", report)
+        self.assertIn("resume_cost", report)
         self.assertIn("provider_evidence", report)
         self.assertIn("route_cost", report)
         self.assertEqual("ok", report["status"])
@@ -153,6 +163,21 @@ class LeanMetricsSupportTests(unittest.TestCase):
         self.assertEqual(100.0, sample["min_ms"])
         self.assertEqual(300.0, sample["max_ms"])
         self.assertEqual(200.0, sample["avg_ms"])
+
+    def test_build_resume_cost_sample_prefers_compact_resume_surface(self) -> None:
+        sample = lean_metrics_support.build_resume_cost_sample(
+            [
+                {"command": "jini continue --from pack", "exit_code": 0, "stdout_chars": 1200},
+                {"command": "jini resume pack --format json --max-chars 900", "exit_code": 0, "stdout_chars": 400},
+            ]
+        )
+
+        self.assertTrue(sample["available"])
+        self.assertEqual("measured", sample["status"])
+        self.assertEqual(1200, sample["continue_output_chars"])
+        self.assertEqual(400, sample["resume_output_chars"])
+        self.assertEqual(0.33, sample["resume_to_continue_ratio"])
+        self.assertEqual("resume", sample["cheaper_surface"])
 
     def test_build_route_cost_prefers_lowest_cost_ready_adapter(self) -> None:
         report = lean_metrics_support.build_route_cost(
