@@ -4025,7 +4025,18 @@ class JiniCliConformanceTests(unittest.TestCase):
         recommendation_doc = json.loads(recommendation.stdout)
         self.assertEqual("cheap", recommendation_doc["execution_class"])
         self.assertEqual(candidate["candidate_id"], recommendation_doc["active_policy"]["candidate_id"])
+        self.assertEqual(
+            ["export"],
+            recommendation_doc["active_policy"]["route_feedback_drivers"]["changed_cohort_keys"],
+        )
+        self.assertEqual(
+            "export:local-fast->local-workhorse",
+            recommendation_doc["active_policy"]["route_feedback_drivers"]["cohort_preview"]["text"],
+        )
         self.assertEqual("kiro-cli", recommendation_doc["runtime_guidance"]["selected"]["id"])
+        recommendation_text = self.run_cli("recommend-execution", pack_dir, "--intent", "make")
+        self.assert_ok(recommendation_text)
+        self.assertIn("DRIVERS export:local-fast->local-workhorse", recommendation_text.stdout)
 
         rollback = self.run_cli(
             "rollback-policy-candidate",

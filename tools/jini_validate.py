@@ -16026,6 +16026,7 @@ def recommend_execution(
             "status": active_policy.get("status", ""),
             "intent_overrides": active_policy.get("intent_overrides", {}),
             "recommended_runtime_target": active_policy.get("recommended_runtime_target", ""),
+            "route_feedback_drivers": deepcopy(active_policy.get("route_feedback_drivers", {})),
         }
         if active_policy is not None
         else {},
@@ -22771,6 +22772,12 @@ def main() -> int:
                 )
                 if active_policy.get("intent_overrides"):
                     print(f"  OVERRIDES {json.dumps(active_policy.get('intent_overrides', {}), sort_keys=True)}")
+                drivers = active_policy.get("route_feedback_drivers", {})
+                if isinstance(drivers, dict):
+                    preview = drivers.get("cohort_preview", {})
+                    preview_text = preview.get("text", "") if isinstance(preview, dict) else ""
+                    if preview_text:
+                        print(f"  DRIVERS {preview_text}")
             print("WHY")
             for item in recommendation["rationale"]:
                 print(f"  - {item}")
