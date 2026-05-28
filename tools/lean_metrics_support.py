@@ -561,17 +561,16 @@ def render_lean_platform_metrics(report: dict[str, Any]) -> list[str]:
         )
     route_impact = report.get("route_feedback_impact", {})
     if isinstance(route_impact, dict):
-        cohorts = route_impact.get("cohorts", [])
-        first_cohort = cohorts[0] if cohorts and isinstance(cohorts[0], dict) else {}
         action = route_impact.get("recommended_action", {})
         action_command = action.get("command", "") if isinstance(action, dict) else ""
+        preview = route_impact.get("cohort_preview", {})
+        preview_text = preview.get("text", "") if isinstance(preview, dict) else ""
         lines.append(
             "ROUTEIMPACT "
             f"status={route_impact.get('status', 'unknown')} "
             f"changed={route_impact.get('changed_selection_count', 0)}/"
             f"{route_impact.get('active_cohort_count', 0)} "
-            f"baseline={first_cohort.get('baseline_selected_adapter', 'n/a') or 'n/a'} "
-            f"feedback={first_cohort.get('feedback_selected_adapter', 'n/a') or 'n/a'} "
+            f"cohorts={preview_text or 'n/a'} "
             f"action={action_command or 'n/a'}"
         )
 

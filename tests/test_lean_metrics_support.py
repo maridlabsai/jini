@@ -104,10 +104,19 @@ class LeanMetricsSupportTests(unittest.TestCase):
                 },
                 "route_feedback_impact": {
                     "status": "changed",
-                    "active_cohort_count": 1,
-                    "changed_selection_count": 1,
+                    "active_cohort_count": 2,
+                    "changed_selection_count": 2,
                     "recommended_action": {
                         "command": "jini review-policy"
+                    },
+                    "changed_cohort_keys": ["export", "wiki"],
+                    "cohort_preview": {
+                        "entries": [
+                            "export:local-fast->local-workhorse",
+                            "wiki:local-fast->local-workhorse",
+                        ],
+                        "remaining_count": 0,
+                        "text": "export:local-fast->local-workhorse,wiki:local-fast->local-workhorse",
                     },
                     "cohorts": [
                         {
@@ -115,7 +124,13 @@ class LeanMetricsSupportTests(unittest.TestCase):
                             "baseline_selected_adapter": "local-fast",
                             "feedback_selected_adapter": "local-workhorse",
                             "selected_changed": True,
-                        }
+                        },
+                        {
+                            "cohort_key": "wiki",
+                            "baseline_selected_adapter": "local-fast",
+                            "feedback_selected_adapter": "local-workhorse",
+                            "selected_changed": True,
+                        },
                     ],
                 },
                 "cost_proxy": {
@@ -142,7 +157,7 @@ class LeanMetricsSupportTests(unittest.TestCase):
         self.assertIn("ROUTECOST available=yes status=measured basis=local-runtime-benchmark posture=zero-external-api-spend", lines)
         self.assertIn("ROUTEFEEDBACK status=stale active=0 expired=2 adapters=1 action=jini route-feedback --prune-expired", lines)
         self.assertIn(
-            "ROUTEIMPACT status=changed changed=1/1 baseline=local-fast feedback=local-workhorse action=jini review-policy",
+            "ROUTEIMPACT status=changed changed=2/2 cohorts=export:local-fast->local-workhorse,wiki:local-fast->local-workhorse action=jini review-policy",
             lines,
         )
         self.assertTrue(any("local-fast | recovered" in line for line in lines))
