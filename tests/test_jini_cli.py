@@ -1056,8 +1056,8 @@ class JiniCliConformanceTests(unittest.TestCase):
                             "warm_latency_ms": 70,
                             "cold_start_cost_ms": 5,
                             "tokens_per_second": 40.0,
-                            "quality_class": "usable",
-                            "structured_reliability": "usable",
+                            "quality_class": "strong",
+                            "structured_reliability": "strong",
                             "benchmarked_at": "2026-05-21T19:00:00Z",
                         },
                         "local-workhorse": {
@@ -1066,8 +1066,8 @@ class JiniCliConformanceTests(unittest.TestCase):
                             "warm_latency_ms": 160,
                             "cold_start_cost_ms": 30,
                             "tokens_per_second": 22.5,
-                            "quality_class": "usable",
-                            "structured_reliability": "usable",
+                            "quality_class": "strong",
+                            "structured_reliability": "strong",
                             "benchmarked_at": "2026-05-21T19:00:00Z",
                         },
                     },
@@ -3902,6 +3902,45 @@ class JiniCliConformanceTests(unittest.TestCase):
 
     def test_policy_candidate_lifecycle_can_activate_and_rollback_routing_override(self) -> None:
         pack_dir = self.compile_research_pack()
+        home = self.personal_home()
+        state_root = self.tmp / ".jini"
+        state_root.mkdir(parents=True, exist_ok=True)
+        capabilities_path = state_root / "local-runtime-capabilities.json"
+        capabilities_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.4.0",
+                    "context_type": "JiniLocalRuntimeCapabilities",
+                    "captured_at": "2026-05-21T19:00:00Z",
+                    "local_runtime_class": "local-ollama",
+                    "adapters": {
+                        "local-fast": {
+                            "status": "ok",
+                            "latency_ms": 85,
+                            "warm_latency_ms": 70,
+                            "cold_start_cost_ms": 5,
+                            "tokens_per_second": 40.0,
+                            "quality_class": "usable",
+                            "structured_reliability": "usable",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        },
+                        "local-workhorse": {
+                            "status": "ok",
+                            "latency_ms": 190,
+                            "warm_latency_ms": 160,
+                            "cold_start_cost_ms": 30,
+                            "tokens_per_second": 22.5,
+                            "quality_class": "usable",
+                            "structured_reliability": "usable",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        },
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        self.assert_ok(self.run_cli("bootstrap-home", home))
+        self.assert_ok(self.run_cli("bind-home", pack_dir, "--home", home))
         runtime_dir = pack_dir / "runtime"
         runtime_dir.mkdir(parents=True, exist_ok=True)
         events_path = runtime_dir / "events.jsonl"
@@ -3932,6 +3971,22 @@ class JiniCliConformanceTests(unittest.TestCase):
             },
         ]
         events_path.write_text("".join(json.dumps(item, sort_keys=True) + "\n" for item in events), encoding="utf-8")
+        self.assert_ok(
+            self.run_cli(
+                "record-route-outcome",
+                pack_dir,
+                "--adapter-id",
+                "local-fast",
+                "--intent",
+                "export",
+                "--outcome",
+                "replaced-this",
+                "--reason",
+                "Needed a stronger export route.",
+                "--format",
+                "json",
+            )
+        )
 
         self.assert_ok(self.run_cli("review-policy", pack_dir))
         stage = self.run_cli("stage-policy-candidate", pack_dir, "--format", "json")
@@ -3940,6 +3995,11 @@ class JiniCliConformanceTests(unittest.TestCase):
         candidate_path = Path(pack_dir) / "runtime" / "policy-candidates" / f"{candidate['candidate_id']}.json"
         self.assertTrue(candidate_path.exists())
         self.assertEqual("cheap", candidate["intent_overrides"]["make"])
+        self.assertEqual(["export"], candidate["route_feedback_drivers"]["changed_cohort_keys"])
+        self.assertEqual(
+            "export:local-fast->local-workhorse",
+            candidate["route_feedback_drivers"]["cohort_preview"]["text"],
+        )
 
         approve = self.run_cli(
             "approve-policy-candidate",
@@ -3947,13 +4007,18 @@ class JiniCliConformanceTests(unittest.TestCase):
             candidate_path,
             "--approver",
             "policy-lead",
-            "--format",
-            "json",
         )
         self.assert_ok(approve)
-        rollout = json.loads(approve.stdout)
+        self.assertIn("DRIVERS export:local-fast->local-workhorse", approve.stdout)
+        rollout_path = Path(pack_dir) / "runtime" / "policy-rollouts" / "runtime-routing-active.json"
+        rollout = json.loads(rollout_path.read_text(encoding="utf-8"))
         self.assertEqual("active", rollout["status"])
         self.assertEqual("cheap", rollout["intent_overrides"]["make"])
+        self.assertEqual(["export"], rollout["route_feedback_drivers"]["changed_cohort_keys"])
+        self.assertEqual(
+            "export:local-fast->local-workhorse",
+            rollout["route_feedback_drivers"]["cohort_preview"]["text"],
+        )
 
         recommendation = self.run_cli("recommend-execution", pack_dir, "--intent", "make", "--format", "json")
         self.assert_ok(recommendation)
@@ -3970,12 +4035,17 @@ class JiniCliConformanceTests(unittest.TestCase):
             "policy-lead",
             "--reason",
             "Restore baseline routing after evaluation",
-            "--format",
-            "json",
         )
         self.assert_ok(rollback)
-        rollback_doc = json.loads(rollback.stdout)
+        self.assertIn("DRIVERS export:local-fast->local-workhorse", rollback.stdout)
+        rollback_path = sorted((pack_dir / "runtime" / "policy-rollouts").glob("*rollback*.json"))[-1]
+        rollback_doc = json.loads(rollback_path.read_text(encoding="utf-8"))
         self.assertEqual("rolled-back", rollback_doc["status"])
+        self.assertEqual(["export"], rollback_doc["route_feedback_drivers"]["changed_cohort_keys"])
+        self.assertEqual(
+            "export:local-fast->local-workhorse",
+            rollback_doc["route_feedback_drivers"]["cohort_preview"]["text"],
+        )
 
         restored = self.run_cli("recommend-execution", pack_dir, "--intent", "make", "--format", "json")
         self.assert_ok(restored)

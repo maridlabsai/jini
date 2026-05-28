@@ -12561,6 +12561,33 @@ def next_policy_rollout_path(pack_dir: Path, policy_id: str) -> Path:
     return rollout_dir / f"{slugify(policy_id)}-rollout-{stamp}.json"
 
 
+def summarize_policy_candidate_route_feedback_drivers(candidate_items: Sequence[dict[str, Any]]) -> dict[str, Any]:
+    for item in candidate_items:
+        if not isinstance(item, dict):
+            continue
+        drivers = item.get("route_feedback_drivers", {})
+        if not isinstance(drivers, dict):
+            continue
+        changed_cohort_keys = [
+            str(value).strip()
+            for value in drivers.get("changed_cohort_keys", [])
+            if str(value).strip()
+        ]
+        cohort_preview = drivers.get("cohort_preview", {})
+        if not isinstance(cohort_preview, dict) or not changed_cohort_keys:
+            continue
+        return {
+            "status": str(drivers.get("status", "")).strip(),
+            "changed_cohort_keys": changed_cohort_keys,
+            "cohort_preview": {
+                "entries": list(cohort_preview.get("entries", [])),
+                "remaining_count": int(cohort_preview.get("remaining_count", 0) or 0),
+                "text": str(cohort_preview.get("text", "")).strip(),
+            },
+        }
+    return {}
+
+
 def load_active_policy_rollout(pack_dir: Path, policy_id: str = "runtime-routing") -> dict[str, Any] | None:
     path = active_policy_rollout_path(pack_dir, policy_id)
     if not path.exists():
@@ -12593,7 +12620,7 @@ def stage_policy_candidate(
     promotion_gate_required = False
     compact_reload_preferred = False
     memory_loop_required = False
-    candidate_items = []
+    candidate_items: list[dict[str, Any]] = []
     for item in review.get("policy_candidates", []):
         if not isinstance(item, dict):
             continue
@@ -12613,6 +12640,7 @@ def stage_policy_candidate(
         elif kind == "memory-loop":
             memory_loop_required = True
 
+    route_feedback_drivers = summarize_policy_candidate_route_feedback_drivers(candidate_items)
     policy_id = "runtime-routing"
     candidate_path = next_policy_candidate_path(pack_dir, policy_id)
     candidate_id = candidate_path.stem
@@ -12638,6 +12666,8 @@ def stage_policy_candidate(
             "runtime_targets": review.get("runtime_targets", {}),
         },
     }
+    if route_feedback_drivers:
+        payload["route_feedback_drivers"] = route_feedback_drivers
     candidate_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     append_learning_event(
         "policy-candidate-staged",
@@ -12687,6 +12717,9 @@ def approve_policy_candidate(
         "memory_loop_required": bool(candidate.get("memory_loop_required", False)),
         "guardrails": candidate.get("guardrails", {}),
     }
+    route_feedback_drivers = candidate.get("route_feedback_drivers", {})
+    if isinstance(route_feedback_drivers, dict) and route_feedback_drivers:
+        rollout["route_feedback_drivers"] = deepcopy(route_feedback_drivers)
     rollout_path.write_text(json.dumps(rollout, indent=2) + "\n", encoding="utf-8")
     active_path = active_policy_rollout_path(pack_dir, policy_id)
     active_path.write_text(json.dumps(rollout, indent=2) + "\n", encoding="utf-8")
@@ -12737,6 +12770,11 @@ def rollback_policy_candidate(
         "source_candidate_path": display_path(candidate_path),
         "source_rollout_path": display_path(active_path),
     }
+    route_feedback_drivers = active_rollout.get("route_feedback_drivers", {})
+    if not isinstance(route_feedback_drivers, dict) or not route_feedback_drivers:
+        route_feedback_drivers = candidate.get("route_feedback_drivers", {})
+    if isinstance(route_feedback_drivers, dict) and route_feedback_drivers:
+        rollback["route_feedback_drivers"] = deepcopy(route_feedback_drivers)
     rollback_path.write_text(json.dumps(rollback, indent=2) + "\n", encoding="utf-8")
     active_path.unlink(missing_ok=True)
     candidate["status"] = "rolled-back"
@@ -12763,6 +12801,12 @@ def print_policy_candidate(candidate: dict[str, Any]) -> None:
     print(f"STATUS {candidate.get('status', '')}")
     print(f"ID     {candidate.get('candidate_id', '')}")
     print(f"REVIEW {candidate.get('source_review_path', '')}")
+    drivers = candidate.get("route_feedback_drivers", {})
+    if isinstance(drivers, dict):
+        preview = drivers.get("cohort_preview", {})
+        preview_text = preview.get("text", "") if isinstance(preview, dict) else ""
+        if preview_text:
+            print(f"DRIVERS {preview_text}")
     if candidate.get("intent_overrides"):
         print("OVERRIDES")
         for intent, execution_class in sorted(candidate.get("intent_overrides", {}).items()):
@@ -12773,6 +12817,12 @@ def print_policy_rollout(rollout: dict[str, Any]) -> None:
     print(f"POLICY {rollout.get('policy_id', '')}")
     print(f"STATUS {rollout.get('status', '')}")
     print(f"CANDIDATE {rollout.get('candidate_id', '')}")
+    drivers = rollout.get("route_feedback_drivers", {})
+    if isinstance(drivers, dict):
+        preview = drivers.get("cohort_preview", {})
+        preview_text = preview.get("text", "") if isinstance(preview, dict) else ""
+        if preview_text:
+            print(f"DRIVERS {preview_text}")
     if rollout.get("intent_overrides"):
         print("OVERRIDES")
         for intent, execution_class in sorted(rollout.get("intent_overrides", {}).items()):
