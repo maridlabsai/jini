@@ -106,6 +106,9 @@ class LeanMetricsSupportTests(unittest.TestCase):
                     "status": "changed",
                     "active_cohort_count": 1,
                     "changed_selection_count": 1,
+                    "recommended_action": {
+                        "command": "jini review-policy"
+                    },
                     "cohorts": [
                         {
                             "cohort_key": "export",
@@ -138,7 +141,10 @@ class LeanMetricsSupportTests(unittest.TestCase):
         self.assertIn("RESUME   available=yes status=measured continue_chars=420 resume_chars=840 ratio=2.0 cheaper=continue", lines)
         self.assertIn("ROUTECOST available=yes status=measured basis=local-runtime-benchmark posture=zero-external-api-spend", lines)
         self.assertIn("ROUTEFEEDBACK status=stale active=0 expired=2 adapters=1 action=jini route-feedback --prune-expired", lines)
-        self.assertIn("ROUTEIMPACT status=changed changed=1/1 baseline=local-fast feedback=local-workhorse", lines)
+        self.assertIn(
+            "ROUTEIMPACT status=changed changed=1/1 baseline=local-fast feedback=local-workhorse action=jini review-policy",
+            lines,
+        )
         self.assertTrue(any("local-fast | recovered" in line for line in lines))
         self.assertTrue(any("cheapest=local-fast" in line for line in lines))
 

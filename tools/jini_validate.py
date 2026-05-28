@@ -1686,6 +1686,10 @@ def build_route_feedback_impact_summary(
             "status": "empty",
             "active_cohort_count": 0,
             "changed_selection_count": 0,
+            "recommended_action": {
+                "label": "No route feedback to review",
+                "command": "",
+            },
             "cohorts": [],
         }
     if not isinstance(route_evidence, dict) or not route_evidence.get("available"):
@@ -1693,6 +1697,10 @@ def build_route_feedback_impact_summary(
             "status": "unavailable",
             "active_cohort_count": len(active_cohorts),
             "changed_selection_count": 0,
+            "recommended_action": {
+                "label": "Inspect routing evidence",
+                "command": f"{cli_invocation()} metrics",
+            },
             "cohorts": [],
         }
     cohorts: list[dict[str, Any]] = []
@@ -1732,10 +1740,20 @@ def build_route_feedback_impact_summary(
     status = "unavailable"
     if cohorts:
         status = "changed" if changed_selection_count else "observed"
+    recommended_action = {
+        "label": "Inspect routing evidence",
+        "command": f"{cli_invocation()} metrics",
+    }
+    if status in {"changed", "observed"}:
+        recommended_action = {
+            "label": "Review routing policy",
+            "command": f"{cli_invocation()} review-policy",
+        }
     return {
         "status": status,
         "active_cohort_count": len(active_cohorts),
         "changed_selection_count": changed_selection_count,
+        "recommended_action": recommended_action,
         "cohorts": cohorts,
     }
 
@@ -11637,12 +11655,15 @@ def print_route_feedback_maintenance(report: dict[str, Any]) -> None:
     if isinstance(route_feedback_impact, dict):
         cohorts = route_feedback_impact.get("cohorts", [])
         first_cohort = cohorts[0] if cohorts and isinstance(cohorts[0], dict) else {}
+        action = route_feedback_impact.get("recommended_action", {})
+        action_command = action.get("command", "") if isinstance(action, dict) else ""
         print(
             "IMPACT "
             f"changed={route_feedback_impact.get('changed_selection_count', 0)}/"
             f"{route_feedback_impact.get('active_cohort_count', 0)} "
             f"baseline={first_cohort.get('baseline_selected_adapter', 'n/a') or 'n/a'} "
-            f"feedback={first_cohort.get('feedback_selected_adapter', 'n/a') or 'n/a'}"
+            f"feedback={first_cohort.get('feedback_selected_adapter', 'n/a') or 'n/a'} "
+            f"action={action_command or 'n/a'}"
         )
     for adapter in report.get("adapters", []):
         print(
@@ -17285,12 +17306,15 @@ def print_outcome_view(report: dict[str, Any]) -> None:
         if isinstance(route_feedback_impact, dict):
             cohorts = route_feedback_impact.get("cohorts", [])
             first_cohort = cohorts[0] if cohorts and isinstance(cohorts[0], dict) else {}
+            action = route_feedback_impact.get("recommended_action", {})
+            action_command = action.get("command", "") if isinstance(action, dict) else ""
             print(
                 "  "
                 f"impact changed={route_feedback_impact.get('changed_selection_count', 0)}/"
                 f"{route_feedback_impact.get('active_cohort_count', 0)} "
                 f"baseline={first_cohort.get('baseline_selected_adapter', 'n/a') or 'n/a'} "
-                f"feedback={first_cohort.get('feedback_selected_adapter', 'n/a') or 'n/a'}"
+                f"feedback={first_cohort.get('feedback_selected_adapter', 'n/a') or 'n/a'} "
+                f"action={action_command or 'n/a'}"
             )
     missing_now = report.get("questions", {}).get("what_is_still_missing_now", [])
     missing_later = report.get("questions", {}).get("what_is_still_missing_later", [])

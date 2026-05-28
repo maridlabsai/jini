@@ -1098,6 +1098,8 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("changed", impact["status"])
         self.assertEqual(1, impact["active_cohort_count"])
         self.assertEqual(1, impact["changed_selection_count"])
+        self.assertEqual("Review routing policy", impact["recommended_action"]["label"])
+        self.assertEqual("jini review-policy", impact["recommended_action"]["command"])
         self.assertEqual("export", impact["cohorts"][0]["cohort_key"])
         self.assertEqual("local-fast", impact["cohorts"][0]["baseline_selected_adapter"])
         self.assertEqual("local-workhorse", impact["cohorts"][0]["feedback_selected_adapter"])
@@ -1105,7 +1107,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         readout_text = self.run_cli("route-feedback")
         self.assert_ok(readout_text)
         self.assertIn(
-            "IMPACT changed=1/1 baseline=local-fast feedback=local-workhorse",
+            "IMPACT changed=1/1 baseline=local-fast feedback=local-workhorse action=jini review-policy",
             readout_text.stdout,
         )
 
@@ -1171,6 +1173,8 @@ class JiniCliConformanceTests(unittest.TestCase):
         status_impact = status_payload["route_feedback_impact"]
         self.assertEqual("changed", status_impact["status"])
         self.assertEqual(1, status_impact["changed_selection_count"])
+        self.assertEqual("Review routing policy", status_impact["recommended_action"]["label"])
+        self.assertEqual("jini review-policy", status_impact["recommended_action"]["command"])
         self.assertEqual(status_impact, status_payload["runtime_readout"]["route_feedback_impact"])
         self.assertEqual("local-fast", status_impact["cohorts"][0]["baseline_selected_adapter"])
         self.assertEqual("local-workhorse", status_impact["cohorts"][0]["feedback_selected_adapter"])
@@ -1179,7 +1183,10 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(status_text)
         self.assertIn("LEARNING", status_text.stdout)
         self.assertIn("route-feedback status=stale active=1 expired=1", status_text.stdout)
-        self.assertIn("impact changed=1/1 baseline=local-fast feedback=local-workhorse", status_text.stdout)
+        self.assertIn(
+            "impact changed=1/1 baseline=local-fast feedback=local-workhorse action=jini review-policy",
+            status_text.stdout,
+        )
         self.assertIn("jini route-feedback --prune-expired", status_text.stdout)
 
         metrics_json = self.run_cli("metrics", "--format", "json")
@@ -1192,6 +1199,8 @@ class JiniCliConformanceTests(unittest.TestCase):
         metrics_impact = metrics_payload["route_feedback_impact"]
         self.assertEqual("changed", metrics_impact["status"])
         self.assertEqual(1, metrics_impact["changed_selection_count"])
+        self.assertEqual("Review routing policy", metrics_impact["recommended_action"]["label"])
+        self.assertEqual("jini review-policy", metrics_impact["recommended_action"]["command"])
         self.assertEqual("local-fast", metrics_impact["cohorts"][0]["baseline_selected_adapter"])
         self.assertEqual("local-workhorse", metrics_impact["cohorts"][0]["feedback_selected_adapter"])
 
@@ -1201,7 +1210,10 @@ class JiniCliConformanceTests(unittest.TestCase):
             "ROUTEFEEDBACK status=stale active=1 expired=1 adapters=1 action=jini route-feedback --prune-expired",
             metrics_text.stdout,
         )
-        self.assertIn("ROUTEIMPACT status=changed changed=1/1 baseline=local-fast feedback=local-workhorse", metrics_text.stdout)
+        self.assertIn(
+            "ROUTEIMPACT status=changed changed=1/1 baseline=local-fast feedback=local-workhorse action=jini review-policy",
+            metrics_text.stdout,
+        )
 
     def test_passive_route_outcome_feedback_is_captured_from_user_actions(self) -> None:
         pack_dir = self.compile_research_pack()
