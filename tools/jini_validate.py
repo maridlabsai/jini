@@ -8069,6 +8069,7 @@ def rewrite_artifact(
         intent="rewrite",
         outcome="needed-light-edits",
         reason=f"passive:artifact-rewrite:{artifact.get('id', '')}:{shortcut}",
+        observation_key=f"artifact-rewrite:{artifact.get('id', '')}:{shortcut}",
     )
     cli = cli_invocation()
     return {
@@ -11102,10 +11103,13 @@ def load_local_runtime_capabilities_payload() -> dict[str, Any]:
     payload.setdefault("local_runtime_class", "")
     payload.setdefault("adapters", {})
     payload.setdefault("cohort_feedback", {})
+    payload.setdefault("passive_feedback_observations", {})
     if not isinstance(payload.get("adapters"), dict):
         payload["adapters"] = {}
     if not isinstance(payload.get("cohort_feedback"), dict):
         payload["cohort_feedback"] = {}
+    if not isinstance(payload.get("passive_feedback_observations"), dict):
+        payload["passive_feedback_observations"] = {}
     return payload
 
 
@@ -11126,6 +11130,7 @@ def record_route_outcome_feedback(
     reason: str = "",
     cohort_key: str = "",
     passive: bool = False,
+    passive_observation_key: str = "",
 ) -> dict[str, Any]:
     adapter_id = adapter_id.strip()
     if not adapter_id:
@@ -11152,6 +11157,60 @@ def record_route_outcome_feedback(
     if not isinstance(row, dict):
         row = {}
         adapter_feedback[cohort] = row
+    deduped = False
+    observation_key = ""
+    if passive and passive_observation_key.strip():
+        observation_scope = ":".join(
+            item
+            for item in (
+                str(summary.get("pack_id", "")).strip(),
+                str(summary.get("work_unit", {}).get("work_unit_id", "")).strip(),
+                passive_observation_key.strip(),
+            )
+            if item
+        )
+        observation_key = slugify(observation_scope)
+        observations = payload.setdefault("passive_feedback_observations", {})
+        if not isinstance(observations, dict):
+            observations = {}
+            payload["passive_feedback_observations"] = observations
+        adapter_observations = observations.setdefault(adapter_id, {})
+        if not isinstance(adapter_observations, dict):
+            adapter_observations = {}
+            observations[adapter_id] = adapter_observations
+        if observation_key in adapter_observations:
+            deduped = True
+        else:
+            adapter_observations[observation_key] = {
+                "observed_at": now_utc(),
+                "intent": intent,
+                "cohort_key": cohort,
+                "outcome": outcome,
+                "counter": counter,
+                "reason": reason.strip(),
+            }
+    if deduped:
+        path = local_runtime_capabilities_path()
+        return {
+            "schema_version": "0.1.0",
+            "feedback_type": "JiniRouteOutcomeFeedback",
+            "recorded_at": payload.get("last_feedback_at", ""),
+            "pack_id": summary.get("pack_id", ""),
+            "work_unit_id": summary.get("work_unit", {}).get("work_unit_id", ""),
+            "adapter_id": adapter_id,
+            "intent": intent,
+            "cohort_key": cohort,
+            "outcome": outcome,
+            "counter": counter,
+            "passive": passive,
+            "reason": reason.strip(),
+            "feedback_bias": route_feedback_bias(row),
+            "feedback_signal_count": route_feedback_signal_count(row),
+            "passive_observation_key": observation_key,
+            "deduped": True,
+            "capability_report_path": display_path(path),
+            "event_paths": [],
+        }
     row[counter] = route_feedback_counter_value(row, counter) + 1
     payload["last_feedback_at"] = now_utc()
 
@@ -11171,6 +11230,7 @@ def record_route_outcome_feedback(
             "counter": counter,
             "passive": passive,
             "reason": reason.strip(),
+            "passive_observation_key": observation_key,
             "feedback_bias": route_feedback_bias(row),
             "feedback_signal_count": route_feedback_signal_count(row),
         },
@@ -11191,6 +11251,8 @@ def record_route_outcome_feedback(
         "reason": reason.strip(),
         "feedback_bias": route_feedback_bias(row),
         "feedback_signal_count": route_feedback_signal_count(row),
+        "passive_observation_key": observation_key,
+        "deduped": False,
         "capability_report_path": display_path(path),
         "event_paths": event_paths,
     }
@@ -11212,6 +11274,7 @@ def record_passive_route_outcome_from_current_selection(
     intent: str,
     outcome: str,
     reason: str,
+    observation_key: str,
 ) -> dict[str, Any]:
     try:
         recommendation = recommend_execution(pack_dir, registry, intent=intent)
@@ -11231,6 +11294,7 @@ def record_passive_route_outcome_from_current_selection(
             outcome=outcome,
             reason=reason,
             passive=True,
+            passive_observation_key=observation_key,
         )
     except (FileNotFoundError, OSError, TypeError, ValueError, KeyError):
         return {}
@@ -21633,6 +21697,7 @@ def main() -> int:
                     intent="open",
                     outcome="used-this",
                     reason=f"passive:artifact-open:{artifact.get('id', '')}:print-path",
+                    observation_key=f"artifact-open:{artifact.get('id', '')}",
                 )
                 if args.format == "json":
                     print(
@@ -21656,6 +21721,7 @@ def main() -> int:
                     intent="open",
                     outcome="used-this",
                     reason=f"passive:artifact-open:{artifact.get('id', '')}:launch",
+                    observation_key=f"artifact-open:{artifact.get('id', '')}",
                 )
                 if args.format == "json":
                     print(
@@ -22758,6 +22824,7 @@ def main() -> int:
                 intent="export",
                 outcome="shared-this",
                 reason="passive:export-tasks",
+                observation_key="export-tasks",
             )
         except ValueError as exc:
             print(f"ERROR {exc}")
@@ -22774,6 +22841,7 @@ def main() -> int:
                 intent="export",
                 outcome="shared-this",
                 reason="passive:sync-tasks",
+                observation_key="sync-tasks",
             )
         except ValueError as exc:
             print(f"ERROR {exc}")
@@ -22795,6 +22863,7 @@ def main() -> int:
                 intent="issues",
                 outcome="shared-this",
                 reason=f"passive:export-issues:{args.adapter}",
+                observation_key=f"export-issues:{args.adapter}",
             )
         except ValueError as exc:
             print(f"ERROR {exc}")
@@ -22816,6 +22885,7 @@ def main() -> int:
                 intent="wiki",
                 outcome="shared-this",
                 reason=f"passive:export-wiki:{args.adapter}",
+                observation_key=f"export-wiki:{args.adapter}",
             )
         except ValueError as exc:
             print(f"ERROR {exc}")
