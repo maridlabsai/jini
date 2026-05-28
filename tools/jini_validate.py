@@ -12662,30 +12662,54 @@ def next_policy_rollout_path(pack_dir: Path, policy_id: str) -> Path:
 
 
 def summarize_policy_candidate_route_feedback_drivers(candidate_items: Sequence[dict[str, Any]]) -> dict[str, Any]:
+    status = ""
+    changed_cohort_keys: list[str] = []
+    preview_entries: list[str] = []
+    seen_cohort_keys: set[str] = set()
     for item in candidate_items:
         if not isinstance(item, dict):
             continue
         drivers = item.get("route_feedback_drivers", {})
         if not isinstance(drivers, dict):
             continue
-        changed_cohort_keys = [
+        driver_cohort_keys = [
             str(value).strip()
             for value in drivers.get("changed_cohort_keys", [])
             if str(value).strip()
         ]
         cohort_preview = drivers.get("cohort_preview", {})
-        if not isinstance(cohort_preview, dict) or not changed_cohort_keys:
+        if not isinstance(cohort_preview, dict) or not driver_cohort_keys:
             continue
-        return {
-            "status": str(drivers.get("status", "")).strip(),
-            "changed_cohort_keys": changed_cohort_keys,
-            "cohort_preview": {
-                "entries": list(cohort_preview.get("entries", [])),
-                "remaining_count": int(cohort_preview.get("remaining_count", 0) or 0),
-                "text": str(cohort_preview.get("text", "")).strip(),
-            },
-        }
-    return {}
+        if not status:
+            status = str(drivers.get("status", "")).strip()
+        entry_map = list(cohort_preview.get("entries", []))
+        for index, cohort_key in enumerate(driver_cohort_keys):
+            if cohort_key in seen_cohort_keys:
+                continue
+            seen_cohort_keys.add(cohort_key)
+            changed_cohort_keys.append(cohort_key)
+            fallback_entry = cohort_key
+            if index < len(entry_map):
+                entry = str(entry_map[index]).strip()
+                preview_entries.append(entry or fallback_entry)
+            else:
+                preview_entries.append(fallback_entry)
+    if not changed_cohort_keys:
+        return {}
+    visible_entries = preview_entries[:3]
+    remaining_count = max(0, len(preview_entries) - len(visible_entries))
+    text = ",".join(visible_entries)
+    if remaining_count:
+        text = f"{text},+{remaining_count} more"
+    return {
+        "status": status,
+        "changed_cohort_keys": changed_cohort_keys,
+        "cohort_preview": {
+            "entries": visible_entries,
+            "remaining_count": remaining_count,
+            "text": text,
+        },
+    }
 
 
 def load_active_policy_rollout(pack_dir: Path, policy_id: str = "runtime-routing") -> dict[str, Any] | None:

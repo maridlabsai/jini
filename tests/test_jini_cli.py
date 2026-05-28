@@ -4052,6 +4052,69 @@ class JiniCliConformanceTests(unittest.TestCase):
         for item in routing_defaults:
             self.assertNotIn("route_feedback_drivers", item)
 
+    def test_stage_policy_candidate_merges_multiple_route_feedback_driver_blocks(self) -> None:
+        pack_dir = self.compile_research_pack()
+        review_path = pack_dir / "runtime" / "policy-reviews" / "synthetic-review.json"
+        review_path.parent.mkdir(parents=True, exist_ok=True)
+        review_path.write_text(
+            json.dumps(
+                {
+                    "pack_id": "research-prd",
+                    "work_unit_id": "test-research-pack",
+                    "policy_candidates": [
+                        {
+                            "kind": "routing-default",
+                            "intent": "make",
+                            "proposed_execution_class": "cheap",
+                            "route_feedback_drivers": {
+                                "status": "changed",
+                                "changed_cohort_keys": ["export"],
+                                "cohort_preview": {
+                                    "entries": ["export:local-fast->local-workhorse"],
+                                    "remaining_count": 0,
+                                    "text": "export:local-fast->local-workhorse",
+                                },
+                            },
+                        },
+                        {
+                            "kind": "routing-default",
+                            "intent": "verify",
+                            "proposed_execution_class": "standard",
+                            "route_feedback_drivers": {
+                                "status": "changed",
+                                "changed_cohort_keys": ["wiki"],
+                                "cohort_preview": {
+                                    "entries": ["wiki:local-fast->local-workhorse"],
+                                    "remaining_count": 0,
+                                    "text": "wiki:local-fast->local-workhorse",
+                                },
+                            },
+                        },
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        staged = self.run_cli(
+            "stage-policy-candidate",
+            pack_dir,
+            "--review",
+            review_path,
+            "--format",
+            "json",
+        )
+        self.assert_ok(staged)
+        candidate = json.loads(staged.stdout)
+        self.assertEqual(
+            ["export", "wiki"],
+            candidate["route_feedback_drivers"]["changed_cohort_keys"],
+        )
+        self.assertEqual(
+            "export:local-fast->local-workhorse,wiki:local-fast->local-workhorse",
+            candidate["route_feedback_drivers"]["cohort_preview"]["text"],
+        )
+
     def test_policy_candidate_lifecycle_can_activate_and_rollback_routing_override(self) -> None:
         pack_dir = self.compile_research_pack()
         home = self.personal_home()
