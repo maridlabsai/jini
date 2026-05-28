@@ -27,7 +27,7 @@
     "work_unit_id": { "type": "string" },
     "branch_id": { "type": "string" },
     "revision": { "type": "integer", "minimum": 1 },
-    "status": { "type": "string", "enum": ["draft", "reviewed", "approved", "superseded", "invalidated", "merged", "archived"] },
+    "status": { "type": "string", "enum": ["draft", "reviewed", "approved", "published", "superseded", "invalidated", "merged", "archived"] },
     "author_actor_id": { "type": "string" },
     "approver_actor_ids": { "type": "array", "items": { "type": "string" } },
     "created_at": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$" },
@@ -58,7 +58,7 @@
           "external_id": { "type": "string" },
           "external_url": { "type": "string" },
           "published_at": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$" },
-          "publication_status": { "type": "string", "enum": ["staged", "published", "failed"] },
+          "publication_status": { "type": "string", "enum": ["staged", "published", "created", "updated", "failed"] },
           "notes": { "type": "array", "items": { "type": "string" } }
         }
       }

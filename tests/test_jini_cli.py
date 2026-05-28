@@ -1693,6 +1693,53 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual(3, len(publication["records"]))
         self.assertTrue(publication["records"][0]["external_url"].startswith("https://github.com/acme/demo/issues/"))
 
+    def test_recovery_surfaces_latest_native_publication_links(self) -> None:
+        pack_dir = self.compile_research_pack()
+        gh = self.create_fake_gh_cli()
+        env = dict(os.environ)
+        env["PATH"] = f"{gh.parent}:{env.get('PATH', '')}"
+
+        publish = self.run_cli(
+            "publish-issues",
+            pack_dir,
+            "--adapter",
+            "github",
+            "--repository",
+            "acme/demo",
+            "--execute-native",
+            "--format",
+            "json",
+            env=env,
+        )
+        self.assert_ok(publish)
+        url = "https://github.com/acme/demo/issues/1"
+
+        status_text = self.run_cli("status", pack_dir)
+        self.assert_ok(status_text)
+        self.assertIn("PUBLISHED", status_text.stdout)
+        self.assertIn(url, status_text.stdout)
+
+        status_json = self.run_cli("status", pack_dir, "--format", "json")
+        self.assert_ok(status_json)
+        status_report = json.loads(status_json.stdout)
+        self.assertEqual(url, status_report["published_links"][0]["external_url"])
+        self.assertEqual("github-issues", status_report["published_links"][0]["scope"])
+
+        resume_json = self.run_cli("resume", pack_dir, "--format", "json", "--max-chars", "1600")
+        self.assert_ok(resume_json)
+        compact = json.loads(resume_json.stdout)
+        self.assertEqual(url, compact["publication_links"][0]["external_url"])
+
+        resume_text = self.run_cli("resume", pack_dir, "--max-chars", "1600")
+        self.assert_ok(resume_text)
+        self.assertIn("PUBLISHED", resume_text.stdout)
+        self.assertIn(url, resume_text.stdout)
+
+        continue_result = self.run_cli("continue", "--from", pack_dir)
+        self.assert_ok(continue_result)
+        self.assertIn("PUBLISHED", continue_result.stdout)
+        self.assertIn(url, continue_result.stdout)
+
     def test_execute_publish_plan_native_github_replay_is_upsert_safe(self) -> None:
         pack_dir = self.compile_research_pack()
         gh = self.create_fake_gh_cli()

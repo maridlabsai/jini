@@ -133,6 +133,10 @@ Each publication record MUST include:
 - `published_at`
 - `publication_status`
 
+Publication artifact status may be `published`. Publication record status may be
+`staged`, `published`, `created`, `updated`, or `failed` so local bridge
+publishers and native idempotent upserts can both report accurate outcomes.
+
 
 ### 2.10 Retro
 

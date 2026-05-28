@@ -7497,6 +7497,7 @@ def print_continue_preview(
     artifact_path: Path,
     *,
     pack_dir: Path | None = None,
+    publication_links: list[dict[str, Any]] | None = None,
     max_chars: int = 420,
 ) -> None:
     artifact_id = str(artifact.get("id", "")).strip() or "artifact"
@@ -7507,6 +7508,11 @@ def print_continue_preview(
     print(f"PATH   {display_path(artifact_path)}")
     print()
     print(preview)
+    if publication_links:
+        print()
+        print("PUBLISHED")
+        for item in publication_links:
+            print(f"  - {format_publication_link(item)}")
     if trimmed:
         show_command, open_command = build_continue_commands(artifact_id, pack_dir=pack_dir)
         print()
@@ -8633,6 +8639,10 @@ def build_memory_context(
     if steering_paths:
         resume_items.append("Steering docs: " + ", ".join(steering_paths[:3]))
 
+    publication_links = latest_publication_links(summary, limit=3)
+    if publication_links:
+        resume_items.append(f"Published: {format_publication_link(publication_links[0])}")
+
     return {
         "state_anchor": state,
         "recent_artifacts": recent_artifacts,
@@ -8640,6 +8650,7 @@ def build_memory_context(
         "stale_signals": stale_signals,
         "freshness": freshness,
         "resume_items": resume_items,
+        "publication_links": publication_links,
         "home": home_context,
         "steering_paths": steering_paths,
     }
@@ -8750,6 +8761,7 @@ def build_compact_context(
     repo_actions = repo_context.get("next_actions", [])[: max(1, max_items)]
     latest_run = latest_run_report_summary(pack_dir)
     latest_harvest = latest_harvest_report_summary(pack_dir)
+    publication_links = memory_context.get("publication_links", [])[: max(1, min(max_items, 3))]
 
     def shorten_path(path_text: Any) -> str:
         if not isinstance(path_text, str) or not path_text.strip():
@@ -8783,6 +8795,7 @@ def build_compact_context(
         "next_operation": summary.get("next_operation", ""),
         "recent_artifacts": compact_recent_artifacts,
         "resume_items": resume_items,
+        "publication_links": publication_links,
         "stale_signals": stale_signals,
         "home_memory": home_memory,
         "freshness": memory_context.get("freshness", [])[: max(1, max_items)],
@@ -8818,7 +8831,7 @@ def build_compact_context(
         return len(json.dumps(payload, sort_keys=True))
 
     def shrink_compact(payload: dict[str, Any]) -> bool:
-        for key in ("steering", "resume_items", "home_memory", "repo_actions", "stale_signals", "unresolved_tasks", "recent_artifacts", "freshness"):
+        for key in ("steering", "resume_items", "home_memory", "repo_actions", "stale_signals", "unresolved_tasks", "recent_artifacts", "freshness", "publication_links"):
             values = payload.get(key, [])
             if isinstance(values, list) and len(values) > 1:
                 payload[key] = values[:-1]
@@ -8867,6 +8880,7 @@ def build_compact_context(
         if compact_chars(compact) > max_chars:
             compact["recent_artifacts"] = compact["recent_artifacts"][:1]
             compact["resume_items"] = compact["resume_items"][:1]
+            compact["publication_links"] = compact.get("publication_links", [])[:1]
             compact["stale_signals"] = compact["stale_signals"][:1]
             compact["home_memory"] = compact["home_memory"][:1]
             compact["freshness"] = []
@@ -8973,6 +8987,10 @@ def print_compact_context(compact: dict[str, Any], *, heading: str = "RESUME") -
         print("REPO")
         for item in compact["repo_actions"]:
             print(f"  - {item}")
+    if compact.get("publication_links"):
+        print("PUBLISHED")
+        for item in compact["publication_links"]:
+            print(f"  - {format_publication_link(item)}")
     if compact.get("steering"):
         print("STEERING")
         for item in compact["steering"]:
@@ -10872,6 +10890,53 @@ def summarise_pack(pack_dir: Path, registry: dict[str, Any]) -> dict[str, Any]:
         "blockers": blockers,
         "evidence_doc": evidence_doc,
     }
+
+
+def latest_publication_links(summary: dict[str, Any], *, limit: int = 3) -> list[dict[str, Any]]:
+    publication_entry = summary["latest_by_type"].get("Publication")
+    if publication_entry is None:
+        return []
+    publication_path, publication_doc = publication_entry
+    scope = str(publication_doc.get("publication_scope", "")).strip()
+    revision = int(publication_doc.get("revision", 0) or 0)
+    links: list[dict[str, Any]] = []
+    seen_urls: set[str] = set()
+    for record in publication_doc.get("records", []):
+        if not isinstance(record, dict):
+            continue
+        external_url = str(record.get("external_url", "")).strip()
+        if not external_url or external_url in seen_urls:
+            continue
+        seen_urls.add(external_url)
+        links.append(
+            {
+                "scope": scope,
+                "artifact_id": str(publication_doc.get("artifact_id", "")).strip(),
+                "artifact_path": display_path(publication_path),
+                "revision": revision,
+                "adapter": str(record.get("adapter", "")).strip(),
+                "target_kind": str(record.get("target_kind", "")).strip(),
+                "source_ref": str(record.get("source_ref", "")).strip(),
+                "external_id": str(record.get("external_id", "")).strip(),
+                "external_url": external_url,
+                "status": str(record.get("publication_status", "")).strip(),
+                "published_at": str(record.get("published_at", "")).strip(),
+            }
+        )
+        if len(links) >= limit:
+            break
+    return links
+
+
+def format_publication_link(link: dict[str, Any]) -> str:
+    scope = str(link.get("scope", "")).strip() or "publication"
+    target = str(link.get("target_kind", "")).strip() or "target"
+    source_ref = str(link.get("source_ref", "")).strip()
+    status = str(link.get("status", "")).strip()
+    url = str(link.get("external_url", "")).strip()
+    source_suffix = f" {source_ref}" if source_ref else ""
+    status_suffix = f" [{status}]" if status else ""
+    return f"{scope} {target}{source_suffix} -> {url}{status_suffix}"
 
 
 def transition_blockers(summary: dict[str, Any], target_state: str) -> list[str]:
@@ -14397,6 +14462,12 @@ def print_pack_status(summary: dict[str, Any]) -> None:
             f"revision={artifact_doc.get('revision')}"
         )
 
+    publication_links = latest_publication_links(summary)
+    if publication_links:
+        print("PUBLISHED")
+        for item in publication_links:
+            print(f"  - {format_publication_link(item)}")
+
     if summary["missing_stage_required"]:
         print("STILL MISSING")
         for artifact_type in summary["missing_stage_required"]:
@@ -14498,6 +14569,7 @@ def build_outcome_view(
         },
         "current_focus": current_focus,
         "ready_now": ready_now,
+        "published_links": latest_publication_links(summary),
         "continue_with": [continue_command],
         "validation_errors": list(summary["validation_errors"]),
         "validation_warnings": list(summary["validation_warnings"]),
@@ -14554,6 +14626,7 @@ def build_outcome_view_from_projection(
         },
         "current_focus": current_focus,
         "ready_now": ready_now,
+        "published_links": [],
         "continue_with": [continue_command],
         "validation_errors": [],
         "validation_warnings": [
@@ -14629,6 +14702,7 @@ def build_compact_context_from_projection(
             for item in ready[:4]
         ],
         "resume_items": resume_items,
+        "publication_links": [],
         "stale_signals": ["saved session projection is being used because the original pack path is unavailable."],
         "home_memory": [],
         "freshness": [],
@@ -14699,6 +14773,11 @@ def print_outcome_view(report: dict[str, Any]) -> None:
         print("READY NOW")
         for item in ready_now:
             print(f"  {item.get('id', ''):<14} -> {item.get('show_command', '')}")
+    if report.get("published_links"):
+        print()
+        print("PUBLISHED")
+        for item in report.get("published_links", []):
+            print(f"  - {format_publication_link(item)}")
     if report.get("validation_warnings"):
         print()
         print("NOTES")
@@ -19558,10 +19637,12 @@ def main() -> int:
             if args.print_path:
                 print(display_path(artifact_path))
             else:
+                summary = summarise_pack(pack_dir, registry)
                 print_continue_preview(
                     artifact,
                     artifact_path,
                     pack_dir=pack_dir if args.path is not None else None,
+                    publication_links=latest_publication_links(summary),
                 )
         except (FileNotFoundError, OSError, TypeError, ValueError) as exc:
             if args.path is None:
