@@ -1335,7 +1335,13 @@ def build_lean_platform_metrics() -> dict[str, Any]:
         token_efficiency=dimensions.get("token-efficiency", {}),
         delivery_maturity=dimensions.get("delivery-maturity", {}),
     )
+    route_snapshot = build_local_runtime_route_snapshot()
     report["route_feedback_health"] = build_route_feedback_health_summary()
+    report["route_feedback_impact"] = build_route_feedback_impact_summary(
+        route_snapshot["route_evidence"],
+        route_snapshot["route_cost"],
+        route_snapshot["route_payload"],
+    )
     return report
 
 
@@ -1643,6 +1649,94 @@ def route_feedback_selection_delta(
         "feedback_rank": feedback_rank,
         "promoted_adapters": promoted,
         "demoted_adapters": demoted,
+    }
+
+
+def route_feedback_execution_class_for_cohort(cohort_key: str) -> str:
+    intent = str(cohort_key).strip().lower()
+    if intent in {"export", "issues", "wiki"}:
+        return "cheap"
+    if intent == "verify":
+        return "deep"
+    return "standard"
+
+
+def route_feedback_active_cohort_keys(route_payload: dict[str, Any]) -> list[str]:
+    feedback = route_payload.get("cohort_feedback", {}) if isinstance(route_payload, dict) else {}
+    if not isinstance(feedback, dict):
+        return []
+    cohort_keys: set[str] = set()
+    for adapter_feedback in feedback.values():
+        if not isinstance(adapter_feedback, dict):
+            continue
+        for cohort_key, row in adapter_feedback.items():
+            if isinstance(row, dict) and route_feedback_signal_count(row) > 0:
+                cohort_keys.add(str(cohort_key))
+    return sorted(cohort_keys)
+
+
+def build_route_feedback_impact_summary(
+    route_evidence: dict[str, Any],
+    route_cost: dict[str, Any],
+    route_payload: dict[str, Any],
+) -> dict[str, Any]:
+    active_cohorts = route_feedback_active_cohort_keys(route_payload)
+    if not active_cohorts:
+        return {
+            "status": "empty",
+            "active_cohort_count": 0,
+            "changed_selection_count": 0,
+            "cohorts": [],
+        }
+    if not isinstance(route_evidence, dict) or not route_evidence.get("available"):
+        return {
+            "status": "unavailable",
+            "active_cohort_count": len(active_cohorts),
+            "changed_selection_count": 0,
+            "cohorts": [],
+        }
+    cohorts: list[dict[str, Any]] = []
+    for cohort_key in active_cohorts:
+        execution_class = route_feedback_execution_class_for_cohort(cohort_key)
+        execution_route = select_measured_local_execution_route(
+            {"selected": {}, "fallbacks": []},
+            route_evidence,
+            route_cost,
+            route_payload,
+            execution_class=execution_class,
+            intent=cohort_key,
+        )
+        feedback_evidence = execution_route.get("feedback_evidence", {}) if isinstance(execution_route, dict) else {}
+        selection_delta = (
+            feedback_evidence.get("selection_delta", {})
+            if isinstance(feedback_evidence, dict)
+            else {}
+        )
+        if not isinstance(selection_delta, dict) or not selection_delta:
+            continue
+        cohorts.append(
+            {
+                "cohort_key": cohort_key,
+                "execution_class": execution_class,
+                "active_signal_count": int(feedback_evidence.get("total_signal_count", 0) or 0),
+                "baseline_selected_adapter": str(selection_delta.get("baseline_selected_adapter", "")).strip(),
+                "feedback_selected_adapter": str(selection_delta.get("feedback_selected_adapter", "")).strip(),
+                "selected_changed": bool(selection_delta.get("selected_changed")),
+                "baseline_rank": list(selection_delta.get("baseline_rank", [])),
+                "feedback_rank": list(selection_delta.get("feedback_rank", [])),
+                "promoted_adapters": list(selection_delta.get("promoted_adapters", [])),
+                "demoted_adapters": list(selection_delta.get("demoted_adapters", [])),
+            }
+        )
+    changed_selection_count = sum(1 for cohort in cohorts if cohort.get("selected_changed"))
+    status = "unavailable"
+    if cohorts:
+        status = "changed" if changed_selection_count else "observed"
+    return {
+        "status": status,
+        "active_cohort_count": len(active_cohorts),
+        "changed_selection_count": changed_selection_count,
+        "cohorts": cohorts,
     }
 
 
@@ -16740,9 +16834,16 @@ def build_outcome_view(
         max_rationale=2,
         include_rate_limits=True,
     )
+    route_snapshot = build_local_runtime_route_snapshot()
     route_feedback_health = build_route_feedback_health_summary()
+    route_feedback_impact = build_route_feedback_impact_summary(
+        route_snapshot["route_evidence"],
+        route_snapshot["route_cost"],
+        route_snapshot["route_payload"],
+    )
     runtime_readout = build_runtime_readout(recommendation, efficiency_posture=efficiency_posture)
     runtime_readout["route_feedback_health"] = route_feedback_health
+    runtime_readout["route_feedback_impact"] = route_feedback_impact
     return {
         "schema_version": "0.1.0",
         "view_type": "JiniOutcomeView",
@@ -16756,6 +16857,7 @@ def build_outcome_view(
         "efficiency_posture": efficiency_posture,
         "runtime_readout": runtime_readout,
         "route_feedback_health": route_feedback_health,
+        "route_feedback_impact": route_feedback_impact,
         "task_summary": {
             "done": int(task_summary.get("done", 0) or 0),
             "total": int(task_summary.get("total", 0) or 0),
@@ -17156,6 +17258,17 @@ def print_outcome_view(report: dict[str, Any]) -> None:
         action = route_feedback_health.get("recommended_action", {})
         if isinstance(action, dict) and action.get("command"):
             print(f"  action={action.get('command', '')}")
+        route_feedback_impact = report.get("route_feedback_impact", {})
+        if isinstance(route_feedback_impact, dict):
+            cohorts = route_feedback_impact.get("cohorts", [])
+            first_cohort = cohorts[0] if cohorts and isinstance(cohorts[0], dict) else {}
+            print(
+                "  "
+                f"impact changed={route_feedback_impact.get('changed_selection_count', 0)}/"
+                f"{route_feedback_impact.get('active_cohort_count', 0)} "
+                f"baseline={first_cohort.get('baseline_selected_adapter', 'n/a') or 'n/a'} "
+                f"feedback={first_cohort.get('feedback_selected_adapter', 'n/a') or 'n/a'}"
+            )
     missing_now = report.get("questions", {}).get("what_is_still_missing_now", [])
     missing_later = report.get("questions", {}).get("what_is_still_missing_later", [])
     print()

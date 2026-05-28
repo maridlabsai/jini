@@ -102,6 +102,19 @@ class LeanMetricsSupportTests(unittest.TestCase):
                         "command": "jini route-feedback --prune-expired"
                     },
                 },
+                "route_feedback_impact": {
+                    "status": "changed",
+                    "active_cohort_count": 1,
+                    "changed_selection_count": 1,
+                    "cohorts": [
+                        {
+                            "cohort_key": "export",
+                            "baseline_selected_adapter": "local-fast",
+                            "feedback_selected_adapter": "local-workhorse",
+                            "selected_changed": True,
+                        }
+                    ],
+                },
                 "cost_proxy": {
                     "dimension": "token-efficiency",
                     "current_score": 8.8,
@@ -125,6 +138,7 @@ class LeanMetricsSupportTests(unittest.TestCase):
         self.assertIn("RESUME   available=yes status=measured continue_chars=420 resume_chars=840 ratio=2.0 cheaper=continue", lines)
         self.assertIn("ROUTECOST available=yes status=measured basis=local-runtime-benchmark posture=zero-external-api-spend", lines)
         self.assertIn("ROUTEFEEDBACK status=stale active=0 expired=2 adapters=1 action=jini route-feedback --prune-expired", lines)
+        self.assertIn("ROUTEIMPACT status=changed changed=1/1 baseline=local-fast feedback=local-workhorse", lines)
         self.assertTrue(any("local-fast | recovered" in line for line in lines))
         self.assertTrue(any("cheapest=local-fast" in line for line in lines))
 

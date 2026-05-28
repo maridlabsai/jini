@@ -1059,13 +1059,25 @@ class JiniCliConformanceTests(unittest.TestCase):
                             "structured_reliability": "usable",
                             "benchmarked_at": "2026-05-21T19:00:00Z",
                         },
+                        "local-workhorse": {
+                            "status": "ok",
+                            "latency_ms": 190,
+                            "warm_latency_ms": 160,
+                            "cold_start_cost_ms": 30,
+                            "tokens_per_second": 22.5,
+                            "quality_class": "usable",
+                            "structured_reliability": "usable",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        },
                     },
                     "cohort_feedback": {
                         "local-fast": {
                             "export": {
                                 "outcome_replaced": 1,
+                                "not_useful": 1,
                                 "counter_last_observed_at": {
-                                    "outcome_replaced": "2026-01-01T00:00:00Z"
+                                    "outcome_replaced": "2026-01-01T00:00:00Z",
+                                    "not_useful": "2026-05-21T19:10:00Z",
                                 },
                             }
                         }
@@ -1080,15 +1092,22 @@ class JiniCliConformanceTests(unittest.TestCase):
         status_payload = json.loads(status_json.stdout)
         status_health = status_payload["route_feedback_health"]
         self.assertEqual("stale", status_health["status"])
-        self.assertEqual(0, status_health["active_signal_count"])
+        self.assertEqual(1, status_health["active_signal_count"])
         self.assertEqual(1, status_health["expired_signal_count"])
         self.assertEqual("jini route-feedback --prune-expired", status_health["recommended_action"]["command"])
         self.assertEqual(status_health, status_payload["runtime_readout"]["route_feedback_health"])
+        status_impact = status_payload["route_feedback_impact"]
+        self.assertEqual("changed", status_impact["status"])
+        self.assertEqual(1, status_impact["changed_selection_count"])
+        self.assertEqual(status_impact, status_payload["runtime_readout"]["route_feedback_impact"])
+        self.assertEqual("local-fast", status_impact["cohorts"][0]["baseline_selected_adapter"])
+        self.assertEqual("local-workhorse", status_impact["cohorts"][0]["feedback_selected_adapter"])
 
         status_text = self.run_cli("status", pack_dir)
         self.assert_ok(status_text)
         self.assertIn("LEARNING", status_text.stdout)
-        self.assertIn("route-feedback status=stale active=0 expired=1", status_text.stdout)
+        self.assertIn("route-feedback status=stale active=1 expired=1", status_text.stdout)
+        self.assertIn("impact changed=1/1 baseline=local-fast feedback=local-workhorse", status_text.stdout)
         self.assertIn("jini route-feedback --prune-expired", status_text.stdout)
 
         metrics_json = self.run_cli("metrics", "--format", "json")
@@ -1098,13 +1117,19 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("stale", metrics_health["status"])
         self.assertEqual(1, metrics_health["expired_signal_count"])
         self.assertEqual("jini route-feedback --prune-expired", metrics_health["recommended_action"]["command"])
+        metrics_impact = metrics_payload["route_feedback_impact"]
+        self.assertEqual("changed", metrics_impact["status"])
+        self.assertEqual(1, metrics_impact["changed_selection_count"])
+        self.assertEqual("local-fast", metrics_impact["cohorts"][0]["baseline_selected_adapter"])
+        self.assertEqual("local-workhorse", metrics_impact["cohorts"][0]["feedback_selected_adapter"])
 
         metrics_text = self.run_cli("metrics")
         self.assert_ok(metrics_text)
         self.assertIn(
-            "ROUTEFEEDBACK status=stale active=0 expired=1 adapters=1 action=jini route-feedback --prune-expired",
+            "ROUTEFEEDBACK status=stale active=1 expired=1 adapters=1 action=jini route-feedback --prune-expired",
             metrics_text.stdout,
         )
+        self.assertIn("ROUTEIMPACT status=changed changed=1/1 baseline=local-fast feedback=local-workhorse", metrics_text.stdout)
 
     def test_passive_route_outcome_feedback_is_captured_from_user_actions(self) -> None:
         pack_dir = self.compile_research_pack()
