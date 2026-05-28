@@ -615,6 +615,45 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue(compact["resume_items"])
         self.assertIn("saved session projection", compact["stale_signals"][0])
 
+    def test_pathless_resume_prefers_saved_focus_when_pack_is_missing(self) -> None:
+        pack_dir = self.compile_travel_pack()
+
+        focused = self.run_cli("show", "itinerary", "--from", pack_dir)
+        self.assert_ok(focused)
+
+        refresh = self.run_cli("status", pack_dir, "--format", "json")
+        self.assert_ok(refresh)
+
+        shutil.rmtree(pack_dir)
+        current_work = self.tmp / ".jini" / "current-work.json"
+        current_work.unlink()
+
+        result = self.run_cli("resume", "--format", "json")
+        self.assert_ok(result)
+        compact = json.loads(result.stdout)
+        self.assertEqual("itinerary", compact["current_focus"]["id"])
+        self.assertEqual("Itinerary", compact["current_focus"]["label"])
+        self.assertEqual("Itinerary", compact["recent_artifacts"][0]["artifact_type"])
+        self.assertTrue(any("Focused artifact: `Itinerary`" in item for item in compact["resume_items"]))
+
+    def test_pathless_resume_text_surfaces_saved_focus_when_pack_is_missing(self) -> None:
+        pack_dir = self.compile_travel_pack()
+
+        focused = self.run_cli("show", "itinerary", "--from", pack_dir)
+        self.assert_ok(focused)
+
+        refresh = self.run_cli("status", pack_dir, "--format", "json")
+        self.assert_ok(refresh)
+
+        shutil.rmtree(pack_dir)
+        current_work = self.tmp / ".jini" / "current-work.json"
+        current_work.unlink()
+
+        result = self.run_cli("resume")
+        self.assert_ok(result)
+        self.assertIn("FOCUS  itinerary", result.stdout)
+        self.assertIn("Focused artifact: `Itinerary` via `jini show itinerary`.", result.stdout)
+
     def test_pathless_open_falls_back_to_saved_session_snapshot_when_pack_is_missing(self) -> None:
         pack_dir = self.compile_travel_pack()
         shutil.rmtree(pack_dir)

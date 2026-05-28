@@ -8446,6 +8446,10 @@ def print_compact_context(compact: dict[str, Any], *, heading: str = "RESUME") -
             f"TOKENS est={token_budget.get('estimated_tokens', 0)} "
             f"chars={token_budget.get('estimated_chars', 0)} trimmed={token_budget.get('trimmed', False)}"
         )
+    current_focus = compact.get("current_focus", {})
+    focused_id = str(current_focus.get("id", "")).strip()
+    if focused_id:
+        print(f"FOCUS  {focused_id}")
     print(heading)
     for item in compact.get("resume_items", []):
         print(f"  - {item}")
@@ -13268,11 +13272,20 @@ def build_compact_context_from_projection(
 ) -> dict[str, Any]:
     projection = context.get("projection", {}) or {}
     chosen_intent = (intent or projection.get("next") or "resume-session").strip().lower()
-    ready = list(projection.get("ready", []))
+    ready = reorder_ready_items_by_focus(list(projection.get("ready", [])), projection)
     missing = list(projection.get("missing", []))
-    resume_items = [
-        f"Session anchor: `{context.get('state', '')}` with next operation `{projection.get('next', '')}`.",
-    ]
+    focused_artifact = resolve_projection_artifact_item(context, prefer_saved_focus=True)
+    resume_items = []
+    if focused_artifact is not None:
+        focused_artifact_id = str(focused_artifact.get("id", "")).strip()
+        focused_artifact_label = str(focused_artifact.get("label", "")).strip() or focused_artifact_id or "artifact"
+        if focused_artifact_id:
+            resume_items.append(
+                f"Focused artifact: `{focused_artifact_label}` via `jini show {focused_artifact_id}`."
+            )
+    resume_items.append(
+        f"Session anchor: `{context.get('state', '')}` with next operation `{projection.get('next', '')}`."
+    )
     if ready:
         resume_items.append(
             "Ready artifacts: " + ", ".join(str(item.get("id", "")).strip() for item in ready[:4] if str(item.get("id", "")).strip())
@@ -13295,6 +13308,24 @@ def build_compact_context_from_projection(
         "health": "session-only",
         "execution_class": execution_class,
         "next_operation": str(projection.get("next", "")),
+        "current_focus": (
+            {
+                "id": str(focused_artifact.get("id", "")).strip(),
+                "label": str(focused_artifact.get("label", "")).strip(),
+                "show_command": (
+                    f"{cli_invocation()} show {str(focused_artifact.get('id', '')).strip()}"
+                    if str(focused_artifact.get("id", "")).strip()
+                    else ""
+                ),
+                "open_command": (
+                    f"{cli_invocation()} open {str(focused_artifact.get('id', '')).strip()}"
+                    if str(focused_artifact.get("id", "")).strip()
+                    else ""
+                ),
+            }
+            if focused_artifact is not None
+            else {}
+        ),
         "recent_artifacts": [
             {
                 "artifact_type": str(item.get("label", "")).strip() or "artifact",
