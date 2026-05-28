@@ -476,7 +476,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("READY NOW", result.stdout)
         self.assertIn("CONTINUE", result.stdout)
         self.assertIn("jini continue", result.stdout)
-        self.assertIn("jini resume ", result.stdout)
+        self.assertNotIn("jini resume ", result.stdout)
 
     def test_example_sets_current_work_for_pathless_status_and_artifacts(self) -> None:
         example_output = self.tmp / "research-example"
@@ -2930,7 +2930,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("  - jini doctor --format json", result.stdout)
         self.assertIn("  - jini status packs/research-prd/examples/research-prd-v1", result.stdout)
         self.assertIn("  - jini continue --from packs/research-prd/examples/research-prd-v1", result.stdout)
-        self.assertIn("  - jini resume packs/research-prd/examples/research-prd-v1 --format json --max-chars 900", result.stdout)
+        self.assertIn("  - jini resume packs/research-prd/examples/research-prd-v1 --format json --max-chars 700", result.stdout)
         self.assertIn("RESUME   available=yes status=measured", result.stdout)
         self.assertIn("PROVIDER available=yes id=local-preview status=ok", result.stdout)
         self.assertIn("  label=Local preview", result.stdout)
@@ -2954,7 +2954,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("jini status packs/research-prd/examples/research-prd-v1", payload["command_samples"][2]["command"])
         self.assertEqual("jini continue --from packs/research-prd/examples/research-prd-v1", payload["command_samples"][3]["command"])
         self.assertEqual(
-            "jini resume packs/research-prd/examples/research-prd-v1 --format json --max-chars 900",
+            "jini resume packs/research-prd/examples/research-prd-v1 --format json --max-chars 700",
             payload["command_samples"][4]["command"],
         )
         self.assertTrue(all(item["exit_code"] == 0 for item in payload["command_samples"]))

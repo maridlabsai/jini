@@ -12914,11 +12914,6 @@ def build_outcome_view(
         if artifact_type not in summary["missing_stage_required"]
     ]
     continue_command = f"{cli_invocation()} continue"
-    resume_command = f"{cli_invocation()} resume"
-    if repo_path is not None:
-        repo_display = display_path(repo_path)
-        resume_command = f"{resume_command} --repo {repo_display}"
-    resume_command = f"{resume_command} --intent {summary['next_operation'].lower()} --max-chars 900"
     artifact_catalog = build_artifact_catalog(pack_dir, registry)
     ready_now = [
         {
@@ -12954,7 +12949,7 @@ def build_outcome_view(
             "what_is_still_missing_later": missing_later,
         },
         "ready_now": ready_now,
-        "continue_with": [continue_command, resume_command],
+        "continue_with": [continue_command],
         "validation_errors": list(summary["validation_errors"]),
         "validation_warnings": list(summary["validation_warnings"]),
     }
@@ -12984,7 +12979,7 @@ def build_outcome_view_from_projection(
     if repo_path is not None:
         repo_display = display_path(repo_path)
         resume_command = f"{resume_command} --repo {repo_display}"
-    resume_command = f"{resume_command} --intent {next_operation.lower()} --max-chars 900"
+    resume_command = f"{resume_command} --intent {next_operation.lower()} --max-chars 700"
 
     task_done = len(ready_now)
     continuation_saved_work = bool(projection.get("cost_posture", {}).get("continuation_saved_work"))

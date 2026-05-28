@@ -316,7 +316,7 @@ def collect_core_command_samples(root: Path, cli_path: Path) -> tuple[list[dict[
         sample, _ = sample_cli(["continue", "--from", "packs/research-prd/examples/research-prd-v1"])
         command_samples.append(sample)
         sample, _ = sample_cli(
-            ["resume", "packs/research-prd/examples/research-prd-v1", "--format", "json", "--max-chars", "900"]
+            ["resume", "packs/research-prd/examples/research-prd-v1", "--format", "json", "--max-chars", "700"]
         )
         command_samples.append(sample)
     return command_samples, provider_evidence

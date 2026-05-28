@@ -168,7 +168,7 @@ class LeanMetricsSupportTests(unittest.TestCase):
         sample = lean_metrics_support.build_resume_cost_sample(
             [
                 {"command": "jini continue --from pack", "exit_code": 0, "stdout_chars": 1200},
-                {"command": "jini resume pack --format json --max-chars 900", "exit_code": 0, "stdout_chars": 400},
+                {"command": "jini resume pack --format json --max-chars 700", "exit_code": 0, "stdout_chars": 400},
             ]
         )
 
