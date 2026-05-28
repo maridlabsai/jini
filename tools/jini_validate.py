@@ -12350,20 +12350,35 @@ def build_policy_review(
         "harvest-evidence": int(event_types.get("harvest-evidence", 0)),
     }
     coverage_gaps = [key for key, value in coverage.items() if value == 0]
+    route_feedback_drivers: dict[str, Any] = {}
+    if isinstance(route_feedback_impact, dict):
+        changed_cohort_keys = route_feedback_impact.get("changed_cohort_keys", [])
+        cohort_preview = route_feedback_impact.get("cohort_preview", {})
+        if isinstance(changed_cohort_keys, list) and isinstance(cohort_preview, dict) and changed_cohort_keys:
+            route_feedback_drivers = {
+                "status": str(route_feedback_impact.get("status", "")).strip(),
+                "changed_cohort_keys": [str(item).strip() for item in changed_cohort_keys if str(item).strip()],
+                "cohort_preview": {
+                    "entries": list(cohort_preview.get("entries", [])),
+                    "remaining_count": int(cohort_preview.get("remaining_count", 0) or 0),
+                    "text": str(cohort_preview.get("text", "")).strip(),
+                },
+            }
 
     policy_candidates: list[dict[str, Any]] = []
     for recommendation in backtest.get("policy_recommendations", []):
-        policy_candidates.append(
-            {
-                "kind": "routing-default",
-                "priority": 1,
-                "intent": recommendation["intent"],
-                "proposed_execution_class": recommendation["recommended_execution_class"],
-                "samples": recommendation["samples"],
-                "confidence": recommendation["success_rate"],
-                "rationale": recommendation["rationale"],
-            }
-        )
+        candidate = {
+            "kind": "routing-default",
+            "priority": 1,
+            "intent": recommendation["intent"],
+            "proposed_execution_class": recommendation["recommended_execution_class"],
+            "samples": recommendation["samples"],
+            "confidence": recommendation["success_rate"],
+            "rationale": recommendation["rationale"],
+        }
+        if route_feedback_drivers:
+            candidate["route_feedback_drivers"] = deepcopy(route_feedback_drivers)
+        policy_candidates.append(candidate)
 
     bounded_harvests = int(harvest_readiness.get("bounded", 0))
     ready_harvests = int(harvest_readiness.get("ready", 0))
@@ -12514,7 +12529,14 @@ def print_policy_review(review: dict[str, Any]) -> None:
     print("CANDIDATES")
     for candidate in review.get("policy_candidates", []):
         detail = candidate.get("proposed_rule") or candidate.get("proposed_execution_class") or ""
-        print(f"  - [{candidate.get('kind', '')}] {detail}")
+        line = f"  - [{candidate.get('kind', '')}] {detail}"
+        drivers = candidate.get("route_feedback_drivers", {})
+        if isinstance(drivers, dict):
+            preview = drivers.get("cohort_preview", {})
+            preview_text = preview.get("text", "") if isinstance(preview, dict) else ""
+            if preview_text:
+                line = f"{line} drivers={preview_text}"
+        print(line)
 
 
 def latest_policy_review_path(pack_dir: Path) -> Path | None:

@@ -3873,6 +3873,12 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue(review["policy_candidates"])
         self.assertTrue(any(item["kind"] == "routing-default" for item in review["policy_candidates"]))
         self.assertTrue(any(item["kind"] == "promotion-gate" for item in review["policy_candidates"]))
+        routing_default = next(item for item in review["policy_candidates"] if item["kind"] == "routing-default")
+        self.assertEqual(["export", "wiki"], routing_default["route_feedback_drivers"]["changed_cohort_keys"])
+        self.assertEqual(
+            "export:local-fast->local-workhorse,wiki:local-fast->local-workhorse",
+            routing_default["route_feedback_drivers"]["cohort_preview"]["text"],
+        )
         self.assertEqual("changed", review["route_feedback_impact"]["status"])
         self.assertEqual(["export", "wiki"], review["route_feedback_impact"]["changed_cohort_keys"])
         self.assertEqual(
@@ -3883,6 +3889,10 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(review_text)
         self.assertIn(
             "IMPACT changed=2/2 cohorts=export:local-fast->local-workhorse,wiki:local-fast->local-workhorse action=jini review-policy",
+            review_text.stdout,
+        )
+        self.assertIn(
+            "drivers=export:local-fast->local-workhorse,wiki:local-fast->local-workhorse",
             review_text.stdout,
         )
         events = self.run_cli("show-learning-events", pack_dir, "--format", "json")
