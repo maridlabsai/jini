@@ -674,6 +674,75 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("export", resume_runtime["reason"])
         self.assertLessEqual(compact["token_budget"]["estimated_chars"], 900)
 
+    def test_runtime_readouts_surface_measured_local_route_evidence(self) -> None:
+        pack_dir = self.compile_research_pack()
+        state_root = self.tmp / ".jini"
+        state_root.mkdir(parents=True, exist_ok=True)
+        (state_root / "local-runtime-capabilities.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.4.0",
+                    "context_type": "JiniLocalRuntimeCapabilities",
+                    "captured_at": "2026-05-21T19:00:00Z",
+                    "local_runtime_class": "local-ollama",
+                    "adapters": {
+                        "local-workhorse": {
+                            "status": "ok",
+                            "latency_ms": 180,
+                            "warm_latency_ms": 150,
+                            "cold_start_cost_ms": 30,
+                            "tokens_per_second": 22.5,
+                            "quality_class": "strong",
+                            "structured_reliability": "strong",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        },
+                        "local-fast": {
+                            "status": "degraded",
+                            "latency_ms": 95,
+                            "warm_latency_ms": 90,
+                            "cold_start_cost_ms": 5,
+                            "tokens_per_second": 38.2,
+                            "quality_class": "usable",
+                            "structured_reliability": "usable",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        },
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        recommendation_result = self.run_cli("recommend-execution", pack_dir, "--format", "json")
+        self.assert_ok(recommendation_result)
+        recommendation = json.loads(recommendation_result.stdout)
+        self.assertTrue(recommendation["route_evidence"]["available"])
+        self.assertEqual("local-ollama", recommendation["route_evidence"]["local_runtime_class"])
+        self.assertEqual("measured", recommendation["route_cost"]["status"])
+        self.assertEqual("local-fast", recommendation["route_cost"]["cheapest_ready_adapter"]["adapter_id"])
+
+        status_result = self.run_cli("status", pack_dir, "--format", "json")
+        self.assert_ok(status_result)
+        status_readout = json.loads(status_result.stdout)["runtime_readout"]
+        self.assertEqual("local-ollama", status_readout["route_evidence"]["local_runtime_class"])
+        self.assertEqual(2, status_readout["route_evidence"]["ready_adapter_count"])
+        self.assertEqual("measured", status_readout["route_evidence"]["cost_status"])
+        self.assertEqual("zero-external-api-spend", status_readout["route_evidence"]["cost_posture"])
+        self.assertEqual("local-fast", status_readout["route_evidence"]["cheapest_ready_adapter"])
+        self.assertIn("local-fast", status_readout["reason"])
+
+        resume_result = self.run_cli(
+            "resume",
+            pack_dir,
+            "--format",
+            "json",
+            "--max-chars",
+            "1100",
+        )
+        self.assert_ok(resume_result)
+        resume_readout = json.loads(resume_result.stdout)["runtime_readout"]
+        self.assertEqual("local-ollama", resume_readout["route_evidence"]["local_runtime_class"])
+        self.assertEqual("local-fast", resume_readout["route_evidence"]["cheapest_ready_adapter"])
+
     def test_status_surfaces_turn_record_and_progress_frame(self) -> None:
         pack_dir = self.compile_research_pack()
 

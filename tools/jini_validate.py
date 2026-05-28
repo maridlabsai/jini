@@ -50,6 +50,8 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for older Python
 try:
     from .lean_metrics_support import (
         build_lean_platform_report,
+        build_route_cost,
+        load_route_report,
         render_lean_platform_metrics,
     )
     from .session_core import build_canonical_session
@@ -64,6 +66,8 @@ try:
 except ImportError:  # pragma: no cover - script execution path
     from lean_metrics_support import (
         build_lean_platform_report,
+        build_route_cost,
+        load_route_report,
         render_lean_platform_metrics,
     )
     from session_core import build_canonical_session
@@ -1316,6 +1320,56 @@ def build_lean_platform_metrics() -> dict[str, Any]:
 def print_lean_platform_metrics(report: dict[str, Any]) -> None:
     for line in render_lean_platform_metrics(report):
         print(line)
+
+
+def build_local_runtime_route_snapshot() -> dict[str, Any]:
+    route_evidence, _route_payload = load_route_report(session_state_root(), display_path)
+    return {
+        "route_evidence": route_evidence,
+        "route_cost": build_route_cost(route_evidence),
+    }
+
+
+def summarize_local_runtime_route(
+    route_evidence: dict[str, Any],
+    route_cost: dict[str, Any],
+) -> str:
+    if not isinstance(route_evidence, dict) or not route_evidence.get("available"):
+        return ""
+    runtime_class = str(route_evidence.get("local_runtime_class", "")).strip() or "local-runtime"
+    ready_count = int(route_evidence.get("ready_adapter_count", 0) or 0)
+    adapter_count = int(route_evidence.get("adapter_count", 0) or 0)
+    cheapest = route_cost.get("cheapest_ready_adapter") if isinstance(route_cost, dict) else None
+    cheapest_id = str(cheapest.get("adapter_id", "")).strip() if isinstance(cheapest, dict) else ""
+    posture = str(route_cost.get("posture", "")).strip() if isinstance(route_cost, dict) else ""
+    if cheapest_id:
+        return (
+            f"Measured local runtime `{runtime_class}` has {ready_count}/{adapter_count} ready adapter(s); "
+            f"cheapest ready adapter `{cheapest_id}` keeps posture `{posture or 'measured'}`."
+        )
+    return f"Measured local runtime `{runtime_class}` has {ready_count}/{adapter_count} ready adapter(s)."
+
+
+def compact_route_evidence_for_readout(
+    route_evidence: dict[str, Any],
+    route_cost: dict[str, Any],
+) -> dict[str, Any]:
+    if not isinstance(route_evidence, dict) or not route_evidence.get("available"):
+        return {}
+    compact = {
+        "available": True,
+        "local_runtime_class": str(route_evidence.get("local_runtime_class", "")).strip(),
+        "adapter_count": int(route_evidence.get("adapter_count", 0) or 0),
+        "ready_adapter_count": int(route_evidence.get("ready_adapter_count", 0) or 0),
+    }
+    if isinstance(route_cost, dict):
+        compact["cost_status"] = str(route_cost.get("status", "")).strip()
+        compact["cost_basis"] = str(route_cost.get("basis", "")).strip()
+        compact["cost_posture"] = str(route_cost.get("posture", "")).strip()
+        cheapest = route_cost.get("cheapest_ready_adapter")
+        if isinstance(cheapest, dict) and str(cheapest.get("adapter_id", "")).strip():
+            compact["cheapest_ready_adapter"] = str(cheapest.get("adapter_id", "")).strip()
+    return compact
 
 
 def golden_benchmark_report_dir() -> Path:
@@ -14793,6 +14847,14 @@ def recommend_execution(
     rationale.append(
         f"Runtime guidance prefers `{runtime_guidance['selected']['id']}` for portable pack guidance surfaces"
     )
+    route_snapshot = build_local_runtime_route_snapshot()
+    route_evidence = route_snapshot["route_evidence"]
+    route_cost = route_snapshot["route_cost"]
+    recommendation["route_evidence"] = route_evidence
+    recommendation["route_cost"] = route_cost
+    local_route_reason = summarize_local_runtime_route(route_evidence, route_cost)
+    if local_route_reason:
+        rationale.append(local_route_reason)
     return recommendation
 
 
@@ -14873,7 +14935,7 @@ def build_runtime_readout(
         route_id = str(selected_runtime.get("id", "")).strip()
     if not route_id and isinstance(route, dict):
         route_id = str(route.get("provider_id", "") or route.get("id", "")).strip()
-    return {
+    readout = {
         "selection_mode": selection_mode,
         "route": route_id,
         "model": str(model if model is not None else configured_model_readout()).strip() or "auto",
@@ -14881,6 +14943,16 @@ def build_runtime_readout(
         "context_policy": str(posture.get("context_policy", "")).strip(),
         "reason": reason,
     }
+    if isinstance(recommendation, dict):
+        route_evidence = recommendation.get("route_evidence", {})
+        route_cost = recommendation.get("route_cost", {})
+        compact_route_evidence = compact_route_evidence_for_readout(route_evidence, route_cost)
+        if compact_route_evidence:
+            readout["route_evidence"] = compact_route_evidence
+            local_route_reason = summarize_local_runtime_route(route_evidence, route_cost)
+            if local_route_reason:
+                readout["reason"] = local_route_reason
+    return readout
 
 
 def materialize_compile_outputs(pack_dir: Path, registry: dict[str, Any]) -> list[str]:
