@@ -19,6 +19,10 @@ quick_links:
 
 <p class="page-lead">Jini is for the awkward middle of work: after the meeting, before the handoff, before the recommendation, and before calling something done. It should reduce stress, not add process.</p>
 
+<p class="page-lead"><code>jini</code> is the front door. Use <code>Open</code> when you need the current artifact, and use <code>Plan</code> when the work needs structure before drafting.</p>
+
+`jini` is the front door. `Open` shows the current artifact. `Plan` slows down and structures the work before drafting.
+
 <div class="section-card">
   <span class="section-kicker">Start here</span>
   <h2>The shortest first run</h2>

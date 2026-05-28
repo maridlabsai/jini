@@ -3,6 +3,8 @@ title: Jini
 description: Free orchestration for AI work across providers today. Pay only when Jini can prove it saves money or keeps work moving.
 ---
 
+**In plain words:** Jini helps turn rough AI work into a follow-up, readiness check, or decision memo you can actually hand to someone else.
+
 <div class="hero-panel hero-panel-marketing">
   <p class="hero-kicker">AI work that has to survive week two, not just answer once.</p>
   <h1 class="hero-title">Turn messy AI work into something you can actually send.</h1>
