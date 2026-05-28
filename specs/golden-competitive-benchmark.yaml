@@ -498,6 +498,43 @@ scenarios:
           ]
         path: "token_strategy.reused_context_surfaces"
         contains: "runtime-handoff"
+      - id: artifact-rewrite-creates-version
+        command:
+          [
+            "rewrite",
+            "checklist",
+            "tasks",
+            "--from",
+            "{scenario_root}/research-pack",
+            "--format",
+            "json",
+          ]
+        path: "result_type"
+        equals: "JiniArtifactRewrite"
+      - id: artifact-versions-list-rewrite
+        command:
+          [
+            "versions",
+            "tasks",
+            "--from",
+            "{scenario_root}/research-pack",
+            "--format",
+            "json",
+          ]
+        path: "versions"
+        contains: "rewrite:checklist"
+      - id: artifact-undo-restores-version
+        command:
+          [
+            "undo",
+            "tasks",
+            "--from",
+            "{scenario_root}/research-pack",
+            "--format",
+            "json",
+          ]
+        path: "result_type"
+        equals: "JiniArtifactUndo"
 
   - id: first-minute-adoption
     label: First-minute adoption truth

@@ -720,6 +720,57 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(open_result)
         self.assertIn(str((pack_dir / "views" / "itinerary.md").resolve()), open_result.stdout.strip())
 
+    def test_rewrite_versions_and_undo_restore_current_artifact(self) -> None:
+        pack_dir = self.compile_research_pack()
+        artifact_path = pack_dir / "views" / "tasks.md"
+        original_text = artifact_path.read_text(encoding="utf-8")
+        versions_root = pack_dir / "runtime" / "artifact-versions"
+
+        initial_versions = self.run_cli("versions", "tasks", "--from", pack_dir, "--format", "json")
+        self.assert_ok(initial_versions)
+        self.assertEqual(0, json.loads(initial_versions.stdout)["version_count"])
+        self.assertFalse(versions_root.exists())
+
+        rewrite = self.run_cli(
+            "rewrite",
+            "checklist",
+            "tasks",
+            "--from",
+            pack_dir,
+            "--format",
+            "json",
+        )
+        self.assert_ok(rewrite)
+
+        rewrite_report = json.loads(rewrite.stdout)
+        self.assertEqual("JiniArtifactRewrite", rewrite_report["result_type"])
+        self.assertEqual("tasks", rewrite_report["artifact_id"])
+        self.assertEqual("checklist", rewrite_report["shortcut"])
+        self.assertTrue(Path(rewrite_report["snapshot_path"]).exists())
+        rewritten_text = artifact_path.read_text(encoding="utf-8")
+        self.assertNotEqual(original_text, rewritten_text)
+        self.assertIn("- [ ]", rewritten_text)
+
+        versions = self.run_cli("versions", "tasks", "--from", pack_dir, "--format", "json")
+        self.assert_ok(versions)
+        versions_report = json.loads(versions.stdout)
+        self.assertEqual("JiniArtifactVersions", versions_report["result_type"])
+        self.assertEqual("tasks", versions_report["artifact_id"])
+        self.assertEqual(1, versions_report["version_count"])
+        self.assertEqual(rewrite_report["snapshot_id"], versions_report["versions"][0]["snapshot_id"])
+
+        versions_text = self.run_cli("versions", "tasks", "--from", pack_dir)
+        self.assert_ok(versions_text)
+        self.assertIn("VERSIONS", versions_text.stdout)
+        self.assertIn("rewrite:checklist", versions_text.stdout)
+
+        undo = self.run_cli("undo", "tasks", "--from", pack_dir, "--format", "json")
+        self.assert_ok(undo)
+        undo_report = json.loads(undo.stdout)
+        self.assertEqual("JiniArtifactUndo", undo_report["result_type"])
+        self.assertEqual(rewrite_report["snapshot_id"], undo_report["restored_snapshot_id"])
+        self.assertEqual(original_text, artifact_path.read_text(encoding="utf-8"))
+
     def test_pathless_status_and_open_can_resume_from_canonical_session_pointer(self) -> None:
         pack_dir = self.compile_travel_pack()
         current_work = self.tmp / ".jini" / "current-work.json"

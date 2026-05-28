@@ -7463,6 +7463,284 @@ def persist_projection_focus(pack_dir: Path, artifact: dict[str, Any]) -> None:
     store.save(session, projection=projection, source="artifact-focus")
 
 
+def artifact_versions_root(pack_dir: Path, *, create: bool = True) -> Path:
+    root = pack_dir / "runtime" / "artifact-versions"
+    if create:
+        root.mkdir(parents=True, exist_ok=True)
+    return root
+
+
+def artifact_versions_ledger_path(pack_dir: Path, *, create: bool = True) -> Path:
+    return artifact_versions_root(pack_dir, create=create) / "ledger.jsonl"
+
+
+def read_artifact_version_entries(
+    pack_dir: Path,
+    *,
+    artifact_id: str | None = None,
+) -> list[dict[str, Any]]:
+    ledger_path = artifact_versions_ledger_path(pack_dir, create=False)
+    if not ledger_path.exists():
+        return []
+    entries: list[dict[str, Any]] = []
+    for line in ledger_path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        try:
+            entry = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(entry, dict):
+            continue
+        if artifact_id is not None and str(entry.get("artifact_id", "")) != artifact_id:
+            continue
+        entries.append(entry)
+    return entries
+
+
+def write_artifact_version_entry(pack_dir: Path, entry: dict[str, Any]) -> None:
+    ledger_path = artifact_versions_ledger_path(pack_dir)
+    prior = ledger_path.read_text(encoding="utf-8") if ledger_path.exists() else ""
+    ledger_path.write_text(prior + json.dumps(entry, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def create_artifact_snapshot(
+    pack_dir: Path,
+    artifact: dict[str, Any],
+    *,
+    reason: str,
+) -> dict[str, Any]:
+    artifact_path = Path(str(artifact["resolved_path"]))
+    if not artifact_path.exists():
+        raise FileNotFoundError(f"Artifact path does not exist: {display_path(artifact_path)}")
+    content = artifact_path.read_bytes()
+    artifact_id = str(artifact.get("id", "")).strip() or artifact_path.stem
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+    snapshot_id = f"{stamp}-{slugify(artifact_id)}"
+    snapshot_dir = artifact_versions_root(pack_dir) / "snapshots"
+    snapshot_dir.mkdir(parents=True, exist_ok=True)
+    snapshot_path = snapshot_dir / f"{snapshot_id}.md"
+    snapshot_path.write_bytes(content)
+    entry = {
+        "schema_version": "0.1.0",
+        "snapshot_id": snapshot_id,
+        "created_at": now_utc(),
+        "artifact_id": artifact_id,
+        "artifact_label": str(artifact.get("label", "")).strip(),
+        "artifact_path": str(artifact_path.resolve()),
+        "snapshot_path": str(snapshot_path.resolve()),
+        "reason": reason,
+        "sha256": hashlib.sha256(content).hexdigest(),
+        "bytes": len(content),
+    }
+    write_artifact_version_entry(pack_dir, entry)
+    return entry
+
+
+def artifact_rewrite_transform(text: str, *, shortcut: str, label: str) -> str:
+    lines = text.splitlines()
+    if shortcut == "checklist":
+        transformed: list[str] = []
+        for line in lines:
+            stripped = line.strip()
+            indent = line[: len(line) - len(line.lstrip())]
+            if not stripped or stripped.startswith("#"):
+                transformed.append(line)
+            elif stripped.startswith("- ["):
+                transformed.append(line)
+            elif stripped.startswith("- "):
+                transformed.append(f"{indent}- [ ] {stripped[2:].strip()}")
+            elif re.match(r"^\d+[.)]\s+", stripped):
+                item_text = re.sub(r"^\d+[.)]\s+", "", stripped).strip()
+                transformed.append(f"{indent}- [ ] {item_text}")
+            else:
+                transformed.append(f"{indent}- [ ] {stripped}")
+        return "\n".join(transformed).rstrip() + "\n"
+
+    heading = next((line for line in lines if line.strip().startswith("#")), f"# {label}")
+    content = [line.strip() for line in lines if line.strip() and not line.strip().startswith("#")]
+    normalized = [
+        re.sub(r"^[-*]\s+", "", item)
+        for item in content
+    ]
+    normalized = [item for item in normalized if item]
+
+    if shortcut == "shorter":
+        kept = normalized[:6]
+        body = [heading, "", "## Short Version"]
+        body.extend(f"- {item}" for item in kept)
+        return "\n".join(body).rstrip() + "\n"
+
+    if shortcut == "executive":
+        kept = normalized[:5]
+        body = [
+            heading,
+            "",
+            "## Executive Summary",
+            *(f"- {item}" for item in kept),
+            "",
+            "## Decision Needed",
+            "- Confirm the next action, owner, and verification proof.",
+        ]
+        return "\n".join(body).rstrip() + "\n"
+
+    raise ValueError(f"Unsupported rewrite shortcut {shortcut!r}")
+
+
+def rewrite_artifact(
+    pack_dir: Path,
+    registry: dict[str, Any],
+    *,
+    shortcut: str,
+    artifact_name: str | None = None,
+) -> dict[str, Any]:
+    artifact = (
+        resolve_artifact_item(pack_dir, registry, artifact_name)
+        if artifact_name
+        else resolve_default_artifact_item(pack_dir, registry)
+    )
+    artifact_path = Path(str(artifact["resolved_path"]))
+    if artifact_path.suffix.lower() != ".md":
+        raise ValueError("Rewrite shortcuts only support markdown artifacts.")
+    snapshot = create_artifact_snapshot(pack_dir, artifact, reason=f"rewrite:{shortcut}")
+    original_text = artifact_path.read_text(encoding="utf-8")
+    rewritten = artifact_rewrite_transform(
+        original_text,
+        shortcut=shortcut,
+        label=str(artifact.get("label", artifact.get("id", "Artifact"))),
+    )
+    artifact_path.write_text(rewritten, encoding="utf-8")
+    persist_projection_focus(pack_dir, artifact)
+    append_learning_event(
+        "artifact-rewrite",
+        {
+            "pack_id": build_artifact_catalog(pack_dir, registry).get("pack_id", ""),
+            "artifact_id": str(artifact.get("id", "")),
+            "shortcut": shortcut,
+            "snapshot_id": snapshot["snapshot_id"],
+        },
+        pack_dir=pack_dir,
+    )
+    cli = cli_invocation()
+    return {
+        "schema_version": "0.1.0",
+        "result_type": "JiniArtifactRewrite",
+        "generated_at": now_utc(),
+        "pack_dir": display_path(pack_dir),
+        "artifact_id": str(artifact.get("id", "")),
+        "artifact_label": str(artifact.get("label", "")),
+        "shortcut": shortcut,
+        "artifact_path": str(artifact_path.resolve()),
+        "snapshot_id": snapshot["snapshot_id"],
+        "snapshot_path": snapshot["snapshot_path"],
+        "bytes_before": len(original_text.encode("utf-8")),
+        "bytes_after": len(rewritten.encode("utf-8")),
+        "versions_command": f"{cli} versions {artifact.get('id', '')} --from {shlex.quote(display_path(pack_dir))}",
+        "undo_command": f"{cli} undo {artifact.get('id', '')} --from {shlex.quote(display_path(pack_dir))}",
+    }
+
+
+def list_artifact_versions(
+    pack_dir: Path,
+    registry: dict[str, Any],
+    *,
+    artifact_name: str | None = None,
+) -> dict[str, Any]:
+    artifact = (
+        resolve_artifact_item(pack_dir, registry, artifact_name)
+        if artifact_name
+        else resolve_default_artifact_item(pack_dir, registry)
+    )
+    artifact_id = str(artifact.get("id", "")).strip()
+    versions = read_artifact_version_entries(pack_dir, artifact_id=artifact_id)
+    return {
+        "schema_version": "0.1.0",
+        "result_type": "JiniArtifactVersions",
+        "generated_at": now_utc(),
+        "pack_dir": display_path(pack_dir),
+        "artifact_id": artifact_id,
+        "artifact_label": str(artifact.get("label", "")),
+        "version_count": len(versions),
+        "versions": versions,
+    }
+
+
+def undo_artifact(
+    pack_dir: Path,
+    registry: dict[str, Any],
+    *,
+    artifact_name: str | None = None,
+) -> dict[str, Any]:
+    artifact = (
+        resolve_artifact_item(pack_dir, registry, artifact_name)
+        if artifact_name
+        else resolve_default_artifact_item(pack_dir, registry)
+    )
+    artifact_id = str(artifact.get("id", "")).strip()
+    versions = read_artifact_version_entries(pack_dir, artifact_id=artifact_id)
+    if not versions:
+        raise ValueError(f"No restorable versions exist for artifact `{artifact_id}`.")
+    snapshot = versions[-1]
+    snapshot_path = Path(str(snapshot.get("snapshot_path", "")))
+    if not snapshot_path.exists():
+        raise FileNotFoundError(f"Snapshot path does not exist: {display_path(snapshot_path)}")
+    artifact_path = Path(str(artifact["resolved_path"]))
+    artifact_path.write_bytes(snapshot_path.read_bytes())
+    persist_projection_focus(pack_dir, artifact)
+    append_learning_event(
+        "artifact-undo",
+        {
+            "pack_id": build_artifact_catalog(pack_dir, registry).get("pack_id", ""),
+            "artifact_id": artifact_id,
+            "snapshot_id": snapshot["snapshot_id"],
+        },
+        pack_dir=pack_dir,
+    )
+    return {
+        "schema_version": "0.1.0",
+        "result_type": "JiniArtifactUndo",
+        "generated_at": now_utc(),
+        "pack_dir": display_path(pack_dir),
+        "artifact_id": artifact_id,
+        "artifact_label": str(artifact.get("label", "")),
+        "artifact_path": str(artifact_path.resolve()),
+        "restored_snapshot_id": snapshot["snapshot_id"],
+        "snapshot_path": str(snapshot_path.resolve()),
+    }
+
+
+def print_artifact_rewrite(report: dict[str, Any]) -> None:
+    print(f"REWROTE {report.get('artifact_id', '')}")
+    print(f"MODE    {report.get('shortcut', '')}")
+    print(f"VERSION {report.get('snapshot_id', '')}")
+    print()
+    print("UNDO")
+    print(f"  - {report.get('undo_command', '')}")
+    print("VERSIONS")
+    print(f"  - {report.get('versions_command', '')}")
+
+
+def print_artifact_versions(report: dict[str, Any]) -> None:
+    print(f"VERSIONS {report.get('artifact_id', '')}")
+    versions = report.get("versions", [])
+    if not versions:
+        print("  No restorable versions yet.")
+        return
+    for entry in versions:
+        print(
+            "  - "
+            f"{entry.get('snapshot_id', '')} "
+            f"{entry.get('created_at', '')} "
+            f"{entry.get('reason', '')}"
+        )
+
+
+def print_artifact_undo(report: dict[str, Any]) -> None:
+    print(f"RESTORED {report.get('artifact_id', '')}")
+    print(f"VERSION  {report.get('restored_snapshot_id', '')}")
+    print(f"PATH     {report.get('artifact_path', '')}")
+
+
 def print_projection_artifact_snapshot(
     context: dict[str, Any],
     artifact: dict[str, Any],
@@ -7626,6 +7904,8 @@ PUBLIC_HELP_GROUPS: list[tuple[str, list[tuple[str, str]]]] = [
             ("jini continue", "Preview the next useful artifact without rebuilding the work state."),
             ("jini open", "Open the current artifact or human-facing view."),
             ("jini show", "Print an artifact or ready-now view in the terminal."),
+            ("jini rewrite checklist", "Refine the current markdown artifact after saving a restorable version."),
+            ("jini versions / undo", "Inspect or restore recent artifact versions without using file paths or git."),
             ("jini resume", "Re-enter the latest active work cheaply."),
             ("jini run --repo /path/to/repo --harness codex", "Execute the work on a chosen harness with explicit consent."),
         ],
@@ -18108,6 +18388,58 @@ def main() -> int:
         help="Print the resolved artifact path instead of rendering it",
     )
 
+    rewrite_parser = subparsers.add_parser(
+        "rewrite",
+        help="Rewrite the current markdown artifact with a deterministic shortcut and save a restorable version first",
+    )
+    rewrite_parser.add_argument("shortcut", choices=["shorter", "executive", "checklist"])
+    rewrite_parser.add_argument(
+        "artifact",
+        nargs="?",
+        help="Optional artifact or view id; defaults to the current focused artifact",
+    )
+    rewrite_parser.add_argument("--from", dest="path", type=Path, help="Optional pack path; defaults to the current Jini work")
+    rewrite_parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for the rewrite result",
+    )
+
+    versions_parser = subparsers.add_parser(
+        "versions",
+        help="List restorable versions for the current artifact",
+    )
+    versions_parser.add_argument(
+        "artifact",
+        nargs="?",
+        help="Optional artifact or view id; defaults to the current focused artifact",
+    )
+    versions_parser.add_argument("--from", dest="path", type=Path, help="Optional pack path; defaults to the current Jini work")
+    versions_parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for the version list",
+    )
+
+    undo_parser = subparsers.add_parser(
+        "undo",
+        help="Restore the latest saved version for the current artifact",
+    )
+    undo_parser.add_argument(
+        "artifact",
+        nargs="?",
+        help="Optional artifact or view id; defaults to the current focused artifact",
+    )
+    undo_parser.add_argument("--from", dest="path", type=Path, help="Optional pack path; defaults to the current Jini work")
+    undo_parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for the undo result",
+    )
+
     recommend_execution_parser = subparsers.add_parser(
         "recommend-execution",
         help="Recommend the execution class, context posture, and rate-limit strategy for a pack",
@@ -19878,6 +20210,61 @@ def main() -> int:
             failing_path = args.path if args.path is not None else Path("<current-work>")
             print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
             return 1
+        return 0
+
+    if args.command == "rewrite":
+        try:
+            pack_dir = resolve_context_pack_dir(args.path, registry, command_label="rewrite")
+            report = rewrite_artifact(
+                pack_dir,
+                registry,
+                shortcut=args.shortcut,
+                artifact_name=args.artifact,
+            )
+        except (FileNotFoundError, OSError, TypeError, ValueError) as exc:
+            failing_path = args.path if args.path is not None else Path("<current-work>")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
+            return 1
+        if args.format == "json":
+            print(json.dumps(report, indent=2))
+        else:
+            print_artifact_rewrite(report)
+        return 0
+
+    if args.command == "versions":
+        try:
+            pack_dir = resolve_context_pack_dir(args.path, registry, command_label="versions")
+            report = list_artifact_versions(
+                pack_dir,
+                registry,
+                artifact_name=args.artifact,
+            )
+        except (FileNotFoundError, OSError, TypeError, ValueError) as exc:
+            failing_path = args.path if args.path is not None else Path("<current-work>")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
+            return 1
+        if args.format == "json":
+            print(json.dumps(report, indent=2))
+        else:
+            print_artifact_versions(report)
+        return 0
+
+    if args.command == "undo":
+        try:
+            pack_dir = resolve_context_pack_dir(args.path, registry, command_label="undo")
+            report = undo_artifact(
+                pack_dir,
+                registry,
+                artifact_name=args.artifact,
+            )
+        except (FileNotFoundError, OSError, TypeError, ValueError) as exc:
+            failing_path = args.path if args.path is not None else Path("<current-work>")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
+            return 1
+        if args.format == "json":
+            print(json.dumps(report, indent=2))
+        else:
+            print_artifact_undo(report)
         return 0
 
     if args.command == "recommend-execution":
