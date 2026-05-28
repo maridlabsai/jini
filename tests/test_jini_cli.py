@@ -4066,18 +4066,24 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue(
             any("drivers=export:local-fast->local-workhorse" in item for item in handoff_doc["handoff_steps"])
         )
+        activation_prefix = self.install_prefix()
         activation = self.run_cli(
             "activate-runtime-target",
             pack_dir,
             "--intent",
             "make",
             "--prefix",
-            self.install_prefix(),
+            activation_prefix,
             "--format",
             "json",
         )
         self.assert_ok(activation)
         activation_doc = json.loads(activation.stdout)
+        self.assertEqual(["export"], activation_doc["route_feedback_drivers"]["changed_cohort_keys"])
+        self.assertEqual(
+            "export:local-fast->local-workhorse",
+            activation_doc["route_feedback_drivers"]["cohort_preview"]["text"],
+        )
         activation_markdown_path = next(
             Path(path)
             for path in activation_doc["activation_files"]
@@ -4090,6 +4096,16 @@ class JiniCliConformanceTests(unittest.TestCase):
             "- [recommended] Active policy rollout", activation_markdown
         )
         self.assertIn("drivers=export:local-fast->local-workhorse", activation_markdown)
+        activation_text = self.run_cli(
+            "activate-runtime-target",
+            pack_dir,
+            "--intent",
+            "make",
+            "--prefix",
+            activation_prefix,
+        )
+        self.assert_ok(activation_text)
+        self.assertIn("DRIVERS export:local-fast->local-workhorse", activation_text.stdout)
 
         rollback = self.run_cli(
             "rollback-policy-candidate",

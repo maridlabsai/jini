@@ -12141,6 +12141,8 @@ def activate_runtime_target(
             f"at state {handoff.get('state', '')} with intent {handoff.get('intent', '')}."
         ),
     )
+    active_policy = handoff.get("active_policy", {})
+    route_feedback_drivers = active_policy.get("route_feedback_drivers", {})
 
     receipt = {
         "schema_version": "0.1.0",
@@ -12166,6 +12168,8 @@ def activate_runtime_target(
         "home_observation": home_observation,
         "guardrails": handoff.get("guardrails", {}),
     }
+    if isinstance(route_feedback_drivers, dict) and route_feedback_drivers:
+        receipt["route_feedback_drivers"] = deepcopy(route_feedback_drivers)
     receipt_path = next_runtime_activation_receipt_path(pack_dir, target_id)
     receipt_path.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
     append_learning_event(
@@ -12193,6 +12197,12 @@ def print_runtime_activation(activation: dict[str, Any]) -> None:
     print(f"STATE  {activation['state']}")
     print(f"INTENT {activation['intent']}")
     print(f"CLASS  {activation['execution_class']}")
+    drivers = activation.get("route_feedback_drivers", {})
+    if isinstance(drivers, dict):
+        preview = drivers.get("cohort_preview", {})
+        preview_text = preview.get("text", "") if isinstance(preview, dict) else ""
+        if preview_text:
+            print(f"DRIVERS {preview_text}")
     print(f"ROOT   {activation['activation_root']}")
     print(f"HANDOFF {activation['source_handoff_path']}")
     print(f"INSTALL {activation.get('install_receipt_path', '')}")
