@@ -3754,8 +3754,76 @@ class JiniCliConformanceTests(unittest.TestCase):
         pack_dir = self.compile_research_pack()
         repo = self.create_repo_fixture()
         home = self.personal_home()
+        state_root = self.tmp / ".jini"
+        state_root.mkdir(parents=True, exist_ok=True)
+        capabilities_path = state_root / "local-runtime-capabilities.json"
+        capabilities_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.4.0",
+                    "context_type": "JiniLocalRuntimeCapabilities",
+                    "captured_at": "2026-05-21T19:00:00Z",
+                    "local_runtime_class": "local-ollama",
+                    "adapters": {
+                        "local-fast": {
+                            "status": "ok",
+                            "latency_ms": 85,
+                            "warm_latency_ms": 70,
+                            "cold_start_cost_ms": 5,
+                            "tokens_per_second": 40.0,
+                            "quality_class": "usable",
+                            "structured_reliability": "usable",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        },
+                        "local-workhorse": {
+                            "status": "ok",
+                            "latency_ms": 190,
+                            "warm_latency_ms": 160,
+                            "cold_start_cost_ms": 30,
+                            "tokens_per_second": 22.5,
+                            "quality_class": "usable",
+                            "structured_reliability": "usable",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        },
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
         self.assert_ok(self.run_cli("bootstrap-home", home))
         self.assert_ok(self.run_cli("bind-home", pack_dir, "--home", home))
+        self.assert_ok(
+            self.run_cli(
+                "record-route-outcome",
+                pack_dir,
+                "--adapter-id",
+                "local-fast",
+                "--intent",
+                "export",
+                "--outcome",
+                "replaced-this",
+                "--reason",
+                "Needed a stronger export route.",
+                "--format",
+                "json",
+            )
+        )
+        self.assert_ok(
+            self.run_cli(
+                "record-route-outcome",
+                pack_dir,
+                "--adapter-id",
+                "local-fast",
+                "--intent",
+                "wiki",
+                "--outcome",
+                "replaced-this",
+                "--reason",
+                "Needed a stronger wiki route.",
+                "--format",
+                "json",
+            )
+        )
         self.assert_ok(
             self.run_cli(
                 "stage-runtime-handoff",
@@ -3805,6 +3873,18 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue(review["policy_candidates"])
         self.assertTrue(any(item["kind"] == "routing-default" for item in review["policy_candidates"]))
         self.assertTrue(any(item["kind"] == "promotion-gate" for item in review["policy_candidates"]))
+        self.assertEqual("changed", review["route_feedback_impact"]["status"])
+        self.assertEqual(["export", "wiki"], review["route_feedback_impact"]["changed_cohort_keys"])
+        self.assertEqual(
+            "export:local-fast->local-workhorse,wiki:local-fast->local-workhorse",
+            review["route_feedback_impact"]["cohort_preview"]["text"],
+        )
+        review_text = self.run_cli("review-policy", pack_dir)
+        self.assert_ok(review_text)
+        self.assertIn(
+            "IMPACT changed=2/2 cohorts=export:local-fast->local-workhorse,wiki:local-fast->local-workhorse action=jini review-policy",
+            review_text.stdout,
+        )
         events = self.run_cli("show-learning-events", pack_dir, "--format", "json")
         self.assert_ok(events)
         event_types = [item["event_type"] for item in json.loads(events.stdout)["events"]]

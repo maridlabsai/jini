@@ -12330,6 +12330,12 @@ def build_policy_review(
     source_path = runtime_events_path(pack_dir) if pack_dir is not None else LEARNING_EVENTS_PATH
     snapshot = build_learning_snapshot(path=source_path, limit=limit)
     backtest = build_routing_backtest(path=source_path, limit=limit, min_samples=min_samples)
+    route_snapshot = build_local_runtime_route_snapshot()
+    route_feedback_impact = build_route_feedback_impact_summary(
+        route_snapshot["route_evidence"],
+        route_snapshot["route_cost"],
+        route_snapshot["route_payload"],
+    )
     snapshot_summary = deepcopy(snapshot)
     snapshot_summary.pop("events", None)
 
@@ -12446,6 +12452,7 @@ def build_policy_review(
         },
         "learning_snapshot": snapshot_summary,
         "routing_backtest": backtest,
+        "route_feedback_impact": route_feedback_impact,
         "runtime_targets": runtime_targets,
         "event_coverage": coverage,
         "coverage_gaps": coverage_gaps,
@@ -12491,6 +12498,19 @@ def print_policy_review(review: dict[str, Any]) -> None:
         print("RUNTIME")
         for target, count in runtime_targets.items():
             print(f"  - {target}: {count}")
+    route_feedback_impact = review.get("route_feedback_impact", {})
+    if isinstance(route_feedback_impact, dict):
+        preview = route_feedback_impact.get("cohort_preview", {})
+        preview_text = preview.get("text", "") if isinstance(preview, dict) else ""
+        action = route_feedback_impact.get("recommended_action", {})
+        action_command = action.get("command", "") if isinstance(action, dict) else ""
+        print(
+            "IMPACT "
+            f"changed={route_feedback_impact.get('changed_selection_count', 0)}/"
+            f"{route_feedback_impact.get('active_cohort_count', 0)} "
+            f"cohorts={preview_text or 'n/a'} "
+            f"action={action_command or 'n/a'}"
+        )
     print("CANDIDATES")
     for candidate in review.get("policy_candidates", []):
         detail = candidate.get("proposed_rule") or candidate.get("proposed_execution_class") or ""
