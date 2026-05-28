@@ -12210,6 +12210,26 @@ def print_runtime_activation(activation: dict[str, Any]) -> None:
         print(f"  - {path}")
 
 
+def summarize_runtime_activation(activation: dict[str, Any] | None) -> dict[str, Any]:
+    if not isinstance(activation, dict) or not activation:
+        return {}
+    summary = {
+        "runtime_target": activation.get("runtime_target", ""),
+        "state": activation.get("state", ""),
+        "intent": activation.get("intent", ""),
+        "execution_class": activation.get("execution_class", ""),
+        "activation_root": activation.get("activation_root", ""),
+    }
+    drivers = activation.get("route_feedback_drivers", {})
+    if isinstance(drivers, dict) and drivers:
+        summary["route_feedback_drivers"] = deepcopy(drivers)
+        preview = drivers.get("cohort_preview", {})
+        preview_text = preview.get("text", "") if isinstance(preview, dict) else ""
+        if preview_text:
+            summary["route_feedback_driver_preview"] = preview_text
+    return summary
+
+
 def next_policy_review_path(pack_dir: Path) -> Path:
     review_dir = pack_dir / "runtime" / "policy-reviews"
     review_dir.mkdir(parents=True, exist_ok=True)
@@ -16669,6 +16689,7 @@ def execute_flow(
             max_items=max_items,
             max_chars=max_chars,
         )
+    activation_summary = summarize_runtime_activation(activation_receipt)
 
     run_report, run_report_path = run_pack(
         pack_dir,
@@ -16748,6 +16769,7 @@ def execute_flow(
         "repo_map": repo_map,
         "runtime_handoff_path": display_path(handoff_path),
         "runtime_activation": activation_receipt,
+        "runtime_activation_summary": activation_summary,
         "runtime_activation_path": display_path(activation_receipt_path) if activation_receipt_path is not None else "",
         "run_report_path": display_path(run_report_path),
         "run_report": run_report,
@@ -16845,6 +16867,9 @@ def print_execute_flow(report: dict[str, Any]) -> None:
         print(f"HANDOFF {report['runtime_handoff_path']}")
     if report.get("runtime_activation_path"):
         print(f"ACTIVE {report['runtime_activation_path']}")
+    activation_summary = report.get("runtime_activation_summary", {})
+    if isinstance(activation_summary, dict) and activation_summary.get("route_feedback_driver_preview"):
+        print(f"ACTIVE-DRIVERS {activation_summary['route_feedback_driver_preview']}")
     if report.get("run_report_path"):
         print(f"RUN    {report['run_report_path']}")
     token_strategy = report.get("token_strategy", {})

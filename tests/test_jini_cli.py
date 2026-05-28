@@ -4106,6 +4106,46 @@ class JiniCliConformanceTests(unittest.TestCase):
         )
         self.assert_ok(activation_text)
         self.assertIn("DRIVERS export:local-fast->local-workhorse", activation_text.stdout)
+        flow = self.run_cli(
+            "run",
+            pack_dir,
+            "--mode",
+            "supervised",
+            "--intent",
+            "make",
+            "--activate-runtime",
+            "--prefix",
+            activation_prefix,
+            "--format",
+            "json",
+        )
+        self.assert_ok(flow)
+        flow_doc = json.loads(flow.stdout)
+        self.assertEqual(
+            ["export"],
+            flow_doc["runtime_activation"]["route_feedback_drivers"]["changed_cohort_keys"],
+        )
+        self.assertEqual(
+            "export:local-fast->local-workhorse",
+            flow_doc["runtime_activation"]["route_feedback_drivers"]["cohort_preview"]["text"],
+        )
+        self.assertEqual(
+            "export:local-fast->local-workhorse",
+            flow_doc["runtime_activation_summary"]["route_feedback_driver_preview"],
+        )
+        flow_text = self.run_cli(
+            "run",
+            pack_dir,
+            "--mode",
+            "supervised",
+            "--intent",
+            "make",
+            "--activate-runtime",
+            "--prefix",
+            activation_prefix,
+        )
+        self.assert_ok(flow_text)
+        self.assertIn("ACTIVE-DRIVERS export:local-fast->local-workhorse", flow_text.stdout)
 
         rollback = self.run_cli(
             "rollback-policy-candidate",
