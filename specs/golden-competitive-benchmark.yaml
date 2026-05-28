@@ -284,6 +284,10 @@ scenarios:
         command: ["status", "{scenario_root}/research-pack", "--format", "json"]
         path: "turn_record.user_input_ids"
         contains: "initial-request"
+      - id: status-input-extraction-summary-visible
+        command: ["status", "{scenario_root}/research-pack", "--format", "json"]
+        path: "working_with.input_items.0.extraction_summary"
+        contains: "Captured text request"
       - id: status-shows-grouped-artifact-shelf
         command: ["status", "{scenario_root}/research-pack", "--format", "json"]
         path: "artifact_shelf.ready_now.label"

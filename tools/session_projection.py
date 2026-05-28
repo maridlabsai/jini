@@ -80,6 +80,98 @@ def _compact_preview(text: str, *, max_chars: int = 180) -> str:
     return cleaned[:cut].rstrip() + "..."
 
 
+def _input_origin(item: dict[str, Any]) -> str:
+    return (
+        str(item.get("origin_ref", "")).strip()
+        or str(item.get("title", "")).strip()
+        or str(item.get("input_id", "")).strip()
+        or "input"
+    )
+
+
+def _input_extraction_status(item: dict[str, Any]) -> str:
+    explicit = str(item.get("extraction_status", "")).strip()
+    if explicit:
+        return explicit
+    status = str(item.get("status", "")).strip().lower()
+    if status == "processed":
+        return "extracted"
+    if status == "failed":
+        return "failed"
+    if status == "received":
+        return "pending"
+    if status == "superseded":
+        return "superseded"
+    return "unknown"
+
+
+def _input_failure_reason(item: dict[str, Any]) -> str:
+    return (
+        str(item.get("failure_reason", "")).strip()
+        or str(item.get("error_message", "")).strip()
+        or str(item.get("preview", "")).strip()
+        or "Processing failed."
+    )
+
+
+def _input_extraction_summary(item: dict[str, Any], extraction_status: str) -> str:
+    explicit = str(item.get("extraction_summary", "")).strip()
+    if explicit:
+        return _compact_preview(explicit, max_chars=180)
+
+    origin = _input_origin(item)
+    preview = str(item.get("preview", "")).strip()
+    kind = str(item.get("kind", "")).strip().lower()
+
+    if extraction_status == "failed":
+        return _compact_preview(f"Could not process {origin}: {_input_failure_reason(item)}", max_chars=180)
+    if extraction_status in {"pending", "received"}:
+        return _compact_preview(f"Waiting to extract {origin}.", max_chars=180)
+    if extraction_status == "superseded":
+        return _compact_preview(f"{origin} was superseded by a newer input.", max_chars=180)
+
+    suffix = f": {preview}" if preview else "."
+    if kind == "text":
+        derived_count = len(
+            [
+                artifact_id
+                for artifact_id in item.get("derived_artifact_ids", [])
+                if str(artifact_id).strip()
+            ]
+        )
+        if derived_count:
+            return _compact_preview(
+                f"Captured text request from {origin} and linked it to {derived_count} artifact(s).",
+                max_chars=180,
+            )
+        return _compact_preview(f"Captured text request from {origin}.", max_chars=180)
+    if kind == "image":
+        return _compact_preview(f"Observed image input from {origin}{suffix}", max_chars=180)
+    if kind == "audio":
+        return _compact_preview(f"Transcribed audio input from {origin}{suffix}", max_chars=180)
+    if kind == "link":
+        return _compact_preview(f"Fetched link input from {origin}{suffix}", max_chars=180)
+    if kind == "file" and origin.lower().endswith(".pdf"):
+        return _compact_preview(f"Parsed PDF input from {origin}{suffix}", max_chars=180)
+    if kind == "file":
+        return _compact_preview(f"Parsed file input from {origin}{suffix}", max_chars=180)
+    if kind == "derived":
+        return _compact_preview(f"Derived working input from {origin}{suffix}", max_chars=180)
+    return _compact_preview(f"Extracted {origin}{suffix}", max_chars=180)
+
+
+def normalize_input_item(item: dict[str, Any]) -> dict[str, Any]:
+    normalized = dict(item)
+    extraction_status = _input_extraction_status(normalized)
+    normalized["extraction_status"] = extraction_status
+    normalized["extraction_summary"] = _input_extraction_summary(normalized, extraction_status)
+    if extraction_status == "failed":
+        normalized["failure_reason"] = _input_failure_reason(normalized)
+    elif "failure_reason" in normalized and not str(normalized.get("failure_reason", "")).strip():
+        normalized.pop("failure_reason", None)
+    return normalized
+
+
 def build_input_items(
     *,
     session_id: str,
@@ -97,7 +189,7 @@ def build_input_items(
                 if isinstance(item, dict) and item.get("input_id") == "initial-request":
                     previous_initial = item
                 elif isinstance(item, dict):
-                    preserved_items.append(item)
+                    preserved_items.append(normalize_input_item(item))
 
     work_unit = summary.get("work_unit", {})
     title = str(work_unit.get("title", "")).strip() or "Initial work request"
@@ -114,7 +206,7 @@ def build_input_items(
         if str(item.get("id", "")).strip()
     ]
 
-    return [
+    initial_item = normalize_input_item(
         {
             "input_id": "initial-request",
             "thread_id": session_id,
@@ -127,7 +219,11 @@ def build_input_items(
             "derived_artifact_ids": derived_artifact_ids,
             "created_at": created_at,
             "updated_at": updated_at,
-        },
+        }
+    )
+
+    return [
+        initial_item,
         *preserved_items,
     ]
 

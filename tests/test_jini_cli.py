@@ -701,6 +701,8 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("processed", input_items[0]["status"])
         self.assertEqual("product-lead", input_items[0]["source_actor"])
         self.assertIn("Exercise the research pack lifecycle", input_items[0]["preview"])
+        self.assertEqual("extracted", input_items[0]["extraction_status"])
+        self.assertIn("Captured text request", input_items[0]["extraction_summary"])
         self.assertIn("prd", input_items[0]["derived_artifact_ids"])
         self.assertIn("initial-request", report["turn_record"]["user_input_ids"])
 
@@ -709,6 +711,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("WORKING WITH", status_text.stdout)
         self.assertIn("Test Research Pack", status_text.stdout)
         self.assertIn("Exercise the research pack lifecycle", status_text.stdout)
+        self.assertIn("extracted:", status_text.stdout)
 
     def test_status_refresh_preserves_saved_non_initial_input_items(self) -> None:
         pack_dir = self.compile_research_pack()
@@ -739,6 +742,65 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("initial-request", input_ids)
         self.assertIn("uploaded-brief", input_ids)
         self.assertIn("uploaded-brief", report["turn_record"]["user_input_ids"])
+
+    def test_status_surfaces_input_extraction_summaries_and_failures(self) -> None:
+        pack_dir = self.compile_research_pack()
+        projection_path = self.tmp / ".jini" / "sessions" / "test-research-pack" / "projection.json"
+        projection_doc = json.loads(projection_path.read_text(encoding="utf-8"))
+        projection_doc["input_items"].extend(
+            [
+                {
+                    "input_id": "hotel-photo",
+                    "thread_id": "test-research-pack",
+                    "kind": "image",
+                    "title": "Hotel Photo",
+                    "source_actor": "product-lead",
+                    "status": "processed",
+                    "preview": "Read whiteboard budget totals and dates",
+                    "origin_ref": "hotel-whiteboard.png",
+                    "derived_artifact_ids": ["prd"],
+                    "created_at": "2026-05-01T00:00:00Z",
+                    "updated_at": "2026-05-01T00:00:00Z",
+                },
+                {
+                    "input_id": "voice-note",
+                    "thread_id": "test-research-pack",
+                    "kind": "audio",
+                    "title": "Voice Note",
+                    "source_actor": "product-lead",
+                    "status": "failed",
+                    "preview": "Voice note could not be transcribed",
+                    "origin_ref": "voice-note.m4a",
+                    "error_message": "transcription confidence below threshold",
+                    "derived_artifact_ids": [],
+                    "created_at": "2026-05-01T00:00:00Z",
+                    "updated_at": "2026-05-01T00:00:00Z",
+                },
+            ]
+        )
+        projection_path.write_text(json.dumps(projection_doc, indent=2), encoding="utf-8")
+
+        status_json = self.run_cli("status", pack_dir, "--format", "json")
+        self.assert_ok(status_json)
+        report = json.loads(status_json.stdout)
+
+        by_id = {item["input_id"]: item for item in report["input_items"]}
+        self.assertEqual("extracted", by_id["hotel-photo"]["extraction_status"])
+        self.assertIn("Observed image input", by_id["hotel-photo"]["extraction_summary"])
+        self.assertIn("hotel-whiteboard.png", by_id["hotel-photo"]["extraction_summary"])
+        self.assertEqual("failed", by_id["voice-note"]["extraction_status"])
+        self.assertEqual(
+            "transcription confidence below threshold",
+            by_id["voice-note"]["failure_reason"],
+        )
+        self.assertIn("Could not process voice-note.m4a", by_id["voice-note"]["extraction_summary"])
+
+        status_text = self.run_cli("status", pack_dir)
+        self.assert_ok(status_text)
+        self.assertIn("Hotel Photo [image/processed]", status_text.stdout)
+        self.assertIn("extracted: Observed image input", status_text.stdout)
+        self.assertIn("Voice Note [audio/failed]", status_text.stdout)
+        self.assertIn("failed: Could not process voice-note.m4a", status_text.stdout)
 
     def test_status_surfaces_grouped_artifact_shelf(self) -> None:
         pack_dir = self.compile_research_pack()

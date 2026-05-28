@@ -56,6 +56,7 @@ try:
     from .session_projection import build_progress_snapshot
     from .session_projection import build_session_projection
     from .session_projection import build_turn_record
+    from .session_projection import normalize_input_item
     from .session_store import SessionStore
     from .yaml_compat import YAMLError as CompatYAMLError
     from .yaml_compat import safe_dump as compat_yaml_dump
@@ -69,6 +70,7 @@ except ImportError:  # pragma: no cover - script execution path
     from session_projection import build_progress_snapshot
     from session_projection import build_session_projection
     from session_projection import build_turn_record
+    from session_projection import normalize_input_item
     from session_store import SessionStore
     from yaml_compat import YAMLError as CompatYAMLError
     from yaml_compat import safe_dump as compat_yaml_dump
@@ -15555,6 +15557,7 @@ def build_outcome_view(
     input_items = projection.get("input_items", [])
     if not isinstance(input_items, list):
         input_items = []
+    input_items = [normalize_input_item(item) for item in input_items if isinstance(item, dict)]
     artifact_shelf = projection.get("artifact_shelf", {})
     if not isinstance(artifact_shelf, dict):
         artifact_shelf = {}
@@ -15652,6 +15655,7 @@ def build_outcome_view_from_projection(
     input_items = projection.get("input_items", [])
     if not isinstance(input_items, list):
         input_items = []
+    input_items = [normalize_input_item(item) for item in input_items if isinstance(item, dict)]
     artifact_shelf = projection.get("artifact_shelf", {})
     if not isinstance(artifact_shelf, dict):
         artifact_shelf = {}
@@ -15896,6 +15900,11 @@ def print_outcome_view(report: dict[str, Any]) -> None:
             if preview:
                 preview, _trimmed = build_terminal_preview(preview, max_chars=160)
                 print(f"    {preview}")
+            extraction_status = str(item.get("extraction_status", "")).strip()
+            extraction_summary = str(item.get("extraction_summary", "")).strip()
+            if extraction_status and extraction_summary:
+                extraction_summary, _trimmed = build_terminal_preview(extraction_summary, max_chars=160)
+                print(f"    {extraction_status}: {extraction_summary}")
     if isinstance(artifact_shelf, dict) and artifact_shelf:
         print()
         print("ARTIFACT SHELF")
