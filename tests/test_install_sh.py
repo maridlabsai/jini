@@ -143,12 +143,12 @@ class InstallScriptTests(unittest.TestCase):
             command_env.update(env)
 
         smoke_cases = [
-            (["--help"], 0, "Actions"),
+            (["--help"], 0, "OPEN JINI"),
             (["commands"], 0, "Public command inventory"),
             (["help", "--all"], 0, "Public command inventory"),
             (["admin", "help"], 0, "Admin and developer command inventory"),
             (["doctor"], 0, "Provider"),
-            (["status"], 0, "Goal"),
+            (["status"], 0, "WORK   research-prd-v1"),
         ]
         for args, expected_code, marker in smoke_cases:
             with self.subTest(args=args):
@@ -170,7 +170,12 @@ class InstallScriptTests(unittest.TestCase):
                 )
 
     def assert_python_public_command_contract(self, binary_path: Path, *, env: Optional[dict[str, str]] = None) -> None:
-        command_env = {"JINI_PROVIDER": "local-preview"}
+        state_dir = self.tmp / ".jini-python-artifact-state"
+        self.write_current_work(state_dir, RESEARCH_EXAMPLE)
+        command_env = {
+            "JINI_PROVIDER": "local-preview",
+            "JINI_STATE_DIR": str(state_dir),
+        }
         if env:
             command_env.update(env)
 
@@ -180,7 +185,7 @@ class InstallScriptTests(unittest.TestCase):
             (["help", "--all"], 0, "Public command inventory"),
             (["admin", "help"], 0, "Admin and developer command inventory"),
             (["doctor"], 0, "Provider"),
-            (["status", str(RESEARCH_EXAMPLE)], 0, "WORK   research-prd-v1"),
+            (["status"], 0, "WORK   research-prd-v1"),
         ]
         for args, expected_code, marker in smoke_cases:
             with self.subTest(args=args):
@@ -302,9 +307,21 @@ class InstallScriptTests(unittest.TestCase):
             context="meeting open surface",
         )
 
+        meeting_continue = self.run_installed_jini(binary_path, "continue", env=command_env)
+        self.assertEqual(
+            0,
+            meeting_continue.returncode,
+            msg=f"STDOUT:\n{meeting_continue.stdout}\nSTDERR:\n{meeting_continue.stderr}",
+        )
+        self.assert_any_marker(
+            meeting_continue.stdout,
+            ("# Tasks: Sample Meeting Pack", "## Task Board", "Sarah: draft the pricing update by Thursday."),
+            context="meeting continue surface",
+        )
+
         if use_pathless_status:
             self.write_current_work(state_dir, RESEARCH_EXAMPLE)
-            research_status = self.run_installed_jini(binary_path, "status", env=command_env)
+            research_status = self.run_installed_jini(binary_path, "status", str(RESEARCH_EXAMPLE), env=command_env)
         else:
             research_status = self.run_installed_jini(binary_path, "status", str(RESEARCH_EXAMPLE), env=command_env)
         self.assertEqual(0, research_status.returncode, msg=f"STDOUT:\n{research_status.stdout}\nSTDERR:\n{research_status.stderr}")
@@ -348,6 +365,18 @@ class InstallScriptTests(unittest.TestCase):
             research_open.stdout,
             (str((RESEARCH_EXAMPLE / "views" / "prd.md").resolve()), "# Build-Readiness Check", "# PRD: Jini Research To PRD"),
             context="research open surface",
+        )
+
+        research_continue = self.run_installed_jini(binary_path, "continue", env=command_env)
+        self.assertEqual(
+            0,
+            research_continue.returncode,
+            msg=f"STDOUT:\n{research_continue.stdout}\nSTDERR:\n{research_continue.stderr}",
+        )
+        self.assert_any_marker(
+            research_continue.stdout,
+            ("# Tasks: Jini Research To PRD", "## Task Board", "Confirm build-ready requirements and task ownership"),
+            context="research continue surface",
         )
 
     def create_remote_snapshot(self) -> Path:

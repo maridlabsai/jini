@@ -89,6 +89,8 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 			return runCheck(args[1:], stdout, stderr)
 		case "status":
 			return runStatus(stdout, stderr)
+		case "continue":
+			return runContinue(stdout, stderr)
 		case "doctor":
 			return runProvider(nil, stdout, stderr)
 		case "provider":
@@ -1855,6 +1857,22 @@ func runOpen(args []string, stdout, stderr io.Writer) int {
 	return openArtifactItem(summary, item, stdout, stderr)
 }
 
+func runContinue(stdout, stderr io.Writer) int {
+	summary, err := resolveSummary(nil)
+	if err != nil {
+		fmt.Fprintf(stderr, "%v\n", err)
+		return 1
+	}
+	if renderNextContinuation(stdout, summary) {
+		return 0
+	}
+	if renderFocusedContinuation(stdout, summary) {
+		return 0
+	}
+	renderCheck(stdout, summary)
+	return 0
+}
+
 func resolveSummary(args []string) (*workSummary, error) {
 	if len(args) > 0 && strings.TrimSpace(args[0]) != "" {
 		return loadWorkSummary(args[0], nil)
@@ -2245,6 +2263,7 @@ func renderPublicCommandInventory(w io.Writer) {
 	fmt.Fprintln(w, "WORK WITH JINI")
 	fmt.Fprintln(w, "- jini check")
 	fmt.Fprintln(w, "- jini status")
+	fmt.Fprintln(w, "- jini continue")
 	fmt.Fprintln(w, "- jini open")
 	fmt.Fprintln(w, "- jini doctor")
 	fmt.Fprintln(w, "- jini provider doctor")

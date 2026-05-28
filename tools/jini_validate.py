@@ -6746,6 +6746,23 @@ def resolve_artifact_item(pack_dir: Path, registry: dict[str, Any], artifact_nam
     )
 
 
+def resolve_continue_item(pack_dir: Path, registry: dict[str, Any]) -> dict[str, Any]:
+    catalog = build_artifact_catalog(pack_dir, registry)
+    ready_now = list(catalog.get("ready_now", []))
+    if not ready_now:
+        raise ValueError("Nothing is ready yet. Run `jini status` after Jini produces the first useful artifact.")
+
+    preferred_ids = ("tasks", "next-actions", "decision")
+    indexed = {slugify(str(item.get("id", ""))): item for item in ready_now}
+    for preferred_id in preferred_ids:
+        if preferred_id in indexed:
+            return indexed[preferred_id]
+
+    if len(ready_now) > 1:
+        return ready_now[1]
+    return ready_now[0]
+
+
 def print_artifact_catalog(catalog: dict[str, Any]) -> None:
     print(f"WORK   {catalog.get('work_unit_id', '')}")
     print(f"TITLE  {catalog.get('title', '')}")
@@ -6848,9 +6865,9 @@ PUBLIC_HELP_GROUPS: list[tuple[str, list[tuple[str, str]]]] = [
         "WORK WITH JINI",
         [
             ("jini status", "See what is done, what is next, and what is still missing."),
+            ("jini continue", "Open the next useful artifact without rebuilding the work state."),
             ("jini open", "Open the current artifact or human-facing view."),
             ("jini show", "Print an artifact or ready-now view in the terminal."),
-            ("jini next", "Show the next step and follow-on commands."),
             ("jini resume", "Re-enter the latest active work cheaply."),
             ("jini run --repo /path/to/repo --harness codex", "Execute the work on a chosen harness with explicit consent."),
         ],
@@ -12896,13 +12913,11 @@ def build_outcome_view(
         for artifact_type in summary["missing_full_required"]
         if artifact_type not in summary["missing_stage_required"]
     ]
-    next_command = f"{cli_invocation()} next"
+    continue_command = f"{cli_invocation()} continue"
     resume_command = f"{cli_invocation()} resume"
     if repo_path is not None:
         repo_display = display_path(repo_path)
-        next_command = f"{next_command} --repo {repo_display}"
         resume_command = f"{resume_command} --repo {repo_display}"
-    next_command = f"{next_command} --intent {summary['next_operation'].lower()}"
     resume_command = f"{resume_command} --intent {summary['next_operation'].lower()} --max-chars 900"
     artifact_catalog = build_artifact_catalog(pack_dir, registry)
     ready_now = [
@@ -12939,7 +12954,7 @@ def build_outcome_view(
             "what_is_still_missing_later": missing_later,
         },
         "ready_now": ready_now,
-        "continue_with": [next_command, resume_command],
+        "continue_with": [continue_command, resume_command],
         "validation_errors": list(summary["validation_errors"]),
         "validation_warnings": list(summary["validation_warnings"]),
     }
@@ -12965,13 +12980,10 @@ def build_outcome_view_from_projection(
         )
 
     next_operation = str(projection.get("next", "")).strip() or "inspect-session"
-    next_command = f"{cli_invocation()} next"
     resume_command = f"{cli_invocation()} resume"
     if repo_path is not None:
         repo_display = display_path(repo_path)
-        next_command = f"{next_command} --repo {repo_display}"
         resume_command = f"{resume_command} --repo {repo_display}"
-    next_command = f"{next_command} --intent {next_operation.lower()}"
     resume_command = f"{resume_command} --intent {next_operation.lower()} --max-chars 900"
 
     task_done = len(ready_now)
@@ -12999,7 +13011,7 @@ def build_outcome_view_from_projection(
             "what_is_still_missing_later": [],
         },
         "ready_now": ready_now,
-        "continue_with": [next_command, resume_command],
+        "continue_with": [resume_command],
         "validation_errors": [],
         "validation_warnings": [
             "Pack files are unavailable, so this status view is coming from the saved session projection."
@@ -16224,6 +16236,17 @@ def main() -> int:
         help="Print the resolved artifact path instead of launching it",
     )
 
+    continue_parser = subparsers.add_parser(
+        "continue",
+        help="Open the next useful artifact from the current work",
+    )
+    continue_parser.add_argument("--from", dest="path", type=Path, help="Optional pack path; defaults to the current Jini work")
+    continue_parser.add_argument(
+        "--print-path",
+        action="store_true",
+        help="Print the resolved artifact path instead of rendering it",
+    )
+
     recommend_execution_parser = subparsers.add_parser(
         "recommend-execution",
         help="Recommend the execution class, context posture, and rate-limit strategy for a pack",
@@ -17418,6 +17441,13 @@ def main() -> int:
     if argv[0] == "commands":
         print_public_command_inventory()
         return 0
+    if argv[0] == "provider":
+        provider_argv = argv[1:]
+        if not provider_argv or provider_argv[0] in {"-h", "--help", "help"}:
+            print_admin_command_inventory()
+            return 0
+        if provider_argv[0] == "doctor":
+            argv = ["doctor", *provider_argv[1:]]
     if argv[0] in {"-h", "--help"}:
         if "--admin" in argv[1:]:
             print_admin_command_inventory()
@@ -17846,6 +17876,28 @@ def main() -> int:
                 launch_open_path(artifact_path)
                 print(f"OPENED {display_path(artifact_path)}")
         except (FileNotFoundError, OSError, RuntimeError, TypeError, ValueError, subprocess.CalledProcessError) as exc:
+            failing_path = args.path if args.path is not None else Path("<current-work>")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
+            return 1
+        return 0
+
+    if args.command == "continue":
+        try:
+            pack_dir = resolve_context_pack_dir(args.path, registry, command_label="continue")
+            artifact = resolve_continue_item(pack_dir, registry)
+            artifact_path = Path(str(artifact["resolved_path"]))
+            if args.print_path:
+                print(display_path(artifact_path))
+            else:
+                print(artifact_path.read_text(encoding="utf-8"))
+        except (FileNotFoundError, OSError, TypeError, ValueError) as exc:
+            if args.path is None:
+                context = load_current_session_context()
+                if context is not None:
+                    remembered_pack = Path(str(context.get("pack_dir", ""))).expanduser()
+                    if remembered_pack and not remembered_pack.exists():
+                        print("ERROR Current pack files are unavailable. Run `jini resume` to recover the saved context slice.")
+                        return 1
             failing_path = args.path if args.path is not None else Path("<current-work>")
             print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
             return 1

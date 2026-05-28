@@ -451,6 +451,21 @@ class JiniCliConformanceTests(unittest.TestCase):
         compact = json.loads(resume_result.stdout)
         self.assertEqual("research-prd", compact["pack_id"])
 
+    def test_continue_command_resolves_next_useful_artifact(self) -> None:
+        pack_dir = self.compile_research_pack()
+
+        result = self.run_cli("continue", "--from", pack_dir, "--print-path")
+        self.assert_ok(result)
+        self.assertIn(str((pack_dir / "views" / "tasks.md").resolve()), result.stdout.strip())
+
+    def test_pathless_continue_uses_current_work(self) -> None:
+        pack_dir = self.compile_meeting_pack()
+        self.assert_ok(self.run_cli("status", pack_dir))
+
+        result = self.run_cli("continue", "--print-path")
+        self.assert_ok(result)
+        self.assertIn(str((pack_dir / "views" / "tasks.md").resolve()), result.stdout.strip())
+
     def test_status_view_reports_plain_questions_and_follow_on_commands(self) -> None:
         pack_dir = self.compile_research_pack()
         result = self.run_cli("status", pack_dir)
@@ -459,7 +474,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("WHAT HAPPENS NEXT?", result.stdout)
         self.assertIn("READY NOW", result.stdout)
         self.assertIn("CONTINUE", result.stdout)
-        self.assertIn("jini next ", result.stdout)
+        self.assertIn("jini continue", result.stdout)
         self.assertIn("jini resume ", result.stdout)
 
     def test_example_sets_current_work_for_pathless_status_and_artifacts(self) -> None:
@@ -2282,14 +2297,16 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("needs setup", report["status"])
         self.assertTrue(any("supported only on Bedrock" in item for item in report["missing"]))
 
-    def test_provider_nested_command_is_rejected(self) -> None:
+    def test_provider_nested_command_keeps_doctor_compatibility_alias(self) -> None:
         env = {
             "JINI_PROVIDER": "claude",
             "ANTHROPIC_API_KEY": "sk-live-secret",
             "JINI_MODEL": "sonnet",
         }
         result = self.run_cli("provider", "doctor", "--format", "json", env=env)
-        self.assertNotEqual(0, result.returncode)
+        self.assert_ok(result)
+        report = json.loads(result.stdout)
+        self.assertEqual("anthropic", report["provider_id"])
 
     def test_validate_golden_benchmark_reports_jini_against_expanded_competitor_field(self) -> None:
         result = self.run_cli("validate-golden-benchmark", "--format", "json")

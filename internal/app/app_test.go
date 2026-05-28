@@ -330,6 +330,7 @@ func TestCommandsAliasShowsPublicCommandInventory(t *testing.T) {
 		"WORK WITH JINI",
 		"jini check",
 		"jini status",
+		"jini continue",
 		"jini open",
 		"jini doctor",
 		"jini provider doctor",
@@ -831,6 +832,28 @@ func TestOpenPrintsNamedView(t *testing.T) {
 
 	if got := stdout.String(); !strings.Contains(got, "# Build-Readiness Check") {
 		t.Fatalf("expected build-readiness content, got:\n%s", got)
+	}
+}
+
+func TestContinuePrintsNextUsefulView(t *testing.T) {
+	stateDir := t.TempDir()
+	packDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"continue"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	if !strings.Contains(out, "Owners and Due Points") {
+		t.Fatalf("expected continue to open the next useful artifact, got:\n%s", out)
+	}
+	if strings.Contains(out, "Working Draft") {
+		t.Fatalf("expected continue not to fall back to a working draft, got:\n%s", out)
 	}
 }
 
