@@ -5,6 +5,12 @@ Updated: 2026-05-14
 This is the short-form consensus version of the fuller product document in
 [full-product-prd.md](./full-product-prd.md).
 
+Deeper follow-on strategy artifacts:
+
+- [number-one-product-research.md](./number-one-product-research.md)
+- [number-one-platform-prd.md](./number-one-platform-prd.md)
+- [number-one-development-plan.md](./number-one-development-plan.md)
+
 ## Product Decision
 
 Jini should be a complete, visible work loop.
