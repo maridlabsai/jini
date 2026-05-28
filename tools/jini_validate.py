@@ -1413,6 +1413,17 @@ def route_feedback_signal_count(row: dict[str, Any]) -> int:
     return sum(route_feedback_counter_value(row, key) for key in ROUTE_FEEDBACK_COUNTER_KEYS)
 
 
+def route_feedback_counters(row: dict[str, Any]) -> dict[str, int]:
+    if not isinstance(row, dict):
+        return {}
+    counters: dict[str, int] = {}
+    for key in ROUTE_FEEDBACK_COUNTER_KEYS:
+        value = route_feedback_counter_value(row, key)
+        if value:
+            counters[key] = value
+    return counters
+
+
 def route_feedback_bias(row: dict[str, Any]) -> int:
     if not isinstance(row, dict):
         return 0
@@ -1459,6 +1470,7 @@ def route_feedback_summary_for_adapters(
 ) -> dict[str, Any]:
     biases: dict[str, int] = {}
     signal_counts: dict[str, int] = {}
+    adapters: list[dict[str, Any]] = []
     adjusted: list[str] = []
     for adapter_id in adapter_ids:
         row = route_feedback_row(route_payload, adapter_id, cohort_key)
@@ -1468,12 +1480,24 @@ def route_feedback_summary_for_adapters(
         signal_counts[adapter_id] = signal_count
         if signal_count > 0 and bias != 0:
             adjusted.append(adapter_id)
+        if signal_count > 0:
+            adapters.append(
+                {
+                    "adapter_id": adapter_id,
+                    "cohort_key": cohort_key,
+                    "bias": bias,
+                    "signal_count": signal_count,
+                    "counters": route_feedback_counters(row),
+                    "routing_effect": "boosted" if bias > 0 else "penalized" if bias < 0 else "neutral",
+                }
+            )
     return {
         "cohort_key": cohort_key,
         "biases": biases,
         "signal_counts": signal_counts,
         "total_signal_count": sum(signal_counts.values()),
         "adjusted_adapters": sorted(adjusted),
+        "adapters": adapters,
     }
 
 
@@ -1579,6 +1603,12 @@ def select_measured_local_execution_route(
         "feedback_cohort": cohort_key,
         "outcome_signal_count": int(feedback["total_signal_count"]),
         "feedback_adjusted_adapters": feedback["adjusted_adapters"],
+        "feedback_evidence": {
+            "cohort_key": cohort_key,
+            "total_signal_count": int(feedback["total_signal_count"]),
+            "adjusted_adapters": feedback["adjusted_adapters"],
+            "adapters": feedback["adapters"],
+        },
     }
 
 
@@ -11055,7 +11085,90 @@ def build_routing_backtest(
         "event_count": len(events),
         "buckets": entries,
         "policy_recommendations": recommendations,
+        "route_feedback": build_route_feedback_backtest(events),
     }
+
+
+def build_route_feedback_backtest(events: list[dict[str, Any]]) -> dict[str, Any]:
+    by_cohort: dict[str, dict[str, Any]] = {}
+    event_count = 0
+    for event in events:
+        if str(event.get("event_type", "")).strip() != "route-outcome-feedback":
+            continue
+        adapter_id = str(event.get("adapter_id", "")).strip()
+        if not adapter_id:
+            continue
+        intent = str(event.get("intent", "")).strip()
+        cohort_key = str(event.get("cohort_key", "")).strip() or route_feedback_cohort_key(intent)
+        counter = str(event.get("counter", "")).strip()
+        if counter not in ROUTE_FEEDBACK_COUNTER_KEYS:
+            continue
+        event_count += 1
+        cohort = by_cohort.setdefault(
+            cohort_key,
+            {
+                "cohort_key": cohort_key,
+                "intent": intent,
+                "signal_count": 0,
+                "passive_signal_count": 0,
+                "adapters": {},
+            },
+        )
+        if intent and not cohort.get("intent"):
+            cohort["intent"] = intent
+        cohort["signal_count"] += 1
+        if bool(event.get("passive", False)):
+            cohort["passive_signal_count"] += 1
+        adapter = cohort["adapters"].setdefault(
+            adapter_id,
+            {
+                "adapter_id": adapter_id,
+                "signal_count": 0,
+                "passive_signal_count": 0,
+                "counters": Counter(),
+                "latest_feedback_bias": 0,
+                "latest_feedback_signal_count": 0,
+            },
+        )
+        adapter["signal_count"] += 1
+        if bool(event.get("passive", False)):
+            adapter["passive_signal_count"] += 1
+        adapter["counters"][counter] += 1
+        adapter["latest_feedback_bias"] = int(event.get("feedback_bias", 0) or 0)
+        adapter["latest_feedback_signal_count"] = int(event.get("feedback_signal_count", 0) or 0)
+
+    cohorts: list[dict[str, Any]] = []
+    for cohort in by_cohort.values():
+        adapters: list[dict[str, Any]] = []
+        adjusted: list[str] = []
+        for adapter in cohort["adapters"].values():
+            bias = int(adapter["latest_feedback_bias"])
+            if bias != 0:
+                adjusted.append(str(adapter["adapter_id"]))
+            adapters.append(
+                {
+                    "adapter_id": adapter["adapter_id"],
+                    "signal_count": int(adapter["signal_count"]),
+                    "passive_signal_count": int(adapter["passive_signal_count"]),
+                    "counters": dict(sorted(adapter["counters"].items())),
+                    "latest_feedback_bias": bias,
+                    "latest_feedback_signal_count": int(adapter["latest_feedback_signal_count"]),
+                    "routing_effect": "boosted" if bias > 0 else "penalized" if bias < 0 else "neutral",
+                }
+            )
+        adapters.sort(key=lambda item: (-int(item["signal_count"]), str(item["adapter_id"])))
+        cohorts.append(
+            {
+                "cohort_key": cohort["cohort_key"],
+                "intent": cohort.get("intent", ""),
+                "signal_count": int(cohort["signal_count"]),
+                "passive_signal_count": int(cohort["passive_signal_count"]),
+                "adjusted_adapters": sorted(adjusted),
+                "adapters": adapters,
+            }
+        )
+    cohorts.sort(key=lambda item: (-int(item["signal_count"]), str(item["cohort_key"])))
+    return {"event_count": event_count, "cohorts": cohorts}
 
 
 def print_routing_backtest(backtest: dict[str, Any]) -> None:
@@ -11074,6 +11187,19 @@ def print_routing_backtest(backtest: dict[str, Any]) -> None:
                 f"  - {item['intent']}: {item['recommended_execution_class']} "
                 f"({item['success_rate']:.3f} over {item['samples']} sample(s))"
             )
+    route_feedback = backtest.get("route_feedback", {})
+    if isinstance(route_feedback, dict) and route_feedback.get("event_count"):
+        print("ROUTE FEEDBACK")
+        for cohort in route_feedback.get("cohorts", []):
+            print(
+                f"  - {cohort.get('cohort_key', '')}: signals={cohort.get('signal_count', 0)} "
+                f"adjusted={', '.join(cohort.get('adjusted_adapters', [])) or 'none'}"
+            )
+            for adapter in cohort.get("adapters", []):
+                print(
+                    f"    * {adapter.get('adapter_id', '')}: bias={int(adapter.get('latest_feedback_bias', 0)):+} "
+                    f"signals={adapter.get('signal_count', 0)} effect={adapter.get('routing_effect', 'neutral')}"
+                )
 
 
 def local_runtime_capabilities_path() -> Path:
@@ -21962,6 +22088,21 @@ def main() -> int:
                     )
                 for item in runtime_guidance.get("fallbacks", []):
                     print(f"  FALLBACK {item}")
+                execution_route = runtime_guidance.get("execution_route", {})
+                feedback_evidence = execution_route.get("feedback_evidence", {}) if isinstance(execution_route, dict) else {}
+                if isinstance(feedback_evidence, dict) and feedback_evidence.get("total_signal_count"):
+                    print("ROUTE FEEDBACK")
+                    print(
+                        f"  COHORT {feedback_evidence.get('cohort_key', '')} "
+                        f"signals={feedback_evidence.get('total_signal_count', 0)}"
+                    )
+                    for item in feedback_evidence.get("adapters", []):
+                        print(
+                            f"  ADAPTER {item.get('adapter_id', '')} "
+                            f"bias={int(item.get('bias', 0)):+} "
+                            f"signals={item.get('signal_count', 0)} "
+                            f"effect={item.get('routing_effect', 'neutral')}"
+                        )
             active_policy = recommendation.get("active_policy", {})
             if active_policy:
                 print("POLICY")

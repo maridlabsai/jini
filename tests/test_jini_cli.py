@@ -836,12 +836,34 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("export", execution_route["feedback_cohort"])
         self.assertEqual(1, execution_route["outcome_signal_count"])
         self.assertIn("local-fast", execution_route["feedback_adjusted_adapters"])
+        feedback_evidence = execution_route["feedback_evidence"]
+        self.assertEqual("export", feedback_evidence["cohort_key"])
+        self.assertEqual(1, feedback_evidence["total_signal_count"])
+        self.assertEqual(["local-fast"], feedback_evidence["adjusted_adapters"])
+        adapter_evidence = {item["adapter_id"]: item for item in feedback_evidence["adapters"]}
+        self.assertEqual(-7, adapter_evidence["local-fast"]["bias"])
+        self.assertEqual(1, adapter_evidence["local-fast"]["signal_count"])
+        self.assertEqual({"outcome_replaced": 1}, adapter_evidence["local-fast"]["counters"])
+        self.assertEqual("penalized", adapter_evidence["local-fast"]["routing_effect"])
 
         events = self.run_cli("show-learning-events", pack_dir, "--event-type", "route-outcome-feedback", "--format", "json")
         self.assert_ok(events)
         event = json.loads(events.stdout)["events"][-1]
         self.assertEqual("local-fast", event["adapter_id"])
         self.assertEqual("replaced-this", event["outcome"])
+
+        backtest_result = self.run_cli("routing-backtest", pack_dir, "--format", "json")
+        self.assert_ok(backtest_result)
+        route_feedback = json.loads(backtest_result.stdout)["route_feedback"]
+        self.assertEqual(1, route_feedback["event_count"])
+        cohort = route_feedback["cohorts"][0]
+        self.assertEqual("export", cohort["cohort_key"])
+        self.assertEqual(1, cohort["signal_count"])
+        self.assertEqual(["local-fast"], cohort["adjusted_adapters"])
+        backtest_adapter = cohort["adapters"][0]
+        self.assertEqual("local-fast", backtest_adapter["adapter_id"])
+        self.assertEqual({"outcome_replaced": 1}, backtest_adapter["counters"])
+        self.assertEqual(-7, backtest_adapter["latest_feedback_bias"])
 
     def test_passive_route_outcome_feedback_is_captured_from_user_actions(self) -> None:
         pack_dir = self.compile_research_pack()
