@@ -6763,6 +6763,58 @@ def resolve_continue_item(pack_dir: Path, registry: dict[str, Any]) -> dict[str,
     return ready_now[0]
 
 
+def build_terminal_preview(text: str, *, max_chars: int = 420) -> tuple[str, bool]:
+    cleaned = text.strip()
+    if len(cleaned) <= max_chars:
+        return cleaned, False
+
+    min_boundary = int(max_chars * 0.55)
+    cut = -1
+    for marker in ("\n\n", "\n", " "):
+        candidate = cleaned.rfind(marker, 0, max_chars)
+        if candidate >= min_boundary:
+            cut = candidate
+            break
+    if cut < 0:
+        cut = max_chars
+    preview = cleaned[:cut].rstrip()
+    return preview + "\n\n...", True
+
+
+def build_continue_commands(artifact_id: str, *, pack_dir: Path | None = None) -> tuple[str, str]:
+    cli = cli_invocation()
+    show_command = f"{cli} show {artifact_id}"
+    open_command = f"{cli} open {artifact_id}"
+    if pack_dir is not None:
+        quoted_pack_dir = shlex.quote(display_path(pack_dir))
+        show_command += f" --from {quoted_pack_dir}"
+        open_command += f" --from {quoted_pack_dir}"
+    return show_command, open_command
+
+
+def print_continue_preview(
+    artifact: dict[str, Any],
+    artifact_path: Path,
+    *,
+    pack_dir: Path | None = None,
+    max_chars: int = 420,
+) -> None:
+    artifact_id = str(artifact.get("id", "")).strip() or "artifact"
+    label = str(artifact.get("label", "")).strip() or artifact_id
+    preview, trimmed = build_terminal_preview(artifact_path.read_text(encoding="utf-8"), max_chars=max_chars)
+    print(f"NEXT   {artifact_id}")
+    print(f"LABEL  {label}")
+    print(f"PATH   {display_path(artifact_path)}")
+    print()
+    print(preview)
+    if trimmed:
+        show_command, open_command = build_continue_commands(artifact_id, pack_dir=pack_dir)
+        print()
+        print("MORE")
+        print(f"  - {show_command}")
+        print(f"  - {open_command}")
+
+
 def print_artifact_catalog(catalog: dict[str, Any]) -> None:
     print(f"WORK   {catalog.get('work_unit_id', '')}")
     print(f"TITLE  {catalog.get('title', '')}")
@@ -6865,7 +6917,7 @@ PUBLIC_HELP_GROUPS: list[tuple[str, list[tuple[str, str]]]] = [
         "WORK WITH JINI",
         [
             ("jini status", "See what is done, what is next, and what is still missing."),
-            ("jini continue", "Open the next useful artifact without rebuilding the work state."),
+            ("jini continue", "Preview the next useful artifact without rebuilding the work state."),
             ("jini open", "Open the current artifact or human-facing view."),
             ("jini show", "Print an artifact or ready-now view in the terminal."),
             ("jini resume", "Re-enter the latest active work cheaply."),
@@ -16230,7 +16282,7 @@ def main() -> int:
 
     continue_parser = subparsers.add_parser(
         "continue",
-        help="Open the next useful artifact from the current work",
+        help="Preview the next useful artifact from the current work",
     )
     continue_parser.add_argument("--from", dest="path", type=Path, help="Optional pack path; defaults to the current Jini work")
     continue_parser.add_argument(
@@ -17881,7 +17933,11 @@ def main() -> int:
             if args.print_path:
                 print(display_path(artifact_path))
             else:
-                print(artifact_path.read_text(encoding="utf-8"))
+                print_continue_preview(
+                    artifact,
+                    artifact_path,
+                    pack_dir=pack_dir if args.path is not None else None,
+                )
         except (FileNotFoundError, OSError, TypeError, ValueError) as exc:
             if args.path is None:
                 context = load_current_session_context()

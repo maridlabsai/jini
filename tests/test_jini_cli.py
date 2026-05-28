@@ -467,6 +467,20 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(result)
         self.assertIn(str((pack_dir / "views" / "tasks.md").resolve()), result.stdout.strip())
 
+    def test_continue_command_uses_compact_preview_surface(self) -> None:
+        pack_dir = self.compile_research_pack()
+
+        continue_result = self.run_cli("continue", "--from", pack_dir)
+        self.assert_ok(continue_result)
+        self.assertIn("NEXT   tasks", continue_result.stdout)
+        self.assertIn("# Tasks:", continue_result.stdout)
+        self.assertIn("jini show tasks --from", continue_result.stdout)
+        self.assertIn("jini open tasks --from", continue_result.stdout)
+
+        resume_result = self.run_cli("resume", pack_dir, "--format", "json", "--max-chars", "700")
+        self.assert_ok(resume_result)
+        self.assertLess(len(continue_result.stdout), len(resume_result.stdout))
+
     def test_status_view_reports_plain_questions_and_follow_on_commands(self) -> None:
         pack_dir = self.compile_research_pack()
         result = self.run_cli("status", pack_dir)
@@ -2976,8 +2990,8 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue(all("stderr_preview" not in item for item in payload["command_samples"]))
         self.assertTrue(payload["resume_cost"]["available"])
         self.assertEqual("measured", payload["resume_cost"]["status"])
-        self.assertEqual("resume", payload["resume_cost"]["cheaper_surface"])
-        self.assertGreater(payload["resume_cost"]["continue_output_chars"], payload["resume_cost"]["resume_output_chars"])
+        self.assertEqual("continue", payload["resume_cost"]["cheaper_surface"])
+        self.assertLess(payload["resume_cost"]["continue_output_chars"], payload["resume_cost"]["resume_output_chars"])
         self.assertTrue(payload["provider_evidence"]["available"])
         self.assertEqual("local-preview", payload["provider_evidence"]["provider_id"])
         self.assertEqual("Local preview", payload["provider_evidence"]["label"])
