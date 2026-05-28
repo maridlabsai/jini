@@ -1,17 +1,36 @@
 updated_at: "2026-05-27"
 target_score: 9.0
-comparison_set:
+core_benchmark_set:
   - Kiro
+  - Hermes
+  - Claude Code
+  - Codex
+  - ChatGPT
+  - AgentField
+  - AI Hero Studio
+watchlist:
   - Spec Kit
   - Windsurf
   - Cline
   - Aider
+  - Matt Pocock Skills Installer
+comparison_set:
+  - Kiro
   - Hermes
+  - Claude Code
+  - Codex
+  - ChatGPT
+  - AgentField
   - AI Hero Studio
+  - Spec Kit
+  - Windsurf
+  - Cline
+  - Aider
   - Matt Pocock Skills Installer
 notes:
   - AI Hero Studio is tracked as a focused agent platform, not as a full protocol peer.
   - Matt Pocock's multi-target skills installer is treated as a packaging and distribution benchmark.
+  - The core benchmark set must align with the rerunnable golden benchmark; the watchlist is tracked for strategy pressure but does not require scenario coverage.
   - No replacement-critical score may clear 9.0 while the public docs, built install artifact, and taught command surface disagree.
 dimensions:
   - id: workflow-rigor

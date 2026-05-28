@@ -1,12 +1,31 @@
 schema_version: "0.1.0"
 benchmark_id: jini-product-golden-benchmark
 label: Jini Golden Product Benchmark
-updated_at: "2026-05-20"
+updated_at: "2026-05-28"
 last_verified_at: "2026-05-20"
 purpose: >
   Validate Jini against a rerunnable golden dataset and compare it against the
   major product, harness, coding-agent, and UX competitors using weighted
   user-journey scenarios.
+comparison_model:
+  core_benchmark_set:
+    - Claude Code
+    - Codex
+    - ChatGPT
+    - Kiro
+    - Hermes
+    - AgentField
+    - AI Hero
+  watchlist:
+    - Spec Kit
+    - Windsurf
+    - Cline
+    - Aider
+    - Matt Pocock Skills Installer
+  rule: >
+    The core benchmark set must align with the rerunnable competitor scenarios.
+    Watchlist frameworks stay visible for product pressure and periodic review,
+    but they do not require scenario coverage inside the golden benchmark.
 methodology:
   benchmark_scope: internal-drift-benchmark-not-live-market-ranking
   baseline_type: fixed-competitor-baselines-grounded-in-official-docs

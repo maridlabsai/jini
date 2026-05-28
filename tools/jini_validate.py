@@ -773,6 +773,11 @@ def build_competitive_kpi_summary(
     limit: int | None = None,
 ) -> dict[str, Any]:
     target_default = float(scorecard.get("target_score", 9.0))
+    comparison_set = [str(item).strip() for item in scorecard.get("comparison_set", []) if str(item).strip()]
+    core_benchmark_set = [str(item).strip() for item in scorecard.get("core_benchmark_set", []) if str(item).strip()]
+    watchlist = [str(item).strip() for item in scorecard.get("watchlist", []) if str(item).strip()]
+    if not core_benchmark_set:
+        core_benchmark_set = comparison_set[:]
     entries: list[dict[str, Any]] = []
 
     for raw_entry in scorecard["dimensions"]:
@@ -820,7 +825,9 @@ def build_competitive_kpi_summary(
     return {
         "updated_at": scorecard.get("updated_at"),
         "target_score": target_default,
-        "comparison_set": scorecard.get("comparison_set", []),
+        "comparison_set": comparison_set,
+        "core_benchmark_set": core_benchmark_set,
+        "watchlist": watchlist,
         "dimension_filter": dimension,
         "dimensions": entries,
     }
@@ -832,6 +839,12 @@ def print_competitive_kpi_summary(summary: dict[str, Any]) -> None:
     comparison_set = summary.get("comparison_set") or []
     if comparison_set:
         print("VERSUS  " + ", ".join(str(item) for item in comparison_set))
+    core_benchmark_set = summary.get("core_benchmark_set") or []
+    if core_benchmark_set:
+        print("CORE    " + ", ".join(str(item) for item in core_benchmark_set))
+    watchlist = summary.get("watchlist") or []
+    if watchlist:
+        print("WATCH   " + ", ".join(str(item) for item in watchlist))
 
     if summary.get("dimension_filter"):
         for item in summary["dimensions"]:
@@ -963,19 +976,58 @@ def build_competitive_watch_report() -> dict[str, Any]:
         for label in scorecard.get("comparison_set", [])
         if str(label).strip()
     ]
-    scorecard_competitor_map = {
-        item["normalized_id"]: item for item in scorecard_competitor_rows if item["normalized_id"]
-    }
-    missing_from_benchmark = [
-        item["label"]
-        for item in scorecard_competitor_rows
-        if item["normalized_id"] and item["normalized_id"] not in benchmark_competitor_map
+    scorecard_core_rows = [
+        {
+            "label": str(label).strip(),
+            "normalized_id": normalize_competitor_name(str(label).strip()),
+        }
+        for label in scorecard.get("core_benchmark_set", [])
+        if str(label).strip()
     ]
-    missing_from_scorecard = [
-        item["label"]
-        for item in benchmark_competitor_rows
-        if normalize_competitor_name(item["label"] or item["id"]) not in scorecard_competitor_map
+    scorecard_watchlist_rows = [
+        {
+            "label": str(label).strip(),
+            "normalized_id": normalize_competitor_name(str(label).strip()),
+        }
+        for label in scorecard.get("watchlist", [])
+        if str(label).strip()
     ]
+    scorecard_core_map = {item["normalized_id"]: item for item in scorecard_core_rows if item["normalized_id"]}
+    comparison_model = benchmark.get("comparison_model", {}) if isinstance(benchmark.get("comparison_model", {}), dict) else {}
+    benchmark_core_rows = [
+        {
+            "label": str(label).strip(),
+            "normalized_id": normalize_competitor_name(str(label).strip()),
+        }
+        for label in comparison_model.get("core_benchmark_set", [])
+        if str(label).strip()
+    ]
+    if not benchmark_core_rows:
+        benchmark_core_rows = [
+            {"label": item["label"], "normalized_id": normalize_competitor_name(item["label"] or item["id"])}
+            for item in benchmark_competitor_rows
+        ]
+    benchmark_core_map = {item["normalized_id"]: item for item in benchmark_core_rows if item["normalized_id"]}
+    benchmark_watchlist_rows = [
+        {
+            "label": str(label).strip(),
+            "normalized_id": normalize_competitor_name(str(label).strip()),
+        }
+        for label in comparison_model.get("watchlist", [])
+        if str(label).strip()
+    ]
+    missing_from_benchmark_core = [
+        item["label"]
+        for item in scorecard_core_rows
+        if item["normalized_id"] and item["normalized_id"] not in benchmark_core_map
+    ]
+    missing_from_scorecard_core = [
+        item["label"]
+        for item in benchmark_core_rows
+        if item["normalized_id"] and item["normalized_id"] not in scorecard_core_map
+    ]
+    watchlist_only = sorted({item["label"] for item in scorecard_watchlist_rows})
+    benchmark_watchlist_only = sorted({item["label"] for item in benchmark_watchlist_rows})
 
     replacement_rows = []
     for item in scorecard.get("dimensions", []):
@@ -1081,7 +1133,7 @@ def build_competitive_watch_report() -> dict[str, Any]:
         },
     ]
     freshness_status = "ok" if all(item["status"] == "ok" for item in freshness_checks) else "warning"
-    coverage_status = "ok" if not missing_from_benchmark and not missing_from_scorecard else "warning"
+    coverage_status = "ok" if not missing_from_benchmark_core and not missing_from_scorecard_core else "warning"
     replacement_status = "ok" if not blocked_replacement_rows else "warning"
     score_truth_checks = [
         {
@@ -1128,6 +1180,8 @@ def build_competitive_watch_report() -> dict[str, Any]:
             "updated_at": scorecard_updated_at,
             "age_days": scorecard_age_days,
             "comparison_set": scorecard.get("comparison_set", []),
+            "core_benchmark_set": scorecard.get("core_benchmark_set", []),
+            "watchlist": scorecard.get("watchlist", []),
         },
         "benchmark": {
             "benchmark_id": str(benchmark.get("benchmark_id", "")).strip(),
@@ -1138,6 +1192,8 @@ def build_competitive_watch_report() -> dict[str, Any]:
             "scenario_count": len(benchmark.get("scenarios", [])) if isinstance(benchmark.get("scenarios", []), list) else 0,
             "competitor_count": len(benchmark_competitor_rows),
             "competitors": benchmark_competitor_rows,
+            "core_benchmark_set": [item["label"] for item in benchmark_core_rows],
+            "watchlist": [item["label"] for item in benchmark_watchlist_rows],
         },
         "freshness": {
             "status": freshness_status,
@@ -1146,8 +1202,11 @@ def build_competitive_watch_report() -> dict[str, Any]:
         },
         "coverage": {
             "status": coverage_status,
-            "missing_from_benchmark": sorted(missing_from_benchmark),
-            "missing_from_scorecard": sorted(missing_from_scorecard),
+            "core_alignment_status": coverage_status,
+            "missing_from_benchmark_core": sorted(missing_from_benchmark_core),
+            "missing_from_scorecard_core": sorted(missing_from_scorecard_core),
+            "watchlist_only": watchlist_only,
+            "benchmark_watchlist": benchmark_watchlist_only,
         },
         "replacement_critical": {
             "status": replacement_status,
@@ -1196,10 +1255,12 @@ def print_competitive_watch_report(report: dict[str, Any]) -> None:
         )
     coverage = report.get("coverage", {})
     print(f"COVER   {coverage.get('status', '')}")
-    for label in coverage.get("missing_from_benchmark", []):
-        print(f"  - scorecard only: {label}")
-    for label in coverage.get("missing_from_scorecard", []):
-        print(f"  - benchmark only: {label}")
+    for label in coverage.get("missing_from_benchmark_core", []):
+        print(f"  - core scorecard only: {label}")
+    for label in coverage.get("missing_from_scorecard_core", []):
+        print(f"  - core benchmark only: {label}")
+    for label in coverage.get("watchlist_only", []):
+        print(f"  - watchlist: {label}")
     score_truth = report.get("score_truth", {})
     print(
         "LEAD    "
@@ -6498,20 +6559,23 @@ def render_competitive_watch_brief(home_root: Path) -> Path:
         f"- Scenarios: {benchmark.get('scenario_count', 0)}",
         f"- Projected Score: {score_truth.get('projected_overall_score', 0.0)}",
         (
-            f"- Strongest Competitor: {score_truth.get('projected_strongest_competitor', '')} "
-            f"({score_truth.get('projected_strongest_competitor_score', 0.0)})"
+        f"- Strongest Competitor: {score_truth.get('projected_strongest_competitor', '')} "
+        f"({score_truth.get('projected_strongest_competitor_score', 0.0)})"
         ),
         f"- Margin: {score_truth.get('projected_margin', 0.0):+.2f}",
         "",
         "## Coverage Gaps",
     ]
-    missing_from_benchmark = report.get("coverage", {}).get("missing_from_benchmark", [])
-    missing_from_scorecard = report.get("coverage", {}).get("missing_from_scorecard", [])
+    missing_from_benchmark = report.get("coverage", {}).get("missing_from_benchmark_core", [])
+    missing_from_scorecard = report.get("coverage", {}).get("missing_from_scorecard_core", [])
+    watchlist_only = report.get("coverage", {}).get("watchlist_only", [])
     if missing_from_benchmark:
-        lines.extend([f"- Scorecard only: {item}" for item in missing_from_benchmark])
+        lines.extend([f"- Core scorecard only: {item}" for item in missing_from_benchmark])
     if missing_from_scorecard:
-        lines.extend([f"- Benchmark only: {item}" for item in missing_from_scorecard])
-    if not missing_from_benchmark and not missing_from_scorecard:
+        lines.extend([f"- Core benchmark only: {item}" for item in missing_from_scorecard])
+    if watchlist_only:
+        lines.extend([f"- Watchlist only: {item}" for item in watchlist_only])
+    if not missing_from_benchmark and not missing_from_scorecard and not watchlist_only:
         lines.append("- None.")
     lines.extend(["", "## Next Actions"])
     next_actions = report.get("next_actions", [])
