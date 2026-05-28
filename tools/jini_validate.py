@@ -136,6 +136,34 @@ LEAN_PLATFORM_ALIAS_SCAN_PATHS = (
     PRODUCT_REWRITE_CONTRACT_PATH,
     ROOT / "specs" / "launcher-intake-design.md",
 )
+REPLACEMENT_CRITICAL_DIMENSION_IDS = (
+    "workflow-rigor",
+    "delivery-maturity",
+    "packaging-install",
+    "memory-reliability",
+    "adapter-portability",
+    "token-efficiency",
+)
+COMPETITOR_ALIAS_NORMALIZATION = {
+    "claude-code": "claude-code",
+    "claude code": "claude-code",
+    "codex": "codex",
+    "chatgpt": "chatgpt",
+    "kiro": "kiro",
+    "hermes": "hermes",
+    "agentfield": "agentfield",
+    "ai hero": "ai-hero",
+    "ai hero studio": "ai-hero",
+    "ai-hero": "ai-hero",
+    "spec kit": "spec-kit",
+    "windsurf": "windsurf",
+    "cline": "cline",
+    "aider": "aider",
+    "matt pocock skills installer": "matt-pocock-skills-installer",
+}
+COMPETITIVE_WATCH_SCORECARD_MAX_AGE_DAYS = 14
+COMPETITIVE_WATCH_BENCHMARK_MAX_AGE_DAYS = 30
+COMPETITIVE_WATCH_VERIFICATION_MAX_AGE_DAYS = 14
 PUBLIC_EXAMPLE_SPECS: dict[str, dict[str, Any]] = {
     "meeting-followup": {
         "label": "Meeting Follow-up",
@@ -840,6 +868,359 @@ def print_competitive_kpi_summary(summary: dict[str, Any]) -> None:
         next_steps = normalize_framework_steps(item.get("next_build_steps", []))
         if next_steps:
             print(f"    next: {next_steps[0]}")
+
+
+def parse_iso_datetime(value: str) -> datetime | None:
+    text = str(value).strip()
+    if not text:
+        return None
+    try:
+        if len(text) == 10 and text.count("-") == 2:
+            return datetime.fromisoformat(f"{text}T00:00:00+00:00")
+        return datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def age_in_days(value: str) -> int | None:
+    parsed = parse_iso_datetime(value)
+    if parsed is None:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    delta = datetime.now(timezone.utc) - parsed.astimezone(timezone.utc)
+    return max(0, int(delta.total_seconds() // 86400))
+
+
+def age_status(age_days: int | None, *, max_age_days: int) -> str:
+    if age_days is None:
+        return "unknown"
+    if age_days <= max_age_days:
+        return "ok"
+    if age_days <= max_age_days * 2:
+        return "warning"
+    return "stale"
+
+
+def normalize_competitor_name(value: str) -> str:
+    cleaned = re.sub(r"[^a-z0-9]+", " ", str(value).lower()).strip()
+    if not cleaned:
+        return ""
+    return COMPETITOR_ALIAS_NORMALIZATION.get(cleaned, cleaned.replace(" ", "-"))
+
+
+def latest_golden_benchmark_report_path() -> Path | None:
+    reports = sorted(golden_benchmark_report_dir().glob("golden-benchmark-*.json"))
+    if not reports:
+        return None
+    return reports[-1]
+
+
+def load_latest_golden_benchmark_report() -> dict[str, Any] | None:
+    report_path = latest_golden_benchmark_report_path()
+    if report_path is None or not report_path.exists():
+        return None
+    report = load_document(report_path)
+    if not isinstance(report, dict):
+        return None
+    return report
+
+
+def build_competitive_watch_report() -> dict[str, Any]:
+    scorecard = build_competitive_kpi_summary(load_competitive_kpis(), limit=None)
+    benchmark = load_golden_benchmark()
+    projection = build_golden_benchmark_projection()
+    rewrite_baseline = load_rewrite_score_baseline()
+    latest_validation = load_latest_golden_benchmark_report()
+
+    scorecard_updated_at = str(scorecard.get("updated_at", "")).strip()
+    benchmark_updated_at = str(benchmark.get("updated_at", "")).strip()
+    benchmark_last_verified_at = str(benchmark.get("last_verified_at", benchmark_updated_at)).strip()
+    scorecard_age_days = age_in_days(scorecard_updated_at)
+    benchmark_age_days = age_in_days(benchmark_updated_at)
+    benchmark_verification_age_days = age_in_days(benchmark_last_verified_at)
+
+    benchmark_competitors = [
+        item for item in benchmark.get("competitors", []) if isinstance(item, dict) and str(item.get("id", "")).strip()
+    ]
+    benchmark_competitor_rows = [
+        {
+            "id": str(item.get("id", "")).strip(),
+            "label": str(item.get("label", item.get("id", ""))).strip(),
+            "source_urls": [str(url).strip() for url in item.get("source_urls", []) if str(url).strip()],
+            "validated_strengths": [str(entry).strip() for entry in item.get("validated_strengths", []) if str(entry).strip()],
+        }
+        for item in benchmark_competitors
+    ]
+    benchmark_competitor_map = {
+        normalize_competitor_name(item["label"] or item["id"]): item for item in benchmark_competitor_rows
+    }
+    scorecard_competitor_rows = [
+        {
+            "label": str(label).strip(),
+            "normalized_id": normalize_competitor_name(str(label).strip()),
+        }
+        for label in scorecard.get("comparison_set", [])
+        if str(label).strip()
+    ]
+    scorecard_competitor_map = {
+        item["normalized_id"]: item for item in scorecard_competitor_rows if item["normalized_id"]
+    }
+    missing_from_benchmark = [
+        item["label"]
+        for item in scorecard_competitor_rows
+        if item["normalized_id"] and item["normalized_id"] not in benchmark_competitor_map
+    ]
+    missing_from_scorecard = [
+        item["label"]
+        for item in benchmark_competitor_rows
+        if normalize_competitor_name(item["label"] or item["id"]) not in scorecard_competitor_map
+    ]
+
+    replacement_rows = []
+    for item in scorecard.get("dimensions", []):
+        if not isinstance(item, dict):
+            continue
+        dimension_id = str(item.get("id", "")).strip()
+        if dimension_id not in REPLACEMENT_CRITICAL_DIMENSION_IDS:
+            continue
+        strongest = item.get("strongest_competitor", {}) if isinstance(item.get("strongest_competitor", {}), dict) else {}
+        current_score = float(item.get("current_score", 0.0))
+        target_score = float(item.get("target_score", scorecard.get("target_score", 9.0)))
+        strongest_score = float(strongest.get("score", 0.0))
+        replacement_rows.append(
+            {
+                "id": dimension_id,
+                "label": str(item.get("label", dimension_id)).strip(),
+                "current_score": current_score,
+                "target_score": target_score,
+                "gap_to_target": round(max(0.0, target_score - current_score), 2),
+                "competitive_gap": round(max(0.0, strongest_score - current_score), 2),
+                "strength_status": str(item.get("strength_status", "")),
+                "strongest_competitor": {
+                    "name": str(strongest.get("name", "")).strip(),
+                    "score": strongest_score,
+                },
+                "next_build_steps": normalize_framework_steps(item.get("next_build_steps", [])),
+            }
+        )
+    blocked_replacement_rows = [
+        item
+        for item in replacement_rows
+        if item["gap_to_target"] > 0.0 or item["competitive_gap"] > 0.0 or item["strength_status"] != "leading"
+    ]
+
+    projection_overall = projection.get("overall", {}) if isinstance(projection.get("overall", {}), dict) else {}
+    projected_margin = round(
+        float(projection_overall.get("jini_score", 0.0)) - float(projection_overall.get("strongest_competitor_score", 0.0)),
+        2,
+    )
+    required_margin = float(rewrite_baseline.get("minimum_margin_over_strongest_competitor", 0.0))
+    required_floor = float(rewrite_baseline.get("minimum_next_overall_score", 0.0))
+
+    latest_validation_summary: dict[str, Any]
+    if latest_validation is None:
+        latest_validation_summary = {
+            "available": False,
+            "path": "",
+            "generated_at": "",
+            "age_days": None,
+            "status": "missing",
+            "dataset_digest_matches_current": False,
+        }
+    else:
+        latest_validation_overall = (
+            latest_validation.get("overall", {}) if isinstance(latest_validation.get("overall", {}), dict) else {}
+        )
+        latest_validation_summary = {
+            "available": True,
+            "path": display_path(latest_golden_benchmark_report_path()),
+            "generated_at": str(latest_validation.get("generated_at", "")).strip(),
+            "age_days": age_in_days(str(latest_validation.get("generated_at", "")).strip()),
+            "status": str(latest_validation_overall.get("status", "unknown")).strip(),
+            "dataset_digest": str(latest_validation.get("dataset_digest", "")).strip(),
+            "dataset_digest_matches_current": str(latest_validation.get("dataset_digest", "")).strip()
+            == projection.get("dataset_digest", ""),
+            "jini_score": float(latest_validation_overall.get("jini_score", 0.0)),
+            "strongest_competitor": str(latest_validation_overall.get("strongest_competitor", "")).strip(),
+            "strongest_competitor_score": float(latest_validation_overall.get("strongest_competitor_score", 0.0)),
+            "margin": round(
+                float(latest_validation_overall.get("jini_score", 0.0))
+                - float(latest_validation_overall.get("strongest_competitor_score", 0.0)),
+                2,
+            ),
+        }
+
+    freshness_checks = [
+        {
+            "id": "scorecard-updated-at",
+            "label": "Competitive KPI scorecard freshness",
+            "updated_at": scorecard_updated_at,
+            "age_days": scorecard_age_days,
+            "max_age_days": COMPETITIVE_WATCH_SCORECARD_MAX_AGE_DAYS,
+            "status": age_status(scorecard_age_days, max_age_days=COMPETITIVE_WATCH_SCORECARD_MAX_AGE_DAYS),
+        },
+        {
+            "id": "benchmark-updated-at",
+            "label": "Golden benchmark dataset freshness",
+            "updated_at": benchmark_updated_at,
+            "age_days": benchmark_age_days,
+            "max_age_days": COMPETITIVE_WATCH_BENCHMARK_MAX_AGE_DAYS,
+            "status": age_status(benchmark_age_days, max_age_days=COMPETITIVE_WATCH_BENCHMARK_MAX_AGE_DAYS),
+        },
+        {
+            "id": "benchmark-last-verified-at",
+            "label": "Golden benchmark verification freshness",
+            "updated_at": benchmark_last_verified_at,
+            "age_days": benchmark_verification_age_days,
+            "max_age_days": COMPETITIVE_WATCH_VERIFICATION_MAX_AGE_DAYS,
+            "status": age_status(
+                benchmark_verification_age_days,
+                max_age_days=COMPETITIVE_WATCH_VERIFICATION_MAX_AGE_DAYS,
+            ),
+        },
+    ]
+    freshness_status = "ok" if all(item["status"] == "ok" for item in freshness_checks) else "warning"
+    coverage_status = "ok" if not missing_from_benchmark and not missing_from_scorecard else "warning"
+    replacement_status = "ok" if not blocked_replacement_rows else "warning"
+    score_truth_checks = [
+        {
+            "id": "overall-score-floor",
+            "current": float(projection_overall.get("jini_score", 0.0)),
+            "required": required_floor,
+            "delta": round(float(projection_overall.get("jini_score", 0.0)) - required_floor, 2),
+            "status": "ok" if float(projection_overall.get("jini_score", 0.0)) > required_floor else "warning",
+        },
+        {
+            "id": "lead-margin-floor",
+            "current": projected_margin,
+            "required": required_margin,
+            "delta": round(projected_margin - required_margin, 2),
+            "status": "ok" if projected_margin >= required_margin else "warning",
+        },
+        {
+            "id": "latest-validation-digest",
+            "current": latest_validation_summary.get("dataset_digest", ""),
+            "required": projection.get("dataset_digest", ""),
+            "delta": 0.0,
+            "status": "ok"
+            if not latest_validation_summary["available"] or latest_validation_summary["dataset_digest_matches_current"]
+            else "warning",
+        },
+    ]
+    score_truth_status = "ok" if all(item["status"] == "ok" for item in score_truth_checks) else "warning"
+
+    next_actions: list[str] = []
+    for item in blocked_replacement_rows:
+        for step in item.get("next_build_steps", []):
+            if step and step not in next_actions:
+                next_actions.append(step)
+                break
+
+    return {
+        "schema_version": "0.1.0",
+        "result_type": "JiniCompetitiveWatch",
+        "generated_at": now_utc(),
+        "status": "ok"
+        if all(status == "ok" for status in (freshness_status, coverage_status, replacement_status, score_truth_status))
+        else "warning",
+        "scorecard": {
+            "updated_at": scorecard_updated_at,
+            "age_days": scorecard_age_days,
+            "comparison_set": scorecard.get("comparison_set", []),
+        },
+        "benchmark": {
+            "benchmark_id": str(benchmark.get("benchmark_id", "")).strip(),
+            "label": str(benchmark.get("label", "")).strip(),
+            "updated_at": benchmark_updated_at,
+            "last_verified_at": benchmark_last_verified_at,
+            "dataset_digest": projection.get("dataset_digest", ""),
+            "scenario_count": len(benchmark.get("scenarios", [])) if isinstance(benchmark.get("scenarios", []), list) else 0,
+            "competitor_count": len(benchmark_competitor_rows),
+            "competitors": benchmark_competitor_rows,
+        },
+        "freshness": {
+            "status": freshness_status,
+            "checks": freshness_checks,
+            "latest_validation": latest_validation_summary,
+        },
+        "coverage": {
+            "status": coverage_status,
+            "missing_from_benchmark": sorted(missing_from_benchmark),
+            "missing_from_scorecard": sorted(missing_from_scorecard),
+        },
+        "replacement_critical": {
+            "status": replacement_status,
+            "dimensions": replacement_rows,
+            "blocked_dimensions": [item["id"] for item in blocked_replacement_rows],
+        },
+        "score_truth": {
+            "status": score_truth_status,
+            "checks": score_truth_checks,
+            "projected_overall_score": float(projection_overall.get("jini_score", 0.0)),
+            "projected_strongest_competitor": str(projection_overall.get("strongest_competitor", "")).strip(),
+            "projected_strongest_competitor_score": float(projection_overall.get("strongest_competitor_score", 0.0)),
+            "projected_margin": projected_margin,
+            "track_statuses": {
+                track_id: str(track.get("status", "")).strip()
+                for track_id, track in projection_overall.get("tracks", {}).items()
+                if isinstance(track, dict)
+            },
+        },
+        "next_actions": next_actions[:5],
+    }
+
+
+def print_competitive_watch_report(report: dict[str, Any]) -> None:
+    print("Competitive Watch")
+    print(f"STATUS  {report.get('status', 'unknown')}")
+    benchmark = report.get("benchmark", {})
+    print(f"BENCH   {benchmark.get('label', '')}")
+    print(f"DIGEST  {benchmark.get('dataset_digest', '')}")
+    scorecard = report.get("scorecard", {})
+    print(f"SCORE   {scorecard.get('updated_at', '')}")
+    freshness = report.get("freshness", {})
+    print(f"FRESH   {freshness.get('status', '')}")
+    for item in freshness.get("checks", []):
+        print(
+            f"  - {item.get('id', '')}: {item.get('status', '')} | "
+            f"age={item.get('age_days', 'unknown')}d | max={item.get('max_age_days', 0)}d"
+        )
+    latest_validation = freshness.get("latest_validation", {})
+    if latest_validation.get("available"):
+        print(
+            "VALID   "
+            f"{latest_validation.get('status', '')} | "
+            f"age={latest_validation.get('age_days', 'unknown')}d | "
+            f"margin={float(latest_validation.get('margin', 0.0)):.2f}"
+        )
+    coverage = report.get("coverage", {})
+    print(f"COVER   {coverage.get('status', '')}")
+    for label in coverage.get("missing_from_benchmark", []):
+        print(f"  - scorecard only: {label}")
+    for label in coverage.get("missing_from_scorecard", []):
+        print(f"  - benchmark only: {label}")
+    score_truth = report.get("score_truth", {})
+    print(
+        "LEAD    "
+        f"{score_truth.get('projected_overall_score', 0.0):.2f} vs "
+        f"{score_truth.get('projected_strongest_competitor', '')} "
+        f"({score_truth.get('projected_strongest_competitor_score', 0.0):.2f}) | "
+        f"margin={score_truth.get('projected_margin', 0.0):+.2f}"
+    )
+    for item in report.get("replacement_critical", {}).get("dimensions", []):
+        if item.get("id") not in report.get("replacement_critical", {}).get("blocked_dimensions", []):
+            continue
+        print(
+            f"BLOCK   {item.get('id', '')} | cur={float(item.get('current_score', 0.0)):.1f} | "
+            f"tgt={float(item.get('target_score', 0.0)):.1f} | "
+            f"gap={float(item.get('gap_to_target', 0.0)):.1f}"
+        )
+    next_actions = report.get("next_actions", [])
+    if next_actions:
+        print("NEXT")
+        for step in next_actions:
+            print(f"  - {step}")
 
 
 def build_lean_platform_metrics() -> dict[str, Any]:
@@ -5492,6 +5873,18 @@ def default_personal_routines() -> list[dict[str, Any]]:
         },
         {
             "schema_version": "0.1.0",
+            "routine_id": "competitive-watch",
+            "title": "Competitive Watch",
+            "mode": "local",
+            "runner": "builtin",
+            "builtin_id": "competitive-watch",
+            "enabled": True,
+            "summary": "Render a score-truth packet for benchmark freshness, competitor coverage, and replacement blockers.",
+            "cadence": "on-demand",
+            "outputs": ["outputs/benchmarks/"],
+        },
+        {
+            "schema_version": "0.1.0",
             "routine_id": "framework-review",
             "title": "Framework Review",
             "mode": "local",
@@ -6086,6 +6479,50 @@ def render_golden_benchmark_brief(home_root: Path) -> Path:
     return output_path
 
 
+def render_competitive_watch_brief(home_root: Path) -> Path:
+    load_personal_home(home_root)
+    report = build_competitive_watch_report()
+    output_dir = home_root / "outputs" / "benchmarks"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    output_path = output_dir / f"competitive-watch-{stamp}.md"
+    benchmark = report.get("benchmark", {})
+    score_truth = report.get("score_truth", {})
+    lines = [
+        "# Competitive Watch",
+        "",
+        f"- Generated: {report.get('generated_at', now_utc())}",
+        f"- Status: {report.get('status', 'unknown')}",
+        f"- Benchmark: {benchmark.get('label', '')}",
+        f"- Competitors: {benchmark.get('competitor_count', 0)}",
+        f"- Scenarios: {benchmark.get('scenario_count', 0)}",
+        f"- Projected Score: {score_truth.get('projected_overall_score', 0.0)}",
+        (
+            f"- Strongest Competitor: {score_truth.get('projected_strongest_competitor', '')} "
+            f"({score_truth.get('projected_strongest_competitor_score', 0.0)})"
+        ),
+        f"- Margin: {score_truth.get('projected_margin', 0.0):+.2f}",
+        "",
+        "## Coverage Gaps",
+    ]
+    missing_from_benchmark = report.get("coverage", {}).get("missing_from_benchmark", [])
+    missing_from_scorecard = report.get("coverage", {}).get("missing_from_scorecard", [])
+    if missing_from_benchmark:
+        lines.extend([f"- Scorecard only: {item}" for item in missing_from_benchmark])
+    if missing_from_scorecard:
+        lines.extend([f"- Benchmark only: {item}" for item in missing_from_scorecard])
+    if not missing_from_benchmark and not missing_from_scorecard:
+        lines.append("- None.")
+    lines.extend(["", "## Next Actions"])
+    next_actions = report.get("next_actions", [])
+    if next_actions:
+        lines.extend([f"- {item}" for item in next_actions])
+    else:
+        lines.append("- None.")
+    output_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return output_path
+
+
 def render_framework_review_brief(home_root: Path) -> Path:
     load_personal_home(home_root)
     review, review_path = build_framework_review(limit=5)
@@ -6175,6 +6612,15 @@ def run_personal_routine(home_root: Path, routine_id: str, *, mode: str | None =
             result = {
                 "schema_version": "0.1.0",
                 "result_type": "JiniGoldenBenchmarkRoutineResult",
+                "generated_at": now_utc(),
+                "output_path": str(output_path),
+            }
+            output_paths = [str(output_path)]
+        elif builtin_id == "competitive-watch":
+            output_path = render_competitive_watch_brief(home_root)
+            result = {
+                "schema_version": "0.1.0",
+                "result_type": "JiniCompetitiveWatchRoutineResult",
                 "generated_at": now_utc(),
                 "output_path": str(output_path),
             }
@@ -16606,6 +17052,17 @@ def main() -> int:
         help="Output format for the golden benchmark report",
     )
 
+    competitive_watch_parser = subparsers.add_parser(
+        "competitive-watch",
+        help="Show benchmark freshness, competitor-set drift, and replacement-critical score blockers",
+    )
+    competitive_watch_parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for the competitive-watch report",
+    )
+
     open_source_prompt_parser = subparsers.add_parser(
         "validate-open-source-prompts",
         help="Validate the derived open-source GitHub prompt corpus and framework comparison gates",
@@ -18380,6 +18837,18 @@ def main() -> int:
             print(json.dumps(report, indent=2))
         else:
             print_golden_benchmark_report(report)
+        return 0
+
+    if args.command == "competitive-watch":
+        try:
+            report = build_competitive_watch_report()
+        except (FileNotFoundError, KeyError, TypeError, ValueError) as exc:
+            print(f"ERROR {exc}")
+            return 1
+        if args.format == "json":
+            print(json.dumps(report, indent=2))
+        else:
+            print_competitive_watch_report(report)
         return 0
 
     if args.command == "validate-open-source-prompts":

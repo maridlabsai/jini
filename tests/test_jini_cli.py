@@ -889,6 +889,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("dream-memory", routine_ids)
         self.assertIn("daily-brief", routine_ids)
         self.assertIn("golden-benchmark", routine_ids)
+        self.assertIn("competitive-watch", routine_ids)
         self.assertIn("framework-review", routine_ids)
         self.assertIn("publish-readiness", routine_ids)
         self.assertIn("weekly-planning", routine_ids)
@@ -966,6 +967,29 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("Golden Benchmark", text)
         self.assertIn("Kiro", text)
         self.assertIn("Hermes", text)
+
+    def test_run_routine_competitive_watch_emits_watch_brief(self) -> None:
+        home = self.personal_home()
+        self.assert_ok(self.run_cli("bootstrap-home", home, "--owner-name", "Sharad"))
+
+        result = self.run_cli(
+            "run-routine",
+            home,
+            "competitive-watch",
+            "--mode",
+            "local",
+            "--format",
+            "json",
+        )
+        self.assert_ok(result)
+
+        payload = json.loads(result.stdout)
+        self.assertEqual("executed", payload["status"])
+        output_path = Path(payload["output_paths"][0])
+        self.assertTrue(output_path.exists())
+        text = output_path.read_text(encoding="utf-8")
+        self.assertIn("Competitive Watch", text)
+        self.assertIn("Coverage Gaps", text)
 
     def test_run_routine_framework_review_emits_review_brief(self) -> None:
         home = self.personal_home()
@@ -2550,6 +2574,24 @@ class JiniCliConformanceTests(unittest.TestCase):
             expected_consensus_checks,
             {check["id"] for check in consensus_scenario["checks"] if check["status"] == "ok"},
         )
+
+    def test_competitive_watch_surfaces_freshness_coverage_and_blockers(self) -> None:
+        result = self.run_cli("competitive-watch", "--format", "json")
+        self.assert_ok(result)
+
+        report = json.loads(result.stdout)
+        self.assertEqual("JiniCompetitiveWatch", report["result_type"])
+        self.assertIn(report["status"], {"ok", "warning"})
+        self.assertEqual("warning", report["coverage"]["status"])
+        self.assertIn("Windsurf", report["coverage"]["missing_from_benchmark"])
+        self.assertIn("Claude Code", report["coverage"]["missing_from_scorecard"])
+        self.assertEqual("warning", report["score_truth"]["status"])
+        self.assertGreater(report["benchmark"]["competitor_count"], 0)
+        self.assertGreater(report["benchmark"]["scenario_count"], 0)
+        self.assertTrue(all(item["source_urls"] for item in report["benchmark"]["competitors"]))
+        self.assertTrue(report["freshness"]["checks"])
+        self.assertIn("delivery-maturity", report["replacement_critical"]["blocked_dimensions"])
+        self.assertTrue(report["next_actions"])
 
     def test_get_started_reports_beginner_and_power_paths(self) -> None:
         result = self.run_cli("get-started", "--harness", "codex", "--format", "json")
