@@ -3930,12 +3930,10 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue(review["policy_candidates"])
         self.assertTrue(any(item["kind"] == "routing-default" for item in review["policy_candidates"]))
         self.assertTrue(any(item["kind"] == "promotion-gate" for item in review["policy_candidates"]))
-        routing_default = next(item for item in review["policy_candidates"] if item["kind"] == "routing-default")
-        self.assertEqual(["export", "wiki"], routing_default["route_feedback_drivers"]["changed_cohort_keys"])
-        self.assertEqual(
-            "export:local-fast->local-workhorse,wiki:local-fast->local-workhorse",
-            routing_default["route_feedback_drivers"]["cohort_preview"]["text"],
-        )
+        routing_defaults = [item for item in review["policy_candidates"] if item["kind"] == "routing-default"]
+        self.assertTrue(routing_defaults)
+        for item in routing_defaults:
+            self.assertNotIn("route_feedback_drivers", item)
         self.assertEqual("changed", review["route_feedback_impact"]["status"])
         self.assertEqual(["export", "wiki"], review["route_feedback_impact"]["changed_cohort_keys"])
         self.assertEqual(
@@ -3948,14 +3946,111 @@ class JiniCliConformanceTests(unittest.TestCase):
             "IMPACT changed=2/2 cohorts=export:local-fast->local-workhorse,wiki:local-fast->local-workhorse action=jini review-policy",
             review_text.stdout,
         )
-        self.assertIn(
-            "drivers=export:local-fast->local-workhorse,wiki:local-fast->local-workhorse",
-            review_text.stdout,
-        )
         events = self.run_cli("show-learning-events", pack_dir, "--format", "json")
         self.assert_ok(events)
         event_types = [item["event_type"] for item in json.loads(events.stdout)["events"]]
         self.assertIn("policy-review", event_types)
+
+    def test_review_policy_keeps_unrelated_route_feedback_off_multi_candidate_defaults(self) -> None:
+        pack_dir = self.compile_research_pack()
+        home = self.personal_home()
+        state_root = self.tmp / ".jini"
+        state_root.mkdir(parents=True, exist_ok=True)
+        capabilities_path = state_root / "local-runtime-capabilities.json"
+        capabilities_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.4.0",
+                    "context_type": "JiniLocalRuntimeCapabilities",
+                    "captured_at": "2026-05-21T19:00:00Z",
+                    "local_runtime_class": "local-ollama",
+                    "adapters": {
+                        "local-fast": {
+                            "status": "ok",
+                            "latency_ms": 85,
+                            "warm_latency_ms": 70,
+                            "cold_start_cost_ms": 5,
+                            "tokens_per_second": 40.0,
+                            "quality_class": "usable",
+                            "structured_reliability": "usable",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        },
+                        "local-workhorse": {
+                            "status": "ok",
+                            "latency_ms": 190,
+                            "warm_latency_ms": 160,
+                            "cold_start_cost_ms": 30,
+                            "tokens_per_second": 22.5,
+                            "quality_class": "usable",
+                            "structured_reliability": "usable",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        },
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        self.assert_ok(self.run_cli("bootstrap-home", home))
+        self.assert_ok(self.run_cli("bind-home", pack_dir, "--home", home))
+        runtime_dir = pack_dir / "runtime"
+        runtime_dir.mkdir(parents=True, exist_ok=True)
+        events_path = runtime_dir / "events.jsonl"
+        events = [
+            {
+                "schema_version": "0.1.0",
+                "event_type": "run-pack",
+                "recorded_at": "2026-05-11T10:00:00Z",
+                "pack_id": "research-prd",
+                "work_unit_id": "test-research-pack",
+                "intent": "make",
+                "execution_class": "cheap",
+                "state_before": "decided",
+                "state_after": "in_make",
+                "blocker_count": 0,
+            },
+            {
+                "schema_version": "0.1.0",
+                "event_type": "run-pack",
+                "recorded_at": "2026-05-11T10:05:00Z",
+                "pack_id": "research-prd",
+                "work_unit_id": "test-research-pack",
+                "intent": "verify",
+                "execution_class": "cheap",
+                "state_before": "in_make",
+                "state_after": "ready_for_review",
+                "blocker_count": 0,
+            },
+        ]
+        events_path.write_text("".join(json.dumps(item, sort_keys=True) + "\n" for item in events), encoding="utf-8")
+        self.assert_ok(
+            self.run_cli(
+                "record-route-outcome",
+                pack_dir,
+                "--adapter-id",
+                "local-fast",
+                "--intent",
+                "export",
+                "--outcome",
+                "replaced-this",
+                "--reason",
+                "Needed a stronger export route.",
+                "--format",
+                "json",
+            )
+        )
+
+        review = self.run_cli("review-policy", pack_dir, "--format", "json")
+        self.assert_ok(review)
+        review_doc = json.loads(review.stdout)
+        self.assertEqual(["export"], review_doc["route_feedback_impact"]["changed_cohort_keys"])
+        routing_defaults = [
+            item
+            for item in review_doc["policy_candidates"]
+            if item["kind"] == "routing-default"
+        ]
+        self.assertEqual(["make", "verify"], sorted(item["intent"] for item in routing_defaults))
+        for item in routing_defaults:
+            self.assertNotIn("route_feedback_drivers", item)
 
     def test_policy_candidate_lifecycle_can_activate_and_rollback_routing_override(self) -> None:
         pack_dir = self.compile_research_pack()

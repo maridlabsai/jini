@@ -12229,6 +12229,46 @@ def next_policy_review_path(pack_dir: Path) -> Path:
     return review_dir / f"policy-review-{stamp}.json"
 
 
+def build_policy_candidate_route_feedback_drivers(
+    route_feedback_impact: dict[str, Any],
+    *,
+    intent: str,
+    candidate_count: int,
+) -> dict[str, Any]:
+    if not isinstance(route_feedback_impact, dict):
+        return {}
+    cohorts = route_feedback_impact.get("cohorts", [])
+    if not isinstance(cohorts, list):
+        return {}
+    if candidate_count <= 1:
+        matched = [item for item in cohorts if isinstance(item, dict) and item.get("selected_changed")]
+    else:
+        matched = [
+            item
+            for item in cohorts
+            if isinstance(item, dict)
+            and item.get("selected_changed")
+            and str(item.get("cohort_key", "")).strip() == intent
+        ]
+    changed_cohort_keys = [
+        str(item.get("cohort_key", "")).strip()
+        for item in matched
+        if str(item.get("cohort_key", "")).strip()
+    ]
+    if not changed_cohort_keys:
+        return {}
+    cohort_preview = build_route_feedback_cohort_preview(matched)
+    return {
+        "status": str(route_feedback_impact.get("status", "")).strip(),
+        "changed_cohort_keys": changed_cohort_keys,
+        "cohort_preview": {
+            "entries": list(cohort_preview.get("entries", [])),
+            "remaining_count": int(cohort_preview.get("remaining_count", 0) or 0),
+            "text": str(cohort_preview.get("text", "")).strip(),
+        },
+    }
+
+
 def build_runtime_handoff(
     pack_dir: Path,
     registry: dict[str, Any],
@@ -12418,23 +12458,10 @@ def build_policy_review(
         "harvest-evidence": int(event_types.get("harvest-evidence", 0)),
     }
     coverage_gaps = [key for key, value in coverage.items() if value == 0]
-    route_feedback_drivers: dict[str, Any] = {}
-    if isinstance(route_feedback_impact, dict):
-        changed_cohort_keys = route_feedback_impact.get("changed_cohort_keys", [])
-        cohort_preview = route_feedback_impact.get("cohort_preview", {})
-        if isinstance(changed_cohort_keys, list) and isinstance(cohort_preview, dict) and changed_cohort_keys:
-            route_feedback_drivers = {
-                "status": str(route_feedback_impact.get("status", "")).strip(),
-                "changed_cohort_keys": [str(item).strip() for item in changed_cohort_keys if str(item).strip()],
-                "cohort_preview": {
-                    "entries": list(cohort_preview.get("entries", [])),
-                    "remaining_count": int(cohort_preview.get("remaining_count", 0) or 0),
-                    "text": str(cohort_preview.get("text", "")).strip(),
-                },
-            }
-
     policy_candidates: list[dict[str, Any]] = []
-    for recommendation in backtest.get("policy_recommendations", []):
+    recommendations = list(backtest.get("policy_recommendations", []))
+    candidate_count = len(recommendations)
+    for recommendation in recommendations:
         candidate = {
             "kind": "routing-default",
             "priority": 1,
@@ -12444,6 +12471,11 @@ def build_policy_review(
             "confidence": recommendation["success_rate"],
             "rationale": recommendation["rationale"],
         }
+        route_feedback_drivers = build_policy_candidate_route_feedback_drivers(
+            route_feedback_impact,
+            intent=str(recommendation["intent"]),
+            candidate_count=candidate_count,
+        )
         if route_feedback_drivers:
             candidate["route_feedback_drivers"] = deepcopy(route_feedback_drivers)
         policy_candidates.append(candidate)
