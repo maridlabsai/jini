@@ -932,6 +932,99 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual({"outcome_replaced": 1}, adapter_evidence["local-fast"]["expired_counters"])
         self.assertEqual("neutral", adapter_evidence["local-fast"]["routing_effect"])
 
+    def test_route_feedback_readout_can_prune_expired_state_without_deleting_history(self) -> None:
+        pack_dir = self.compile_research_pack()
+        state_root = self.tmp / ".jini"
+        state_root.mkdir(parents=True, exist_ok=True)
+        capabilities_path = state_root / "local-runtime-capabilities.json"
+        capabilities_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.4.0",
+                    "context_type": "JiniLocalRuntimeCapabilities",
+                    "captured_at": "2026-05-21T19:00:00Z",
+                    "local_runtime_class": "local-ollama",
+                    "adapters": {
+                        "local-fast": {
+                            "status": "ok",
+                            "latency_ms": 85,
+                            "warm_latency_ms": 70,
+                            "cold_start_cost_ms": 5,
+                            "tokens_per_second": 40.0,
+                            "quality_class": "usable",
+                            "structured_reliability": "usable",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        },
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        feedback = self.run_cli(
+            "record-route-outcome",
+            pack_dir,
+            "--adapter-id",
+            "local-fast",
+            "--intent",
+            "export",
+            "--outcome",
+            "replaced-this",
+            "--reason",
+            "No longer useful for this export.",
+            "--format",
+            "json",
+        )
+        self.assert_ok(feedback)
+        saved = self.read_json(capabilities_path)
+        saved["cohort_feedback"]["local-fast"]["export"]["counter_last_observed_at"]["outcome_replaced"] = (
+            "2026-01-01T00:00:00Z"
+        )
+        capabilities_path.write_text(json.dumps(saved, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+        readout = self.run_cli("route-feedback", "--format", "json")
+        self.assert_ok(readout)
+        report = json.loads(readout.stdout)
+        self.assertEqual("JiniRouteFeedbackMaintenance", report["report_type"])
+        self.assertFalse(report["pruned"])
+        self.assertEqual(0, report["total_active_signal_count"])
+        self.assertEqual(1, report["total_expired_signal_count"])
+        adapter = report["adapters"][0]
+        cohort = adapter["cohorts"][0]
+        self.assertEqual("local-fast", adapter["adapter_id"])
+        self.assertEqual("export", cohort["cohort_key"])
+        self.assertEqual({"outcome_replaced": 1}, cohort["expired_counters"])
+
+        before_events = self.run_cli(
+            "show-learning-events",
+            pack_dir,
+            "--event-type",
+            "route-outcome-feedback",
+            "--format",
+            "json",
+        )
+        self.assert_ok(before_events)
+        self.assertEqual(1, len(json.loads(before_events.stdout)["events"]))
+
+        pruned = self.run_cli("route-feedback", "--prune-expired", "--format", "json")
+        self.assert_ok(pruned)
+        pruned_report = json.loads(pruned.stdout)
+        self.assertTrue(pruned_report["pruned"])
+        self.assertEqual(1, pruned_report["pruned_signal_count"])
+        self.assertEqual(0, pruned_report["total_expired_signal_count"])
+        pruned_payload = self.read_json(capabilities_path)
+        self.assertNotIn("local-fast", pruned_payload.get("cohort_feedback", {}))
+
+        after_events = self.run_cli(
+            "show-learning-events",
+            pack_dir,
+            "--event-type",
+            "route-outcome-feedback",
+            "--format",
+            "json",
+        )
+        self.assert_ok(after_events)
+        self.assertEqual(1, len(json.loads(after_events.stdout)["events"]))
+
     def test_passive_route_outcome_feedback_is_captured_from_user_actions(self) -> None:
         pack_dir = self.compile_research_pack()
         state_root = self.tmp / ".jini"

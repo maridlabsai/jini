@@ -8917,7 +8917,7 @@ ADMIN_HELP_GROUPS: list[tuple[str, list[tuple[str, str]]]] = [
         [
             ("recommend-execution", "Execution posture recommendation."),
             ("show-adapters / resolve-adapter / adapter-matrix / adapter-conformance", "Adapter inspection and conformance."),
-            ("routing-backtest / review-policy / stage-policy-candidate / approve-policy-candidate / rollback-policy-candidate", "Routing policy analysis and rollout."),
+            ("routing-backtest / route-feedback / review-policy / stage-policy-candidate / approve-policy-candidate / rollback-policy-candidate", "Routing policy analysis and rollout."),
             ("record-route-outcome", "Record measured route outcome feedback for self-correcting local selection."),
             ("stage-runtime-handoff / activate-runtime-target", "Runtime target staging and activation."),
             ("show-learning-events / learning-snapshot", "Runtime and learning evidence inspection."),
@@ -11301,6 +11301,151 @@ def load_local_runtime_capabilities_payload() -> dict[str, Any]:
     if not isinstance(payload.get("passive_feedback_observations"), dict):
         payload["passive_feedback_observations"] = {}
     return payload
+
+
+def write_local_runtime_capabilities_payload(payload: dict[str, Any]) -> Path:
+    path = local_runtime_capabilities_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return path
+
+
+def route_feedback_row_has_signals(row: dict[str, Any]) -> bool:
+    if not isinstance(row, dict):
+        return False
+    return any(route_feedback_counter_value(row, key) > 0 for key in ROUTE_FEEDBACK_COUNTER_KEYS)
+
+
+def route_feedback_cohort_maintenance_summary(
+    adapter_id: str,
+    cohort_key: str,
+    row: dict[str, Any],
+) -> dict[str, Any]:
+    active_signal_count = route_feedback_signal_count(row)
+    expired_signal_count = route_feedback_expired_signal_count(row)
+    bias = route_feedback_bias(row)
+    return {
+        "adapter_id": adapter_id,
+        "cohort_key": cohort_key,
+        "active_signal_count": active_signal_count,
+        "expired_signal_count": expired_signal_count,
+        "active_counters": route_feedback_counters(row),
+        "expired_counters": route_feedback_expired_counters(row),
+        "feedback_bias": bias,
+        "routing_effect": "boosted" if bias > 0 else "penalized" if bias < 0 else "neutral",
+    }
+
+
+def prune_expired_route_feedback(payload: dict[str, Any]) -> int:
+    feedback = payload.get("cohort_feedback", {}) if isinstance(payload, dict) else {}
+    if not isinstance(feedback, dict):
+        return 0
+    pruned_signal_count = 0
+    for adapter_id in list(feedback.keys()):
+        adapter_feedback = feedback.get(adapter_id, {})
+        if not isinstance(adapter_feedback, dict):
+            feedback.pop(adapter_id, None)
+            continue
+        for cohort_key in list(adapter_feedback.keys()):
+            row = adapter_feedback.get(cohort_key, {})
+            if not isinstance(row, dict):
+                adapter_feedback.pop(cohort_key, None)
+                continue
+            expired_counters = route_feedback_expired_counters(row)
+            if expired_counters:
+                pruned_signal_count += sum(expired_counters.values())
+                observed_at = row.get(ROUTE_FEEDBACK_COUNTER_LAST_OBSERVED_AT_KEY, {})
+                if not isinstance(observed_at, dict):
+                    observed_at = {}
+                for counter in expired_counters:
+                    row.pop(counter, None)
+                    observed_at.pop(counter, None)
+                if observed_at:
+                    row[ROUTE_FEEDBACK_COUNTER_LAST_OBSERVED_AT_KEY] = observed_at
+                else:
+                    row.pop(ROUTE_FEEDBACK_COUNTER_LAST_OBSERVED_AT_KEY, None)
+            if not route_feedback_row_has_signals(row):
+                adapter_feedback.pop(cohort_key, None)
+        if not adapter_feedback:
+            feedback.pop(adapter_id, None)
+    return pruned_signal_count
+
+
+def build_route_feedback_maintenance_report(*, prune_expired: bool = False) -> dict[str, Any]:
+    payload = load_local_runtime_capabilities_payload()
+    path = local_runtime_capabilities_path()
+    pruned_signal_count = 0
+    if prune_expired:
+        pruned_signal_count = prune_expired_route_feedback(payload)
+        if pruned_signal_count:
+            path = write_local_runtime_capabilities_payload(payload)
+
+    feedback = payload.get("cohort_feedback", {}) if isinstance(payload, dict) else {}
+    adapters: list[dict[str, Any]] = []
+    total_active_signal_count = 0
+    total_expired_signal_count = 0
+    if isinstance(feedback, dict):
+        for adapter_id, adapter_feedback in sorted(feedback.items()):
+            if not isinstance(adapter_feedback, dict):
+                continue
+            cohorts: list[dict[str, Any]] = []
+            adapter_active_signal_count = 0
+            adapter_expired_signal_count = 0
+            for cohort_key, row in sorted(adapter_feedback.items()):
+                if not isinstance(row, dict):
+                    continue
+                cohort = route_feedback_cohort_maintenance_summary(str(adapter_id), str(cohort_key), row)
+                if not cohort["active_signal_count"] and not cohort["expired_signal_count"]:
+                    continue
+                cohorts.append(cohort)
+                adapter_active_signal_count += int(cohort["active_signal_count"])
+                adapter_expired_signal_count += int(cohort["expired_signal_count"])
+            if cohorts:
+                adapters.append(
+                    {
+                        "adapter_id": str(adapter_id),
+                        "active_signal_count": adapter_active_signal_count,
+                        "expired_signal_count": adapter_expired_signal_count,
+                        "cohorts": cohorts,
+                    }
+                )
+                total_active_signal_count += adapter_active_signal_count
+                total_expired_signal_count += adapter_expired_signal_count
+
+    return {
+        "schema_version": "0.1.0",
+        "report_type": "JiniRouteFeedbackMaintenance",
+        "generated_at": now_utc(),
+        "capability_report_path": display_path(path),
+        "window_days": ROUTE_FEEDBACK_WINDOW_DAYS,
+        "pruned": bool(prune_expired),
+        "pruned_signal_count": pruned_signal_count,
+        "total_active_signal_count": total_active_signal_count,
+        "total_expired_signal_count": total_expired_signal_count,
+        "adapter_count": len(adapters),
+        "adapters": adapters,
+    }
+
+
+def print_route_feedback_maintenance(report: dict[str, Any]) -> None:
+    print(f"REPORT  {report.get('capability_report_path', '')}")
+    print(f"WINDOW  {report.get('window_days', 0)}d")
+    print(f"ACTIVE  {report.get('total_active_signal_count', 0)}")
+    print(f"EXPIRED {report.get('total_expired_signal_count', 0)}")
+    if report.get("pruned"):
+        print(f"PRUNED  {report.get('pruned_signal_count', 0)}")
+    for adapter in report.get("adapters", []):
+        print(
+            f"ADAPTER {adapter.get('adapter_id', '')} "
+            f"active={adapter.get('active_signal_count', 0)} expired={adapter.get('expired_signal_count', 0)}"
+        )
+        for cohort in adapter.get("cohorts", []):
+            print(
+                f"  - {cohort.get('cohort_key', '')}: "
+                f"active={cohort.get('active_signal_count', 0)} "
+                f"expired={cohort.get('expired_signal_count', 0)} "
+                f"bias={int(cohort.get('feedback_bias', 0)):+}"
+            )
 
 
 def route_outcome_counter(outcome: str, *, passive: bool = False) -> str:
@@ -20589,6 +20734,22 @@ def main() -> int:
         help="Output format for the routing backtest",
     )
 
+    route_feedback_parser = subparsers.add_parser(
+        "route-feedback",
+        help="Inspect and optionally prune expired route outcome feedback from local capability state",
+    )
+    route_feedback_parser.add_argument(
+        "--prune-expired",
+        action="store_true",
+        help="Remove expired route feedback counters from local capability state",
+    )
+    route_feedback_parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for route feedback maintenance",
+    )
+
     route_outcome_parser = subparsers.add_parser(
         "record-route-outcome",
         help="Record measured route outcome feedback so local routing can self-correct",
@@ -22624,6 +22785,14 @@ def main() -> int:
             print(json.dumps(backtest, indent=2))
         else:
             print_routing_backtest(backtest)
+        return 0
+
+    if args.command == "route-feedback":
+        report = build_route_feedback_maintenance_report(prune_expired=bool(args.prune_expired))
+        if args.format == "json":
+            print(json.dumps(report, indent=2))
+        else:
+            print_route_feedback_maintenance(report)
         return 0
 
     if args.command == "record-route-outcome":
