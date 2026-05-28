@@ -10879,6 +10879,27 @@ def build_execution_checklist(
     }
 
 
+def format_execution_checklist_item_detail(
+    item: dict[str, Any],
+    *,
+    include_command: bool = False,
+    include_route_feedback_drivers: bool = False,
+) -> str:
+    detail = str(item.get("description", ""))
+    if include_route_feedback_drivers:
+        drivers = item.get("route_feedback_drivers", {})
+        if isinstance(drivers, dict):
+            preview = drivers.get("cohort_preview", {})
+            preview_text = preview.get("text", "") if isinstance(preview, dict) else ""
+            if preview_text:
+                detail += f" drivers={preview_text}"
+    if include_command:
+        command = item.get("command", "")
+        if command:
+            detail += f" command={command}"
+    return detail
+
+
 def print_execution_checklist(checklist: dict[str, Any]) -> None:
     print(f"PACK   {checklist['pack_id']}")
     print(f"WORK   {checklist['work_unit_id']}")
@@ -10892,16 +10913,11 @@ def print_execution_checklist(checklist: dict[str, Any]) -> None:
         print(f"RUNTIME {runtime_target['selected']}")
     print("CHECKLIST")
     for item in checklist.get("items", []):
-        detail = item["description"]
-        command = item.get("command", "")
-        drivers = item.get("route_feedback_drivers", {})
-        if isinstance(drivers, dict):
-            preview = drivers.get("cohort_preview", {})
-            preview_text = preview.get("text", "") if isinstance(preview, dict) else ""
-            if preview_text:
-                detail += f" drivers={preview_text}"
-        if command:
-            detail += f" command={command}"
+        detail = format_execution_checklist_item_detail(
+            item,
+            include_command=True,
+            include_route_feedback_drivers=True,
+        )
         print(f"  - [{item['status']}] {item['phase']} {item['kind']}: {detail}")
 
 
@@ -12032,8 +12048,18 @@ def render_runtime_activation_markdown(handoff: dict[str, Any]) -> str:
             if preview_text:
                 lines.append(f"- Drivers: `{preview_text}`")
     lines.extend(["", "## Checklist"])
-    for item in execution_checklist.get("items", [])[:6]:
-        lines.append(f"- [{item.get('status', '')}] {item.get('description', '')}")
+    checklist_items = list(execution_checklist.get("items", [])[:6])
+    active_rollout_item = next(
+        (item for item in execution_checklist.get("items", []) if item.get("kind") == "active-rollout"),
+        None,
+    )
+    if active_rollout_item is not None and active_rollout_item not in checklist_items:
+        checklist_items.append(active_rollout_item)
+    for item in checklist_items:
+        lines.append(
+            f"- [{item.get('status', '')}] "
+            f"{format_execution_checklist_item_detail(item, include_route_feedback_drivers=True)}"
+        )
     lines.extend(["", "## Guardrails"])
     for key, value in handoff.get("guardrails", {}).items():
         lines.append(f"- `{key}`: `{value}`")
@@ -12250,8 +12276,14 @@ def build_runtime_handoff(
             f"{', '.join(runtime_guidance.get('fallbacks', [])[:3]) or 'no fallback'}."
         ),
     ]
-    for item in checklist_items[:4]:
-        handoff_steps.append(item["description"])
+    handoff_checklist_items = list(checklist_items[:4])
+    active_rollout_item = next((item for item in checklist_items if item.get("kind") == "active-rollout"), None)
+    if active_rollout_item is not None and active_rollout_item not in handoff_checklist_items:
+        handoff_checklist_items.append(active_rollout_item)
+    for item in handoff_checklist_items:
+        handoff_steps.append(
+            format_execution_checklist_item_detail(item, include_route_feedback_drivers=True)
+        )
 
     handoff = {
         "schema_version": "0.1.0",
