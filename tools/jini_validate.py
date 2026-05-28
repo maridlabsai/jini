@@ -7741,6 +7741,276 @@ def print_artifact_undo(report: dict[str, Any]) -> None:
     print(f"PATH     {report.get('artifact_path', '')}")
 
 
+def context_item(kind: str, label: str, value: str) -> dict[str, str]:
+    return {
+        "kind": kind,
+        "label": label,
+        "value": value,
+    }
+
+
+def append_context_item(
+    items: list[dict[str, str]],
+    *,
+    kind: str,
+    label: str,
+    value: Any,
+) -> None:
+    text = str(value).strip()
+    if not text:
+        return
+    fingerprint = (kind, label, text)
+    if any((item.get("kind"), item.get("label"), item.get("value")) == fingerprint for item in items):
+        return
+    items.append(context_item(kind, label, text))
+
+
+def append_context_list(
+    items: list[dict[str, str]],
+    *,
+    kind: str,
+    label: str,
+    values: Any,
+    limit: int = 6,
+) -> None:
+    if not isinstance(values, list):
+        return
+    for value in values[:limit]:
+        append_context_item(items, kind=kind, label=label, value=value)
+
+
+def build_context_capsule(
+    pack_dir: Path,
+    registry: dict[str, Any],
+    *,
+    artifact_name: str | None = None,
+) -> dict[str, Any]:
+    summary = summarise_pack(pack_dir, registry)
+    artifact = (
+        resolve_artifact_item(pack_dir, registry, artifact_name)
+        if artifact_name
+        else resolve_default_artifact_item(pack_dir, registry)
+    )
+    work_unit = summary["work_unit"]
+    pack_instance_path = pack_dir / "pack-instance.yaml"
+    pack_instance = load_document(pack_instance_path) if pack_instance_path.exists() else {}
+    context_reference = str(pack_instance.get("compiled_from_context", "")).strip()
+    context = current_session_context_for_pack(pack_dir)
+    projection = context.get("projection", {}) if context is not None else {}
+
+    direct_inputs: list[dict[str, str]] = []
+    append_context_item(direct_inputs, kind="title", label="Title", value=work_unit.get("title", ""))
+    append_context_item(direct_inputs, kind="purpose", label="Purpose", value=work_unit.get("purpose", ""))
+    append_context_item(direct_inputs, kind="owner", label="Owner", value=work_unit.get("owner_actor_id", ""))
+    append_context_list(
+        direct_inputs,
+        kind="approver",
+        label="Approver",
+        values=work_unit.get("approver_actor_ids", []),
+        limit=4,
+    )
+    append_context_list(
+        direct_inputs,
+        kind="stakeholder",
+        label="Stakeholder",
+        values=work_unit.get("stakeholder_actor_ids", []),
+        limit=4,
+    )
+
+    source_references: list[dict[str, str]] = []
+    if context_reference:
+        append_context_item(
+            source_references,
+            kind="context_reference",
+            label="Research context document",
+            value=Path(context_reference).name if "/" in context_reference else context_reference,
+        )
+    for artifact_type in ("Sources", "Literature", "Method", "Spec", "Evidence"):
+        entry = summary["latest_by_type"].get(artifact_type)
+        if entry is None:
+            continue
+        _path, doc = entry
+        source_entries = doc.get("source_entries", [])
+        if not isinstance(source_entries, list):
+            source_entries = []
+        for source_entry in source_entries[:6]:
+            append_context_item(
+                source_references,
+                kind=slugify(artifact_type),
+                label=str(source_entry),
+                value=artifact_type,
+            )
+        append_context_list(
+            source_references,
+            kind=slugify(artifact_type),
+            label=artifact_type,
+            values=doc.get("sources", []),
+            limit=6,
+        )
+        append_context_list(
+            source_references,
+            kind=slugify(artifact_type),
+            label=f"{artifact_type} finding",
+            values=doc.get("key_findings", []),
+            limit=4,
+        )
+        append_context_list(
+            source_references,
+            kind=slugify(artifact_type),
+            label=f"{artifact_type} reference",
+            values=doc.get("references", []),
+            limit=4,
+        )
+
+    missing_or_uncertain: list[dict[str, str]] = []
+    for item in summary.get("missing_stage_required", []):
+        append_context_item(
+            missing_or_uncertain,
+            kind="missing_now",
+            label="Missing now",
+            value=item,
+        )
+    for item in summary.get("missing_full_required", []):
+        append_context_item(
+            missing_or_uncertain,
+            kind="missing_later",
+            label="Missing later",
+            value=item,
+        )
+    for artifact_type in ("Assumptions", "Sources", "Literature", "Method", "Evidence"):
+        entry = summary["latest_by_type"].get(artifact_type)
+        if entry is None:
+            continue
+        _path, doc = entry
+        append_context_list(
+            missing_or_uncertain,
+            kind="known_unknown",
+            label="Known unknown",
+            values=doc.get("known_unknowns", []),
+            limit=5,
+        )
+        append_context_list(
+            missing_or_uncertain,
+            kind="deferred_question",
+            label="Deferred question",
+            values=doc.get("deferred_questions", []),
+            limit=5,
+        )
+        append_context_list(
+            missing_or_uncertain,
+            kind="coverage_gap",
+            label="Coverage gap",
+            values=doc.get("coverage_gaps", []),
+            limit=5,
+        )
+        append_context_list(
+            missing_or_uncertain,
+            kind="research_gap",
+            label="Research gap",
+            values=doc.get("gaps", []),
+            limit=5,
+        )
+        append_context_list(
+            missing_or_uncertain,
+            kind="residual_risk",
+            label="Residual risk",
+            values=doc.get("residual_risks", []),
+            limit=5,
+        )
+        append_context_list(
+            missing_or_uncertain,
+            kind="validity_risk",
+            label="Validity risk",
+            values=doc.get("validity_risks", []),
+            limit=5,
+        )
+
+    route = projection.get("route", {}) if isinstance(projection.get("route", {}), dict) else {}
+    cost_posture = (
+        projection.get("cost_posture", {})
+        if isinstance(projection.get("cost_posture", {}), dict)
+        else {}
+    )
+    return {
+        "schema_version": "0.1.0",
+        "result_type": "JiniContextCapsule",
+        "generated_at": now_utc(),
+        "pack_id": summary.get("pack_id", ""),
+        "work_unit_id": str(work_unit.get("work_unit_id", "")),
+        "title": str(work_unit.get("title", "")),
+        "state": str(work_unit.get("current_state", "")),
+        "artifact": {
+            "id": str(artifact.get("id", "")),
+            "label": str(artifact.get("label", "")),
+            "kind": str(artifact.get("kind", "")),
+        },
+        "direct_user_inputs": direct_inputs,
+        "source_references": source_references[:12],
+        "missing_or_uncertain": missing_or_uncertain[:16],
+        "route_and_continuity": {
+            "route": {
+                "provider_id": str(route.get("provider_id", "")),
+                "reason": str(route.get("reason", "")),
+            },
+            "cost_posture": {
+                "current_path": str(cost_posture.get("current_path", "")),
+                "continuation_saved_work": bool(cost_posture.get("continuation_saved_work", False)),
+            },
+            "session_id": str(projection.get("session_id", "")),
+            "next": str(projection.get("next", summary.get("next_operation", ""))),
+        },
+        "side_effects": {
+            "mutates_artifact": False,
+            "creates_work_unit": False,
+            "sends_or_publishes": False,
+        },
+    }
+
+
+def print_context_capsule(report: dict[str, Any]) -> None:
+    artifact = report.get("artifact", {})
+    print("WHAT JINI USED")
+    print(f"WORK     {report.get('work_unit_id', '')}")
+    print(f"TITLE    {report.get('title', '')}")
+    print(f"ARTIFACT {artifact.get('id', '')} ({artifact.get('label', '')})")
+
+    print()
+    print("DIRECT INPUTS")
+    for item in report.get("direct_user_inputs", []):
+        print(f"  - {item.get('label', '')}: {item.get('value', '')}")
+    if not report.get("direct_user_inputs"):
+        print("  No direct input summary is available.")
+
+    print()
+    print("SOURCES")
+    for item in report.get("source_references", []):
+        print(f"  - {item.get('label', '')}: {item.get('value', '')}")
+    if not report.get("source_references"):
+        print("  No source references are visible for this work.")
+
+    print()
+    print("MISSING OR UNCERTAIN")
+    for item in report.get("missing_or_uncertain", []):
+        print(f"  - {item.get('label', '')}: {item.get('value', '')}")
+    if not report.get("missing_or_uncertain"):
+        print("  No missing or uncertain signals are visible right now.")
+
+    continuity = report.get("route_and_continuity", {})
+    route = continuity.get("route", {})
+    cost = continuity.get("cost_posture", {})
+    print()
+    print("ROUTE AND CONTINUITY")
+    print(f"  - route: {route.get('provider_id', '')}")
+    if route.get("reason"):
+        print(f"  - why: {route.get('reason', '')}")
+    print(f"  - current path: {cost.get('current_path', '')}")
+    print(f"  - next: {continuity.get('next', '')}")
+
+    print()
+    print("SAFE TO DO")
+    print("  Read-only. Nothing was changed, sent, or published.")
+
+
 def print_projection_artifact_snapshot(
     context: dict[str, Any],
     artifact: dict[str, Any],
@@ -7904,6 +8174,7 @@ PUBLIC_HELP_GROUPS: list[tuple[str, list[tuple[str, str]]]] = [
             ("jini continue", "Preview the next useful artifact without rebuilding the work state."),
             ("jini open", "Open the current artifact or human-facing view."),
             ("jini show", "Print an artifact or ready-now view in the terminal."),
+            ("jini context", "Show the compact context capsule that shaped the current artifact."),
             ("jini rewrite checklist", "Refine the current markdown artifact after saving a restorable version."),
             ("jini versions / undo", "Inspect or restore recent artifact versions without using file paths or git."),
             ("jini resume", "Re-enter the latest active work cheaply."),
@@ -18388,6 +18659,23 @@ def main() -> int:
         help="Print the resolved artifact path instead of rendering it",
     )
 
+    context_parser = subparsers.add_parser(
+        "context",
+        help="Show the compact context capsule that shaped the current artifact",
+    )
+    context_parser.add_argument(
+        "artifact",
+        nargs="?",
+        help="Optional artifact or view id; defaults to the current focused artifact",
+    )
+    context_parser.add_argument("--from", dest="path", type=Path, help="Optional pack path; defaults to the current Jini work")
+    context_parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for the context capsule",
+    )
+
     rewrite_parser = subparsers.add_parser(
         "rewrite",
         help="Rewrite the current markdown artifact with a deterministic shortcut and save a restorable version first",
@@ -20210,6 +20498,24 @@ def main() -> int:
             failing_path = args.path if args.path is not None else Path("<current-work>")
             print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
             return 1
+        return 0
+
+    if args.command == "context":
+        try:
+            pack_dir = resolve_context_pack_dir(args.path, registry, command_label="context")
+            report = build_context_capsule(
+                pack_dir,
+                registry,
+                artifact_name=args.artifact,
+            )
+        except (FileNotFoundError, OSError, TypeError, ValueError) as exc:
+            failing_path = args.path if args.path is not None else Path("<current-work>")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
+            return 1
+        if args.format == "json":
+            print(json.dumps(report, indent=2))
+        else:
+            print_context_capsule(report)
         return 0
 
     if args.command == "rewrite":

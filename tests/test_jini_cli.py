@@ -771,6 +771,48 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual(rewrite_report["snapshot_id"], undo_report["restored_snapshot_id"])
         self.assertEqual(original_text, artifact_path.read_text(encoding="utf-8"))
 
+    def test_context_capsule_explains_what_shaped_current_artifact(self) -> None:
+        pack_dir = self.compile_research_pack()
+        self.assert_ok(self.run_cli("show", "tasks", "--from", pack_dir))
+
+        result = self.run_cli("context", "tasks", "--from", pack_dir, "--format", "json")
+        self.assert_ok(result)
+
+        capsule = json.loads(result.stdout)
+        self.assertEqual("JiniContextCapsule", capsule["result_type"])
+        self.assertEqual("tasks", capsule["artifact"]["id"])
+        self.assertEqual("test-research-pack", capsule["work_unit_id"])
+        self.assertTrue(any("Test Research Pack" in item["value"] for item in capsule["direct_user_inputs"]))
+        self.assertTrue(any("Exercise the research pack lifecycle" in item["value"] for item in capsule["direct_user_inputs"]))
+        self.assertTrue(any("Research context document" in item["label"] for item in capsule["source_references"]))
+        self.assertTrue(any("12 semi-structured customer interviews" in item["label"] for item in capsule["source_references"]))
+        self.assertTrue(any("known_unknown" == item["kind"] for item in capsule["missing_or_uncertain"]))
+        self.assertTrue(any("coverage_gap" == item["kind"] for item in capsule["missing_or_uncertain"]))
+        self.assertEqual("session-kernel", capsule["route_and_continuity"]["route"]["provider_id"])
+        self.assertEqual("continue-existing-work", capsule["route_and_continuity"]["cost_posture"]["current_path"])
+        self.assertFalse(capsule["side_effects"]["mutates_artifact"])
+
+        text_result = self.run_cli("context", "tasks", "--from", pack_dir)
+        self.assert_ok(text_result)
+        self.assertIn("WHAT JINI USED", text_result.stdout)
+        self.assertIn("DIRECT INPUTS", text_result.stdout)
+        self.assertIn("SOURCES", text_result.stdout)
+        self.assertIn("MISSING OR UNCERTAIN", text_result.stdout)
+        self.assertNotIn(str(pack_dir.resolve()), text_result.stdout)
+
+    def test_context_capsule_uses_current_work_without_path(self) -> None:
+        pack_dir = self.compile_research_pack()
+        self.assert_ok(self.run_cli("show", "tasks", "--from", pack_dir))
+
+        result = self.run_cli("context", "--format", "json")
+        self.assert_ok(result)
+
+        capsule = json.loads(result.stdout)
+        self.assertEqual("JiniContextCapsule", capsule["result_type"])
+        self.assertEqual("tasks", capsule["artifact"]["id"])
+        self.assertEqual("test-research-pack", capsule["work_unit_id"])
+        self.assertEqual("session-kernel", capsule["route_and_continuity"]["route"]["provider_id"])
+
     def test_pathless_status_and_open_can_resume_from_canonical_session_pointer(self) -> None:
         pack_dir = self.compile_travel_pack()
         current_work = self.tmp / ".jini" / "current-work.json"

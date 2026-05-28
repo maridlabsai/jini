@@ -498,6 +498,30 @@ scenarios:
           ]
         path: "token_strategy.reused_context_surfaces"
         contains: "runtime-handoff"
+      - id: artifact-context-capsule-is-readable
+        command:
+          [
+            "context",
+            "tasks",
+            "--from",
+            "{scenario_root}/research-pack",
+            "--format",
+            "json",
+          ]
+        path: "result_type"
+        equals: "JiniContextCapsule"
+      - id: artifact-context-capsule-surfaces-sources
+        command:
+          [
+            "context",
+            "tasks",
+            "--from",
+            "{scenario_root}/research-pack",
+            "--format",
+            "json",
+          ]
+        path: "source_references"
+        contains: "12 semi-structured customer interviews"
       - id: artifact-rewrite-creates-version
         command:
           [
