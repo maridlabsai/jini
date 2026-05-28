@@ -7247,18 +7247,77 @@ def build_artifact_catalog(pack_dir: Path, registry: dict[str, Any]) -> dict[str
     }
 
 
+OPEN_SHELF_BUCKETS = (
+    ("ready_now", "READY NOW", "ready"),
+    ("shareable_exports", "SHAREABLE EXPORTS", "export"),
+    ("source_records", "DETAILS", "detail"),
+)
+
+
+def open_shelf_items(catalog: dict[str, Any]) -> list[dict[str, Any]]:
+    items: list[dict[str, Any]] = []
+    shelf_number = 1
+    for bucket, _heading, shelf_kind in OPEN_SHELF_BUCKETS:
+        for item in catalog.get(bucket, []):
+            if not isinstance(item, dict):
+                continue
+            shelf_item = dict(item)
+            shelf_item["shelf_number"] = shelf_number
+            shelf_item["shelf_kind"] = shelf_kind
+            shelf_item["selection_mode"] = "default"
+            items.append(shelf_item)
+            shelf_number += 1
+    return items
+
+
+def build_open_shelf(catalog: dict[str, Any]) -> dict[str, Any]:
+    items = []
+    cli = cli_invocation()
+    for item in open_shelf_items(catalog):
+        item_id = str(item.get("id", "")).strip()
+        items.append(
+            {
+                "number": item.get("shelf_number"),
+                "id": item_id,
+                "label": str(item.get("label", "")).strip(),
+                "kind": str(item.get("shelf_kind", "")).strip(),
+                "category": str(item.get("category", "")).strip(),
+                "aliases": item.get("aliases", []),
+                "open_command": f"{cli} open {item.get('shelf_number')}",
+            }
+        )
+    return {
+        "schema_version": "0.1.0",
+        "result_type": "JiniOpenShelf",
+        "generated_at": now_utc(),
+        "work_unit_id": str(catalog.get("work_unit_id", "")),
+        "title": str(catalog.get("title", "")),
+        "items": items,
+    }
+
+
 def resolve_artifact_item(pack_dir: Path, registry: dict[str, Any], artifact_name: str) -> dict[str, Any]:
     catalog = build_artifact_catalog(pack_dir, registry)
+    selection = str(artifact_name).strip()
     normalized = slugify(artifact_name)
-    for bucket in ("ready_now", "source_records", "shareable_exports"):
-        for item in catalog.get(bucket, []):
-            aliases = {slugify(item.get("id", "")), *(slugify(alias) for alias in item.get("aliases", []))}
-            if normalized in aliases:
-                return item
+    for item in open_shelf_items(catalog):
+        if selection and selection == str(item.get("shelf_number", "")):
+            item["selection_mode"] = "number"
+            return item
+        item_id = slugify(str(item.get("id", "")))
+        item_label = slugify(str(item.get("label", "")))
+        item_aliases = {slugify(str(alias)) for alias in item.get("aliases", [])}
+        if normalized in {item_id, item_label, *item_aliases}:
+            if normalized == item_id:
+                item["selection_mode"] = "id"
+            elif normalized == item_label:
+                item["selection_mode"] = "label"
+            else:
+                item["selection_mode"] = "alias"
+            return item
     available = [
         item["id"]
-        for bucket in ("ready_now", "source_records", "shareable_exports")
-        for item in catalog.get(bucket, [])
+        for item in open_shelf_items(catalog)
     ]
     raise ValueError(
         "Unknown artifact "
@@ -8099,6 +8158,84 @@ def print_artifact_catalog(catalog: dict[str, Any]) -> None:
     print()
     print("USE")
     print(f"  {cli_invocation()} open <name>")
+
+
+def print_open_shelf(shelf: dict[str, Any]) -> None:
+    print("OPEN SHELF")
+    print(f"WORK  {shelf.get('work_unit_id', '')}")
+    print(f"TITLE {shelf.get('title', '')}")
+    print()
+    print("TYPE A NUMBER, TITLE, OR ALIAS")
+    items = [item for item in shelf.get("items", []) if isinstance(item, dict)]
+    if not items:
+        print("  No openable artifacts are ready yet.")
+        return
+
+    for _bucket, heading, shelf_kind in OPEN_SHELF_BUCKETS:
+        bucket_items = [item for item in items if item.get("kind") == shelf_kind]
+        if not bucket_items:
+            continue
+        print()
+        print(heading)
+        for item in bucket_items:
+            aliases = [str(alias) for alias in item.get("aliases", []) if str(alias).strip()]
+            alias_text = f" aliases: {', '.join(aliases[:3])}" if aliases else ""
+            print(
+                f"  {item.get('number')}. "
+                f"{str(item.get('id', '')):<14} "
+                f"{item.get('label', '')}"
+                f"{alias_text}"
+            )
+
+    print()
+    print("OPEN")
+    print(f"  {cli_invocation()} open 1")
+    print(f"  {cli_invocation()} open \"{items[0].get('label', items[0].get('id', ''))}\"")
+
+
+def record_artifact_open_observation(
+    pack_dir: Path,
+    catalog: dict[str, Any],
+    artifact: dict[str, Any],
+    *,
+    open_mode: str,
+) -> None:
+    append_learning_event(
+        "artifact-open",
+        {
+            "pack_id": str(catalog.get("pack_id", "")),
+            "work_unit_id": str(catalog.get("work_unit_id", "")),
+            "artifact_id": str(artifact.get("id", "")),
+            "artifact_label": str(artifact.get("label", "")),
+            "artifact_kind": str(artifact.get("kind", "")),
+            "artifact_category": str(artifact.get("category", "")),
+            "selection_mode": str(artifact.get("selection_mode", "default")),
+            "open_mode": open_mode,
+        },
+        pack_dir=pack_dir,
+    )
+
+
+def build_open_artifact_report(
+    artifact: dict[str, Any],
+    artifact_path: Path,
+    *,
+    open_mode: str,
+) -> dict[str, Any]:
+    return {
+        "schema_version": "0.1.0",
+        "result_type": "JiniOpenArtifact",
+        "generated_at": now_utc(),
+        "artifact": {
+            "id": str(artifact.get("id", "")),
+            "label": str(artifact.get("label", "")),
+            "kind": str(artifact.get("kind", "")),
+            "category": str(artifact.get("category", "")),
+        },
+        "selection_mode": str(artifact.get("selection_mode", "default")),
+        "open_mode": open_mode,
+        "path": display_path(artifact_path),
+    }
 
 
 def launch_open_path(path: Path) -> None:
@@ -18647,6 +18784,12 @@ def main() -> int:
         action="store_true",
         help="Print the resolved artifact path instead of launching it",
     )
+    open_parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format when rendering the open shelf or scriptable open result",
+    )
 
     continue_parser = subparsers.add_parser(
         "continue",
@@ -20410,6 +20553,14 @@ def main() -> int:
     if args.command == "open":
         try:
             pack_dir = resolve_context_pack_dir(args.path, registry, command_label="open")
+            catalog = build_artifact_catalog(pack_dir, registry)
+            if args.artifact is None and not args.print_path:
+                shelf = build_open_shelf(catalog)
+                if args.format == "json":
+                    print(json.dumps(shelf, indent=2))
+                else:
+                    print_open_shelf(shelf)
+                return 0
             artifact = (
                 resolve_artifact_item(pack_dir, registry, args.artifact)
                 if args.artifact
@@ -20418,10 +20569,36 @@ def main() -> int:
             persist_projection_focus(pack_dir, artifact)
             artifact_path = Path(str(artifact["resolved_path"]))
             if args.print_path:
-                print(display_path(artifact_path))
+                record_artifact_open_observation(pack_dir, catalog, artifact, open_mode="print-path")
+                if args.format == "json":
+                    print(
+                        json.dumps(
+                            build_open_artifact_report(
+                                artifact,
+                                artifact_path,
+                                open_mode="print-path",
+                            ),
+                            indent=2,
+                        )
+                    )
+                else:
+                    print(display_path(artifact_path))
             else:
                 launch_open_path(artifact_path)
-                print(f"OPENED {display_path(artifact_path)}")
+                record_artifact_open_observation(pack_dir, catalog, artifact, open_mode="launch")
+                if args.format == "json":
+                    print(
+                        json.dumps(
+                            build_open_artifact_report(
+                                artifact,
+                                artifact_path,
+                                open_mode="launch",
+                            ),
+                            indent=2,
+                        )
+                    )
+                else:
+                    print(f"OPENED {display_path(artifact_path)}")
         except (FileNotFoundError, OSError, RuntimeError, TypeError, ValueError, subprocess.CalledProcessError) as exc:
             if args.path is None:
                 context = load_current_session_context()

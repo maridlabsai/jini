@@ -720,6 +720,45 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(open_result)
         self.assertIn(str((pack_dir / "views" / "itinerary.md").resolve()), open_result.stdout.strip())
 
+    def test_open_without_artifact_shows_actionable_shelf(self) -> None:
+        pack_dir = self.compile_research_pack()
+
+        result = self.run_cli("open", "--from", pack_dir)
+        self.assert_ok(result)
+
+        self.assertIn("OPEN SHELF", result.stdout)
+        self.assertIn("READY NOW", result.stdout)
+        self.assertIn("SHAREABLE EXPORTS", result.stdout)
+        self.assertIn("DETAILS", result.stdout)
+        self.assertIn("1.", result.stdout)
+        self.assertIn("prd", result.stdout)
+        self.assertIn("tasks", result.stdout)
+        self.assertIn("github", result.stdout)
+        self.assertIn("jini open 1", result.stdout)
+        self.assertNotIn("--from", result.stdout)
+        self.assertNotIn(str(pack_dir.resolve()), result.stdout)
+        self.assertNotIn("/views/", result.stdout)
+
+    def test_open_shelf_number_selects_artifact_and_records_observation(self) -> None:
+        pack_dir = self.compile_research_pack()
+
+        result = self.run_cli("open", "2", "--from", pack_dir, "--print-path")
+        self.assert_ok(result)
+
+        self.assertIn(str((pack_dir / "views" / "tasks.md").resolve()), result.stdout.strip())
+        events_path = pack_dir / "runtime" / "events.jsonl"
+        self.assertTrue(events_path.exists())
+        events = [
+            json.loads(line)
+            for line in events_path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        artifact_open_events = [event for event in events if event["event_type"] == "artifact-open"]
+        self.assertTrue(artifact_open_events)
+        self.assertEqual("tasks", artifact_open_events[-1]["artifact_id"])
+        self.assertEqual("number", artifact_open_events[-1]["selection_mode"])
+        self.assertEqual("print-path", artifact_open_events[-1]["open_mode"])
+
     def test_rewrite_versions_and_undo_restore_current_artifact(self) -> None:
         pack_dir = self.compile_research_pack()
         artifact_path = pack_dir / "views" / "tasks.md"

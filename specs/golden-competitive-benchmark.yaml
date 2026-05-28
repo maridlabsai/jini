@@ -522,6 +522,30 @@ scenarios:
           ]
         path: "source_references"
         contains: "12 semi-structured customer interviews"
+      - id: interactive-open-shelf-is-actionable
+        command:
+          [
+            "open",
+            "--from",
+            "{scenario_root}/research-pack",
+            "--format",
+            "json",
+          ]
+        path: "result_type"
+        equals: "JiniOpenShelf"
+      - id: interactive-open-shelf-supports-number-selection
+        command:
+          [
+            "open",
+            "2",
+            "--from",
+            "{scenario_root}/research-pack",
+            "--print-path",
+            "--format",
+            "json",
+          ]
+        path: "artifact.id"
+        equals: "tasks"
       - id: artifact-rewrite-creates-version
         command:
           [
