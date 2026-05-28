@@ -1377,6 +1377,7 @@ ROUTE_OUTCOME_COUNTERS = {
 ROUTE_PASSIVE_OUTCOME_COUNTERS = {
     "used-this": "passive_reopened",
     "shared-this": "passive_export_opened",
+    "needed-light-edits": "passive_needed_light_edits",
     "replaced-this": "passive_replaced_later",
 }
 
@@ -8062,6 +8063,13 @@ def rewrite_artifact(
         },
         pack_dir=pack_dir,
     )
+    record_passive_route_outcome_from_current_selection(
+        pack_dir,
+        registry,
+        intent="rewrite",
+        outcome="needed-light-edits",
+        reason=f"passive:artifact-rewrite:{artifact.get('id', '')}:{shortcut}",
+    )
     cli = cli_invocation()
     return {
         "schema_version": "0.1.0",
@@ -11195,6 +11203,37 @@ def print_route_outcome_feedback(feedback: dict[str, Any]) -> None:
     print(f"OUTCOME {feedback.get('outcome', '')}")
     print(f"BIAS    {feedback.get('feedback_bias', 0):+}")
     print(f"REPORT  {feedback.get('capability_report_path', '')}")
+
+
+def record_passive_route_outcome_from_current_selection(
+    pack_dir: Path,
+    registry: dict[str, Any],
+    *,
+    intent: str,
+    outcome: str,
+    reason: str,
+) -> dict[str, Any]:
+    try:
+        recommendation = recommend_execution(pack_dir, registry, intent=intent)
+        runtime_guidance = recommendation.get("runtime_guidance", {})
+        execution_route = runtime_guidance.get("execution_route", {}) if isinstance(runtime_guidance, dict) else {}
+        selected = execution_route.get("selected", {}) if isinstance(execution_route, dict) else {}
+        if not isinstance(selected, dict):
+            return {}
+        adapter_id = str(selected.get("id", "")).strip()
+        if not adapter_id or str(selected.get("kind", "")).strip() != "local-runtime-adapter":
+            return {}
+        return record_route_outcome_feedback(
+            pack_dir,
+            registry,
+            adapter_id=adapter_id,
+            intent=intent,
+            outcome=outcome,
+            reason=reason,
+            passive=True,
+        )
+    except (FileNotFoundError, OSError, TypeError, ValueError, KeyError):
+        return {}
 
 
 def next_runtime_handoff_path(pack_dir: Path, runtime_target_id: str) -> Path:
@@ -21588,6 +21627,13 @@ def main() -> int:
             artifact_path = Path(str(artifact["resolved_path"]))
             if args.print_path:
                 record_artifact_open_observation(pack_dir, catalog, artifact, open_mode="print-path")
+                record_passive_route_outcome_from_current_selection(
+                    pack_dir,
+                    registry,
+                    intent="open",
+                    outcome="used-this",
+                    reason=f"passive:artifact-open:{artifact.get('id', '')}:print-path",
+                )
                 if args.format == "json":
                     print(
                         json.dumps(
@@ -21604,6 +21650,13 @@ def main() -> int:
             else:
                 launch_open_path(artifact_path)
                 record_artifact_open_observation(pack_dir, catalog, artifact, open_mode="launch")
+                record_passive_route_outcome_from_current_selection(
+                    pack_dir,
+                    registry,
+                    intent="open",
+                    outcome="used-this",
+                    reason=f"passive:artifact-open:{artifact.get('id', '')}:launch",
+                )
                 if args.format == "json":
                     print(
                         json.dumps(
@@ -22699,6 +22752,13 @@ def main() -> int:
     if args.command == "export-tasks":
         try:
             output_path = export_tasks(args.path, registry, output_path=args.output)
+            record_passive_route_outcome_from_current_selection(
+                args.path,
+                registry,
+                intent="export",
+                outcome="shared-this",
+                reason="passive:export-tasks",
+            )
         except ValueError as exc:
             print(f"ERROR {exc}")
             return 1
@@ -22708,6 +22768,13 @@ def main() -> int:
     if args.command == "sync-tasks":
         try:
             output_path = sync_tasks(args.path, registry, output_path=args.output)
+            record_passive_route_outcome_from_current_selection(
+                args.path,
+                registry,
+                intent="export",
+                outcome="shared-this",
+                reason="passive:sync-tasks",
+            )
         except ValueError as exc:
             print(f"ERROR {exc}")
             return 1
@@ -22722,6 +22789,13 @@ def main() -> int:
                 adapter=args.adapter,
                 output_dir=args.output,
             )
+            record_passive_route_outcome_from_current_selection(
+                args.path,
+                registry,
+                intent="issues",
+                outcome="shared-this",
+                reason=f"passive:export-issues:{args.adapter}",
+            )
         except ValueError as exc:
             print(f"ERROR {exc}")
             return 1
@@ -22735,6 +22809,13 @@ def main() -> int:
                 registry,
                 adapter=args.adapter,
                 output_dir=args.output,
+            )
+            record_passive_route_outcome_from_current_selection(
+                args.path,
+                registry,
+                intent="wiki",
+                outcome="shared-this",
+                reason=f"passive:export-wiki:{args.adapter}",
             )
         except ValueError as exc:
             print(f"ERROR {exc}")

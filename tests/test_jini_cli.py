@@ -843,6 +843,54 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("local-fast", event["adapter_id"])
         self.assertEqual("replaced-this", event["outcome"])
 
+    def test_passive_route_outcome_feedback_is_captured_from_user_actions(self) -> None:
+        pack_dir = self.compile_research_pack()
+        state_root = self.tmp / ".jini"
+        state_root.mkdir(parents=True, exist_ok=True)
+        capabilities_path = state_root / "local-runtime-capabilities.json"
+        capabilities_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.4.0",
+                    "context_type": "JiniLocalRuntimeCapabilities",
+                    "captured_at": "2026-05-21T19:00:00Z",
+                    "local_runtime_class": "local-ollama",
+                    "adapters": {
+                        "local-fast": {
+                            "status": "ok",
+                            "latency_ms": 85,
+                            "warm_latency_ms": 70,
+                            "cold_start_cost_ms": 5,
+                            "tokens_per_second": 40.0,
+                            "quality_class": "strong",
+                            "structured_reliability": "strong",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        },
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        opened = self.run_cli("open", "tasks", "--from", pack_dir, "--print-path")
+        self.assert_ok(opened)
+        exported = self.run_cli("export-tasks", pack_dir)
+        self.assert_ok(exported)
+        rewritten = self.run_cli("rewrite", "checklist", "tasks", "--from", pack_dir, "--format", "json")
+        self.assert_ok(rewritten)
+
+        saved = self.read_json(capabilities_path)
+        feedback = saved["cohort_feedback"]["local-fast"]
+        self.assertEqual(1, feedback["open"]["passive_reopened"])
+        self.assertEqual(1, feedback["export"]["passive_export_opened"])
+        self.assertEqual(1, feedback["rewrite"]["passive_needed_light_edits"])
+
+        events = self.run_cli("show-learning-events", pack_dir, "--event-type", "route-outcome-feedback", "--format", "json")
+        self.assert_ok(events)
+        passive_events = [event for event in json.loads(events.stdout)["events"] if event["passive"]]
+        self.assertEqual(["open", "export", "rewrite"], [event["intent"] for event in passive_events[-3:]])
+        self.assertEqual(["used-this", "shared-this", "needed-light-edits"], [event["outcome"] for event in passive_events[-3:]])
+
     def test_status_surfaces_turn_record_and_progress_frame(self) -> None:
         pack_dir = self.compile_research_pack()
 
