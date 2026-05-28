@@ -827,7 +827,9 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual(-7, feedback_payload["feedback_bias"])
 
         saved = self.read_json(capabilities_path)
-        self.assertEqual(1, saved["cohort_feedback"]["local-fast"]["export"]["outcome_replaced"])
+        feedback_row = saved["cohort_feedback"]["local-fast"]["export"]
+        self.assertEqual(1, feedback_row["outcome_replaced"])
+        self.assertIn("outcome_replaced", feedback_row["counter_last_observed_at"])
 
         corrected = self.run_cli("recommend-execution", pack_dir, "--intent", "export", "--format", "json")
         self.assert_ok(corrected)
@@ -864,6 +866,71 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("local-fast", backtest_adapter["adapter_id"])
         self.assertEqual({"outcome_replaced": 1}, backtest_adapter["counters"])
         self.assertEqual(-7, backtest_adapter["latest_feedback_bias"])
+
+    def test_stale_route_outcome_feedback_does_not_permanently_steer_selection(self) -> None:
+        pack_dir = self.compile_research_pack()
+        state_root = self.tmp / ".jini"
+        state_root.mkdir(parents=True, exist_ok=True)
+        capabilities_path = state_root / "local-runtime-capabilities.json"
+        capabilities_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.4.0",
+                    "context_type": "JiniLocalRuntimeCapabilities",
+                    "captured_at": "2026-05-21T19:00:00Z",
+                    "local_runtime_class": "local-ollama",
+                    "adapters": {
+                        "local-workhorse": {
+                            "status": "ok",
+                            "latency_ms": 190,
+                            "warm_latency_ms": 160,
+                            "cold_start_cost_ms": 30,
+                            "tokens_per_second": 22.5,
+                            "quality_class": "usable",
+                            "structured_reliability": "usable",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        },
+                        "local-fast": {
+                            "status": "ok",
+                            "latency_ms": 85,
+                            "warm_latency_ms": 70,
+                            "cold_start_cost_ms": 5,
+                            "tokens_per_second": 40.0,
+                            "quality_class": "usable",
+                            "structured_reliability": "usable",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        },
+                    },
+                    "cohort_feedback": {
+                        "local-fast": {
+                            "export": {
+                                "outcome_replaced": 1,
+                                "counter_last_observed_at": {
+                                    "outcome_replaced": "2026-01-01T00:00:00Z",
+                                },
+                            },
+                        },
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        result = self.run_cli("recommend-execution", pack_dir, "--intent", "export", "--format", "json")
+        self.assert_ok(result)
+        execution_route = json.loads(result.stdout)["runtime_guidance"]["execution_route"]
+        self.assertEqual("local-fast", execution_route["selected"]["id"])
+        self.assertEqual(0, execution_route["outcome_signal_count"])
+        self.assertEqual([], execution_route["feedback_adjusted_adapters"])
+        feedback_evidence = execution_route["feedback_evidence"]
+        self.assertEqual(0, feedback_evidence["total_signal_count"])
+        self.assertEqual(1, feedback_evidence["total_expired_signal_count"])
+        adapter_evidence = {item["adapter_id"]: item for item in feedback_evidence["adapters"]}
+        self.assertEqual(0, adapter_evidence["local-fast"]["bias"])
+        self.assertEqual(0, adapter_evidence["local-fast"]["signal_count"])
+        self.assertEqual(1, adapter_evidence["local-fast"]["expired_signal_count"])
+        self.assertEqual({"outcome_replaced": 1}, adapter_evidence["local-fast"]["expired_counters"])
+        self.assertEqual("neutral", adapter_evidence["local-fast"]["routing_effect"])
 
     def test_passive_route_outcome_feedback_is_captured_from_user_actions(self) -> None:
         pack_dir = self.compile_research_pack()

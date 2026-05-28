@@ -1394,6 +1394,8 @@ ROUTE_FEEDBACK_COUNTER_KEYS = sorted(
         "passive_decision_changes",
     }
 )
+ROUTE_FEEDBACK_WINDOW_DAYS = 30
+ROUTE_FEEDBACK_COUNTER_LAST_OBSERVED_AT_KEY = "counter_last_observed_at"
 
 
 def route_feedback_cohort_key(intent: str) -> str:
@@ -1407,10 +1409,54 @@ def route_feedback_counter_value(row: dict[str, Any], key: str) -> int:
         return 0
 
 
+def route_feedback_counter_last_observed_at(row: dict[str, Any], key: str) -> str:
+    if not isinstance(row, dict):
+        return ""
+    observed_at = row.get(ROUTE_FEEDBACK_COUNTER_LAST_OBSERVED_AT_KEY, {})
+    if not isinstance(observed_at, dict):
+        return ""
+    return str(observed_at.get(key, "")).strip()
+
+
+def route_feedback_counter_age_days(row: dict[str, Any], key: str) -> int | None:
+    observed_at = route_feedback_counter_last_observed_at(row, key)
+    if not observed_at:
+        return None
+    return age_in_days(observed_at)
+
+
+def route_feedback_counter_is_expired(row: dict[str, Any], key: str) -> bool:
+    if route_feedback_counter_value(row, key) <= 0:
+        return False
+    observed_at = route_feedback_counter_last_observed_at(row, key)
+    if not observed_at:
+        return False
+    age_days = age_in_days(observed_at)
+    return age_days is not None and age_days > ROUTE_FEEDBACK_WINDOW_DAYS
+
+
+def route_feedback_active_counter_value(row: dict[str, Any], key: str) -> int:
+    if route_feedback_counter_is_expired(row, key):
+        return 0
+    return route_feedback_counter_value(row, key)
+
+
+def route_feedback_expired_counter_value(row: dict[str, Any], key: str) -> int:
+    if route_feedback_counter_is_expired(row, key):
+        return route_feedback_counter_value(row, key)
+    return 0
+
+
 def route_feedback_signal_count(row: dict[str, Any]) -> int:
     if not isinstance(row, dict):
         return 0
-    return sum(route_feedback_counter_value(row, key) for key in ROUTE_FEEDBACK_COUNTER_KEYS)
+    return sum(route_feedback_active_counter_value(row, key) for key in ROUTE_FEEDBACK_COUNTER_KEYS)
+
+
+def route_feedback_expired_signal_count(row: dict[str, Any]) -> int:
+    if not isinstance(row, dict):
+        return 0
+    return sum(route_feedback_expired_counter_value(row, key) for key in ROUTE_FEEDBACK_COUNTER_KEYS)
 
 
 def route_feedback_counters(row: dict[str, Any]) -> dict[str, int]:
@@ -1418,7 +1464,18 @@ def route_feedback_counters(row: dict[str, Any]) -> dict[str, int]:
         return {}
     counters: dict[str, int] = {}
     for key in ROUTE_FEEDBACK_COUNTER_KEYS:
-        value = route_feedback_counter_value(row, key)
+        value = route_feedback_active_counter_value(row, key)
+        if value:
+            counters[key] = value
+    return counters
+
+
+def route_feedback_expired_counters(row: dict[str, Any]) -> dict[str, int]:
+    if not isinstance(row, dict):
+        return {}
+    counters: dict[str, int] = {}
+    for key in ROUTE_FEEDBACK_COUNTER_KEYS:
+        value = route_feedback_expired_counter_value(row, key)
         if value:
             counters[key] = value
     return counters
@@ -1428,26 +1485,26 @@ def route_feedback_bias(row: dict[str, Any]) -> int:
     if not isinstance(row, dict):
         return 0
     positive = (
-        route_feedback_counter_value(row, "outcome_used") * 4
-        + route_feedback_counter_value(row, "outcome_shared") * 5
-        + route_feedback_counter_value(row, "accepted_as_is") * 3
-        + route_feedback_counter_value(row, "needed_light_edits")
-        + route_feedback_counter_value(row, "upvotes") * 2
-        + route_feedback_counter_value(row, "passive_reopened") * 2
-        + route_feedback_counter_value(row, "passive_export_opened") * 3
-        + route_feedback_counter_value(row, "passive_accepted_as_is") * 2
-        + route_feedback_counter_value(row, "passive_needed_light_edits")
-        + route_feedback_counter_value(row, "passive_header_only_edits")
+        route_feedback_active_counter_value(row, "outcome_used") * 4
+        + route_feedback_active_counter_value(row, "outcome_shared") * 5
+        + route_feedback_active_counter_value(row, "accepted_as_is") * 3
+        + route_feedback_active_counter_value(row, "needed_light_edits")
+        + route_feedback_active_counter_value(row, "upvotes") * 2
+        + route_feedback_active_counter_value(row, "passive_reopened") * 2
+        + route_feedback_active_counter_value(row, "passive_export_opened") * 3
+        + route_feedback_active_counter_value(row, "passive_accepted_as_is") * 2
+        + route_feedback_active_counter_value(row, "passive_needed_light_edits")
+        + route_feedback_active_counter_value(row, "passive_header_only_edits")
     )
     negative = (
-        route_feedback_counter_value(row, "outcome_replaced") * 7
-        + route_feedback_counter_value(row, "not_useful") * 6
-        + route_feedback_counter_value(row, "downvotes") * 4
-        + route_feedback_counter_value(row, "passive_replaced_later") * 5
-        + route_feedback_counter_value(row, "passive_needed_heavy_edits") * 4
-        + route_feedback_counter_value(row, "passive_core_section_edits") * 2
-        + route_feedback_counter_value(row, "passive_core_wording_edits")
-        + route_feedback_counter_value(row, "passive_decision_changes") * 4
+        route_feedback_active_counter_value(row, "outcome_replaced") * 7
+        + route_feedback_active_counter_value(row, "not_useful") * 6
+        + route_feedback_active_counter_value(row, "downvotes") * 4
+        + route_feedback_active_counter_value(row, "passive_replaced_later") * 5
+        + route_feedback_active_counter_value(row, "passive_needed_heavy_edits") * 4
+        + route_feedback_active_counter_value(row, "passive_core_section_edits") * 2
+        + route_feedback_active_counter_value(row, "passive_core_wording_edits")
+        + route_feedback_active_counter_value(row, "passive_decision_changes") * 4
     )
     return max(-20, min(20, positive - negative))
 
@@ -1476,18 +1533,22 @@ def route_feedback_summary_for_adapters(
         row = route_feedback_row(route_payload, adapter_id, cohort_key)
         bias = route_feedback_bias(row)
         signal_count = route_feedback_signal_count(row)
+        expired_signal_count = route_feedback_expired_signal_count(row)
         biases[adapter_id] = bias
         signal_counts[adapter_id] = signal_count
         if signal_count > 0 and bias != 0:
             adjusted.append(adapter_id)
-        if signal_count > 0:
+        if signal_count > 0 or expired_signal_count > 0:
             adapters.append(
                 {
                     "adapter_id": adapter_id,
                     "cohort_key": cohort_key,
                     "bias": bias,
                     "signal_count": signal_count,
+                    "expired_signal_count": expired_signal_count,
+                    "window_days": ROUTE_FEEDBACK_WINDOW_DAYS,
                     "counters": route_feedback_counters(row),
+                    "expired_counters": route_feedback_expired_counters(row),
                     "routing_effect": "boosted" if bias > 0 else "penalized" if bias < 0 else "neutral",
                 }
             )
@@ -1496,6 +1557,7 @@ def route_feedback_summary_for_adapters(
         "biases": biases,
         "signal_counts": signal_counts,
         "total_signal_count": sum(signal_counts.values()),
+        "total_expired_signal_count": sum(int(item.get("expired_signal_count", 0) or 0) for item in adapters),
         "adjusted_adapters": sorted(adjusted),
         "adapters": adapters,
     }
@@ -1605,7 +1667,9 @@ def select_measured_local_execution_route(
         "feedback_adjusted_adapters": feedback["adjusted_adapters"],
         "feedback_evidence": {
             "cohort_key": cohort_key,
+            "window_days": ROUTE_FEEDBACK_WINDOW_DAYS,
             "total_signal_count": int(feedback["total_signal_count"]),
+            "total_expired_signal_count": int(feedback["total_expired_signal_count"]),
             "adjusted_adapters": feedback["adjusted_adapters"],
             "adapters": feedback["adapters"],
         },
@@ -11285,6 +11349,7 @@ def record_route_outcome_feedback(
         adapter_feedback[cohort] = row
     deduped = False
     observation_key = ""
+    recorded_at = now_utc()
     if passive and passive_observation_key.strip():
         observation_scope = ":".join(
             item
@@ -11308,7 +11373,7 @@ def record_route_outcome_feedback(
             deduped = True
         else:
             adapter_observations[observation_key] = {
-                "observed_at": now_utc(),
+                "observed_at": recorded_at,
                 "intent": intent,
                 "cohort_key": cohort,
                 "outcome": outcome,
@@ -11337,8 +11402,13 @@ def record_route_outcome_feedback(
             "capability_report_path": display_path(path),
             "event_paths": [],
         }
-    row[counter] = route_feedback_counter_value(row, counter) + 1
-    payload["last_feedback_at"] = now_utc()
+    row[counter] = route_feedback_active_counter_value(row, counter) + 1
+    counter_last_observed_at = row.setdefault(ROUTE_FEEDBACK_COUNTER_LAST_OBSERVED_AT_KEY, {})
+    if not isinstance(counter_last_observed_at, dict):
+        counter_last_observed_at = {}
+        row[ROUTE_FEEDBACK_COUNTER_LAST_OBSERVED_AT_KEY] = counter_last_observed_at
+    counter_last_observed_at[counter] = recorded_at
+    payload["last_feedback_at"] = recorded_at
 
     path = local_runtime_capabilities_path()
     path.parent.mkdir(parents=True, exist_ok=True)
