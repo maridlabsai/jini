@@ -175,7 +175,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
   <div class="workflow-card">
     <span class="workflow-meta">Evidence</span>
     <h3>Route evidence</h3>
-    <p>Users learn one shell while providers, models, and tools can change underneath. Jini exposes command latency, provider state, route cost, and route trend, and surfaces <code>jini metrics</code> when the cost story matters.</p>
+    <p>Users learn one shell while providers, models, and tools can change underneath. Jini exposes command latency, provider state, route cost, and route trend, and keeps that route evidence inspectable when the cost story matters.</p>
   </div>
   <div class="workflow-card">
     <span class="workflow-meta">Boundary</span>

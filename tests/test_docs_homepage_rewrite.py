@@ -62,7 +62,7 @@ class DocsHomepageRewriteTests(unittest.TestCase):
             "capture id and source",
             "checked-in proof carousel slides from the repo",
             "Start in the CLI today, then carry the same work forward as desktop and mobile come online.",
-            "jini metrics",
+            "keeps that route evidence inspectable when the cost story matters.",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
@@ -154,7 +154,7 @@ class DocsHomepageRewriteTests(unittest.TestCase):
         for marker in (
             "free shell should make its value obvious",
             "What a buyer should be able to verify quickly",
-            "Inspectability instead of product magic",
+            "inspectability instead of product magic",
             "What the paid layer should prove before renewal",
         ):
             with self.subTest(marker=marker):

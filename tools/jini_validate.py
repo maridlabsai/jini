@@ -54,6 +54,9 @@ try:
     from .session_core import build_canonical_session
     from .session_projection import build_session_projection
     from .session_store import SessionStore
+    from .yaml_compat import YAMLError as CompatYAMLError
+    from .yaml_compat import safe_dump as compat_yaml_dump
+    from .yaml_compat import safe_load as compat_yaml_load
 except ImportError:  # pragma: no cover - script execution path
     from lean_metrics_support import (
         build_lean_platform_report,
@@ -62,6 +65,9 @@ except ImportError:  # pragma: no cover - script execution path
     from session_core import build_canonical_session
     from session_projection import build_session_projection
     from session_store import SessionStore
+    from yaml_compat import YAMLError as CompatYAMLError
+    from yaml_compat import safe_dump as compat_yaml_dump
+    from yaml_compat import safe_load as compat_yaml_load
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -562,29 +568,18 @@ def _simple_yaml_dump_lines(value: Any, indent: int = 0) -> list[str]:
 
 
 def _yaml_load_text(text: str) -> Any:
-    if yaml is not None:
-        class JiniYamlLoader(yaml.SafeLoader):
-            """Safe YAML loader that keeps timestamps as strings."""
-
-        for key, resolvers in list(JiniYamlLoader.yaml_implicit_resolvers.items()):
-            JiniYamlLoader.yaml_implicit_resolvers[key] = [
-                resolver for resolver in resolvers if resolver[0] != "tag:yaml.org,2002:timestamp"
-            ]
-        return yaml.load(text, Loader=JiniYamlLoader)
-    return _simple_yaml_load(text)
+    return compat_yaml_load(text)
 
 
 def _yaml_dump_text(data: Any) -> str:
-    if yaml is not None:
-        return yaml.safe_dump(data, sort_keys=False)
-    return "\n".join(_simple_yaml_dump_lines(data)) + "\n"
+    return compat_yaml_dump(data, sort_keys=False)
 
 
 YAML_ERROR_TYPES: tuple[type[BaseException], ...]
 if yaml is not None:
-    YAML_ERROR_TYPES = (yaml.YAMLError, SimpleYamlError)
+    YAML_ERROR_TYPES = (yaml.YAMLError, SimpleYamlError, CompatYAMLError)
 else:
-    YAML_ERROR_TYPES = (SimpleYamlError,)
+    YAML_ERROR_TYPES = (SimpleYamlError, CompatYAMLError)
 DOCUMENT_READ_ERRORS = (OSError, json.JSONDecodeError) + YAML_ERROR_TYPES
 
 

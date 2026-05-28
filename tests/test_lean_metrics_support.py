@@ -16,8 +16,8 @@ class LeanMetricsSupportTests(unittest.TestCase):
         lines = lean_metrics_support.render_lean_platform_metrics(
             {
                 "status": "ok",
-                "command_surface_count": 5,
-                "taught_commands": ["doctor", "metrics"],
+                "command_surface_count": 2,
+                "taught_commands": ["doctor", "status"],
                 "compatibility_alias_count": 0,
                 "compatibility_alias_matches": [],
                 "latency_sample": {

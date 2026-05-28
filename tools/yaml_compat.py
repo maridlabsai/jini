@@ -140,6 +140,56 @@ def _parse_block(lines: list[str], start: int, indent: int) -> tuple[Any, int]:
     return _parse_dict(lines, index, indent)
 
 
+def _parse_nested_block(lines: list[str], start: int, parent_indent: int) -> tuple[Any, int]:
+    index = start
+    while index < len(lines):
+        candidate = lines[index]
+        if candidate.strip() and not candidate.lstrip().startswith("#"):
+            break
+        index += 1
+    if index >= len(lines):
+        return {}, index
+    child_indent = _indent(lines[index])
+    if child_indent < parent_indent:
+        return {}, index
+    if child_indent == parent_indent and not lines[index].lstrip().startswith("- "):
+        raise YAMLError(f"Unexpected indentation at line {index + 1}")
+    return _parse_block(lines, index, child_indent)
+
+
+def _looks_like_mapping_entry(text: str) -> bool:
+    key, separator, raw_value = text.partition(":")
+    if not separator or not key.strip():
+        return False
+    return raw_value == "" or raw_value.startswith(" ")
+
+
+def _consume_plain_scalar_continuation(
+    lines: list[str],
+    start: int,
+    *,
+    parent_indent: int,
+    initial: str,
+) -> tuple[str, int]:
+    parts = [initial.strip()]
+    index = start
+    while index < len(lines):
+        candidate = lines[index]
+        if not candidate.strip():
+            break
+        line_indent = _indent(candidate)
+        if line_indent <= parent_indent:
+            break
+        stripped = candidate.strip()
+        if stripped.startswith("- "):
+            break
+        if _looks_like_mapping_entry(stripped):
+            break
+        parts.append(stripped)
+        index += 1
+    return " ".join(part for part in parts if part).strip(), index
+
+
 def _parse_list(lines: list[str], start: int, indent: int) -> tuple[list[Any], int]:
     items: list[Any] = []
     index = start
@@ -163,7 +213,7 @@ def _parse_list(lines: list[str], start: int, indent: int) -> tuple[list[Any], i
             items.append(value)
             continue
         key, separator, raw_value = remainder.partition(":")
-        if separator:
+        if _looks_like_mapping_entry(remainder):
             mapping: dict[str, Any] = {}
             key = key.strip()
             raw_value = raw_value.strip()
@@ -174,6 +224,13 @@ def _parse_list(lines: list[str], start: int, indent: int) -> tuple[list[Any], i
             else:
                 value = _scalar(raw_value)
                 next_index = index + 1
+                if isinstance(value, str):
+                    value, next_index = _consume_plain_scalar_continuation(
+                        lines,
+                        next_index,
+                        parent_indent=indent,
+                        initial=value,
+                    )
             mapping[key] = value
             while next_index < len(lines):
                 extra = lines[next_index]
@@ -200,8 +257,17 @@ def _parse_list(lines: list[str], start: int, indent: int) -> tuple[list[Any], i
             items.append(mapping)
             index = next_index
             continue
-        items.append(_scalar(remainder))
-        index += 1
+        value = _scalar(remainder)
+        next_index = index + 1
+        if isinstance(value, str):
+            value, next_index = _consume_plain_scalar_continuation(
+                lines,
+                next_index,
+                parent_indent=indent,
+                initial=value,
+            )
+        items.append(value)
+        index = next_index
     return items, index
 
 
@@ -229,10 +295,17 @@ def _parse_dict(lines: list[str], start: int, indent: int) -> tuple[dict[str, An
         if raw_value in {">", "|"}:
             value, index = _parse_block_scalar(lines, index + 1, indent, raw_value)
         elif raw_value == "":
-            value, index = _parse_block(lines, index + 1, indent + 2)
+            value, index = _parse_nested_block(lines, index + 1, indent)
         else:
             value = _scalar(raw_value)
             index += 1
+            if isinstance(value, str):
+                value, index = _consume_plain_scalar_continuation(
+                    lines,
+                    index,
+                    parent_indent=indent,
+                    initial=value,
+                )
         payload[key] = value
     return payload, index
 

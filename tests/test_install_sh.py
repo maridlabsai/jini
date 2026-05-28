@@ -1,4 +1,5 @@
 import os
+import json
 import shutil
 import stat
 import subprocess
@@ -12,6 +13,8 @@ from typing import Optional
 REPO_ROOT = Path(__file__).resolve().parents[1]
 INSTALLER = REPO_ROOT / "install.sh"
 LOCAL_GO_BIN = REPO_ROOT.parent / ".local-go" / "bin"
+CLI_DOC = REPO_ROOT / "docs" / "cli.md"
+RESEARCH_EXAMPLE = REPO_ROOT / "packs" / "research-prd" / "examples" / "research-prd-v1"
 
 
 class InstallScriptTests(unittest.TestCase):
@@ -87,6 +90,102 @@ class InstallScriptTests(unittest.TestCase):
         if result.returncode == 0:
             self.fail(f"Expected installer to fail.\nSTDOUT:\n{result.stdout}")
 
+    def run_installed_jini(
+        self,
+        binary_path: Path,
+        *args: str,
+        env: Optional[dict[str, str]] = None,
+        cwd: Optional[Path] = None,
+    ) -> subprocess.CompletedProcess[str]:
+        run_env = dict(os.environ)
+        if env:
+            run_env.update(env)
+        return subprocess.run(
+            [str(binary_path), *args],
+            cwd=str(cwd or REPO_ROOT),
+            text=True,
+            capture_output=True,
+            env=run_env,
+        )
+
+    def write_current_work(self, state_dir: Path, pack_dir: Path) -> None:
+        state_dir.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "pack_dir": str(pack_dir),
+            "pack_id": "research-prd",
+            "work_unit_id": "research-prd-v1",
+            "title": "Research PRD Example",
+            "state": "awaiting_verification",
+            "health": "ready-to-verify",
+        }
+        (state_dir / "current-work.json").write_text(json.dumps(payload), encoding="utf-8")
+
+    def assert_go_public_command_contract(self, binary_path: Path, *, env: Optional[dict[str, str]] = None) -> None:
+        state_dir = self.tmp / ".jini-go-artifact-state"
+        self.write_current_work(state_dir, RESEARCH_EXAMPLE)
+        command_env = {"JINI_STATE_DIR": str(state_dir), "JINI_PROVIDER": "local-preview"}
+        if env:
+            command_env.update(env)
+
+        smoke_cases = [
+            (["--help"], 0, "Actions"),
+            (["commands"], 0, "Public command inventory"),
+            (["help", "--all"], 0, "Public command inventory"),
+            (["admin", "help"], 0, "Admin and developer command inventory"),
+            (["doctor"], 0, "Provider"),
+            (["status"], 0, "Goal"),
+        ]
+        for args, expected_code, marker in smoke_cases:
+            with self.subTest(args=args):
+                result = self.run_installed_jini(binary_path, *args, env=command_env)
+                self.assertEqual(
+                    expected_code,
+                    result.returncode,
+                    msg=f"Expected {' '.join(args)} to exit {expected_code}.\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}",
+                )
+                self.assertIn(
+                    marker,
+                    result.stdout,
+                    msg=f"Expected {' '.join(args)} to include {marker!r}.\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}",
+                )
+                self.assertNotIn(
+                    "Unknown command",
+                    result.stderr,
+                    msg=f"Installed artifact rejected {' '.join(args)}.\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}",
+                )
+
+    def assert_python_public_command_contract(self, binary_path: Path, *, env: Optional[dict[str, str]] = None) -> None:
+        command_env = {"JINI_PROVIDER": "local-preview"}
+        if env:
+            command_env.update(env)
+
+        smoke_cases = [
+            (["--help"], 0, "Jini CLI"),
+            (["commands"], 0, "Public command inventory"),
+            (["help", "--all"], 0, "Public command inventory"),
+            (["admin", "help"], 0, "Admin and developer command inventory"),
+            (["doctor"], 0, "Provider"),
+            (["status", str(RESEARCH_EXAMPLE)], 0, "WORK   research-prd-v1"),
+        ]
+        for args, expected_code, marker in smoke_cases:
+            with self.subTest(args=args):
+                result = self.run_installed_jini(binary_path, *args, env=command_env)
+                self.assertEqual(
+                    expected_code,
+                    result.returncode,
+                    msg=f"Expected {' '.join(args)} to exit {expected_code}.\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}",
+                )
+                self.assertIn(
+                    marker,
+                    result.stdout,
+                    msg=f"Expected {' '.join(args)} to include {marker!r}.\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}",
+                )
+                self.assertNotIn(
+                    "Unknown command",
+                    result.stderr,
+                    msg=f"Installed artifact rejected {' '.join(args)}.\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}",
+                )
+
     def create_remote_snapshot(self) -> Path:
         snapshot = self.tmp / "snapshot-repo"
         shutil.copytree(
@@ -132,6 +231,69 @@ class InstallScriptTests(unittest.TestCase):
         )
         self.assertEqual(0, launch.returncode, msg=launch.stderr)
         self.assertIn("Provider", launch.stdout)
+
+    def test_local_go_install_supports_taught_public_command_contract(self) -> None:
+        bin_dir = self.tmp / "go-bin"
+        install_dir = self.tmp / "go-share" / "jini"
+        result = self.run_installer(
+            "--source-dir",
+            str(REPO_ROOT),
+            "--bin-dir",
+            str(bin_dir),
+            "--install-dir",
+            str(install_dir),
+            "--force",
+            env=self.go_ready_env(),
+        )
+        self.assert_ok(result)
+        self.assert_go_public_command_contract(bin_dir / "jini")
+
+    def test_local_go_install_keeps_provider_doctor_compatibility_alias(self) -> None:
+        bin_dir = self.tmp / "go-provider-bin"
+        install_dir = self.tmp / "go-provider-share" / "jini"
+        result = self.run_installer(
+            "--source-dir",
+            str(REPO_ROOT),
+            "--bin-dir",
+            str(bin_dir),
+            "--install-dir",
+            str(install_dir),
+            "--force",
+            env=self.go_ready_env(),
+        )
+        self.assert_ok(result)
+        provider = self.run_installed_jini(
+            bin_dir / "jini",
+            "provider",
+            "doctor",
+            env={"JINI_PROVIDER": "local-preview"},
+        )
+        self.assertEqual(0, provider.returncode, msg=provider.stderr)
+        self.assertIn("Provider", provider.stdout)
+
+    def test_python_fallback_install_supports_taught_public_command_contract(self) -> None:
+        bin_dir = self.tmp / "python-bin"
+        install_dir = self.tmp / "python-share" / "jini"
+        result = self.run_installer(
+            "--source-dir",
+            str(REPO_ROOT),
+            "--bin-dir",
+            str(bin_dir),
+            "--install-dir",
+            str(install_dir),
+            "--force",
+            env={"PATH": "/usr/bin:/bin"},
+        )
+        self.assert_ok(result)
+        self.assert_python_public_command_contract(bin_dir / "jini")
+
+    def test_cli_guide_taught_support_commands_match_installed_smoke_surface(self) -> None:
+        text = CLI_DOC.read_text(encoding="utf-8")
+        taught = set()
+        for line in text.splitlines():
+            if "<h3><code>jini " in line:
+                taught.add(line.split("<h3><code>jini ", 1)[1].split("</code></h3>", 1)[0].strip())
+        self.assertEqual({"status", "doctor"}, taught)
 
     def test_remote_style_install_works_from_outside_repo(self) -> None:
         remote_snapshot = self.create_remote_snapshot()

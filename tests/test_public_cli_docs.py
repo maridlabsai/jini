@@ -42,6 +42,23 @@ class PublicCliDocsTests(unittest.TestCase):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
 
+    def test_cli_guide_keeps_support_commands_on_the_runtime_surface(self) -> None:
+        text = read(CLI_PATH)
+        for marker in (
+            "jini status",
+            "jini doctor",
+        ):
+            with self.subTest(marker=marker):
+                self.assertIn(marker, text)
+        for marker in (
+            "jini check",
+            "jini setup",
+            "jini open",
+            "jini metrics",
+        ):
+            with self.subTest(marker=marker):
+                self.assertNotIn(marker, text)
+
     def test_install_page_uses_same_public_vs_admin_boundary(self) -> None:
         text = read(INSTALL_PATH)
         for marker in (

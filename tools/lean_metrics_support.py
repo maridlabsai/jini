@@ -294,7 +294,7 @@ def collect_core_command_samples(root: Path, cli_path: Path) -> tuple[list[dict[
 
     with tempfile.TemporaryDirectory(prefix="jini-metrics-") as tmp_dir:
         tmp_root = Path(tmp_dir)
-        sample, _ = sample_cli(["setup", "--harness", "codex", "--prefix", str(tmp_root / "setup-prefix")])
+        sample, _ = sample_cli(["commands"])
         command_samples.append(sample)
         doctor_sample, doctor_payload = sample_cli(
             ["doctor", "--format", "json"],
@@ -310,8 +310,6 @@ def collect_core_command_samples(root: Path, cli_path: Path) -> tuple[list[dict[
                 "status": str(doctor_payload.get("status", "")),
             }
         sample, _ = sample_cli(["status", "packs/research-prd/examples/research-prd-v1"])
-        command_samples.append(sample)
-        sample, _ = sample_cli(["open", "prd", "--from", "packs/research-prd/examples/research-prd-v1", "--print-path"])
         command_samples.append(sample)
     return command_samples, provider_evidence
 

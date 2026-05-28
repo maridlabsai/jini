@@ -89,24 +89,12 @@ quick_links:
   <p>These are still part of the public command catalog. They support the product front door, and most people should reach them because Jini asked for one of them, not because they are navigating a command tree by hand.</p>
   <div class="checklist-grid">
     <div class="checklist-card">
-      <h3><code>jini setup</code></h3>
-      <p>Materializes one safe starter setup for a harness when you need an explicit local setup path.</p>
-    </div>
-    <div class="checklist-card">
       <h3><code>jini status</code></h3>
       <p>Shows a calm work summary when you want the current work state outside the shell.</p>
     </div>
     <div class="checklist-card">
-      <h3><code>jini open</code></h3>
-      <p>Opens useful outputs like a follow-up, memo, or check instead of internal file paths.</p>
-    </div>
-    <div class="checklist-card">
       <h3><code>jini doctor</code></h3>
       <p>Local setup check when Jini needs route help or you are debugging access.</p>
-    </div>
-    <div class="checklist-card">
-      <h3><code>jini metrics</code></h3>
-      <p>Shows the lean-platform command count, command timings, active provider, and measured route cost and trend evidence when available.</p>
     </div>
   </div>
 </div>
@@ -158,7 +146,7 @@ jini</code></pre>
 <div class="section-card section-card-cta">
   <span class="section-kicker">Next step</span>
   <h2>The public rule</h2>
-  <p>The normal path is still small: install once, run <code>jini</code>, paste the work you want finished. When you need a public command list, use <code>jini commands</code>. The rest of the CLI exists to support that experience, not replace it.</p>
+  <p>The normal path is still small: install once, run <code>jini</code>, paste the work you want finished. When you need a public command list, use <code>jini commands</code>. Use <code>status</code> and <code>doctor</code> when Jini points you there; the rest of the CLI should stay out of the way.</p>
   <div class="page-intro-links">
     <a href="{{ '/install.html' | relative_url }}">Install</a>
     <a href="{{ '/simple.html' | relative_url }}">Quickstart</a>
