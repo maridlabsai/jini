@@ -7342,6 +7342,74 @@ def resolve_continue_item(pack_dir: Path, registry: dict[str, Any]) -> dict[str,
     return ready_now[0]
 
 
+EXPANSION_CURRENT_TOKENS = {"", "this", "current", "current-artifact", "artifact"}
+
+
+def is_current_expansion_token(artifact_name: str | None) -> bool:
+    if artifact_name is None:
+        return True
+    return slugify(str(artifact_name).strip()) in EXPANSION_CURRENT_TOKENS
+
+
+def resolve_expansion_item(
+    pack_dir: Path,
+    registry: dict[str, Any],
+    artifact_name: str | None = None,
+) -> dict[str, Any]:
+    catalog = build_artifact_catalog(pack_dir, registry)
+    shelf_items = open_shelf_items(catalog)
+    if not shelf_items:
+        raise ValueError("No richer artifact surface is available yet. Run `jini status` after Jini produces the first useful artifact.")
+
+    source = (
+        resolve_default_artifact_item(pack_dir, registry)
+        if is_current_expansion_token(artifact_name)
+        else resolve_artifact_item(pack_dir, registry, str(artifact_name))
+    )
+    source_id = str(source.get("id", "")).strip()
+    source_path = str(source.get("resolved_path", "")).strip()
+
+    source_index = -1
+    for index, item in enumerate(shelf_items):
+        if source_id and source_id == str(item.get("id", "")).strip():
+            source_index = index
+            break
+        if source_path and source_path == str(item.get("resolved_path", "")).strip():
+            source_index = index
+            break
+    if source_index < 0:
+        raise ValueError(f"Current artifact `{source_id or artifact_name or 'unknown'}` is not available on the open shelf.")
+
+    tail = shelf_items[source_index + 1 :]
+    if not tail:
+        raise ValueError(f"No richer companion artifact is available after `{source_id}`.")
+
+    selection_order = (
+        ("ready", "next-ready"),
+        ("export", "fallback-export"),
+        ("detail", "fallback-detail"),
+    )
+    for shelf_kind, selection_reason in selection_order:
+        for item in tail:
+            if str(item.get("shelf_kind", "")) == shelf_kind:
+                item["selection_mode"] = "expand"
+                return {
+                    "catalog": catalog,
+                    "source_artifact": source,
+                    "artifact": item,
+                    "selection_reason": selection_reason,
+                }
+
+    artifact = dict(tail[0])
+    artifact["selection_mode"] = "expand"
+    return {
+        "catalog": catalog,
+        "source_artifact": source,
+        "artifact": artifact,
+        "selection_reason": "next-available",
+    }
+
+
 def projection_focus_artifact_id(projection: dict[str, Any] | None) -> str:
     if not isinstance(projection, dict):
         return ""
@@ -8216,6 +8284,33 @@ def record_artifact_open_observation(
     )
 
 
+def record_artifact_expand_observation(
+    pack_dir: Path,
+    catalog: dict[str, Any],
+    source_artifact: dict[str, Any],
+    artifact: dict[str, Any],
+    *,
+    selection_reason: str,
+    open_mode: str,
+) -> None:
+    append_learning_event(
+        "artifact-expand",
+        {
+            "pack_id": str(catalog.get("pack_id", "")),
+            "work_unit_id": str(catalog.get("work_unit_id", "")),
+            "source_artifact_id": str(source_artifact.get("id", "")),
+            "source_artifact_label": str(source_artifact.get("label", "")),
+            "artifact_id": str(artifact.get("id", "")),
+            "artifact_label": str(artifact.get("label", "")),
+            "artifact_kind": str(artifact.get("kind", "")),
+            "artifact_category": str(artifact.get("category", "")),
+            "selection_reason": selection_reason,
+            "open_mode": open_mode,
+        },
+        pack_dir=pack_dir,
+    )
+
+
 def build_open_artifact_report(
     artifact: dict[str, Any],
     artifact_path: Path,
@@ -8236,6 +8331,58 @@ def build_open_artifact_report(
         "open_mode": open_mode,
         "path": display_path(artifact_path),
     }
+
+
+def artifact_report_item(artifact: dict[str, Any]) -> dict[str, str]:
+    return {
+        "id": str(artifact.get("id", "")),
+        "label": str(artifact.get("label", "")),
+        "kind": str(artifact.get("kind", "")),
+        "category": str(artifact.get("category", "")),
+    }
+
+
+def build_expand_artifact_report(
+    source_artifact: dict[str, Any],
+    artifact: dict[str, Any],
+    artifact_path: Path,
+    *,
+    selection_reason: str,
+    open_mode: str,
+) -> dict[str, Any]:
+    return {
+        "schema_version": "0.1.0",
+        "result_type": "JiniExpandArtifact",
+        "generated_at": now_utc(),
+        "source_artifact": artifact_report_item(source_artifact),
+        "artifact": artifact_report_item(artifact),
+        "selection_reason": selection_reason,
+        "selection_mode": str(artifact.get("selection_mode", "expand")),
+        "open_mode": open_mode,
+        "path": display_path(artifact_path),
+    }
+
+
+def print_expand_preview(report: dict[str, Any], artifact_path: Path, *, pack_dir: Path | None = None) -> None:
+    source = report.get("source_artifact", {})
+    artifact = report.get("artifact", {})
+    source_id = str(source.get("id", "")).strip() if isinstance(source, dict) else ""
+    artifact_id = str(artifact.get("id", "")).strip() if isinstance(artifact, dict) else ""
+    label = str(artifact.get("label", "")).strip() if isinstance(artifact, dict) else artifact_id
+    preview, trimmed = build_terminal_preview(artifact_path.read_text(encoding="utf-8"))
+
+    print(f"EXPANDED {source_id or 'current'} -> {artifact_id or 'artifact'}")
+    print(f"LABEL    {label or artifact_id}")
+    print(f"WHY      {report.get('selection_reason', '')}")
+    print(f"PATH     {display_path(artifact_path)}")
+    print()
+    print(preview)
+    if trimmed:
+        show_command, open_command = build_continue_commands(artifact_id, pack_dir=pack_dir)
+        print()
+        print("MORE")
+        print(f"  - {show_command}")
+        print(f"  - {open_command}")
 
 
 def launch_open_path(path: Path) -> None:
@@ -8262,7 +8409,12 @@ def cli_invocation() -> str:
 
 
 def normalize_cli_argv(argv: list[str]) -> list[str]:
-    return list(argv)
+    normalized = list(argv)
+    if len(normalized) >= 2 and normalized[0].lower() == "show" and normalized[1].lower() == "more":
+        return ["expand", *normalized[2:]]
+    if normalized and normalized[0].lower() in {"show-more", "show-more-this", "expand-this"}:
+        return ["expand", *normalized[1:]]
+    return normalized
 
 
 def print_cli_overview() -> None:
@@ -8311,6 +8463,7 @@ PUBLIC_HELP_GROUPS: list[tuple[str, list[tuple[str, str]]]] = [
             ("jini continue", "Preview the next useful artifact without rebuilding the work state."),
             ("jini open", "Open the current artifact or human-facing view."),
             ("jini show", "Print an artifact or ready-now view in the terminal."),
+            ("jini expand", "Open the next richer surface from the current artifact."),
             ("jini context", "Show the compact context capsule that shaped the current artifact."),
             ("jini rewrite checklist", "Refine the current markdown artifact after saving a restorable version."),
             ("jini versions / undo", "Inspect or restore recent artifact versions without using file paths or git."),
@@ -18802,6 +18955,30 @@ def main() -> int:
         help="Print the resolved artifact path instead of rendering it",
     )
 
+    expand_parser = subparsers.add_parser(
+        "expand",
+        aliases=["more", "show-more", "expand-this", "show-more-this"],
+        help="Open the next richer artifact from the current focus",
+    )
+    expand_parser.set_defaults(command="expand")
+    expand_parser.add_argument(
+        "artifact",
+        nargs="?",
+        help="Optional anchor artifact; defaults to the current focused artifact",
+    )
+    expand_parser.add_argument("--from", dest="path", type=Path, help="Optional pack path; defaults to the current Jini work")
+    expand_parser.add_argument(
+        "--print-path",
+        action="store_true",
+        help="Print the resolved artifact path instead of rendering it",
+    )
+    expand_parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for the expansion result",
+    )
+
     context_parser = subparsers.add_parser(
         "context",
         help="Show the compact context capsule that shaped the current artifact",
@@ -20672,6 +20849,44 @@ def main() -> int:
                             return 1
                         print_compact_context(compact, heading="CONTINUE")
                         return 0
+            failing_path = args.path if args.path is not None else Path("<current-work>")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
+            return 1
+        return 0
+
+    if args.command == "expand":
+        try:
+            pack_dir = resolve_context_pack_dir(args.path, registry, command_label="expand")
+            resolution = resolve_expansion_item(pack_dir, registry, args.artifact)
+            catalog = resolution["catalog"]
+            source_artifact = resolution["source_artifact"]
+            artifact = resolution["artifact"]
+            selection_reason = str(resolution["selection_reason"])
+            persist_projection_focus(pack_dir, artifact)
+            artifact_path = Path(str(artifact["resolved_path"]))
+            open_mode = "print-path" if args.print_path else "preview"
+            record_artifact_expand_observation(
+                pack_dir,
+                catalog,
+                source_artifact,
+                artifact,
+                selection_reason=selection_reason,
+                open_mode=open_mode,
+            )
+            report = build_expand_artifact_report(
+                source_artifact,
+                artifact,
+                artifact_path,
+                selection_reason=selection_reason,
+                open_mode=open_mode,
+            )
+            if args.format == "json":
+                print(json.dumps(report, indent=2))
+            elif args.print_path:
+                print(display_path(artifact_path))
+            else:
+                print_expand_preview(report, artifact_path, pack_dir=pack_dir if args.path is not None else None)
+        except (FileNotFoundError, OSError, TypeError, ValueError) as exc:
             failing_path = args.path if args.path is not None else Path("<current-work>")
             print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
             return 1

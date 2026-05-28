@@ -759,6 +759,41 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("number", artifact_open_events[-1]["selection_mode"])
         self.assertEqual("print-path", artifact_open_events[-1]["open_mode"])
 
+    def test_expand_opens_next_ready_artifact_from_current_focus(self) -> None:
+        pack_dir = self.compile_research_pack()
+        self.assert_ok(self.run_cli("show", "prd", "--from", pack_dir))
+
+        result = self.run_cli("expand", "--print-path")
+        self.assert_ok(result)
+
+        self.assertIn(str((pack_dir / "views" / "tasks.md").resolve()), result.stdout.strip())
+        events_path = pack_dir / "runtime" / "events.jsonl"
+        events = [
+            json.loads(line)
+            for line in events_path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        expand_events = [event for event in events if event["event_type"] == "artifact-expand"]
+        self.assertTrue(expand_events)
+        self.assertEqual("prd", expand_events[-1]["source_artifact_id"])
+        self.assertEqual("tasks", expand_events[-1]["artifact_id"])
+        self.assertEqual("next-ready", expand_events[-1]["selection_reason"])
+
+    def test_show_more_alias_falls_back_to_export_after_last_ready_artifact(self) -> None:
+        pack_dir = self.compile_research_pack()
+        self.assert_ok(self.run_cli("continue", "--from", pack_dir, "--print-path"))
+
+        result = self.run_cli("show", "more", "--from", pack_dir, "--print-path", "--format", "json")
+        self.assert_ok(result)
+
+        payload = json.loads(result.stdout)
+        self.assertEqual("JiniExpandArtifact", payload["result_type"])
+        self.assertEqual("tasks", payload["source_artifact"]["id"])
+        self.assertEqual("github", payload["artifact"]["id"])
+        self.assertEqual("fallback-export", payload["selection_reason"])
+        self.assertEqual("print-path", payload["open_mode"])
+        self.assertTrue(payload["path"].endswith("exports/issues/github/README.md"))
+
     def test_rewrite_versions_and_undo_restore_current_artifact(self) -> None:
         pack_dir = self.compile_research_pack()
         artifact_path = pack_dir / "views" / "tasks.md"

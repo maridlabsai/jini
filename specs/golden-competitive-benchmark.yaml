@@ -546,6 +546,32 @@ scenarios:
           ]
         path: "artifact.id"
         equals: "tasks"
+      - id: fuller-next-pass-opens-next-ready-surface
+        command:
+          [
+            "expand",
+            "prd",
+            "--from",
+            "{scenario_root}/research-pack",
+            "--print-path",
+            "--format",
+            "json",
+          ]
+        path: "artifact.id"
+        equals: "tasks"
+      - id: fuller-next-pass-falls-back-to-export-surface
+        command:
+          [
+            "expand",
+            "tasks",
+            "--from",
+            "{scenario_root}/research-pack",
+            "--print-path",
+            "--format",
+            "json",
+          ]
+        path: "artifact.id"
+        equals: "github"
       - id: artifact-rewrite-creates-version
         command:
           [
