@@ -46,4 +46,6 @@ Reject any change that:
 - `time-to-first-useful-result`
 - `resume-cost`
 - `command-surface-count`
+- `route-feedback-health`
+- `route-feedback-impact`
 - `no-compatibility-aliases`

@@ -110,6 +110,8 @@ class LeanPlatformDoctrineDocsTests(unittest.TestCase):
             "`time-to-first-useful-result`",
             "`resume-cost`",
             "`command-surface-count`",
+            "`route-feedback-health`",
+            "`route-feedback-impact`",
             "`no-compatibility-aliases`",
         ]
         for marker in required_markers:
@@ -127,6 +129,22 @@ class LeanPlatformDoctrineDocsTests(unittest.TestCase):
         report = json.loads(result.stdout)
         sections = {section["id"]: section for section in report["sections"]}
         self.assertEqual("ok", sections["lean-platform"]["status"])
+        gate_check = next(
+            check
+            for check in sections["lean-platform"]["checks"]
+            if check.get("path") == "specs/lean-platform-gate.md"
+        )
+        self.assertIn("`route-feedback-health`", gate_check["markers"])
+        self.assertIn("`route-feedback-impact`", gate_check["markers"])
+        runtime_check = next(
+            check
+            for check in sections["lean-platform"]["checks"]
+            if check.get("path") == "runtime:lean-platform-metrics"
+        )
+        self.assertIn("route_feedback_health:tracked", runtime_check["markers"])
+        self.assertIn("route_feedback_impact:measured-or-empty", runtime_check["markers"])
+        self.assertIn("route_feedback_health", runtime_check["measurement"])
+        self.assertIn("route_feedback_impact", runtime_check["measurement"])
 
 
 if __name__ == "__main__":
