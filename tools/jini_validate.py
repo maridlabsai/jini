@@ -12017,6 +12017,12 @@ def render_runtime_activation_markdown(handoff: dict[str, Any]) -> str:
         )
         if active_policy.get("intent_overrides"):
             lines.append(f"- Overrides: `{json.dumps(active_policy.get('intent_overrides', {}), sort_keys=True)}`")
+        drivers = active_policy.get("route_feedback_drivers", {})
+        if isinstance(drivers, dict):
+            preview = drivers.get("cohort_preview", {})
+            preview_text = preview.get("text", "") if isinstance(preview, dict) else ""
+            if preview_text:
+                lines.append(f"- Drivers: `{preview_text}`")
     lines.extend(["", "## Checklist"])
     for item in execution_checklist.get("items", [])[:6]:
         lines.append(f"- [{item.get('status', '')}] {item.get('description', '')}")

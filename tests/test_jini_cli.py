@@ -4037,6 +4037,37 @@ class JiniCliConformanceTests(unittest.TestCase):
         recommendation_text = self.run_cli("recommend-execution", pack_dir, "--intent", "make")
         self.assert_ok(recommendation_text)
         self.assertIn("DRIVERS export:local-fast->local-workhorse", recommendation_text.stdout)
+        handoff = self.run_cli("stage-runtime-handoff", pack_dir, "--intent", "make", "--format", "json")
+        self.assert_ok(handoff)
+        handoff_doc = json.loads(handoff.stdout)
+        self.assertEqual(
+            ["export"],
+            handoff_doc["active_policy"]["route_feedback_drivers"]["changed_cohort_keys"],
+        )
+        self.assertEqual(
+            "export:local-fast->local-workhorse",
+            handoff_doc["active_policy"]["route_feedback_drivers"]["cohort_preview"]["text"],
+        )
+        activation = self.run_cli(
+            "activate-runtime-target",
+            pack_dir,
+            "--intent",
+            "make",
+            "--prefix",
+            self.install_prefix(),
+            "--format",
+            "json",
+        )
+        self.assert_ok(activation)
+        activation_doc = json.loads(activation.stdout)
+        activation_markdown_path = next(
+            Path(path)
+            for path in activation_doc["activation_files"]
+            if path.endswith("Jini-RUNTIME.md")
+        )
+        activation_markdown = activation_markdown_path.read_text(encoding="utf-8")
+        self.assertIn("## Active Policy", activation_markdown)
+        self.assertIn("- Drivers: `export:local-fast->local-workhorse`", activation_markdown)
 
         rollback = self.run_cli(
             "rollback-policy-candidate",
