@@ -12734,6 +12734,34 @@ def publish_plan_source_ref(item: dict[str, Any], payload_path: Path) -> str:
     return display_path(payload_path)
 
 
+def infer_pack_dir_from_publish_plan(plan_path: Path) -> Path | None:
+    for candidate in (plan_path.parent, *plan_path.parents):
+        if (candidate / "work-unit.yaml").exists() and (candidate / "artifacts").is_dir():
+            return candidate
+    return None
+
+
+def capture_publication_result_from_plan(
+    *,
+    plan_path: Path,
+    result_path: Path,
+    publication_scope: str,
+    author_actor_id: str = "jini-native-publish",
+) -> str:
+    pack_dir = infer_pack_dir_from_publish_plan(plan_path)
+    if pack_dir is None:
+        return ""
+    artifact_path = capture_publication(
+        pack_dir,
+        load_registry(),
+        author_actor_id=author_actor_id,
+        input_path=result_path,
+        publication_scope=publication_scope,
+        status="published",
+    )
+    return display_path(artifact_path)
+
+
 def execute_publish_plan(
     path: Path,
     *,
@@ -13172,6 +13200,17 @@ def execute_github_issue_publish_plan(
     }
     result_path = next_publish_execution_bundle_path(executed_root, adapter)
     result_path.write_text(json.dumps(result_bundle, indent=2) + "\n", encoding="utf-8")
+    publication_artifact_path = ""
+    if status == "executed":
+        publication_artifact_path = capture_publication_result_from_plan(
+            plan_path=plan_path,
+            result_path=result_path,
+            publication_scope="github-issues",
+        )
+        if publication_artifact_path:
+            result_bundle["publication_artifact_path"] = publication_artifact_path
+            result_path.write_text(json.dumps(result_bundle, indent=2) + "\n", encoding="utf-8")
+            notes.append("Captured native GitHub issue publication results into the pack publication artifact.")
 
     receipt = {
         "schema_version": "0.1.0",
@@ -13184,6 +13223,7 @@ def execute_github_issue_publish_plan(
         "plan_path": display_path(plan_path),
         "runner": gh_binary,
         "repository": resolved_repository,
+        "publication_artifact_path": publication_artifact_path,
         "output_root": str(executed_root),
         "result_path": display_path(result_path),
         "records": records,
@@ -13406,6 +13446,17 @@ def execute_github_docs_publish_plan(
     }
     result_path = next_publish_execution_bundle_path(executed_root, adapter)
     result_path.write_text(json.dumps(result_bundle, indent=2) + "\n", encoding="utf-8")
+    publication_artifact_path = ""
+    if status == "executed":
+        publication_artifact_path = capture_publication_result_from_plan(
+            plan_path=plan_path,
+            result_path=result_path,
+            publication_scope="github-docs",
+        )
+        if publication_artifact_path:
+            result_bundle["publication_artifact_path"] = publication_artifact_path
+            result_path.write_text(json.dumps(result_bundle, indent=2) + "\n", encoding="utf-8")
+            notes.append("Captured native GitHub docs publication results into the pack publication artifact.")
 
     receipt = {
         "schema_version": "0.1.0",
@@ -13419,6 +13470,7 @@ def execute_github_docs_publish_plan(
         "runner": gh_binary,
         "repository": resolved_repository,
         "docs_path": resolved_docs_path,
+        "publication_artifact_path": publication_artifact_path,
         "output_root": str(executed_root),
         "result_path": display_path(result_path),
         "records": records,

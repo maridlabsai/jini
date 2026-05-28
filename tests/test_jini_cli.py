@@ -1685,6 +1685,13 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("issue", bundle["records"][0]["target_kind"])
         self.assertEqual("acme/demo", bundle["repository"])
         self.assertEqual(receipt["replay_contract"], bundle["replay_contract"])
+        self.assertTrue(Path(receipt["publication_artifact_path"]).exists())
+        publication_files = sorted((pack_dir / "artifacts").glob("*-publication.yaml"))
+        self.assertEqual(1, len(publication_files))
+        publication = self.read_yaml(publication_files[0])
+        self.assertEqual("github-issues", publication["publication_scope"])
+        self.assertEqual(3, len(publication["records"]))
+        self.assertTrue(publication["records"][0]["external_url"].startswith("https://github.com/acme/demo/issues/"))
 
     def test_execute_publish_plan_native_github_replay_is_upsert_safe(self) -> None:
         pack_dir = self.compile_research_pack()
@@ -1735,6 +1742,12 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual(first_projection, second_projection)
         self.assertTrue(all(record["publication_status"] == "created" for record in first_receipt["records"]))
         self.assertTrue(all(record["publication_status"] == "updated" for record in second_receipt["records"]))
+        publication_files = sorted((pack_dir / "artifacts").glob("*-publication.yaml"))
+        self.assertEqual(1, len(publication_files))
+        publication = self.read_yaml(publication_files[0])
+        self.assertEqual(2, publication["revision"])
+        self.assertEqual("github-issues", publication["publication_scope"])
+        self.assertTrue(all(record["publication_status"] == "updated" for record in publication["records"]))
 
     def test_publish_issues_jira_can_execute_via_bridge_and_capture_publication(self) -> None:
         pack_dir = self.compile_research_pack()
@@ -1910,6 +1923,13 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("acme/demo", bundle["repository"])
         self.assertEqual("docs/jini", bundle["docs_path"])
         self.assertEqual(receipt["replay_contract"], bundle["replay_contract"])
+        self.assertTrue(Path(receipt["publication_artifact_path"]).exists())
+        publication_files = sorted((pack_dir / "artifacts").glob("*-publication.yaml"))
+        self.assertEqual(1, len(publication_files))
+        publication = self.read_yaml(publication_files[0])
+        self.assertEqual("github-docs", publication["publication_scope"])
+        self.assertEqual(3, len(publication["records"]))
+        self.assertTrue(publication["records"][0]["external_url"].startswith("https://github.com/acme/demo/blob/main/docs/jini/"))
 
     def test_execute_publish_plan_native_github_docs_replay_is_upsert_safe(self) -> None:
         pack_dir = self.compile_research_pack()
@@ -1962,6 +1982,12 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual(first_projection, second_projection)
         self.assertTrue(all(record["publication_status"] == "created" for record in first_receipt["records"]))
         self.assertTrue(all(record["publication_status"] == "updated" for record in second_receipt["records"]))
+        publication_files = sorted((pack_dir / "artifacts").glob("*-publication.yaml"))
+        self.assertEqual(1, len(publication_files))
+        publication = self.read_yaml(publication_files[0])
+        self.assertEqual(2, publication["revision"])
+        self.assertEqual("github-docs", publication["publication_scope"])
+        self.assertTrue(all(record["publication_status"] == "updated" for record in publication["records"]))
 
     def test_recommend_execution_can_use_repo_context_for_guidance(self) -> None:
         pack_dir = self.compile_research_pack()
