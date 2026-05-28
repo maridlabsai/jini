@@ -6792,6 +6792,98 @@ def build_continue_commands(artifact_id: str, *, pack_dir: Path | None = None) -
     return show_command, open_command
 
 
+def resolve_projection_artifact_item(
+    context: dict[str, Any],
+    artifact_name: str | None = None,
+    *,
+    prefer_continue_surface: bool = False,
+) -> dict[str, Any] | None:
+    projection = context.get("projection", {}) or {}
+    ready_now = [item for item in projection.get("ready", []) if isinstance(item, dict)]
+    if not ready_now:
+        return None
+    if artifact_name is not None:
+        normalized = slugify(artifact_name)
+        for item in ready_now:
+            aliases = {
+                slugify(str(item.get("id", ""))),
+                slugify(str(item.get("label", ""))),
+            }
+            if normalized in aliases:
+                return item
+        available = ", ".join(sorted(str(item.get("id", "")).strip() for item in ready_now if str(item.get("id", "")).strip()))
+        raise ValueError(
+            "Unknown artifact "
+            f"{artifact_name!r}. Try `jini status` or use one of the saved snapshot artifacts: {available}"
+        )
+
+    if prefer_continue_surface:
+        preferred_ids = ("tasks", "next-actions", "decision")
+        indexed = {slugify(str(item.get("id", ""))): item for item in ready_now}
+        for preferred_id in preferred_ids:
+            if preferred_id in indexed:
+                return indexed[preferred_id]
+        if len(ready_now) > 1:
+            return ready_now[1]
+    return ready_now[0]
+
+
+def render_projection_snapshot_markdown(context: dict[str, Any], artifact: dict[str, Any]) -> str:
+    body = str(artifact.get("snapshot_markdown", "")).strip()
+    label = str(artifact.get("label", "")).strip() or str(artifact.get("id", "")).strip() or "Artifact"
+    work_unit_id = str(context.get("work_unit_id", "")).strip()
+    lines = [
+        "> Saved artifact snapshot.",
+        "> Original pack files are unavailable, so this content was reconstructed from the saved session projection.",
+        f"> Artifact: `{label}`",
+    ]
+    if work_unit_id:
+        lines.append(f"> Work: `{work_unit_id}`")
+    header = "\n".join(lines).rstrip()
+    if body:
+        return header + "\n\n" + body + "\n"
+    return header + "\n"
+
+
+def materialize_projection_artifact_snapshot(context: dict[str, Any], artifact: dict[str, Any]) -> Path:
+    session_id = str(context.get("session_id", "")).strip() or "saved-session"
+    artifact_id = slugify(str(artifact.get("id", "")).strip() or "artifact")
+    snapshot_dir = session_state_root() / "sessions" / session_id / "projection-snapshots"
+    snapshot_dir.mkdir(parents=True, exist_ok=True)
+    snapshot_path = snapshot_dir / f"{artifact_id}.md"
+    snapshot_path.write_text(render_projection_snapshot_markdown(context, artifact), encoding="utf-8")
+    return snapshot_path
+
+
+def print_projection_artifact_snapshot(
+    context: dict[str, Any],
+    artifact: dict[str, Any],
+    *,
+    heading: str = "SNAPSHOT",
+) -> None:
+    artifact_id = str(artifact.get("id", "")).strip() or "artifact"
+    label = str(artifact.get("label", "")).strip() or artifact_id
+    snapshot = str(artifact.get("snapshot_markdown", "")).strip()
+    show_command, open_command = build_continue_commands(artifact_id)
+
+    print(f"NEXT   {artifact_id}")
+    print(f"LABEL  {label}")
+    print(f"HEALTH session-only")
+    print()
+    print(heading)
+    if snapshot:
+        print(snapshot)
+    else:
+        print("Saved session projection has artifact metadata, but no snapshot content was captured.")
+    print()
+    print("NOTES")
+    print("  - Original pack files are unavailable, so this is a saved artifact snapshot.")
+    print()
+    print("MORE")
+    print(f"  - {show_command}")
+    print(f"  - {open_command}")
+
+
 def print_continue_preview(
     artifact: dict[str, Any],
     artifact_path: Path,
@@ -17904,6 +17996,19 @@ def main() -> int:
             artifact = resolve_artifact_item(pack_dir, registry, args.artifact)
             print(Path(str(artifact["resolved_path"])).read_text(encoding="utf-8"))
         except (FileNotFoundError, OSError, TypeError, ValueError) as exc:
+            if args.path is None:
+                context = load_current_session_context()
+                if context is not None:
+                    remembered_pack = Path(str(context.get("pack_dir", ""))).expanduser()
+                    if remembered_pack and not remembered_pack.exists():
+                        try:
+                            artifact = resolve_projection_artifact_item(context, args.artifact)
+                        except ValueError as projection_exc:
+                            print(f"ERROR {projection_exc}")
+                            return 1
+                        if artifact is not None:
+                            print(render_projection_snapshot_markdown(context, artifact).rstrip())
+                            return 0
             failing_path = args.path if args.path is not None else Path("<current-work>")
             print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
             return 1
@@ -17920,6 +18025,24 @@ def main() -> int:
                 launch_open_path(artifact_path)
                 print(f"OPENED {display_path(artifact_path)}")
         except (FileNotFoundError, OSError, RuntimeError, TypeError, ValueError, subprocess.CalledProcessError) as exc:
+            if args.path is None:
+                context = load_current_session_context()
+                if context is not None:
+                    remembered_pack = Path(str(context.get("pack_dir", ""))).expanduser()
+                    if remembered_pack and not remembered_pack.exists():
+                        try:
+                            artifact = resolve_projection_artifact_item(context, args.artifact)
+                        except ValueError as projection_exc:
+                            print(f"ERROR {projection_exc}")
+                            return 1
+                        if artifact is not None:
+                            snapshot_path = materialize_projection_artifact_snapshot(context, artifact)
+                            if args.print_path:
+                                print(display_path(snapshot_path))
+                            else:
+                                launch_open_path(snapshot_path)
+                                print(f"OPENED {display_path(snapshot_path)}")
+                            return 0
             failing_path = args.path if args.path is not None else Path("<current-work>")
             print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
             return 1
@@ -17944,15 +18067,23 @@ def main() -> int:
                 if context is not None:
                     remembered_pack = Path(str(context.get("pack_dir", ""))).expanduser()
                     if remembered_pack and not remembered_pack.exists():
-                        if args.print_path:
-                            print("ERROR Current pack files are unavailable, so there is no artifact path to print. Run `jini continue` without `--print-path` to reopen the saved context slice.")
-                            return 1
+                        artifact = resolve_projection_artifact_item(context, prefer_continue_surface=True)
+                        if artifact is not None and str(artifact.get("snapshot_markdown", "")).strip():
+                            snapshot_path = materialize_projection_artifact_snapshot(context, artifact)
+                            if args.print_path:
+                                print(display_path(snapshot_path))
+                            else:
+                                print_projection_artifact_snapshot(context, artifact, heading="CONTINUE")
+                            return 0
                         compact = build_compact_context_from_projection(
                             context,
                             intent="continue-session",
                             max_chars=700,
                             execution_class="projection-continue",
                         )
+                        if args.print_path:
+                            print("ERROR Current pack files are unavailable, and no saved artifact snapshot path exists. Run `jini continue` without `--print-path` to reopen the saved context slice.")
+                            return 1
                         print_compact_context(compact, heading="CONTINUE")
                         return 0
             failing_path = args.path if args.path is not None else Path("<current-work>")
