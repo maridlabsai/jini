@@ -8107,10 +8107,6 @@ def build_memory_context(
             f"Harvest anchor: `{latest_harvest.get('readiness', '')}` / `{latest_harvest.get('evidence_status', '')}` "
             f"from `{latest_harvest.get('path', '')}` ({age_summary(latest_harvest.get('generated_at', '')) or 'unknown age'})."
         )
-    for artifact in recent_artifacts[:4]:
-        resume_items.append(
-            f"{artifact['artifact_type']} rev {artifact['revision']} is `{artifact['status']}` at `{artifact['path']}`."
-        )
     if home_context.get("bound"):
         if home_context.get("long_term_memory"):
             resume_items.append(f"Home memory: {home_context['long_term_memory'][0]}")
@@ -8235,7 +8231,7 @@ def build_compact_context(
     memory_context = recommendation["memory_context"]
     repo_context = recommendation["repo_context"]
     home_context = memory_context.get("home", {})
-    recent_artifacts = memory_context.get("recent_artifacts", [])[: max(1, max_items)]
+    recent_artifacts = memory_context.get("recent_artifacts", [])[: min(max(1, max_items), 3)]
     resume_items = memory_context.get("resume_items", [])[: max(2, max_items + 1)]
     stale_signals = memory_context.get("stale_signals", [])[: max(1, max_items)]
     home_memory = home_context.get("long_term_memory", [])[: max(1, max_items)]
@@ -18609,7 +18605,7 @@ def main() -> int:
                             max_chars=args.max_chars,
                         )
                         if args.format == "json":
-                            print(json.dumps(compact, indent=2))
+                            print(json.dumps(compact, separators=(",", ":")))
                         else:
                             print_compact_context(compact)
                         return 0
@@ -18617,7 +18613,7 @@ def main() -> int:
             print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
             return 1
         if args.format == "json":
-            print(json.dumps(compact, indent=2))
+            print(json.dumps(compact, separators=(",", ":")))
         else:
             print_compact_context(compact)
         append_learning_event(

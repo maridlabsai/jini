@@ -1804,6 +1804,9 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue(compact["unresolved_tasks"])
         self.assertEqual("ready", compact["latest_harvest"]["readiness"])
         self.assertTrue(any("State anchor:" in item for item in compact["resume_items"]))
+        self.assertFalse(any(" rev " in item for item in compact["resume_items"]))
+        self.assertLessEqual(len(compact["recent_artifacts"]), 3)
+        self.assertLessEqual(result.stdout.count("\n"), 1)
 
     def test_resume_applies_token_budget_and_trim(self) -> None:
         pack_dir = self.compile_research_pack()
