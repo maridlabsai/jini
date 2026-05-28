@@ -69,6 +69,68 @@ def _artifact_delta_items(ready_now: list[dict[str, Any]]) -> list[dict[str, str
     ]
 
 
+def _compact_preview(text: str, *, max_chars: int = 180) -> str:
+    cleaned = " ".join(text.strip().split())
+    if len(cleaned) <= max_chars:
+        return cleaned
+    cut = cleaned.rfind(" ", 0, max_chars)
+    if cut < int(max_chars * 0.55):
+        cut = max_chars
+    return cleaned[:cut].rstrip() + "..."
+
+
+def build_input_items(
+    *,
+    session_id: str,
+    summary: dict[str, Any],
+    ready_now: list[dict[str, Any]],
+    updated_at: str,
+    previous_projection: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    previous_initial: dict[str, Any] = {}
+    preserved_items: list[dict[str, Any]] = []
+    if isinstance(previous_projection, dict):
+        previous_items = previous_projection.get("input_items")
+        if isinstance(previous_items, list) and previous_items:
+            for item in previous_items:
+                if isinstance(item, dict) and item.get("input_id") == "initial-request":
+                    previous_initial = item
+                elif isinstance(item, dict):
+                    preserved_items.append(item)
+
+    work_unit = summary.get("work_unit", {})
+    title = str(work_unit.get("title", "")).strip() or "Initial work request"
+    purpose = str(work_unit.get("purpose", "")).strip() or title
+    source_actor = str(work_unit.get("owner_actor_id", "")).strip() or "user"
+    created_at = (
+        str(work_unit.get("created_at", "")).strip()
+        or str(previous_initial.get("created_at", "")).strip()
+        or updated_at
+    )
+    derived_artifact_ids = [
+        str(item.get("id", "")).strip()
+        for item in ready_now
+        if str(item.get("id", "")).strip()
+    ]
+
+    return [
+        {
+            "input_id": "initial-request",
+            "thread_id": session_id,
+            "kind": "text",
+            "title": title,
+            "source_actor": source_actor,
+            "status": "processed",
+            "preview": _compact_preview(purpose),
+            "origin_ref": "work-unit.yaml",
+            "derived_artifact_ids": derived_artifact_ids,
+            "created_at": created_at,
+            "updated_at": updated_at,
+        },
+        *preserved_items,
+    ]
+
+
 def build_progress_snapshot(summary: dict[str, Any], ready_now: list[dict[str, Any]]) -> dict[str, Any]:
     work_unit = summary.get("work_unit", {})
     title = str(work_unit.get("title", "")).strip()
@@ -152,12 +214,18 @@ def build_turn_record(
     session_id: str,
     summary: dict[str, Any],
     ready_now: list[dict[str, Any]],
+    input_items: list[dict[str, Any]] | None = None,
     updated_at: str,
     previous_projection: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     current_state = str(summary.get("work_unit", {}).get("current_state", "")).strip()
     current_next = str(summary.get("next_operation", "")).strip()
     ready_ids = [str(item.get("id", "")).strip() for item in ready_now if str(item.get("id", "")).strip()]
+    input_ids = [
+        str(item.get("input_id", "")).strip()
+        for item in input_items or []
+        if isinstance(item, dict) and str(item.get("input_id", "")).strip()
+    ]
 
     if isinstance(previous_projection, dict):
         previous_turn = previous_projection.get("turn_record")
@@ -169,7 +237,13 @@ def build_turn_record(
         unchanged_state = str(previous_projection.get("state", "")).strip() == current_state
         unchanged_next = str(previous_projection.get("next", "")).strip() == current_next
         if isinstance(previous_turn, dict) and previous_ready_ids == ready_ids and unchanged_state and unchanged_next:
-            return dict(previous_turn)
+            previous_input_ids = [
+                str(item).strip()
+                for item in previous_turn.get("user_input_ids", [])
+                if str(item).strip()
+            ]
+            if previous_input_ids == input_ids:
+                return dict(previous_turn)
 
     state_changes: list[dict[str, str]] = []
     previous_state = ""
@@ -189,7 +263,7 @@ def build_turn_record(
         "record_type": "JiniTurnRecord",
         "turn_id": f"{session_id}-latest",
         "thread_id": session_id,
-        "user_input_ids": [],
+        "user_input_ids": input_ids,
         "assistant_message": f"Session projection refreshed with {artifact_phrase}; next is {current_next}.",
         "artifacts_created": _artifact_delta_items(ready_now),
         "artifacts_updated": [],
@@ -232,10 +306,18 @@ def build_session_projection(
     continuation_saved_work = bool(ready_now) or int(task_summary.get("done", 0) or 0) > 0
     focus_item = _projection_focus_item(ready_now, previous_projection)
     progress_snapshot = build_progress_snapshot(summary, ready_now)
+    input_items = build_input_items(
+        session_id=session_id,
+        summary=summary,
+        ready_now=ready_now,
+        updated_at=updated_at,
+        previous_projection=previous_projection,
+    )
     turn_record = build_turn_record(
         session_id=session_id,
         summary=summary,
         ready_now=ready_now,
+        input_items=input_items,
         updated_at=updated_at,
         previous_projection=previous_projection,
     )
@@ -258,6 +340,7 @@ def build_session_projection(
         ),
         "missing": missing,
         "next": str(summary.get("next_operation", "")),
+        "input_items": input_items,
         "progress_snapshot": progress_snapshot,
         "turn_record": turn_record,
         "route": {

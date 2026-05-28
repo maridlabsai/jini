@@ -672,7 +672,7 @@ class JiniCliConformanceTests(unittest.TestCase):
 
         turn = report["turn_record"]
         self.assertEqual("test-research-pack", turn["thread_id"])
-        self.assertEqual([], turn["user_input_ids"])
+        self.assertIn("initial-request", turn["user_input_ids"])
         self.assertTrue(turn["artifacts_created"])
         self.assertEqual([], turn["artifacts_updated"])
         self.assertTrue(turn["state_changes"])
@@ -684,6 +684,61 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("JUST FINISHED", status_text.stdout)
         self.assertIn("DOING NOW", status_text.stdout)
         self.assertIn("UP NEXT", status_text.stdout)
+
+    def test_status_surfaces_working_with_input_strip(self) -> None:
+        pack_dir = self.compile_research_pack()
+
+        status_json = self.run_cli("status", pack_dir, "--format", "json")
+        self.assert_ok(status_json)
+        report = json.loads(status_json.stdout)
+
+        input_items = report["working_with"]["input_items"]
+        self.assertEqual(1, len(input_items))
+        self.assertEqual(input_items, report["input_items"])
+        self.assertEqual("initial-request", input_items[0]["input_id"])
+        self.assertEqual("test-research-pack", input_items[0]["thread_id"])
+        self.assertEqual("text", input_items[0]["kind"])
+        self.assertEqual("processed", input_items[0]["status"])
+        self.assertEqual("product-lead", input_items[0]["source_actor"])
+        self.assertIn("Exercise the research pack lifecycle", input_items[0]["preview"])
+        self.assertIn("prd", input_items[0]["derived_artifact_ids"])
+        self.assertIn("initial-request", report["turn_record"]["user_input_ids"])
+
+        status_text = self.run_cli("status", pack_dir)
+        self.assert_ok(status_text)
+        self.assertIn("WORKING WITH", status_text.stdout)
+        self.assertIn("Test Research Pack", status_text.stdout)
+        self.assertIn("Exercise the research pack lifecycle", status_text.stdout)
+
+    def test_status_refresh_preserves_saved_non_initial_input_items(self) -> None:
+        pack_dir = self.compile_research_pack()
+        projection_path = self.tmp / ".jini" / "sessions" / "test-research-pack" / "projection.json"
+        projection_doc = json.loads(projection_path.read_text(encoding="utf-8"))
+        projection_doc["input_items"].append(
+            {
+                "input_id": "uploaded-brief",
+                "thread_id": "test-research-pack",
+                "kind": "file",
+                "title": "Uploaded Brief",
+                "source_actor": "product-lead",
+                "status": "processed",
+                "preview": "Imported customer evidence brief",
+                "origin_ref": "brief.pdf",
+                "derived_artifact_ids": ["prd"],
+                "created_at": "2026-05-01T00:00:00Z",
+                "updated_at": "2026-05-01T00:00:00Z",
+            }
+        )
+        projection_path.write_text(json.dumps(projection_doc, indent=2), encoding="utf-8")
+
+        status_json = self.run_cli("status", pack_dir, "--format", "json")
+        self.assert_ok(status_json)
+        report = json.loads(status_json.stdout)
+
+        input_ids = [item["input_id"] for item in report["input_items"]]
+        self.assertIn("initial-request", input_ids)
+        self.assertIn("uploaded-brief", input_ids)
+        self.assertIn("uploaded-brief", report["turn_record"]["user_input_ids"])
 
     def test_example_sets_current_work_for_pathless_status_and_artifacts(self) -> None:
         example_output = self.tmp / "research-example"
@@ -723,6 +778,12 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("test-research-pack", projection_doc["turn_record"]["thread_id"])
         self.assertIn("progress_snapshot", projection_doc)
         self.assertEqual("Test Research Pack", projection_doc["progress_snapshot"]["goal"])
+        self.assertIn("input_items", projection_doc)
+        self.assertEqual("initial-request", projection_doc["input_items"][0]["input_id"])
+        self.assertEqual("test-research-pack", projection_doc["input_items"][0]["thread_id"])
+        self.assertEqual("text", projection_doc["input_items"][0]["kind"])
+        self.assertEqual("processed", projection_doc["input_items"][0]["status"])
+        self.assertIn("tasks", projection_doc["input_items"][0]["derived_artifact_ids"])
 
     def test_show_artifact_uses_current_work_without_path(self) -> None:
         pack_dir = self.compile_travel_pack()

@@ -15552,6 +15552,9 @@ def build_outcome_view(
         for item in artifact_catalog.get("ready_now", [])
     ], projection)
     current_focus = ready_now[0] if ready_now else {}
+    input_items = projection.get("input_items", [])
+    if not isinstance(input_items, list):
+        input_items = []
     progress_snapshot = projection.get("progress_snapshot")
     if not isinstance(progress_snapshot, dict):
         progress_snapshot = build_progress_snapshot(summary, list(artifact_catalog.get("ready_now", [])))
@@ -15561,6 +15564,7 @@ def build_outcome_view(
             session_id=str(work_unit.get("work_unit_id", "")),
             summary=summary,
             ready_now=list(artifact_catalog.get("ready_now", [])),
+            input_items=input_items,
             updated_at=now_utc(),
             previous_projection=projection if isinstance(projection, dict) else None,
         )
@@ -15594,6 +15598,11 @@ def build_outcome_view(
             "what_is_still_missing_now": missing_now,
             "what_is_still_missing_later": missing_later,
         },
+        "working_with": {
+            "summary": progress_snapshot.get("working_with_summary", "") if isinstance(progress_snapshot, dict) else "",
+            "input_items": input_items,
+        },
+        "input_items": input_items,
         "progress_snapshot": progress_snapshot,
         "turn_record": turn_record,
         "current_focus": current_focus,
@@ -15632,6 +15641,9 @@ def build_outcome_view_from_projection(
     continuation_saved_work = bool(projection.get("cost_posture", {}).get("continuation_saved_work"))
     done_text = "Work has already been captured in session artifacts." if continuation_saved_work else "No completed artifact evidence is stored yet."
     current_focus = ready_now[0] if ready_now else {}
+    input_items = projection.get("input_items", [])
+    if not isinstance(input_items, list):
+        input_items = []
     progress_snapshot = projection.get("progress_snapshot")
     if not isinstance(progress_snapshot, dict):
         progress_snapshot = {
@@ -15650,7 +15662,11 @@ def build_outcome_view_from_projection(
             "record_type": "JiniTurnRecord",
             "turn_id": f"{context.get('work_unit_id', 'session')}-latest",
             "thread_id": str(context.get("work_unit_id", "")),
-            "user_input_ids": [],
+            "user_input_ids": [
+                str(item.get("input_id", "")).strip()
+                for item in input_items
+                if isinstance(item, dict) and str(item.get("input_id", "")).strip()
+            ],
             "assistant_message": "Saved session projection restored from local state.",
             "artifacts_created": [],
             "artifacts_updated": [],
@@ -15695,6 +15711,11 @@ def build_outcome_view_from_projection(
             "what_is_still_missing_now": list(projection.get("missing", [])),
             "what_is_still_missing_later": [],
         },
+        "working_with": {
+            "summary": progress_snapshot.get("working_with_summary", "") if isinstance(progress_snapshot, dict) else "",
+            "input_items": input_items,
+        },
+        "input_items": input_items,
         "progress_snapshot": progress_snapshot,
         "turn_record": turn_record,
         "current_focus": current_focus,
@@ -15822,6 +15843,7 @@ def print_outcome_view(report: dict[str, Any]) -> None:
     print(f"STATE  {report.get('state', '')}")
     progress = report.get("progress_snapshot", {})
     turn = report.get("turn_record", {})
+    input_items = report.get("input_items", [])
     if isinstance(progress, dict) and progress:
         print()
         print("JUST FINISHED")
@@ -15842,6 +15864,21 @@ def print_outcome_view(report: dict[str, Any]) -> None:
         print()
         print("UP NEXT")
         print(f"  {progress.get('next', '')}")
+    if input_items:
+        print()
+        print("WORKING WITH")
+        for item in input_items[:4]:
+            if not isinstance(item, dict):
+                continue
+            title = str(item.get("title", "")).strip() or str(item.get("input_id", "")).strip()
+            kind = str(item.get("kind", "")).strip()
+            status = str(item.get("status", "")).strip()
+            suffix = f" [{kind}/{status}]" if kind or status else ""
+            print(f"  - {title}{suffix}")
+            preview = str(item.get("preview", "")).strip()
+            if preview:
+                preview, _trimmed = build_terminal_preview(preview, max_chars=160)
+                print(f"    {preview}")
     print()
     print("WHAT IS DONE?")
     print(f"  {report.get('questions', {}).get('what_is_done', '')}")
