@@ -11578,6 +11578,13 @@ def build_route_feedback_maintenance_report(*, prune_expired: bool = False) -> d
                 total_active_signal_count += adapter_active_signal_count
                 total_expired_signal_count += adapter_expired_signal_count
 
+    route_evidence, route_payload = load_route_report(session_state_root(), display_path)
+    route_feedback_impact = build_route_feedback_impact_summary(
+        route_evidence,
+        build_route_cost(route_evidence),
+        route_payload,
+    )
+
     return {
         "schema_version": "0.1.0",
         "report_type": "JiniRouteFeedbackMaintenance",
@@ -11590,6 +11597,7 @@ def build_route_feedback_maintenance_report(*, prune_expired: bool = False) -> d
         "total_expired_signal_count": total_expired_signal_count,
         "adapter_count": len(adapters),
         "adapters": adapters,
+        "route_feedback_impact": route_feedback_impact,
     }
 
 
@@ -11625,6 +11633,17 @@ def print_route_feedback_maintenance(report: dict[str, Any]) -> None:
     print(f"EXPIRED {report.get('total_expired_signal_count', 0)}")
     if report.get("pruned"):
         print(f"PRUNED  {report.get('pruned_signal_count', 0)}")
+    route_feedback_impact = report.get("route_feedback_impact", {})
+    if isinstance(route_feedback_impact, dict):
+        cohorts = route_feedback_impact.get("cohorts", [])
+        first_cohort = cohorts[0] if cohorts and isinstance(cohorts[0], dict) else {}
+        print(
+            "IMPACT "
+            f"changed={route_feedback_impact.get('changed_selection_count', 0)}/"
+            f"{route_feedback_impact.get('active_cohort_count', 0)} "
+            f"baseline={first_cohort.get('baseline_selected_adapter', 'n/a') or 'n/a'} "
+            f"feedback={first_cohort.get('feedback_selected_adapter', 'n/a') or 'n/a'}"
+        )
     for adapter in report.get("adapters", []):
         print(
             f"ADAPTER {adapter.get('adapter_id', '')} "

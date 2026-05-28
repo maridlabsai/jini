@@ -1037,6 +1037,78 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(after_events)
         self.assertEqual(1, len(json.loads(after_events.stdout)["events"]))
 
+    def test_route_feedback_readout_surfaces_routing_impact_summary(self) -> None:
+        pack_dir = self.compile_research_pack()
+        state_root = self.tmp / ".jini"
+        state_root.mkdir(parents=True, exist_ok=True)
+        capabilities_path = state_root / "local-runtime-capabilities.json"
+        capabilities_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.4.0",
+                    "context_type": "JiniLocalRuntimeCapabilities",
+                    "captured_at": "2026-05-21T19:00:00Z",
+                    "local_runtime_class": "local-ollama",
+                    "adapters": {
+                        "local-fast": {
+                            "status": "ok",
+                            "latency_ms": 85,
+                            "warm_latency_ms": 70,
+                            "cold_start_cost_ms": 5,
+                            "tokens_per_second": 40.0,
+                            "quality_class": "usable",
+                            "structured_reliability": "usable",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        },
+                        "local-workhorse": {
+                            "status": "ok",
+                            "latency_ms": 190,
+                            "warm_latency_ms": 160,
+                            "cold_start_cost_ms": 30,
+                            "tokens_per_second": 22.5,
+                            "quality_class": "usable",
+                            "structured_reliability": "usable",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        },
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        feedback = self.run_cli(
+            "record-route-outcome",
+            pack_dir,
+            "--adapter-id",
+            "local-fast",
+            "--intent",
+            "export",
+            "--outcome",
+            "replaced-this",
+            "--reason",
+            "Needed a stronger export route.",
+            "--format",
+            "json",
+        )
+        self.assert_ok(feedback)
+
+        readout = self.run_cli("route-feedback", "--format", "json")
+        self.assert_ok(readout)
+        report = json.loads(readout.stdout)
+        impact = report["route_feedback_impact"]
+        self.assertEqual("changed", impact["status"])
+        self.assertEqual(1, impact["active_cohort_count"])
+        self.assertEqual(1, impact["changed_selection_count"])
+        self.assertEqual("export", impact["cohorts"][0]["cohort_key"])
+        self.assertEqual("local-fast", impact["cohorts"][0]["baseline_selected_adapter"])
+        self.assertEqual("local-workhorse", impact["cohorts"][0]["feedback_selected_adapter"])
+
+        readout_text = self.run_cli("route-feedback")
+        self.assert_ok(readout_text)
+        self.assertIn(
+            "IMPACT changed=1/1 baseline=local-fast feedback=local-workhorse",
+            readout_text.stdout,
+        )
+
     def test_status_and_metrics_surface_route_feedback_freshness(self) -> None:
         pack_dir = self.compile_research_pack()
         state_root = self.tmp / ".jini"
