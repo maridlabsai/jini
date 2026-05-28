@@ -1350,9 +1350,122 @@ def summarize_local_runtime_route(
     return f"Measured local runtime `{runtime_class}` has {ready_count}/{adapter_count} ready adapter(s)."
 
 
+def route_quality_rank(value: Any) -> int:
+    return {"unknown": 0, "weak": 1, "usable": 2, "strong": 3}.get(str(value or "").strip().lower(), 0)
+
+
+def route_reliability_rank(value: Any) -> int:
+    return {"unknown": 0, "fragile": 1, "usable": 2, "strong": 3}.get(str(value or "").strip().lower(), 0)
+
+
+def measured_local_route_threshold(execution_class: str) -> int:
+    return 2 if execution_class == "cheap" else 3
+
+
+def select_measured_local_execution_route(
+    runtime_guidance: dict[str, Any],
+    route_evidence: dict[str, Any],
+    route_cost: dict[str, Any],
+    *,
+    execution_class: str,
+) -> dict[str, Any]:
+    if not isinstance(route_evidence, dict) or not route_evidence.get("available"):
+        return {}
+    threshold = measured_local_route_threshold(execution_class)
+    ready_adapters = [
+        item
+        for item in route_evidence.get("adapters", [])
+        if isinstance(item, dict)
+        and str(item.get("status", "")).strip().lower() in {"ok", "degraded"}
+        and route_quality_rank(item.get("quality_class", "")) >= threshold
+        and route_reliability_rank(item.get("structured_reliability", "")) >= threshold
+    ]
+    if not ready_adapters:
+        return {}
+
+    if execution_class == "cheap":
+        ready_adapters.sort(
+            key=lambda item: (
+                int(item.get("cold_start_cost_ms", 0) or 0),
+                int(item.get("warm_latency_ms", 0) or 0),
+                -float(item.get("tokens_per_second", 0) or 0),
+                -route_quality_rank(item.get("quality_class", "")),
+                -route_reliability_rank(item.get("structured_reliability", "")),
+            )
+        )
+    else:
+        ready_adapters.sort(
+            key=lambda item: (
+                -route_quality_rank(item.get("quality_class", "")),
+                -route_reliability_rank(item.get("structured_reliability", "")),
+                1 if str(item.get("status", "")).strip().lower() == "degraded" else 0,
+                int(item.get("warm_latency_ms", 0) or 0),
+                int(item.get("cold_start_cost_ms", 0) or 0),
+                -float(item.get("tokens_per_second", 0) or 0),
+            )
+        )
+
+    selected = ready_adapters[0]
+    selected_id = str(selected.get("adapter_id", "")).strip()
+    fallback_ids: list[str] = []
+    for adapter in ready_adapters[1:]:
+        adapter_id = str(adapter.get("adapter_id", "")).strip()
+        if adapter_id and adapter_id != selected_id and adapter_id not in fallback_ids:
+            fallback_ids.append(adapter_id)
+    selected_runtime = runtime_guidance.get("selected", {}) if isinstance(runtime_guidance, dict) else {}
+    harness_ids = [str(selected_runtime.get("id", "")).strip()]
+    if isinstance(runtime_guidance, dict):
+        harness_ids.extend(str(item).strip() for item in runtime_guidance.get("fallbacks", []) if str(item).strip())
+    for harness_id in harness_ids:
+        if harness_id and harness_id != selected_id and harness_id not in fallback_ids:
+            fallback_ids.append(harness_id)
+
+    selected_route = {
+        "id": selected_id,
+        "kind": "local-runtime-adapter",
+        "status": str(selected.get("status", "")).strip(),
+        "quality_class": str(selected.get("quality_class", "")).strip(),
+        "structured_reliability": str(selected.get("structured_reliability", "")).strip(),
+        "warm_latency_ms": int(selected.get("warm_latency_ms", 0) or 0),
+        "cold_start_cost_ms": int(selected.get("cold_start_cost_ms", 0) or 0),
+        "tokens_per_second": float(selected.get("tokens_per_second", 0) or 0),
+    }
+    cheapest = route_cost.get("cheapest_ready_adapter") if isinstance(route_cost, dict) else {}
+    cheapest_id = str(cheapest.get("adapter_id", "")).strip() if isinstance(cheapest, dict) else ""
+    return {
+        "selected": selected_route,
+        "fallbacks": fallback_ids,
+        "selection_basis": "measured-local-runtime",
+        "local_runtime_class": str(route_evidence.get("local_runtime_class", "")).strip(),
+        "quality_threshold": "usable" if threshold == 2 else "strong",
+        "cheapest_ready_adapter": cheapest_id,
+    }
+
+
+def summarize_selected_execution_route(execution_route: dict[str, Any]) -> str:
+    if not isinstance(execution_route, dict):
+        return ""
+    selected = execution_route.get("selected", {})
+    if not isinstance(selected, dict):
+        return ""
+    selected_id = str(selected.get("id", "")).strip()
+    if not selected_id:
+        return ""
+    runtime_class = str(execution_route.get("local_runtime_class", "")).strip() or "local-runtime"
+    threshold = str(execution_route.get("quality_threshold", "")).strip() or "measured"
+    fallbacks = [str(item).strip() for item in execution_route.get("fallbacks", []) if str(item).strip()]
+    fallback_text = ", ".join(fallbacks[:3]) if fallbacks else "none"
+    return (
+        f"Measured local runtime `{runtime_class}` selects `{selected_id}` "
+        f"with `{threshold}` quality threshold; fallbacks: {fallback_text}."
+    )
+
+
 def compact_route_evidence_for_readout(
     route_evidence: dict[str, Any],
     route_cost: dict[str, Any],
+    *,
+    selected_route_id: str = "",
 ) -> dict[str, Any]:
     if not isinstance(route_evidence, dict) or not route_evidence.get("available"):
         return {}
@@ -1369,6 +1482,8 @@ def compact_route_evidence_for_readout(
         cheapest = route_cost.get("cheapest_ready_adapter")
         if isinstance(cheapest, dict) and str(cheapest.get("adapter_id", "")).strip():
             compact["cheapest_ready_adapter"] = str(cheapest.get("adapter_id", "")).strip()
+    if selected_route_id:
+        compact["selected_ready_adapter"] = selected_route_id
     return compact
 
 
@@ -14843,15 +14958,27 @@ def recommend_execution(
         layer="runtime-target",
         preferred=runtime_target or policy_runtime_target or None,
     )
+    route_snapshot = build_local_runtime_route_snapshot()
+    route_evidence = route_snapshot["route_evidence"]
+    route_cost = route_snapshot["route_cost"]
+    execution_route = select_measured_local_execution_route(
+        runtime_guidance,
+        route_evidence,
+        route_cost,
+        execution_class=execution_class,
+    )
+    if execution_route:
+        runtime_guidance["execution_route"] = execution_route
+        runtime_guidance.setdefault("notes", []).append(summarize_selected_execution_route(execution_route))
     recommendation["runtime_guidance"] = runtime_guidance
     rationale.append(
         f"Runtime guidance prefers `{runtime_guidance['selected']['id']}` for portable pack guidance surfaces"
     )
-    route_snapshot = build_local_runtime_route_snapshot()
-    route_evidence = route_snapshot["route_evidence"]
-    route_cost = route_snapshot["route_cost"]
     recommendation["route_evidence"] = route_evidence
     recommendation["route_cost"] = route_cost
+    selected_route_reason = summarize_selected_execution_route(execution_route)
+    if selected_route_reason:
+        rationale.append(selected_route_reason)
     local_route_reason = summarize_local_runtime_route(route_evidence, route_cost)
     if local_route_reason:
         rationale.append(local_route_reason)
@@ -14868,6 +14995,10 @@ def build_efficiency_posture(
     selected_runtime = {}
     if isinstance(runtime_guidance, dict):
         selected_runtime = runtime_guidance.get("selected", {}) if isinstance(runtime_guidance.get("selected", {}), dict) else {}
+        execution_route = runtime_guidance.get("execution_route", {})
+        route_selected = execution_route.get("selected", {}) if isinstance(execution_route, dict) else {}
+        if isinstance(route_selected, dict) and str(route_selected.get("id", "")).strip():
+            selected_runtime = route_selected
     execution_class = str(recommendation.get("execution_class", "")).strip()
     posture = {
         "intent": str(recommendation.get("intent", "")).strip(),
@@ -14918,8 +15049,14 @@ def build_runtime_readout(
     posture = efficiency_posture or {}
     runtime_guidance = recommendation.get("runtime_guidance", {}) if isinstance(recommendation, dict) else {}
     selected_runtime = {}
+    selected_execution_route = {}
     if isinstance(runtime_guidance, dict):
         selected_runtime = runtime_guidance.get("selected", {}) if isinstance(runtime_guidance.get("selected", {}), dict) else {}
+        execution_route = runtime_guidance.get("execution_route", {})
+        if isinstance(execution_route, dict):
+            selected_execution_route = (
+                execution_route.get("selected", {}) if isinstance(execution_route.get("selected", {}), dict) else {}
+            )
     rationale = posture.get("rationale", [])
     if not isinstance(rationale, list) and isinstance(recommendation, dict):
         rationale = recommendation.get("rationale", [])
@@ -14931,6 +15068,8 @@ def build_runtime_readout(
     if not reason and isinstance(route, dict):
         reason = str(route.get("reason", "")).strip()
     route_id = str(posture.get("selected_runtime", "")).strip()
+    if not route_id and selected_execution_route:
+        route_id = str(selected_execution_route.get("id", "")).strip()
     if not route_id and selected_runtime:
         route_id = str(selected_runtime.get("id", "")).strip()
     if not route_id and isinstance(route, dict):
@@ -14946,12 +15085,19 @@ def build_runtime_readout(
     if isinstance(recommendation, dict):
         route_evidence = recommendation.get("route_evidence", {})
         route_cost = recommendation.get("route_cost", {})
-        compact_route_evidence = compact_route_evidence_for_readout(route_evidence, route_cost)
+        compact_route_evidence = compact_route_evidence_for_readout(
+            route_evidence,
+            route_cost,
+            selected_route_id=str(selected_execution_route.get("id", "")).strip(),
+        )
         if compact_route_evidence:
             readout["route_evidence"] = compact_route_evidence
-            local_route_reason = summarize_local_runtime_route(route_evidence, route_cost)
-            if local_route_reason:
-                readout["reason"] = local_route_reason
+            execution_route = runtime_guidance.get("execution_route", {}) if isinstance(runtime_guidance, dict) else {}
+            route_reason = summarize_selected_execution_route(execution_route)
+            if not route_reason:
+                route_reason = summarize_local_runtime_route(route_evidence, route_cost)
+            if route_reason:
+                readout["reason"] = route_reason
     return readout
 
 

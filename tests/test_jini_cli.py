@@ -719,29 +719,45 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("local-ollama", recommendation["route_evidence"]["local_runtime_class"])
         self.assertEqual("measured", recommendation["route_cost"]["status"])
         self.assertEqual("local-fast", recommendation["route_cost"]["cheapest_ready_adapter"]["adapter_id"])
+        execution_route = recommendation["runtime_guidance"]["execution_route"]
+        self.assertEqual("local-workhorse", execution_route["selected"]["id"])
+        self.assertEqual("measured-local-runtime", execution_route["selection_basis"])
+        self.assertEqual("local-fast", execution_route["cheapest_ready_adapter"])
+        self.assertNotIn("local-fast", execution_route["fallbacks"])
+        self.assertIn("codex", execution_route["fallbacks"])
 
         status_result = self.run_cli("status", pack_dir, "--format", "json")
         self.assert_ok(status_result)
-        status_readout = json.loads(status_result.stdout)["runtime_readout"]
+        status_payload = json.loads(status_result.stdout)
+        self.assertEqual("local-workhorse", status_payload["efficiency_posture"]["selected_runtime"])
+        status_readout = status_payload["runtime_readout"]
+        self.assertEqual("local-workhorse", status_readout["route"])
         self.assertEqual("local-ollama", status_readout["route_evidence"]["local_runtime_class"])
         self.assertEqual(2, status_readout["route_evidence"]["ready_adapter_count"])
         self.assertEqual("measured", status_readout["route_evidence"]["cost_status"])
         self.assertEqual("zero-external-api-spend", status_readout["route_evidence"]["cost_posture"])
         self.assertEqual("local-fast", status_readout["route_evidence"]["cheapest_ready_adapter"])
-        self.assertIn("local-fast", status_readout["reason"])
+        self.assertEqual("local-workhorse", status_readout["route_evidence"]["selected_ready_adapter"])
+        self.assertIn("local-workhorse", status_readout["reason"])
 
         resume_result = self.run_cli(
             "resume",
             pack_dir,
+            "--intent",
+            "export",
             "--format",
             "json",
             "--max-chars",
             "1100",
         )
         self.assert_ok(resume_result)
-        resume_readout = json.loads(resume_result.stdout)["runtime_readout"]
+        resume_payload = json.loads(resume_result.stdout)
+        self.assertEqual("local-fast", resume_payload["efficiency_posture"]["selected_runtime"])
+        resume_readout = resume_payload["runtime_readout"]
+        self.assertEqual("local-fast", resume_readout["route"])
         self.assertEqual("local-ollama", resume_readout["route_evidence"]["local_runtime_class"])
         self.assertEqual("local-fast", resume_readout["route_evidence"]["cheapest_ready_adapter"])
+        self.assertEqual("local-fast", resume_readout["route_evidence"]["selected_ready_adapter"])
 
     def test_status_surfaces_turn_record_and_progress_frame(self) -> None:
         pack_dir = self.compile_research_pack()
