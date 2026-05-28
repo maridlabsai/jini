@@ -57,6 +57,154 @@ def _projection_focus_item(
     return _default_focus_item(ready_now)
 
 
+def _artifact_delta_items(ready_now: list[dict[str, Any]]) -> list[dict[str, str]]:
+    return [
+        {
+            "artifact_id": str(item.get("id", "")).strip(),
+            "title": str(item.get("label", "")).strip(),
+            "status": "ready",
+        }
+        for item in ready_now
+        if str(item.get("id", "")).strip()
+    ]
+
+
+def build_progress_snapshot(summary: dict[str, Any], ready_now: list[dict[str, Any]]) -> dict[str, Any]:
+    work_unit = summary.get("work_unit", {})
+    title = str(work_unit.get("title", "")).strip()
+    state = str(work_unit.get("current_state", "")).strip()
+    health = str(summary.get("health", "")).strip()
+    next_operation = str(summary.get("next_operation", "")).strip()
+    task_summary = summary.get("task_summary", {})
+    missing_now = [str(item).strip() for item in summary.get("missing_stage_required", []) if str(item).strip()]
+    blockers = [str(item).strip() for item in summary.get("blockers", []) if str(item).strip()]
+    ready_labels = [str(item.get("label", "")).strip() or str(item.get("id", "")).strip() for item in ready_now]
+
+    if ready_labels:
+        working_with_summary = f"{len(ready_labels)} ready artifact(s): {', '.join(ready_labels[:3])}"
+    else:
+        working_with_summary = "No ready artifacts yet"
+
+    total_tasks = int(task_summary.get("total", 0) or 0)
+    done_tasks = int(task_summary.get("done", 0) or 0)
+    if total_tasks:
+        done = f"{done_tasks}/{total_tasks} tasks completed"
+    elif ready_labels:
+        done = f"{len(ready_labels)} ready artifact(s) available"
+    else:
+        done = "No completed artifact evidence yet"
+
+    if missing_now:
+        need = "Missing now: " + ", ".join(missing_now[:3])
+    elif blockers:
+        need = blockers[0]
+    else:
+        need = "Nothing stage-critical is missing right now"
+
+    return {
+        "goal": title,
+        "working_with_summary": working_with_summary,
+        "now": f"{state} / {health}".strip(" /"),
+        "done": done,
+        "need": need,
+        "next": next_operation,
+        "safe_to_do": not bool(summary.get("validation_errors")) and not bool(missing_now),
+    }
+
+
+def _active_asks(summary: dict[str, Any]) -> list[dict[str, Any]]:
+    validation_errors = [str(item).strip() for item in summary.get("validation_errors", []) if str(item).strip()]
+    missing_now = [str(item).strip() for item in summary.get("missing_stage_required", []) if str(item).strip()]
+    blockers = [str(item).strip() for item in summary.get("blockers", []) if str(item).strip()]
+
+    if validation_errors:
+        return [
+            {
+                "ask_id": "fix-validation",
+                "prompt": "Fix validation errors before continuing.",
+                "reason": validation_errors[0],
+                "blocking": True,
+            }
+        ]
+    if missing_now:
+        return [
+            {
+                "ask_id": f"provide-{missing_now[0].lower()}",
+                "prompt": f"Provide {missing_now[0]} before the next state transition.",
+                "reason": "The current stage requires this artifact.",
+                "blocking": True,
+            }
+        ]
+    if blockers:
+        return [
+            {
+                "ask_id": "resolve-blocker",
+                "prompt": blockers[0],
+                "reason": "This blocks the next safe transition.",
+                "blocking": True,
+            }
+        ]
+    return []
+
+
+def build_turn_record(
+    *,
+    session_id: str,
+    summary: dict[str, Any],
+    ready_now: list[dict[str, Any]],
+    updated_at: str,
+    previous_projection: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    current_state = str(summary.get("work_unit", {}).get("current_state", "")).strip()
+    current_next = str(summary.get("next_operation", "")).strip()
+    ready_ids = [str(item.get("id", "")).strip() for item in ready_now if str(item.get("id", "")).strip()]
+
+    if isinstance(previous_projection, dict):
+        previous_turn = previous_projection.get("turn_record")
+        previous_ready_ids = [
+            str(item.get("id", "")).strip()
+            for item in previous_projection.get("ready", [])
+            if isinstance(item, dict) and str(item.get("id", "")).strip()
+        ]
+        unchanged_state = str(previous_projection.get("state", "")).strip() == current_state
+        unchanged_next = str(previous_projection.get("next", "")).strip() == current_next
+        if isinstance(previous_turn, dict) and previous_ready_ids == ready_ids and unchanged_state and unchanged_next:
+            return dict(previous_turn)
+
+    state_changes: list[dict[str, str]] = []
+    previous_state = ""
+    previous_next = ""
+    if isinstance(previous_projection, dict):
+        previous_state = str(previous_projection.get("state", "")).strip()
+        previous_next = str(previous_projection.get("next", "")).strip()
+    if previous_state != current_state:
+        state_changes.append({"field": "state", "before": previous_state, "after": current_state})
+    if previous_next != current_next:
+        state_changes.append({"field": "next", "before": previous_next, "after": current_next})
+
+    ready_count = len(ready_ids)
+    artifact_phrase = f"{ready_count} ready artifact(s)" if ready_count else "no ready artifacts"
+    return {
+        "schema_version": "0.1.0",
+        "record_type": "JiniTurnRecord",
+        "turn_id": f"{session_id}-latest",
+        "thread_id": session_id,
+        "user_input_ids": [],
+        "assistant_message": f"Session projection refreshed with {artifact_phrase}; next is {current_next}.",
+        "artifacts_created": _artifact_delta_items(ready_now),
+        "artifacts_updated": [],
+        "state_changes": state_changes,
+        "asks_opened": _active_asks(summary),
+        "asks_resolved": [],
+        "route_decision": {
+            "provider_id": "session-kernel",
+            "reason": "Derived from current pack state and ready artifacts.",
+        },
+        "started_at": updated_at,
+        "completed_at": updated_at,
+    }
+
+
 def build_session_projection(
     *,
     session_id: str,
@@ -83,12 +231,21 @@ def build_session_projection(
     task_summary = summary.get("task_summary", {})
     continuation_saved_work = bool(ready_now) or int(task_summary.get("done", 0) or 0) > 0
     focus_item = _projection_focus_item(ready_now, previous_projection)
+    progress_snapshot = build_progress_snapshot(summary, ready_now)
+    turn_record = build_turn_record(
+        session_id=session_id,
+        summary=summary,
+        ready_now=ready_now,
+        updated_at=updated_at,
+        previous_projection=previous_projection,
+    )
     return {
         "schema_version": "0.1.0",
         "projection_type": "JiniSessionProjection",
         "session_id": session_id,
         "updated_at": updated_at,
         "pack_dir": str(pack_dir),
+        "state": str(summary.get("work_unit", {}).get("current_state", "")),
         "ready": ready_now,
         "current_focus": (
             {
@@ -101,6 +258,8 @@ def build_session_projection(
         ),
         "missing": missing,
         "next": str(summary.get("next_operation", "")),
+        "progress_snapshot": progress_snapshot,
+        "turn_record": turn_record,
         "route": {
             "provider_id": "session-kernel",
             "reason": "Derived from current pack state and ready artifacts.",

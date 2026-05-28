@@ -53,7 +53,9 @@ try:
         render_lean_platform_metrics,
     )
     from .session_core import build_canonical_session
+    from .session_projection import build_progress_snapshot
     from .session_projection import build_session_projection
+    from .session_projection import build_turn_record
     from .session_store import SessionStore
     from .yaml_compat import YAMLError as CompatYAMLError
     from .yaml_compat import safe_dump as compat_yaml_dump
@@ -64,7 +66,9 @@ except ImportError:  # pragma: no cover - script execution path
         render_lean_platform_metrics,
     )
     from session_core import build_canonical_session
+    from session_projection import build_progress_snapshot
     from session_projection import build_session_projection
+    from session_projection import build_turn_record
     from session_store import SessionStore
     from yaml_compat import YAMLError as CompatYAMLError
     from yaml_compat import safe_dump as compat_yaml_dump
@@ -15548,6 +15552,18 @@ def build_outcome_view(
         for item in artifact_catalog.get("ready_now", [])
     ], projection)
     current_focus = ready_now[0] if ready_now else {}
+    progress_snapshot = projection.get("progress_snapshot")
+    if not isinstance(progress_snapshot, dict):
+        progress_snapshot = build_progress_snapshot(summary, list(artifact_catalog.get("ready_now", [])))
+    turn_record = projection.get("turn_record")
+    if not isinstance(turn_record, dict):
+        turn_record = build_turn_record(
+            session_id=str(work_unit.get("work_unit_id", "")),
+            summary=summary,
+            ready_now=list(artifact_catalog.get("ready_now", [])),
+            updated_at=now_utc(),
+            previous_projection=projection if isinstance(projection, dict) else None,
+        )
     return {
         "schema_version": "0.1.0",
         "view_type": "JiniOutcomeView",
@@ -15578,6 +15594,8 @@ def build_outcome_view(
             "what_is_still_missing_now": missing_now,
             "what_is_still_missing_later": missing_later,
         },
+        "progress_snapshot": progress_snapshot,
+        "turn_record": turn_record,
         "current_focus": current_focus,
         "ready_now": ready_now,
         "published_links": latest_publication_links(summary),
@@ -15614,6 +15632,38 @@ def build_outcome_view_from_projection(
     continuation_saved_work = bool(projection.get("cost_posture", {}).get("continuation_saved_work"))
     done_text = "Work has already been captured in session artifacts." if continuation_saved_work else "No completed artifact evidence is stored yet."
     current_focus = ready_now[0] if ready_now else {}
+    progress_snapshot = projection.get("progress_snapshot")
+    if not isinstance(progress_snapshot, dict):
+        progress_snapshot = {
+            "goal": str(context.get("title", "")),
+            "working_with_summary": f"{len(ready_now)} saved ready artifact(s)",
+            "now": f"{context.get('state', '')} / session-only".strip(" /"),
+            "done": done_text,
+            "need": "Saved projection only; reload pack files for full missing-state detail.",
+            "next": next_operation,
+            "safe_to_do": True,
+        }
+    turn_record = projection.get("turn_record")
+    if not isinstance(turn_record, dict):
+        turn_record = {
+            "schema_version": "0.1.0",
+            "record_type": "JiniTurnRecord",
+            "turn_id": f"{context.get('work_unit_id', 'session')}-latest",
+            "thread_id": str(context.get("work_unit_id", "")),
+            "user_input_ids": [],
+            "assistant_message": "Saved session projection restored from local state.",
+            "artifacts_created": [],
+            "artifacts_updated": [],
+            "state_changes": [],
+            "asks_opened": [],
+            "asks_resolved": [],
+            "route_decision": {
+                "provider_id": "session-projection",
+                "reason": "Pack files are unavailable, so Jini restored the saved projection.",
+            },
+            "started_at": str(context.get("updated_at", "")),
+            "completed_at": str(context.get("updated_at", "")),
+        }
     return {
         "schema_version": "0.1.0",
         "view_type": "JiniOutcomeView",
@@ -15645,6 +15695,8 @@ def build_outcome_view_from_projection(
             "what_is_still_missing_now": list(projection.get("missing", [])),
             "what_is_still_missing_later": [],
         },
+        "progress_snapshot": progress_snapshot,
+        "turn_record": turn_record,
         "current_focus": current_focus,
         "ready_now": ready_now,
         "published_links": [],
@@ -15768,6 +15820,28 @@ def print_outcome_view(report: dict[str, Any]) -> None:
     print(f"TITLE  {report.get('title', '')}")
     print(f"HEALTH {report.get('health', '')}")
     print(f"STATE  {report.get('state', '')}")
+    progress = report.get("progress_snapshot", {})
+    turn = report.get("turn_record", {})
+    if isinstance(progress, dict) and progress:
+        print()
+        print("JUST FINISHED")
+        print(f"  {progress.get('done', '')}")
+        if isinstance(turn, dict) and turn.get("artifacts_created"):
+            created = [
+                str(item.get("artifact_id", "")).strip()
+                for item in turn.get("artifacts_created", [])
+                if isinstance(item, dict) and str(item.get("artifact_id", "")).strip()
+            ]
+            if created:
+                print(f"  artifacts: {', '.join(created[:4])}")
+        print()
+        print("DOING NOW")
+        print(f"  {progress.get('now', '')}")
+        if progress.get("need"):
+            print(f"  need: {progress.get('need', '')}")
+        print()
+        print("UP NEXT")
+        print(f"  {progress.get('next', '')}")
     print()
     print("WHAT IS DONE?")
     print(f"  {report.get('questions', {}).get('what_is_done', '')}")

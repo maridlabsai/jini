@@ -657,6 +657,34 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue(any("export" in item for item in resume_posture["rationale"]))
         self.assertLessEqual(compact["token_budget"]["estimated_chars"], 900)
 
+    def test_status_surfaces_turn_record_and_progress_frame(self) -> None:
+        pack_dir = self.compile_research_pack()
+
+        status_json = self.run_cli("status", pack_dir, "--format", "json")
+        self.assert_ok(status_json)
+        report = json.loads(status_json.stdout)
+
+        progress = report["progress_snapshot"]
+        self.assertEqual("Test Research Pack", progress["goal"])
+        self.assertIn("ready artifact", progress["working_with_summary"])
+        self.assertEqual("Make", progress["next"])
+        self.assertTrue(progress["safe_to_do"])
+
+        turn = report["turn_record"]
+        self.assertEqual("test-research-pack", turn["thread_id"])
+        self.assertEqual([], turn["user_input_ids"])
+        self.assertTrue(turn["artifacts_created"])
+        self.assertEqual([], turn["artifacts_updated"])
+        self.assertTrue(turn["state_changes"])
+        self.assertLessEqual(len([ask for ask in turn["asks_opened"] if ask.get("blocking")]), 1)
+        self.assertEqual("session-kernel", turn["route_decision"]["provider_id"])
+
+        status_text = self.run_cli("status", pack_dir)
+        self.assert_ok(status_text)
+        self.assertIn("JUST FINISHED", status_text.stdout)
+        self.assertIn("DOING NOW", status_text.stdout)
+        self.assertIn("UP NEXT", status_text.stdout)
+
     def test_example_sets_current_work_for_pathless_status_and_artifacts(self) -> None:
         example_output = self.tmp / "research-example"
         result = self.run_cli("try-example", "research-prd", "--output", example_output)
@@ -691,6 +719,10 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("snapshot_trimmed", projection_doc["ready"][0])
         self.assertIn("current_focus", projection_doc)
         self.assertEqual("artifact", projection_doc["current_focus"]["kind"])
+        self.assertEqual("JiniTurnRecord", projection_doc["turn_record"]["record_type"])
+        self.assertEqual("test-research-pack", projection_doc["turn_record"]["thread_id"])
+        self.assertIn("progress_snapshot", projection_doc)
+        self.assertEqual("Test Research Pack", projection_doc["progress_snapshot"]["goal"])
 
     def test_show_artifact_uses_current_work_without_path(self) -> None:
         pack_dir = self.compile_travel_pack()
