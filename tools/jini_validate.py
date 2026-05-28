@@ -9601,6 +9601,9 @@ def build_compact_context(
     repo_context = recommendation["repo_context"]
     home_context = memory_context.get("home", {})
     efficiency_posture = build_efficiency_posture(recommendation, max_rationale=2)
+    runtime_readout = build_runtime_readout(recommendation, efficiency_posture=efficiency_posture)
+    runtime_readout.pop("model", None)
+    runtime_readout.pop("context_policy", None)
     recent_artifacts = memory_context.get("recent_artifacts", [])[: min(max(1, max_items), 3)]
     resume_items = memory_context.get("resume_items", [])[: max(2, max_items + 1)]
     stale_signals = memory_context.get("stale_signals", [])[: max(1, max_items)]
@@ -9641,6 +9644,7 @@ def build_compact_context(
         "profile_id": summary["work_unit"].get("profile_id", ""),
         "execution_class": recommendation["execution_class"],
         "efficiency_posture": efficiency_posture,
+        "runtime_readout": runtime_readout,
         "next_operation": summary.get("next_operation", ""),
         "recent_artifacts": compact_recent_artifacts,
         "resume_items": resume_items,
@@ -9717,6 +9721,19 @@ def build_compact_context(
             if key in payload and payload.get(key) is None:
                 payload.pop(key, None)
                 return True
+        runtime = payload.get("runtime_readout")
+        if isinstance(runtime, dict):
+            if runtime.get("model"):
+                runtime.pop("model", None)
+                return True
+            if runtime.get("context_policy"):
+                runtime.pop("context_policy", None)
+                return True
+            efficiency = payload.get("efficiency_posture", {})
+            rationale = efficiency.get("rationale", []) if isinstance(efficiency, dict) else []
+            if max_chars < 900 and isinstance(rationale, list) and rationale and runtime.get("reason") == rationale[0]:
+                runtime.pop("reason", None)
+                return True
         if payload.get("repo_root") == "":
             payload.pop("repo_root", None)
             return True
@@ -9759,6 +9776,26 @@ def build_compact_context(
                 if len(last) > 96:
                     values[-1] = last[:93] + "..."
                     return True
+        runtime = payload.get("runtime_readout")
+        if isinstance(runtime, dict):
+            if runtime.get("model"):
+                runtime.pop("model", None)
+                return True
+            if runtime.get("context_policy"):
+                runtime.pop("context_policy", None)
+                return True
+            reason = str(runtime.get("reason", "")).strip()
+            if len(reason) > 96:
+                runtime["reason"] = reason[:93] + "..."
+                return True
+        if payload.get("recent_artifacts"):
+            payload["recent_artifacts"] = []
+            return True
+        runtime_target = payload.get("runtime_target")
+        runtime = payload.get("runtime_readout")
+        if isinstance(runtime_target, dict) and isinstance(runtime, dict) and runtime.get("route"):
+            payload["runtime_target"] = {}
+            return True
         efficiency = payload.get("efficiency_posture")
         if isinstance(efficiency, dict):
             rationale = efficiency.get("rationale", [])
@@ -9848,22 +9885,31 @@ def build_compact_context(
             ]
         if compact_chars(compact) > max_chars:
             compact.pop("latest_run", None)
-            compact.pop("latest_harvest", None)
+            if max_chars < 900:
+                compact.pop("latest_harvest", None)
         if compact_chars(compact) > max_chars:
             compact["home_memory"] = compact.get("home_memory", [])[:1]
             compact["resume_items"] = compact["resume_items"][:1]
         if compact_chars(compact) > max_chars:
-            for key in ("recent_artifacts", "home_memory", "freshness", "repo_actions", "steering"):
+            for key in ("home_memory", "freshness", "repo_actions", "steering"):
                 if compact.get(key) == []:
                     compact.pop(key, None)
         if compact_chars(compact) > max_chars:
             efficiency = compact.get("efficiency_posture", {})
+            runtime = compact.get("runtime_readout", {})
+            rationale = efficiency.get("rationale", [])
+            preserved_reason = ""
+            if isinstance(rationale, list) and rationale:
+                preserved_reason = str(rationale[0]).strip()
+            if not preserved_reason and isinstance(runtime, dict):
+                preserved_reason = str(runtime.get("reason", "")).strip()
             compact["efficiency_posture"] = {
                 "intent": str(efficiency.get("intent", compact.get("intent", ""))).strip(),
                 "execution_class": str(efficiency.get("execution_class", compact.get("execution_class", ""))).strip(),
                 "cheap_path": bool(efficiency.get("cheap_path", False)),
                 "context_policy": str(efficiency.get("context_policy", "")).strip(),
                 "selected_runtime": str(efficiency.get("selected_runtime", "")).strip(),
+                "rationale": [preserved_reason] if preserved_reason else [],
             }
             compact["recent_artifacts"] = []
             compact["publication_links"] = []
@@ -9894,7 +9940,6 @@ def build_compact_context(
         if compact_chars(compact) > max_chars:
             compact["resume_items"] = []
             compact["unresolved_tasks"] = []
-            compact["efficiency_posture"].pop("selected_runtime", None)
             compact["runtime_target"] = {}
             for key in (
                 "recent_artifacts",
@@ -9905,9 +9950,28 @@ def build_compact_context(
                 "repo_actions",
                 "steering",
                 "unresolved_tasks",
+                "runtime_target",
             ):
-                if compact.get(key) == []:
+                if key != "recent_artifacts" and compact.get(key) == []:
                     compact.pop(key, None)
+                if compact.get(key) == {}:
+                    compact.pop(key, None)
+        if compact_chars(compact) > max_chars:
+            runtime = compact.get("runtime_readout", {})
+            efficiency = compact.get("efficiency_posture", {})
+            rationale = efficiency.get("rationale", []) if isinstance(efficiency, dict) else []
+            if (
+                isinstance(runtime, dict)
+                and isinstance(rationale, list)
+                and rationale
+                and runtime.get("reason") == rationale[0]
+            ):
+                runtime.pop("reason", None)
+        if compact_chars(compact) > max_chars:
+            runtime = compact.get("runtime_readout", {})
+            efficiency = compact.get("efficiency_posture", {})
+            if isinstance(runtime, dict) and isinstance(efficiency, dict) and runtime.get("route"):
+                efficiency.pop("selected_runtime", None)
     final_chars = compact_chars(compact)
     compact["token_budget"] = {
         "max_chars": max_chars,
@@ -9952,6 +10016,17 @@ def print_compact_context(compact: dict[str, Any], *, heading: str = "RESUME") -
             f"context={efficiency.get('context_policy', '')} "
             f"runtime={efficiency.get('selected_runtime', '')}"
         )
+    runtime = compact.get("runtime_readout", {})
+    if runtime:
+        print(
+            "RUNTIME "
+            f"mode={runtime.get('selection_mode', '')} "
+            f"route={runtime.get('route', '')} "
+            f"model={runtime.get('model', '')} "
+            f"effort={runtime.get('effort', '')}"
+        )
+        if runtime.get("reason"):
+            print(f"REASON  {runtime.get('reason', '')}")
     if compact.get("unresolved_tasks"):
         print("TASKS")
         for task in compact["unresolved_tasks"]:
@@ -14753,6 +14828,61 @@ def build_efficiency_posture(
     return posture
 
 
+def configured_model_readout(*, env: dict[str, str] | None = None) -> str:
+    env_map = os.environ if env is None else env
+    provider = build_provider_doctor(env=env_map)
+    for setting in provider.get("settings", []):
+        if not isinstance(setting, dict):
+            continue
+        if setting.get("name") in {"JINI_MODEL", "BEDROCK_MODEL_ID"}:
+            presence = str(setting.get("presence", "")).strip()
+            if presence:
+                return presence
+    configured = _configured_model_input(env=env_map)
+    if configured and _normalized_model_mode(env=env_map) != "auto":
+        return configured
+    label = str(provider.get("label", "")).strip()
+    return f"auto -> {label}" if label else "auto"
+
+
+def build_runtime_readout(
+    recommendation: dict[str, Any] | None = None,
+    *,
+    efficiency_posture: dict[str, Any] | None = None,
+    route: dict[str, Any] | None = None,
+    selection_mode: str = "auto",
+    model: str | None = None,
+) -> dict[str, Any]:
+    posture = efficiency_posture or {}
+    runtime_guidance = recommendation.get("runtime_guidance", {}) if isinstance(recommendation, dict) else {}
+    selected_runtime = {}
+    if isinstance(runtime_guidance, dict):
+        selected_runtime = runtime_guidance.get("selected", {}) if isinstance(runtime_guidance.get("selected", {}), dict) else {}
+    rationale = posture.get("rationale", [])
+    if not isinstance(rationale, list) and isinstance(recommendation, dict):
+        rationale = recommendation.get("rationale", [])
+    reason = ""
+    for item in rationale if isinstance(rationale, list) else []:
+        reason = str(item).strip()
+        if reason:
+            break
+    if not reason and isinstance(route, dict):
+        reason = str(route.get("reason", "")).strip()
+    route_id = str(posture.get("selected_runtime", "")).strip()
+    if not route_id and selected_runtime:
+        route_id = str(selected_runtime.get("id", "")).strip()
+    if not route_id and isinstance(route, dict):
+        route_id = str(route.get("provider_id", "") or route.get("id", "")).strip()
+    return {
+        "selection_mode": selection_mode,
+        "route": route_id,
+        "model": str(model if model is not None else configured_model_readout()).strip() or "auto",
+        "effort": str(posture.get("execution_class", "")).strip(),
+        "context_policy": str(posture.get("context_policy", "")).strip(),
+        "reason": reason,
+    }
+
+
 def materialize_compile_outputs(pack_dir: Path, registry: dict[str, Any]) -> list[str]:
     warnings: list[str] = []
     actions = [
@@ -15577,6 +15707,11 @@ def build_outcome_view(
             updated_at=now_utc(),
             previous_projection=projection if isinstance(projection, dict) else None,
         )
+    efficiency_posture = build_efficiency_posture(
+        recommendation,
+        max_rationale=2,
+        include_rate_limits=True,
+    )
     return {
         "schema_version": "0.1.0",
         "view_type": "JiniOutcomeView",
@@ -15587,11 +15722,8 @@ def build_outcome_view(
         "health": summary["health"],
         "state": str(work_unit.get("current_state", "")),
         "next_operation": summary["next_operation"],
-        "efficiency_posture": build_efficiency_posture(
-            recommendation,
-            max_rationale=2,
-            include_rate_limits=True,
-        ),
+        "efficiency_posture": efficiency_posture,
+        "runtime_readout": build_runtime_readout(recommendation, efficiency_posture=efficiency_posture),
         "task_summary": {
             "done": int(task_summary.get("done", 0) or 0),
             "total": int(task_summary.get("total", 0) or 0),
@@ -15698,6 +15830,16 @@ def build_outcome_view_from_projection(
             "started_at": str(context.get("updated_at", "")),
             "completed_at": str(context.get("updated_at", "")),
         }
+    efficiency_posture = {
+        "intent": next_operation,
+        "execution_class": "projection",
+        "cheap_path": True,
+        "context_policy": "session-projection",
+        "selected_runtime": "session-projection",
+        "rationale": [
+            "Pack files are unavailable, so Jini uses the saved projection before reloading larger context."
+        ],
+    }
     return {
         "schema_version": "0.1.0",
         "view_type": "JiniOutcomeView",
@@ -15708,16 +15850,13 @@ def build_outcome_view_from_projection(
         "health": "session-only",
         "state": str(context.get("state", "")),
         "next_operation": next_operation,
-        "efficiency_posture": {
-            "intent": next_operation,
-            "execution_class": "projection",
-            "cheap_path": True,
-            "context_policy": "session-projection",
-            "selected_runtime": "session-projection",
-            "rationale": [
-                "Pack files are unavailable, so Jini uses the saved projection before reloading larger context."
-            ],
-        },
+        "efficiency_posture": efficiency_posture,
+        "runtime_readout": build_runtime_readout(
+            efficiency_posture=efficiency_posture,
+            route=turn_record.get("route_decision", {}) if isinstance(turn_record, dict) else {},
+            selection_mode="projection",
+            model="saved session projection",
+        ),
         "task_summary": {
             "done": task_done,
             "total": task_done,
@@ -15776,6 +15915,16 @@ def build_compact_context_from_projection(
     route_reason = str(projection.get("route", {}).get("reason", "")).strip()
     if route_reason:
         resume_items.append(f"Route evidence: {route_reason}")
+    efficiency_posture = {
+        "intent": chosen_intent,
+        "execution_class": execution_class,
+        "cheap_path": execution_class == "projection-resume",
+        "context_policy": "session-projection",
+        "selected_runtime": "session-projection",
+        "rationale": [
+            "Pack files are unavailable, so Jini uses the saved projection before reloading larger context."
+        ],
+    }
 
     compact = {
         "schema_version": "0.1.0",
@@ -15787,16 +15936,13 @@ def build_compact_context_from_projection(
         "state": str(context.get("state", "")),
         "health": "session-only",
         "execution_class": execution_class,
-        "efficiency_posture": {
-            "intent": chosen_intent,
-            "execution_class": execution_class,
-            "cheap_path": execution_class == "projection-resume",
-            "context_policy": "session-projection",
-            "selected_runtime": "session-projection",
-            "rationale": [
-                "Pack files are unavailable, so Jini uses the saved projection before reloading larger context."
-            ],
-        },
+        "efficiency_posture": efficiency_posture,
+        "runtime_readout": build_runtime_readout(
+            efficiency_posture=efficiency_posture,
+            route=projection.get("route", {}) if isinstance(projection.get("route", {}), dict) else {},
+            selection_mode="projection",
+            model="saved session projection",
+        ),
         "next_operation": str(projection.get("next", "")),
         "current_focus": (
             {
@@ -15950,6 +16096,19 @@ def print_outcome_view(report: dict[str, Any]) -> None:
         )
         for item in efficiency.get("rationale", [])[:2]:
             print(f"  - {item}")
+    runtime = report.get("runtime_readout", {})
+    if runtime:
+        print()
+        print("RUNTIME")
+        print(
+            "  "
+            f"mode={runtime.get('selection_mode', '')} "
+            f"route={runtime.get('route', '')} "
+            f"model={runtime.get('model', '')} "
+            f"effort={runtime.get('effort', '')}"
+        )
+        if runtime.get("reason"):
+            print(f"  reason={runtime.get('reason', '')}")
     missing_now = report.get("questions", {}).get("what_is_still_missing_now", [])
     missing_later = report.get("questions", {}).get("what_is_still_missing_later", [])
     print()

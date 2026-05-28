@@ -605,7 +605,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("jini show tasks --from", continue_result.stdout)
         self.assertIn("jini open tasks --from", continue_result.stdout)
 
-        resume_result = self.run_cli("resume", pack_dir, "--format", "json", "--max-chars", "700")
+        resume_result = self.run_cli("resume", pack_dir, "--format", "json", "--max-chars", "900")
         self.assert_ok(resume_result)
         self.assertLess(len(continue_result.stdout), len(resume_result.stdout))
 
@@ -628,6 +628,11 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("EFFICIENCY", status_text.stdout)
         self.assertIn("class=standard", status_text.stdout)
         self.assertIn("context=targeted", status_text.stdout)
+        self.assertIn("RUNTIME", status_text.stdout)
+        self.assertIn("route=", status_text.stdout)
+        self.assertIn("model=", status_text.stdout)
+        self.assertIn("effort=standard", status_text.stdout)
+        self.assertIn("reason=", status_text.stdout)
 
         status_json = self.run_cli("status", pack_dir, "--format", "json")
         self.assert_ok(status_json)
@@ -638,6 +643,13 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("targeted", posture["context_policy"])
         self.assertTrue(posture["selected_runtime"])
         self.assertTrue(posture["rationale"])
+        runtime = report["runtime_readout"]
+        self.assertEqual("auto", runtime["selection_mode"])
+        self.assertEqual(posture["selected_runtime"], runtime["route"])
+        self.assertTrue(runtime["model"])
+        self.assertEqual("standard", runtime["effort"])
+        self.assertEqual("targeted", runtime["context_policy"])
+        self.assertIn("make", runtime["reason"])
 
         resume_json = self.run_cli(
             "resume",
@@ -655,6 +667,11 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("cheap", resume_posture["execution_class"])
         self.assertTrue(resume_posture["cheap_path"])
         self.assertTrue(any("export" in item for item in resume_posture["rationale"]))
+        resume_runtime = compact["runtime_readout"]
+        self.assertEqual("auto", resume_runtime["selection_mode"])
+        self.assertEqual(resume_posture["selected_runtime"], resume_runtime["route"])
+        self.assertEqual("cheap", resume_runtime["effort"])
+        self.assertIn("export", resume_runtime["reason"])
         self.assertLessEqual(compact["token_budget"]["estimated_chars"], 900)
 
     def test_status_surfaces_turn_record_and_progress_frame(self) -> None:
