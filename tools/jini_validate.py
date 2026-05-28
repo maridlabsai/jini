@@ -10809,17 +10809,19 @@ def build_execution_checklist(
 
     active_policy = recommendation.get("active_policy", {})
     if active_policy.get("policy_id"):
-        items.append(
-            {
-                "phase": "policy",
-                "status": "recommended",
-                "kind": "active-rollout",
-                "description": (
-                    f"Active policy rollout `{active_policy.get('candidate_id', '')}` is in effect for "
-                    f"`{active_policy.get('policy_id', '')}`."
-                ),
-            }
-        )
+        active_rollout_item = {
+            "phase": "policy",
+            "status": "recommended",
+            "kind": "active-rollout",
+            "description": (
+                f"Active policy rollout `{active_policy.get('candidate_id', '')}` is in effect for "
+                f"`{active_policy.get('policy_id', '')}`."
+            ),
+        }
+        drivers = active_policy.get("route_feedback_drivers", {})
+        if isinstance(drivers, dict) and drivers:
+            active_rollout_item["route_feedback_drivers"] = deepcopy(drivers)
+        items.append(active_rollout_item)
 
     latest_harvest = latest_harvest_report_summary(pack_dir)
     if latest_harvest is not None:
@@ -10892,6 +10894,12 @@ def print_execution_checklist(checklist: dict[str, Any]) -> None:
     for item in checklist.get("items", []):
         detail = item["description"]
         command = item.get("command", "")
+        drivers = item.get("route_feedback_drivers", {})
+        if isinstance(drivers, dict):
+            preview = drivers.get("cohort_preview", {})
+            preview_text = preview.get("text", "") if isinstance(preview, dict) else ""
+            if preview_text:
+                detail += f" drivers={preview_text}"
         if command:
             detail += f" command={command}"
         print(f"  - [{item['status']}] {item['phase']} {item['kind']}: {detail}")

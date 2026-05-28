@@ -4037,6 +4037,21 @@ class JiniCliConformanceTests(unittest.TestCase):
         recommendation_text = self.run_cli("recommend-execution", pack_dir, "--intent", "make")
         self.assert_ok(recommendation_text)
         self.assertIn("DRIVERS export:local-fast->local-workhorse", recommendation_text.stdout)
+        checklist = self.run_cli("next", pack_dir, "--intent", "make", "--format", "json")
+        self.assert_ok(checklist)
+        checklist_doc = json.loads(checklist.stdout)
+        active_rollout = next(item for item in checklist_doc["items"] if item["kind"] == "active-rollout")
+        self.assertEqual(
+            ["export"],
+            active_rollout["route_feedback_drivers"]["changed_cohort_keys"],
+        )
+        self.assertEqual(
+            "export:local-fast->local-workhorse",
+            active_rollout["route_feedback_drivers"]["cohort_preview"]["text"],
+        )
+        checklist_text = self.run_cli("next", pack_dir, "--intent", "make")
+        self.assert_ok(checklist_text)
+        self.assertIn("drivers=export:local-fast->local-workhorse", checklist_text.stdout)
         handoff = self.run_cli("stage-runtime-handoff", pack_dir, "--intent", "make", "--format", "json")
         self.assert_ok(handoff)
         handoff_doc = json.loads(handoff.stdout)
