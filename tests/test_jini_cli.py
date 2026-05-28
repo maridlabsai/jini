@@ -3743,12 +3743,69 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("codex", report["recommendation"]["runtime_guidance"]["selected"]["id"])
         self.assertTrue(report["runtime_activation"])
         self.assertTrue(Path(report["runtime_activation_path"]).exists())
+        self.assertEqual({}, report["runtime_activation_summary"])
         self.assertTrue(self.resolve_repo_path(report["run_report_path"]).exists())
         self.assertTrue(report["local_publish_receipts"])
         self.assertTrue(any(item["status"] == "applied-local" for item in report["local_publish_receipts"]))
         self.assertGreater(report["token_strategy"]["compact_estimated_tokens"], 0)
         self.assertIn("compact-context", report["token_strategy"]["reused_context_surfaces"])
         self.assertIn("runtime-handoff", report["token_strategy"]["reused_context_surfaces"])
+
+        no_activation = self.run_cli(
+            "run",
+            pack_dir,
+            "--mode",
+            "supervised",
+            "--intent",
+            "publish",
+            "--repo",
+            repo,
+            "--home",
+            home,
+            "--runtime-target",
+            "codex",
+            "--consent",
+            "write",
+            "--consent",
+            "publish",
+            "--issue-adapter",
+            "github",
+            "--wiki-adapter",
+            "markdown",
+            "--format",
+            "json",
+        )
+        self.assert_ok(no_activation)
+        no_activation_doc = json.loads(no_activation.stdout)
+        self.assertIsNone(no_activation_doc["runtime_activation"])
+        self.assertEqual({}, no_activation_doc["runtime_activation_summary"])
+        self.assertEqual("", no_activation_doc["runtime_activation_path"])
+
+        no_activation_text = self.run_cli(
+            "run",
+            pack_dir,
+            "--mode",
+            "supervised",
+            "--intent",
+            "publish",
+            "--repo",
+            repo,
+            "--home",
+            home,
+            "--runtime-target",
+            "codex",
+            "--consent",
+            "write",
+            "--consent",
+            "publish",
+            "--issue-adapter",
+            "github",
+            "--wiki-adapter",
+            "markdown",
+        )
+        self.assert_ok(no_activation_text)
+        self.assertNotIn("ACTIVE ", no_activation_text.stdout)
+        self.assertNotIn("ACTIVE-DRIVERS ", no_activation_text.stdout)
 
     def test_review_policy_summarizes_learning_without_mutating_policy(self) -> None:
         pack_dir = self.compile_research_pack()
@@ -4130,8 +4187,8 @@ class JiniCliConformanceTests(unittest.TestCase):
             flow_doc["runtime_activation"]["route_feedback_drivers"]["cohort_preview"]["text"],
         )
         self.assertEqual(
-            "export:local-fast->local-workhorse",
-            flow_doc["runtime_activation_summary"]["route_feedback_driver_preview"],
+            {"route_feedback_driver_preview": "export:local-fast->local-workhorse"},
+            flow_doc["runtime_activation_summary"],
         )
         flow_text = self.run_cli(
             "run",

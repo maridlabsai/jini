@@ -12213,21 +12213,13 @@ def print_runtime_activation(activation: dict[str, Any]) -> None:
 def summarize_runtime_activation(activation: dict[str, Any] | None) -> dict[str, Any]:
     if not isinstance(activation, dict) or not activation:
         return {}
-    summary = {
-        "runtime_target": activation.get("runtime_target", ""),
-        "state": activation.get("state", ""),
-        "intent": activation.get("intent", ""),
-        "execution_class": activation.get("execution_class", ""),
-        "activation_root": activation.get("activation_root", ""),
-    }
     drivers = activation.get("route_feedback_drivers", {})
     if isinstance(drivers, dict) and drivers:
-        summary["route_feedback_drivers"] = deepcopy(drivers)
         preview = drivers.get("cohort_preview", {})
         preview_text = preview.get("text", "") if isinstance(preview, dict) else ""
         if preview_text:
-            summary["route_feedback_driver_preview"] = preview_text
-    return summary
+            return {"route_feedback_driver_preview": preview_text}
+    return {}
 
 
 def next_policy_review_path(pack_dir: Path) -> Path:
