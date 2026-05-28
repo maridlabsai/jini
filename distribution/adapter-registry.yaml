@@ -6,6 +6,10 @@ adapters:
     layer: issue-system
     maturity: bridge-execute
     priority: 90
+    publish_semantics:
+      plan_serialization: serialized-idempotent
+      bridge_execution: replay-safe
+      receipt_contract: portable-json
     capabilities:
       - issues-export
       - issues-publish-plan
@@ -17,6 +21,10 @@ adapters:
     layer: issue-system
     maturity: local-apply
     priority: 60
+    publish_semantics:
+      plan_serialization: serialized-idempotent
+      local_apply: deterministic-reapply
+      receipt_contract: portable-json
     capabilities:
       - issues-export
       - issues-publish-plan
@@ -28,6 +36,10 @@ adapters:
     layer: wiki-system
     maturity: bridge-execute
     priority: 90
+    publish_semantics:
+      plan_serialization: serialized-idempotent
+      bridge_execution: replay-safe
+      receipt_contract: portable-json
     capabilities:
       - wiki-export
       - wiki-publish-plan
@@ -39,6 +51,10 @@ adapters:
     layer: wiki-system
     maturity: local-apply
     priority: 70
+    publish_semantics:
+      plan_serialization: serialized-idempotent
+      local_apply: deterministic-reapply
+      receipt_contract: portable-json
     capabilities:
       - wiki-export
       - wiki-fallback

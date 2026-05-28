@@ -1468,11 +1468,44 @@ class JiniCliConformanceTests(unittest.TestCase):
 
         receipt = json.loads(result.stdout)
         self.assertEqual("applied-local", receipt["status"])
+        self.assertEqual("deterministic-reapply", receipt["replay_contract"]["mode"])
+        self.assertTrue(receipt["replay_contract"]["stable_output_names"])
+        self.assertTrue(receipt["replay_contract"]["identity_keys"])
         self.assertTrue(Path(receipt["receipt_path"]).exists())
         self.assertTrue(receipt["applied_paths"])
         first_issue = Path(receipt["applied_paths"][0])
         self.assertTrue(first_issue.exists())
         self.assertIn("## Description", first_issue.read_text(encoding="utf-8"))
+
+    def test_publish_issues_github_reapply_is_stable(self) -> None:
+        pack_dir = self.compile_research_pack()
+
+        self.assert_ok(self.run_cli("publish-issues", pack_dir, "--adapter", "github"))
+        first = self.run_cli(
+            "apply-publish-plan",
+            pack_dir / "exports" / "publish" / "issues" / "github",
+            "--format",
+            "json",
+        )
+        second = self.run_cli(
+            "apply-publish-plan",
+            pack_dir / "exports" / "publish" / "issues" / "github",
+            "--format",
+            "json",
+        )
+        self.assert_ok(first)
+        self.assert_ok(second)
+
+        first_receipt = json.loads(first.stdout)
+        second_receipt = json.loads(second.stdout)
+        self.assertEqual(first_receipt["applied_paths"], second_receipt["applied_paths"])
+        self.assertEqual(first_receipt["replay_contract"], second_receipt["replay_contract"])
+        first_issue = Path(first_receipt["applied_paths"][0])
+        second_issue = Path(second_receipt["applied_paths"][0])
+        self.assertEqual(
+            first_issue.read_text(encoding="utf-8"),
+            second_issue.read_text(encoding="utf-8"),
+        )
 
     def test_publish_issues_github_can_apply_locally_in_one_command(self) -> None:
         pack_dir = self.compile_research_pack()
@@ -1512,11 +1545,15 @@ class JiniCliConformanceTests(unittest.TestCase):
         receipt = json.loads(result.stdout)
         self.assertEqual("executed", receipt["status"])
         self.assertEqual("jira", receipt["adapter"])
+        self.assertEqual("replay-safe", receipt["replay_contract"]["mode"])
+        self.assertTrue(receipt["replay_contract"]["serialized_execution"])
+        self.assertTrue(receipt["replay_contract"]["identity_keys"])
         self.assertTrue(Path(receipt["receipt_path"]).exists())
         self.assertTrue(Path(receipt["result_path"]).exists())
         bundle = self.read_json(Path(receipt["result_path"]))
         self.assertEqual(3, len(bundle["records"]))
         self.assertEqual("issue", bundle["records"][0]["target_kind"])
+        self.assertEqual(receipt["replay_contract"], bundle["replay_contract"])
 
         capture = self.run_cli(
             "capture-publication",
@@ -1554,6 +1591,39 @@ class JiniCliConformanceTests(unittest.TestCase):
         bundle = self.read_json(Path(receipt["result_path"]))
         self.assertEqual(3, len(bundle["records"]))
         self.assertEqual("wiki-page", bundle["records"][0]["target_kind"])
+
+    def test_execute_publish_plan_replay_is_stable(self) -> None:
+        pack_dir = self.compile_research_pack()
+        runner = self.create_publish_bridge_runner()
+        self.assert_ok(self.run_cli("publish-wiki", pack_dir, "--adapter", "confluence"))
+
+        first = self.run_cli(
+            "execute-publish-plan",
+            pack_dir / "exports" / "publish" / "wiki" / "confluence",
+            "--runner",
+            runner,
+            "--format",
+            "json",
+        )
+        second = self.run_cli(
+            "execute-publish-plan",
+            pack_dir / "exports" / "publish" / "wiki" / "confluence",
+            "--runner",
+            runner,
+            "--format",
+            "json",
+        )
+        self.assert_ok(first)
+        self.assert_ok(second)
+
+        first_receipt = json.loads(first.stdout)
+        second_receipt = json.loads(second.stdout)
+        self.assertEqual(first_receipt["replay_contract"], second_receipt["replay_contract"])
+        self.assertEqual("replay-safe", first_receipt["replay_contract"]["mode"])
+        stable_fields = ("source_ref", "external_id", "external_url", "publication_status", "target_kind")
+        first_projection = [{key: record[key] for key in stable_fields} for record in first_receipt["records"]]
+        second_projection = [{key: record[key] for key in stable_fields} for record in second_receipt["records"]]
+        self.assertEqual(first_projection, second_projection)
 
     def test_publish_wiki_markdown_can_be_applied_locally(self) -> None:
         pack_dir = self.compile_research_pack()
@@ -1922,6 +1992,15 @@ class JiniCliConformanceTests(unittest.TestCase):
         summary = json.loads(result.stdout)
         self.assertEqual("ok", summary["status"])
         self.assertTrue(any(item["id"] == "codex" for item in summary["checks"]))
+        github = next(item for item in summary["checks"] if item["id"] == "github")
+        jira = next(item for item in summary["checks"] if item["id"] == "jira")
+        markdown = next(item for item in summary["checks"] if item["id"] == "markdown")
+        confluence = next(item for item in summary["checks"] if item["id"] == "confluence")
+        self.assertEqual("deterministic-reapply", github["publish_semantics"]["local_apply"])
+        self.assertEqual("portable-json", github["publish_semantics"]["receipt_contract"])
+        self.assertEqual("replay-safe", jira["publish_semantics"]["bridge_execution"])
+        self.assertEqual("replay-safe", confluence["publish_semantics"]["bridge_execution"])
+        self.assertEqual("deterministic-reapply", markdown["publish_semantics"]["local_apply"])
         self.assertTrue(all(item["status"] == "ok" for item in summary["checks"]))
 
     def test_resolve_adapter_prefers_jira_and_lists_fallbacks(self) -> None:

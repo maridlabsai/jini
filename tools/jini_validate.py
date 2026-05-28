@@ -9229,6 +9229,7 @@ def build_adapter_conformance_summary() -> dict[str, Any]:
         adapter_id = str(adapter.get("id", "")).strip()
         layer = str(adapter.get("layer", "")).strip()
         capabilities = list(adapter.get("capabilities", []))
+        semantics = adapter.get("publish_semantics", {})
         passed = True
         notes: list[str] = []
 
@@ -9258,12 +9259,25 @@ def build_adapter_conformance_summary() -> dict[str, Any]:
             if "issues-export" not in capabilities:
                 passed = False
                 notes.append("Issue-system adapter is missing issues-export capability")
+            if not isinstance(semantics, dict):
+                passed = False
+                notes.append("Issue-system adapter must declare publish_semantics")
+                semantics = {}
+            if semantics.get("plan_serialization") != "serialized-idempotent":
+                passed = False
+                notes.append("Issue-system adapter must declare serialized-idempotent publish plans")
+            if semantics.get("receipt_contract") != "portable-json":
+                passed = False
+                notes.append("Issue-system adapter must emit portable-json publish receipts")
             if adapter_id == "jira" and "issues-publish-plan" not in capabilities:
                 passed = False
                 notes.append("Jira adapter should expose issues-publish-plan")
             if adapter_id == "jira" and "issues-execute-bridge" not in capabilities:
                 passed = False
                 notes.append("Jira adapter should expose issues-execute-bridge")
+            if adapter_id == "jira" and semantics.get("bridge_execution") != "replay-safe":
+                passed = False
+                notes.append("Jira adapter should declare replay-safe bridge execution")
             if adapter_id == "github":
                 if "issues-publish-plan" not in capabilities:
                     passed = False
@@ -9271,6 +9285,9 @@ def build_adapter_conformance_summary() -> dict[str, Any]:
                 if "issues-apply-local" not in capabilities:
                     passed = False
                     notes.append("GitHub adapter should expose issues-apply-local")
+                if semantics.get("local_apply") != "deterministic-reapply":
+                    passed = False
+                    notes.append("GitHub adapter should declare deterministic-reapply local apply")
         elif layer == "wiki-system":
             if adapter_id not in {"confluence", "markdown"}:
                 passed = False
@@ -9278,9 +9295,22 @@ def build_adapter_conformance_summary() -> dict[str, Any]:
             if "wiki-export" not in capabilities:
                 passed = False
                 notes.append("Wiki-system adapter is missing wiki-export capability")
+            if not isinstance(semantics, dict):
+                passed = False
+                notes.append("Wiki-system adapter must declare publish_semantics")
+                semantics = {}
+            if semantics.get("plan_serialization") != "serialized-idempotent":
+                passed = False
+                notes.append("Wiki-system adapter must declare serialized-idempotent publish plans")
+            if semantics.get("receipt_contract") != "portable-json":
+                passed = False
+                notes.append("Wiki-system adapter must emit portable-json publish receipts")
             if adapter_id == "confluence" and "wiki-execute-bridge" not in capabilities:
                 passed = False
                 notes.append("Confluence adapter should expose wiki-execute-bridge")
+            if adapter_id == "confluence" and semantics.get("bridge_execution") != "replay-safe":
+                passed = False
+                notes.append("Confluence adapter should declare replay-safe bridge execution")
             if adapter_id == "markdown":
                 if "wiki-publish-plan" not in capabilities:
                     passed = False
@@ -9288,6 +9318,9 @@ def build_adapter_conformance_summary() -> dict[str, Any]:
                 if "wiki-apply-local" not in capabilities:
                     passed = False
                     notes.append("Markdown adapter should expose wiki-apply-local")
+                if semantics.get("local_apply") != "deterministic-reapply":
+                    passed = False
+                    notes.append("Markdown adapter should declare deterministic-reapply local apply")
 
         checks.append(
             {
@@ -9296,6 +9329,7 @@ def build_adapter_conformance_summary() -> dict[str, Any]:
                 "maturity": adapter.get("maturity", ""),
                 "status": "ok" if passed else "missing",
                 "capabilities": capabilities,
+                "publish_semantics": semantics,
                 "notes": notes,
             }
         )
@@ -12443,6 +12477,7 @@ def apply_publish_plan(
     applied_root = output_dir.expanduser() if output_dir is not None else plan_dir / "applied"
     applied_root.mkdir(parents=True, exist_ok=True)
     applied_paths: list[str] = []
+    replay_identity: list[str] = []
     status = "staged-external"
     notes: list[str] = []
 
@@ -12458,6 +12493,7 @@ def apply_publish_plan(
             destination = issues_dir / filename
             destination.write_text(render_local_issue_markdown(payload), encoding="utf-8")
             applied_paths.append(str(destination))
+            replay_identity.append(str(payload.get("idempotency_key", "")).strip())
         status = "applied-local"
         notes.append("Applied GitHub-flavored issue plan to a local markdown issue ledger.")
     elif publish_type == "JiniWikiPublishPlan" and execution_mode in {"markdown-fallback", "local-apply"}:
@@ -12472,6 +12508,7 @@ def apply_publish_plan(
             destination = pages_dir / filename
             destination.write_text(render_local_wiki_markdown(payload), encoding="utf-8")
             applied_paths.append(str(destination))
+            replay_identity.append(str(payload.get("idempotency_key", "")).strip())
         status = "applied-local"
         notes.append("Applied wiki publish plan to a local markdown page set.")
     else:
@@ -12490,6 +12527,12 @@ def apply_publish_plan(
         "plan_path": display_path(plan_path),
         "output_root": str(applied_root),
         "applied_paths": applied_paths,
+        "replay_contract": {
+            "mode": "deterministic-reapply" if status == "applied-local" else "staged-only",
+            "portable_receipt": True,
+            "stable_output_names": status == "applied-local",
+            "identity_keys": [key for key in replay_identity if key],
+        },
         "notes": notes,
     }
     receipt_path = next_publish_apply_receipt_path(plan_dir, adapter or "publish")
@@ -12583,6 +12626,7 @@ def execute_publish_plan(
     records: list[dict[str, Any]] = []
     failures: list[dict[str, Any]] = []
     notes: list[str] = []
+    replay_identity: list[str] = []
 
     for item in items:
         if not isinstance(item, dict):
@@ -12683,6 +12727,7 @@ def execute_publish_plan(
             "notes": [str(note) for note in item_notes],
         }
         records.append(record)
+        replay_identity.append(str(item.get("idempotency_key", "")).strip())
 
     status = "executed" if not failures else "failed"
     if status == "executed":
@@ -12701,6 +12746,12 @@ def execute_publish_plan(
         "runner": display_path(runner_path),
         "records": records,
         "failures": failures,
+        "replay_contract": {
+            "mode": "replay-safe" if not failures else "partial-failure",
+            "portable_result": True,
+            "serialized_execution": True,
+            "identity_keys": [key for key in replay_identity if key],
+        },
     }
     result_path = next_publish_execution_bundle_path(executed_root, adapter)
     result_path.write_text(json.dumps(result_bundle, indent=2) + "\n", encoding="utf-8")
@@ -12719,6 +12770,7 @@ def execute_publish_plan(
         "result_path": display_path(result_path),
         "records": records,
         "failures": failures,
+        "replay_contract": result_bundle["replay_contract"],
         "notes": notes,
     }
     receipt_path = next_publish_execution_receipt_path(executed_root, adapter)
