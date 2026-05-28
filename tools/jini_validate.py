@@ -13284,18 +13284,11 @@ def build_compact_context_from_projection(
                 f"Focused artifact: `{focused_artifact_label}` via `jini show {focused_artifact_id}`."
             )
     resume_items.append(
-        f"Session anchor: `{context.get('state', '')}` with next operation `{projection.get('next', '')}`."
+        f"State anchor: `{context.get('state', '')}` with next `{projection.get('next', '')}`."
     )
-    if ready:
-        resume_items.append(
-            "Ready artifacts: " + ", ".join(str(item.get("id", "")).strip() for item in ready[:4] if str(item.get("id", "")).strip())
-        )
-    if missing:
-        resume_items.append("Missing now: " + ", ".join(str(item).strip() for item in missing[:4] if str(item).strip()))
     route_reason = str(projection.get("route", {}).get("reason", "")).strip()
     if route_reason:
         resume_items.append(f"Route evidence: {route_reason}")
-    resume_items.append("Pack files are unavailable, so this saved context slice is using the session projection.")
 
     compact = {
         "schema_version": "0.1.0",
