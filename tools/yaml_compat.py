@@ -158,7 +158,14 @@ def _parse_nested_block(lines: list[str], start: int, parent_indent: int) -> tup
 
 
 def _looks_like_mapping_entry(text: str) -> bool:
-    key, separator, raw_value = text.partition(":")
+    candidate = _strip_comment(text.strip())
+    if len(candidate) >= 2 and candidate[0] in {'"', "'"} and candidate[-1] == candidate[0]:
+        try:
+            if isinstance(ast.literal_eval(candidate), str):
+                return False
+        except (SyntaxError, ValueError):
+            pass
+    key, separator, raw_value = candidate.partition(":")
     if not separator or not key.strip():
         return False
     return raw_value == "" or raw_value.startswith(" ")

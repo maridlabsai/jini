@@ -90,6 +90,11 @@ class InstallScriptTests(unittest.TestCase):
         if result.returncode == 0:
             self.fail(f"Expected installer to fail.\nSTDOUT:\n{result.stdout}")
 
+    def assert_any_marker(self, text: str, markers: tuple[str, ...], *, context: str) -> None:
+        if any(marker in text for marker in markers):
+            return
+        self.fail(f"Expected {context} to include one of {markers!r}.\nSTDOUT:\n{text}")
+
     def run_installed_jini(
         self,
         binary_path: Path,
@@ -108,15 +113,25 @@ class InstallScriptTests(unittest.TestCase):
             env=run_env,
         )
 
-    def write_current_work(self, state_dir: Path, pack_dir: Path) -> None:
+    def write_current_work(
+        self,
+        state_dir: Path,
+        pack_dir: Path,
+        *,
+        pack_id: str = "research-prd",
+        work_unit_id: str = "research-prd-v1",
+        title: str = "Research PRD Example",
+        state: str = "awaiting_verification",
+        health: str = "ready-to-verify",
+    ) -> None:
         state_dir.mkdir(parents=True, exist_ok=True)
         payload = {
             "pack_dir": str(pack_dir),
-            "pack_id": "research-prd",
-            "work_unit_id": "research-prd-v1",
-            "title": "Research PRD Example",
-            "state": "awaiting_verification",
-            "health": "ready-to-verify",
+            "pack_id": pack_id,
+            "work_unit_id": work_unit_id,
+            "title": title,
+            "state": state,
+            "health": health,
         }
         (state_dir / "current-work.json").write_text(json.dumps(payload), encoding="utf-8")
 
@@ -185,6 +200,155 @@ class InstallScriptTests(unittest.TestCase):
                     result.stderr,
                     msg=f"Installed artifact rejected {' '.join(args)}.\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}",
                 )
+
+    def create_meeting_pack_fixture(self) -> Path:
+        output = self.tmp / "installed-meeting-pack"
+        state_dir = self.tmp / ".jini-meeting-fixture"
+        env = dict(os.environ)
+        env["JINI_STATE_DIR"] = str(state_dir)
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(REPO_ROOT / "tools" / "jini.py"),
+                "compile-pack",
+                "meeting-followup",
+                "--work-unit-id",
+                "sample-meeting",
+                "--title",
+                "Sample Meeting Pack",
+                "--purpose",
+                "Exercise meeting flow",
+                "--owner",
+                "meeting-owner",
+                "--approver",
+                "team-lead",
+                "--output",
+                str(output),
+            ],
+            cwd=str(REPO_ROOT),
+            text=True,
+            capture_output=True,
+            env=env,
+        )
+        self.assertEqual(0, result.returncode, msg=f"STDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}")
+        return output
+
+    def assert_installed_flagship_example_flows(
+        self,
+        binary_path: Path,
+        *,
+        env: Optional[dict[str, str]] = None,
+        use_pathless_status: bool,
+    ) -> None:
+        state_dir = self.tmp / ".jini-installed-flagship-state"
+        command_env = {"JINI_PROVIDER": "local-preview", "JINI_STATE_DIR": str(state_dir)}
+        if env:
+            command_env.update(env)
+
+        meeting_output = self.create_meeting_pack_fixture()
+        if use_pathless_status:
+            self.write_current_work(
+                state_dir,
+                meeting_output,
+                pack_id="meeting-followup",
+                work_unit_id="sample-meeting",
+                title="Sample Meeting Pack",
+                state="decided",
+                health="ready-to-make",
+            )
+            meeting_status = self.run_installed_jini(binary_path, "status", env=command_env)
+        else:
+            meeting_status = self.run_installed_jini(binary_path, "status", str(meeting_output), env=command_env)
+        self.assertEqual(0, meeting_status.returncode, msg=f"STDOUT:\n{meeting_status.stdout}\nSTDERR:\n{meeting_status.stderr}")
+        self.assert_any_marker(
+            meeting_status.stdout,
+            ("WORK   sample-meeting", "Weekly Product Review Follow-up", "Sample Meeting Pack"),
+            context="meeting status title surface",
+        )
+        self.assert_any_marker(
+            meeting_status.stdout,
+            ("READY NOW", "Ready now"),
+            context="meeting status ready-now surface",
+        )
+        self.assert_any_marker(
+            meeting_status.stdout,
+            ("followup", "Sendable Follow-up"),
+            context="meeting status primary artifact",
+        )
+        self.assert_any_marker(
+            meeting_status.stdout,
+            ("tasks", "Owners and Due Points"),
+            context="meeting status supporting artifact",
+        )
+        self.assert_any_marker(
+            meeting_status.stdout,
+            ("- Approval", "- Evidence", "legal-review decision", "Nothing has been sent yet"),
+            context="meeting status blocked or trust surface",
+        )
+
+        meeting_open = self.run_installed_jini(
+            binary_path,
+            "open",
+            "followup",
+            "--from",
+            str(meeting_output),
+            "--print-path",
+            env=command_env,
+        )
+        self.assertEqual(0, meeting_open.returncode, msg=f"STDOUT:\n{meeting_open.stdout}\nSTDERR:\n{meeting_open.stderr}")
+        self.assert_any_marker(
+            meeting_open.stdout,
+            (str((meeting_output / "views" / "followup.md").resolve()), "# Sendable Follow-Up: Sample Meeting Pack"),
+            context="meeting open surface",
+        )
+
+        if use_pathless_status:
+            self.write_current_work(state_dir, RESEARCH_EXAMPLE)
+            research_status = self.run_installed_jini(binary_path, "status", env=command_env)
+        else:
+            research_status = self.run_installed_jini(binary_path, "status", str(RESEARCH_EXAMPLE), env=command_env)
+        self.assertEqual(0, research_status.returncode, msg=f"STDOUT:\n{research_status.stdout}\nSTDERR:\n{research_status.stderr}")
+        self.assert_any_marker(
+            research_status.stdout,
+            ("WORK   research-prd-v1", "WORK   example-research-prd", "Jini Research To PRD"),
+            context="research status title surface",
+        )
+        self.assert_any_marker(
+            research_status.stdout,
+            ("READY NOW", "Ready now"),
+            context="research status ready-now surface",
+        )
+        self.assert_any_marker(
+            research_status.stdout,
+            ("prd", "Build-Readiness Check"),
+            context="research status primary artifact",
+        )
+        self.assert_any_marker(
+            research_status.stdout,
+            ("tasks", "Missing Pieces Before Build"),
+            context="research status supporting artifact",
+        )
+        self.assert_any_marker(
+            research_status.stdout,
+            ("- Approval", "Approval"),
+            context="research status blocked surface",
+        )
+
+        research_open = self.run_installed_jini(
+            binary_path,
+            "open",
+            "prd",
+            "--from",
+            str(RESEARCH_EXAMPLE),
+            "--print-path",
+            env=command_env,
+        )
+        self.assertEqual(0, research_open.returncode, msg=f"STDOUT:\n{research_open.stdout}\nSTDERR:\n{research_open.stderr}")
+        self.assert_any_marker(
+            research_open.stdout,
+            (str((RESEARCH_EXAMPLE / "views" / "prd.md").resolve()), "# Build-Readiness Check", "# PRD: Jini Research To PRD"),
+            context="research open surface",
+        )
 
     def create_remote_snapshot(self) -> Path:
         snapshot = self.tmp / "snapshot-repo"
@@ -286,6 +450,38 @@ class InstallScriptTests(unittest.TestCase):
         )
         self.assert_ok(result)
         self.assert_python_public_command_contract(bin_dir / "jini")
+
+    def test_local_go_install_supports_flagship_example_flows(self) -> None:
+        bin_dir = self.tmp / "go-flow-bin"
+        install_dir = self.tmp / "go-flow-share" / "jini"
+        result = self.run_installer(
+            "--source-dir",
+            str(REPO_ROOT),
+            "--bin-dir",
+            str(bin_dir),
+            "--install-dir",
+            str(install_dir),
+            "--force",
+            env=self.go_ready_env(),
+        )
+        self.assert_ok(result)
+        self.assert_installed_flagship_example_flows(bin_dir / "jini", use_pathless_status=True)
+
+    def test_python_fallback_install_supports_flagship_example_flows(self) -> None:
+        bin_dir = self.tmp / "python-flow-bin"
+        install_dir = self.tmp / "python-flow-share" / "jini"
+        result = self.run_installer(
+            "--source-dir",
+            str(REPO_ROOT),
+            "--bin-dir",
+            str(bin_dir),
+            "--install-dir",
+            str(install_dir),
+            "--force",
+            env={"PATH": "/usr/bin:/bin"},
+        )
+        self.assert_ok(result)
+        self.assert_installed_flagship_example_flows(bin_dir / "jini", use_pathless_status=False)
 
     def test_cli_guide_taught_support_commands_match_installed_smoke_surface(self) -> None:
         text = CLI_DOC.read_text(encoding="utf-8")

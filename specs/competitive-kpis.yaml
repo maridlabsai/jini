@@ -54,8 +54,8 @@ dimensions:
     conversion_strategy: Preserve governance, but compress operator friction through repo-aware orchestration, workspace steering, compact repo maps, target-ready handoff bundles, guided execution flows, hook-style post-step automation, and benchmark-ready defaults.
     kpi: The benchmark pack can be driven from idea to verification with fewer than five manual control decisions.
     next_build_steps:
-      - Make the public command contract executable and stable: either support the taught aliases or stop teaching them until the install artifact honors them.
-      - Lock two flagship replacement flows so they are visibly better than raw model shells: meeting notes to follow-up, and plan or PRD to readiness check.
+      - "Make the public command contract executable and stable: either support the taught aliases or stop teaching them until the install artifact honors them."
+      - "Lock two flagship replacement flows so they are visibly better than raw model shells: meeting notes to follow-up, and plan or PRD to readiness check."
       - Extend `execute-flow` with stronger benchmark defaults so fewer flags are needed for common repo families.
       - Extend steering-aware startup, resume, runtime activation, local publish apply, and memory capture across more commands by default.
       - Turn repo-aware detection into stronger default flows for more repo families, especially Python app/server, Rust, Go, and CI-first repos.

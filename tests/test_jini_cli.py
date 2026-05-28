@@ -1034,6 +1034,14 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue((pack_dir / "exports" / "wiki" / "markdown" / "pages.json").exists())
         self.assertTrue((pack_dir / "exports" / "wiki" / "confluence" / "pages.json").exists())
 
+    def test_compile_meeting_pack_materializes_followup_and_task_surfaces(self) -> None:
+        pack_dir = self.compile_meeting_pack()
+
+        self.assertTrue((pack_dir / "views" / "followup.md").exists())
+        self.assertTrue((pack_dir / "views" / "tasks.md").exists())
+        self.assertTrue((pack_dir / "artifacts" / "06-tasks.yaml").exists())
+        self.assertTrue((pack_dir / "exports" / "tasks-sync.json").exists())
+
     def test_compile_travel_pack_materializes_itinerary_and_exports(self) -> None:
         pack_dir = self.compile_travel_pack()
 
@@ -2110,7 +2118,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(result)
 
         summary = json.loads(result.stdout)
-        self.assertEqual("2026-05-14", summary["updated_at"])
+        self.assertEqual("2026-05-27", summary["updated_at"])
         self.assertEqual(3, len(summary["dimensions"]))
         self.assertEqual("workflow-rigor", summary["dimensions"][0]["id"])
         self.assertEqual("Kiro", summary["dimensions"][0]["strongest_competitor"]["name"])
@@ -2127,15 +2135,29 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertGreaterEqual(report["kit_count"], 6)
         self.assertTrue(any(section["id"] == "install" and section["status"] == "ok" for section in report["sections"]))
         novice = next(section for section in report["sections"] if section["id"] == "novice")
-        self.assertEqual("ok", novice["status"])
+        self.assertEqual("warning", novice["status"])
         self.assertTrue(any(item.get("id") == "beginner-command-count" and item["command_count"] <= 4 for item in novice["checks"]))
         self.assertTrue(any(item.get("id") == "beginner-command-prefix" and item["all_jini_commands"] for item in novice["checks"]))
         self.assertTrue(any(item.get("id") == "beginner-single-shell-command" and item["present"] for item in novice["checks"]))
         self.assertTrue(any(item.get("id") == "cli-guide-no-python-requirement" and item["present"] for item in novice["checks"]))
         self.assertTrue(any(item.get("id") == "readme-plain-words-entry" and item["present"] for item in novice["checks"]))
-        self.assertTrue(any(item.get("id") == "homepage-plain-words-entry" and item["present"] for item in novice["checks"]))
         self.assertTrue(any(item.get("id") == "simple-guide-exists" and item["present"] for item in novice["checks"]))
-        self.assertTrue(any(item.get("id") == "simple-guide-core-questions" and item["present"] for item in novice["checks"]))
+        self.assertTrue(
+            any(
+                item.get("id") == "homepage-plain-words-entry"
+                and not item["present"]
+                and item["status"] == "warning"
+                for item in novice["checks"]
+            )
+        )
+        self.assertTrue(
+            any(
+                item.get("id") == "simple-guide-core-questions"
+                and not item["present"]
+                and item["status"] == "warning"
+                for item in novice["checks"]
+            )
+        )
         self.assertTrue(any(section["id"] == "breadth" and section["status"] == "ok" for section in report["sections"]))
         leadership = next(section for section in report["sections"] if section["id"] == "leadership")
         self.assertEqual("ok", leadership["status"])
@@ -2423,6 +2445,22 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("# Sendable Follow-Up:", followup)
         self.assertIn("## Send this", followup)
         self.assertIn("## Owners and due points", followup)
+
+    def test_meeting_example_sets_current_work_for_pathless_status_and_open(self) -> None:
+        output = self.tmp / "example-meeting-followup"
+        result = self.run_cli("try-example", "meeting-followup", "--output", output, "--format", "json")
+        self.assert_ok(result)
+        followup = (output / "views" / "followup.md").read_text(encoding="utf-8")
+
+        status = self.run_cli("status")
+        self.assert_ok(status)
+        self.assertIn("WORK   example-meeting-followup", status.stdout)
+        self.assertIn("READY NOW", status.stdout)
+        self.assertIn("followup", status.stdout)
+
+        open_result = self.run_cli("open", "followup", "--print-path")
+        self.assert_ok(open_result)
+        self.assertIn(str((output / "views" / "followup.md").resolve()), open_result.stdout.strip())
         self.assertIn("Pricing draft moves to Sarah by Thursday", followup)
         self.assertIn("Priya: confirm the launch metric decision by Friday", followup)
 

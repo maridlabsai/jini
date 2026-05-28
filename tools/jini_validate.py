@@ -820,7 +820,9 @@ def print_competitive_kpi_summary(summary: dict[str, Any]) -> None:
             print(f"KPI    {item['kpi']}")
             print("NEXT")
             for step in item.get("next_build_steps", []):
-                print(f"  - {step}")
+                normalized_step = normalize_framework_step(step)
+                if normalized_step:
+                    print(f"  - {normalized_step}")
             print("DONE")
             for criterion in item.get("exit_criteria", []):
                 print(f"  - {criterion}")
@@ -835,7 +837,7 @@ def print_competitive_kpi_summary(summary: dict[str, Any]) -> None:
             f"({float(strongest['score']):.1f}) | gap {item['gap_to_target']:.1f}"
         )
         print(f"    weak: {item['weakness']}")
-        next_steps = item.get("next_build_steps", [])
+        next_steps = normalize_framework_steps(item.get("next_build_steps", []))
         if next_steps:
             print(f"    next: {next_steps[0]}")
 
@@ -1724,12 +1726,43 @@ def build_framework_cleanup_experiment(entry: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def normalize_framework_step(step: Any) -> str:
+    if isinstance(step, str):
+        return step.strip()
+    if isinstance(step, dict):
+        parts: list[str] = []
+        for key, value in step.items():
+            key_text = str(key).strip()
+            if isinstance(value, (list, tuple)):
+                value_text = ", ".join(str(item).strip() for item in value if str(item).strip())
+            else:
+                value_text = str(value).strip()
+            if key_text and value_text:
+                parts.append(f"{key_text}: {value_text}")
+            elif key_text:
+                parts.append(key_text)
+            elif value_text:
+                parts.append(value_text)
+        return "; ".join(part for part in parts if part)
+    if step is None:
+        return ""
+    return str(step).strip()
+
+
+def normalize_framework_steps(steps: Any) -> list[str]:
+    if not isinstance(steps, list):
+        return []
+    normalized = [normalize_framework_step(step) for step in steps]
+    return [step for step in normalized if step]
+
+
 def build_framework_experiment_candidates(entry: dict[str, Any]) -> list[dict[str, Any]]:
     weight = float(entry.get("adoption_weight", framework_adoption_weights().get(entry["id"], 1.0)))
     reward_signals = framework_reward_signals(str(entry["id"]))
     gap = float(entry.get("gap_to_target", 0.0))
+    next_steps = normalize_framework_steps(entry.get("next_build_steps", []))
     experiments: list[dict[str, Any]] = [build_framework_cleanup_experiment(entry)]
-    for index, step in enumerate(entry.get("next_build_steps", [])[:3], start=2):
+    for index, step in enumerate(next_steps[:3], start=2):
         expected_delta = round(min(gap, max(0.1, 0.4 - ((index - 1) * 0.1))), 1)
         experiments.append(
             {
@@ -1740,7 +1773,7 @@ def build_framework_experiment_candidates(entry: dict[str, Any]) -> list[dict[st
                     f"If Jini {step[0].lower() + step[1:]}, then {entry['label'].lower()} should improve "
                     f"because {framework_user_value_reason(str(entry['id'])).lower()}"
                 ),
-                "build_steps": [step, *entry.get("next_build_steps", [])[index:index + 2]],
+                "build_steps": [step, *next_steps[index:index + 2]],
                 "expected_score_delta": expected_delta,
                 "success_signals": reward_signals[:3],
                 "reward_model": {
