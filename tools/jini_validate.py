@@ -8192,7 +8192,7 @@ def build_compact_context(
     return compact
 
 
-def print_compact_context(compact: dict[str, Any]) -> None:
+def print_compact_context(compact: dict[str, Any], *, heading: str = "RESUME") -> None:
     print(f"PACK   {compact['pack_id']}")
     print(f"WORK   {compact['work_unit_id']}")
     print(f"STATE  {compact['state']}")
@@ -8205,7 +8205,7 @@ def print_compact_context(compact: dict[str, Any]) -> None:
             f"TOKENS est={token_budget.get('estimated_tokens', 0)} "
             f"chars={token_budget.get('estimated_chars', 0)} trimmed={token_budget.get('trimmed', False)}"
         )
-    print("RESUME")
+    print(heading)
     for item in compact.get("resume_items", []):
         print(f"  - {item}")
     if compact.get("home_memory"):
@@ -12975,11 +12975,7 @@ def build_outcome_view_from_projection(
         )
 
     next_operation = str(projection.get("next", "")).strip() or "inspect-session"
-    resume_command = f"{cli_invocation()} resume"
-    if repo_path is not None:
-        repo_display = display_path(repo_path)
-        resume_command = f"{resume_command} --repo {repo_display}"
-    resume_command = f"{resume_command} --intent {next_operation.lower()} --max-chars 700"
+    continue_command = f"{cli_invocation()} continue"
 
     task_done = len(ready_now)
     continuation_saved_work = bool(projection.get("cost_posture", {}).get("continuation_saved_work"))
@@ -13006,7 +13002,7 @@ def build_outcome_view_from_projection(
             "what_is_still_missing_later": [],
         },
         "ready_now": ready_now,
-        "continue_with": [resume_command],
+        "continue_with": [continue_command],
         "validation_errors": [],
         "validation_warnings": [
             "Pack files are unavailable, so this status view is coming from the saved session projection."
@@ -13020,6 +13016,7 @@ def build_compact_context_from_projection(
     intent: str | None = None,
     repo_path: Path | None = None,
     max_chars: int = 1200,
+    execution_class: str = "projection-resume",
 ) -> dict[str, Any]:
     projection = context.get("projection", {}) or {}
     chosen_intent = (intent or projection.get("next") or "resume-session").strip().lower()
@@ -13037,7 +13034,7 @@ def build_compact_context_from_projection(
     route_reason = str(projection.get("route", {}).get("reason", "")).strip()
     if route_reason:
         resume_items.append(f"Route evidence: {route_reason}")
-    resume_items.append("Pack files are unavailable, so this resume is using the saved session projection.")
+    resume_items.append("Pack files are unavailable, so this saved context slice is using the session projection.")
 
     compact = {
         "schema_version": "0.1.0",
@@ -13048,7 +13045,7 @@ def build_compact_context_from_projection(
         "intent": chosen_intent,
         "state": str(context.get("state", "")),
         "health": "session-only",
-        "execution_class": "projection-resume",
+        "execution_class": execution_class,
         "next_operation": str(projection.get("next", "")),
         "recent_artifacts": [
             {
@@ -17891,8 +17888,17 @@ def main() -> int:
                 if context is not None:
                     remembered_pack = Path(str(context.get("pack_dir", ""))).expanduser()
                     if remembered_pack and not remembered_pack.exists():
-                        print("ERROR Current pack files are unavailable. Run `jini resume` to recover the saved context slice.")
-                        return 1
+                        if args.print_path:
+                            print("ERROR Current pack files are unavailable, so there is no artifact path to print. Run `jini continue` without `--print-path` to reopen the saved context slice.")
+                            return 1
+                        compact = build_compact_context_from_projection(
+                            context,
+                            intent="continue-session",
+                            max_chars=700,
+                            execution_class="projection-continue",
+                        )
+                        print_compact_context(compact, heading="CONTINUE")
+                        return 0
             failing_path = args.path if args.path is not None else Path("<current-work>")
             print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
             return 1
