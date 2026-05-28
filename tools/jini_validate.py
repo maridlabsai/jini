@@ -6556,12 +6556,21 @@ def remember_current_work(pack_dir: Path, registry: dict[str, Any], *, source: s
     summary = summarise_pack(resolved, registry)
     artifact_catalog = build_artifact_catalog(resolved, registry)
     updated_at = now_utc()
+    previous_projection: dict[str, Any] | None = None
+    existing_context = load_current_session_context()
+    if existing_context is not None:
+        existing_pack_dir = Path(str(existing_context.get("pack_dir", ""))).expanduser()
+        if existing_pack_dir and existing_pack_dir.resolve() == resolved:
+            projection_payload = existing_context.get("projection")
+            if isinstance(projection_payload, dict):
+                previous_projection = projection_payload
     projection = build_session_projection(
         session_id=str(summary.get("work_unit", {}).get("work_unit_id", "")),
         pack_dir=resolved,
         summary=summary,
         artifact_catalog=artifact_catalog,
         updated_at=updated_at,
+        previous_projection=previous_projection,
     )
     current_artifact_id = ""
     if projection.get("ready"):
@@ -6797,6 +6806,7 @@ def resolve_projection_artifact_item(
     artifact_name: str | None = None,
     *,
     prefer_continue_surface: bool = False,
+    prefer_saved_focus: bool = False,
 ) -> dict[str, Any] | None:
     projection = context.get("projection", {}) or {}
     ready_now = [item for item in projection.get("ready", []) if isinstance(item, dict)]
@@ -6816,6 +6826,19 @@ def resolve_projection_artifact_item(
             "Unknown artifact "
             f"{artifact_name!r}. Try `jini status` or use one of the saved snapshot artifacts: {available}"
         )
+
+    if prefer_saved_focus:
+        current_focus = projection.get("current_focus", {})
+        if isinstance(current_focus, dict):
+            focus_id = str(current_focus.get("artifact_id", "")).strip()
+            focus_label = str(current_focus.get("artifact_label", "")).strip().lower()
+            for item in ready_now:
+                item_id = str(item.get("id", "")).strip()
+                item_label = str(item.get("label", "")).strip().lower()
+                if focus_id and focus_id == item_id:
+                    return item
+                if focus_label and focus_label == item_label:
+                    return item
 
     if prefer_continue_surface:
         preferred_ids = ("tasks", "next-actions", "decision")
@@ -6853,6 +6876,32 @@ def materialize_projection_artifact_snapshot(context: dict[str, Any], artifact: 
     snapshot_path = snapshot_dir / f"{artifact_id}.md"
     snapshot_path.write_text(render_projection_snapshot_markdown(context, artifact), encoding="utf-8")
     return snapshot_path
+
+
+def persist_projection_focus(pack_dir: Path, artifact: dict[str, Any]) -> None:
+    context = load_current_session_context()
+    if context is None:
+        return
+    context_pack_dir = Path(str(context.get("pack_dir", ""))).expanduser()
+    if not context_pack_dir or context_pack_dir.resolve() != pack_dir.expanduser().resolve():
+        return
+
+    session_id = str(context.get("session_id", "")).strip()
+    if not session_id:
+        return
+
+    store = SessionStore(session_state_root())
+    session = store.load_session(session_id)
+    projection = store.load_projection(session_id)
+    if session is None or not isinstance(projection, dict):
+        return
+
+    projection["current_focus"] = {
+        "kind": "artifact",
+        "artifact_id": str(artifact.get("id", "")).strip(),
+        "artifact_label": str(artifact.get("label", "")).strip(),
+    }
+    store.save(session, projection=projection, source="artifact-focus")
 
 
 def print_projection_artifact_snapshot(
@@ -17994,6 +18043,7 @@ def main() -> int:
         try:
             pack_dir = resolve_context_pack_dir(args.path, registry, command_label="show")
             artifact = resolve_artifact_item(pack_dir, registry, args.artifact)
+            persist_projection_focus(pack_dir, artifact)
             print(Path(str(artifact["resolved_path"])).read_text(encoding="utf-8"))
         except (FileNotFoundError, OSError, TypeError, ValueError) as exc:
             if args.path is None:
@@ -18018,6 +18068,7 @@ def main() -> int:
         try:
             pack_dir = resolve_context_pack_dir(args.path, registry, command_label="open")
             artifact = resolve_artifact_item(pack_dir, registry, args.artifact)
+            persist_projection_focus(pack_dir, artifact)
             artifact_path = Path(str(artifact["resolved_path"]))
             if args.print_path:
                 print(display_path(artifact_path))
@@ -18052,6 +18103,7 @@ def main() -> int:
         try:
             pack_dir = resolve_context_pack_dir(args.path, registry, command_label="continue")
             artifact = resolve_continue_item(pack_dir, registry)
+            persist_projection_focus(pack_dir, artifact)
             artifact_path = Path(str(artifact["resolved_path"]))
             if args.print_path:
                 print(display_path(artifact_path))
@@ -18067,7 +18119,11 @@ def main() -> int:
                 if context is not None:
                     remembered_pack = Path(str(context.get("pack_dir", ""))).expanduser()
                     if remembered_pack and not remembered_pack.exists():
-                        artifact = resolve_projection_artifact_item(context, prefer_continue_surface=True)
+                        artifact = resolve_projection_artifact_item(
+                            context,
+                            prefer_continue_surface=True,
+                            prefer_saved_focus=True,
+                        )
                         if artifact is not None and str(artifact.get("snapshot_markdown", "")).strip():
                             snapshot_path = materialize_projection_artifact_snapshot(context, artifact)
                             if args.print_path:

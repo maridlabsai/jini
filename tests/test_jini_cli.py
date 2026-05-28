@@ -524,6 +524,8 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue(projection_doc["ready"])
         self.assertTrue(projection_doc["ready"][0]["snapshot_markdown"])
         self.assertIn("snapshot_trimmed", projection_doc["ready"][0])
+        self.assertIn("current_focus", projection_doc)
+        self.assertEqual("artifact", projection_doc["current_focus"]["kind"])
 
     def test_show_artifact_uses_current_work_without_path(self) -> None:
         pack_dir = self.compile_travel_pack()
@@ -619,6 +621,25 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(result)
         self.assertIn("Saved artifact snapshot", result.stdout)
         self.assertIn("# Itinerary:", result.stdout)
+
+    def test_pathless_continue_prefers_saved_focus_snapshot_when_pack_is_missing(self) -> None:
+        pack_dir = self.compile_travel_pack()
+
+        focused = self.run_cli("show", "itinerary", "--from", pack_dir)
+        self.assert_ok(focused)
+
+        refresh = self.run_cli("status", pack_dir, "--format", "json")
+        self.assert_ok(refresh)
+
+        shutil.rmtree(pack_dir)
+        current_work = self.tmp / ".jini" / "current-work.json"
+        current_work.unlink()
+
+        result = self.run_cli("continue")
+        self.assert_ok(result)
+        self.assertIn("LABEL  Itinerary", result.stdout)
+        self.assertIn("# Itinerary:", result.stdout)
+        self.assertNotIn("# Tasks:", result.stdout)
 
     def test_status_without_current_work_fails_cleanly(self) -> None:
         result = self.run_cli("status")
