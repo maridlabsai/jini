@@ -1025,6 +1025,75 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(after_events)
         self.assertEqual(1, len(json.loads(after_events.stdout)["events"]))
 
+    def test_status_and_metrics_surface_route_feedback_freshness(self) -> None:
+        pack_dir = self.compile_research_pack()
+        state_root = self.tmp / ".jini"
+        state_root.mkdir(parents=True, exist_ok=True)
+        (state_root / "local-runtime-capabilities.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.4.0",
+                    "context_type": "JiniLocalRuntimeCapabilities",
+                    "captured_at": "2026-05-21T19:00:00Z",
+                    "local_runtime_class": "local-ollama",
+                    "adapters": {
+                        "local-fast": {
+                            "status": "ok",
+                            "latency_ms": 85,
+                            "warm_latency_ms": 70,
+                            "cold_start_cost_ms": 5,
+                            "tokens_per_second": 40.0,
+                            "quality_class": "usable",
+                            "structured_reliability": "usable",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        },
+                    },
+                    "cohort_feedback": {
+                        "local-fast": {
+                            "export": {
+                                "outcome_replaced": 1,
+                                "counter_last_observed_at": {
+                                    "outcome_replaced": "2026-01-01T00:00:00Z"
+                                },
+                            }
+                        }
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        status_json = self.run_cli("status", pack_dir, "--format", "json")
+        self.assert_ok(status_json)
+        status_payload = json.loads(status_json.stdout)
+        status_health = status_payload["route_feedback_health"]
+        self.assertEqual("stale", status_health["status"])
+        self.assertEqual(0, status_health["active_signal_count"])
+        self.assertEqual(1, status_health["expired_signal_count"])
+        self.assertEqual("jini route-feedback --prune-expired", status_health["recommended_action"]["command"])
+        self.assertEqual(status_health, status_payload["runtime_readout"]["route_feedback_health"])
+
+        status_text = self.run_cli("status", pack_dir)
+        self.assert_ok(status_text)
+        self.assertIn("LEARNING", status_text.stdout)
+        self.assertIn("route-feedback status=stale active=0 expired=1", status_text.stdout)
+        self.assertIn("jini route-feedback --prune-expired", status_text.stdout)
+
+        metrics_json = self.run_cli("metrics", "--format", "json")
+        self.assert_ok(metrics_json)
+        metrics_payload = json.loads(metrics_json.stdout)
+        metrics_health = metrics_payload["route_feedback_health"]
+        self.assertEqual("stale", metrics_health["status"])
+        self.assertEqual(1, metrics_health["expired_signal_count"])
+        self.assertEqual("jini route-feedback --prune-expired", metrics_health["recommended_action"]["command"])
+
+        metrics_text = self.run_cli("metrics")
+        self.assert_ok(metrics_text)
+        self.assertIn(
+            "ROUTEFEEDBACK status=stale active=0 expired=1 adapters=1 action=jini route-feedback --prune-expired",
+            metrics_text.stdout,
+        )
+
     def test_passive_route_outcome_feedback_is_captured_from_user_actions(self) -> None:
         pack_dir = self.compile_research_pack()
         state_root = self.tmp / ".jini"

@@ -1302,7 +1302,7 @@ def build_lean_platform_metrics() -> dict[str, Any]:
         for item in summary.get("dimensions", [])
         if isinstance(item, dict)
     }
-    return build_lean_platform_report(
+    report = build_lean_platform_report(
         generated_at=now_utc(),
         root=ROOT,
         cli_path=ROOT / "tools" / "jini.py",
@@ -1315,6 +1315,8 @@ def build_lean_platform_metrics() -> dict[str, Any]:
         token_efficiency=dimensions.get("token-efficiency", {}),
         delivery_maturity=dimensions.get("delivery-maturity", {}),
     )
+    report["route_feedback_health"] = build_route_feedback_health_summary()
+    return report
 
 
 def print_lean_platform_metrics(report: dict[str, Any]) -> None:
@@ -11427,6 +11429,31 @@ def build_route_feedback_maintenance_report(*, prune_expired: bool = False) -> d
     }
 
 
+def build_route_feedback_health_summary(report: dict[str, Any] | None = None) -> dict[str, Any]:
+    report = report if isinstance(report, dict) else build_route_feedback_maintenance_report()
+    active_signal_count = int(report.get("total_active_signal_count", 0) or 0)
+    expired_signal_count = int(report.get("total_expired_signal_count", 0) or 0)
+    adapter_count = int(report.get("adapter_count", 0) or 0)
+    command = f"{cli_invocation()} route-feedback"
+    status = "active" if active_signal_count else "empty"
+    action_label = "Inspect route feedback"
+    if expired_signal_count:
+        status = "stale"
+        command = f"{command} --prune-expired"
+        action_label = "Prune expired route feedback"
+    return {
+        "status": status,
+        "window_days": int(report.get("window_days", ROUTE_FEEDBACK_WINDOW_DAYS) or ROUTE_FEEDBACK_WINDOW_DAYS),
+        "active_signal_count": active_signal_count,
+        "expired_signal_count": expired_signal_count,
+        "adapter_count": adapter_count,
+        "recommended_action": {
+            "label": action_label,
+            "command": command,
+        },
+    }
+
+
 def print_route_feedback_maintenance(report: dict[str, Any]) -> None:
     print(f"REPORT  {report.get('capability_report_path', '')}")
     print(f"WINDOW  {report.get('window_days', 0)}d")
@@ -16647,6 +16674,9 @@ def build_outcome_view(
         max_rationale=2,
         include_rate_limits=True,
     )
+    route_feedback_health = build_route_feedback_health_summary()
+    runtime_readout = build_runtime_readout(recommendation, efficiency_posture=efficiency_posture)
+    runtime_readout["route_feedback_health"] = route_feedback_health
     return {
         "schema_version": "0.1.0",
         "view_type": "JiniOutcomeView",
@@ -16658,7 +16688,8 @@ def build_outcome_view(
         "state": str(work_unit.get("current_state", "")),
         "next_operation": summary["next_operation"],
         "efficiency_posture": efficiency_posture,
-        "runtime_readout": build_runtime_readout(recommendation, efficiency_posture=efficiency_posture),
+        "runtime_readout": runtime_readout,
+        "route_feedback_health": route_feedback_health,
         "task_summary": {
             "done": int(task_summary.get("done", 0) or 0),
             "total": int(task_summary.get("total", 0) or 0),
@@ -17044,6 +17075,21 @@ def print_outcome_view(report: dict[str, Any]) -> None:
         )
         if runtime.get("reason"):
             print(f"  reason={runtime.get('reason', '')}")
+    route_feedback_health = report.get("route_feedback_health", {})
+    if isinstance(route_feedback_health, dict) and (
+        route_feedback_health.get("active_signal_count") or route_feedback_health.get("expired_signal_count")
+    ):
+        print()
+        print("LEARNING")
+        print(
+            "  "
+            f"route-feedback status={route_feedback_health.get('status', '')} "
+            f"active={route_feedback_health.get('active_signal_count', 0)} "
+            f"expired={route_feedback_health.get('expired_signal_count', 0)}"
+        )
+        action = route_feedback_health.get("recommended_action", {})
+        if isinstance(action, dict) and action.get("command"):
+            print(f"  action={action.get('command', '')}")
     missing_now = report.get("questions", {}).get("what_is_still_missing_now", [])
     missing_later = report.get("questions", {}).get("what_is_still_missing_later", [])
     print()

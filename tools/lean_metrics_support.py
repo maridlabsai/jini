@@ -547,6 +547,19 @@ def render_lean_platform_metrics(report: dict[str, Any]) -> list[str]:
                 f"tok/s={cheapest.get('tokens_per_second', 0):.1f}"
             )
 
+    route_feedback = report.get("route_feedback_health", {})
+    if isinstance(route_feedback, dict):
+        action = route_feedback.get("recommended_action", {})
+        action_command = action.get("command", "") if isinstance(action, dict) else ""
+        lines.append(
+            "ROUTEFEEDBACK "
+            f"status={route_feedback.get('status', 'unknown')} "
+            f"active={route_feedback.get('active_signal_count', 0)} "
+            f"expired={route_feedback.get('expired_signal_count', 0)} "
+            f"adapters={route_feedback.get('adapter_count', 0)} "
+            f"action={action_command or 'n/a'}"
+        )
+
     cost_proxy = report.get("cost_proxy", {})
     lines.append(
         "COST     "
