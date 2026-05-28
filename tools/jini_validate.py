@@ -8753,6 +8753,7 @@ def build_compact_context(
     memory_context = recommendation["memory_context"]
     repo_context = recommendation["repo_context"]
     home_context = memory_context.get("home", {})
+    efficiency_posture = build_efficiency_posture(recommendation, max_rationale=2)
     recent_artifacts = memory_context.get("recent_artifacts", [])[: min(max(1, max_items), 3)]
     resume_items = memory_context.get("resume_items", [])[: max(2, max_items + 1)]
     stale_signals = memory_context.get("stale_signals", [])[: max(1, max_items)]
@@ -8792,6 +8793,7 @@ def build_compact_context(
         "health": summary.get("health", ""),
         "profile_id": summary["work_unit"].get("profile_id", ""),
         "execution_class": recommendation["execution_class"],
+        "efficiency_posture": efficiency_posture,
         "next_operation": summary.get("next_operation", ""),
         "recent_artifacts": compact_recent_artifacts,
         "resume_items": resume_items,
@@ -8860,6 +8862,49 @@ def build_compact_context(
         if isinstance(payload.get("repo_root"), str) and payload["repo_root"]:
             payload["repo_root"] = Path(payload["repo_root"]).name
             return True
+        for key in ("publication_links", "stale_signals", "home_memory", "freshness", "repo_actions", "steering"):
+            if payload.get(key) == []:
+                payload.pop(key, None)
+                return True
+        for key in ("latest_run", "latest_harvest"):
+            if key in payload and payload.get(key) is None:
+                payload.pop(key, None)
+                return True
+        if payload.get("repo_root") == "":
+            payload.pop("repo_root", None)
+            return True
+        for key in ("profile_id", "next_operation"):
+            if payload.get(key):
+                payload.pop(key, None)
+                return True
+        recent_artifacts = payload.get("recent_artifacts", [])
+        if isinstance(recent_artifacts, list) and recent_artifacts:
+            compacted_artifacts = [
+                {
+                    "artifact_type": item.get("artifact_type", ""),
+                    "revision": item.get("revision", 0),
+                }
+                for item in recent_artifacts
+                if isinstance(item, dict)
+            ]
+            if compacted_artifacts and compacted_artifacts != recent_artifacts:
+                payload["recent_artifacts"] = compacted_artifacts
+                return True
+        unresolved = payload.get("unresolved_tasks", [])
+        if isinstance(unresolved, list) and unresolved:
+            first = unresolved[0]
+            if isinstance(first, dict):
+                if first.get("owner"):
+                    first.pop("owner", None)
+                    return True
+                task = str(first.get("task", ""))
+                if len(task) > 56:
+                    first["task"] = task[:53] + "..."
+                    return True
+        freshness = payload.get("freshness", [])
+        if isinstance(freshness, list) and freshness:
+            payload["freshness"] = []
+            return True
         for key in ("resume_items", "home_memory", "repo_actions", "stale_signals"):
             values = payload.get(key, [])
             if isinstance(values, list) and values:
@@ -8867,6 +8912,22 @@ def build_compact_context(
                 if len(last) > 96:
                     values[-1] = last[:93] + "..."
                     return True
+        efficiency = payload.get("efficiency_posture")
+        if isinstance(efficiency, dict):
+            rationale = efficiency.get("rationale", [])
+            if isinstance(rationale, list) and len(rationale) > 1:
+                efficiency["rationale"] = rationale[:-1]
+                return True
+            if isinstance(rationale, list) and rationale:
+                item = str(rationale[0])
+                if len(item) > 96:
+                    rationale[0] = item[:93] + "..."
+                    return True
+                efficiency["rationale"] = []
+                return True
+            if efficiency.get("selected_runtime"):
+                efficiency.pop("selected_runtime", None)
+                return True
         return False
 
     baseline_tokens = estimate_tokens(compact)
@@ -8878,13 +8939,13 @@ def build_compact_context(
             if not shrink_compact(compact):
                 break
         if compact_chars(compact) > max_chars:
-            compact["recent_artifacts"] = compact["recent_artifacts"][:1]
+            compact["recent_artifacts"] = compact.get("recent_artifacts", [])[:1]
             compact["resume_items"] = compact["resume_items"][:1]
             compact["publication_links"] = compact.get("publication_links", [])[:1]
-            compact["stale_signals"] = compact["stale_signals"][:1]
-            compact["home_memory"] = compact["home_memory"][:1]
+            compact["stale_signals"] = compact.get("stale_signals", [])[:1]
+            compact["home_memory"] = compact.get("home_memory", [])[:1]
             compact["freshness"] = []
-            compact["repo_actions"] = compact["repo_actions"][:1]
+            compact["repo_actions"] = compact.get("repo_actions", [])[:1]
             compact["steering"] = compact.get("steering", [])[:1]
             compact["unresolved_tasks"] = [
                 {
@@ -8907,7 +8968,10 @@ def build_compact_context(
                 for item in compact.get("recent_artifacts", [])[:1]
             ]
             compact["unresolved_tasks"] = [
-                {"task": item.get("task", "")}
+                {
+                    "task": item.get("task", ""),
+                    "status": item.get("status", "") or "pending",
+                }
                 for item in compact.get("unresolved_tasks", [])[:1]
             ]
             compact["repo_actions"] = []
@@ -8925,21 +8989,76 @@ def build_compact_context(
             compact["recent_artifacts"] = []
             compact.pop("repo_root", None)
             compact["resume_items"] = [item[:64] + ("..." if len(item) > 64 else "") for item in compact["resume_items"][:1]]
-            compact["home_memory"] = [item[:64] + ("..." if len(item) > 64 else "") for item in compact["home_memory"][:1]]
-            compact["stale_signals"] = [item[:56] + ("..." if len(item) > 56 else "") for item in compact["stale_signals"][:1]]
+            compact["home_memory"] = [item[:64] + ("..." if len(item) > 64 else "") for item in compact.get("home_memory", [])[:1]]
+            compact["stale_signals"] = [item[:56] + ("..." if len(item) > 56 else "") for item in compact.get("stale_signals", [])[:1]]
             compact["steering"] = [item[:48] + ("..." if len(item) > 48 else "") for item in compact.get("steering", [])[:1]]
             compact["unresolved_tasks"] = [
-                {"task": item.get("task", "")[:48] + ("..." if len(item.get("task", "")) > 48 else "")}
+                {
+                    "task": item.get("task", "")[:48] + ("..." if len(item.get("task", "")) > 48 else ""),
+                    "status": item.get("status", "") or "pending",
+                }
                 for item in compact.get("unresolved_tasks", [])[:1]
             ]
         if compact_chars(compact) > max_chars:
             compact.pop("latest_run", None)
             compact.pop("latest_harvest", None)
         if compact_chars(compact) > max_chars:
-            compact["home_memory"] = []
+            compact["home_memory"] = compact.get("home_memory", [])[:1]
             compact["resume_items"] = compact["resume_items"][:1]
         if compact_chars(compact) > max_chars:
-            for key in ("recent_artifacts", "home_memory", "freshness", "repo_actions", "stale_signals", "steering"):
+            for key in ("recent_artifacts", "home_memory", "freshness", "repo_actions", "steering"):
+                if compact.get(key) == []:
+                    compact.pop(key, None)
+        if compact_chars(compact) > max_chars:
+            efficiency = compact.get("efficiency_posture", {})
+            compact["efficiency_posture"] = {
+                "intent": str(efficiency.get("intent", compact.get("intent", ""))).strip(),
+                "execution_class": str(efficiency.get("execution_class", compact.get("execution_class", ""))).strip(),
+                "cheap_path": bool(efficiency.get("cheap_path", False)),
+                "context_policy": str(efficiency.get("context_policy", "")).strip(),
+                "selected_runtime": str(efficiency.get("selected_runtime", "")).strip(),
+            }
+            compact["recent_artifacts"] = []
+            compact["publication_links"] = []
+            compact["stale_signals"] = []
+            compact["home_memory"] = [
+                item[:48] + ("..." if len(item) > 48 else "")
+                for item in compact.get("home_memory", [])[:1]
+            ]
+            compact["freshness"] = []
+            compact["repo_actions"] = []
+            compact["steering"] = []
+            compact["resume_items"] = [
+                item[:48] + ("..." if len(item) > 48 else "")
+                for item in compact.get("resume_items", [])[:1]
+            ]
+            compact["unresolved_tasks"] = [
+                {
+                    "task": item.get("task", "")[:40] + ("..." if len(item.get("task", "")) > 40 else ""),
+                    "status": item.get("status", "") or "pending",
+                }
+                for item in compact.get("unresolved_tasks", [])[:1]
+            ]
+            compact["runtime_target"] = {
+                "selected": compact.get("runtime_target", {}).get("selected", "")
+            }
+            for key in ("profile_id", "next_operation", "repo_root", "latest_run", "latest_harvest"):
+                compact.pop(key, None)
+        if compact_chars(compact) > max_chars:
+            compact["resume_items"] = []
+            compact["unresolved_tasks"] = []
+            compact["efficiency_posture"].pop("selected_runtime", None)
+            compact["runtime_target"] = {}
+            for key in (
+                "recent_artifacts",
+                "publication_links",
+                "stale_signals",
+                "home_memory",
+                "freshness",
+                "repo_actions",
+                "steering",
+                "unresolved_tasks",
+            ):
                 if compact.get(key) == []:
                     compact.pop(key, None)
     final_chars = compact_chars(compact)
@@ -8978,11 +9097,19 @@ def print_compact_context(compact: dict[str, Any], *, heading: str = "RESUME") -
         print("HOME")
         for item in compact["home_memory"]:
             print(f"  - {item}")
+    efficiency = compact.get("efficiency_posture", {})
+    if efficiency:
+        print(
+            "EFFICIENCY "
+            f"class={efficiency.get('execution_class', '')} "
+            f"context={efficiency.get('context_policy', '')} "
+            f"runtime={efficiency.get('selected_runtime', '')}"
+        )
     if compact.get("unresolved_tasks"):
         print("TASKS")
         for task in compact["unresolved_tasks"]:
             owner_suffix = f" owner={task['owner']}" if task.get("owner") else ""
-            print(f"  - [{task['status']}] {task['task']}{owner_suffix}")
+            print(f"  - [{task.get('status', 'pending')}] {task.get('task', '')}{owner_suffix}")
     if compact.get("repo_actions"):
         print("REPO")
         for item in compact["repo_actions"]:
@@ -13747,6 +13874,38 @@ def recommend_execution(
     return recommendation
 
 
+def build_efficiency_posture(
+    recommendation: dict[str, Any],
+    *,
+    max_rationale: int = 3,
+    include_rate_limits: bool = False,
+) -> dict[str, Any]:
+    runtime_guidance = recommendation.get("runtime_guidance", {})
+    selected_runtime = {}
+    if isinstance(runtime_guidance, dict):
+        selected_runtime = runtime_guidance.get("selected", {}) if isinstance(runtime_guidance.get("selected", {}), dict) else {}
+    execution_class = str(recommendation.get("execution_class", "")).strip()
+    posture = {
+        "intent": str(recommendation.get("intent", "")).strip(),
+        "execution_class": execution_class,
+        "cheap_path": execution_class == "cheap",
+        "context_policy": str(recommendation.get("context_policy", "")).strip(),
+        "selected_runtime": str(selected_runtime.get("id", "")).strip(),
+        "rationale": [
+            str(item).strip()
+            for item in recommendation.get("rationale", [])[: max(1, max_rationale)]
+            if str(item).strip()
+        ],
+    }
+    if include_rate_limits:
+        posture["rate_limit_strategy"] = [
+            str(item).strip()
+            for item in recommendation.get("rate_limit_strategy", [])[:3]
+            if str(item).strip()
+        ]
+    return posture
+
+
 def materialize_compile_outputs(pack_dir: Path, registry: dict[str, Any]) -> list[str]:
     warnings: list[str] = []
     actions = [
@@ -14521,6 +14680,12 @@ def build_outcome_view(
 ) -> dict[str, Any]:
     summary = summarise_pack(pack_dir, registry)
     remember_current_work(pack_dir, registry, source="outcome")
+    recommendation = recommend_execution(
+        pack_dir,
+        registry,
+        intent=str(summary["next_operation"]).strip().lower(),
+        repo_path=repo_path,
+    )
     work_unit = summary["work_unit"]
     task_summary = summary["task_summary"]
     missing_now = list(summary["missing_stage_required"])
@@ -14552,6 +14717,11 @@ def build_outcome_view(
         "health": summary["health"],
         "state": str(work_unit.get("current_state", "")),
         "next_operation": summary["next_operation"],
+        "efficiency_posture": build_efficiency_posture(
+            recommendation,
+            max_rationale=2,
+            include_rate_limits=True,
+        ),
         "task_summary": {
             "done": int(task_summary.get("done", 0) or 0),
             "total": int(task_summary.get("total", 0) or 0),
@@ -14613,6 +14783,16 @@ def build_outcome_view_from_projection(
         "health": "session-only",
         "state": str(context.get("state", "")),
         "next_operation": next_operation,
+        "efficiency_posture": {
+            "intent": next_operation,
+            "execution_class": "projection",
+            "cheap_path": True,
+            "context_policy": "session-projection",
+            "selected_runtime": "session-projection",
+            "rationale": [
+                "Pack files are unavailable, so Jini uses the saved projection before reloading larger context."
+            ],
+        },
         "task_summary": {
             "done": task_done,
             "total": task_done,
@@ -14673,6 +14853,16 @@ def build_compact_context_from_projection(
         "state": str(context.get("state", "")),
         "health": "session-only",
         "execution_class": execution_class,
+        "efficiency_posture": {
+            "intent": chosen_intent,
+            "execution_class": execution_class,
+            "cheap_path": execution_class == "projection-resume",
+            "context_policy": "session-projection",
+            "selected_runtime": "session-projection",
+            "rationale": [
+                "Pack files are unavailable, so Jini uses the saved projection before reloading larger context."
+            ],
+        },
         "next_operation": str(projection.get("next", "")),
         "current_focus": (
             {
@@ -14743,6 +14933,18 @@ def print_outcome_view(report: dict[str, Any]) -> None:
     print()
     print("WHAT HAPPENS NEXT?")
     print(f"  {report.get('questions', {}).get('what_happens_next', '')}")
+    efficiency = report.get("efficiency_posture", {})
+    if efficiency:
+        print()
+        print("EFFICIENCY")
+        print(
+            "  "
+            f"class={efficiency.get('execution_class', '')} "
+            f"context={efficiency.get('context_policy', '')} "
+            f"runtime={efficiency.get('selected_runtime', '')}"
+        )
+        for item in efficiency.get("rationale", [])[:2]:
+            print(f"  - {item}")
     missing_now = report.get("questions", {}).get("what_is_still_missing_now", [])
     missing_later = report.get("questions", {}).get("what_is_still_missing_later", [])
     print()
@@ -20060,8 +20262,8 @@ def main() -> int:
                 "intent": compact["intent"],
                 "state": compact["state"],
                 "execution_class": compact["execution_class"],
-                "resume_item_count": len(compact["resume_items"]),
-                "stale_signal_count": len(compact["stale_signals"]),
+                "resume_item_count": len(compact.get("resume_items", [])),
+                "stale_signal_count": len(compact.get("stale_signals", [])),
                 "estimated_tokens": compact.get("token_budget", {}).get("estimated_tokens", 0),
                 "compression_ratio": compact.get("token_budget", {}).get("compression_ratio", 0.0),
                 "home_bound": bool(compact.get("home_memory")),

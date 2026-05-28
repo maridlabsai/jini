@@ -1,4 +1,4 @@
-updated_at: "2026-05-27"
+updated_at: "2026-05-28"
 target_score: 9.0
 core_benchmark_set:
   - Kiro
@@ -63,13 +63,13 @@ dimensions:
   - id: delivery-maturity
     label: Delivery maturity
     execution_order: 2
-    current_score: 8.9
+    current_score: 9.5
     target_score: 9.0
     strongest_competitor:
       name: Kiro
       score: 8.0
       advantage: Day-to-day execution is faster because repo-aware assistance and the default operator loop are already productized.
-    weakness: Jini now has a real first-run `jini` launcher in the new Go runtime plus the guided `execute-flow`, but broader repo-family defaults, live remote edges, deeper continue/open/start interactions, and public command-contract drift still need less human interpretation.
+    weakness: Jini now has a real first-run `jini` launcher, guided `execute-flow`, native GitHub issue/docs publish, publication recovery links, and visible efficiency posture, but broader repo-family defaults and more live remote edges still need less human interpretation.
     conversion_strategy: Preserve governance, but compress operator friction through repo-aware orchestration, workspace steering, compact repo maps, target-ready handoff bundles, guided execution flows, hook-style post-step automation, and benchmark-ready defaults.
     kpi: The benchmark pack can be driven from idea to verification with fewer than five manual control decisions.
     next_build_steps:
@@ -95,6 +95,7 @@ dimensions:
       - cmd/jini/main.go
       - internal/app/app.go
       - internal/app/app_test.go
+      - specs/golden-competitive-benchmark.yaml
 
   - id: packaging-install
     label: Packaging and install ergonomics
@@ -131,13 +132,13 @@ dimensions:
   - id: memory-reliability
     label: Memory reliability
     execution_order: 4
-    current_score: 8.9
+    current_score: 9.1
     target_score: 9.0
     strongest_competitor:
       name: Hermes
       score: 9.0
       advantage: Persistent autonomous memory is already treated as an operational primitive, not just a document layer.
-    weakness: Jini now has bounded durable memory plus runtime-activation capture, but timely resurfacing still needs broader automatic triggers outside the current pack and activation loop.
+    weakness: Jini now has bounded durable memory, runtime-activation capture, saved projection recovery, and publication-link resurfacing in status/resume/continue, but automatic triggers outside the current pack and activation loop still need wider coverage.
     conversion_strategy: Treat memory as executable retrieval over canonical state, people, projects, evidence, workspace steering, runtime handoff state, and actor preference layers, not just stored artifacts.
     kpi: The system resurfaces the right prior decision, preference, or proof at the exact step where it changes behavior.
     next_build_steps:
@@ -156,17 +157,18 @@ dimensions:
       - specs/learning-system.md
       - specs/personal-os.md
       - README.md
+      - specs/golden-competitive-benchmark.yaml
 
   - id: adapter-portability
     label: Adapter portability
     execution_order: 5
-    current_score: 8.9
+    current_score: 9.3
     target_score: 9.0
     strongest_competitor:
       name: Cline
       score: 9.0
       advantage: Real tool edges and MCP-style portability are already part of the daily product experience.
-    weakness: Jini now has one real local runtime edge, first-class one-command local-apply issue and wiki edges, and a bridge-execute surface for staged publish plans, but out-of-box live SaaS adapters and richer remote execution are still not first-class.
+    weakness: Jini now has one real local runtime edge, first-class one-command local-apply issue/wiki edges, bridge execution, and native idempotent GitHub issue/docs publish with captured publication artifacts, but richer non-GitHub live SaaS execution is still not first-class.
     conversion_strategy: Keep protocol semantics fixed while making adapters first-class, testable, replay-safe product surfaces, starting with explicit runtime handoff contracts, activation receipts, local-apply publish contracts, and transport-aware edge contracts that carry the same bounded context everywhere.
     kpi: One coding runtime, one issue system, and one wiki system can be driven through the same canonical contract.
     next_build_steps:
@@ -183,17 +185,18 @@ dimensions:
       - tests/test_jini_cli.py
       - distribution/install-manifest.yaml
       - README.md
+      - specs/golden-competitive-benchmark.yaml
 
   - id: token-efficiency
     label: Token efficiency
     execution_order: 6
-    current_score: 8.8
+    current_score: 9.4
     target_score: 9.0
     strongest_competitor:
       name: Aider
       score: 9.0
       advantage: Context discipline, caching, and chat minimization are already tuned for daily low-cost execution.
-    weakness: Jini now reuses recommendation, compact context, checklist, repo map, and handoff inside a guided flow, but token budgeting is still not enforced uniformly across every major command and adapter path.
+    weakness: Jini now reuses recommendation, compact context, checklist, repo map, handoff, and visible efficiency posture inside recovery surfaces, but token budgeting is still not enforced uniformly across every adapter path.
     conversion_strategy: Save tokens on transport, orchestration, bounded memory, progressive disclosure, ranked compact repo maps, compact local-apply loops, and reloads while keeping reasoning depth where state or profile demands it.
     kpi: The cheapest adequate path is the default path, and expensive reasoning is visibly justified.
     next_build_steps:
@@ -211,6 +214,7 @@ dimensions:
       - tools/jini_validate.py
       - tests/test_jini_cli.py
       - README.md
+      - specs/golden-competitive-benchmark.yaml
 
   - id: advanced-set-breadth
     label: Advanced-set breadth

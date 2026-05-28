@@ -248,6 +248,34 @@ scenarios:
           ]
         path: "token_budget.estimated_chars"
         maximum: 900
+      - id: resume-efficiency-posture-is-cheap
+        command:
+          [
+            "resume",
+            "{scenario_root}/research-pack",
+            "--intent",
+            "export",
+            "--max-chars",
+            "900",
+            "--format",
+            "json",
+          ]
+        path: "efficiency_posture.execution_class"
+        equals: "cheap"
+      - id: resume-efficiency-rationale-is-visible
+        command:
+          [
+            "resume",
+            "{scenario_root}/research-pack",
+            "--intent",
+            "export",
+            "--max-chars",
+            "900",
+            "--format",
+            "json",
+          ]
+        path: "efficiency_posture.rationale"
+        contains: "Intent `export` defaults to `cheap` execution"
 
   - id: portable-edges
     label: Portable execution edges

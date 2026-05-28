@@ -620,6 +620,43 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("jini continue", result.stdout)
         self.assertNotIn("jini resume ", result.stdout)
 
+    def test_status_and_resume_surface_efficiency_posture(self) -> None:
+        pack_dir = self.compile_research_pack()
+
+        status_text = self.run_cli("status", pack_dir)
+        self.assert_ok(status_text)
+        self.assertIn("EFFICIENCY", status_text.stdout)
+        self.assertIn("class=standard", status_text.stdout)
+        self.assertIn("context=targeted", status_text.stdout)
+
+        status_json = self.run_cli("status", pack_dir, "--format", "json")
+        self.assert_ok(status_json)
+        report = json.loads(status_json.stdout)
+        posture = report["efficiency_posture"]
+        self.assertEqual("make", posture["intent"])
+        self.assertEqual("standard", posture["execution_class"])
+        self.assertEqual("targeted", posture["context_policy"])
+        self.assertTrue(posture["selected_runtime"])
+        self.assertTrue(posture["rationale"])
+
+        resume_json = self.run_cli(
+            "resume",
+            pack_dir,
+            "--intent",
+            "export",
+            "--format",
+            "json",
+            "--max-chars",
+            "900",
+        )
+        self.assert_ok(resume_json)
+        compact = json.loads(resume_json.stdout)
+        resume_posture = compact["efficiency_posture"]
+        self.assertEqual("cheap", resume_posture["execution_class"])
+        self.assertTrue(resume_posture["cheap_path"])
+        self.assertTrue(any("export" in item for item in resume_posture["rationale"]))
+        self.assertLessEqual(compact["token_budget"]["estimated_chars"], 900)
+
     def test_example_sets_current_work_for_pathless_status_and_artifacts(self) -> None:
         example_output = self.tmp / "research-example"
         result = self.run_cli("try-example", "research-prd", "--output", example_output)
@@ -2773,7 +2810,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(result)
 
         summary = json.loads(result.stdout)
-        self.assertEqual("2026-05-27", summary["updated_at"])
+        self.assertEqual("2026-05-28", summary["updated_at"])
         self.assertIn("Claude Code", summary["core_benchmark_set"])
         self.assertIn("Windsurf", summary["watchlist"])
         self.assertEqual(3, len(summary["dimensions"]))
@@ -2786,7 +2823,7 @@ class JiniCliConformanceTests(unittest.TestCase):
 
         report = json.loads(result.stdout)
         self.assertEqual("JiniPublishReadiness", report["result_type"])
-        self.assertEqual("warning", report["status"])
+        self.assertEqual("ok", report["status"])
         self.assertEqual("starter-kit", report["default_kit_id"])
         self.assertGreaterEqual(report["pack_count"], 6)
         self.assertGreaterEqual(report["kit_count"], 6)
@@ -2812,11 +2849,11 @@ class JiniCliConformanceTests(unittest.TestCase):
             any(item["dimension_id"] == "learning-maturity" and item["position"] == "ahead" for item in leadership["checks"])
         )
         rewrite_momentum = next(section for section in report["sections"] if section["id"] == "rewrite-momentum")
-        self.assertEqual("warning", rewrite_momentum["status"])
+        self.assertEqual("ok", rewrite_momentum["status"])
         self.assertTrue(any(item["id"] == "overall-score-floor" and item["delta"] > 0 for item in rewrite_momentum["checks"]))
         self.assertTrue(
             any(
-                item["id"] == "overall-lead-margin" and item["margin"] < item["minimum_margin"] and item["status"] == "warning"
+                item["id"] == "overall-lead-margin" and item["margin"] >= item["minimum_margin"] and item["status"] == "ok"
                 for item in rewrite_momentum["checks"]
             )
         )
@@ -2966,7 +3003,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("leading", report["overall"]["status"])
         self.assertIn("tracks", report["overall"])
         self.assertEqual("leading", report["overall"]["tracks"]["architecture-strength"]["status"])
-        self.assertEqual("trailing", report["overall"]["tracks"]["adoption-truth"]["status"])
+        self.assertEqual("leading", report["overall"]["tracks"]["adoption-truth"]["status"])
         for competitor_id, competitor_score in report["overall"]["competitor_scores"].items():
             self.assertGreater(report["overall"]["jini_score"], competitor_score, competitor_id)
         scenario_ids = {item["id"] for item in report["scenarios"]}
@@ -3044,13 +3081,13 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual([], report["coverage"]["missing_from_scorecard_core"])
         self.assertIn("Windsurf", report["coverage"]["watchlist_only"])
         self.assertIn("Claude Code", report["scorecard"]["core_benchmark_set"])
-        self.assertEqual("warning", report["score_truth"]["status"])
+        self.assertEqual("ok", report["score_truth"]["status"])
         self.assertGreater(report["benchmark"]["competitor_count"], 0)
         self.assertGreater(report["benchmark"]["scenario_count"], 0)
         self.assertTrue(all(item["source_urls"] for item in report["benchmark"]["competitors"]))
         self.assertTrue(report["freshness"]["checks"])
-        self.assertIn("delivery-maturity", report["replacement_critical"]["blocked_dimensions"])
-        self.assertTrue(report["next_actions"])
+        self.assertEqual([], report["replacement_critical"]["blocked_dimensions"])
+        self.assertEqual([], report["next_actions"])
 
     def test_get_started_reports_beginner_and_power_paths(self) -> None:
         result = self.run_cli("get-started", "--harness", "codex", "--format", "json")

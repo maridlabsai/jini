@@ -1,8 +1,8 @@
 schema_version: "0.1.0"
 baseline_type: "rewrite-score-floor"
-updated_at: "2026-05-14"
-last_verified_overall_score: 8.92
-minimum_next_overall_score: 8.91
+updated_at: "2026-05-28"
+last_verified_overall_score: 9.25
+minimum_next_overall_score: 9.24
 minimum_margin_over_strongest_competitor: 0.80
 notes:
   - "Every meaningful rewrite slice should push the overall benchmark score upward, not just preserve per-dimension ties."
