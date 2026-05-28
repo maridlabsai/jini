@@ -541,6 +541,20 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(open_result)
         self.assertIn(str((pack_dir / "views" / "itinerary.md").resolve()), open_result.stdout.strip())
 
+    def test_show_without_artifact_uses_focused_current_work(self) -> None:
+        pack_dir = self.compile_travel_pack()
+
+        focused = self.run_cli("show", "itinerary", "--from", pack_dir)
+        self.assert_ok(focused)
+
+        show = self.run_cli("show")
+        self.assert_ok(show)
+        self.assertIn("# Itinerary: Test Travel Pack", show.stdout)
+
+        open_result = self.run_cli("open", "--print-path")
+        self.assert_ok(open_result)
+        self.assertIn(str((pack_dir / "views" / "itinerary.md").resolve()), open_result.stdout.strip())
+
     def test_pathless_status_and_open_can_resume_from_canonical_session_pointer(self) -> None:
         pack_dir = self.compile_travel_pack()
         current_work = self.tmp / ".jini" / "current-work.json"
@@ -556,6 +570,8 @@ class JiniCliConformanceTests(unittest.TestCase):
 
     def test_pathless_status_falls_back_to_saved_session_projection_when_pack_is_missing(self) -> None:
         pack_dir = self.compile_travel_pack()
+        focused = self.run_cli("show", "itinerary", "--from", pack_dir)
+        self.assert_ok(focused)
         shutil.rmtree(pack_dir)
         current_work = self.tmp / ".jini" / "current-work.json"
         current_work.unlink()
@@ -566,6 +582,8 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("session-only", report["health"])
         self.assertEqual("test-travel-pack", report["work_unit_id"])
         self.assertTrue(report["ready_now"])
+        self.assertEqual("itinerary", report["current_focus"]["id"])
+        self.assertEqual("itinerary", report["ready_now"][0]["id"])
         self.assertIn("saved session projection", report["validation_warnings"][0])
         self.assertEqual(["jini continue"], report["continue_with"])
 
@@ -610,6 +628,28 @@ class JiniCliConformanceTests(unittest.TestCase):
         snapshot_text = snapshot_path.read_text(encoding="utf-8")
         self.assertIn("Saved artifact snapshot", snapshot_text)
         self.assertIn("# Itinerary:", snapshot_text)
+
+    def test_pathless_open_without_artifact_prefers_saved_focus_snapshot_when_pack_is_missing(self) -> None:
+        pack_dir = self.compile_travel_pack()
+
+        focused = self.run_cli("show", "itinerary", "--from", pack_dir)
+        self.assert_ok(focused)
+
+        refresh = self.run_cli("status", pack_dir, "--format", "json")
+        self.assert_ok(refresh)
+
+        shutil.rmtree(pack_dir)
+        current_work = self.tmp / ".jini" / "current-work.json"
+        current_work.unlink()
+
+        result = self.run_cli("open", "--print-path")
+        self.assert_ok(result)
+        snapshot_path = Path(result.stdout.strip())
+        self.assertTrue(snapshot_path.exists())
+        snapshot_text = snapshot_path.read_text(encoding="utf-8")
+        self.assertIn("Saved artifact snapshot", snapshot_text)
+        self.assertIn("# Itinerary:", snapshot_text)
+        self.assertNotIn("# Tasks:", snapshot_text)
 
     def test_pathless_show_falls_back_to_saved_session_snapshot_when_pack_is_missing(self) -> None:
         pack_dir = self.compile_travel_pack()

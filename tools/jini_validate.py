@@ -6572,8 +6572,8 @@ def remember_current_work(pack_dir: Path, registry: dict[str, Any], *, source: s
         updated_at=updated_at,
         previous_projection=previous_projection,
     )
-    current_artifact_id = ""
-    if projection.get("ready"):
+    current_artifact_id = projection_focus_artifact_id(projection)
+    if not current_artifact_id and projection.get("ready"):
         current_artifact_id = str(projection["ready"][0].get("id", ""))
     session = build_canonical_session(
         pack_dir=resolved,
@@ -6770,6 +6770,54 @@ def resolve_continue_item(pack_dir: Path, registry: dict[str, Any]) -> dict[str,
     if len(ready_now) > 1:
         return ready_now[1]
     return ready_now[0]
+
+
+def projection_focus_artifact_id(projection: dict[str, Any] | None) -> str:
+    if not isinstance(projection, dict):
+        return ""
+    current_focus = projection.get("current_focus", {})
+    if not isinstance(current_focus, dict):
+        return ""
+    return str(current_focus.get("artifact_id", "")).strip()
+
+
+def reorder_ready_items_by_focus(
+    ready_now: list[dict[str, Any]],
+    projection: dict[str, Any] | None,
+) -> list[dict[str, Any]]:
+    focus_id = projection_focus_artifact_id(projection)
+    if not focus_id:
+        return list(ready_now)
+
+    focused = [item for item in ready_now if str(item.get("id", "")).strip() == focus_id]
+    if not focused:
+        return list(ready_now)
+
+    remaining = [item for item in ready_now if str(item.get("id", "")).strip() != focus_id]
+    return [*focused, *remaining]
+
+
+def current_session_context_for_pack(pack_dir: Path) -> dict[str, Any] | None:
+    context = load_current_session_context()
+    if context is None:
+        return None
+    context_pack_dir = Path(str(context.get("pack_dir", ""))).expanduser()
+    if not context_pack_dir:
+        return None
+    if context_pack_dir.resolve() != pack_dir.expanduser().resolve():
+        return None
+    return context
+
+
+def resolve_default_artifact_item(pack_dir: Path, registry: dict[str, Any]) -> dict[str, Any]:
+    context = current_session_context_for_pack(pack_dir)
+    if context is not None:
+        artifact = resolve_projection_artifact_item(context, prefer_saved_focus=True)
+        if artifact is not None:
+            artifact_id = str(artifact.get("id", "")).strip()
+            if artifact_id:
+                return resolve_artifact_item(pack_dir, registry, artifact_id)
+    return resolve_continue_item(pack_dir, registry)
 
 
 def build_terminal_preview(text: str, *, max_chars: int = 420) -> tuple[str, bool]:
@@ -13108,14 +13156,17 @@ def build_outcome_view(
     ]
     continue_command = f"{cli_invocation()} continue"
     artifact_catalog = build_artifact_catalog(pack_dir, registry)
-    ready_now = [
+    context = current_session_context_for_pack(pack_dir)
+    projection = context.get("projection", {}) if context is not None else {}
+    ready_now = reorder_ready_items_by_focus([
         {
             "id": item["id"],
             "label": item["label"],
             "show_command": item["show_command"],
         }
         for item in artifact_catalog.get("ready_now", [])
-    ]
+    ], projection)
+    current_focus = ready_now[0] if ready_now else {}
     return {
         "schema_version": "0.1.0",
         "view_type": "JiniOutcomeView",
@@ -13141,6 +13192,7 @@ def build_outcome_view(
             "what_is_still_missing_now": missing_now,
             "what_is_still_missing_later": missing_later,
         },
+        "current_focus": current_focus,
         "ready_now": ready_now,
         "continue_with": [continue_command],
         "validation_errors": list(summary["validation_errors"]),
@@ -13166,6 +13218,7 @@ def build_outcome_view_from_projection(
                 "show_command": f"{cli_invocation()} show {artifact_id}",
             }
         )
+    ready_now = reorder_ready_items_by_focus(ready_now, projection)
 
     next_operation = str(projection.get("next", "")).strip() or "inspect-session"
     continue_command = f"{cli_invocation()} continue"
@@ -13173,6 +13226,7 @@ def build_outcome_view_from_projection(
     task_done = len(ready_now)
     continuation_saved_work = bool(projection.get("cost_posture", {}).get("continuation_saved_work"))
     done_text = "Work has already been captured in session artifacts." if continuation_saved_work else "No completed artifact evidence is stored yet."
+    current_focus = ready_now[0] if ready_now else {}
     return {
         "schema_version": "0.1.0",
         "view_type": "JiniOutcomeView",
@@ -13194,6 +13248,7 @@ def build_outcome_view_from_projection(
             "what_is_still_missing_now": list(projection.get("missing", [])),
             "what_is_still_missing_later": [],
         },
+        "current_focus": current_focus,
         "ready_now": ready_now,
         "continue_with": [continue_command],
         "validation_errors": [],
@@ -13306,7 +13361,15 @@ def print_outcome_view(report: dict[str, Any]) -> None:
             print(f"  - {item}")
     else:
         print("  No future-required artifact gaps are visible right now.")
+    current_focus = report.get("current_focus", {})
+    focused_id = str(current_focus.get("id", "")).strip()
+    if focused_id:
+        print()
+        print("FOCUS")
+        print(f"  {focused_id:<14} -> {current_focus.get('show_command', '')}")
     ready_now = report.get("ready_now", [])
+    if focused_id:
+        ready_now = [item for item in ready_now if str(item.get("id", "")).strip() != focused_id]
     if ready_now:
         print()
         print("READY NOW")
@@ -16406,14 +16469,22 @@ def main() -> int:
         "show",
         help="Print one artifact or human-facing view from the current work",
     )
-    show_parser.add_argument("artifact", help="Artifact or view id, for example prd, tasks, itinerary, github, or plan")
+    show_parser.add_argument(
+        "artifact",
+        nargs="?",
+        help="Optional artifact or view id; defaults to the current focused artifact",
+    )
     show_parser.add_argument("--from", dest="path", type=Path, help="Optional pack path; defaults to the current Jini work")
 
     open_parser = subparsers.add_parser(
         "open",
         help="Open one artifact or human-facing view from the current work",
     )
-    open_parser.add_argument("artifact", help="Artifact or view id, for example prd, tasks, itinerary, github, or plan")
+    open_parser.add_argument(
+        "artifact",
+        nargs="?",
+        help="Optional artifact or view id; defaults to the current focused artifact",
+    )
     open_parser.add_argument("--from", dest="path", type=Path, help="Optional pack path; defaults to the current Jini work")
     open_parser.add_argument(
         "--print-path",
@@ -18042,7 +18113,11 @@ def main() -> int:
     if args.command == "show":
         try:
             pack_dir = resolve_context_pack_dir(args.path, registry, command_label="show")
-            artifact = resolve_artifact_item(pack_dir, registry, args.artifact)
+            artifact = (
+                resolve_artifact_item(pack_dir, registry, args.artifact)
+                if args.artifact
+                else resolve_default_artifact_item(pack_dir, registry)
+            )
             persist_projection_focus(pack_dir, artifact)
             print(Path(str(artifact["resolved_path"])).read_text(encoding="utf-8"))
         except (FileNotFoundError, OSError, TypeError, ValueError) as exc:
@@ -18052,7 +18127,11 @@ def main() -> int:
                     remembered_pack = Path(str(context.get("pack_dir", ""))).expanduser()
                     if remembered_pack and not remembered_pack.exists():
                         try:
-                            artifact = resolve_projection_artifact_item(context, args.artifact)
+                            artifact = resolve_projection_artifact_item(
+                                context,
+                                args.artifact,
+                                prefer_saved_focus=args.artifact is None,
+                            )
                         except ValueError as projection_exc:
                             print(f"ERROR {projection_exc}")
                             return 1
@@ -18067,7 +18146,11 @@ def main() -> int:
     if args.command == "open":
         try:
             pack_dir = resolve_context_pack_dir(args.path, registry, command_label="open")
-            artifact = resolve_artifact_item(pack_dir, registry, args.artifact)
+            artifact = (
+                resolve_artifact_item(pack_dir, registry, args.artifact)
+                if args.artifact
+                else resolve_default_artifact_item(pack_dir, registry)
+            )
             persist_projection_focus(pack_dir, artifact)
             artifact_path = Path(str(artifact["resolved_path"]))
             if args.print_path:
@@ -18082,7 +18165,11 @@ def main() -> int:
                     remembered_pack = Path(str(context.get("pack_dir", ""))).expanduser()
                     if remembered_pack and not remembered_pack.exists():
                         try:
-                            artifact = resolve_projection_artifact_item(context, args.artifact)
+                            artifact = resolve_projection_artifact_item(
+                                context,
+                                args.artifact,
+                                prefer_saved_focus=args.artifact is None,
+                            )
                         except ValueError as projection_exc:
                             print(f"ERROR {projection_exc}")
                             return 1
