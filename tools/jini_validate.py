@@ -9285,9 +9285,15 @@ def build_adapter_conformance_summary() -> dict[str, Any]:
                 if "issues-apply-local" not in capabilities:
                     passed = False
                     notes.append("GitHub adapter should expose issues-apply-local")
+                if "issues-execute-native" not in capabilities:
+                    passed = False
+                    notes.append("GitHub adapter should expose issues-execute-native")
                 if semantics.get("local_apply") != "deterministic-reapply":
                     passed = False
                     notes.append("GitHub adapter should declare deterministic-reapply local apply")
+                if semantics.get("native_execution") != "idempotent-upsert":
+                    passed = False
+                    notes.append("GitHub adapter should declare idempotent-upsert native execution")
         elif layer == "wiki-system":
             if adapter_id not in {"confluence", "markdown"}:
                 passed = False
@@ -9440,6 +9446,7 @@ def adapter_priority(adapter: dict[str, Any]) -> int:
     maturity = str(adapter.get("maturity", ""))
     defaults = {
         "staged-publish": 90,
+        "native-execute": 85,
         "local-activation": 80,
         "local-apply": 75,
         "local-fallback": 70,
@@ -12004,6 +12011,43 @@ def build_rate_limit_policy(adapter: str) -> dict[str, Any]:
     }
 
 
+def normalize_github_repository(value: str) -> str:
+    candidate = value.strip()
+    if not candidate:
+        return ""
+    if candidate.startswith("https://github.com/"):
+        candidate = candidate.removeprefix("https://github.com/")
+    elif candidate.startswith("http://github.com/"):
+        candidate = candidate.removeprefix("http://github.com/")
+    elif candidate.startswith("git@github.com:"):
+        candidate = candidate.removeprefix("git@github.com:")
+    candidate = candidate.rstrip("/")
+    if candidate.endswith(".git"):
+        candidate = candidate[:-4]
+    parts = [item for item in candidate.split("/") if item]
+    if len(parts) != 2:
+        return ""
+    return f"{parts[0]}/{parts[1]}"
+
+
+def infer_github_repository(repo_path: Path | None) -> str:
+    if repo_path is None:
+        return ""
+    remote = run_git(repo_path, "remote", "get-url", "origin") or ""
+    return normalize_github_repository(remote)
+
+
+def resolve_github_repository(
+    *,
+    repository: str | None = None,
+    repo_path: Path | None = None,
+) -> str:
+    explicit = normalize_github_repository(repository or "")
+    if explicit:
+        return explicit
+    return infer_github_repository(repo_path)
+
+
 def runtime_consent_path(pack_dir: Path) -> Path:
     return pack_dir / "runtime" / "consent.json"
 
@@ -12156,6 +12200,8 @@ def publish_issues(
     project_key: str | None = None,
     cloud_id: str | None = None,
     site_url: str | None = None,
+    repository: str | None = None,
+    repo_path: Path | None = None,
 ) -> Path:
     cli = cli_invocation()
     if adapter not in {"jira", "github"}:
@@ -12175,6 +12221,7 @@ def publish_issues(
             "cloud_id": "",
             "site_url": "",
             "project_key": "",
+            "repository": resolve_github_repository(repository=repository, repo_path=repo_path),
             "bound": False,
             "path": "",
         }
@@ -12199,22 +12246,25 @@ def publish_issues(
             "cloud_id": targets["cloud_id"],
             "site_url": targets["site_url"],
             "project_key": targets["project_key"],
-            "summary": issue.get("summary", ""),
-            "description_markdown": issue.get("description_markdown", ""),
+            "repository": targets.get("repository", ""),
+            "summary": issue.get("summary", "") or issue.get("title", ""),
+            "description_markdown": issue.get("description_markdown", "") or issue.get("body_markdown", ""),
+            "title": issue.get("title", "") or issue.get("summary", ""),
+            "body_markdown": issue.get("body_markdown", "") or issue.get("description_markdown", ""),
             "labels": issue.get("labels", []),
             "issue_type_hint": issue.get("issue_type_hint", "Task"),
             "assignee_hint": issue.get("assignee_hint", ""),
             "status_hint": issue.get("status_hint", ""),
             "source_task_id": issue.get("task_id", ""),
         }
-        payload_name = f"{idx:02d}-{slugify(issue.get('summary', 'issue'))}.json"
+        payload_name = f"{idx:02d}-{slugify(issue.get('summary', '') or issue.get('title', 'issue'))}.json"
         payload_path = payload_dir / payload_name
         payload_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
         items.append(
             {
                 "sequence": idx,
                 "task_id": issue.get("task_id", ""),
-                "summary": issue.get("summary", ""),
+                "summary": issue.get("summary", "") or issue.get("title", ""),
                 "idempotency_key": issue_key,
                 "payload_path": display_path(payload_path),
             }
@@ -12228,13 +12278,20 @@ def publish_issues(
         "execution_mode": (
             "connector-ready"
             if adapter == "jira" and (targets["cloud_id"] and targets["project_key"])
+            else "native-ready"
+            if adapter == "github" and targets.get("repository")
             else "local-apply" if adapter == "github" else "staged-only"
         ),
         "target": {
             "cloud_id": targets["cloud_id"],
             "site_url": targets["site_url"],
             "project_key": targets["project_key"],
-            "configured": bool(targets["cloud_id"] and targets["project_key"]),
+            "repository": targets.get("repository", ""),
+            "configured": bool(
+                (targets["cloud_id"] and targets["project_key"])
+                if adapter == "jira"
+                else targets.get("repository", "")
+            ),
             "bound_config_path": targets["path"],
         },
         "work_unit": work_unit,
@@ -12245,6 +12302,8 @@ def publish_issues(
             (
                 "This plan is staged in serialized order so an external Jira publisher can replay it safely."
                 if adapter == "jira"
+                else "This plan can be executed natively against GitHub Issues when a repository target is configured."
+                if targets.get("repository")
                 else "This plan can be applied locally as a markdown issue ledger for portable review."
             ),
             "Payloads are serialized and idempotent so a future publisher can replay safely.",
@@ -12261,6 +12320,7 @@ def publish_issues(
         f"- Cloud ID: `{targets['cloud_id'] or 'unset'}`",
         f"- Site URL: `{targets['site_url'] or 'unset'}`",
         f"- Project Key: `{targets['project_key'] or 'unset'}`",
+        f"- Repository: `{targets.get('repository', '') or 'unset'}`",
         "",
         "## Rate-Limit Policy",
         *[f"- {key}: `{value}`" for key, value in build_rate_limit_policy(adapter).items()],
@@ -12272,8 +12332,11 @@ def publish_issues(
     if adapter == "github":
         readme_lines.extend(
             [
+                "## GitHub Native Publish",
+                f"- Use `{cli} execute-publish-plan <publish-dir> --native-github` to upsert issues through the GitHub CLI.",
+                "",
                 "## Local Apply",
-                f"- Use `{cli} apply-publish-plan <publish-dir>` to materialize a local markdown issue set.",
+                f"- Use `{cli} apply-publish-plan <publish-dir>` to materialize a local markdown issue set when no repository target is configured.",
                 "",
             ]
         )
@@ -12435,9 +12498,11 @@ def next_publish_apply_receipt_path(plan_dir: Path, adapter: str) -> Path:
 
 
 def render_local_issue_markdown(payload: dict[str, Any]) -> str:
+    title = str(payload.get("title", "") or payload.get("summary", "")).strip()
+    body = str(payload.get("body_markdown", "") or payload.get("description_markdown", "")).rstrip()
     labels = ", ".join(str(item) for item in payload.get("labels", [])) or "none"
     lines = [
-        f"# {payload.get('summary', '')}",
+        f"# {title}",
         "",
         f"- Idempotency Key: `{payload.get('idempotency_key', '')}`",
         f"- Source Task: `{payload.get('source_task_id', '')}`",
@@ -12447,7 +12512,7 @@ def render_local_issue_markdown(payload: dict[str, Any]) -> str:
         f"- Labels: `{labels}`",
         "",
         "## Description",
-        payload.get("description_markdown", "").rstrip(),
+        body,
         "",
     ]
     return "\n".join(lines)
@@ -12563,6 +12628,8 @@ def build_staged_publish_receipt(path: Path) -> dict[str, Any]:
             (
                 "Local apply is available for this adapter; rerun with --apply-local to materialize local outputs."
                 if execution_mode in {"local-apply", "markdown-fallback"}
+                else "Native GitHub execution is available; rerun with --execute-native or execute-publish-plan --native-github."
+                if execution_mode == "native-ready"
                 else "This publish plan remains staged for an external connector or future replay."
             )
         ],
@@ -12600,7 +12667,7 @@ def publish_plan_source_ref(item: dict[str, Any], payload_path: Path) -> str:
 def execute_publish_plan(
     path: Path,
     *,
-    runner: Path,
+    runner: Path | None = None,
     output_dir: Path | None = None,
     timeout_seconds: int = 15,
 ) -> tuple[dict[str, Any], Path, Path]:
@@ -12608,6 +12675,8 @@ def execute_publish_plan(
     plan = load_json_file(plan_path)
     if not isinstance(plan, dict):
         raise ValueError("Publish plan must be a mapping")
+    if runner is None:
+        raise ValueError("execute-publish-plan requires a bridge runner")
     runner_path = runner.expanduser()
     if not runner_path.exists():
         raise ValueError(f"Bridge runner not found at {display_path(runner_path)}")
@@ -12766,6 +12835,285 @@ def execute_publish_plan(
         "status": status,
         "plan_path": display_path(plan_path),
         "runner": display_path(runner_path),
+        "output_root": str(executed_root),
+        "result_path": display_path(result_path),
+        "records": records,
+        "failures": failures,
+        "replay_contract": result_bundle["replay_contract"],
+        "notes": notes,
+    }
+    receipt_path = next_publish_execution_receipt_path(executed_root, adapter)
+    receipt["receipt_path"] = display_path(receipt_path)
+    receipt_path.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
+    return receipt, receipt_path, result_path
+
+
+def github_issue_idempotency_label(key: str) -> str:
+    return f"jini-publish:{key}"
+
+
+def run_github_cli(
+    argv: list[str],
+    *,
+    timeout_seconds: int,
+) -> subprocess.CompletedProcess[str]:
+    try:
+        return subprocess.run(
+            argv,
+            capture_output=True,
+            text=True,
+            timeout=timeout_seconds,
+        )
+    except OSError as exc:
+        raise ValueError(f"GitHub CLI failed to start: {exc}") from exc
+    except subprocess.TimeoutExpired as exc:
+        raise ValueError(f"GitHub CLI timed out after {timeout_seconds}s: {' '.join(argv)}") from exc
+
+
+def lookup_github_issue(
+    *,
+    repository: str,
+    label: str,
+    timeout_seconds: int,
+    gh_binary: str = "gh",
+) -> dict[str, Any] | None:
+    result = run_github_cli(
+        [
+            gh_binary,
+            "issue",
+            "list",
+            "--repo",
+            repository,
+            "--label",
+            label,
+            "--state",
+            "all",
+            "--json",
+            "number,url,title",
+        ],
+        timeout_seconds=timeout_seconds,
+    )
+    if result.returncode != 0:
+        raise ValueError(
+            f"GitHub CLI issue lookup failed: {result.stderr.strip() or result.stdout.strip() or result.returncode}"
+        )
+    try:
+        payload = json.loads(result.stdout or "[]")
+    except json.JSONDecodeError as exc:
+        raise ValueError("GitHub CLI issue lookup did not return valid JSON") from exc
+    if not isinstance(payload, list):
+        raise ValueError("GitHub CLI issue lookup must return a JSON array")
+    if len(payload) > 1:
+        raise ValueError(f"GitHub issue lookup found multiple issues for idempotency label {label}")
+    if not payload:
+        return None
+    issue = payload[0]
+    if not isinstance(issue, dict):
+        raise ValueError("GitHub CLI issue lookup returned a non-object issue record")
+    return issue
+
+
+def execute_github_issue_publish_plan(
+    path: Path,
+    *,
+    repository: str | None = None,
+    output_dir: Path | None = None,
+    timeout_seconds: int = 15,
+    gh_binary: str = "gh",
+) -> tuple[dict[str, Any], Path, Path]:
+    plan_path = resolve_publish_plan_input(path)
+    plan = load_json_file(plan_path)
+    if not isinstance(plan, dict):
+        raise ValueError("Publish plan must be a mapping")
+
+    publish_type = str(plan.get("publish_type", "")).strip()
+    adapter = str(plan.get("adapter", "")).strip()
+    if publish_type != "JiniIssuePublishPlan" or adapter != "github":
+        raise ValueError("native GitHub execution supports only GitHub issue publish plans")
+
+    target = plan.get("target", {}) if isinstance(plan.get("target", {}), dict) else {}
+    resolved_repository = resolve_github_repository(
+        repository=repository or str(target.get("repository", "")).strip()
+    )
+    if not resolved_repository:
+        raise ValueError("native GitHub execution requires a GitHub repository target like owner/repo")
+
+    execution_mode = str(plan.get("execution_mode", "")).strip() or "native-ready"
+    items = plan.get("items", [])
+    if not isinstance(items, list) or not items:
+        raise ValueError("Publish plan must contain at least one item")
+
+    plan_dir = plan_path.parent
+    executed_root = output_dir.expanduser() if output_dir is not None else plan_dir / "executed"
+    executed_root.mkdir(parents=True, exist_ok=True)
+    records: list[dict[str, Any]] = []
+    failures: list[dict[str, Any]] = []
+    notes: list[str] = []
+    replay_identity: list[str] = []
+
+    with tempfile.TemporaryDirectory(prefix="jini-github-publish-") as temp_dir:
+        temp_root = Path(temp_dir)
+        for item in items:
+            if not isinstance(item, dict):
+                failures.append({"reason": "Plan item must be an object"})
+                break
+            payload_path = resolve_display_path(str(item.get("payload_path", "")))
+            payload = load_json_file(payload_path)
+            idempotency_key = str(payload.get("idempotency_key", "")).strip()
+            label = github_issue_idempotency_label(idempotency_key)
+            title = str(payload.get("title", "") or payload.get("summary", "")).strip()
+            body = str(payload.get("body_markdown", "") or payload.get("description_markdown", "")).rstrip() + "\n"
+            issue_labels = list(dict.fromkeys([*(payload.get("labels", []) or []), label]))
+            body_path = temp_root / f"{int(item.get('sequence', 0) or 0):02d}-{slugify(title or 'issue')}.md"
+            body_path.write_text(body, encoding="utf-8")
+
+            try:
+                existing = lookup_github_issue(
+                    repository=resolved_repository,
+                    label=label,
+                    timeout_seconds=timeout_seconds,
+                    gh_binary=gh_binary,
+                )
+            except ValueError as exc:
+                failures.append(
+                    {
+                        "source_ref": publish_plan_source_ref(item, payload_path),
+                        "payload_path": display_path(payload_path),
+                        "reason": str(exc),
+                    }
+                )
+                break
+
+            if existing is None:
+                command = [
+                    gh_binary,
+                    "issue",
+                    "create",
+                    "--repo",
+                    resolved_repository,
+                    "--title",
+                    title,
+                    "--body-file",
+                    str(body_path),
+                ]
+                for issue_label in issue_labels:
+                    command.extend(["--label", str(issue_label)])
+                command_result = run_github_cli(command, timeout_seconds=timeout_seconds)
+                if command_result.returncode != 0:
+                    failures.append(
+                        {
+                            "source_ref": publish_plan_source_ref(item, payload_path),
+                            "payload_path": display_path(payload_path),
+                            "reason": f"GitHub issue create exited with status {command_result.returncode}",
+                            "stdout": command_result.stdout.strip(),
+                            "stderr": command_result.stderr.strip(),
+                        }
+                    )
+                    break
+                existing = lookup_github_issue(
+                    repository=resolved_repository,
+                    label=label,
+                    timeout_seconds=timeout_seconds,
+                    gh_binary=gh_binary,
+                )
+                publication_status = "created"
+            else:
+                command = [
+                    gh_binary,
+                    "issue",
+                    "edit",
+                    str(existing.get("number", "")),
+                    "--repo",
+                    resolved_repository,
+                    "--title",
+                    title,
+                    "--body-file",
+                    str(body_path),
+                ]
+                for issue_label in issue_labels:
+                    command.extend(["--add-label", str(issue_label)])
+                command_result = run_github_cli(command, timeout_seconds=timeout_seconds)
+                if command_result.returncode != 0:
+                    failures.append(
+                        {
+                            "source_ref": publish_plan_source_ref(item, payload_path),
+                            "payload_path": display_path(payload_path),
+                            "reason": f"GitHub issue edit exited with status {command_result.returncode}",
+                            "stdout": command_result.stdout.strip(),
+                            "stderr": command_result.stderr.strip(),
+                        }
+                    )
+                    break
+                publication_status = "updated"
+
+            if existing is None:
+                failures.append(
+                    {
+                        "source_ref": publish_plan_source_ref(item, payload_path),
+                        "payload_path": display_path(payload_path),
+                        "reason": "GitHub issue lookup returned no issue after native publish",
+                    }
+                )
+                break
+
+            records.append(
+                {
+                    "adapter": adapter,
+                    "target_kind": "issue",
+                    "source_ref": publish_plan_source_ref(item, payload_path),
+                    "external_id": str(existing.get("number", "")).strip(),
+                    "external_url": str(existing.get("url", "")).strip(),
+                    "published_at": now_utc(),
+                    "publication_status": publication_status,
+                    "notes": [
+                        f"{publication_status} via GitHub CLI",
+                        f"repository:{resolved_repository}",
+                        f"idempotency-label:{label}",
+                    ],
+                }
+            )
+            replay_identity.append(idempotency_key)
+
+    status = "executed" if not failures else "failed"
+    if status == "executed":
+        notes.append("Executed staged publish plan natively through GitHub Issues with idempotent upsert semantics.")
+    else:
+        notes.append("Native GitHub execution stopped before all publish-plan items completed.")
+
+    result_bundle = {
+        "schema_version": "0.1.0",
+        "result_type": "JiniPublicationResult",
+        "generated_at": now_utc(),
+        "publish_type": publish_type,
+        "adapter": adapter,
+        "target_kind": "issue",
+        "plan_path": display_path(plan_path),
+        "runner": gh_binary,
+        "repository": resolved_repository,
+        "records": records,
+        "failures": failures,
+        "replay_contract": {
+            "mode": "idempotent-upsert" if not failures else "partial-failure",
+            "portable_result": True,
+            "serialized_execution": True,
+            "identity_keys": [key for key in replay_identity if key],
+            "repository": resolved_repository,
+        },
+    }
+    result_path = next_publish_execution_bundle_path(executed_root, adapter)
+    result_path.write_text(json.dumps(result_bundle, indent=2) + "\n", encoding="utf-8")
+
+    receipt = {
+        "schema_version": "0.1.0",
+        "receipt_type": "JiniExecutedPublishPlan",
+        "generated_at": now_utc(),
+        "publish_type": publish_type,
+        "adapter": adapter,
+        "execution_mode": execution_mode,
+        "status": status,
+        "plan_path": display_path(plan_path),
+        "runner": gh_binary,
+        "repository": resolved_repository,
         "output_root": str(executed_root),
         "result_path": display_path(result_path),
         "records": records,
@@ -13104,6 +13452,7 @@ def run_pack(
                     project_key=atlassian_targets["project_key"],
                     cloud_id=atlassian_targets["cloud_id"],
                     site_url=atlassian_targets["site_url"],
+                    repo_path=repo_path,
                 )
                 append_run_action(
                     actions,
@@ -18005,6 +18354,8 @@ def main() -> int:
     publish_issues_parser.add_argument("--project-key", help="Optional Jira project key for the staged publish plan")
     publish_issues_parser.add_argument("--cloud-id", help="Optional Atlassian cloud id override")
     publish_issues_parser.add_argument("--site-url", help="Optional Atlassian site url override")
+    publish_issues_parser.add_argument("--repository", help="Optional GitHub repository target like owner/repo")
+    publish_issues_parser.add_argument("--repo", type=Path, help="Optional local repo path to infer the GitHub origin target")
     publish_issues_parser.add_argument("--output", type=Path, help="Optional output directory")
     publish_issues_parser.add_argument(
         "--apply-local",
@@ -18021,6 +18372,11 @@ def main() -> int:
         type=int,
         default=15,
         help="Per-item timeout for bridge execution when --bridge-runner is provided",
+    )
+    publish_issues_parser.add_argument(
+        "--execute-native",
+        action="store_true",
+        help="Execute GitHub issue publish plans natively through the GitHub CLI after staging",
     )
     publish_issues_parser.add_argument(
         "--format",
@@ -18047,7 +18403,16 @@ def main() -> int:
         help="Execute a staged publish plan through a bridge command and emit a portable publication result bundle",
     )
     execute_publish_plan_parser.add_argument("path", type=Path)
-    execute_publish_plan_parser.add_argument("--runner", type=Path, required=True, help="Executable bridge command")
+    execute_publish_plan_parser.add_argument("--runner", type=Path, help="Executable bridge command")
+    execute_publish_plan_parser.add_argument(
+        "--native-github",
+        action="store_true",
+        help="Execute GitHub issue publish plans natively through the GitHub CLI",
+    )
+    execute_publish_plan_parser.add_argument(
+        "--repository",
+        help="Optional GitHub repository override like owner/repo when --native-github is used",
+    )
     execute_publish_plan_parser.add_argument("--output", type=Path, help="Optional output directory override")
     execute_publish_plan_parser.add_argument(
         "--timeout-seconds",
@@ -19742,8 +20107,12 @@ def main() -> int:
         return 0
 
     if args.command == "publish-issues":
-        if args.apply_local and args.bridge_runner:
-            print("ERROR publish-issues accepts only one of --apply-local or --bridge-runner")
+        selected_execution_modes = sum(bool(flag) for flag in (args.apply_local, args.bridge_runner, args.execute_native))
+        if selected_execution_modes > 1:
+            print("ERROR publish-issues accepts only one of --apply-local, --bridge-runner, or --execute-native")
+            return 1
+        if args.execute_native and args.adapter != "github":
+            print("ERROR publish-issues --execute-native is supported only for --adapter github")
             return 1
         try:
             output_path = publish_issues(
@@ -19754,6 +20123,8 @@ def main() -> int:
                 project_key=args.project_key,
                 cloud_id=args.cloud_id,
                 site_url=args.site_url,
+                repository=args.repository,
+                repo_path=args.repo,
             )
         except ValueError as exc:
             print(f"ERROR {exc}")
@@ -19774,6 +20145,21 @@ def main() -> int:
                 receipt, _receipt_path, _result_path = execute_publish_plan(
                     output_path,
                     runner=args.bridge_runner,
+                    timeout_seconds=args.bridge_timeout_seconds,
+                )
+            except ValueError as exc:
+                print(f"ERROR {exc}")
+                return 1
+            if args.format == "json":
+                print(json.dumps(receipt, indent=2))
+            else:
+                print_execute_publish_plan(receipt)
+            return 0
+        if args.execute_native:
+            try:
+                receipt, _receipt_path, _result_path = execute_github_issue_publish_plan(
+                    output_path,
+                    repository=args.repository,
                     timeout_seconds=args.bridge_timeout_seconds,
                 )
             except ValueError as exc:
@@ -19807,13 +20193,24 @@ def main() -> int:
         return 0
 
     if args.command == "execute-publish-plan":
+        if bool(args.runner) == bool(args.native_github):
+            print("ERROR execute-publish-plan requires exactly one of --runner or --native-github")
+            return 1
         try:
-            receipt, _receipt_path, _result_path = execute_publish_plan(
-                args.path,
-                runner=args.runner,
-                output_dir=args.output,
-                timeout_seconds=args.timeout_seconds,
-            )
+            if args.native_github:
+                receipt, _receipt_path, _result_path = execute_github_issue_publish_plan(
+                    args.path,
+                    repository=args.repository,
+                    output_dir=args.output,
+                    timeout_seconds=args.timeout_seconds,
+                )
+            else:
+                receipt, _receipt_path, _result_path = execute_publish_plan(
+                    args.path,
+                    runner=args.runner,
+                    output_dir=args.output,
+                    timeout_seconds=args.timeout_seconds,
+                )
         except ValueError as exc:
             print(f"ERROR {exc}")
             return 1

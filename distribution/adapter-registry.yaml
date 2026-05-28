@@ -19,16 +19,18 @@ adapters:
   - id: github
     label: GitHub Issues
     layer: issue-system
-    maturity: local-apply
+    maturity: native-execute
     priority: 60
     publish_semantics:
       plan_serialization: serialized-idempotent
       local_apply: deterministic-reapply
+      native_execution: idempotent-upsert
       receipt_contract: portable-json
     capabilities:
       - issues-export
       - issues-publish-plan
       - issues-apply-local
+      - issues-execute-native
     contract: Canonical Tasks -> sync payload -> GitHub issue bundle
 
   - id: confluence

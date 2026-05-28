@@ -312,6 +312,99 @@ class JiniCliConformanceTests(unittest.TestCase):
         runner.chmod(0o755)
         return runner
 
+    def create_fake_gh_cli(self) -> Path:
+        gh = self.tmp / "gh"
+        gh.write_text(
+            "\n".join(
+                [
+                    "#!/usr/bin/env python3",
+                    "import json",
+                    "import pathlib",
+                    "import sys",
+                    "",
+                    "state_path = pathlib.Path(__file__).with_name('gh-state.json')",
+                    "if state_path.exists():",
+                    "    state = json.loads(state_path.read_text(encoding='utf-8'))",
+                    "else:",
+                    "    state = {'repos': {}}",
+                    "",
+                    "def save():",
+                    "    state_path.write_text(json.dumps(state, indent=2) + '\\n', encoding='utf-8')",
+                    "",
+                    "def parse_flag(args, flag, default=''):",
+                    "    if flag not in args:",
+                    "        return default",
+                    "    return args[args.index(flag) + 1]",
+                    "",
+                    "def parse_many(args, flag):",
+                    "    values = []",
+                    "    index = 0",
+                    "    while index < len(args):",
+                    "        if args[index] == flag and index + 1 < len(args):",
+                    "            values.append(args[index + 1])",
+                    "            index += 2",
+                    "            continue",
+                    "        index += 1",
+                    "    return values",
+                    "",
+                    "args = sys.argv[1:]",
+                    "if args[:2] != ['issue', 'list'] and args[:2] != ['issue', 'create'] and args[:2] != ['issue', 'edit']:",
+                    "    raise SystemExit(f'unsupported args: {args}')",
+                    "",
+                    "if args[:2] == ['issue', 'list']:",
+                    "    repo = parse_flag(args, '--repo')",
+                    "    label = parse_flag(args, '--label')",
+                    "    repo_state = state['repos'].get(repo, [])",
+                    "    rows = [",
+                    "        {'number': issue['number'], 'url': issue['url'], 'title': issue['title']}",
+                    "        for issue in repo_state",
+                    "        if label in issue['labels']",
+                    "    ]",
+                    "    print(json.dumps(rows))",
+                    "    raise SystemExit(0)",
+                    "",
+                    "if args[:2] == ['issue', 'create']:",
+                    "    repo = parse_flag(args, '--repo')",
+                    "    title = parse_flag(args, '--title')",
+                    "    body_path = pathlib.Path(parse_flag(args, '--body-file'))",
+                    "    labels = parse_many(args, '--label')",
+                    "    repo_state = state['repos'].setdefault(repo, [])",
+                    "    number = max((issue['number'] for issue in repo_state), default=0) + 1",
+                    "    issue = {",
+                    "        'number': number,",
+                    "        'url': f'https://github.com/{repo}/issues/{number}',",
+                    "        'title': title,",
+                    "        'body': body_path.read_text(encoding='utf-8'),",
+                    "        'labels': labels,",
+                    "    }",
+                    "    repo_state.append(issue)",
+                    "    save()",
+                    "    print(issue['url'])",
+                    "    raise SystemExit(0)",
+                    "",
+                    "repo = parse_flag(args, '--repo')",
+                    "number = int(args[2])",
+                    "title = parse_flag(args, '--title')",
+                    "body_path = pathlib.Path(parse_flag(args, '--body-file'))",
+                    "labels = parse_many(args, '--add-label')",
+                    "repo_state = state['repos'].setdefault(repo, [])",
+                    "for issue in repo_state:",
+                    "    if issue['number'] == number:",
+                    "        issue['title'] = title",
+                    "        issue['body'] = body_path.read_text(encoding='utf-8')",
+                    "        issue['labels'] = sorted(set(issue['labels']) | set(labels))",
+                    "        save()",
+                    "        print(issue['url'])",
+                    "        raise SystemExit(0)",
+                    "raise SystemExit('unknown issue number')",
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        gh.chmod(0o755)
+        return gh
+
     def read_json(self, path: Path) -> dict[str, object]:
         return json.loads(path.read_text(encoding="utf-8"))
 
@@ -1526,6 +1619,88 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue(receipt["applied_paths"])
         self.assertTrue(Path(receipt["receipt_path"]).exists())
 
+    def test_publish_issues_github_can_execute_natively(self) -> None:
+        pack_dir = self.compile_research_pack()
+        gh = self.create_fake_gh_cli()
+        env = dict(os.environ)
+        env["PATH"] = f"{gh.parent}:{env.get('PATH', '')}"
+
+        result = self.run_cli(
+            "publish-issues",
+            pack_dir,
+            "--adapter",
+            "github",
+            "--repository",
+            "acme/demo",
+            "--execute-native",
+            "--format",
+            "json",
+            env=env,
+        )
+        self.assert_ok(result)
+
+        receipt = json.loads(result.stdout)
+        self.assertEqual("executed", receipt["status"])
+        self.assertEqual("github", receipt["adapter"])
+        self.assertEqual("idempotent-upsert", receipt["replay_contract"]["mode"])
+        self.assertEqual("acme/demo", receipt["repository"])
+        self.assertTrue(Path(receipt["result_path"]).exists())
+        bundle = self.read_json(Path(receipt["result_path"]))
+        self.assertEqual(3, len(bundle["records"]))
+        self.assertEqual("issue", bundle["records"][0]["target_kind"])
+        self.assertEqual("acme/demo", bundle["repository"])
+        self.assertEqual(receipt["replay_contract"], bundle["replay_contract"])
+
+    def test_execute_publish_plan_native_github_replay_is_upsert_safe(self) -> None:
+        pack_dir = self.compile_research_pack()
+        gh = self.create_fake_gh_cli()
+        env = dict(os.environ)
+        env["PATH"] = f"{gh.parent}:{env.get('PATH', '')}"
+
+        staged = self.run_cli(
+            "publish-issues",
+            pack_dir,
+            "--adapter",
+            "github",
+            "--repository",
+            "acme/demo",
+            "--format",
+            "json",
+            env=env,
+        )
+        self.assert_ok(staged)
+        self.assertEqual("native-ready", json.loads(staged.stdout)["execution_mode"])
+
+        first = self.run_cli(
+            "execute-publish-plan",
+            pack_dir / "exports" / "publish" / "issues" / "github",
+            "--native-github",
+            "--format",
+            "json",
+            env=env,
+        )
+        second = self.run_cli(
+            "execute-publish-plan",
+            pack_dir / "exports" / "publish" / "issues" / "github",
+            "--native-github",
+            "--format",
+            "json",
+            env=env,
+        )
+        self.assert_ok(first)
+        self.assert_ok(second)
+
+        first_receipt = json.loads(first.stdout)
+        second_receipt = json.loads(second.stdout)
+        self.assertEqual(first_receipt["replay_contract"], second_receipt["replay_contract"])
+        self.assertEqual("idempotent-upsert", first_receipt["replay_contract"]["mode"])
+        stable_fields = ("source_ref", "external_id", "external_url", "target_kind")
+        first_projection = [{key: record[key] for key in stable_fields} for record in first_receipt["records"]]
+        second_projection = [{key: record[key] for key in stable_fields} for record in second_receipt["records"]]
+        self.assertEqual(first_projection, second_projection)
+        self.assertTrue(all(record["publication_status"] == "created" for record in first_receipt["records"]))
+        self.assertTrue(all(record["publication_status"] == "updated" for record in second_receipt["records"]))
+
     def test_publish_issues_jira_can_execute_via_bridge_and_capture_publication(self) -> None:
         pack_dir = self.compile_research_pack()
         runner = self.create_publish_bridge_runner()
@@ -1997,6 +2172,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         markdown = next(item for item in summary["checks"] if item["id"] == "markdown")
         confluence = next(item for item in summary["checks"] if item["id"] == "confluence")
         self.assertEqual("deterministic-reapply", github["publish_semantics"]["local_apply"])
+        self.assertEqual("idempotent-upsert", github["publish_semantics"]["native_execution"])
         self.assertEqual("portable-json", github["publish_semantics"]["receipt_contract"])
         self.assertEqual("replay-safe", jira["publish_semantics"]["bridge_execution"])
         self.assertEqual("replay-safe", confluence["publish_semantics"]["bridge_execution"])
