@@ -284,6 +284,14 @@ scenarios:
         command: ["status", "{scenario_root}/research-pack", "--format", "json"]
         path: "turn_record.user_input_ids"
         contains: "initial-request"
+      - id: status-shows-grouped-artifact-shelf
+        command: ["status", "{scenario_root}/research-pack", "--format", "json"]
+        path: "artifact_shelf.ready_now.label"
+        equals: "Ready now"
+      - id: status-artifact-card-is-openable
+        command: ["status", "{scenario_root}/research-pack", "--format", "json"]
+        path: "artifact_shelf.ready_now.cards.0.open_action.command"
+        contains: "jini open"
 
   - id: portable-edges
     label: Portable execution edges

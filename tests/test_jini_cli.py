@@ -740,6 +740,67 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("uploaded-brief", input_ids)
         self.assertIn("uploaded-brief", report["turn_record"]["user_input_ids"])
 
+    def test_status_surfaces_grouped_artifact_shelf(self) -> None:
+        pack_dir = self.compile_research_pack()
+
+        status_json = self.run_cli("status", pack_dir, "--format", "json")
+        self.assert_ok(status_json)
+        report = json.loads(status_json.stdout)
+
+        shelf = report["artifact_shelf"]
+        self.assertEqual("Ready now", shelf["ready_now"]["label"])
+        self.assertEqual("Needs input", shelf["needs_input"]["label"])
+        self.assertEqual("Blocked", shelf["blocked"]["label"])
+        ready_cards = shelf["ready_now"]["cards"]
+        self.assertTrue(ready_cards)
+        ready_ids = [card["artifact_id"] for card in ready_cards]
+        self.assertIn("tasks", ready_ids)
+        tasks_card = next(card for card in ready_cards if card["artifact_id"] == "tasks")
+        self.assertEqual("JiniArtifactCard", tasks_card["card_type"])
+        self.assertEqual("test-research-pack", tasks_card["thread_id"])
+        self.assertEqual("Tasks", tasks_card["title"])
+        self.assertEqual("ready", tasks_card["status"])
+        self.assertTrue(tasks_card["summary"])
+        self.assertTrue(tasks_card["preview"])
+        self.assertEqual("jini open tasks", tasks_card["open_action"]["command"])
+        self.assertTrue(tasks_card["export_actions"])
+        self.assertIn("initial-request", tasks_card["source_input_ids"])
+        self.assertEqual(ready_cards, report["artifact_cards"])
+
+        status_text = self.run_cli("status", pack_dir)
+        self.assert_ok(status_text)
+        self.assertIn("ARTIFACT SHELF", status_text.stdout)
+        self.assertIn("Ready now", status_text.stdout)
+        self.assertIn("Tasks [ready]", status_text.stdout)
+        self.assertIn("jini open tasks", status_text.stdout)
+
+    def test_status_shelf_groups_missing_required_artifacts_as_needs_input(self) -> None:
+        pack_dir = self.compile_research_pack()
+        work_unit_path = pack_dir / "work-unit.yaml"
+        work_unit_text = work_unit_path.read_text(encoding="utf-8")
+        self.assertIn("current_state: decided", work_unit_text)
+        work_unit_path.write_text(
+            work_unit_text.replace("current_state: decided", "current_state: operational"),
+            encoding="utf-8",
+        )
+
+        status_json = self.run_cli("status", pack_dir, "--format", "json")
+        self.assert_ok(status_json)
+        report = json.loads(status_json.stdout)
+
+        needs_cards = report["artifact_shelf"]["needs_input"]["cards"]
+        needs_ids = [card["artifact_id"] for card in needs_cards]
+        self.assertIn("approval", needs_ids)
+        approval_card = next(card for card in needs_cards if card["artifact_id"] == "approval")
+        self.assertEqual("Approval", approval_card["artifact_type"])
+        self.assertEqual("needs_input", approval_card["status"])
+        self.assertIn("Missing required artifact", approval_card["summary"])
+
+        status_text = self.run_cli("status", pack_dir)
+        self.assert_ok(status_text)
+        self.assertIn("Needs input", status_text.stdout)
+        self.assertIn("Approval [needs_input]", status_text.stdout)
+
     def test_example_sets_current_work_for_pathless_status_and_artifacts(self) -> None:
         example_output = self.tmp / "research-example"
         result = self.run_cli("try-example", "research-prd", "--output", example_output)
@@ -784,6 +845,14 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("text", projection_doc["input_items"][0]["kind"])
         self.assertEqual("processed", projection_doc["input_items"][0]["status"])
         self.assertIn("tasks", projection_doc["input_items"][0]["derived_artifact_ids"])
+        self.assertIn("artifact_shelf", projection_doc)
+        self.assertEqual("Ready now", projection_doc["artifact_shelf"]["ready_now"]["label"])
+        self.assertTrue(projection_doc["artifact_shelf"]["ready_now"]["cards"])
+        self.assertIn("artifact_cards", projection_doc)
+        self.assertEqual(
+            projection_doc["artifact_shelf"]["ready_now"]["cards"],
+            projection_doc["artifact_cards"],
+        )
 
     def test_show_artifact_uses_current_work_without_path(self) -> None:
         pack_dir = self.compile_travel_pack()

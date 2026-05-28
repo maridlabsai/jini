@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any
 
@@ -129,6 +130,161 @@ def build_input_items(
         },
         *preserved_items,
     ]
+
+
+def _card_artifact_id(label: str) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", label.strip().lower()).strip("-")
+    return slug or "artifact"
+
+
+def _snapshot_summary(snapshot_markdown: str, fallback: str) -> str:
+    for raw_line in snapshot_markdown.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        if line.startswith("#"):
+            line = line.lstrip("#").strip()
+        if line:
+            return _compact_preview(line, max_chars=120)
+    return fallback
+
+
+def _source_input_ids_for_artifact(artifact_id: str, input_items: list[dict[str, Any]]) -> list[str]:
+    matches = [
+        str(item.get("input_id", "")).strip()
+        for item in input_items
+        if isinstance(item, dict)
+        and artifact_id in {str(value).strip() for value in item.get("derived_artifact_ids", [])}
+        and str(item.get("input_id", "")).strip()
+    ]
+    if matches:
+        return matches
+    return [
+        str(item.get("input_id", "")).strip()
+        for item in input_items
+        if isinstance(item, dict) and str(item.get("input_id", "")).strip()
+    ][:1]
+
+
+def build_artifact_shelf(
+    *,
+    session_id: str,
+    summary: dict[str, Any],
+    ready_now: list[dict[str, Any]],
+    input_items: list[dict[str, Any]],
+    updated_at: str,
+) -> dict[str, Any]:
+    ready_cards: list[dict[str, Any]] = []
+    for item in ready_now:
+        artifact_id = str(item.get("id", "")).strip()
+        if not artifact_id:
+            continue
+        title = str(item.get("label", "")).strip() or artifact_id
+        snapshot = str(item.get("snapshot_markdown", "")).strip()
+        ready_cards.append(
+            {
+                "schema_version": "0.1.0",
+                "card_type": "JiniArtifactCard",
+                "artifact_id": artifact_id,
+                "thread_id": session_id,
+                "artifact_type": title,
+                "title": title,
+                "status": "ready",
+                "summary": _snapshot_summary(snapshot, f"{title} is ready."),
+                "preview": _compact_preview(snapshot or title, max_chars=220),
+                "open_action": {
+                    "label": "Open",
+                    "command": f"jini open {artifact_id}",
+                },
+                "export_actions": [
+                    {
+                        "label": "Show",
+                        "command": f"jini show {artifact_id}",
+                    },
+                    {
+                        "label": "Print path",
+                        "command": f"jini open {artifact_id} --print-path",
+                    },
+                ],
+                "source_input_ids": _source_input_ids_for_artifact(artifact_id, input_items),
+                "updated_at": updated_at,
+            }
+        )
+
+    needs_input_cards = [
+        {
+            "schema_version": "0.1.0",
+            "card_type": "JiniArtifactCard",
+            "artifact_id": _card_artifact_id(str(artifact_type)),
+            "thread_id": session_id,
+            "artifact_type": str(artifact_type).strip(),
+            "title": str(artifact_type).strip(),
+            "status": "needs_input",
+            "summary": f"Missing required artifact: {str(artifact_type).strip()}",
+            "preview": "Jini needs this before the current stage can move forward.",
+            "open_action": {
+                "label": "Inspect status",
+                "command": "jini status",
+            },
+            "export_actions": [],
+            "source_input_ids": [],
+            "updated_at": updated_at,
+        }
+        for artifact_type in summary.get("missing_stage_required", [])
+        if str(artifact_type).strip()
+    ]
+
+    missing_blocker_prefixes = {
+        f"Missing required artifact: {str(artifact_type).strip()}"
+        for artifact_type in summary.get("missing_stage_required", [])
+        if str(artifact_type).strip()
+    }
+    blocked_cards = [
+        {
+            "schema_version": "0.1.0",
+            "card_type": "JiniArtifactCard",
+            "artifact_id": f"blocked-{index}",
+            "thread_id": session_id,
+            "artifact_type": "Blocker",
+            "title": "Blocked work",
+            "status": "blocked",
+            "summary": blocker,
+            "preview": blocker,
+            "open_action": {
+                "label": "Inspect status",
+                "command": "jini status",
+            },
+            "export_actions": [],
+            "source_input_ids": [],
+            "updated_at": updated_at,
+        }
+        for index, blocker in enumerate(
+            [
+                str(item).strip()
+                for item in summary.get("blockers", [])
+                if str(item).strip() and str(item).strip() not in missing_blocker_prefixes
+            ],
+            start=1,
+        )
+    ]
+
+    return {
+        "schema_version": "0.1.0",
+        "shelf_type": "JiniArtifactShelf",
+        "groups": ["ready_now", "needs_input", "blocked"],
+        "ready_now": {
+            "label": "Ready now",
+            "cards": ready_cards,
+        },
+        "needs_input": {
+            "label": "Needs input",
+            "cards": needs_input_cards,
+        },
+        "blocked": {
+            "label": "Blocked",
+            "cards": blocked_cards,
+        },
+    }
 
 
 def build_progress_snapshot(summary: dict[str, Any], ready_now: list[dict[str, Any]]) -> dict[str, Any]:
@@ -313,6 +469,13 @@ def build_session_projection(
         updated_at=updated_at,
         previous_projection=previous_projection,
     )
+    artifact_shelf = build_artifact_shelf(
+        session_id=session_id,
+        summary=summary,
+        ready_now=ready_now,
+        input_items=input_items,
+        updated_at=updated_at,
+    )
     turn_record = build_turn_record(
         session_id=session_id,
         summary=summary,
@@ -341,6 +504,12 @@ def build_session_projection(
         "missing": missing,
         "next": str(summary.get("next_operation", "")),
         "input_items": input_items,
+        "artifact_shelf": artifact_shelf,
+        "artifact_cards": [
+            *artifact_shelf["ready_now"]["cards"],
+            *artifact_shelf["needs_input"]["cards"],
+            *artifact_shelf["blocked"]["cards"],
+        ],
         "progress_snapshot": progress_snapshot,
         "turn_record": turn_record,
         "route": {

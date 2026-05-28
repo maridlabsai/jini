@@ -15555,6 +15555,12 @@ def build_outcome_view(
     input_items = projection.get("input_items", [])
     if not isinstance(input_items, list):
         input_items = []
+    artifact_shelf = projection.get("artifact_shelf", {})
+    if not isinstance(artifact_shelf, dict):
+        artifact_shelf = {}
+    artifact_cards = projection.get("artifact_cards", [])
+    if not isinstance(artifact_cards, list):
+        artifact_cards = []
     progress_snapshot = projection.get("progress_snapshot")
     if not isinstance(progress_snapshot, dict):
         progress_snapshot = build_progress_snapshot(summary, list(artifact_catalog.get("ready_now", [])))
@@ -15603,6 +15609,8 @@ def build_outcome_view(
             "input_items": input_items,
         },
         "input_items": input_items,
+        "artifact_shelf": artifact_shelf,
+        "artifact_cards": artifact_cards,
         "progress_snapshot": progress_snapshot,
         "turn_record": turn_record,
         "current_focus": current_focus,
@@ -15644,6 +15652,12 @@ def build_outcome_view_from_projection(
     input_items = projection.get("input_items", [])
     if not isinstance(input_items, list):
         input_items = []
+    artifact_shelf = projection.get("artifact_shelf", {})
+    if not isinstance(artifact_shelf, dict):
+        artifact_shelf = {}
+    artifact_cards = projection.get("artifact_cards", [])
+    if not isinstance(artifact_cards, list):
+        artifact_cards = []
     progress_snapshot = projection.get("progress_snapshot")
     if not isinstance(progress_snapshot, dict):
         progress_snapshot = {
@@ -15716,6 +15730,8 @@ def build_outcome_view_from_projection(
             "input_items": input_items,
         },
         "input_items": input_items,
+        "artifact_shelf": artifact_shelf,
+        "artifact_cards": artifact_cards,
         "progress_snapshot": progress_snapshot,
         "turn_record": turn_record,
         "current_focus": current_focus,
@@ -15844,6 +15860,7 @@ def print_outcome_view(report: dict[str, Any]) -> None:
     progress = report.get("progress_snapshot", {})
     turn = report.get("turn_record", {})
     input_items = report.get("input_items", [])
+    artifact_shelf = report.get("artifact_shelf", {})
     if isinstance(progress, dict) and progress:
         print()
         print("JUST FINISHED")
@@ -15879,6 +15896,33 @@ def print_outcome_view(report: dict[str, Any]) -> None:
             if preview:
                 preview, _trimmed = build_terminal_preview(preview, max_chars=160)
                 print(f"    {preview}")
+    if isinstance(artifact_shelf, dict) and artifact_shelf:
+        print()
+        print("ARTIFACT SHELF")
+        for group_id in artifact_shelf.get("groups", ["ready_now", "needs_input", "blocked"]):
+            group = artifact_shelf.get(group_id, {})
+            if not isinstance(group, dict):
+                continue
+            cards = [card for card in group.get("cards", []) if isinstance(card, dict)]
+            if not cards:
+                continue
+            print(f"  {group.get('label', group_id)}")
+            for card in cards[:4]:
+                title = str(card.get("title", "")).strip() or str(card.get("artifact_id", "")).strip()
+                status = str(card.get("status", "")).strip()
+                command = ""
+                open_action = card.get("open_action", {})
+                if isinstance(open_action, dict):
+                    command = str(open_action.get("command", "")).strip()
+                suffix = f" [{status}]" if status else ""
+                if command:
+                    print(f"    - {title}{suffix} -> {command}")
+                else:
+                    print(f"    - {title}{suffix}")
+                summary = str(card.get("summary", "")).strip()
+                if summary:
+                    summary, _trimmed = build_terminal_preview(summary, max_chars=140)
+                    print(f"      {summary}")
     print()
     print("WHAT IS DONE?")
     print(f"  {report.get('questions', {}).get('what_is_done', '')}")
