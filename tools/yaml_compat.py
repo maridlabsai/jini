@@ -351,7 +351,27 @@ def _dump_scalar(value: Any) -> str:
         return "false"
     if isinstance(value, (int, float)):
         return str(value)
-    return json.dumps(str(value))
+    text = str(value)
+    if _plain_scalar_safe(text):
+        return text
+    return json.dumps(text)
+
+
+def _plain_scalar_safe(text: str) -> bool:
+    if not text or text != text.strip():
+        return False
+    lowered = text.lower()
+    if lowered in {"null", "~", "true", "false"}:
+        return False
+    if re.fullmatch(r"-?\d+(\.\d+)?", text):
+        return False
+    if "\n" in text or "\r" in text or "\t" in text:
+        return False
+    if ": " in text or " #" in text:
+        return False
+    if text[0] in "-?:,[]{}#&*!|>'\"%@`":
+        return False
+    return True
 
 
 def _dump_lines(value: Any, indent: int = 0) -> list[str]:

@@ -847,6 +847,18 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual(1, adapter_evidence["local-fast"]["signal_count"])
         self.assertEqual({"outcome_replaced": 1}, adapter_evidence["local-fast"]["counters"])
         self.assertEqual("penalized", adapter_evidence["local-fast"]["routing_effect"])
+        selection_delta = feedback_evidence["selection_delta"]
+        self.assertTrue(selection_delta["selected_changed"])
+        self.assertEqual("local-fast", selection_delta["baseline_selected_adapter"])
+        self.assertEqual("local-workhorse", selection_delta["feedback_selected_adapter"])
+        self.assertEqual(["local-fast", "local-workhorse"], selection_delta["baseline_rank"])
+        self.assertEqual(["local-workhorse", "local-fast"], selection_delta["feedback_rank"])
+        self.assertEqual(["local-fast"], selection_delta["demoted_adapters"])
+        self.assertEqual(["local-workhorse"], selection_delta["promoted_adapters"])
+
+        corrected_text = self.run_cli("recommend-execution", pack_dir, "--intent", "export")
+        self.assert_ok(corrected_text)
+        self.assertIn("IMPACT baseline=local-fast feedback=local-workhorse changed=yes", corrected_text.stdout)
 
         events = self.run_cli("show-learning-events", pack_dir, "--event-type", "route-outcome-feedback", "--format", "json")
         self.assert_ok(events)

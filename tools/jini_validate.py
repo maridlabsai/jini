@@ -566,7 +566,27 @@ def _simple_yaml_scalar_dump(value: Any) -> str:
         return "false"
     if isinstance(value, (int, float)):
         return str(value)
-    return json.dumps(str(value))
+    text = str(value)
+    if _simple_yaml_plain_scalar_safe(text):
+        return text
+    return json.dumps(text)
+
+
+def _simple_yaml_plain_scalar_safe(text: str) -> bool:
+    if not text or text != text.strip():
+        return False
+    lowered = text.lower()
+    if lowered in {"null", "~", "true", "false"}:
+        return False
+    if re.fullmatch(r"-?\d+(\.\d+)?", text):
+        return False
+    if "\n" in text or "\r" in text or "\t" in text:
+        return False
+    if ": " in text or " #" in text:
+        return False
+    if text[0] in "-?:,[]{}#&*!|>'\"%@`":
+        return False
+    return True
 
 
 def _simple_yaml_dump_lines(value: Any, indent: int = 0) -> list[str]:
@@ -1565,6 +1585,67 @@ def route_feedback_summary_for_adapters(
     }
 
 
+def route_adapter_id(item: dict[str, Any]) -> str:
+    return str(item.get("adapter_id", "")).strip()
+
+
+def route_adapter_sort_key(item: dict[str, Any], execution_class: str, *, use_feedback: bool) -> tuple[Any, ...]:
+    if execution_class == "cheap":
+        base_key = (
+            int(item.get("cold_start_cost_ms", 0) or 0),
+            int(item.get("warm_latency_ms", 0) or 0),
+            -float(item.get("tokens_per_second", 0) or 0),
+            -route_quality_rank(item.get("quality_class", "")),
+            -route_reliability_rank(item.get("structured_reliability", "")),
+        )
+        if not use_feedback:
+            return base_key
+        bias = int(item.get("_route_feedback_bias", 0) or 0)
+        return (1 if bias < 0 else 0, abs(min(0, bias)), *base_key)
+
+    base_key = (
+        -route_quality_rank(item.get("quality_class", "")),
+        -route_reliability_rank(item.get("structured_reliability", "")),
+        1 if str(item.get("status", "")).strip().lower() == "degraded" else 0,
+        int(item.get("warm_latency_ms", 0) or 0),
+        int(item.get("cold_start_cost_ms", 0) or 0),
+        -float(item.get("tokens_per_second", 0) or 0),
+    )
+    if not use_feedback:
+        return base_key
+    bias = int(item.get("_route_feedback_bias", 0) or 0)
+    return (*base_key[:3], -bias, *base_key[3:])
+
+
+def route_feedback_selection_delta(
+    baseline_rank: list[str],
+    feedback_rank: list[str],
+) -> dict[str, Any]:
+    baseline_selected = baseline_rank[0] if baseline_rank else ""
+    feedback_selected = feedback_rank[0] if feedback_rank else ""
+    baseline_positions = {adapter_id: index for index, adapter_id in enumerate(baseline_rank)}
+    feedback_positions = {adapter_id: index for index, adapter_id in enumerate(feedback_rank)}
+    promoted = [
+        adapter_id
+        for adapter_id in feedback_rank
+        if adapter_id in baseline_positions and feedback_positions[adapter_id] < baseline_positions[adapter_id]
+    ]
+    demoted = [
+        adapter_id
+        for adapter_id in baseline_rank
+        if adapter_id in feedback_positions and feedback_positions[adapter_id] > baseline_positions[adapter_id]
+    ]
+    return {
+        "baseline_selected_adapter": baseline_selected,
+        "feedback_selected_adapter": feedback_selected,
+        "selected_changed": bool(baseline_selected and feedback_selected and baseline_selected != feedback_selected),
+        "baseline_rank": baseline_rank,
+        "feedback_rank": feedback_rank,
+        "promoted_adapters": promoted,
+        "demoted_adapters": demoted,
+    }
+
+
 def select_measured_local_execution_route(
     runtime_guidance: dict[str, Any],
     route_evidence: dict[str, Any],
@@ -1601,38 +1682,22 @@ def select_measured_local_execution_route(
         item["_route_feedback_bias"] = int(feedback["biases"].get(adapter_id, 0))
         item["_route_feedback_signal_count"] = int(feedback["signal_counts"].get(adapter_id, 0))
 
-    if execution_class == "cheap":
-        ready_adapters.sort(
-            key=lambda item: (
-                1 if int(item.get("_route_feedback_bias", 0) or 0) < 0 else 0,
-                abs(min(0, int(item.get("_route_feedback_bias", 0) or 0))),
-                int(item.get("cold_start_cost_ms", 0) or 0),
-                int(item.get("warm_latency_ms", 0) or 0),
-                -float(item.get("tokens_per_second", 0) or 0),
-                -route_quality_rank(item.get("quality_class", "")),
-                -route_reliability_rank(item.get("structured_reliability", "")),
-            )
-        )
-    else:
-        ready_adapters.sort(
-            key=lambda item: (
-                -route_quality_rank(item.get("quality_class", "")),
-                -route_reliability_rank(item.get("structured_reliability", "")),
-                1 if str(item.get("status", "")).strip().lower() == "degraded" else 0,
-                -int(item.get("_route_feedback_bias", 0) or 0),
-                int(item.get("warm_latency_ms", 0) or 0),
-                int(item.get("cold_start_cost_ms", 0) or 0),
-                -float(item.get("tokens_per_second", 0) or 0),
-            )
-        )
+    baseline_rank = [
+        route_adapter_id(item)
+        for item in sorted(ready_adapters, key=lambda item: route_adapter_sort_key(item, execution_class, use_feedback=False))
+        if route_adapter_id(item)
+    ]
+    ready_adapters.sort(key=lambda item: route_adapter_sort_key(item, execution_class, use_feedback=True))
+    feedback_rank = [route_adapter_id(item) for item in ready_adapters if route_adapter_id(item)]
+    selection_delta = route_feedback_selection_delta(baseline_rank, feedback_rank)
 
     selected = ready_adapters[0]
-    selected_id = str(selected.get("adapter_id", "")).strip()
+    selected_id = route_adapter_id(selected)
     if not selected_id:
         return {}
     fallback_ids: list[str] = []
     for adapter in ready_adapters[1:]:
-        adapter_id = str(adapter.get("adapter_id", "")).strip()
+        adapter_id = route_adapter_id(adapter)
         if adapter_id and adapter_id != selected_id and adapter_id not in fallback_ids:
             fallback_ids.append(adapter_id)
     selected_runtime = runtime_guidance.get("selected", {}) if isinstance(runtime_guidance, dict) else {}
@@ -1674,6 +1739,7 @@ def select_measured_local_execution_route(
             "total_expired_signal_count": int(feedback["total_expired_signal_count"]),
             "adjusted_adapters": feedback["adjusted_adapters"],
             "adapters": feedback["adapters"],
+            "selection_delta": selection_delta,
         },
     }
 
@@ -22373,6 +22439,14 @@ def main() -> int:
                         f"  COHORT {feedback_evidence.get('cohort_key', '')} "
                         f"signals={feedback_evidence.get('total_signal_count', 0)}"
                     )
+                    selection_delta = feedback_evidence.get("selection_delta", {})
+                    if isinstance(selection_delta, dict):
+                        changed = "yes" if selection_delta.get("selected_changed") else "no"
+                        print(
+                            f"  IMPACT baseline={selection_delta.get('baseline_selected_adapter', '')} "
+                            f"feedback={selection_delta.get('feedback_selected_adapter', '')} "
+                            f"changed={changed}"
+                        )
                     for item in feedback_evidence.get("adapters", []):
                         print(
                             f"  ADAPTER {item.get('adapter_id', '')} "

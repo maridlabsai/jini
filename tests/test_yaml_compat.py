@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from tools.yaml_compat import safe_load
+from tools.yaml_compat import safe_dump, safe_load
 
 
 class YamlCompatTests(unittest.TestCase):
@@ -24,6 +24,27 @@ tasks:
                 ]
             },
             document,
+        )
+
+    def test_safe_dump_uses_plain_scalars_when_yaml_can_read_them_unambiguously(self) -> None:
+        document = safe_dump(
+            {
+                "current_state": "decided",
+                "task": "Sarah: draft the pricing update by Thursday.",
+                "enabled": True,
+            },
+            sort_keys=False,
+        )
+        self.assertIn("current_state: decided", document)
+        self.assertNotIn("task: Sarah: draft the pricing update by Thursday.", document)
+        self.assertIn("enabled: true", document)
+        self.assertEqual(
+            {
+                "current_state": "decided",
+                "task": "Sarah: draft the pricing update by Thursday.",
+                "enabled": True,
+            },
+            safe_load(document),
         )
 
 
