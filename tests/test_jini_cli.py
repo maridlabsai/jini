@@ -348,6 +348,41 @@ class JiniCliConformanceTests(unittest.TestCase):
                     "    return values",
                     "",
                     "args = sys.argv[1:]",
+                    "def content_key(endpoint):",
+                    "    if not endpoint.startswith('repos/') or '/contents/' not in endpoint:",
+                    "        raise SystemExit(f'unsupported endpoint: {endpoint}')",
+                    "    repo_part, path = endpoint.removeprefix('repos/').split('/contents/', 1)",
+                    "    owner, repo, *_rest = repo_part.split('/')",
+                    "    return f'{owner}/{repo}', path",
+                    "",
+                    "if args and args[0] == 'api':",
+                    "    endpoint = args[1]",
+                    "    repo, path = content_key(endpoint)",
+                    "    method = parse_flag(args, '-X', 'GET')",
+                    "    repo_state = state['repos'].setdefault(repo, [])",
+                    "    docs = state.setdefault('docs', {}).setdefault(repo, {})",
+                    "    if method == 'GET':",
+                    "        if path not in docs:",
+                    "            raise SystemExit('Not Found')",
+                    "        record = docs[path]",
+                    "        print(json.dumps({'path': path, 'sha': record['sha'], 'html_url': record['html_url']}))",
+                    "        raise SystemExit(0)",
+                    "    if method == 'PUT':",
+                    "        input_path = pathlib.Path(parse_flag(args, '--input'))",
+                    "        payload = json.loads(input_path.read_text(encoding='utf-8'))",
+                    "        status = 'updated' if path in docs else 'created'",
+                    "        sha = f'sha-{len(docs) + 1}' if status == 'created' else docs[path]['sha']",
+                    "        docs[path] = {",
+                    "            'sha': sha,",
+                    "            'html_url': f'https://github.com/{repo}/blob/main/{path}',",
+                    "            'message': payload.get('message', ''),",
+                    "            'content': payload.get('content', ''),",
+                    "        }",
+                    "        save()",
+                    "        print(json.dumps({'content': {'path': path, 'sha': sha, 'html_url': docs[path]['html_url']}, 'commit': {'sha': f'commit-{len(docs)}'}, 'status': status}))",
+                    "        raise SystemExit(0)",
+                    "    raise SystemExit(f'unsupported method: {method}')",
+                    "",
                     "if args[:2] != ['issue', 'list'] and args[:2] != ['issue', 'create'] and args[:2] != ['issue', 'edit']:",
                     "    raise SystemExit(f'unsupported args: {args}')",
                     "",
@@ -1840,6 +1875,94 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue(receipt["applied_paths"])
         self.assertTrue(Path(receipt["receipt_path"]).exists())
 
+    def test_publish_wiki_github_docs_can_execute_natively(self) -> None:
+        pack_dir = self.compile_research_pack()
+        gh = self.create_fake_gh_cli()
+        env = dict(os.environ)
+        env["PATH"] = f"{gh.parent}:{env.get('PATH', '')}"
+
+        result = self.run_cli(
+            "publish-wiki",
+            pack_dir,
+            "--adapter",
+            "github-docs",
+            "--repository",
+            "acme/demo",
+            "--docs-path",
+            "docs/jini",
+            "--execute-native",
+            "--format",
+            "json",
+            env=env,
+        )
+        self.assert_ok(result)
+
+        receipt = json.loads(result.stdout)
+        self.assertEqual("executed", receipt["status"])
+        self.assertEqual("github-docs", receipt["adapter"])
+        self.assertEqual("idempotent-upsert", receipt["replay_contract"]["mode"])
+        self.assertEqual("acme/demo", receipt["repository"])
+        self.assertEqual("docs/jini", receipt["docs_path"])
+        self.assertTrue(Path(receipt["result_path"]).exists())
+        bundle = self.read_json(Path(receipt["result_path"]))
+        self.assertEqual(3, len(bundle["records"]))
+        self.assertEqual("wiki-page", bundle["records"][0]["target_kind"])
+        self.assertEqual("acme/demo", bundle["repository"])
+        self.assertEqual("docs/jini", bundle["docs_path"])
+        self.assertEqual(receipt["replay_contract"], bundle["replay_contract"])
+
+    def test_execute_publish_plan_native_github_docs_replay_is_upsert_safe(self) -> None:
+        pack_dir = self.compile_research_pack()
+        gh = self.create_fake_gh_cli()
+        env = dict(os.environ)
+        env["PATH"] = f"{gh.parent}:{env.get('PATH', '')}"
+
+        staged = self.run_cli(
+            "publish-wiki",
+            pack_dir,
+            "--adapter",
+            "github-docs",
+            "--repository",
+            "acme/demo",
+            "--docs-path",
+            "docs/jini",
+            "--format",
+            "json",
+            env=env,
+        )
+        self.assert_ok(staged)
+        self.assertEqual("native-ready", json.loads(staged.stdout)["execution_mode"])
+
+        first = self.run_cli(
+            "execute-publish-plan",
+            pack_dir / "exports" / "publish" / "wiki" / "github-docs",
+            "--native-github",
+            "--format",
+            "json",
+            env=env,
+        )
+        second = self.run_cli(
+            "execute-publish-plan",
+            pack_dir / "exports" / "publish" / "wiki" / "github-docs",
+            "--native-github",
+            "--format",
+            "json",
+            env=env,
+        )
+        self.assert_ok(first)
+        self.assert_ok(second)
+
+        first_receipt = json.loads(first.stdout)
+        second_receipt = json.loads(second.stdout)
+        self.assertEqual(first_receipt["replay_contract"], second_receipt["replay_contract"])
+        self.assertEqual("idempotent-upsert", first_receipt["replay_contract"]["mode"])
+        stable_fields = ("source_ref", "external_id", "external_url", "target_kind")
+        first_projection = [{key: record[key] for key in stable_fields} for record in first_receipt["records"]]
+        second_projection = [{key: record[key] for key in stable_fields} for record in second_receipt["records"]]
+        self.assertEqual(first_projection, second_projection)
+        self.assertTrue(all(record["publication_status"] == "created" for record in first_receipt["records"]))
+        self.assertTrue(all(record["publication_status"] == "updated" for record in second_receipt["records"]))
+
     def test_recommend_execution_can_use_repo_context_for_guidance(self) -> None:
         pack_dir = self.compile_research_pack()
         repo = self.create_repo_fixture()
@@ -2168,12 +2291,16 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("ok", summary["status"])
         self.assertTrue(any(item["id"] == "codex" for item in summary["checks"]))
         github = next(item for item in summary["checks"] if item["id"] == "github")
+        github_docs = next(item for item in summary["checks"] if item["id"] == "github-docs")
         jira = next(item for item in summary["checks"] if item["id"] == "jira")
         markdown = next(item for item in summary["checks"] if item["id"] == "markdown")
         confluence = next(item for item in summary["checks"] if item["id"] == "confluence")
         self.assertEqual("deterministic-reapply", github["publish_semantics"]["local_apply"])
         self.assertEqual("idempotent-upsert", github["publish_semantics"]["native_execution"])
         self.assertEqual("portable-json", github["publish_semantics"]["receipt_contract"])
+        self.assertEqual("deterministic-reapply", github_docs["publish_semantics"]["local_apply"])
+        self.assertEqual("idempotent-upsert", github_docs["publish_semantics"]["native_execution"])
+        self.assertEqual("portable-json", github_docs["publish_semantics"]["receipt_contract"])
         self.assertEqual("replay-safe", jira["publish_semantics"]["bridge_execution"])
         self.assertEqual("replay-safe", confluence["publish_semantics"]["bridge_execution"])
         self.assertEqual("deterministic-reapply", markdown["publish_semantics"]["local_apply"])

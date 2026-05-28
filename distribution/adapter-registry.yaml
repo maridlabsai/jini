@@ -48,6 +48,23 @@ adapters:
       - wiki-execute-bridge
     contract: Canonical artifacts and rendered views -> wiki bundle -> serialized publish plan
 
+  - id: github-docs
+    label: GitHub Docs
+    layer: wiki-system
+    maturity: native-execute
+    priority: 80
+    publish_semantics:
+      plan_serialization: serialized-idempotent
+      local_apply: deterministic-reapply
+      native_execution: idempotent-upsert
+      receipt_contract: portable-json
+    capabilities:
+      - wiki-export
+      - wiki-publish-plan
+      - wiki-apply-local
+      - wiki-execute-native
+    contract: Canonical artifacts and rendered views -> GitHub markdown docs bundle -> serialized publish plan -> repository content upsert
+
   - id: markdown
     label: Markdown
     layer: wiki-system

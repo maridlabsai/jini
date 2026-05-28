@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import base64
 import hashlib
 import json
 import os
@@ -9295,7 +9296,7 @@ def build_adapter_conformance_summary() -> dict[str, Any]:
                     passed = False
                     notes.append("GitHub adapter should declare idempotent-upsert native execution")
         elif layer == "wiki-system":
-            if adapter_id not in {"confluence", "markdown"}:
+            if adapter_id not in {"confluence", "github-docs", "markdown"}:
                 passed = False
                 notes.append("Wiki-system adapter is not wired into export surfaces")
             if "wiki-export" not in capabilities:
@@ -9317,6 +9318,22 @@ def build_adapter_conformance_summary() -> dict[str, Any]:
             if adapter_id == "confluence" and semantics.get("bridge_execution") != "replay-safe":
                 passed = False
                 notes.append("Confluence adapter should declare replay-safe bridge execution")
+            if adapter_id == "github-docs":
+                if "wiki-publish-plan" not in capabilities:
+                    passed = False
+                    notes.append("GitHub docs adapter should expose wiki-publish-plan")
+                if "wiki-apply-local" not in capabilities:
+                    passed = False
+                    notes.append("GitHub docs adapter should expose wiki-apply-local")
+                if "wiki-execute-native" not in capabilities:
+                    passed = False
+                    notes.append("GitHub docs adapter should expose wiki-execute-native")
+                if semantics.get("local_apply") != "deterministic-reapply":
+                    passed = False
+                    notes.append("GitHub docs adapter should declare deterministic-reapply local apply")
+                if semantics.get("native_execution") != "idempotent-upsert":
+                    passed = False
+                    notes.append("GitHub docs adapter should declare idempotent-upsert native execution")
             if adapter_id == "markdown":
                 if "wiki-publish-plan" not in capabilities:
                     passed = False
@@ -11963,11 +11980,13 @@ def export_wiki(
     summary = summarise_pack(pack_dir, registry)
     if adapter == "confluence":
         bundle, pages = build_confluence_page_export(summary)
-    elif adapter == "markdown":
+    elif adapter in {"markdown", "github-docs"}:
         bundle, pages = build_markdown_page_export(summary)
+        if adapter == "github-docs":
+            bundle["export_type"] = "JiniGithubDocs"
     else:
         raise ValueError(
-            f"Unsupported adapter {adapter!r}; supported adapters are 'confluence' and 'markdown'"
+            f"Unsupported adapter {adapter!r}; supported adapters are 'confluence', 'github-docs', and 'markdown'"
         )
 
     if output_dir is None:
@@ -12046,6 +12065,12 @@ def resolve_github_repository(
     if explicit:
         return explicit
     return infer_github_repository(repo_path)
+
+
+def normalize_github_docs_path(value: str | None) -> str:
+    candidate = (value or "docs/jini").strip().strip("/")
+    parts = [slugify(part) for part in candidate.split("/") if slugify(part)]
+    return "/".join(parts) or "docs/jini"
 
 
 def runtime_consent_path(pack_dir: Path) -> Path:
@@ -12353,21 +12378,37 @@ def publish_wiki(
     cloud_id: str | None = None,
     site_url: str | None = None,
     space_id: str | None = None,
+    repository: str | None = None,
+    repo_path: Path | None = None,
+    docs_path: str | None = None,
 ) -> Path:
     cli = cli_invocation()
-    if adapter not in {"confluence", "markdown"}:
-        raise ValueError("publish-wiki supports only 'confluence' and 'markdown'")
+    if adapter not in {"confluence", "github-docs", "markdown"}:
+        raise ValueError("publish-wiki supports only 'confluence', 'github-docs', and 'markdown'")
 
     export_dir = export_wiki(pack_dir, registry, adapter=adapter)
     markdown_export_dir = export_wiki(pack_dir, registry, adapter="markdown")
     bundle = load_json_file(export_dir / "pages.json")
     work_unit = bundle["work_unit"]
-    targets = resolve_atlassian_targets(
-        pack_dir,
-        cloud_id=cloud_id,
-        site_url=site_url,
-        space_key=space_key,
-        space_id=space_id,
+    targets = (
+        resolve_atlassian_targets(
+            pack_dir,
+            cloud_id=cloud_id,
+            site_url=site_url,
+            space_key=space_key,
+            space_id=space_id,
+        )
+        if adapter == "confluence"
+        else {
+            "cloud_id": "",
+            "site_url": "",
+            "space_key": "",
+            "space_id": "",
+            "repository": resolve_github_repository(repository=repository, repo_path=repo_path),
+            "docs_path": normalize_github_docs_path(docs_path),
+            "bound": False,
+            "path": "",
+        }
     )
     publish_root = output_dir.expanduser() if output_dir else pack_dir / "exports" / "publish" / "wiki" / adapter
     publish_root.mkdir(parents=True, exist_ok=True)
@@ -12390,6 +12431,8 @@ def publish_wiki(
             "site_url": targets["site_url"],
             "space_key": targets["space_key"],
             "space_id": targets["space_id"],
+            "repository": targets.get("repository", ""),
+            "docs_path": targets.get("docs_path", ""),
             "title": page.get("title", ""),
             "slug": page.get("slug", ""),
             "role": page.get("role", ""),
@@ -12408,10 +12451,14 @@ def publish_wiki(
             }
         )
 
-    fallback_active = adapter == "markdown" or not targets["space_key"]
+    fallback_active = adapter == "markdown" or (adapter == "confluence" and not targets["space_key"])
     execution_mode = (
         "local-apply"
         if adapter == "markdown"
+        else "native-ready"
+        if adapter == "github-docs" and targets.get("repository")
+        else "local-apply"
+        if adapter == "github-docs"
         else "markdown-fallback"
         if fallback_active
         else "connector-ready" if targets["cloud_id"] else "staged-only"
@@ -12427,7 +12474,13 @@ def publish_wiki(
             "site_url": targets["site_url"],
             "space_key": targets["space_key"],
             "space_id": targets["space_id"],
-            "configured": bool(targets["cloud_id"] and targets["space_key"]),
+            "repository": targets.get("repository", ""),
+            "docs_path": targets.get("docs_path", ""),
+            "configured": bool(
+                targets.get("repository")
+                if adapter == "github-docs"
+                else targets["cloud_id"] and targets["space_key"]
+            ),
             "bound_config_path": targets["path"],
         },
         "work_unit": work_unit,
@@ -12439,11 +12492,15 @@ def publish_wiki(
             (
                 "When Confluence is not configured, markdown export is the canonical fallback output."
                 if adapter == "confluence"
+                else "GitHub docs publish plans can upsert markdown pages into a repository docs path."
+                if adapter == "github-docs"
                 else "Markdown publish plans can be applied locally for portable documentation handoff."
             ),
             (
                 "This plan is staged in serialized order so an external Confluence publisher can replay it safely."
                 if adapter == "confluence"
+                else "Payloads are serialized and idempotent so GitHub docs execution can replay safely."
+                if adapter == "github-docs"
                 else "Payloads are serialized and idempotent so local markdown application stays replay-safe."
             ),
         ],
@@ -12460,6 +12517,8 @@ def publish_wiki(
         f"- Site URL: `{targets['site_url'] or 'unset'}`",
         f"- Space Key: `{targets['space_key'] or 'unset'}`",
         f"- Space ID: `{targets['space_id'] or 'unset'}`",
+        f"- Repository: `{targets.get('repository', '') or 'unset'}`",
+        f"- Docs Path: `{targets.get('docs_path', '') or 'unset'}`",
         f"- Markdown Fallback: `{display_path(markdown_export_dir)}`",
         "",
         "## Rate-Limit Policy",
@@ -12469,7 +12528,18 @@ def publish_wiki(
         *[f"- [{Path(item['payload_path']).name}](./payloads/{Path(item['payload_path']).name}) -> `{item['slug']}`" for item in items],
         "",
     ]
-    if execution_mode in {"local-apply", "markdown-fallback"}:
+    if adapter == "github-docs":
+        readme_lines.extend(
+            [
+                "## GitHub Native Publish",
+                f"- Use `{cli} execute-publish-plan <publish-dir> --native-github` to upsert docs pages through the GitHub CLI.",
+                "",
+                "## Local Apply",
+                f"- Use `{cli} apply-publish-plan <publish-dir>` to materialize a local markdown docs set when no repository target is configured.",
+                "",
+            ]
+        )
+    elif execution_mode in {"local-apply", "markdown-fallback"}:
         readme_lines.extend(
             [
                 "## Local Apply",
@@ -13127,6 +13197,276 @@ def execute_github_issue_publish_plan(
     return receipt, receipt_path, result_path
 
 
+def github_docs_content_path(docs_path: str, slug: str) -> str:
+    root = normalize_github_docs_path(docs_path)
+    page_slug = slugify(slug or "page")
+    return f"{root}/{page_slug}.md"
+
+
+def lookup_github_content(
+    *,
+    repository: str,
+    content_path: str,
+    timeout_seconds: int,
+    gh_binary: str = "gh",
+) -> dict[str, Any] | None:
+    result = run_github_cli(
+        [
+            gh_binary,
+            "api",
+            f"repos/{repository}/contents/{content_path}",
+        ],
+        timeout_seconds=timeout_seconds,
+    )
+    if result.returncode != 0:
+        message = result.stderr.strip() or result.stdout.strip()
+        if "not found" in message.lower() or "404" in message:
+            return None
+        raise ValueError(f"GitHub content lookup failed: {message or result.returncode}")
+    try:
+        payload = json.loads(result.stdout or "{}")
+    except json.JSONDecodeError as exc:
+        raise ValueError("GitHub content lookup did not return valid JSON") from exc
+    if not isinstance(payload, dict):
+        raise ValueError("GitHub content lookup must return a JSON object")
+    return payload
+
+
+def execute_github_docs_publish_plan(
+    path: Path,
+    *,
+    repository: str | None = None,
+    docs_path: str | None = None,
+    output_dir: Path | None = None,
+    timeout_seconds: int = 15,
+    gh_binary: str = "gh",
+) -> tuple[dict[str, Any], Path, Path]:
+    plan_path = resolve_publish_plan_input(path)
+    plan = load_json_file(plan_path)
+    if not isinstance(plan, dict):
+        raise ValueError("Publish plan must be a mapping")
+
+    publish_type = str(plan.get("publish_type", "")).strip()
+    adapter = str(plan.get("adapter", "")).strip()
+    if publish_type != "JiniWikiPublishPlan" or adapter != "github-docs":
+        raise ValueError("native GitHub docs execution supports only GitHub docs wiki publish plans")
+
+    target = plan.get("target", {}) if isinstance(plan.get("target", {}), dict) else {}
+    resolved_repository = resolve_github_repository(
+        repository=repository or str(target.get("repository", "")).strip()
+    )
+    if not resolved_repository:
+        raise ValueError("native GitHub docs execution requires a GitHub repository target like owner/repo")
+    resolved_docs_path = normalize_github_docs_path(
+        docs_path or str(target.get("docs_path", "")).strip()
+    )
+
+    execution_mode = str(plan.get("execution_mode", "")).strip() or "native-ready"
+    items = plan.get("items", [])
+    if not isinstance(items, list) or not items:
+        raise ValueError("Publish plan must contain at least one item")
+
+    plan_dir = plan_path.parent
+    executed_root = output_dir.expanduser() if output_dir is not None else plan_dir / "executed"
+    executed_root.mkdir(parents=True, exist_ok=True)
+    records: list[dict[str, Any]] = []
+    failures: list[dict[str, Any]] = []
+    notes: list[str] = []
+    replay_identity: list[str] = []
+
+    with tempfile.TemporaryDirectory(prefix="jini-github-docs-publish-") as temp_dir:
+        temp_root = Path(temp_dir)
+        for item in items:
+            if not isinstance(item, dict):
+                failures.append({"reason": "Plan item must be an object"})
+                break
+            payload_path = resolve_display_path(str(item.get("payload_path", "")))
+            payload = load_json_file(payload_path)
+            idempotency_key = str(payload.get("idempotency_key", "")).strip()
+            slug = str(payload.get("slug", "") or item.get("slug", "")).strip()
+            title = str(payload.get("title", "") or item.get("title", "")).strip()
+            body = render_local_wiki_markdown(payload)
+            content_path = github_docs_content_path(resolved_docs_path, slug)
+
+            try:
+                existing = lookup_github_content(
+                    repository=resolved_repository,
+                    content_path=content_path,
+                    timeout_seconds=timeout_seconds,
+                    gh_binary=gh_binary,
+                )
+            except ValueError as exc:
+                failures.append(
+                    {
+                        "source_ref": publish_plan_source_ref(item, payload_path),
+                        "payload_path": display_path(payload_path),
+                        "reason": str(exc),
+                    }
+                )
+                break
+
+            publication_status = "updated" if existing else "created"
+            request = {
+                "message": f"Jini publish docs: {title or slug}",
+                "content": base64.b64encode(body.encode("utf-8")).decode("ascii"),
+            }
+            if existing and str(existing.get("sha", "")).strip():
+                request["sha"] = str(existing.get("sha", "")).strip()
+            request_path = temp_root / f"{int(item.get('sequence', 0) or 0):02d}-{slugify(slug or 'page')}.json"
+            request_path.write_text(json.dumps(request, indent=2) + "\n", encoding="utf-8")
+            command_result = run_github_cli(
+                [
+                    gh_binary,
+                    "api",
+                    f"repos/{resolved_repository}/contents/{content_path}",
+                    "-X",
+                    "PUT",
+                    "--input",
+                    str(request_path),
+                ],
+                timeout_seconds=timeout_seconds,
+            )
+            if command_result.returncode != 0:
+                failures.append(
+                    {
+                        "source_ref": publish_plan_source_ref(item, payload_path),
+                        "payload_path": display_path(payload_path),
+                        "reason": f"GitHub content upsert exited with status {command_result.returncode}",
+                        "stdout": command_result.stdout.strip(),
+                        "stderr": command_result.stderr.strip(),
+                    }
+                )
+                break
+
+            try:
+                response = json.loads(command_result.stdout or "{}")
+            except json.JSONDecodeError:
+                failures.append(
+                    {
+                        "source_ref": publish_plan_source_ref(item, payload_path),
+                        "payload_path": display_path(payload_path),
+                        "reason": "GitHub content upsert did not return valid JSON",
+                        "stdout": command_result.stdout.strip(),
+                    }
+                )
+                break
+            content = response.get("content", {}) if isinstance(response, dict) else {}
+            if not isinstance(content, dict):
+                content = {}
+            external_id = str(content.get("path", content_path)).strip()
+            external_url = str(content.get("html_url", "")).strip() or (
+                f"https://github.com/{resolved_repository}/blob/main/{content_path}"
+            )
+            records.append(
+                {
+                    "adapter": adapter,
+                    "target_kind": "wiki-page",
+                    "source_ref": publish_plan_source_ref(item, payload_path),
+                    "external_id": external_id,
+                    "external_url": external_url,
+                    "published_at": now_utc(),
+                    "publication_status": publication_status,
+                    "notes": [
+                        f"{publication_status} via GitHub Contents API",
+                        f"repository:{resolved_repository}",
+                        f"content-path:{content_path}",
+                        f"idempotency-key:{idempotency_key}",
+                    ],
+                }
+            )
+            replay_identity.append(idempotency_key)
+
+    status = "executed" if not failures else "failed"
+    if status == "executed":
+        notes.append("Executed staged wiki publish plan natively through GitHub Docs with idempotent upsert semantics.")
+    else:
+        notes.append("Native GitHub docs execution stopped before all publish-plan items completed.")
+
+    result_bundle = {
+        "schema_version": "0.1.0",
+        "result_type": "JiniPublicationResult",
+        "generated_at": now_utc(),
+        "publish_type": publish_type,
+        "adapter": adapter,
+        "target_kind": "wiki-page",
+        "plan_path": display_path(plan_path),
+        "runner": gh_binary,
+        "repository": resolved_repository,
+        "docs_path": resolved_docs_path,
+        "records": records,
+        "failures": failures,
+        "replay_contract": {
+            "mode": "idempotent-upsert" if not failures else "partial-failure",
+            "portable_result": True,
+            "serialized_execution": True,
+            "identity_keys": [key for key in replay_identity if key],
+            "repository": resolved_repository,
+            "docs_path": resolved_docs_path,
+        },
+    }
+    result_path = next_publish_execution_bundle_path(executed_root, adapter)
+    result_path.write_text(json.dumps(result_bundle, indent=2) + "\n", encoding="utf-8")
+
+    receipt = {
+        "schema_version": "0.1.0",
+        "receipt_type": "JiniExecutedPublishPlan",
+        "generated_at": now_utc(),
+        "publish_type": publish_type,
+        "adapter": adapter,
+        "execution_mode": execution_mode,
+        "status": status,
+        "plan_path": display_path(plan_path),
+        "runner": gh_binary,
+        "repository": resolved_repository,
+        "docs_path": resolved_docs_path,
+        "output_root": str(executed_root),
+        "result_path": display_path(result_path),
+        "records": records,
+        "failures": failures,
+        "replay_contract": result_bundle["replay_contract"],
+        "notes": notes,
+    }
+    receipt_path = next_publish_execution_receipt_path(executed_root, adapter)
+    receipt["receipt_path"] = display_path(receipt_path)
+    receipt_path.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
+    return receipt, receipt_path, result_path
+
+
+def execute_github_native_publish_plan(
+    path: Path,
+    *,
+    repository: str | None = None,
+    docs_path: str | None = None,
+    output_dir: Path | None = None,
+    timeout_seconds: int = 15,
+    gh_binary: str = "gh",
+) -> tuple[dict[str, Any], Path, Path]:
+    plan_path = resolve_publish_plan_input(path)
+    plan = load_json_file(plan_path)
+    if not isinstance(plan, dict):
+        raise ValueError("Publish plan must be a mapping")
+    publish_type = str(plan.get("publish_type", "")).strip()
+    adapter = str(plan.get("adapter", "")).strip()
+    if publish_type == "JiniIssuePublishPlan" and adapter == "github":
+        return execute_github_issue_publish_plan(
+            plan_path,
+            repository=repository,
+            output_dir=output_dir,
+            timeout_seconds=timeout_seconds,
+            gh_binary=gh_binary,
+        )
+    if publish_type == "JiniWikiPublishPlan" and adapter == "github-docs":
+        return execute_github_docs_publish_plan(
+            plan_path,
+            repository=repository,
+            docs_path=docs_path,
+            output_dir=output_dir,
+            timeout_seconds=timeout_seconds,
+            gh_binary=gh_binary,
+        )
+    raise ValueError("native GitHub execution supports GitHub issue and GitHub docs publish plans")
+
+
 def bump_execution_class(level: str) -> str:
     order = ["cheap", "standard", "deep"]
     if level not in order:
@@ -13484,6 +13824,7 @@ def run_pack(
                     cloud_id=atlassian_targets["cloud_id"],
                     site_url=atlassian_targets["site_url"],
                     space_id=atlassian_targets["space_id"],
+                    repo_path=repo_path,
                 )
                 wiki_publish_message = "Staged a serialized wiki publish plan"
                 if chosen_wiki_adapter == "markdown":
@@ -17965,7 +18306,7 @@ def main() -> int:
     )
     execute_flow_parser.add_argument(
         "--wiki-adapter",
-        choices=["confluence", "markdown"],
+        choices=["confluence", "github-docs", "markdown"],
         default="confluence",
         help="Wiki adapter for the embedded publish step",
     )
@@ -18252,7 +18593,7 @@ def main() -> int:
     )
     run_pack_parser.add_argument(
         "--wiki-adapter",
-        choices=["confluence", "markdown"],
+        choices=["confluence", "github-docs", "markdown"],
         default="confluence",
         help="Wiki export adapter; Confluence falls back to markdown when unconfigured",
     )
@@ -18334,7 +18675,7 @@ def main() -> int:
     export_wiki_parser.add_argument("path", type=Path)
     export_wiki_parser.add_argument(
         "--adapter",
-        choices=["confluence", "markdown"],
+        choices=["confluence", "github-docs", "markdown"],
         default="confluence",
         help="Wiki-system adapter to render",
     )
@@ -18413,6 +18754,10 @@ def main() -> int:
         "--repository",
         help="Optional GitHub repository override like owner/repo when --native-github is used",
     )
+    execute_publish_plan_parser.add_argument(
+        "--docs-path",
+        help="Optional GitHub docs path override when executing GitHub docs publish plans",
+    )
     execute_publish_plan_parser.add_argument("--output", type=Path, help="Optional output directory override")
     execute_publish_plan_parser.add_argument(
         "--timeout-seconds",
@@ -18434,7 +18779,7 @@ def main() -> int:
     publish_wiki_parser.add_argument("path", type=Path)
     publish_wiki_parser.add_argument(
         "--adapter",
-        choices=["confluence", "markdown"],
+        choices=["confluence", "github-docs", "markdown"],
         default="confluence",
         help="Wiki-system target to stage for",
     )
@@ -18442,6 +18787,9 @@ def main() -> int:
     publish_wiki_parser.add_argument("--space-id", help="Optional Confluence space id override")
     publish_wiki_parser.add_argument("--cloud-id", help="Optional Atlassian cloud id override")
     publish_wiki_parser.add_argument("--site-url", help="Optional Atlassian site url override")
+    publish_wiki_parser.add_argument("--repository", help="Optional GitHub repository target like owner/repo")
+    publish_wiki_parser.add_argument("--repo", type=Path, help="Optional local repo path to infer the GitHub origin target")
+    publish_wiki_parser.add_argument("--docs-path", help="Optional GitHub repository docs path")
     publish_wiki_parser.add_argument("--output", type=Path, help="Optional output directory")
     publish_wiki_parser.add_argument(
         "--apply-local",
@@ -18458,6 +18806,11 @@ def main() -> int:
         type=int,
         default=15,
         help="Per-item timeout for bridge execution when --bridge-runner is provided",
+    )
+    publish_wiki_parser.add_argument(
+        "--execute-native",
+        action="store_true",
+        help="Execute GitHub docs publish plans natively through the GitHub CLI after staging",
     )
     publish_wiki_parser.add_argument(
         "--format",
@@ -20157,7 +20510,7 @@ def main() -> int:
             return 0
         if args.execute_native:
             try:
-                receipt, _receipt_path, _result_path = execute_github_issue_publish_plan(
+                receipt, _receipt_path, _result_path = execute_github_native_publish_plan(
                     output_path,
                     repository=args.repository,
                     timeout_seconds=args.bridge_timeout_seconds,
@@ -20198,9 +20551,10 @@ def main() -> int:
             return 1
         try:
             if args.native_github:
-                receipt, _receipt_path, _result_path = execute_github_issue_publish_plan(
+                receipt, _receipt_path, _result_path = execute_github_native_publish_plan(
                     args.path,
                     repository=args.repository,
+                    docs_path=args.docs_path,
                     output_dir=args.output,
                     timeout_seconds=args.timeout_seconds,
                 )
@@ -20221,8 +20575,12 @@ def main() -> int:
         return 0
 
     if args.command == "publish-wiki":
-        if args.apply_local and args.bridge_runner:
-            print("ERROR publish-wiki accepts only one of --apply-local or --bridge-runner")
+        selected_execution_modes = sum(bool(flag) for flag in (args.apply_local, args.bridge_runner, args.execute_native))
+        if selected_execution_modes > 1:
+            print("ERROR publish-wiki accepts only one of --apply-local, --bridge-runner, or --execute-native")
+            return 1
+        if args.execute_native and args.adapter != "github-docs":
+            print("ERROR publish-wiki --execute-native is supported only for --adapter github-docs")
             return 1
         try:
             output_path = publish_wiki(
@@ -20234,6 +20592,9 @@ def main() -> int:
                 cloud_id=args.cloud_id,
                 site_url=args.site_url,
                 space_id=args.space_id,
+                repository=args.repository,
+                repo_path=args.repo,
+                docs_path=args.docs_path,
             )
         except ValueError as exc:
             print(f"ERROR {exc}")
@@ -20254,6 +20615,22 @@ def main() -> int:
                 receipt, _receipt_path, _result_path = execute_publish_plan(
                     output_path,
                     runner=args.bridge_runner,
+                    timeout_seconds=args.bridge_timeout_seconds,
+                )
+            except ValueError as exc:
+                print(f"ERROR {exc}")
+                return 1
+            if args.format == "json":
+                print(json.dumps(receipt, indent=2))
+            else:
+                print_execute_publish_plan(receipt)
+            return 0
+        if args.execute_native:
+            try:
+                receipt, _receipt_path, _result_path = execute_github_docs_publish_plan(
+                    output_path,
+                    repository=args.repository,
+                    docs_path=args.docs_path,
                     timeout_seconds=args.bridge_timeout_seconds,
                 )
             except ValueError as exc:
