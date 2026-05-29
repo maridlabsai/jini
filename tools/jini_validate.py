@@ -12219,6 +12219,15 @@ def summarize_runtime_activation(activation: dict[str, Any] | None) -> dict[str,
     return {}
 
 
+def summarize_runtime_handoff(handoff: dict[str, Any] | None) -> dict[str, Any]:
+    if not isinstance(handoff, dict) or not handoff:
+        return {}
+    preview_text = route_feedback_driver_preview_text(handoff)
+    if preview_text:
+        return {"route_feedback_driver_preview": preview_text}
+    return {}
+
+
 def route_feedback_driver_preview_text(payload: dict[str, Any] | None) -> str:
     if not isinstance(payload, dict):
         return ""
@@ -16760,6 +16769,7 @@ def execute_flow(
             max_items=max_items,
             max_chars=max_chars,
         )
+    handoff_summary = summarize_runtime_handoff(handoff)
     activation_summary = summarize_runtime_activation(activation_receipt)
 
     run_report, run_report_path = run_pack(
@@ -16839,6 +16849,7 @@ def execute_flow(
         "execution_checklist": checklist,
         "repo_map": repo_map,
         "runtime_handoff_path": display_path(handoff_path),
+        "runtime_handoff_summary": handoff_summary,
         "runtime_activation": activation_receipt,
         "runtime_activation_summary": activation_summary,
         "runtime_activation_path": display_path(activation_receipt_path) if activation_receipt_path is not None else "",
@@ -16938,7 +16949,14 @@ def print_execute_flow(report: dict[str, Any]) -> None:
         print(f"HANDOFF {report['runtime_handoff_path']}")
     if report.get("runtime_activation_path"):
         print(f"ACTIVE {report['runtime_activation_path']}")
+    handoff_summary = report.get("runtime_handoff_summary", {})
     activation_summary = report.get("runtime_activation_summary", {})
+    if (
+        isinstance(handoff_summary, dict)
+        and handoff_summary.get("route_feedback_driver_preview")
+        and not (isinstance(activation_summary, dict) and activation_summary.get("route_feedback_driver_preview"))
+    ):
+        print(f"HANDOFF-DRIVERS {handoff_summary['route_feedback_driver_preview']}")
     if isinstance(activation_summary, dict) and activation_summary.get("route_feedback_driver_preview"):
         print(f"ACTIVE-DRIVERS {activation_summary['route_feedback_driver_preview']}")
     if report.get("run_report_path"):

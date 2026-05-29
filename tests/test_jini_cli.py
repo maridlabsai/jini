@@ -3742,6 +3742,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("publish", report["intent"])
         self.assertEqual("codex", report["recommendation"]["runtime_guidance"]["selected"]["id"])
         self.assertTrue(report["runtime_activation"])
+        self.assertEqual({}, report["runtime_handoff_summary"])
         self.assertTrue(Path(report["runtime_activation_path"]).exists())
         self.assertEqual({}, report["runtime_activation_summary"])
         self.assertTrue(self.resolve_repo_path(report["run_report_path"]).exists())
@@ -3777,6 +3778,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         )
         self.assert_ok(no_activation)
         no_activation_doc = json.loads(no_activation.stdout)
+        self.assertEqual({}, no_activation_doc["runtime_handoff_summary"])
         self.assertIsNone(no_activation_doc["runtime_activation"])
         self.assertEqual({}, no_activation_doc["runtime_activation_summary"])
         self.assertEqual("", no_activation_doc["runtime_activation_path"])
@@ -4348,6 +4350,10 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(flow)
         flow_doc = json.loads(flow.stdout)
         self.assertEqual(
+            {"route_feedback_driver_preview": "export:local-fast->local-workhorse"},
+            flow_doc["runtime_handoff_summary"],
+        )
+        self.assertEqual(
             ["export"],
             flow_doc["runtime_activation"]["route_feedback_drivers"]["changed_cohort_keys"],
         )
@@ -4376,6 +4382,38 @@ class JiniCliConformanceTests(unittest.TestCase):
         )
         self.assert_ok(flow_text)
         self.assertIn("ACTIVE-DRIVERS export:local-fast->local-workhorse", flow_text.stdout)
+        self.assertNotIn("HANDOFF-DRIVERS ", flow_text.stdout)
+
+        handoff_flow = self.run_cli(
+            "run",
+            pack_dir,
+            "--mode",
+            "supervised",
+            "--intent",
+            "make",
+            "--format",
+            "json",
+        )
+        self.assert_ok(handoff_flow)
+        handoff_flow_doc = json.loads(handoff_flow.stdout)
+        self.assertEqual(
+            {"route_feedback_driver_preview": "export:local-fast->local-workhorse"},
+            handoff_flow_doc["runtime_handoff_summary"],
+        )
+        self.assertIsNone(handoff_flow_doc["runtime_activation"])
+        self.assertEqual({}, handoff_flow_doc["runtime_activation_summary"])
+        self.assertEqual("", handoff_flow_doc["runtime_activation_path"])
+        handoff_flow_text = self.run_cli(
+            "run",
+            pack_dir,
+            "--mode",
+            "supervised",
+            "--intent",
+            "make",
+        )
+        self.assert_ok(handoff_flow_text)
+        self.assertIn("HANDOFF-DRIVERS export:local-fast->local-workhorse", handoff_flow_text.stdout)
+        self.assertNotIn("ACTIVE-DRIVERS ", handoff_flow_text.stdout)
 
         rollback = self.run_cli(
             "rollback-policy-candidate",
