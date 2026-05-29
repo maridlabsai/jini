@@ -5033,20 +5033,19 @@ class JiniCliConformanceTests(unittest.TestCase):
             "fewer manual handoff steps",
             "--note",
             "Local-apply loop reduced staging-only friction",
-            "--format",
-            "json",
         )
         self.assert_ok(outcome)
 
-        outcome_doc = json.loads(outcome.stdout)
+        updated_experiment = self.read_json(experiment_path)
+        self.assertEqual("completed", updated_experiment["status"])
+        outcome_doc = self.read_json(self.resolve_repo_path(updated_experiment["latest_outcome_path"]))
         self.assertEqual("JiniFrameworkEvolutionOutcome", outcome_doc["outcome_type"])
         self.assertEqual("success", outcome_doc["result"])
         self.assertTrue(self.resolve_repo_path(outcome_doc["outcome_path"]).exists())
         self.assertGreater(outcome_doc["computed_reward"], 0)
-
-        updated_experiment = self.read_json(experiment_path)
-        self.assertEqual("completed", updated_experiment["status"])
-        self.assertEqual(outcome_doc["outcome_path"], updated_experiment["latest_outcome_path"])
+        self.assertIsInstance(outcome_doc["latest_execute_flow"], dict)
+        if outcome_doc["latest_execute_flow"]:
+            self.assertIn("FLOW     ", outcome.stdout)
 
         backtest = self.run_cli("backtest-framework-evolution", "--format", "json")
         self.assert_ok(backtest)

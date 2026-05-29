@@ -3133,6 +3133,9 @@ def record_framework_experiment_outcome(
         computed_reward = round((score_delta * weight * 0.5) + (signal_bonus * 0.5), 3)
     else:
         computed_reward = round(min(0.0, (score_delta * weight) - 0.2), 3)
+    latest_execute_flow = experiment.get("latest_execute_flow", {})
+    if not isinstance(latest_execute_flow, dict):
+        latest_execute_flow = build_latest_execute_flow_summary()
 
     outcome_path = next_framework_outcome_path(str(experiment.get("dimension_id", "framework")))
     outcome = {
@@ -3151,6 +3154,7 @@ def record_framework_experiment_outcome(
         "notes": normalized_notes,
         "computed_reward": computed_reward,
         "source_experiment_path": display_path(experiment_path),
+        "latest_execute_flow": latest_execute_flow,
     }
     outcome_path.write_text(json.dumps(outcome, indent=2) + "\n", encoding="utf-8")
     experiment["status"] = "completed"
@@ -3179,6 +3183,17 @@ def print_framework_outcome(outcome: dict[str, Any]) -> None:
     print(f"RESULT   {outcome.get('result', '')}")
     print(f"DELTA    {float(outcome.get('score_delta', 0.0)):+.1f}")
     print(f"REWARD   {float(outcome.get('computed_reward', 0.0)):+.3f}")
+    latest_execute_flow = outcome.get("latest_execute_flow", {})
+    if isinstance(latest_execute_flow, dict) and latest_execute_flow:
+        print(
+            f"FLOW     {latest_execute_flow.get('pack_id', '')} "
+            f"{latest_execute_flow.get('intent', '')} "
+            f"{latest_execute_flow.get('execution_class', '')}"
+        )
+        if latest_execute_flow.get("runtime_target"):
+            print(f"RUNTIME  {latest_execute_flow['runtime_target']}")
+        if latest_execute_flow.get("route_feedback_driver_preview"):
+            print(f"DRIVERS  {latest_execute_flow['route_feedback_driver_preview']}")
     for signal in outcome.get("adoption_signals", []):
         print(f"  - signal: {signal}")
 
