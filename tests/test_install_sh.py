@@ -717,6 +717,49 @@ printf 'fake release artifact\\n'
         self.assertEqual(0, launch.returncode, msg=f"STDOUT:\n{launch.stdout}\nSTDERR:\n{launch.stderr}")
         self.assertIn("Provider: fake release", launch.stdout)
 
+    def test_missing_release_asset_uses_source_runtime_with_release_unavailable_reason(self) -> None:
+        remote_snapshot = self.create_remote_snapshot()
+        remote_root = self.tmp / "remote-missing-release"
+        remote_root.mkdir()
+        remote_installer = remote_root / "install.sh"
+        installer_text = INSTALLER.read_text(encoding="utf-8").replace(
+            'DEFAULT_REPO_URL="https://github.com/maridlabsai/jini.git"',
+            f'DEFAULT_REPO_URL="file://{remote_snapshot}"',
+            1,
+        )
+        remote_installer.write_text(installer_text, encoding="utf-8")
+
+        missing_release_root = self.tmp / "missing-release-root"
+        bin_dir = self.tmp / "release-unavailable-bin"
+        install_dir = self.tmp / "release-unavailable-share" / "jini"
+        result = self.run_installer(
+            "--bin-dir",
+            str(bin_dir),
+            "--install-dir",
+            str(install_dir),
+            "--force",
+            env={
+                **self.go_ready_env(),
+                "JINI_RELEASE_BASE_URL": f"file://{missing_release_root}",
+            },
+            cwd=remote_root,
+            installer_path=remote_installer,
+        )
+        self.assert_ok(result)
+        self.assertIn("Installed Jini", result.stdout)
+        self.assertIn("- install source: source runtime (release-unavailable)", result.stdout)
+        receipt = self.read_install_receipt(install_dir)
+        self.assertEqual("source-runtime", receipt["install_mode"])
+        self.assertEqual("release-unavailable", receipt["source_reason"])
+        self.assertEqual("release-unavailable", receipt["release_validation"])
+        launch = self.run_installed_jini(
+            bin_dir / "jini",
+            "doctor",
+            env={"JINI_PROVIDER": "local-preview"},
+        )
+        self.assertEqual(0, launch.returncode, msg=f"STDOUT:\n{launch.stdout}\nSTDERR:\n{launch.stderr}")
+        self.assertIn("Provider", launch.stdout)
+
     def test_piped_install_from_stdin_works_from_outside_repo(self) -> None:
         remote_snapshot = self.create_remote_snapshot()
         remote_root = self.tmp / "remote-pipe"

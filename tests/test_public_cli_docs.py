@@ -75,6 +75,7 @@ class PublicCliDocsTests(unittest.TestCase):
         for marker in (
             "- install source: release binary",
             "- install source: source runtime (explicit source)",
+            "- install source: source runtime (release-unavailable)",
             "- install source: source fallback (release validation failed: unsupported-public-command-surface)",
         ):
             with self.subTest(marker=marker):
