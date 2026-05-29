@@ -89,6 +89,7 @@ class PublicCliDocsTests(unittest.TestCase):
             "What to do next",
             "Matching release asset was available and passed Jini's public command check.",
             "No action needed unless you expected a source install for local development.",
+            "The absence of <code>- support receipt: ...</code> and <code>- next step: ...</code> is expected on this path.",
             "No matching release asset was available for this machine or release channel.",
             "If this machine should have had a published release, file a release issue and include the receipt.",
             "Downloaded release binary did not support the current public command surface.",
