@@ -62,6 +62,8 @@ quick_links:
 
   <p>The installer first tries to install a matching release binary. If needed, it falls back to a source-backed runtime, verifies that the command launches, and prints one PATH fix only when your shell still cannot see <code>jini</code>.</p>
 
+  <p>After install, Jini also prints one short provenance line for support and troubleshooting, such as <code>- install source: release binary</code>, <code>- install source: source runtime (explicit source)</code>, or <code>- install source: source fallback (release validation failed: unsupported-public-command-surface)</code>.</p>
+
 <pre><code class="language-bash">jini</code></pre>
 
   <p>If the installer prints a PATH line, run it once in the current shell and add it to your shell profile later.</p>

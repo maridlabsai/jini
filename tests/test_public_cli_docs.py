@@ -70,6 +70,16 @@ class PublicCliDocsTests(unittest.TestCase):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
 
+    def test_install_page_explains_installer_provenance_summary(self) -> None:
+        text = read(INSTALL_PATH)
+        for marker in (
+            "- install source: release binary",
+            "- install source: source runtime (explicit source)",
+            "- install source: source fallback (release validation failed: unsupported-public-command-surface)",
+        ):
+            with self.subTest(marker=marker):
+                self.assertIn(marker, text)
+
     def test_quickstart_uses_same_public_vs_admin_boundary(self) -> None:
         text = read(SIMPLE_PATH)
         for marker in (
