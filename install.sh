@@ -423,6 +423,11 @@ else
 fi
 chmod 0755 "${COMMAND_PATH}" 2>/dev/null || true
 
+NEXT_STEP=""
+if next_step="$(install_provenance_next_step)"; then
+  NEXT_STEP="${next_step}"
+fi
+
 RECEIPT_PATH="${INSTALL_DIR}/install-receipt.txt"
 cat >"${RECEIPT_PATH}" <<EOF
 program=${PROGRAM_NAME}
@@ -437,14 +442,17 @@ install_detail=${INSTALL_DETAIL}
 source_reason=${SOURCE_REASON}
 release_validation=${RELEASE_VALIDATION}
 EOF
+if [[ -n "${NEXT_STEP}" ]]; then
+  printf 'next_step=%s\n' "${NEXT_STEP}" >>"${RECEIPT_PATH}"
+fi
 
 "${COMMAND_PATH}" doctor >/dev/null
 
 say "Installed Jini"
 say "- version: ${VERSION}"
 say "- install source: $(install_provenance_summary)"
-if next_step="$(install_provenance_next_step)"; then
-  say "- next step: ${next_step}"
+if [[ -n "${NEXT_STEP}" ]]; then
+  say "- next step: ${NEXT_STEP}"
 fi
 say "- binary: ${TARGET_BINARY}"
 say "- command: ${COMMAND_PATH}"

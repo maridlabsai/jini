@@ -461,6 +461,10 @@ class InstallScriptTests(unittest.TestCase):
         self.assertEqual("source-runtime", receipt["install_mode"])
         self.assertEqual("explicit-source-dir", receipt["source_reason"])
         self.assertEqual("not-attempted", receipt["release_validation"])
+        self.assertEqual(
+            "Keep using this checkout when you want local source changes to control Jini.",
+            receipt["next_step"],
+        )
 
         launch = subprocess.run(
             [str(bin_dir / "jini"), "doctor"],
@@ -668,6 +672,10 @@ printf 'stale release artifact\n'
         self.assertEqual("source-runtime", receipt["install_mode"])
         self.assertEqual("release-validation-failed", receipt["source_reason"])
         self.assertEqual("unsupported-public-command-surface", receipt["release_validation"])
+        self.assertEqual(
+            "Keep the source install, attach install-receipt.txt, and flag the stale release artifact.",
+            receipt["next_step"],
+        )
         launch = self.run_installed_jini(
             bin_dir / "jini",
             "doctor",
@@ -722,6 +730,7 @@ printf 'fake release artifact\\n'
         self.assertEqual("release-binary", receipt["install_mode"])
         self.assertEqual("release-binary", receipt["source_reason"])
         self.assertEqual("passed", receipt["release_validation"])
+        self.assertNotIn("next_step", receipt)
         launch = self.run_installed_jini(bin_dir / "jini", "doctor")
         self.assertEqual(0, launch.returncode, msg=f"STDOUT:\n{launch.stdout}\nSTDERR:\n{launch.stderr}")
         self.assertIn("Provider: fake release", launch.stdout)
@@ -765,6 +774,10 @@ printf 'fake release artifact\\n'
         self.assertEqual("source-runtime", receipt["install_mode"])
         self.assertEqual("release-unavailable", receipt["source_reason"])
         self.assertEqual("release-unavailable", receipt["release_validation"])
+        self.assertEqual(
+            "If this machine should have had a published release, file a release issue and include the receipt.",
+            receipt["next_step"],
+        )
         launch = self.run_installed_jini(
             bin_dir / "jini",
             "doctor",
