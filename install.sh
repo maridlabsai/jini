@@ -453,7 +453,7 @@ say "- version: ${VERSION}"
 say "- install source: $(install_provenance_summary)"
 if [[ -n "${NEXT_STEP}" ]]; then
   say "- next step: ${NEXT_STEP}"
-  say "- support receipt keys: version=, source_reason=, release_validation=, next_step="
+  say "- support receipt: ${RECEIPT_PATH} (send version=, source_reason=, release_validation=, next_step=)"
 fi
 say "- binary: ${TARGET_BINARY}"
 say "- command: ${COMMAND_PATH}"

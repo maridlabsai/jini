@@ -456,7 +456,7 @@ class InstallScriptTests(unittest.TestCase):
             result.stdout,
         )
         self.assertIn(
-            "- support receipt keys: version=, source_reason=, release_validation=, next_step=",
+            f"- support receipt: {install_dir / 'install-receipt.txt'} (send version=, source_reason=, release_validation=, next_step=)",
             result.stdout,
         )
         self.assertTrue((bin_dir / "jini").exists())
@@ -673,7 +673,7 @@ printf 'stale release artifact\n'
             result.stdout,
         )
         self.assertIn(
-            "- support receipt keys: version=, source_reason=, release_validation=, next_step=",
+            f"- support receipt: {install_dir / 'install-receipt.txt'} (send version=, source_reason=, release_validation=, next_step=)",
             result.stdout,
         )
         receipt = self.read_install_receipt(install_dir)
@@ -734,7 +734,7 @@ printf 'fake release artifact\\n'
         self.assertIn("Installed Jini", result.stdout)
         self.assertIn("- install source: release binary", result.stdout)
         self.assertNotIn("- next step:", result.stdout)
-        self.assertNotIn("- support receipt keys:", result.stdout)
+        self.assertNotIn("- support receipt:", result.stdout)
         receipt = self.read_install_receipt(install_dir)
         self.assertEqual("release-binary", receipt["install_mode"])
         self.assertEqual("release-binary", receipt["source_reason"])
@@ -780,7 +780,7 @@ printf 'fake release artifact\\n'
             result.stdout,
         )
         self.assertIn(
-            "- support receipt keys: version=, source_reason=, release_validation=, next_step=",
+            f"- support receipt: {install_dir / 'install-receipt.txt'} (send version=, source_reason=, release_validation=, next_step=)",
             result.stdout,
         )
         receipt = self.read_install_receipt(install_dir)
