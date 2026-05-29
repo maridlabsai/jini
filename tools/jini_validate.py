@@ -12424,6 +12424,13 @@ def print_runtime_handoff(handoff: dict[str, Any]) -> None:
             f"TOKENS est={compact_budget.get('estimated_tokens', 0)} "
             f"chars={compact_budget.get('estimated_chars', 0)}"
         )
+    active_policy = handoff.get("active_policy", {})
+    drivers = active_policy.get("route_feedback_drivers", {}) if isinstance(active_policy, dict) else {}
+    if isinstance(drivers, dict):
+        preview = drivers.get("cohort_preview", {})
+        preview_text = preview.get("text", "") if isinstance(preview, dict) else ""
+        if preview_text:
+            print(f"DRIVERS {preview_text}")
     print("STEPS")
     for item in handoff.get("handoff_steps", []):
         print(f"  - {item}")

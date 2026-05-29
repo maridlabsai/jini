@@ -4281,6 +4281,9 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue(
             any("drivers=export:local-fast->local-workhorse" in item for item in handoff_doc["handoff_steps"])
         )
+        handoff_text = self.run_cli("stage-runtime-handoff", pack_dir, "--intent", "make")
+        self.assert_ok(handoff_text)
+        self.assertIn("DRIVERS export:local-fast->local-workhorse", handoff_text.stdout)
         activation_prefix = self.install_prefix()
         activation = self.run_cli(
             "activate-runtime-target",
