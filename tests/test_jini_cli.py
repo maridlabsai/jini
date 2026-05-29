@@ -3613,6 +3613,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(result)
 
         backtest = json.loads(result.stdout)
+        self.assertEqual({}, backtest["latest_execute_flow"])
         verify_policy = next(item for item in backtest["policy_recommendations"] if item["intent"] == "verify")
         self.assertEqual("deep", verify_policy["recommended_execution_class"])
         self.assertTrue(any(bucket["execution_class"] == "deep" for bucket in backtest["buckets"]))
@@ -4429,6 +4430,20 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("FLOW   research-prd make cheap", learning_snapshot_text.stdout)
         self.assertIn("TARGET kiro-cli", learning_snapshot_text.stdout)
         self.assertIn("DRIVERS export:local-fast->local-workhorse", learning_snapshot_text.stdout)
+
+        routing_backtest = self.run_cli("routing-backtest", pack_dir, "--format", "json")
+        self.assert_ok(routing_backtest)
+        routing_backtest_doc = json.loads(routing_backtest.stdout)
+        self.assertEqual(
+            "export:local-fast->local-workhorse",
+            routing_backtest_doc["latest_execute_flow"]["route_feedback_driver_preview"],
+        )
+        self.assertEqual("kiro-cli", routing_backtest_doc["latest_execute_flow"]["runtime_target"])
+        routing_backtest_text = self.run_cli("routing-backtest", pack_dir)
+        self.assert_ok(routing_backtest_text)
+        self.assertIn("FLOW   research-prd make cheap", routing_backtest_text.stdout)
+        self.assertIn("TARGET kiro-cli", routing_backtest_text.stdout)
+        self.assertIn("DRIVERS export:local-fast->local-workhorse", routing_backtest_text.stdout)
 
         review_after_flow = self.run_cli("review-policy", pack_dir, "--format", "json")
         self.assert_ok(review_after_flow)

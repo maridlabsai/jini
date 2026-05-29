@@ -11397,7 +11397,9 @@ def build_routing_backtest(
     limit: int = 200,
     min_samples: int = 1,
 ) -> dict[str, Any]:
-    events = read_learning_events(path=path, limit=limit)
+    source_path = path if path is not None else LEARNING_EVENTS_PATH
+    events = read_learning_events(path=source_path, limit=limit)
+    latest_execute_flow = build_latest_execute_flow_summary(path=source_path)
     by_bucket: dict[tuple[str, str], dict[str, Any]] = {}
     recommendations: list[dict[str, Any]] = []
 
@@ -11483,10 +11485,11 @@ def build_routing_backtest(
 
     entries.sort(key=lambda item: (item["intent"], class_rank.get(str(item["execution_class"]), 99)))
     return {
-        "path": display_path(path if path is not None else LEARNING_EVENTS_PATH),
+        "path": display_path(source_path),
         "limit": limit,
         "min_samples": min_samples,
         "event_count": len(events),
+        "latest_execute_flow": latest_execute_flow,
         "buckets": entries,
         "policy_recommendations": recommendations,
         "route_feedback": build_route_feedback_backtest(events),
@@ -11578,6 +11581,17 @@ def build_route_feedback_backtest(events: list[dict[str, Any]]) -> dict[str, Any
 def print_routing_backtest(backtest: dict[str, Any]) -> None:
     print(f"PATH   {backtest['path']}")
     print(f"COUNT  {backtest['event_count']}")
+    latest_execute_flow = backtest.get("latest_execute_flow", {})
+    if isinstance(latest_execute_flow, dict) and latest_execute_flow:
+        print(
+            f"FLOW   {latest_execute_flow.get('pack_id', '')} "
+            f"{latest_execute_flow.get('intent', '')} "
+            f"{latest_execute_flow.get('execution_class', '')}"
+        )
+        if latest_execute_flow.get("runtime_target"):
+            print(f"TARGET {latest_execute_flow['runtime_target']}")
+        if latest_execute_flow.get("route_feedback_driver_preview"):
+            print(f"DRIVERS {latest_execute_flow['route_feedback_driver_preview']}")
     print("BUCKETS")
     for bucket in backtest.get("buckets", []):
         print(
