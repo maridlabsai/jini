@@ -9345,6 +9345,16 @@ def print_admin_command_inventory() -> None:
         print()
 
 
+def print_help_request_hint(request_tokens: list[str]) -> None:
+    cli = cli_invocation()
+    request = " ".join(request_tokens).strip()
+    print(
+        f'ERROR `{cli} help` shows the CLI overview; it does not take a request like "{request}".'
+    )
+    print(f"Start with `{cli}` and type the request in the shell.")
+    print(f"Or use `{cli} open` or `{cli} status` if you want the current work surface.")
+
+
 def resolve_display_path(path_text: str) -> Path:
     path = Path(path_text).expanduser()
     if path.is_absolute():
@@ -22430,6 +22440,9 @@ def main() -> int:
             print_admin_command_inventory()
         elif "--all" in argv[1:]:
             print_public_command_inventory()
+        elif argv[1:]:
+            print_help_request_hint(argv[1:])
+            return 2
         else:
             print_cli_overview()
         return 0

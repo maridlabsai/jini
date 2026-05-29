@@ -495,6 +495,16 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("jini run --repo /path/to/repo --harness codex", result.stdout)
         self.assertNotIn("usage: jini", result.stdout)
 
+    def test_help_with_request_tail_shows_corrective_hint(self) -> None:
+        result = self.run_cli("help", "me", "edit", "pear fellow script.txt")
+        self.assert_error(result)
+        self.assertIn("ERROR `jini help` shows the CLI overview", result.stdout)
+        self.assertIn('it does not take a request like "me edit pear fellow script.txt"', result.stdout)
+        self.assertIn("Start with `jini` and type the request in the shell.", result.stdout)
+        self.assertIn("`jini open` or `jini status`", result.stdout)
+        self.assertNotIn("OPEN JINI", result.stdout)
+        self.assertEqual("", result.stderr)
+
     def test_help_all_shows_public_command_inventory(self) -> None:
         result = self.run_cli("help", "--all")
         self.assert_ok(result)
