@@ -113,6 +113,12 @@ class PublicCliDocsTests(unittest.TestCase):
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
+        self.assertEqual(
+            text.count(
+                "In short: <code>release binary</code> means no support receipt and no <code>next_step=</code>, while source-path follow-up output includes both."
+            ),
+            2,
+        )
         self.assertGreaterEqual(
             text.count(
                 "- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)"
