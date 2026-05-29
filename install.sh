@@ -191,6 +191,11 @@ try_install_prebuilt_release() {
   return 0
 }
 
+release_binary_supports_public_contract() {
+  local binary_path="$1"
+  "${binary_path}" doctor >/dev/null 2>&1
+}
+
 try_install_python_source_runtime() {
   local app_dir="${INSTALL_DIR}/source-runtime"
   local wrapper_path="${TARGET_BINARY}"
@@ -316,7 +321,12 @@ INSTALLED_FROM_RELEASE=0
 
 if should_try_release_install; then
   if try_install_prebuilt_release; then
-    INSTALLED_FROM_RELEASE=1
+    if release_binary_supports_public_contract "${TARGET_BINARY}"; then
+      INSTALLED_FROM_RELEASE=1
+    else
+      rm -f "${TARGET_BINARY}"
+      say "Downloaded release asset did not support the current public command surface. Falling back to source install."
+    fi
   fi
 fi
 

@@ -5,6 +5,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import tarfile
 import unittest
 from pathlib import Path
 from typing import Optional
@@ -397,6 +398,33 @@ class InstallScriptTests(unittest.TestCase):
         )
         return snapshot
 
+    def create_fake_release_asset(self, script_body: str) -> Path:
+        system_map = {
+            "darwin": "darwin",
+            "linux": "linux",
+        }
+        arch_map = {
+            "x86_64": "amd64",
+            "amd64": "amd64",
+            "arm64": "arm64",
+            "aarch64": "arm64",
+        }
+        system_key = system_map.get(sys.platform)
+        self.assertIsNotNone(system_key, msg=f"Unsupported test platform: {sys.platform}")
+        arch_key = arch_map.get(os.uname().machine)
+        self.assertIsNotNone(arch_key, msg=f"Unsupported test architecture: {os.uname().machine}")
+
+        asset_name = f"jini-{system_key}-{arch_key}.tar.gz"
+        release_root = self.tmp / "fake-release"
+        release_root.mkdir(parents=True, exist_ok=True)
+        binary_path = release_root / "jini"
+        binary_path.write_text(script_body, encoding="utf-8")
+        binary_path.chmod(0o755)
+        archive_path = release_root / asset_name
+        with tarfile.open(archive_path, "w:gz") as archive:
+            archive.add(binary_path, arcname="jini")
+        return release_root
+
     def test_local_install_creates_jini_command_and_receipt(self) -> None:
         bin_dir = self.tmp / "bin"
         install_dir = self.tmp / "share" / "jini"
@@ -567,6 +595,56 @@ class InstallScriptTests(unittest.TestCase):
         )
         self.assert_ok(result)
         self.assertIn("Installed Jini", result.stdout)
+
+    def test_stale_release_asset_falls_back_to_local_source_runtime(self) -> None:
+        remote_snapshot = self.create_remote_snapshot()
+        remote_root = self.tmp / "remote-stale-release"
+        remote_root.mkdir()
+        remote_installer = remote_root / "install.sh"
+        installer_text = INSTALLER.read_text(encoding="utf-8").replace(
+            'DEFAULT_REPO_URL="https://github.com/maridlabsai/jini.git"',
+            f'DEFAULT_REPO_URL="file://{remote_snapshot}"',
+            1,
+        )
+        remote_installer.write_text(installer_text, encoding="utf-8")
+
+        release_root = self.create_fake_release_asset(
+            """#!/usr/bin/env bash
+set -euo pipefail
+if [[ "${1-}" == "doctor" ]]; then
+  printf 'Unknown command "doctor".\n' >&2
+  printf 'Try jini, jini provider doctor, or a scriptable command such as jini check.\n' >&2
+  exit 2
+fi
+printf 'stale release artifact\n'
+"""
+        )
+        bin_dir = self.tmp / "release-fallback-bin"
+        install_dir = self.tmp / "release-fallback-share" / "jini"
+        result = self.run_installer(
+            "--bin-dir",
+            str(bin_dir),
+            "--install-dir",
+            str(install_dir),
+            "--force",
+            env={
+                **self.go_ready_env(),
+                "JINI_RELEASE_BASE_URL": f"file://{release_root}",
+            },
+            cwd=remote_root,
+            installer_path=remote_installer,
+        )
+        self.assert_ok(result)
+        self.assertIn("Falling back to source install.", result.stdout)
+        self.assertIn("Installed Jini", result.stdout)
+        launch = self.run_installed_jini(
+            bin_dir / "jini",
+            "doctor",
+            env={"JINI_PROVIDER": "local-preview"},
+        )
+        self.assertEqual(0, launch.returncode, msg=f"STDOUT:\n{launch.stdout}\nSTDERR:\n{launch.stderr}")
+        self.assertIn("Provider", launch.stdout)
+        self.assertNotIn("Unknown command", launch.stderr)
 
     def test_piped_install_from_stdin_works_from_outside_repo(self) -> None:
         remote_snapshot = self.create_remote_snapshot()
