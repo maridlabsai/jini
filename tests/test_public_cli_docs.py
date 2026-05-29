@@ -138,6 +138,7 @@ class PublicCliDocsTests(unittest.TestCase):
             "jini",
             "The healthy release-binary path stops there.",
             "It does not print a <code>- support receipt: ...</code> line or a <code>- next step: ...</code> line.",
+            "Unlike the source-path follow-up output below, <code>next_step=</code> appears only on source-path installs that need follow-up.",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
