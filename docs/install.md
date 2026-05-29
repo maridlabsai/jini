@@ -25,6 +25,8 @@ quick_links:
   <p>The CLI is the live installable surface today. Desktop and mobile are the next release surfaces, stay free to download when live, and are not publicly downloadable yet. Desktop and Android should distribute directly first where policy allows, while iOS remains App Store constrained. Commercial pricing is planned to start with a 30-day free trial and become $1/month once checkout and entitlement activation are live.</p>
 
   <!-- | {{ surface.name }} | {{ surface.current_state }} | {{ surface.next_step }} | -->
+  <p>In short: <code>release binary</code> means no support receipt and no <code>next_step=</code>, while source-path follow-up output includes both.</p>
+
   <table>
     <thead>
       <tr>

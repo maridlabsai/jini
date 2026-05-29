@@ -87,6 +87,7 @@ class PublicCliDocsTests(unittest.TestCase):
             "Install source line",
             "What it usually means",
             "What to do next",
+            "In short: <code>release binary</code> means no support receipt and no <code>next_step=</code>, while source-path follow-up output includes both.",
             "Matching published release asset was available, passed Jini's public command check, and was accepted without any source fallback.",
             "No action needed unless you expected a source install for local development.",
             "The absence of <code>- support receipt: ...</code> and <code>- next step: ...</code> is expected on this path, and a missing <code>next_step=</code> field is only meaningful on source-path installs.",
