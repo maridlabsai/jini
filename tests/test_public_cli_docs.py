@@ -87,7 +87,7 @@ class PublicCliDocsTests(unittest.TestCase):
             "Install source line",
             "What it usually means",
             "What to do next",
-            "Matching release asset was available and passed Jini's public command check.",
+            "Matching published release asset was available, passed Jini's public command check, and was accepted without any source fallback.",
             "No action needed unless you expected a source install for local development.",
             "The absence of <code>- support receipt: ...</code> and <code>- next step: ...</code> is expected on this path.",
             "No matching release asset was available for this machine or release channel.",
