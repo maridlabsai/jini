@@ -126,6 +126,16 @@ class PublicCliDocsTests(unittest.TestCase):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
 
+    def test_install_page_shows_release_binary_terminal_example(self) -> None:
+        text = read(INSTALL_PATH)
+        for marker in (
+            "Example release-binary success output:",
+            "- install source: release binary",
+            "jini",
+        ):
+            with self.subTest(marker=marker):
+                self.assertIn(marker, text)
+
     def test_install_page_lists_minimal_support_receipt_keys(self) -> None:
         text = read(INSTALL_PATH)
         for marker in (

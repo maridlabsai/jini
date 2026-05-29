@@ -108,6 +108,11 @@ quick_links:
     </tbody>
   </table>
 
+  <p>Example release-binary success output:</p>
+<pre><code class="language-text">- install source: release binary
+jini
+</code></pre>
+
   <p>Example source-path follow-up output:</p>
 <pre><code class="language-text">- install source: source runtime (release-unavailable)
 - support receipt: /Users/you/.local/bin/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)
