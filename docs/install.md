@@ -112,6 +112,7 @@ quick_links:
 <pre><code class="language-text">- install source: release binary
 jini
 </code></pre>
+  <p>The healthy release-binary path stops there. It does not print a <code>- support receipt: ...</code> line or a <code>- next step: ...</code> line.</p>
 
   <p>Example source-path follow-up output:</p>
 <pre><code class="language-text">- install source: source runtime (release-unavailable)

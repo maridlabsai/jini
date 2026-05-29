@@ -132,6 +132,8 @@ class PublicCliDocsTests(unittest.TestCase):
             "Example release-binary success output:",
             "- install source: release binary",
             "jini",
+            "The healthy release-binary path stops there.",
+            "It does not print a <code>- support receipt: ...</code> line or a <code>- next step: ...</code> line.",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
