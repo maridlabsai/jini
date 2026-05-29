@@ -105,6 +105,7 @@ class PublicCliDocsTests(unittest.TestCase):
             "source_reason=",
             "release_validation=",
             "next_step=",
+            "On source-path installs that need follow-up, the terminal now prints the exact support handoff line",
             "- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)",
         ):
             with self.subTest(marker=marker):

@@ -64,7 +64,7 @@ quick_links:
 
   <p>After install, Jini also prints one short provenance line for support and troubleshooting, such as <code>- install source: release binary</code>, <code>- install source: source runtime (explicit source)</code>, <code>- install source: source runtime (release-unavailable)</code>, or <code>- install source: source fallback (release validation failed: unsupported-public-command-surface)</code>.</p>
 
-  <p>The same install writes <code>install-receipt.txt</code> with the machine-readable fields <code>source_reason=</code> and <code>release_validation=</code>. When the install needs follow-up, the receipt also records <code>next_step=</code>. The terminal now prints the exact support handoff line in the same shape support should ask for: <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code>.</p>
+  <p>The same install writes <code>install-receipt.txt</code> with the machine-readable fields <code>source_reason=</code> and <code>release_validation=</code>. When the install needs follow-up, the receipt also records <code>next_step=</code>. On source-path installs that need follow-up, the terminal now prints the exact support handoff line in the same shape support should ask for: <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code>.</p>
 
   <p>When support asks for install details on a source-path install, send the support receipt path plus only these receipt keys:</p>
   <ul>
