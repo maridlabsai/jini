@@ -64,6 +64,38 @@ quick_links:
 
   <p>After install, Jini also prints one short provenance line for support and troubleshooting, such as <code>- install source: release binary</code>, <code>- install source: source runtime (explicit source)</code>, <code>- install source: source runtime (release-unavailable)</code>, or <code>- install source: source fallback (release validation failed: unsupported-public-command-surface)</code>.</p>
 
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Install source line</th>
+        <th scope="col">What it usually means</th>
+        <th scope="col">What to do next</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th scope="row"><code>- install source: release binary</code></th>
+        <td>Matching release asset was available and passed Jini's public command check.</td>
+        <td>No action needed unless you expected a source install for local development.</td>
+      </tr>
+      <tr>
+        <th scope="row"><code>- install source: source runtime (explicit source)</code></th>
+        <td>You pointed the installer at a local checkout on purpose.</td>
+        <td>Keep using that checkout and rerun from the repo when you want the local source tree to stay in control.</td>
+      </tr>
+      <tr>
+        <th scope="row"><code>- install source: source runtime (release-unavailable)</code></th>
+        <td>No matching release asset was available for this machine or release channel.</td>
+        <td>If this machine should have had a published release, file a release issue and include the receipt.</td>
+      </tr>
+      <tr>
+        <th scope="row"><code>- install source: source fallback (release validation failed: unsupported-public-command-surface)</code></th>
+        <td>Downloaded release binary did not support the current public command surface.</td>
+        <td>Keep the source install, attach install-receipt.txt, and flag the stale release artifact.</td>
+      </tr>
+    </tbody>
+  </table>
+
 <pre><code class="language-bash">jini</code></pre>
 
   <p>If the installer prints a PATH line, run it once in the current shell and add it to your shell profile later.</p>

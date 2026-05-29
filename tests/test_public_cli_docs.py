@@ -81,6 +81,22 @@ class PublicCliDocsTests(unittest.TestCase):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
 
+    def test_install_page_maps_provenance_lines_to_support_actions(self) -> None:
+        text = read(INSTALL_PATH)
+        for marker in (
+            "Install source line",
+            "What it usually means",
+            "What to do next",
+            "Matching release asset was available and passed Jini's public command check.",
+            "No action needed unless you expected a source install for local development.",
+            "No matching release asset was available for this machine or release channel.",
+            "If this machine should have had a published release, file a release issue and include the receipt.",
+            "Downloaded release binary did not support the current public command surface.",
+            "Keep the source install, attach install-receipt.txt, and flag the stale release artifact.",
+        ):
+            with self.subTest(marker=marker):
+                self.assertIn(marker, text)
+
     def test_quickstart_uses_same_public_vs_admin_boundary(self) -> None:
         text = read(SIMPLE_PATH)
         for marker in (
