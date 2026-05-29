@@ -115,6 +115,17 @@ class PublicCliDocsTests(unittest.TestCase):
             4,
         )
 
+    def test_install_page_shows_source_path_terminal_example(self) -> None:
+        text = read(INSTALL_PATH)
+        for marker in (
+            "Example source-path follow-up output:",
+            "- install source: source runtime (release-unavailable)",
+            "- support receipt: /Users/you/.local/bin/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)",
+            "- next step: If this machine should have had a published release, file a release issue and include the receipt.",
+        ):
+            with self.subTest(marker=marker):
+                self.assertIn(marker, text)
+
     def test_install_page_lists_minimal_support_receipt_keys(self) -> None:
         text = read(INSTALL_PATH)
         for marker in (

@@ -108,6 +108,12 @@ quick_links:
     </tbody>
   </table>
 
+  <p>Example source-path follow-up output:</p>
+<pre><code class="language-text">- install source: source runtime (release-unavailable)
+- support receipt: /Users/you/.local/bin/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)
+- next step: If this machine should have had a published release, file a release issue and include the receipt.
+</code></pre>
+
 <pre><code class="language-bash">jini</code></pre>
 
   <p>If the installer prints a PATH line, run it once in the current shell and add it to your shell profile later.</p>
