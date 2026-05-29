@@ -64,6 +64,8 @@ quick_links:
 
   <p>After install, Jini also prints one short provenance line for support and troubleshooting, such as <code>- install source: release binary</code>, <code>- install source: source runtime (explicit source)</code>, <code>- install source: source runtime (release-unavailable)</code>, or <code>- install source: source fallback (release validation failed: unsupported-public-command-surface)</code>.</p>
 
+  <p>The same install writes <code>install-receipt.txt</code> with the machine-readable fields <code>source_reason=</code> and <code>release_validation=</code>. When the install needs follow-up, the receipt also records <code>next_step=</code>. Support can work from the receipt alone without asking the user to reconstruct terminal output.</p>
+
   <table>
     <thead>
       <tr>

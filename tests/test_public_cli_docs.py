@@ -97,6 +97,18 @@ class PublicCliDocsTests(unittest.TestCase):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
 
+    def test_install_page_explains_receipt_next_step_field(self) -> None:
+        text = read(INSTALL_PATH)
+        for marker in (
+            "install-receipt.txt",
+            "source_reason=",
+            "release_validation=",
+            "next_step=",
+            "Support can work from the receipt alone",
+        ):
+            with self.subTest(marker=marker):
+                self.assertIn(marker, text)
+
     def test_quickstart_uses_same_public_vs_admin_boundary(self) -> None:
         text = read(SIMPLE_PATH)
         for marker in (
