@@ -68,7 +68,7 @@ quick_links:
 
   <p>The same install writes <code>install-receipt.txt</code> with the machine-readable fields <code>source_reason=</code> and <code>release_validation=</code>. When the install needs follow-up, the receipt also records <code>next_step=</code>.</p>
   <p>In short: <code>release binary</code> means no support receipt and no <code>next_step=</code>, while source-path follow-up output includes both.</p>
-  <p>On source-path installs that need follow-up, the terminal now prints the exact support handoff line in the same shape support should ask for: <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code>.</p>
+  <p>On source-path installs that need follow-up, the terminal now prints this exact support handoff line: <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code>.</p>
 
   <p>When support asks for install details on a source-path install, send the support receipt path plus only these receipt keys. Treat <code>next_step=</code> as the actionable follow-up field for this source install.</p>
   <ul>
