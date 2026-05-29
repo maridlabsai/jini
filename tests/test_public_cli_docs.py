@@ -119,11 +119,17 @@ class PublicCliDocsTests(unittest.TestCase):
             ),
             2,
         )
-        self.assertGreaterEqual(
+        self.assertEqual(
             text.count(
                 "- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)"
             ),
             4,
+        )
+        self.assertEqual(
+            text.count(
+                "- support receipt: /Users/you/.local/bin/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)"
+            ),
+            1,
         )
 
     def test_install_page_shows_source_path_terminal_example(self) -> None:
