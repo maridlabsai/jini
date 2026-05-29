@@ -455,6 +455,10 @@ class InstallScriptTests(unittest.TestCase):
             "- next step: Keep using this checkout when you want local source changes to control Jini.",
             result.stdout,
         )
+        self.assertIn(
+            "- support receipt keys: version=, source_reason=, release_validation=, next_step=",
+            result.stdout,
+        )
         self.assertTrue((bin_dir / "jini").exists())
         self.assertTrue((install_dir / "install-receipt.txt").exists())
         receipt = self.read_install_receipt(install_dir)
@@ -668,6 +672,10 @@ printf 'stale release artifact\n'
             "- next step: Keep the source install, attach install-receipt.txt, and flag the stale release artifact.",
             result.stdout,
         )
+        self.assertIn(
+            "- support receipt keys: version=, source_reason=, release_validation=, next_step=",
+            result.stdout,
+        )
         receipt = self.read_install_receipt(install_dir)
         self.assertEqual("source-runtime", receipt["install_mode"])
         self.assertEqual("release-validation-failed", receipt["source_reason"])
@@ -726,6 +734,7 @@ printf 'fake release artifact\\n'
         self.assertIn("Installed Jini", result.stdout)
         self.assertIn("- install source: release binary", result.stdout)
         self.assertNotIn("- next step:", result.stdout)
+        self.assertNotIn("- support receipt keys:", result.stdout)
         receipt = self.read_install_receipt(install_dir)
         self.assertEqual("release-binary", receipt["install_mode"])
         self.assertEqual("release-binary", receipt["source_reason"])
@@ -768,6 +777,10 @@ printf 'fake release artifact\\n'
         self.assertIn("- install source: source runtime (release-unavailable)", result.stdout)
         self.assertIn(
             "- next step: If this machine should have had a published release, file a release issue and include the receipt.",
+            result.stdout,
+        )
+        self.assertIn(
+            "- support receipt keys: version=, source_reason=, release_validation=, next_step=",
             result.stdout,
         )
         receipt = self.read_install_receipt(install_dir)
