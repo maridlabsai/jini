@@ -145,6 +145,12 @@ class PublicCliDocsTests(unittest.TestCase):
         )
         self.assertEqual(
             text.count(
+                "Unlike the source-path follow-up output below, <code>next_step=</code> appears only on source-path installs that need follow-up."
+            ),
+            1,
+        )
+        self.assertEqual(
+            text.count(
                 "- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)"
             ),
             4,
