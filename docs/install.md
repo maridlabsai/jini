@@ -70,7 +70,7 @@ quick_links:
   <p>In short: <code>release binary</code> means no support receipt and no <code>next_step=</code>, while source-path follow-up output includes both.</p>
   <p>On source-path installs that need follow-up, the terminal now prints the exact support handoff line in the same shape support should ask for: <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code>.</p>
 
-  <p>When support asks for install details on a source-path install, send the support receipt path plus only these receipt keys. Treat <code>next_step=</code> as the actionable follow-up field for that source install.</p>
+  <p>When support asks for install details on a source-path install, send the support receipt path plus only these receipt keys. Treat <code>next_step=</code> as the actionable follow-up field for this source install.</p>
   <ul>
     <li><code>install-receipt.txt</code> path from the printed <code>- support receipt: ...</code> line</li>
     <li><code>version=</code></li>
@@ -98,17 +98,17 @@ quick_links:
       <tr>
         <th scope="row"><code>- install source: source runtime (explicit source)</code></th>
         <td>You pointed the installer at a local checkout on purpose.</td>
-        <td>Keep using that checkout and rerun from the repo when you want the local source tree to stay in control. If support needs the install details, send <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code> and treat <code>next_step=</code> as the actionable follow-up field for this source install.</td>
+        <td>Keep using that checkout and rerun from the repo when you want the local source tree to stay in control. If support needs the install details, send <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code>. Treat <code>next_step=</code> as the actionable follow-up field for this source install.</td>
       </tr>
       <tr>
         <th scope="row"><code>- install source: source runtime (release-unavailable)</code></th>
         <td>No matching release asset was available for this machine or release channel.</td>
-        <td>If this machine should have had a published release, file a release issue and include the receipt. Support should ask for <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code> and use <code>next_step=</code> as the actionable follow-up field for this source install.</td>
+        <td>If this machine should have had a published release, file a release issue and include the receipt. Support should ask for <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code>. Treat <code>next_step=</code> as the actionable follow-up field for this source install.</td>
       </tr>
       <tr>
         <th scope="row"><code>- install source: source fallback (release validation failed: unsupported-public-command-surface)</code></th>
         <td>Downloaded release binary did not support the current public command surface.</td>
-        <td>Keep the source install, attach install-receipt.txt, and flag the stale release artifact. Support should ask for <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code> and use <code>next_step=</code> as the actionable follow-up field for this source install.</td>
+        <td>Keep the source install, attach install-receipt.txt, and flag the stale release artifact. Support should ask for <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code>. Treat <code>next_step=</code> as the actionable follow-up field for this source install.</td>
       </tr>
     </tbody>
   </table>
@@ -125,7 +125,7 @@ jini
 - support receipt: /Users/you/.local/bin/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)
 - next step: If this machine should have had a published release, file a release issue and include the receipt.
 </code></pre>
-  <p>In that source-path transcript, <code>next_step=</code> is the actionable follow-up field for the install.</p>
+  <p>Treat <code>next_step=</code> as the actionable follow-up field for this source install.</p>
 
 <pre><code class="language-bash">jini</code></pre>
 
