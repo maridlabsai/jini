@@ -185,6 +185,30 @@ class PublicCliDocsTests(unittest.TestCase):
         self.assertEqual(text.count("Install source line"), 1)
         self.assertEqual(text.count("What it usually means"), 1)
         self.assertEqual(text.count("What to do next"), 1)
+        self.assertEqual(
+            text.count(
+                '<th scope="row"><code>- install source: release binary</code></th>'
+            ),
+            1,
+        )
+        self.assertEqual(
+            text.count(
+                '<th scope="row"><code>- install source: source runtime (explicit source)</code></th>'
+            ),
+            1,
+        )
+        self.assertEqual(
+            text.count(
+                '<th scope="row"><code>- install source: source runtime (release-unavailable)</code></th>'
+            ),
+            1,
+        )
+        self.assertEqual(
+            text.count(
+                '<th scope="row"><code>- install source: source fallback (release validation failed: unsupported-public-command-surface)</code></th>'
+            ),
+            1,
+        )
         self.assertEqual(text.count("Example release-binary success output:"), 1)
         self.assertEqual(text.count("Example source-path follow-up output:"), 1)
 
