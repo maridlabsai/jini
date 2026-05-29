@@ -3038,6 +3038,9 @@ def stage_framework_experiment(
     if index < 1 or index > len(experiments):
         raise ValueError(f"Experiment index must be between 1 and {len(experiments)}")
     selected_experiment = experiments[index - 1]
+    latest_execute_flow = review.get("latest_execute_flow", {})
+    if not isinstance(latest_execute_flow, dict):
+        latest_execute_flow = build_latest_execute_flow_summary()
 
     experiment_path = next_framework_experiment_path(str(selected_entry.get("id", "framework")))
     payload = {
@@ -3065,6 +3068,7 @@ def stage_framework_experiment(
         "success_signals": selected_experiment.get("success_signals", []),
         "exit_criteria": selected_entry.get("exit_criteria", [])[:3],
         "implemented_assets": selected_entry.get("implemented_assets", []),
+        "latest_execute_flow": latest_execute_flow,
     }
     experiment_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     append_learning_event(
@@ -3089,6 +3093,17 @@ def print_framework_experiment(experiment: dict[str, Any]) -> None:
     print(f"TARGET    {experiment.get('target_score', 0.0):.1f}")
     print(f"EXPECTED  +{experiment.get('expected_score_delta', 0.0):.1f}")
     print(f"REVIEW    {experiment.get('source_review_path', '')}")
+    latest_execute_flow = experiment.get("latest_execute_flow", {})
+    if isinstance(latest_execute_flow, dict) and latest_execute_flow:
+        print(
+            f"FLOW     {latest_execute_flow.get('pack_id', '')} "
+            f"{latest_execute_flow.get('intent', '')} "
+            f"{latest_execute_flow.get('execution_class', '')}"
+        )
+        if latest_execute_flow.get("runtime_target"):
+            print(f"RUNTIME  {latest_execute_flow['runtime_target']}")
+        if latest_execute_flow.get("route_feedback_driver_preview"):
+            print(f"DRIVERS  {latest_execute_flow['route_feedback_driver_preview']}")
     print(f"HYPOTHESIS {experiment.get('hypothesis', '')}")
     for step in experiment.get("change_plan", []):
         print(f"  - {step}")
@@ -3246,6 +3261,7 @@ def build_framework_evolution_backtest(
         recommended = dimension_summaries[0]["dimension_id"]
     elif review.get("prioritized_dimensions"):
         recommended = review["prioritized_dimensions"][0]["id"]
+    latest_execute_flow = build_latest_execute_flow_summary()
 
     payload = {
         "schema_version": "0.1.0",
@@ -3255,6 +3271,7 @@ def build_framework_evolution_backtest(
         "outcome_count": len(outcomes),
         "dimension_summaries": dimension_summaries,
         "recommended_next_focus": recommended,
+        "latest_execute_flow": latest_execute_flow,
     }
     append_learning_event(
         "framework-evolution-backtest",
@@ -3271,6 +3288,17 @@ def print_framework_evolution_backtest(backtest: dict[str, Any]) -> None:
     print(f"OUTCOMES {backtest.get('outcome_count', 0)}")
     if backtest.get("recommended_next_focus"):
         print(f"NEXT    {backtest['recommended_next_focus']}")
+    latest_execute_flow = backtest.get("latest_execute_flow", {})
+    if isinstance(latest_execute_flow, dict) and latest_execute_flow:
+        print(
+            f"FLOW    {latest_execute_flow.get('pack_id', '')} "
+            f"{latest_execute_flow.get('intent', '')} "
+            f"{latest_execute_flow.get('execution_class', '')}"
+        )
+        if latest_execute_flow.get("runtime_target"):
+            print(f"TARGET  {latest_execute_flow['runtime_target']}")
+        if latest_execute_flow.get("route_feedback_driver_preview"):
+            print(f"DRIVERS {latest_execute_flow['route_feedback_driver_preview']}")
     print("DIMENSIONS")
     for item in backtest.get("dimension_summaries", []):
         print(

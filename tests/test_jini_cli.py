@@ -4994,6 +4994,16 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("subtractive", experiment["change_type"])
         self.assertTrue(experiment["change_plan"])
         self.assertIn("adoption_weight", experiment["reward_model"])
+        self.assertIsInstance(experiment["latest_execute_flow"], dict)
+
+        text_result = self.run_cli(
+            "stage-framework-experiment",
+            "--dimension",
+            "delivery-maturity",
+        )
+        self.assert_ok(text_result)
+        if experiment["latest_execute_flow"]:
+            self.assertIn("FLOW     ", text_result.stdout)
 
     def test_record_framework_outcome_and_backtest_reflect_reward(self) -> None:
         self.assert_ok(self.run_cli("review-framework"))
@@ -5042,12 +5052,18 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(backtest)
         backtest_doc = json.loads(backtest.stdout)
         self.assertGreaterEqual(backtest_doc["outcome_count"], 1)
+        self.assertIsInstance(backtest_doc["latest_execute_flow"], dict)
         adapter_summary = next(
             item for item in backtest_doc["dimension_summaries"] if item["dimension_id"] == "adapter-portability"
         )
         self.assertGreaterEqual(adapter_summary["experiments"], 1)
         self.assertGreaterEqual(adapter_summary["successes"], 1)
         self.assertGreater(adapter_summary["average_score_delta"], 0)
+
+        backtest_text = self.run_cli("backtest-framework-evolution")
+        self.assert_ok(backtest_text)
+        if backtest_doc["latest_execute_flow"]:
+            self.assertIn("FLOW    ", backtest_text.stdout)
 
     def test_plan_install_json_reports_provenance_targets_and_receipt(self) -> None:
         result = self.run_cli(
