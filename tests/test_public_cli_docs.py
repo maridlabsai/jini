@@ -107,6 +107,7 @@ class PublicCliDocsTests(unittest.TestCase):
             "source_reason=",
             "release_validation=",
             "next_step=",
+            "In short: <code>release binary</code> means no support receipt and no <code>next_step=</code>, while source-path follow-up output includes both.",
             "On source-path installs that need follow-up, the terminal now prints the exact support handoff line",
             "- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)",
         ):
