@@ -75,7 +75,7 @@ quick_links:
     <li><code>next_step=</code></li>
   </ul>
   <p>If the install output shows only <code>- install source: release binary</code> followed by <code>jini</code>, support can ignore this checklist.</p>
-  <p>If <code>next_step=</code> is missing, the release-binary path likely succeeded and no extra follow-up was required.</p>
+  <p>If <code>next_step=</code> is missing on a source-path install, that source path likely completed without extra follow-up. The healthy <code>release binary</code> path does not use this source-path handoff at all.</p>
 
   <table>
     <thead>
