@@ -125,6 +125,7 @@ class PublicCliDocsTests(unittest.TestCase):
             "- install source: source runtime (release-unavailable)",
             "- support receipt: /Users/you/.local/bin/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)",
             "- next step: If this machine should have had a published release, file a release issue and include the receipt.",
+            "In that source-path transcript, <code>next_step=</code> is the actionable follow-up field for the install.",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
@@ -144,7 +145,7 @@ class PublicCliDocsTests(unittest.TestCase):
     def test_install_page_lists_minimal_support_receipt_keys(self) -> None:
         text = read(INSTALL_PATH)
         for marker in (
-            "When support asks for install details on a source-path install, send the support receipt path plus only these receipt keys:",
+            "When support asks for install details on a source-path install, send the support receipt path plus only these receipt keys. Treat <code>next_step=</code> as the actionable follow-up field for that source install.",
             "install-receipt.txt</code> path from the printed <code>- support receipt: ...</code> line",
             "version=",
             "source_reason=",
