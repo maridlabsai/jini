@@ -4445,6 +4445,23 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("TARGET kiro-cli", routing_backtest_text.stdout)
         self.assertIn("DRIVERS export:local-fast->local-workhorse", routing_backtest_text.stdout)
 
+        route_feedback = self.run_cli("route-feedback", "--format", "json")
+        self.assert_ok(route_feedback)
+        route_feedback_doc = json.loads(route_feedback.stdout)
+        self.assertEqual("research-prd", route_feedback_doc["latest_execute_flow"]["pack_id"])
+        self.assertEqual("make", route_feedback_doc["latest_execute_flow"]["intent"])
+        self.assertEqual("cheap", route_feedback_doc["latest_execute_flow"]["execution_class"])
+        self.assertEqual("kiro-cli", route_feedback_doc["latest_execute_flow"]["runtime_target"])
+        self.assertEqual(
+            "export:local-fast->local-workhorse",
+            route_feedback_doc["latest_execute_flow"]["route_feedback_driver_preview"],
+        )
+        route_feedback_text = self.run_cli("route-feedback")
+        self.assert_ok(route_feedback_text)
+        self.assertIn("FLOW   research-prd make cheap", route_feedback_text.stdout)
+        self.assertIn("TARGET kiro-cli", route_feedback_text.stdout)
+        self.assertIn("DRIVERS export:local-fast->local-workhorse", route_feedback_text.stdout)
+
         review_after_flow = self.run_cli("review-policy", pack_dir, "--format", "json")
         self.assert_ok(review_after_flow)
         review_after_flow_doc = json.loads(review_after_flow.stdout)
@@ -4477,6 +4494,41 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("FLOW   research-prd make cheap", readiness_text.stdout)
         self.assertIn("TARGET kiro-cli", readiness_text.stdout)
         self.assertIn("DRIVERS export:local-fast->local-workhorse", readiness_text.stdout)
+
+        status_after_flow = self.run_cli("status", pack_dir, "--format", "json")
+        self.assert_ok(status_after_flow)
+        status_after_flow_doc = json.loads(status_after_flow.stdout)
+        self.assertEqual("research-prd", status_after_flow_doc["latest_execute_flow"]["pack_id"])
+        self.assertEqual("make", status_after_flow_doc["latest_execute_flow"]["intent"])
+        self.assertEqual("cheap", status_after_flow_doc["latest_execute_flow"]["execution_class"])
+        self.assertEqual("kiro-cli", status_after_flow_doc["latest_execute_flow"]["runtime_target"])
+        self.assertEqual(
+            "export:local-fast->local-workhorse",
+            status_after_flow_doc["latest_execute_flow"]["route_feedback_driver_preview"],
+        )
+        status_after_flow_text = self.run_cli("status", pack_dir)
+        self.assert_ok(status_after_flow_text)
+        self.assertIn("flow=research-prd make cheap", status_after_flow_text.stdout)
+        self.assertIn("target=kiro-cli", status_after_flow_text.stdout)
+        self.assertIn("drivers=export:local-fast->local-workhorse", status_after_flow_text.stdout)
+
+        metrics_after_flow = self.run_cli("metrics", "--format", "json")
+        self.assert_ok(metrics_after_flow)
+        metrics_after_flow_doc = json.loads(metrics_after_flow.stdout)
+        self.assertEqual("research-prd", metrics_after_flow_doc["latest_execute_flow"]["pack_id"])
+        self.assertEqual("make", metrics_after_flow_doc["latest_execute_flow"]["intent"])
+        self.assertEqual("cheap", metrics_after_flow_doc["latest_execute_flow"]["execution_class"])
+        self.assertEqual("kiro-cli", metrics_after_flow_doc["latest_execute_flow"]["runtime_target"])
+        self.assertEqual(
+            "export:local-fast->local-workhorse",
+            metrics_after_flow_doc["latest_execute_flow"]["route_feedback_driver_preview"],
+        )
+        metrics_after_flow_text = self.run_cli("metrics")
+        self.assert_ok(metrics_after_flow_text)
+        self.assertIn(
+            "ROUTEFLOW pack=research-prd intent=make class=cheap target=kiro-cli drivers=export:local-fast->local-workhorse",
+            metrics_after_flow_text.stdout,
+        )
 
         publish_routine = self.run_cli(
             "run-routine",

@@ -133,6 +133,13 @@ class LeanMetricsSupportTests(unittest.TestCase):
                         },
                     ],
                 },
+                "latest_execute_flow": {
+                    "pack_id": "research-prd",
+                    "intent": "make",
+                    "execution_class": "cheap",
+                    "runtime_target": "kiro-cli",
+                    "route_feedback_driver_preview": "export:local-fast->local-workhorse",
+                },
                 "cost_proxy": {
                     "dimension": "token-efficiency",
                     "current_score": 8.8,
@@ -158,6 +165,10 @@ class LeanMetricsSupportTests(unittest.TestCase):
         self.assertIn("ROUTEFEEDBACK status=stale active=0 expired=2 adapters=1 action=jini route-feedback --prune-expired", lines)
         self.assertIn(
             "ROUTEIMPACT status=changed changed=2/2 cohorts=export:local-fast->local-workhorse,wiki:local-fast->local-workhorse action=jini review-policy",
+            lines,
+        )
+        self.assertIn(
+            "ROUTEFLOW pack=research-prd intent=make class=cheap target=kiro-cli drivers=export:local-fast->local-workhorse",
             lines,
         )
         self.assertTrue(any("local-fast | recovered" in line for line in lines))

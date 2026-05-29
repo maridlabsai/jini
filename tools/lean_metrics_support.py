@@ -573,6 +573,16 @@ def render_lean_platform_metrics(report: dict[str, Any]) -> list[str]:
             f"cohorts={preview_text or 'n/a'} "
             f"action={action_command or 'n/a'}"
         )
+    latest_execute_flow = report.get("latest_execute_flow", {})
+    if isinstance(latest_execute_flow, dict) and latest_execute_flow:
+        lines.append(
+            "ROUTEFLOW "
+            f"pack={latest_execute_flow.get('pack_id', 'n/a') or 'n/a'} "
+            f"intent={latest_execute_flow.get('intent', 'n/a') or 'n/a'} "
+            f"class={latest_execute_flow.get('execution_class', 'n/a') or 'n/a'} "
+            f"target={latest_execute_flow.get('runtime_target', 'n/a') or 'n/a'} "
+            f"drivers={latest_execute_flow.get('route_feedback_driver_preview', 'n/a') or 'n/a'}"
+        )
 
     cost_proxy = report.get("cost_proxy", {})
     lines.append(

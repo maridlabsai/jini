@@ -1336,6 +1336,7 @@ def build_lean_platform_metrics() -> dict[str, Any]:
         delivery_maturity=dimensions.get("delivery-maturity", {}),
     )
     route_snapshot = build_local_runtime_route_snapshot()
+    report["latest_execute_flow"] = build_latest_execute_flow_summary()
     report["route_feedback_health"] = build_route_feedback_health_summary()
     report["route_feedback_impact"] = build_route_feedback_impact_summary(
         route_snapshot["route_evidence"],
@@ -11772,6 +11773,7 @@ def build_route_feedback_maintenance_report(*, prune_expired: bool = False) -> d
         build_route_cost(route_evidence),
         route_payload,
     )
+    latest_execute_flow = build_latest_execute_flow_summary()
 
     return {
         "schema_version": "0.1.0",
@@ -11786,6 +11788,7 @@ def build_route_feedback_maintenance_report(*, prune_expired: bool = False) -> d
         "adapter_count": len(adapters),
         "adapters": adapters,
         "route_feedback_impact": route_feedback_impact,
+        "latest_execute_flow": latest_execute_flow,
     }
 
 
@@ -11834,6 +11837,17 @@ def print_route_feedback_maintenance(report: dict[str, Any]) -> None:
             f"cohorts={preview_text or 'n/a'} "
             f"action={action_command or 'n/a'}"
         )
+    latest_execute_flow = report.get("latest_execute_flow", {})
+    if isinstance(latest_execute_flow, dict) and latest_execute_flow:
+        print(
+            f"FLOW   {latest_execute_flow.get('pack_id', '')} "
+            f"{latest_execute_flow.get('intent', '')} "
+            f"{latest_execute_flow.get('execution_class', '')}"
+        )
+        if latest_execute_flow.get("runtime_target"):
+            print(f"TARGET {latest_execute_flow['runtime_target']}")
+        if latest_execute_flow.get("route_feedback_driver_preview"):
+            print(f"DRIVERS {latest_execute_flow['route_feedback_driver_preview']}")
     for adapter in report.get("adapters", []):
         print(
             f"ADAPTER {adapter.get('adapter_id', '')} "
@@ -17307,6 +17321,7 @@ def build_outcome_view(
         max_rationale=2,
         include_rate_limits=True,
     )
+    latest_execute_flow = build_latest_execute_flow_summary()
     route_snapshot = build_local_runtime_route_snapshot()
     route_feedback_health = build_route_feedback_health_summary()
     route_feedback_impact = build_route_feedback_impact_summary(
@@ -17328,6 +17343,7 @@ def build_outcome_view(
         "state": str(work_unit.get("current_state", "")),
         "next_operation": summary["next_operation"],
         "efficiency_posture": efficiency_posture,
+        "latest_execute_flow": latest_execute_flow,
         "runtime_readout": runtime_readout,
         "route_feedback_health": route_feedback_health,
         "route_feedback_impact": route_feedback_impact,
@@ -17744,6 +17760,18 @@ def print_outcome_view(report: dict[str, Any]) -> None:
                 f"cohorts={preview_text or 'n/a'} "
                 f"action={action_command or 'n/a'}"
             )
+        latest_execute_flow = report.get("latest_execute_flow", {})
+        if isinstance(latest_execute_flow, dict) and latest_execute_flow:
+            print(
+                "  "
+                f"flow={latest_execute_flow.get('pack_id', '')} "
+                f"{latest_execute_flow.get('intent', '')} "
+                f"{latest_execute_flow.get('execution_class', '')}"
+            )
+            if latest_execute_flow.get("runtime_target"):
+                print(f"  target={latest_execute_flow['runtime_target']}")
+            if latest_execute_flow.get("route_feedback_driver_preview"):
+                print(f"  drivers={latest_execute_flow['route_feedback_driver_preview']}")
     missing_now = report.get("questions", {}).get("what_is_still_missing_now", [])
     missing_later = report.get("questions", {}).get("what_is_still_missing_later", [])
     print()
