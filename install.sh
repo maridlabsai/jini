@@ -18,6 +18,7 @@ RELEASE_BASE_URL="${JINI_RELEASE_BASE_URL:-$DEFAULT_RELEASE_BASE_URL}"
 FORCE_INSTALL=0
 COPY_BINARY=0
 TEMP_ROOT=""
+SOURCE_DIR_EXPLICIT=0
 
 usage() {
   cat <<'EOF'
@@ -99,6 +100,10 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+if [[ -n "${SOURCE_DIR}" ]]; then
+  SOURCE_DIR_EXPLICIT=1
+fi
 
 script_dir="$(pwd)"
 script_source="${BASH_SOURCE[0]-}"
@@ -287,8 +292,12 @@ fetch_source() {
   fail "Could not clone ${REPO_URL} at ref ${REPO_REF}."
 }
 
-if [[ -z "${SOURCE_DIR}" ]] && detect_local_source "${script_dir}"; then
+SOURCE_REASON=""
+if [[ ${SOURCE_DIR_EXPLICIT} -eq 1 ]]; then
+  SOURCE_REASON="explicit-source-dir"
+elif [[ -z "${SOURCE_DIR}" ]] && detect_local_source "${script_dir}"; then
   SOURCE_DIR="${script_dir}"
+  SOURCE_REASON="local-repo-source"
 fi
 
 BIN_DIR="$(pick_bin_dir)"
@@ -318,21 +327,34 @@ fi
 
 BUILD_OUTPUT="${TEMP_ROOT}/${PROGRAM_NAME}"
 INSTALLED_FROM_RELEASE=0
+INSTALL_MODE="source-runtime"
+INSTALL_DETAIL="unknown"
+RELEASE_VALIDATION="not-attempted"
 
 if should_try_release_install; then
   if try_install_prebuilt_release; then
     if release_binary_supports_public_contract "${TARGET_BINARY}"; then
       INSTALLED_FROM_RELEASE=1
+      INSTALL_MODE="release-binary"
+      INSTALL_DETAIL="prebuilt-release-binary"
+      SOURCE_REASON="release-binary"
+      RELEASE_VALIDATION="passed"
     else
       rm -f "${TARGET_BINARY}"
+      SOURCE_REASON="release-validation-failed"
+      RELEASE_VALIDATION="unsupported-public-command-surface"
       say "Downloaded release asset did not support the current public command surface. Falling back to source install."
     fi
+  else
+    SOURCE_REASON="${SOURCE_REASON:-release-unavailable}"
+    RELEASE_VALIDATION="release-unavailable"
   fi
 fi
 
 if [[ ${INSTALLED_FROM_RELEASE} -ne 1 ]]; then
   if [[ -z "${SOURCE_DIR}" ]]; then
     fetch_source
+    SOURCE_REASON="${SOURCE_REASON:-cloned-repo-source}"
   fi
   detect_local_source "${SOURCE_DIR}" || fail "source directory does not look like the Jini repo: ${SOURCE_DIR}"
   if ! try_install_python_source_runtime; then
@@ -345,6 +367,9 @@ if [[ ${INSTALLED_FROM_RELEASE} -ne 1 ]]; then
     fi
     mv "${BUILD_OUTPUT}" "${TARGET_BINARY}"
     chmod 0755 "${TARGET_BINARY}"
+    INSTALL_DETAIL="go-source-build"
+  else
+    INSTALL_DETAIL="python-source-runtime"
   fi
 fi
 
@@ -365,6 +390,10 @@ source_dir=${SOURCE_DIR}
 binary_path=${TARGET_BINARY}
 command_path=${COMMAND_PATH}
 copy_mode=$([[ ${COPY_BINARY} -eq 1 ]] && printf copy || printf symlink)
+install_mode=${INSTALL_MODE}
+install_detail=${INSTALL_DETAIL}
+source_reason=${SOURCE_REASON}
+release_validation=${RELEASE_VALIDATION}
 EOF
 
 "${COMMAND_PATH}" doctor >/dev/null

@@ -114,6 +114,16 @@ class InstallScriptTests(unittest.TestCase):
             env=run_env,
         )
 
+    def read_install_receipt(self, install_dir: Path) -> dict[str, str]:
+        receipt_path = install_dir / "install-receipt.txt"
+        payload: dict[str, str] = {}
+        for line in receipt_path.read_text(encoding="utf-8").splitlines():
+            if "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            payload[key] = value
+        return payload
+
     def write_current_work(
         self,
         state_dir: Path,
@@ -442,6 +452,10 @@ class InstallScriptTests(unittest.TestCase):
         self.assertIn("Installed Jini", result.stdout)
         self.assertTrue((bin_dir / "jini").exists())
         self.assertTrue((install_dir / "install-receipt.txt").exists())
+        receipt = self.read_install_receipt(install_dir)
+        self.assertEqual("source-runtime", receipt["install_mode"])
+        self.assertEqual("explicit-source-dir", receipt["source_reason"])
+        self.assertEqual("not-attempted", receipt["release_validation"])
 
         launch = subprocess.run(
             [str(bin_dir / "jini"), "doctor"],
@@ -637,6 +651,10 @@ printf 'stale release artifact\n'
         self.assert_ok(result)
         self.assertIn("Falling back to source install.", result.stdout)
         self.assertIn("Installed Jini", result.stdout)
+        receipt = self.read_install_receipt(install_dir)
+        self.assertEqual("source-runtime", receipt["install_mode"])
+        self.assertEqual("release-validation-failed", receipt["source_reason"])
+        self.assertEqual("unsupported-public-command-surface", receipt["release_validation"])
         launch = self.run_installed_jini(
             bin_dir / "jini",
             "doctor",
