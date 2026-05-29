@@ -109,6 +109,19 @@ class PublicCliDocsTests(unittest.TestCase):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
 
+    def test_install_page_lists_minimal_support_receipt_keys(self) -> None:
+        text = read(INSTALL_PATH)
+        for marker in (
+            "When support asks for install details, send only these receipt keys:",
+            "version=",
+            "source_reason=",
+            "release_validation=",
+            "next_step=",
+            "If <code>next_step=</code> is missing, the release-binary path likely succeeded and no extra follow-up was required.",
+        ):
+            with self.subTest(marker=marker):
+                self.assertIn(marker, text)
+
     def test_quickstart_uses_same_public_vs_admin_boundary(self) -> None:
         text = read(SIMPLE_PATH)
         for marker in (

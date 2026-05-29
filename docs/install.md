@@ -66,6 +66,15 @@ quick_links:
 
   <p>The same install writes <code>install-receipt.txt</code> with the machine-readable fields <code>source_reason=</code> and <code>release_validation=</code>. When the install needs follow-up, the receipt also records <code>next_step=</code>. Support can work from the receipt alone without asking the user to reconstruct terminal output.</p>
 
+  <p>When support asks for install details, send only these receipt keys:</p>
+  <ul>
+    <li><code>version=</code></li>
+    <li><code>source_reason=</code></li>
+    <li><code>release_validation=</code></li>
+    <li><code>next_step=</code></li>
+  </ul>
+  <p>If <code>next_step=</code> is missing, the release-binary path likely succeeded and no extra follow-up was required.</p>
+
   <table>
     <thead>
       <tr>
