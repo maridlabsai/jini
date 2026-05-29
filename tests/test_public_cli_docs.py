@@ -93,9 +93,9 @@ class PublicCliDocsTests(unittest.TestCase):
             "The absence of <code>- support receipt: ...</code> and <code>- next step: ...</code> is expected on this path, and a missing <code>next_step=</code> field is only meaningful on source-path installs.",
             "Treat <code>next_step=</code> as the actionable follow-up field for this source install.",
             "No matching release asset was available for this machine or release channel.",
-            "If this machine should have had a published release, file a release issue and include the receipt. Support should ask for <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code>. Treat <code>next_step=</code> as the actionable follow-up field for this source install.",
+            "If this machine should have had a published release, file a release issue and include the receipt. If support needs the install details, send <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code>. Treat <code>next_step=</code> as the actionable follow-up field for this source install.",
             "Downloaded release binary did not support the current public command surface.",
-            "Keep the source install, attach install-receipt.txt, and flag the stale release artifact. Support should ask for <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code>. Treat <code>next_step=</code> as the actionable follow-up field for this source install.",
+            "Keep the source install, attach install-receipt.txt, and flag the stale release artifact. If support needs the install details, send <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code>. Treat <code>next_step=</code> as the actionable follow-up field for this source install.",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
@@ -124,6 +124,12 @@ class PublicCliDocsTests(unittest.TestCase):
                 "Treat <code>next_step=</code> as the actionable follow-up field for this source install."
             ),
             5,
+        )
+        self.assertEqual(
+            text.count(
+                "If support needs the install details, send <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code>."
+            ),
+            3,
         )
         self.assertEqual(
             text.count(
