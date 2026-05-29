@@ -117,7 +117,8 @@ quick_links:
 <pre><code class="language-text">- install source: release binary
 jini
 </code></pre>
-  <p>The healthy release-binary path stops there. It does not print a <code>- support receipt: ...</code> line or a <code>- next step: ...</code> line.</p>
+  <p>The healthy release-binary path stops there.</p>
+  <p>The absence of <code>- support receipt: ...</code> and <code>- next step: ...</code> is expected on this path, and a missing <code>next_step=</code> field is only meaningful on source-path installs.</p>
   <p>Unlike the source-path follow-up output below, <code>next_step=</code> appears only on source-path installs that need follow-up.</p>
 
   <p>Example source-path follow-up output:</p>

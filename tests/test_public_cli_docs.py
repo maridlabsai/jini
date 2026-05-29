@@ -139,6 +139,12 @@ class PublicCliDocsTests(unittest.TestCase):
         )
         self.assertEqual(
             text.count(
+                "The absence of <code>- support receipt: ...</code> and <code>- next step: ...</code> is expected on this path, and a missing <code>next_step=</code> field is only meaningful on source-path installs."
+            ),
+            2,
+        )
+        self.assertEqual(
+            text.count(
                 "- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)"
             ),
             4,
@@ -169,7 +175,7 @@ class PublicCliDocsTests(unittest.TestCase):
             "- install source: release binary",
             "jini",
             "The healthy release-binary path stops there.",
-            "It does not print a <code>- support receipt: ...</code> line or a <code>- next step: ...</code> line.",
+            "The absence of <code>- support receipt: ...</code> and <code>- next step: ...</code> is expected on this path, and a missing <code>next_step=</code> field is only meaningful on source-path installs.",
             "Unlike the source-path follow-up output below, <code>next_step=</code> appears only on source-path installs that need follow-up.",
         ):
             with self.subTest(marker=marker):
