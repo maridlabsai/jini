@@ -66,7 +66,7 @@ quick_links:
 
   <p>The same install writes <code>install-receipt.txt</code> with the machine-readable fields <code>source_reason=</code> and <code>release_validation=</code>. When the install needs follow-up, the receipt also records <code>next_step=</code>. The terminal now prints the exact support handoff line in the same shape support should ask for: <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code>.</p>
 
-  <p>When support asks for install details, send the support receipt path plus only these receipt keys:</p>
+  <p>When support asks for install details on a source-path install, send the support receipt path plus only these receipt keys:</p>
   <ul>
     <li><code>install-receipt.txt</code> path from the printed <code>- support receipt: ...</code> line</li>
     <li><code>version=</code></li>
