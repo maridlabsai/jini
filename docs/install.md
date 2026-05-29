@@ -89,7 +89,7 @@ quick_links:
       <tr>
         <th scope="row"><code>- install source: release binary</code></th>
         <td>Matching published release asset was available, passed Jini's public command check, and was accepted without any source fallback.</td>
-        <td>No action needed unless you expected a source install for local development. The absence of <code>- support receipt: ...</code> and <code>- next step: ...</code> is expected on this path.</td>
+        <td>No action needed unless you expected a source install for local development. The absence of <code>- support receipt: ...</code> and <code>- next step: ...</code> is expected on this path, and a missing <code>next_step=</code> field is only meaningful on source-path installs.</td>
       </tr>
       <tr>
         <th scope="row"><code>- install source: source runtime (explicit source)</code></th>
