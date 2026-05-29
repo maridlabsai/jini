@@ -104,7 +104,7 @@ class PublicCliDocsTests(unittest.TestCase):
             "source_reason=",
             "release_validation=",
             "next_step=",
-            "Support can work from the receipt alone",
+            "- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
@@ -112,7 +112,8 @@ class PublicCliDocsTests(unittest.TestCase):
     def test_install_page_lists_minimal_support_receipt_keys(self) -> None:
         text = read(INSTALL_PATH)
         for marker in (
-            "When support asks for install details, send only these receipt keys:",
+            "When support asks for install details, send the support receipt path plus only these receipt keys:",
+            "install-receipt.txt</code> path from the printed <code>- support receipt: ...</code> line",
             "version=",
             "source_reason=",
             "release_validation=",
