@@ -94,17 +94,17 @@ quick_links:
       <tr>
         <th scope="row"><code>- install source: source runtime (explicit source)</code></th>
         <td>You pointed the installer at a local checkout on purpose.</td>
-        <td>Keep using that checkout and rerun from the repo when you want the local source tree to stay in control. If support needs the install details, send <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code>.</td>
+        <td>Keep using that checkout and rerun from the repo when you want the local source tree to stay in control. If support needs the install details, send <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code> and treat <code>next_step=</code> as the actionable follow-up field for this source install.</td>
       </tr>
       <tr>
         <th scope="row"><code>- install source: source runtime (release-unavailable)</code></th>
         <td>No matching release asset was available for this machine or release channel.</td>
-        <td>If this machine should have had a published release, file a release issue and include the receipt. Support should ask for <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code>.</td>
+        <td>If this machine should have had a published release, file a release issue and include the receipt. Support should ask for <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code> and use <code>next_step=</code> as the actionable follow-up field for this source install.</td>
       </tr>
       <tr>
         <th scope="row"><code>- install source: source fallback (release validation failed: unsupported-public-command-surface)</code></th>
         <td>Downloaded release binary did not support the current public command surface.</td>
-        <td>Keep the source install, attach install-receipt.txt, and flag the stale release artifact. Support should ask for <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code>.</td>
+        <td>Keep the source install, attach install-receipt.txt, and flag the stale release artifact. Support should ask for <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code> and use <code>next_step=</code> as the actionable follow-up field for this source install.</td>
       </tr>
     </tbody>
   </table>
