@@ -209,6 +209,21 @@ class PublicCliDocsTests(unittest.TestCase):
             ),
             1,
         )
+        release_row = text.index(
+            '<th scope="row"><code>- install source: release binary</code></th>'
+        )
+        explicit_source_row = text.index(
+            '<th scope="row"><code>- install source: source runtime (explicit source)</code></th>'
+        )
+        release_unavailable_row = text.index(
+            '<th scope="row"><code>- install source: source runtime (release-unavailable)</code></th>'
+        )
+        stale_release_row = text.index(
+            '<th scope="row"><code>- install source: source fallback (release validation failed: unsupported-public-command-surface)</code></th>'
+        )
+        self.assertLess(release_row, explicit_source_row)
+        self.assertLess(explicit_source_row, release_unavailable_row)
+        self.assertLess(release_unavailable_row, stale_release_row)
         self.assertEqual(text.count("Example release-binary success output:"), 1)
         self.assertEqual(text.count("Example source-path follow-up output:"), 1)
 
