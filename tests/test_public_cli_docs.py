@@ -148,6 +148,7 @@ class PublicCliDocsTests(unittest.TestCase):
             "source_reason=",
             "release_validation=",
             "next_step=",
+            "If the install output shows only <code>- install source: release binary</code> followed by <code>jini</code>, support can ignore this checklist.",
             "If <code>next_step=</code> is missing, the release-binary path likely succeeded and no extra follow-up was required.",
         ):
             with self.subTest(marker=marker):

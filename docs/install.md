@@ -74,6 +74,7 @@ quick_links:
     <li><code>release_validation=</code></li>
     <li><code>next_step=</code></li>
   </ul>
+  <p>If the install output shows only <code>- install source: release binary</code> followed by <code>jini</code>, support can ignore this checklist.</p>
   <p>If <code>next_step=</code> is missing, the release-binary path likely succeeded and no extra follow-up was required.</p>
 
   <table>
