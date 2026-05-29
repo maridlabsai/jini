@@ -4415,6 +4415,42 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("HANDOFF-DRIVERS export:local-fast->local-workhorse", handoff_flow_text.stdout)
         self.assertNotIn("ACTIVE-DRIVERS ", handoff_flow_text.stdout)
 
+        readiness = self.run_cli("publish-readiness", "--format", "json")
+        self.assert_ok(readiness)
+        readiness_doc = json.loads(readiness.stdout)
+        self.assertEqual("research-prd", readiness_doc["latest_execute_flow"]["pack_id"])
+        self.assertEqual("test-research-pack", readiness_doc["latest_execute_flow"]["work_unit_id"])
+        self.assertEqual("make", readiness_doc["latest_execute_flow"]["intent"])
+        self.assertEqual("cheap", readiness_doc["latest_execute_flow"]["execution_class"])
+        self.assertEqual("kiro-cli", readiness_doc["latest_execute_flow"]["runtime_target"])
+        self.assertFalse(readiness_doc["latest_execute_flow"]["activate_runtime"])
+        self.assertEqual(
+            "export:local-fast->local-workhorse",
+            readiness_doc["latest_execute_flow"]["route_feedback_driver_preview"],
+        )
+        readiness_text = self.run_cli("publish-readiness")
+        self.assert_ok(readiness_text)
+        self.assertIn("FLOW   research-prd make cheap", readiness_text.stdout)
+        self.assertIn("TARGET kiro-cli", readiness_text.stdout)
+        self.assertIn("DRIVERS export:local-fast->local-workhorse", readiness_text.stdout)
+
+        publish_routine = self.run_cli(
+            "run-routine",
+            home,
+            "publish-readiness",
+            "--mode",
+            "local",
+            "--format",
+            "json",
+        )
+        self.assert_ok(publish_routine)
+        publish_routine_doc = json.loads(publish_routine.stdout)
+        publish_brief_path = Path(publish_routine_doc["output_paths"][0])
+        publish_brief = publish_brief_path.read_text(encoding="utf-8")
+        self.assertIn("## Latest Execute Flow", publish_brief)
+        self.assertIn("- Runtime Target: `kiro-cli`", publish_brief)
+        self.assertIn("- Drivers: `export:local-fast->local-workhorse`", publish_brief)
+
         rollback = self.run_cli(
             "rollback-policy-candidate",
             pack_dir,
@@ -4461,6 +4497,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("JiniPublishReadiness", report["result_type"])
         self.assertEqual("ok", report["status"])
         self.assertEqual("starter-kit", report["default_kit_id"])
+        self.assertIsInstance(report["latest_execute_flow"], dict)
         self.assertGreaterEqual(report["pack_count"], 6)
         self.assertGreaterEqual(report["kit_count"], 6)
         self.assertTrue(any(section["id"] == "install" and section["status"] == "ok" for section in report["sections"]))

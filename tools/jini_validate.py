@@ -3468,6 +3468,7 @@ def build_publish_readiness() -> dict[str, Any]:
     scorecard = build_competitive_kpi_summary(load_competitive_kpis())
     rewrite_score_baseline = load_rewrite_score_baseline()
     benchmark_projection = build_golden_benchmark_projection()
+    latest_execute_flow = build_latest_execute_flow_summary()
 
     doc_paths = [
         ROOT / "README.md",
@@ -4217,6 +4218,7 @@ def build_publish_readiness() -> dict[str, Any]:
         "kit_count": len(install_catalog.get("kits", [])),
         "target_count": len(install_catalog.get("targets", [])),
         "consensus_gates": consensus_gates,
+        "latest_execute_flow": latest_execute_flow,
         "sections": sections,
     }
 
@@ -4229,6 +4231,17 @@ def print_publish_readiness(report: dict[str, Any]) -> None:
     print(f"TARGETS {report.get('target_count', 0)}")
     if report.get("default_kit_id"):
         print(f"DEFAULT {report['default_kit_id']}")
+    latest_execute_flow = report.get("latest_execute_flow", {})
+    if isinstance(latest_execute_flow, dict) and latest_execute_flow:
+        print(
+            f"FLOW   {latest_execute_flow.get('pack_id', '')} "
+            f"{latest_execute_flow.get('intent', '')} "
+            f"{latest_execute_flow.get('execution_class', '')}"
+        )
+        if latest_execute_flow.get("runtime_target"):
+            print(f"TARGET {latest_execute_flow['runtime_target']}")
+        if latest_execute_flow.get("route_feedback_driver_preview"):
+            print(f"DRIVERS {latest_execute_flow['route_feedback_driver_preview']}")
     print("CHECKS")
     for section in report.get("sections", []):
         print(f"  - {section['label']}: {section['status']}")
@@ -7139,6 +7152,22 @@ def render_publish_readiness_brief(home_root: Path) -> Path:
         "",
         "## Sections",
     ]
+    latest_execute_flow = report.get("latest_execute_flow", {})
+    if isinstance(latest_execute_flow, dict) and latest_execute_flow:
+        lines.extend(
+            [
+                "",
+                "## Latest Execute Flow",
+                f"- Recorded: {latest_execute_flow.get('recorded_at', '')}",
+                f"- Pack: `{latest_execute_flow.get('pack_id', '')}`",
+                f"- Work Unit: `{latest_execute_flow.get('work_unit_id', '')}`",
+                f"- Intent: `{latest_execute_flow.get('intent', '')}`",
+                f"- Execution Class: `{latest_execute_flow.get('execution_class', '')}`",
+                f"- Runtime Target: `{latest_execute_flow.get('runtime_target', '')}`",
+            ]
+        )
+        if latest_execute_flow.get("route_feedback_driver_preview"):
+            lines.append(f"- Drivers: `{latest_execute_flow['route_feedback_driver_preview']}`")
     for section in report.get("sections", []):
         lines.append(f"- {section.get('label', '')}: {section.get('status', '')}")
     output_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -9298,6 +9327,38 @@ def read_learning_events(
     if limit > 0:
         return entries[-limit:]
     return entries
+
+
+def build_latest_execute_flow_summary(*, path: Path | None = None) -> dict[str, Any]:
+    events = read_learning_events(path=path, limit=200, event_type="execute-flow")
+    if not events:
+        return {}
+    event = events[-1]
+    if not isinstance(event, dict):
+        return {}
+    runtime_activation_summary = event.get("runtime_activation_summary", {})
+    runtime_handoff_summary = event.get("runtime_handoff_summary", {})
+    preview_text = ""
+    if isinstance(runtime_activation_summary, dict):
+        preview_text = str(runtime_activation_summary.get("route_feedback_driver_preview", "")).strip()
+    if not preview_text and isinstance(runtime_handoff_summary, dict):
+        preview_text = str(runtime_handoff_summary.get("route_feedback_driver_preview", "")).strip()
+    if not preview_text:
+        preview_text = str(event.get("route_feedback_driver_preview", "")).strip()
+    summary = {
+        "recorded_at": str(event.get("recorded_at", "")).strip(),
+        "pack_id": str(event.get("pack_id", "")).strip(),
+        "work_unit_id": str(event.get("work_unit_id", "")).strip(),
+        "intent": str(event.get("intent", "")).strip(),
+        "execution_class": str(event.get("execution_class", "")).strip(),
+        "runtime_target": str(event.get("runtime_target", "")).strip(),
+        "activate_runtime": bool(event.get("activate_runtime")),
+    }
+    if preview_text:
+        summary["route_feedback_driver_preview"] = preview_text
+    if not any(summary.values()):
+        return {}
+    return summary
 
 
 def run_git(repo_root: Path, *args: str) -> str | None:
@@ -16891,6 +16952,15 @@ def execute_flow(
             "mode": mode,
             "execution_class": report["execution_class"],
             "activate_runtime": activate_runtime,
+            "runtime_handoff_summary": handoff_summary,
+            "runtime_activation_summary": activation_summary,
+            "route_feedback_driver_preview": (
+                activation_summary.get("route_feedback_driver_preview", "")
+                if isinstance(activation_summary, dict) and activation_summary.get("route_feedback_driver_preview")
+                else handoff_summary.get("route_feedback_driver_preview", "")
+                if isinstance(handoff_summary, dict)
+                else ""
+            ),
             "harvest_ready": bool(harvest_report and harvest_report.get("readiness") == "ready"),
             "local_publish_receipt_count": len(local_publish_receipts),
             "estimated_tokens": report["token_strategy"]["compact_estimated_tokens"],
