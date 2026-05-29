@@ -108,6 +108,12 @@ class PublicCliDocsTests(unittest.TestCase):
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
+        self.assertGreaterEqual(
+            text.count(
+                "- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)"
+            ),
+            4,
+        )
 
     def test_install_page_lists_minimal_support_receipt_keys(self) -> None:
         text = read(INSTALL_PATH)
