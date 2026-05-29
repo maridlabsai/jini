@@ -976,6 +976,7 @@ def build_competitive_watch_report() -> dict[str, Any]:
     projection = build_golden_benchmark_projection()
     rewrite_baseline = load_rewrite_score_baseline()
     latest_validation = load_latest_golden_benchmark_report()
+    latest_execute_flow = build_latest_execute_flow_summary()
 
     scorecard_updated_at = str(scorecard.get("updated_at", "")).strip()
     benchmark_updated_at = str(benchmark.get("updated_at", "")).strip()
@@ -1257,6 +1258,7 @@ def build_competitive_watch_report() -> dict[str, Any]:
                 if isinstance(track, dict)
             },
         },
+        "latest_execute_flow": latest_execute_flow,
         "next_actions": next_actions[:5],
     }
 
@@ -1300,6 +1302,17 @@ def print_competitive_watch_report(report: dict[str, Any]) -> None:
         f"({score_truth.get('projected_strongest_competitor_score', 0.0):.2f}) | "
         f"margin={score_truth.get('projected_margin', 0.0):+.2f}"
     )
+    latest_execute_flow = report.get("latest_execute_flow", {})
+    if isinstance(latest_execute_flow, dict) and latest_execute_flow:
+        print(
+            f"FLOW   {latest_execute_flow.get('pack_id', '')} "
+            f"{latest_execute_flow.get('intent', '')} "
+            f"{latest_execute_flow.get('execution_class', '')}"
+        )
+        if latest_execute_flow.get("runtime_target"):
+            print(f"TARGET {latest_execute_flow['runtime_target']}")
+        if latest_execute_flow.get("route_feedback_driver_preview"):
+            print(f"DRIVERS {latest_execute_flow['route_feedback_driver_preview']}")
     for item in report.get("replacement_critical", {}).get("dimensions", []):
         if item.get("id") not in report.get("replacement_critical", {}).get("blocked_dimensions", []):
             continue
@@ -2920,6 +2933,7 @@ def build_framework_review(
         "updated_at": scorecard.get("updated_at"),
         "target_score": float(scorecard.get("target_score", 9.0)),
         "dimension_filter": dimension,
+        "latest_execute_flow": build_latest_execute_flow_summary(),
         "adoption_constraints": framework_adoption_constraints(),
         "prioritized_dimensions": prioritized,
         "best_next_dimension": prioritized[0]["id"] if prioritized else "",
@@ -2945,6 +2959,17 @@ def print_framework_review(review: dict[str, Any]) -> None:
     print(f"TARGET {review.get('target_score', 9.0):.1f}")
     if review.get("best_next_dimension"):
         print(f"NEXT   {review['best_next_dimension']}")
+    latest_execute_flow = review.get("latest_execute_flow", {})
+    if isinstance(latest_execute_flow, dict) and latest_execute_flow:
+        print(
+            f"FLOW   {latest_execute_flow.get('pack_id', '')} "
+            f"{latest_execute_flow.get('intent', '')} "
+            f"{latest_execute_flow.get('execution_class', '')}"
+        )
+        if latest_execute_flow.get("runtime_target"):
+            print(f"TARGET {latest_execute_flow['runtime_target']}")
+        if latest_execute_flow.get("route_feedback_driver_preview"):
+            print(f"DRIVERS {latest_execute_flow['route_feedback_driver_preview']}")
     print("ADOPTION")
     for item in review.get("adoption_constraints", []):
         print(f"  - {item}")
@@ -7231,6 +7256,7 @@ def render_competitive_watch_brief(home_root: Path) -> Path:
     output_path = output_dir / f"competitive-watch-{stamp}.md"
     benchmark = report.get("benchmark", {})
     score_truth = report.get("score_truth", {})
+    latest_execute_flow = report.get("latest_execute_flow", {})
     lines = [
         "# Competitive Watch",
         "",
@@ -7245,9 +7271,24 @@ def render_competitive_watch_brief(home_root: Path) -> Path:
         f"({score_truth.get('projected_strongest_competitor_score', 0.0)})"
         ),
         f"- Margin: {score_truth.get('projected_margin', 0.0):+.2f}",
-        "",
-        "## Coverage Gaps",
     ]
+    if isinstance(latest_execute_flow, dict) and latest_execute_flow:
+        lines.extend(
+            [
+                "",
+                "## Latest Execute Flow",
+                "",
+                f"- Recorded: {latest_execute_flow.get('recorded_at', '')}",
+                f"- Pack: `{latest_execute_flow.get('pack_id', '')}`",
+                f"- Work Unit: `{latest_execute_flow.get('work_unit_id', '')}`",
+                f"- Intent: `{latest_execute_flow.get('intent', '')}`",
+                f"- Execution Class: `{latest_execute_flow.get('execution_class', '')}`",
+                f"- Runtime Target: `{latest_execute_flow.get('runtime_target', '')}`",
+            ]
+        )
+        if latest_execute_flow.get("route_feedback_driver_preview"):
+            lines.append(f"- Drivers: `{latest_execute_flow['route_feedback_driver_preview']}`")
+    lines.extend(["", "## Coverage Gaps"])
     missing_from_benchmark = report.get("coverage", {}).get("missing_from_benchmark_core", [])
     missing_from_scorecard = report.get("coverage", {}).get("missing_from_scorecard_core", [])
     watchlist_only = report.get("coverage", {}).get("watchlist_only", [])
@@ -7273,6 +7314,7 @@ def render_framework_review_brief(home_root: Path) -> Path:
     load_personal_home(home_root)
     review, review_path = build_framework_review(limit=5)
     backtest = build_framework_evolution_backtest()
+    latest_execute_flow = review.get("latest_execute_flow", {})
     output_dir = home_root / "outputs" / "reviews"
     output_dir.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
@@ -7285,9 +7327,24 @@ def render_framework_review_brief(home_root: Path) -> Path:
         f"- Best Next Dimension: {review.get('best_next_dimension', '')}",
         f"- Learned Next Focus: {backtest.get('recommended_next_focus', '')}",
         f"- Outcome Count: {backtest.get('outcome_count', 0)}",
-        "",
-        "## Adoption Constraints",
     ]
+    if isinstance(latest_execute_flow, dict) and latest_execute_flow:
+        lines.extend(
+            [
+                "",
+                "## Latest Execute Flow",
+                "",
+                f"- Recorded: {latest_execute_flow.get('recorded_at', '')}",
+                f"- Pack: `{latest_execute_flow.get('pack_id', '')}`",
+                f"- Work Unit: `{latest_execute_flow.get('work_unit_id', '')}`",
+                f"- Intent: `{latest_execute_flow.get('intent', '')}`",
+                f"- Execution Class: `{latest_execute_flow.get('execution_class', '')}`",
+                f"- Runtime Target: `{latest_execute_flow.get('runtime_target', '')}`",
+            ]
+        )
+        if latest_execute_flow.get("route_feedback_driver_preview"):
+            lines.append(f"- Drivers: `{latest_execute_flow['route_feedback_driver_preview']}`")
+    lines.extend(["", "## Adoption Constraints"])
     lines.extend([f"- {item}" for item in review.get("adoption_constraints", [])[:6]])
     lines.extend(["", "## Prioritized Dimensions"])
     for entry in review.get("prioritized_dimensions", []):

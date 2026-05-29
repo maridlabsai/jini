@@ -2242,6 +2242,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue(output_path.exists())
         text = output_path.read_text(encoding="utf-8")
         self.assertIn("Competitive Watch", text)
+        self.assertIn("Latest Execute Flow", text)
         self.assertIn("Coverage Gaps", text)
 
     def test_run_routine_framework_review_emits_review_brief(self) -> None:
@@ -2265,6 +2266,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue(output_path.exists())
         text = output_path.read_text(encoding="utf-8")
         self.assertIn("Framework Review", text)
+        self.assertIn("Latest Execute Flow", text)
         self.assertIn("Best Next Dimension", text)
 
     def test_run_routine_remote_stages_receipt(self) -> None:
@@ -4857,6 +4859,23 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue(report["freshness"]["checks"])
         self.assertEqual([], report["replacement_critical"]["blocked_dimensions"])
         self.assertEqual([], report["next_actions"])
+        self.assertIsInstance(report["latest_execute_flow"], dict)
+
+        text_result = self.run_cli("competitive-watch")
+        self.assert_ok(text_result)
+        self.assertIn("FLOW   ", text_result.stdout)
+
+    def test_framework_review_surfaces_latest_execute_flow(self) -> None:
+        result = self.run_cli("review-framework", "--format", "json")
+        self.assert_ok(result)
+
+        review = json.loads(result.stdout)
+        self.assertEqual("JiniFrameworkEvolutionReview", review["review_type"])
+        self.assertIsInstance(review["latest_execute_flow"], dict)
+
+        text_result = self.run_cli("review-framework")
+        self.assert_ok(text_result)
+        self.assertIn("FLOW   ", text_result.stdout)
 
     def test_get_started_reports_beginner_and_power_paths(self) -> None:
         result = self.run_cli("get-started", "--harness", "codex", "--format", "json")
