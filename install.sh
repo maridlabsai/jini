@@ -226,6 +226,23 @@ install_provenance_summary() {
   esac
 }
 
+install_provenance_next_step() {
+  case "${SOURCE_REASON}" in
+    explicit-source-dir)
+      printf 'Keep using this checkout when you want local source changes to control Jini.'
+      ;;
+    release-unavailable)
+      printf 'If this machine should have had a published release, file a release issue and include the receipt.'
+      ;;
+    release-validation-failed)
+      printf 'Keep the source install, attach install-receipt.txt, and flag the stale release artifact.'
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
 try_install_python_source_runtime() {
   local app_dir="${INSTALL_DIR}/source-runtime"
   local wrapper_path="${TARGET_BINARY}"
@@ -426,6 +443,9 @@ EOF
 say "Installed Jini"
 say "- version: ${VERSION}"
 say "- install source: $(install_provenance_summary)"
+if next_step="$(install_provenance_next_step)"; then
+  say "- next step: ${next_step}"
+fi
 say "- binary: ${TARGET_BINARY}"
 say "- command: ${COMMAND_PATH}"
 say "- receipt: ${RECEIPT_PATH}"
