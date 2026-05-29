@@ -12143,6 +12143,7 @@ def activate_runtime_target(
     )
     active_policy = handoff.get("active_policy", {})
     route_feedback_drivers = active_policy.get("route_feedback_drivers", {})
+    route_feedback_driver_preview = route_feedback_driver_preview_text(handoff)
 
     receipt = {
         "schema_version": "0.1.0",
@@ -12170,6 +12171,8 @@ def activate_runtime_target(
     }
     if isinstance(route_feedback_drivers, dict) and route_feedback_drivers:
         receipt["route_feedback_drivers"] = deepcopy(route_feedback_drivers)
+    if route_feedback_driver_preview:
+        receipt["route_feedback_driver_preview"] = route_feedback_driver_preview
     receipt_path = next_runtime_activation_receipt_path(pack_dir, target_id)
     receipt_path.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
     append_learning_event(
@@ -12197,12 +12200,9 @@ def print_runtime_activation(activation: dict[str, Any]) -> None:
     print(f"STATE  {activation['state']}")
     print(f"INTENT {activation['intent']}")
     print(f"CLASS  {activation['execution_class']}")
-    drivers = activation.get("route_feedback_drivers", {})
-    if isinstance(drivers, dict):
-        preview = drivers.get("cohort_preview", {})
-        preview_text = preview.get("text", "") if isinstance(preview, dict) else ""
-        if preview_text:
-            print(f"DRIVERS {preview_text}")
+    preview_text = route_feedback_driver_preview_text(activation)
+    if preview_text:
+        print(f"DRIVERS {preview_text}")
     print(f"ROOT   {activation['activation_root']}")
     print(f"HANDOFF {activation['source_handoff_path']}")
     print(f"INSTALL {activation.get('install_receipt_path', '')}")
@@ -12213,13 +12213,29 @@ def print_runtime_activation(activation: dict[str, Any]) -> None:
 def summarize_runtime_activation(activation: dict[str, Any] | None) -> dict[str, Any]:
     if not isinstance(activation, dict) or not activation:
         return {}
-    drivers = activation.get("route_feedback_drivers", {})
-    if isinstance(drivers, dict) and drivers:
+    preview_text = route_feedback_driver_preview_text(activation)
+    if preview_text:
+        return {"route_feedback_driver_preview": preview_text}
+    return {}
+
+
+def route_feedback_driver_preview_text(payload: dict[str, Any] | None) -> str:
+    if not isinstance(payload, dict):
+        return ""
+    preview_text = str(payload.get("route_feedback_driver_preview", "")).strip()
+    if preview_text:
+        return preview_text
+    drivers = payload.get("route_feedback_drivers", {})
+    if isinstance(drivers, dict):
         preview = drivers.get("cohort_preview", {})
         preview_text = preview.get("text", "") if isinstance(preview, dict) else ""
+        preview_text = str(preview_text).strip()
         if preview_text:
-            return {"route_feedback_driver_preview": preview_text}
-    return {}
+            return preview_text
+    active_policy = payload.get("active_policy", {})
+    if isinstance(active_policy, dict) and active_policy:
+        return route_feedback_driver_preview_text(active_policy)
+    return ""
 
 
 def next_policy_review_path(pack_dir: Path) -> Path:
@@ -12315,6 +12331,8 @@ def build_runtime_handoff(
     )
     runtime_guidance = recommendation["runtime_guidance"]
     selected_runtime = runtime_guidance["selected"]
+    active_policy = recommendation.get("active_policy", {})
+    route_feedback_driver_preview = route_feedback_driver_preview_text(active_policy)
     install_preview = plan_install(
         bundle_ids=["jini-core"],
         target_ids=[selected_runtime["id"]],
@@ -12375,7 +12393,7 @@ def build_runtime_handoff(
         "compact_context": compact,
         "execution_checklist": checklist,
         "install_plan": install_preview,
-        "active_policy": recommendation.get("active_policy", {}),
+        "active_policy": active_policy,
         "handoff_steps": handoff_steps,
         "guardrails": {
             "writes_require_consent": True,
@@ -12383,6 +12401,8 @@ def build_runtime_handoff(
             "semantic_state_changes_stay_in_jini": True,
         },
     }
+    if route_feedback_driver_preview:
+        handoff["route_feedback_driver_preview"] = route_feedback_driver_preview
     handoff_path.write_text(json.dumps(handoff, indent=2) + "\n", encoding="utf-8")
     append_learning_event(
         "stage-runtime-handoff",
@@ -12424,13 +12444,9 @@ def print_runtime_handoff(handoff: dict[str, Any]) -> None:
             f"TOKENS est={compact_budget.get('estimated_tokens', 0)} "
             f"chars={compact_budget.get('estimated_chars', 0)}"
         )
-    active_policy = handoff.get("active_policy", {})
-    drivers = active_policy.get("route_feedback_drivers", {}) if isinstance(active_policy, dict) else {}
-    if isinstance(drivers, dict):
-        preview = drivers.get("cohort_preview", {})
-        preview_text = preview.get("text", "") if isinstance(preview, dict) else ""
-        if preview_text:
-            print(f"DRIVERS {preview_text}")
+    preview_text = route_feedback_driver_preview_text(handoff)
+    if preview_text:
+        print(f"DRIVERS {preview_text}")
     print("STEPS")
     for item in handoff.get("handoff_steps", []):
         print(f"  - {item}")

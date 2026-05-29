@@ -4278,6 +4278,10 @@ class JiniCliConformanceTests(unittest.TestCase):
             "export:local-fast->local-workhorse",
             handoff_doc["active_policy"]["route_feedback_drivers"]["cohort_preview"]["text"],
         )
+        self.assertEqual(
+            "export:local-fast->local-workhorse",
+            handoff_doc["route_feedback_driver_preview"],
+        )
         self.assertTrue(
             any("drivers=export:local-fast->local-workhorse" in item for item in handoff_doc["handoff_steps"])
         )
@@ -4301,6 +4305,10 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual(
             "export:local-fast->local-workhorse",
             activation_doc["route_feedback_drivers"]["cohort_preview"]["text"],
+        )
+        self.assertEqual(
+            "export:local-fast->local-workhorse",
+            activation_doc["route_feedback_driver_preview"],
         )
         activation_markdown_path = next(
             Path(path)
@@ -4346,6 +4354,10 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual(
             "export:local-fast->local-workhorse",
             flow_doc["runtime_activation"]["route_feedback_drivers"]["cohort_preview"]["text"],
+        )
+        self.assertEqual(
+            "export:local-fast->local-workhorse",
+            flow_doc["runtime_activation"]["route_feedback_driver_preview"],
         )
         self.assertEqual(
             {"route_feedback_driver_preview": "export:local-fast->local-workhorse"},
