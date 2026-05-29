@@ -11189,6 +11189,7 @@ def build_learning_snapshot(
 ) -> dict[str, Any]:
     source_path = path if path is not None else LEARNING_EVENTS_PATH
     events = read_learning_events(path=source_path, limit=limit)
+    latest_execute_flow = build_latest_execute_flow_summary(path=source_path)
     by_type = Counter(str(event.get("event_type", "")) for event in events)
     by_pack = Counter(str(event.get("pack_id", "")) for event in events if event.get("pack_id"))
     execution_classes = Counter(str(event.get("execution_class", "")) for event in events if event.get("execution_class"))
@@ -11219,6 +11220,7 @@ def build_learning_snapshot(
         "execution_classes": dict(sorted(execution_classes.items())),
         "harvest_readiness": dict(sorted(harvest_readiness.items())),
         "runtime_targets": dict(sorted(runtime_targets.items())),
+        "latest_execute_flow": latest_execute_flow,
         "memory_write_count": memory_write_count,
         "home_bound_count": home_bound_count,
         "average_compaction_ratio": round(sum(compression_ratios) / len(compression_ratios), 3) if compression_ratios else 0.0,
@@ -11230,6 +11232,17 @@ def build_learning_snapshot(
 def print_learning_snapshot(snapshot: dict[str, Any]) -> None:
     print(f"PATH   {snapshot['path']}")
     print(f"COUNT  {snapshot['event_count']}")
+    latest_execute_flow = snapshot.get("latest_execute_flow", {})
+    if isinstance(latest_execute_flow, dict) and latest_execute_flow:
+        print(
+            f"FLOW   {latest_execute_flow.get('pack_id', '')} "
+            f"{latest_execute_flow.get('intent', '')} "
+            f"{latest_execute_flow.get('execution_class', '')}"
+        )
+        if latest_execute_flow.get("runtime_target"):
+            print(f"TARGET {latest_execute_flow['runtime_target']}")
+        if latest_execute_flow.get("route_feedback_driver_preview"):
+            print(f"DRIVERS {latest_execute_flow['route_feedback_driver_preview']}")
     if snapshot.get("event_types"):
         print("TYPES")
         for key, value in snapshot["event_types"].items():
@@ -12692,6 +12705,7 @@ def build_policy_review(
 
 
 def print_policy_review(review: dict[str, Any]) -> None:
+    learning_snapshot = review.get("learning_snapshot", {})
     print(f"SOURCE {review['source_path']}")
     if review.get("pack_id"):
         print(f"PACK   {review['pack_id']}")
@@ -12700,7 +12714,18 @@ def print_policy_review(review: dict[str, Any]) -> None:
     if review.get("report_path"):
         print(f"REPORT {review['report_path']}")
     print("GUARD  mutation_allowed=False approval_required=True")
-    print(f"EVENTS {review.get('learning_snapshot', {}).get('event_count', 0)}")
+    print(f"EVENTS {learning_snapshot.get('event_count', 0)}")
+    latest_execute_flow = learning_snapshot.get("latest_execute_flow", {}) if isinstance(learning_snapshot, dict) else {}
+    if isinstance(latest_execute_flow, dict) and latest_execute_flow:
+        print(
+            f"FLOW   {latest_execute_flow.get('pack_id', '')} "
+            f"{latest_execute_flow.get('intent', '')} "
+            f"{latest_execute_flow.get('execution_class', '')}"
+        )
+        if latest_execute_flow.get("runtime_target"):
+            print(f"TARGET {latest_execute_flow['runtime_target']}")
+        if latest_execute_flow.get("route_feedback_driver_preview"):
+            print(f"DRIVERS {latest_execute_flow['route_feedback_driver_preview']}")
     runtime_targets = review.get("runtime_targets", {})
     if runtime_targets:
         print("RUNTIME")

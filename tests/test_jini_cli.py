@@ -3588,6 +3588,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("compact-context", snapshot["event_types"])
         self.assertIn("harvest-evidence", snapshot["event_types"])
         self.assertIn("ready", snapshot["harvest_readiness"])
+        self.assertEqual({}, snapshot["latest_execute_flow"])
 
     def test_routing_backtest_recommends_deep_for_verify_after_harvest(self) -> None:
         pack_dir = self.compile_research_pack()
@@ -4414,6 +4415,34 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(handoff_flow_text)
         self.assertIn("HANDOFF-DRIVERS export:local-fast->local-workhorse", handoff_flow_text.stdout)
         self.assertNotIn("ACTIVE-DRIVERS ", handoff_flow_text.stdout)
+
+        learning_snapshot = self.run_cli("learning-snapshot", pack_dir, "--format", "json")
+        self.assert_ok(learning_snapshot)
+        learning_snapshot_doc = json.loads(learning_snapshot.stdout)
+        self.assertEqual(
+            "export:local-fast->local-workhorse",
+            learning_snapshot_doc["latest_execute_flow"]["route_feedback_driver_preview"],
+        )
+        self.assertEqual("kiro-cli", learning_snapshot_doc["latest_execute_flow"]["runtime_target"])
+        learning_snapshot_text = self.run_cli("learning-snapshot", pack_dir)
+        self.assert_ok(learning_snapshot_text)
+        self.assertIn("FLOW   research-prd make cheap", learning_snapshot_text.stdout)
+        self.assertIn("TARGET kiro-cli", learning_snapshot_text.stdout)
+        self.assertIn("DRIVERS export:local-fast->local-workhorse", learning_snapshot_text.stdout)
+
+        review_after_flow = self.run_cli("review-policy", pack_dir, "--format", "json")
+        self.assert_ok(review_after_flow)
+        review_after_flow_doc = json.loads(review_after_flow.stdout)
+        self.assertEqual(
+            "export:local-fast->local-workhorse",
+            review_after_flow_doc["learning_snapshot"]["latest_execute_flow"]["route_feedback_driver_preview"],
+        )
+        self.assertEqual("kiro-cli", review_after_flow_doc["learning_snapshot"]["latest_execute_flow"]["runtime_target"])
+        review_after_flow_text = self.run_cli("review-policy", pack_dir)
+        self.assert_ok(review_after_flow_text)
+        self.assertIn("FLOW   research-prd make cheap", review_after_flow_text.stdout)
+        self.assertIn("TARGET kiro-cli", review_after_flow_text.stdout)
+        self.assertIn("DRIVERS export:local-fast->local-workhorse", review_after_flow_text.stdout)
 
         readiness = self.run_cli("publish-readiness", "--format", "json")
         self.assert_ok(readiness)
