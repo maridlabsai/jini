@@ -201,6 +201,31 @@ release_binary_supports_public_contract() {
   "${binary_path}" doctor >/dev/null 2>&1
 }
 
+install_provenance_summary() {
+  if [[ "${INSTALL_MODE}" == "release-binary" ]]; then
+    printf 'release binary'
+    return 0
+  fi
+
+  case "${SOURCE_REASON}" in
+    release-validation-failed)
+      printf 'source fallback (release validation failed: %s)' "${RELEASE_VALIDATION}"
+      ;;
+    explicit-source-dir)
+      printf 'source runtime (explicit source)'
+      ;;
+    local-repo-source)
+      printf 'source runtime (local repo)'
+      ;;
+    cloned-repo-source)
+      printf 'source runtime (cloned repo)'
+      ;;
+    *)
+      printf 'source runtime (%s)' "${SOURCE_REASON}"
+      ;;
+  esac
+}
+
 try_install_python_source_runtime() {
   local app_dir="${INSTALL_DIR}/source-runtime"
   local wrapper_path="${TARGET_BINARY}"
@@ -400,6 +425,7 @@ EOF
 
 say "Installed Jini"
 say "- version: ${VERSION}"
+say "- install source: $(install_provenance_summary)"
 say "- binary: ${TARGET_BINARY}"
 say "- command: ${COMMAND_PATH}"
 say "- receipt: ${RECEIPT_PATH}"

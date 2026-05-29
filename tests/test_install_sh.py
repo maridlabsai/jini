@@ -450,6 +450,7 @@ class InstallScriptTests(unittest.TestCase):
         )
         self.assert_ok(result)
         self.assertIn("Installed Jini", result.stdout)
+        self.assertIn("- install source: source runtime (explicit source)", result.stdout)
         self.assertTrue((bin_dir / "jini").exists())
         self.assertTrue((install_dir / "install-receipt.txt").exists())
         receipt = self.read_install_receipt(install_dir)
@@ -651,6 +652,10 @@ printf 'stale release artifact\n'
         self.assert_ok(result)
         self.assertIn("Falling back to source install.", result.stdout)
         self.assertIn("Installed Jini", result.stdout)
+        self.assertIn(
+            "- install source: source fallback (release validation failed: unsupported-public-command-surface)",
+            result.stdout,
+        )
         receipt = self.read_install_receipt(install_dir)
         self.assertEqual("source-runtime", receipt["install_mode"])
         self.assertEqual("release-validation-failed", receipt["source_reason"])
