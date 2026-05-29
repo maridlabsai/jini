@@ -162,6 +162,32 @@ class PublicCliDocsTests(unittest.TestCase):
             1,
         )
 
+    def test_install_page_keeps_troubleshooting_block_shape(self) -> None:
+        text = read(INSTALL_PATH)
+        self.assertEqual(
+            text.count(
+                "In short: <code>release binary</code> means no support receipt and no <code>next_step=</code>, while source-path follow-up output includes both."
+            ),
+            2,
+        )
+        self.assertEqual(
+            text.count(
+                "On source-path installs that need follow-up, the terminal now prints this exact support handoff line: <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code>."
+            ),
+            1,
+        )
+        self.assertEqual(
+            text.count(
+                "When support asks for install details on a source-path install, send the support receipt path plus only these receipt keys. Treat <code>next_step=</code> as the actionable follow-up field for this source install."
+            ),
+            1,
+        )
+        self.assertEqual(text.count("Install source line"), 1)
+        self.assertEqual(text.count("What it usually means"), 1)
+        self.assertEqual(text.count("What to do next"), 1)
+        self.assertEqual(text.count("Example release-binary success output:"), 1)
+        self.assertEqual(text.count("Example source-path follow-up output:"), 1)
+
     def test_install_page_shows_source_path_terminal_example(self) -> None:
         text = read(INSTALL_PATH)
         for marker in (
