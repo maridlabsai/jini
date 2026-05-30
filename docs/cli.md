@@ -37,6 +37,7 @@ quick_links:
 <pre><code class="language-bash">jini commands</code></pre>
 
   <p>Use this when you want the small product-facing command catalog. If you maintain routes, bundles, or release plumbing, use <code>jini admin help</code> instead of treating the full internal parser as the public surface.</p>
+  <p>Help surfaces are catalogs, not request entrypoints. If you type <code>jini help me edit notes.txt</code>, <code>jini --help me edit notes.txt</code>, or <code>jini provider help me edit notes.txt</code>, Jini should reject that tail text and tell you to start with <code>jini</code> instead.</p>
 </div>
 
 <div class="section-card">

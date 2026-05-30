@@ -155,6 +155,7 @@ jini
   </div>
 
   <p>If you want the small public command list before doing anything else, run <code>jini commands</code>. If you maintain routes, bundles, or release plumbing, the deeper inventory lives under <code>jini admin help</code>.</p>
+  <p>Help surfaces are catalogs, not request entrypoints. If you paste a work request after <code>help</code> or <code>--help</code>, Jini should reject that tail text and point you back to starting with <code>jini</code> in the shell.</p>
 </div>
 
 <div class="section-card">
