@@ -9327,18 +9327,11 @@ def print_repo_start_surface(repo_context: dict[str, Any]) -> None:
     cli = cli_invocation()
     repo_root = str(repo_context.get("repo_root", "")).strip()
     repo_name = Path(repo_root).name if repo_root else "repo"
-    git_info = repo_context.get("git", {})
     print(f"Jini CLI {load_version()}")
     print("Nothing is in progress yet.")
-    print(f"REPO   {repo_name}")
-    if repo_root:
-        print(f"PATH   {repo_root}")
-    if git_info.get("tracked"):
-        branch = str(git_info.get("branch", "")).strip() or "unknown"
-        dirty_files = int(git_info.get("dirty_files", 0))
-        print(f"GIT    branch={branch} dirty_files={dirty_files}")
+    print(f"Repo: {repo_name}")
     print()
-    print("START WITH THE TASK")
+    print("Try one of these:")
     print(f"  {cli} review this repo")
     print("    Triage the current repo and surface the strongest next move.")
     print(f"  {cli} fix failing tests")
@@ -9346,7 +9339,7 @@ def print_repo_start_surface(repo_context: dict[str, Any]) -> None:
     print(f"  {cli} plan this change")
     print("    Start with a repo-aware plan before editing.")
     print()
-    print("DETECTED ENTRYPOINTS")
+    print("Detected here:")
     surfaced = False
     for category in ("test", "verify", "startup", "build", "docs"):
         command = _repo_entrypoint_command(repo_context, category)
@@ -9357,7 +9350,7 @@ def print_repo_start_surface(repo_context: dict[str, Any]) -> None:
     if not surfaced:
         print("  repo     Repo detected, but no standard startup or test entrypoints were found.")
     print()
-    print("FALLBACKS")
+    print("If needed:")
     print(f"  {cli} repo-map .")
     print("    Inspect the current repo surface Jini can see.")
     print(f"  {cli} doctor")
