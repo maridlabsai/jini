@@ -9427,8 +9427,7 @@ def prompt_repo_task(repo_context: dict[str, Any], *, initial_request: str | Non
     if initial_request:
         print_repo_request_intake(initial_request, repo_context, compact=True)
     else:
-        print("What do you want Jini to do?")
-        print("Type the task directly. Use `exit` to leave.")
+        print_live_session_task_hint()
     while True:
         try:
             request_text = input(f"{cli}> ").strip()
@@ -9456,6 +9455,8 @@ def prompt_repo_task(repo_context: dict[str, Any], *, initial_request: str | Non
 def prompt_current_work_task(pack_dir: Path, registry: dict[str, Any]) -> int:
     cli = cli_invocation()
     repo_context = inspect_repo_context(Path.cwd())
+    print()
+    print_live_session_task_hint()
     while True:
         try:
             request_text = input(f"{cli}> ").strip()
@@ -9487,6 +9488,11 @@ def prompt_current_work_task(pack_dir: Path, registry: dict[str, Any]) -> int:
             max_chars=700,
         )
         print_compact_context(compact, heading="TASK")
+
+
+def print_live_session_task_hint() -> None:
+    print("What do you want Jini to do?")
+    print("Type the task directly. Use `exit` to leave.")
 
 
 def classify_request_intent(request_text: str) -> str:
