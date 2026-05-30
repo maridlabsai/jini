@@ -9353,7 +9353,7 @@ def print_repo_start_surface(repo_context: dict[str, Any]) -> None:
     print(f"  {cli} review this branch")
     print("    Review the current branch and call out risks.")
     print()
-    print("Detected here:")
+    print("Useful here:")
     surfaced_commands = _repo_start_surface_commands(repo_context)
     for command in surfaced_commands:
         print(f"  {command}")
