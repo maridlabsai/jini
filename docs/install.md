@@ -164,6 +164,13 @@ jini
   </ul>
   <p>Only the first line changes. The redirect stays the same: start with <code>jini</code>, then use <code>jini open</code> or <code>jini status</code> if you want the current work surface.</p>
 
+<pre><code class="language-bash">$ jini --help me edit pear fellow script.txt
+ERROR `jini --help` shows the CLI overview; it does not take a request like "me edit pear fellow script.txt".
+Start with `jini` and type the request in the shell.
+Or use `jini open` or `jini status` if you want the current work surface.</code></pre>
+
+  <p>Use that <code>--help</code> example when someone pastes work after the overview flag on first run. It should reject the request and send them back to the normal shell path.</p>
+
 <pre><code class="language-bash">$ jini provider help me edit pear fellow script.txt
 ERROR `jini provider help` shows the admin command inventory; it does not take a request like "me edit pear fellow script.txt".
 Start with `jini` and type the request in the shell.

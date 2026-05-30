@@ -133,6 +133,18 @@ class PublicCliDocsTests(unittest.TestCase):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
 
+    def test_install_page_shows_dash_help_request_tail_transcript(self) -> None:
+        text = read(INSTALL_PATH)
+        for marker in (
+            "$ jini --help me edit pear fellow script.txt",
+            'ERROR `jini --help` shows the CLI overview; it does not take a request like "me edit pear fellow script.txt".',
+            "Start with `jini` and type the request in the shell.",
+            "Or use `jini open` or `jini status` if you want the current work surface.",
+            "Use that <code>--help</code> example when someone pastes work after the overview flag on first run.",
+        ):
+            with self.subTest(marker=marker):
+                self.assertIn(marker, text)
+
     def test_install_page_explains_installer_provenance_summary(self) -> None:
         text = read(INSTALL_PATH)
         for marker in (
