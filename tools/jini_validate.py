@@ -7932,6 +7932,8 @@ def render_cli_front_door(registry: dict[str, Any]) -> int:
     if context is None:
         repo_context = inspect_repo_context(Path.cwd())
         if repo_context.get("discovered"):
+            if interactive_front_door_enabled():
+                return prompt_repo_task(repo_context)
             print_repo_start_surface(repo_context)
         else:
             print_cli_start_surface()
@@ -7945,6 +7947,8 @@ def render_cli_front_door(registry: dict[str, Any]) -> int:
         except (FileNotFoundError, OSError, TypeError, ValueError):
             repo_context = inspect_repo_context(Path.cwd())
             if repo_context.get("discovered"):
+                if interactive_front_door_enabled():
+                    return prompt_repo_task(repo_context)
                 print_repo_start_surface(repo_context)
             else:
                 print_cli_start_surface()
@@ -7960,6 +7964,8 @@ def render_cli_front_door(registry: dict[str, Any]) -> int:
 
     repo_context = inspect_repo_context(Path.cwd())
     if repo_context.get("discovered"):
+        if interactive_front_door_enabled():
+            return prompt_repo_task(repo_context)
         print_repo_start_surface(repo_context)
     else:
         print_cli_start_surface()
@@ -9363,6 +9369,45 @@ def print_repo_start_surface(repo_context: dict[str, Any]) -> None:
     print("    Check route and setup before execution.")
     print(f"  {cli} status /path/to/work")
     print("    Resume existing Jini work when this repo already has it.")
+
+
+def interactive_front_door_enabled() -> bool:
+    override = os.environ.get("JINI_FORCE_INTERACTIVE", "").strip().lower()
+    if override in {"1", "true", "yes", "on"}:
+        return True
+    if override in {"0", "false", "no", "off"}:
+        return False
+    return sys.stdin.isatty() and sys.stdout.isatty()
+
+
+def prompt_repo_task(repo_context: dict[str, Any]) -> int:
+    cli = cli_invocation()
+    repo_root = str(repo_context.get("repo_root", "")).strip()
+    repo_name = Path(repo_root).name if repo_root else "repo"
+    git_info = repo_context.get("git", {})
+    print(f"Jini CLI {load_version()}")
+    print(f"REPO   {repo_name}")
+    if repo_root:
+        print(f"PATH   {repo_root}")
+    if git_info.get("tracked"):
+        branch = str(git_info.get("branch", "")).strip() or "unknown"
+        dirty_files = int(git_info.get("dirty_files", 0))
+        print(f"GIT    branch={branch} dirty_files={dirty_files}")
+    print()
+    print("WHAT DO YOU WANT TO DO?")
+    while True:
+        try:
+            request_text = input(f"{cli}> ").strip()
+        except EOFError:
+            print()
+            print("No task entered.")
+            print(f"Try `{cli} review this repo`, or rerun `{cli}` and type the task at the prompt.")
+            return 0
+        if request_text:
+            print()
+            print_repo_request_intake(request_text, repo_context)
+            return 0
+        print("Enter the task you want Jini to do, or press Ctrl-D to exit.")
 
 
 def classify_request_intent(request_text: str) -> str:

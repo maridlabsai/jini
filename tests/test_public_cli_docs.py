@@ -52,6 +52,9 @@ class PublicCliDocsTests(unittest.TestCase):
             "jini review this repo",
             "jini fix failing tests",
             "jini plan this change",
+            "WHAT DO YOU WANT TO DO?",
+            "jini&gt; fix failing tests",
+            "REQUEST fix failing tests",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
@@ -121,6 +124,8 @@ class PublicCliDocsTests(unittest.TestCase):
                 "jini review this repo",
                 "jini fix failing tests",
                 "jini plan this change",
+                "WHAT DO YOU WANT TO DO?",
+                "jini&gt;</code> prompt",
             ):
                 with self.subTest(marker=marker):
                     self.assertIn(marker, text)

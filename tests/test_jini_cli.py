@@ -47,6 +47,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         cwd: Path,
         *args: object,
         env: Optional[dict[str, str]] = None,
+        input_text: Optional[str] = None,
     ) -> subprocess.CompletedProcess[str]:
         run_env = dict(os.environ if env is None else env)
         run_env["JINI_STATE_DIR"] = str((self.tmp / ".jini").resolve())
@@ -56,6 +57,7 @@ class JiniCliConformanceTests(unittest.TestCase):
             text=True,
             capture_output=True,
             env=run_env,
+            input=input_text,
         )
 
     def assert_ok(self, result: subprocess.CompletedProcess[str]) -> None:
@@ -518,6 +520,33 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("make test", result.stdout)
         self.assertIn("make start", result.stdout)
         self.assertNotIn("jini try-example research-prd", result.stdout)
+
+    def test_zero_arg_cli_prompts_for_task_in_interactive_repo_mode(self) -> None:
+        repo = self.create_repo_fixture()
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\n",
+        )
+        self.assert_ok(result)
+        self.assertIn("WHAT DO YOU WANT TO DO?", result.stdout)
+        self.assertIn("jini> ", result.stdout)
+        self.assertIn("REQUEST fix failing tests", result.stdout)
+        self.assertIn("REPO    sample-repo", result.stdout)
+        self.assertIn("INTENT  verify", result.stdout)
+        self.assertNotIn("START WITH THE TASK", result.stdout)
+
+    def test_zero_arg_cli_interactive_repo_mode_explains_empty_exit(self) -> None:
+        repo = self.create_repo_fixture()
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="",
+        )
+        self.assert_ok(result)
+        self.assertIn("WHAT DO YOU WANT TO DO?", result.stdout)
+        self.assertIn("No task entered.", result.stdout)
+        self.assertIn("rerun `jini` and type the task at the prompt", result.stdout)
 
     def test_zero_arg_cli_shows_generic_start_surface_without_repo_or_current_work(self) -> None:
         empty_dir = self.tmp / "empty"

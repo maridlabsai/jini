@@ -29,6 +29,19 @@ quick_links:
 
   <p>That should be the normal entry. Jini should either continue the thing you were already working on, show <code>Active work</code> when several projects are in flight, or offer a repo-aware task-first start surface if nothing is active yet.</p>
   <p>Inside a repo, the first suggestions should be concrete asks like <code>jini review this repo</code>, <code>jini fix failing tests</code>, and <code>jini plan this change</code>, not examples and setup trivia.</p>
+  <p>In a real terminal, bare <code>jini</code> should not print a launcher card and exit. It should stay open, detect the repo, ask <code>WHAT DO YOU WANT TO DO?</code>, and accept the first task line immediately.</p>
+
+<pre><code class="language-bash">$ jini
+Jini CLI 0.1.0
+REPO   sample-repo
+PATH   /path/to/sample-repo
+GIT    branch=main dirty_files=2
+
+WHAT DO YOU WANT TO DO?
+jini&gt; fix failing tests
+
+Jini CLI 0.1.0
+REQUEST fix failing tests</code></pre>
 </div>
 
 <div class="section-card">
