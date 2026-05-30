@@ -2213,15 +2213,29 @@ class JiniCliConformanceTests(unittest.TestCase):
     def test_status_without_current_work_fails_cleanly(self) -> None:
         result = self.run_cli("status")
         self.assert_error(result)
-        self.assertIn("Nothing is in progress yet. Run `jini` to see start options", result.stdout)
-        self.assertIn("jini try-example research-prd", result.stdout)
-        self.assertIn("jini status /path/to/work", result.stdout)
+        self.assertEqual("", result.stdout)
+        self.assertIn("Nothing is in progress yet. Run `jini` to see start options", result.stderr)
+        self.assertIn("jini try-example research-prd", result.stderr)
+        self.assertIn("jini status /path/to/work", result.stderr)
 
     def test_status_missing_path_returns_friendly_error(self) -> None:
         result = self.run_cli("status", self.tmp / "missing-pack")
         self.assert_error(result)
-        self.assertIn("ERROR Pack path is missing required Jini files", result.stdout)
-        self.assertEqual("", result.stderr)
+        self.assertEqual("", result.stdout)
+        self.assertIn("ERROR Pack path is missing required Jini files", result.stderr)
+
+    def test_continue_without_current_work_fails_cleanly_on_stderr(self) -> None:
+        result = self.run_cli("continue")
+        self.assert_error(result)
+        self.assertEqual("", result.stdout)
+        self.assertIn("Nothing is in progress yet. Run `jini` to see start options", result.stderr)
+        self.assertIn("jini try-example research-prd", result.stderr)
+
+    def test_open_missing_path_returns_friendly_error_on_stderr(self) -> None:
+        result = self.run_cli("open", "itinerary", "--from", self.tmp / "missing-pack", "--print-path")
+        self.assert_error(result)
+        self.assertEqual("", result.stdout)
+        self.assertIn("ERROR Pack path is missing required Jini files", result.stderr)
 
     def test_harnesses_command_lists_supported_harnesses(self) -> None:
         result = self.run_cli("harnesses", "--format", "json")

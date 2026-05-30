@@ -23176,7 +23176,7 @@ def main() -> int:
             summary = summarise_pack(pack_dir, registry)
         except (FileNotFoundError, TypeError, ValueError) as exc:
             failing_path = args.path if args.path is not None else Path("<current-work>")
-            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}", file=sys.stderr)
             return 1
         print_pack_status(summary)
         return 1 if summary["validation_errors"] else 0
@@ -23198,7 +23198,7 @@ def main() -> int:
                             print_outcome_view(report)
                         return 0
             failing_path = args.path if args.path is not None else Path("<current-work>")
-            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}", file=sys.stderr)
             return 1
         if args.format == "json":
             print(json.dumps(report, indent=2))
@@ -23212,7 +23212,7 @@ def main() -> int:
             catalog = build_artifact_catalog(pack_dir, registry)
         except (FileNotFoundError, TypeError, ValueError) as exc:
             failing_path = args.path if args.path is not None else Path("<current-work>")
-            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}", file=sys.stderr)
             return 1
         if args.format == "json":
             print(json.dumps(catalog, indent=2))
@@ -23243,13 +23243,13 @@ def main() -> int:
                                 prefer_saved_focus=args.artifact is None,
                             )
                         except ValueError as projection_exc:
-                            print(f"ERROR {projection_exc}")
+                            print(f"ERROR {projection_exc}", file=sys.stderr)
                             return 1
                         if artifact is not None:
                             print(render_projection_snapshot_markdown(context, artifact).rstrip())
                             return 0
             failing_path = args.path if args.path is not None else Path("<current-work>")
-            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}", file=sys.stderr)
             return 1
         return 0
 
@@ -23331,7 +23331,7 @@ def main() -> int:
                                 prefer_saved_focus=args.artifact is None,
                             )
                         except ValueError as projection_exc:
-                            print(f"ERROR {projection_exc}")
+                            print(f"ERROR {projection_exc}", file=sys.stderr)
                             return 1
                         if artifact is not None:
                             snapshot_path = materialize_projection_artifact_snapshot(context, artifact)
@@ -23342,7 +23342,7 @@ def main() -> int:
                                 print(f"OPENED {display_path(snapshot_path)}")
                             return 0
             failing_path = args.path if args.path is not None else Path("<current-work>")
-            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}", file=sys.stderr)
             return 1
         return 0
 
@@ -23387,12 +23387,16 @@ def main() -> int:
                             execution_class="projection-continue",
                         )
                         if args.print_path:
-                            print("ERROR Current pack files are unavailable, and no saved artifact snapshot path exists. Run `jini continue` without `--print-path` to reopen the saved context slice.")
+                            print(
+                                "ERROR Current pack files are unavailable, and no saved artifact snapshot path exists. "
+                                "Run `jini continue` without `--print-path` to reopen the saved context slice.",
+                                file=sys.stderr,
+                            )
                             return 1
                         print_compact_context(compact, heading="CONTINUE")
                         return 0
             failing_path = args.path if args.path is not None else Path("<current-work>")
-            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}", file=sys.stderr)
             return 1
         return 0
 
@@ -23430,7 +23434,7 @@ def main() -> int:
                 print_expand_preview(report, artifact_path, pack_dir=pack_dir if args.path is not None else None)
         except (FileNotFoundError, OSError, TypeError, ValueError) as exc:
             failing_path = args.path if args.path is not None else Path("<current-work>")
-            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}", file=sys.stderr)
             return 1
         return 0
 
@@ -23444,7 +23448,7 @@ def main() -> int:
             )
         except (FileNotFoundError, OSError, TypeError, ValueError) as exc:
             failing_path = args.path if args.path is not None else Path("<current-work>")
-            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}", file=sys.stderr)
             return 1
         if args.format == "json":
             print(json.dumps(report, indent=2))
@@ -23463,7 +23467,7 @@ def main() -> int:
             )
         except (FileNotFoundError, OSError, TypeError, ValueError) as exc:
             failing_path = args.path if args.path is not None else Path("<current-work>")
-            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}", file=sys.stderr)
             return 1
         if args.format == "json":
             print(json.dumps(report, indent=2))
@@ -23481,7 +23485,7 @@ def main() -> int:
             )
         except (FileNotFoundError, OSError, TypeError, ValueError) as exc:
             failing_path = args.path if args.path is not None else Path("<current-work>")
-            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}", file=sys.stderr)
             return 1
         if args.format == "json":
             print(json.dumps(report, indent=2))
