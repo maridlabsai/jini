@@ -7,6 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from typing import Optional, Union
+from unittest import mock
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
@@ -660,6 +661,24 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("INTENT  verify", result.stdout)
         self.assertIn("make test", result.stdout)
         self.assertIn("jini repo-map .", result.stdout)
+        self.assertNotIn("usage: jini", result.stdout)
+
+    def test_request_text_in_interactive_repo_mode_keeps_live_session_open(self) -> None:
+        repo = self.create_repo_fixture()
+        result = self.run_cli_in_cwd(
+            repo,
+            "fix",
+            "failing",
+            "tests",
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="plan this change\nexit\n",
+        )
+        self.assert_ok(result)
+        self.assertIn("REQUEST fix failing tests", result.stdout)
+        self.assertIn("WHAT NEXT?", result.stdout)
+        self.assertIn("jini> ", result.stdout)
+        self.assertIn("REQUEST plan this change", result.stdout)
+        self.assertIn("Session closed.", result.stdout)
         self.assertNotIn("usage: jini", result.stdout)
 
     def test_unknown_single_token_suggests_closest_command(self) -> None:
@@ -3763,6 +3782,15 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("compact-context", event_types)
         self.assertIn("execution-checklist", event_types)
         self.assertIn("harvest-evidence", event_types)
+
+    def test_append_learning_event_ignores_global_write_failures(self) -> None:
+        from tools import jini_validate
+
+        with mock.patch("tools.jini_validate.Path.mkdir", side_effect=PermissionError("blocked")):
+            paths = jini_validate.append_learning_event("compact-context", {"pack_id": "demo"})
+
+        self.assertEqual("", paths["global_path"])
+        self.assertIn("PermissionError", paths["global_error"])
 
     def test_learning_snapshot_summarizes_recent_runtime_events(self) -> None:
         pack_dir = self.compile_research_pack()

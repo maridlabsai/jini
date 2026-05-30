@@ -9412,7 +9412,7 @@ def handle_interactive_escape_hatch(request_text: str) -> bool:
     return False
 
 
-def prompt_repo_task(repo_context: dict[str, Any]) -> int:
+def prompt_repo_task(repo_context: dict[str, Any], *, initial_request: str | None = None) -> int:
     cli = cli_invocation()
     repo_root = str(repo_context.get("repo_root", "")).strip()
     repo_name = Path(repo_root).name if repo_root else "repo"
@@ -9426,8 +9426,13 @@ def prompt_repo_task(repo_context: dict[str, Any]) -> int:
         dirty_files = int(git_info.get("dirty_files", 0))
         print(f"GIT    branch={branch} dirty_files={dirty_files}")
     print()
-    print("WHAT DO YOU WANT TO DO?")
-    print("Type the task directly. Use `commands`, `doctor`, `help --admin`, or `exit` when needed.")
+    if initial_request:
+        print_repo_request_intake(initial_request, repo_context)
+        print()
+        print("WHAT NEXT?")
+    else:
+        print("WHAT DO YOU WANT TO DO?")
+        print("Type the task directly. Use `commands`, `doctor`, `help --admin`, or `exit` when needed.")
     while True:
         try:
             request_text = input(f"{cli}> ").strip()
@@ -9562,6 +9567,8 @@ def dispatch_request_entrypoint(argv: list[str], known_commands: set[str]) -> in
     if len(argv) > 1 or head.lower() in REQUEST_ENTRY_VERBS:
         request_text = " ".join(argv).strip()
         if repo_context.get("discovered"):
+            if interactive_front_door_enabled():
+                return prompt_repo_task(repo_context, initial_request=request_text)
             print_repo_request_intake(request_text, repo_context)
         else:
             print_generic_request_intake(request_text)
@@ -9794,19 +9801,28 @@ def append_learning_event(
     }
     line = json.dumps(event, sort_keys=True) + "\n"
 
-    LEARNING_EVENTS_ROOT.mkdir(parents=True, exist_ok=True)
-    LEARNING_EVENTS_PATH.write_text(
-        (LEARNING_EVENTS_PATH.read_text(encoding="utf-8") if LEARNING_EVENTS_PATH.exists() else "") + line,
-        encoding="utf-8",
-    )
-    paths = {"global_path": display_path(LEARNING_EVENTS_PATH)}
-    if pack_dir is not None:
-        pack_event_path = runtime_events_path(pack_dir)
-        pack_event_path.write_text(
-            (pack_event_path.read_text(encoding="utf-8") if pack_event_path.exists() else "") + line,
+    paths: dict[str, str] = {}
+    try:
+        LEARNING_EVENTS_ROOT.mkdir(parents=True, exist_ok=True)
+        LEARNING_EVENTS_PATH.write_text(
+            (LEARNING_EVENTS_PATH.read_text(encoding="utf-8") if LEARNING_EVENTS_PATH.exists() else "") + line,
             encoding="utf-8",
         )
-        paths["pack_path"] = display_path(pack_event_path)
+        paths["global_path"] = display_path(LEARNING_EVENTS_PATH)
+    except OSError as exc:
+        paths["global_path"] = ""
+        paths["global_error"] = f"{exc.__class__.__name__}: {exc}"
+    if pack_dir is not None:
+        try:
+            pack_event_path = runtime_events_path(pack_dir)
+            pack_event_path.write_text(
+                (pack_event_path.read_text(encoding="utf-8") if pack_event_path.exists() else "") + line,
+                encoding="utf-8",
+            )
+            paths["pack_path"] = display_path(pack_event_path)
+        except OSError as exc:
+            paths["pack_path"] = ""
+            paths["pack_error"] = f"{exc.__class__.__name__}: {exc}"
     return paths
 
 
