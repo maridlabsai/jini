@@ -115,6 +115,7 @@ ADAPTER_BENCHMARK_GATE_PATH = ROOT / "specs" / "adapter-benchmark-gate.md"
 INSTALL_MANIFEST_PATH = ROOT / "distribution" / "install-manifest.yaml"
 ADAPTER_REGISTRY_PATH = ROOT / "distribution" / "adapter-registry.yaml"
 VERSION_PATH = ROOT / "VERSION"
+BUILTIN_SKILLS_ROOT = ROOT / "skills"
 READY_ARTIFACT_STATUSES = {"reviewed", "approved", "merged"}
 DONE_TASK_STATUSES = {"done", "complete", "completed", "verified", "closed"}
 UNRESOLVED_TASK_STATES = {"pending", "blocked", "todo", "open", "not-started", "not_started"}
@@ -6720,6 +6721,312 @@ def default_personal_routines() -> list[dict[str, Any]]:
     ]
 
 
+SKILL_REQUIRED_FIELDS = (
+    "schema_version",
+    "skill_id",
+    "label",
+    "purpose",
+    "when_to_use",
+    "allowed_tools",
+    "input_contract",
+    "output_contract",
+    "prompt_file",
+)
+
+
+def builtin_skills_root() -> Path:
+    return BUILTIN_SKILLS_ROOT
+
+
+def user_skills_root() -> Path:
+    override = os.environ.get("JINI_USER_SKILLS_DIR", "").strip()
+    if override:
+        return Path(override).expanduser().resolve()
+    return Path.home() / ".jini" / "skills"
+
+
+def project_skills_root(workspace_root: Path | None = None) -> Path:
+    resolved = (workspace_root or Path.cwd()).expanduser().resolve()
+    repo_context = inspect_repo_context(resolved, repo_path=resolved)
+    repo_root = str(repo_context.get("repo_root", "")).strip()
+    if repo_root:
+        return Path(repo_root) / ".jini" / "skills"
+    return resolved / ".jini" / "skills"
+
+
+def skill_lookup_roots(workspace_root: Path | None = None) -> list[tuple[str, Path]]:
+    return [
+        ("project", project_skills_root(workspace_root)),
+        ("user", user_skills_root()),
+        ("builtin", builtin_skills_root()),
+    ]
+
+
+def _skill_matches_query(skill: dict[str, Any], query: str) -> bool:
+    needle = query.strip().lower()
+    if not needle:
+        return True
+    haystacks = [
+        str(skill.get("skill_id", "")),
+        str(skill.get("label", "")),
+        str(skill.get("purpose", "")),
+        " ".join(str(tag) for tag in skill.get("tags", [])),
+    ]
+    return any(needle in text.lower() for text in haystacks if text)
+
+
+def load_skill_definition(skill_dir: Path, *, scope: str, source_root: Path) -> dict[str, Any]:
+    manifest_path = skill_dir / "skill.yaml"
+    if not manifest_path.exists():
+        raise ValueError("missing skill.yaml")
+    manifest = load_document(manifest_path)
+    if not isinstance(manifest, dict):
+        raise ValueError("skill.yaml must be a mapping")
+    missing_fields = [field for field in SKILL_REQUIRED_FIELDS if field not in manifest]
+    if missing_fields:
+        raise ValueError(f"missing {', '.join(missing_fields)}")
+    prompt_file = str(manifest.get("prompt_file", "")).strip()
+    prompt_path = skill_dir / prompt_file
+    if not prompt_file or not prompt_path.exists():
+        raise ValueError(f"missing prompt file {prompt_file or 'prompt.md'}")
+    skill_id = str(manifest.get("skill_id", "")).strip()
+    if not skill_id:
+        raise ValueError("missing skill_id")
+    return {
+        "skill_id": skill_id,
+        "label": str(manifest.get("label", "")).strip(),
+        "purpose": str(manifest.get("purpose", "")).strip(),
+        "scope": scope,
+        "enabled": bool(manifest.get("enabled", True)),
+        "tags": list(manifest.get("tags", [])) if isinstance(manifest.get("tags", []), list) else [],
+        "allowed_tools": list(manifest.get("allowed_tools", []))
+        if isinstance(manifest.get("allowed_tools", []), list)
+        else [],
+        "when_to_use": list(manifest.get("when_to_use", []))
+        if isinstance(manifest.get("when_to_use", []), list)
+        else [],
+        "input_contract": manifest.get("input_contract", {}) if isinstance(manifest.get("input_contract", {}), dict) else {},
+        "output_contract": manifest.get("output_contract", {}) if isinstance(manifest.get("output_contract", {}), dict) else {},
+        "requires_approval": bool(manifest.get("requires_approval", False)),
+        "path": str(skill_dir),
+        "manifest_path": str(manifest_path),
+        "prompt_path": str(prompt_path),
+        "source_root": str(source_root),
+    }
+
+
+def discover_skills(
+    *,
+    workspace_root: Path | None = None,
+    query: str = "",
+    include_disabled: bool = False,
+) -> dict[str, Any]:
+    discovered: list[dict[str, Any]] = []
+    winning_ids: set[str] = set()
+    for scope, root in skill_lookup_roots(workspace_root):
+        if not root.exists():
+            continue
+        for skill_dir in sorted(path for path in root.iterdir() if path.is_dir()):
+            try:
+                skill = load_skill_definition(skill_dir, scope=scope, source_root=root)
+            except (ValueError, OSError, json.JSONDecodeError) + YAML_ERROR_TYPES:
+                continue
+            skill_id = str(skill.get("skill_id", "")).strip()
+            if not skill_id or skill_id in winning_ids:
+                continue
+            if not include_disabled and not bool(skill.get("enabled", True)):
+                continue
+            if query and not _skill_matches_query(skill, query):
+                continue
+            winning_ids.add(skill_id)
+            discovered.append(skill)
+    return {
+        "schema_version": "0.1.0",
+        "result_type": "JiniSkillCatalog",
+        "generated_at": now_utc(),
+        "workspace_root": str((workspace_root or Path.cwd()).expanduser().resolve()),
+        "skills": discovered,
+    }
+
+
+def print_skill_catalog(catalog: dict[str, Any]) -> None:
+    print("SKILLS")
+    for skill in catalog.get("skills", []):
+        enabled = "enabled" if skill.get("enabled", True) else "disabled"
+        print(
+            f"- {skill['skill_id']} | {skill['label']} | {skill['scope']} | {enabled} | {skill['purpose']}"
+        )
+
+
+def resolve_skill(
+    skill_id: str,
+    *,
+    workspace_root: Path | None = None,
+    include_disabled: bool = True,
+) -> dict[str, Any]:
+    normalized = skill_id.strip()
+    for scope, root in skill_lookup_roots(workspace_root):
+        if not root.exists():
+            continue
+        for skill_dir in sorted(path for path in root.iterdir() if path.is_dir()):
+            explicit_dir_match = skill_dir.name == normalized
+            try:
+                skill = load_skill_definition(skill_dir, scope=scope, source_root=root)
+            except (ValueError, OSError, json.JSONDecodeError) + YAML_ERROR_TYPES as exc:
+                if explicit_dir_match:
+                    raise ValueError(f"Skill '{normalized}' is invalid: {exc}.") from exc
+                continue
+            if str(skill.get("skill_id", "")).strip() != normalized:
+                continue
+            if not include_disabled and not bool(skill.get("enabled", True)):
+                raise ValueError(f"Skill '{normalized}' is disabled.")
+            return skill
+    raise ValueError(f"Unknown skill '{skill_id}'.")
+
+
+def thread_state_path(pack_dir: Path) -> Path:
+    return pack_dir / "thread-state.json"
+
+
+def load_thread_state(pack_dir: Path) -> dict[str, Any]:
+    path = thread_state_path(pack_dir)
+    if not path.exists():
+        return {}
+    try:
+        payload = load_json_file(path)
+    except (json.JSONDecodeError, OSError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def save_thread_state(pack_dir: Path, payload: dict[str, Any]) -> Path:
+    path = thread_state_path(pack_dir)
+    path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    return path
+
+
+def record_active_delegation(pack_dir: Path, result: dict[str, Any]) -> Path:
+    payload = load_thread_state(pack_dir)
+    payload["schema_version"] = "0.1.0"
+    payload["context_type"] = "JiniThreadState"
+    payload["active_delegation_id"] = str(result.get("delegation_id", "")).strip()
+    payload["active_skill_id"] = str(result.get("skill_id", "")).strip()
+    payload["active_delegation_status"] = str(result.get("status", "")).strip()
+    payload["current_focus"] = {
+        "kind": "delegation",
+        "artifact_path": str(result.get("summary_path", "")).strip(),
+        "artifact_label": f"{str(result.get('skill_label', '')).strip()} delegation brief",
+    }
+    payload["updated_at"] = now_utc()
+    return save_thread_state(pack_dir, payload)
+
+
+def build_skill_delegation(
+    pack_dir: Path,
+    registry: dict[str, Any],
+    *,
+    skill: dict[str, Any],
+    instruction: str = "",
+) -> dict[str, Any]:
+    summary = summarise_pack(pack_dir, registry)
+    work_unit = summary["work_unit"]
+    session_context = load_current_session_context()
+    artifact_focus = ""
+    if session_context is not None:
+        artifact_focus = projection_focus_artifact_id(session_context.get("projection"))
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    delegation_id = f"{timestamp}-{skill['skill_id']}"
+    delegation_dir = pack_dir / "delegations" / delegation_id
+    delegation_dir.mkdir(parents=True, exist_ok=True)
+    request = {
+        "schema_version": "0.1.0",
+        "delegation_id": delegation_id,
+        "work_unit_id": str(work_unit.get("work_unit_id", "")).strip(),
+        "skill_id": str(skill["skill_id"]),
+        "scope": str(skill["scope"]),
+        "artifact_focus": artifact_focus,
+        "instruction": instruction.strip(),
+        "created_at": now_utc(),
+    }
+    request_path = delegation_dir / "request.json"
+    request_path.write_text(json.dumps(request, indent=2) + "\n", encoding="utf-8")
+    summary_lines = [
+        f"# Delegation: {skill['label']}",
+        "",
+        f"- Skill id: `{skill['skill_id']}`",
+        f"- Scope: `{skill['scope']}`",
+        f"- Work unit: `{work_unit.get('work_unit_id', '')}`",
+        f"- Title: {work_unit.get('title', '')}",
+    ]
+    if artifact_focus:
+        summary_lines.append(f"- Artifact focus: `{artifact_focus}`")
+    if instruction.strip():
+        summary_lines.extend(["", "## Instruction", "", instruction.strip()])
+    when_to_use = [str(item).strip() for item in skill.get("when_to_use", []) if str(item).strip()]
+    if when_to_use:
+        summary_lines.extend(["", "## Why This Skill", ""])
+        summary_lines.extend([f"- {item}" for item in when_to_use[:3]])
+    summary_lines.extend(
+        [
+            "",
+            "## Next",
+            "",
+            "- Review this delegation brief.",
+            "- Run the specialist work using the prompt and current artifact focus.",
+            "- Attach the resulting artifact updates back to the same work unit.",
+            "",
+        ]
+    )
+    summary_path = delegation_dir / "summary.md"
+    summary_path.write_text("\n".join(summary_lines), encoding="utf-8")
+    result = {
+        "schema_version": "0.1.0",
+        "delegation_id": delegation_id,
+        "work_unit_id": str(work_unit.get("work_unit_id", "")).strip(),
+        "skill_id": str(skill["skill_id"]),
+        "status": "staged",
+        "created_artifacts": ["summary"],
+        "updated_artifacts": [],
+        "summary_path": str(summary_path),
+        "completed_at": now_utc(),
+    }
+    result_path = delegation_dir / "result.json"
+    result_path.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    return {
+        "schema_version": "0.1.0",
+        "result_type": "JiniDelegationResult",
+        "generated_at": result["completed_at"],
+        "delegation_id": delegation_id,
+        "work_unit_id": result["work_unit_id"],
+        "skill_id": result["skill_id"],
+        "skill_label": skill["label"],
+        "scope": skill["scope"],
+        "status": result["status"],
+        "artifact_focus": artifact_focus,
+        "delegation_dir": str(delegation_dir),
+        "request_path": str(request_path),
+        "result_path": str(result_path),
+        "summary_path": str(summary_path),
+    }
+
+
+def print_skill_delegation(result: dict[str, Any]) -> None:
+    print(f"SKILL   {result['skill_id']}")
+    print(f"LABEL   {result['skill_label']}")
+    print(f"WORK    {result['work_unit_id']}")
+    print(f"STATUS  {result['status']}")
+    if result.get("artifact_focus"):
+        print(f"FOCUS   {result['artifact_focus']}")
+    print(f"READY   {display_path(Path(result['summary_path']))}")
+    print()
+    print("OPEN")
+    print(f"  cat {shlex.quote(str(result['summary_path']))}")
+    print("STATUS")
+    print(f"  {cli_invocation()} status")
+    print("CONTINUE")
+    print(f"  {cli_invocation()} continue")
+
+
 def load_personal_home(home_root: Path) -> dict[str, Any]:
     manifest_path = home_root / "home.yaml"
     if not manifest_path.exists():
@@ -9711,6 +10018,7 @@ ADMIN_HELP_GROUPS: list[tuple[str, list[tuple[str, str]]]] = [
             ("plan-install / install-bundles / update-bundles / uninstall-bundles", "Bundle installation lifecycle."),
             ("doctor-install / catalog-bundles", "Install health and inventory."),
             ("bootstrap-home / bootstrap-steering / bind-home / append-memory / dream-memory / memory-status", "Personal OS and memory operations."),
+            ("skills / delegate", "Built-in and file-backed specialist skills attached to the current work."),
             ("list-tools / list-routines / run-routine / repo-map / show-steering", "Operator utilities."),
         ],
     ),
@@ -21422,6 +21730,32 @@ def main() -> int:
         help="Output format for list-routines",
     )
 
+    skills_parser = subparsers.add_parser(
+        "skills",
+        help="Show bundled, user, and project skills that can improve work in the current environment",
+    )
+    skills_parser.add_argument("query", nargs="?", help="Optional skill id, label, or tag filter")
+    skills_parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for skills",
+    )
+
+    delegate_parser = subparsers.add_parser(
+        "delegate",
+        help="Stage a bounded specialist skill against the current Jini work",
+    )
+    delegate_parser.add_argument("skill_id", help="Skill id to run")
+    delegate_parser.add_argument("path", nargs="?", type=Path, help="Optional pack path; defaults to current Jini work")
+    delegate_parser.add_argument("--instruction", default="", help="Optional extra instruction for this delegation")
+    delegate_parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for delegate",
+    )
+
     run_routine_parser = subparsers.add_parser(
         "run-routine",
         help="Run a local routine or stage a remote routine from a Jini home",
@@ -23067,6 +23401,59 @@ def main() -> int:
             print(f"HOME   {result['home_root']}")
             for routine in result["routines"]:
                 print(f"- {routine['routine_id']} | {routine['mode']} | {routine['runner']} | {routine['summary']}")
+        return 0
+
+    if args.command == "skills":
+        catalog = discover_skills(workspace_root=Path.cwd(), query=args.query or "")
+        if args.format == "json":
+            print(json.dumps(catalog, indent=2))
+        else:
+            print_skill_catalog(catalog)
+        return 0
+
+    if args.command == "delegate":
+        normalized_skill_id = str(args.skill_id).strip()
+        try:
+            skill = resolve_skill(normalized_skill_id, workspace_root=Path.cwd(), include_disabled=True)
+        except ValueError as exc:
+            print(f"ERROR {exc}", file=sys.stderr)
+            return 1
+        if not bool(skill.get("enabled", True)):
+            print(f"ERROR Skill '{normalized_skill_id}' is disabled.", file=sys.stderr)
+            return 1
+        if args.path is None and load_current_work_context() is None:
+            print(f"ERROR Current work is required for delegate {normalized_skill_id}.", file=sys.stderr)
+            return 1
+        try:
+            pack_dir = resolve_context_pack_dir(args.path, registry, command_label="delegate")
+            result = build_skill_delegation(
+                pack_dir,
+                registry,
+                skill=skill,
+                instruction=args.instruction,
+            )
+            thread_state = record_active_delegation(pack_dir, result)
+        except ValueError as exc:
+            print(f"ERROR {exc}", file=sys.stderr)
+            return 1
+        append_learning_event(
+            "delegate-skill",
+            {
+                "pack_dir": str(pack_dir),
+                "work_unit_id": result.get("work_unit_id", ""),
+                "delegation_id": result.get("delegation_id", ""),
+                "skill_id": result.get("skill_id", ""),
+                "scope": result.get("scope", ""),
+                "status": result.get("status", ""),
+            },
+            pack_dir=pack_dir,
+        )
+        if args.format == "json":
+            payload = dict(result)
+            payload["thread_state_path"] = str(thread_state)
+            print(json.dumps(payload, indent=2))
+        else:
+            print_skill_delegation(result)
         return 0
 
     if args.command == "run-routine":

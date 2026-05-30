@@ -1,0 +1,21 @@
+schema_version: 0.1.0
+skill_id: research
+label: Research
+purpose: Gather and structure the best next research questions for the current Jini work.
+when_to_use:
+  - The work is blocked by missing facts, tradeoff clarity, or external context.
+  - You need a tighter research frame before editing or deciding.
+allowed_tools:
+  - read
+  - search
+  - write
+input_contract:
+  current_work: required
+  artifact_focus: optional
+output_contract:
+  status_values:
+    - staged
+  primary_artifact: summary
+prompt_file: prompt.md
+enabled: true
+requires_approval: false

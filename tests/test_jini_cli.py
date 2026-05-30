@@ -261,6 +261,38 @@ class JiniCliConformanceTests(unittest.TestCase):
         (repo / "scripts" / "build.sh").write_text("#!/bin/sh\necho build\n", encoding="utf-8")
         return repo
 
+    def write_skill(
+        self,
+        root: Path,
+        skill_id: str,
+        *,
+        label: Optional[str] = None,
+        purpose: Optional[str] = None,
+        enabled: bool = True,
+        invalid_missing_output_contract: bool = False,
+    ) -> Path:
+        skill_dir = root / skill_id
+        skill_dir.mkdir(parents=True, exist_ok=True)
+        manifest = {
+            "schema_version": "0.1.0",
+            "skill_id": skill_id,
+            "label": label or skill_id.replace("-", " ").title(),
+            "purpose": purpose or f"Use {skill_id} inside the current environment.",
+            "when_to_use": [f"Use {skill_id} when the current work benefits from that specialist lens."],
+            "allowed_tools": ["read", "search", "write"],
+            "input_contract": {"current_work": "required", "artifact_focus": "optional"},
+            "prompt_file": "prompt.md",
+            "enabled": enabled,
+        }
+        if not invalid_missing_output_contract:
+            manifest["output_contract"] = {"status_values": ["staged"], "primary_artifact": "summary"}
+        (skill_dir / "skill.yaml").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+        (skill_dir / "prompt.md").write_text(
+            f"# {manifest['label']}\n\nStay attached to the same Jini work and improve the result.\n",
+            encoding="utf-8",
+        )
+        return skill_dir
+
     def create_malicious_verification_repo(self) -> Path:
         repo = self.tmp / "malicious-repo"
         (repo / "scripts").mkdir(parents=True)
@@ -940,6 +972,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         result = self.run_cli("help", "--admin")
         self.assert_ok(result)
         self.assertIn("Admin and developer command inventory", result.stdout)
+        self.assertIn("skills / delegate", result.stdout)
         self.assertIn("stage-framework-experiment", result.stdout)
         self.assertIn("capture-evidence", result.stdout)
         self.assertNotIn("usage: jini", result.stdout)
@@ -948,6 +981,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         result = self.run_cli("admin", "help")
         self.assert_ok(result)
         self.assertIn("Admin and developer command inventory", result.stdout)
+        self.assertIn("skills / delegate", result.stdout)
         self.assertIn("stage-framework-experiment", result.stdout)
         self.assertIn("capture-evidence", result.stdout)
 
@@ -1053,6 +1087,94 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(resume_result)
         compact = json.loads(resume_result.stdout)
         self.assertEqual("research-prd", compact["pack_id"])
+
+    def test_skills_lists_builtin_catalog(self) -> None:
+        result = self.run_cli("skills", "--format", "json")
+        self.assert_ok(result)
+
+        payload = json.loads(result.stdout)
+        by_id = {item["skill_id"]: item for item in payload["skills"]}
+        self.assertIn("reviewer", by_id)
+        self.assertIn("debugger", by_id)
+        self.assertIn("research", by_id)
+        self.assertEqual("builtin", by_id["reviewer"]["scope"])
+        self.assertTrue(by_id["reviewer"]["enabled"])
+
+    def test_skills_filter_prefers_project_override(self) -> None:
+        repo = self.create_repo_fixture()
+        self.write_skill(
+            repo / ".jini" / "skills",
+            "reviewer",
+            label="Team Reviewer",
+            purpose="Review using the repo's local standards.",
+        )
+
+        result = self.run_cli_in_cwd(repo, "skills", "reviewer", "--format", "json")
+        self.assert_ok(result)
+
+        payload = json.loads(result.stdout)
+        self.assertEqual(1, len(payload["skills"]))
+        self.assertEqual("reviewer", payload["skills"][0]["skill_id"])
+        self.assertEqual("Team Reviewer", payload["skills"][0]["label"])
+        self.assertEqual("project", payload["skills"][0]["scope"])
+
+    def test_delegate_requires_current_work(self) -> None:
+        result = self.run_cli("delegate", "reviewer")
+        self.assert_error(result)
+        self.assertEqual("", result.stdout)
+        self.assertIn("Current work is required for delegate reviewer.", result.stderr)
+
+    def test_delegate_unknown_skill_returns_clean_error(self) -> None:
+        pack_dir = self.compile_research_pack()
+
+        result = self.run_cli("delegate", "reviewerx", pack_dir)
+        self.assert_error(result)
+        self.assertEqual("", result.stdout)
+        self.assertIn("Unknown skill 'reviewerx'.", result.stderr)
+
+    def test_delegate_invalid_project_skill_fails_cleanly(self) -> None:
+        repo = self.create_repo_fixture()
+        self.write_skill(
+            repo / ".jini" / "skills",
+            "reviewer",
+            invalid_missing_output_contract=True,
+        )
+        pack_dir = self.compile_research_pack()
+
+        result = self.run_cli_in_cwd(repo, "delegate", "reviewer", pack_dir)
+        self.assert_error(result)
+        self.assertEqual("", result.stdout)
+        self.assertIn("Skill 'reviewer' is invalid: missing output_contract.", result.stderr)
+
+    def test_delegate_succeeds_with_current_work_and_records_state(self) -> None:
+        pack_dir = self.compile_research_pack()
+        self.assert_ok(self.run_cli("status", pack_dir))
+
+        result = self.run_cli("delegate", "reviewer", "--instruction", "Focus on the biggest risks.", "--format", "json")
+        self.assert_ok(result)
+
+        payload = json.loads(result.stdout)
+        self.assertEqual("reviewer", payload["skill_id"])
+        self.assertEqual("staged", payload["status"])
+        request_path = Path(payload["request_path"])
+        result_path = Path(payload["result_path"])
+        summary_path = Path(payload["summary_path"])
+        thread_state_path = Path(payload["thread_state_path"])
+        for path in (request_path, result_path, summary_path, thread_state_path):
+            self.assertTrue(path.exists(), str(path))
+        request_payload = json.loads(request_path.read_text(encoding="utf-8"))
+        self.assertEqual(payload["delegation_id"], request_payload["delegation_id"])
+        self.assertEqual("reviewer", request_payload["skill_id"])
+        self.assertEqual("Focus on the biggest risks.", request_payload["instruction"])
+        result_payload = json.loads(result_path.read_text(encoding="utf-8"))
+        self.assertEqual(payload["delegation_id"], result_payload["delegation_id"])
+        self.assertEqual(str(summary_path), result_payload["summary_path"])
+        thread_state = json.loads(thread_state_path.read_text(encoding="utf-8"))
+        self.assertEqual(payload["delegation_id"], thread_state["active_delegation_id"])
+        self.assertEqual("reviewer", thread_state["active_skill_id"])
+        self.assertEqual("staged", thread_state["active_delegation_status"])
+        current_work = json.loads((self.tmp / ".jini" / "current-work.json").read_text(encoding="utf-8"))
+        self.assertEqual(str(pack_dir.resolve()), current_work["pack_dir"])
 
     def test_continue_command_resolves_next_useful_artifact(self) -> None:
         pack_dir = self.compile_research_pack()

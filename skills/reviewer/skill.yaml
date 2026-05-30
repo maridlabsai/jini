@@ -1,0 +1,21 @@
+schema_version: 0.1.0
+skill_id: reviewer
+label: Reviewer
+purpose: Review the current Jini work and call out risks, regressions, and missing checks.
+when_to_use:
+  - You want a fast adversarial review of the current work before continuing.
+  - You need a second pass focused on bugs, regressions, or missing tests.
+allowed_tools:
+  - read
+  - search
+  - write
+input_contract:
+  current_work: required
+  artifact_focus: optional
+output_contract:
+  status_values:
+    - staged
+  primary_artifact: summary
+prompt_file: prompt.md
+enabled: true
+requires_approval: false

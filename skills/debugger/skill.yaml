@@ -1,0 +1,21 @@
+schema_version: 0.1.0
+skill_id: debugger
+label: Debugger
+purpose: Break down a failure in the current Jini work and stage the shortest safe debug path.
+when_to_use:
+  - Something is failing and you need a disciplined diagnosis path.
+  - You want the next debugging move, not a generic brainstorm.
+allowed_tools:
+  - read
+  - search
+  - write
+input_contract:
+  current_work: required
+  artifact_focus: optional
+output_contract:
+  status_values:
+    - staged
+  primary_artifact: summary
+prompt_file: prompt.md
+enabled: true
+requires_approval: false
