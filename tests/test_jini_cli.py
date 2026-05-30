@@ -40,11 +40,19 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.temp_dir.cleanup()
 
     def run_cli(self, *args: object, env: Optional[dict[str, str]] = None) -> subprocess.CompletedProcess[str]:
+        return self.run_cli_in_cwd(REPO_ROOT, *args, env=env)
+
+    def run_cli_in_cwd(
+        self,
+        cwd: Path,
+        *args: object,
+        env: Optional[dict[str, str]] = None,
+    ) -> subprocess.CompletedProcess[str]:
         run_env = dict(os.environ if env is None else env)
         run_env["JINI_STATE_DIR"] = str((self.tmp / ".jini").resolve())
         return subprocess.run(
             [*CLI, *[str(arg) for arg in args]],
-            cwd=REPO_ROOT,
+            cwd=cwd,
             text=True,
             capture_output=True,
             env=run_env,
@@ -496,8 +504,25 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("jini run --repo /path/to/repo --harness codex", result.stdout)
         self.assertNotIn("usage: jini", result.stdout)
 
-    def test_zero_arg_cli_shows_start_surface_without_current_work(self) -> None:
-        result = self.run_cli()
+    def test_zero_arg_cli_shows_repo_aware_start_surface_inside_repo(self) -> None:
+        repo = self.create_repo_fixture()
+        result = self.run_cli_in_cwd(repo)
+        self.assert_ok(result)
+        self.assertIn("Nothing is in progress yet.", result.stdout)
+        self.assertIn("REPO   sample-repo", result.stdout)
+        self.assertIn("START WITH THE TASK", result.stdout)
+        self.assertIn("jini review this repo", result.stdout)
+        self.assertIn("jini fix failing tests", result.stdout)
+        self.assertIn("jini plan this change", result.stdout)
+        self.assertIn("DETECTED ENTRYPOINTS", result.stdout)
+        self.assertIn("make test", result.stdout)
+        self.assertIn("make start", result.stdout)
+        self.assertNotIn("jini try-example research-prd", result.stdout)
+
+    def test_zero_arg_cli_shows_generic_start_surface_without_repo_or_current_work(self) -> None:
+        empty_dir = self.tmp / "empty"
+        empty_dir.mkdir()
+        result = self.run_cli_in_cwd(empty_dir)
         self.assert_ok(result)
         self.assertIn("Nothing is in progress yet.", result.stdout)
         self.assertIn("START HERE", result.stdout)
@@ -566,6 +591,33 @@ class JiniCliConformanceTests(unittest.TestCase):
         )
         self.assertNotIn("Public command inventory", result.stdout)
         self.assertEqual("", result.stderr)
+
+    def test_request_text_in_repo_surfaces_repo_intake_instead_of_argparse(self) -> None:
+        repo = self.create_repo_fixture()
+        result = self.run_cli_in_cwd(repo, "fix", "failing", "tests")
+        self.assert_ok(result)
+        self.assertIn("REQUEST fix failing tests", result.stdout)
+        self.assertIn("REPO    sample-repo", result.stdout)
+        self.assertIn("INTENT  verify", result.stdout)
+        self.assertIn("make test", result.stdout)
+        self.assertIn("jini repo-map .", result.stdout)
+        self.assertNotIn("usage: jini", result.stdout)
+
+    def test_unknown_single_token_suggests_closest_command(self) -> None:
+        result = self.run_cli("stats")
+        self.assert_error(result)
+        self.assertIn('ERROR Unknown command "stats".', result.stdout)
+        self.assertIn("Closest matches:", result.stdout)
+        self.assertIn("jini status", result.stdout)
+        self.assertNotIn("usage: jini", result.stdout)
+
+    def test_repo_path_token_shows_repo_specific_hint(self) -> None:
+        result = self.run_cli(".")
+        self.assert_error(result)
+        self.assertIn("is not a direct repo entrypoint", result.stdout)
+        self.assertIn("jini review this repo", result.stdout)
+        self.assertIn("jini status /path/to/work", result.stdout)
+        self.assertNotIn("usage: jini", result.stdout)
 
     def test_help_admin_shows_internal_inventory(self) -> None:
         result = self.run_cli("help", "--admin")

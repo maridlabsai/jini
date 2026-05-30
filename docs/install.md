@@ -140,7 +140,7 @@ jini
     <div class="step-card">
       <span class="step-number">1</span>
       <h3>Run <code>jini</code></h3>
-      <p>Do not start with provider jargon unless Jini tells you setup is missing.</p>
+      <p>Do not start with provider jargon unless Jini tells you setup is missing. Inside a repo, Jini should immediately steer toward task-first asks like <code>jini review this repo</code> or <code>jini fix failing tests</code>.</p>
     </div>
     <div class="step-card">
       <span class="step-number">2</span>
@@ -155,6 +155,7 @@ jini
   </div>
 
   <p>If you want the small public command list before doing anything else, run <code>jini commands</code>. If you maintain routes, bundles, or release plumbing, the deeper inventory lives under <code>jini admin help</code>.</p>
+  <p>Direct task text belongs on the normal front door. Inside a repo, <code>jini review this repo</code>, <code>jini fix failing tests</code>, and <code>jini plan this change</code> should surface repo-aware intake instead of dropping into argparse usage output.</p>
   <p>Help surfaces and <code>jini commands</code> are catalogs, not request entrypoints. If you paste a work request after <code>help</code>, <code>--help</code>, or <code>commands</code>, Jini should reject that tail text and point you back to starting with <code>jini</code> for the start surface.</p>
   <ul class="compact-list">
     <li><code>jini commands me edit pear fellow script.txt</code> should start with <code>ERROR `jini commands` shows the public command inventory; it does not take a request like "me edit pear fellow script.txt".</code></li>

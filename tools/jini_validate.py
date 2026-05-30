@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import ast
 import base64
+import difflib
 import hashlib
 import json
 import os
@@ -7929,7 +7930,11 @@ def resolve_context_pack_dir(
 def render_cli_front_door(registry: dict[str, Any]) -> int:
     context = load_current_work_context()
     if context is None:
-        print_cli_start_surface()
+        repo_context = inspect_repo_context(Path.cwd())
+        if repo_context.get("discovered"):
+            print_repo_start_surface(repo_context)
+        else:
+            print_cli_start_surface()
         return 0
 
     remembered_pack = Path(str(context.get("pack_dir", ""))).expanduser()
@@ -7938,7 +7943,11 @@ def render_cli_front_door(registry: dict[str, Any]) -> int:
             pack_dir = resolve_context_pack_dir(None, registry, command_label="jini")
             report = build_outcome_view(pack_dir, registry)
         except (FileNotFoundError, OSError, TypeError, ValueError):
-            print_cli_start_surface()
+            repo_context = inspect_repo_context(Path.cwd())
+            if repo_context.get("discovered"):
+                print_repo_start_surface(repo_context)
+            else:
+                print_cli_start_surface()
             return 0
         print_outcome_view(report)
         return 0
@@ -7949,7 +7958,11 @@ def render_cli_front_door(registry: dict[str, Any]) -> int:
         print_outcome_view(report)
         return 0
 
-    print_cli_start_surface()
+    repo_context = inspect_repo_context(Path.cwd())
+    if repo_context.get("discovered"):
+        print_repo_start_surface(repo_context)
+    else:
+        print_cli_start_surface()
     return 0
 
 
@@ -9282,6 +9295,192 @@ def print_cli_start_surface() -> None:
     print("MORE")
     print(f"  {cli} commands")
     print(f"  {cli} help --admin")
+
+
+REQUEST_ENTRY_VERBS = frozenset(
+    {
+        "debug",
+        "edit",
+        "explain",
+        "fix",
+        "help",
+        "plan",
+        "review",
+        "scan",
+        "summarize",
+        "update",
+        "write",
+    }
+)
+
+
+def _repo_entrypoint_command(repo_context: dict[str, Any], category: str) -> str:
+    entries = repo_context.get("entrypoints", {}).get(category, [])
+    if not entries:
+        return ""
+    entry = entries[0]
+    return str(entry.get("command") or entry.get("path") or entry.get("label", "")).strip()
+
+
+def print_repo_start_surface(repo_context: dict[str, Any]) -> None:
+    cli = cli_invocation()
+    repo_root = str(repo_context.get("repo_root", "")).strip()
+    repo_name = Path(repo_root).name if repo_root else "repo"
+    git_info = repo_context.get("git", {})
+    print(f"Jini CLI {load_version()}")
+    print("Nothing is in progress yet.")
+    print(f"REPO   {repo_name}")
+    if repo_root:
+        print(f"PATH   {repo_root}")
+    if git_info.get("tracked"):
+        branch = str(git_info.get("branch", "")).strip() or "unknown"
+        dirty_files = int(git_info.get("dirty_files", 0))
+        print(f"GIT    branch={branch} dirty_files={dirty_files}")
+    print()
+    print("START WITH THE TASK")
+    print(f"  {cli} review this repo")
+    print("    Triage the current repo and surface the strongest next move.")
+    print(f"  {cli} fix failing tests")
+    print("    Focus Jini on the detected test and verification surfaces.")
+    print(f"  {cli} plan this change")
+    print("    Start with a repo-aware plan before editing.")
+    print()
+    print("DETECTED ENTRYPOINTS")
+    surfaced = False
+    for category in ("test", "verify", "startup", "build", "docs"):
+        command = _repo_entrypoint_command(repo_context, category)
+        if not command:
+            continue
+        surfaced = True
+        print(f"  {category:<8}{command}")
+    if not surfaced:
+        print("  repo     Repo detected, but no standard startup or test entrypoints were found.")
+    print()
+    print("FALLBACKS")
+    print(f"  {cli} repo-map .")
+    print("    Inspect the current repo surface Jini can see.")
+    print(f"  {cli} doctor")
+    print("    Check route and setup before execution.")
+    print(f"  {cli} status /path/to/work")
+    print("    Resume existing Jini work when this repo already has it.")
+
+
+def classify_request_intent(request_text: str) -> str:
+    normalized = " ".join(request_text.strip().lower().split())
+    if any(token in normalized for token in ("test", "tests", "failing", "fail", "bug", "verify", "debug")):
+        return "verify"
+    if any(token in normalized for token in ("plan", "design", "scope", "change")):
+        return "plan"
+    if any(token in normalized for token in ("review", "audit", "scan", "read")):
+        return "review"
+    if any(token in normalized for token in ("edit", "write", "update", "refactor")):
+        return "make"
+    return "general"
+
+
+def print_repo_request_intake(request_text: str, repo_context: dict[str, Any]) -> None:
+    cli = cli_invocation()
+    repo_root = str(repo_context.get("repo_root", "")).strip()
+    repo_name = Path(repo_root).name if repo_root else "repo"
+    git_info = repo_context.get("git", {})
+    intent = classify_request_intent(request_text)
+    print(f"Jini CLI {load_version()}")
+    print(f"REQUEST {request_text}")
+    print(f"REPO    {repo_name}")
+    if repo_root:
+        print(f"PATH    {repo_root}")
+    if git_info.get("tracked"):
+        branch = str(git_info.get("branch", "")).strip() or "unknown"
+        dirty_files = int(git_info.get("dirty_files", 0))
+        print(f"GIT     branch={branch} dirty_files={dirty_files}")
+    print(f"INTENT  {intent}")
+    print()
+    print("BEST NEXT MOVE")
+    primary_categories = {
+        "verify": ("test", "verify", "startup"),
+        "plan": ("docs", "startup", "test"),
+        "review": ("docs", "test", "startup"),
+        "make": ("startup", "test", "build"),
+        "general": ("docs", "startup", "test"),
+    }[intent]
+    surfaced = False
+    for category in primary_categories:
+        command = _repo_entrypoint_command(repo_context, category)
+        if not command:
+            continue
+        surfaced = True
+        print(f"  {category:<8}{command}")
+    if not surfaced:
+        print("  repo     Repo detected, but Jini could not find standard entrypoints yet.")
+    print()
+    print("KEEP MOVING")
+    print(f"  {cli} repo-map .")
+    print("    Inspect the current repo surface Jini can see.")
+    print(f"  {cli} doctor")
+    print("    Check route and setup before execution.")
+    print(f"  {cli} status /path/to/work")
+    print("    Resume existing Jini work when this repo already has it.")
+
+
+def print_generic_request_intake(request_text: str) -> None:
+    cli = cli_invocation()
+    print(f"Jini CLI {load_version()}")
+    print(f"REQUEST {request_text}")
+    print("Jini needs either a repo-backed working directory or an existing Jini work path to act on this directly.")
+    print()
+    print("START HERE")
+    print(f"  {cli} doctor")
+    print("    Check what route and setup Jini can use right now.")
+    print(f"  {cli} try-example research-prd")
+    print("    Materialize a public example and inspect the result.")
+    print(f"  {cli} status /path/to/work")
+    print("    Resume existing Jini work when you already have it.")
+
+
+def looks_like_path_token(token: str) -> bool:
+    return token in {".", ".."} or token.startswith(("/", "./", "../", "~/"))
+
+
+def print_repo_path_hint(token: str) -> None:
+    cli = cli_invocation()
+    print(f"ERROR `{cli} {token}` is not a direct repo entrypoint.")
+    print(f"Use `{cli} review this repo` when you want Jini to inspect the current repo.")
+    print(f"Use `{cli} status /path/to/work` only for existing Jini work.")
+
+
+def print_unknown_command_hint(token: str, known_commands: set[str]) -> None:
+    cli = cli_invocation()
+    suggestions = difflib.get_close_matches(token, sorted(known_commands), n=3, cutoff=0.5)
+    print(f'ERROR Unknown command "{token}".')
+    if suggestions:
+        print("Closest matches:")
+        for suggestion in suggestions:
+            print(f"  {cli} {suggestion}")
+    print(f"Use `{cli}` to start from the current repo or `{cli} commands` for the public catalog.")
+
+
+def dispatch_request_entrypoint(argv: list[str], known_commands: set[str]) -> int | None:
+    if not argv:
+        return None
+    head = argv[0]
+    if head in known_commands or head.startswith("-"):
+        return None
+    if looks_like_path_token(head):
+        print_repo_path_hint(head)
+        return 2
+    if len(argv) > 1 and any(token.startswith("-") for token in argv[1:]):
+        print_unknown_command_hint(head, known_commands)
+        return 2
+    repo_context = inspect_repo_context(Path.cwd())
+    if len(argv) > 1 or head.lower() in REQUEST_ENTRY_VERBS:
+        request_text = " ".join(argv).strip()
+        if repo_context.get("discovered"):
+            print_repo_request_intake(request_text, repo_context)
+        else:
+            print_generic_request_intake(request_text)
+        return 0
+    print_unknown_command_hint(head, known_commands)
+    return 2
 
 
 PUBLIC_HELP_GROUPS: list[tuple[str, list[tuple[str, str]]]] = [
@@ -22528,6 +22727,9 @@ def main() -> int:
     argv, catalog_exit = dispatch_catalog_entrypoint(argv)
     if catalog_exit is not None:
         return catalog_exit
+    request_exit = dispatch_request_entrypoint(argv, set(subparsers.choices))
+    if request_exit is not None:
+        return request_exit
 
     args = parser.parse_args(normalize_cli_argv(argv))
 

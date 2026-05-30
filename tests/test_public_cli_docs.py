@@ -49,6 +49,9 @@ class PublicCliDocsTests(unittest.TestCase):
             "jini commands me edit notes.txt",
             "jini --help me edit notes.txt",
             "jini provider help me edit notes.txt",
+            "jini review this repo",
+            "jini fix failing tests",
+            "jini plan this change",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
@@ -115,6 +118,9 @@ class PublicCliDocsTests(unittest.TestCase):
                 "Help surfaces and <code>jini commands</code> are catalogs, not request entrypoints.",
                 "If you paste a work request after <code>help</code>, <code>--help</code>, or <code>commands</code>",
                 "starting with <code>jini</code> for the start surface",
+                "jini review this repo",
+                "jini fix failing tests",
+                "jini plan this change",
             ):
                 with self.subTest(marker=marker):
                     self.assertIn(marker, text)

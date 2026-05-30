@@ -27,7 +27,8 @@ quick_links:
 
 <pre><code class="language-bash">jini</code></pre>
 
-  <p>That should be the normal entry. Jini should either continue the thing you were already working on, show <code>Active work</code> when several projects are in flight, or offer simple choices if nothing is active yet.</p>
+  <p>That should be the normal entry. Jini should either continue the thing you were already working on, show <code>Active work</code> when several projects are in flight, or offer a repo-aware task-first start surface if nothing is active yet.</p>
+  <p>Inside a repo, the first suggestions should be concrete asks like <code>jini review this repo</code>, <code>jini fix failing tests</code>, and <code>jini plan this change</code>, not examples and setup trivia.</p>
 </div>
 
 <div class="section-card">
@@ -45,6 +46,7 @@ Start with `jini` to resume active work or see the start options.
 If you already have work to adopt, use `jini status /path/to/work` once.</code></pre>
 
   <p>That corrective output is the expected terminal shape for a help request tail. It should reject the request and redirect people to the start surface instead of dumping the overview.</p>
+  <p>Direct task intake should still work on the normal front door. Inside a repo, <code>jini fix failing tests</code> and <code>jini review this repo</code> should produce a repo-aware request intake instead of an argparse usage wall.</p>
   <p>The same redirect shape applies across the other help-entry variants too:</p>
   <ul class="compact-list">
     <li><code>jini commands me edit pear fellow script.txt</code> starts with <code>ERROR `jini commands` shows the public command inventory; it does not take a request like "me edit pear fellow script.txt".</code></li>
