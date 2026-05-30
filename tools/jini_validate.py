@@ -9427,7 +9427,7 @@ def prompt_repo_task(repo_context: dict[str, Any], *, initial_request: str | Non
         print("What next?")
     else:
         print("What do you want Jini to do?")
-        print("Type the task directly. Use `commands`, `doctor`, `help --admin`, or `exit` when needed.")
+        print("Type the task directly. Use `exit` to leave.")
     while True:
         try:
             request_text = input(f"{cli}> ").strip()

@@ -61,6 +61,7 @@ class PublicCliDocsTests(unittest.TestCase):
             "jini fix failing tests",
             "jini plan this change",
             "What do you want Jini to do?",
+            "Type the task directly. Use `exit` to leave.",
             "jini&gt; fix failing tests",
             "TASK    fix failing tests",
             "NEXT    make test",
@@ -69,7 +70,8 @@ class PublicCliDocsTests(unittest.TestCase):
             "jini&gt; doctor",
             "provider_id",
             "keep the <code>jini&gt;</code> prompt open",
-            "<code>commands</code>, <code>doctor</code>, <code>help --admin</code>, and <code>exit</code> as escape hatches",
+            "keep the controls in the background instead of teaching them before the task starts",
+            "<code>commands</code>, <code>doctor</code>, <code>help --admin</code>, and <code>exit</code> should still work inside the same live session",
             "Keep typing the next thing",
             "fix failing tests",
             "open the latest artifact",
@@ -165,7 +167,8 @@ class PublicCliDocsTests(unittest.TestCase):
             "jini plan this change",
             "What do you want Jini to do?",
             "jini&gt;</code> prompt",
-            "<code>commands</code>, <code>doctor</code>, <code>help --admin</code>, and <code>exit</code> should all work as in-session escape hatches",
+            "The task should stay primary, and the controls should stay in the background until you need them.",
+            "<code>commands</code>, <code>doctor</code>, <code>help --admin</code>, and <code>exit</code> should still work as in-session escape hatches",
             "keep typing plain follow-up asks like <code>fix failing tests</code>, <code>what is blocked?</code>, or <code>open the latest artifact</code> instead of learning Jini-specific action words",
         ):
             with self.subTest(marker=marker):

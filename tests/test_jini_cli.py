@@ -540,6 +540,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         )
         self.assert_ok(result)
         self.assertIn("What do you want Jini to do?", result.stdout)
+        self.assertIn("Type the task directly. Use `exit` to leave.", result.stdout)
         self.assertIn("jini> ", result.stdout)
         self.assertIn("TASK    fix failing tests", result.stdout)
         self.assertIn("NEXT    make test", result.stdout)
