@@ -9423,8 +9423,6 @@ def prompt_repo_task(repo_context: dict[str, Any], *, initial_request: str | Non
     print()
     if initial_request:
         print_repo_request_intake(initial_request, repo_context, compact=True)
-        print()
-        print("What next?")
     else:
         print("What do you want Jini to do?")
         print("Type the task directly. Use `exit` to leave.")
@@ -9442,14 +9440,10 @@ def prompt_repo_task(repo_context: dict[str, Any], *, initial_request: str | Non
             print("Session closed.")
             return 0
         if handle_interactive_escape_hatch(request_text):
-            print()
-            print("What next?")
             continue
         if request_text:
             print()
             print_repo_request_intake(request_text, repo_context, compact=True)
-            print()
-            print("What next?")
 
 
 def classify_request_intent(request_text: str) -> str:
@@ -9487,10 +9481,8 @@ def print_repo_request_intake(request_text: str, repo_context: dict[str, Any], *
     if compact:
         print(f"TASK    {request_text}")
         if surfaced_commands:
-            lead_category, lead_command = surfaced_commands[0]
+            _, lead_command = surfaced_commands[0]
             print(f"NEXT    {lead_command}")
-            for category, command in surfaced_commands[1:3]:
-                print(f"ALSO    {command}")
         else:
             print("NEXT    Repo detected, but Jini could not find a standard entrypoint yet.")
             print(f"TRY     {cli} repo-map .")

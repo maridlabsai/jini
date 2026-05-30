@@ -44,9 +44,6 @@ jini&gt; fix failing tests
 
 TASK    fix failing tests
 NEXT    make test
-ALSO    make verify
-
-What next?
 jini&gt; doctor
 
 provider_id</code></pre>
