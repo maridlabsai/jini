@@ -9342,7 +9342,6 @@ def print_repo_start_surface(repo_context: dict[str, Any]) -> None:
     repo_root = str(repo_context.get("repo_root", "")).strip()
     repo_name = Path(repo_root).name if repo_root else "repo"
     print(f"Jini CLI {load_version()}")
-    print("Nothing is in progress yet.")
     print(f"Repo: {repo_name}")
     print()
     print("Try one of these:")

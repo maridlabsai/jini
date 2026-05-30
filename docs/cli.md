@@ -28,7 +28,7 @@ quick_links:
 <pre><code class="language-bash">jini</code></pre>
 
   <p>That should be the normal entry. Jini should either continue the thing you were already working on, show <code>Active work</code> when several projects are in flight, or offer a repo-aware task-first start surface if nothing is active yet.</p>
-  <p>That repo-aware start surface should stay light: one calm repo-context line, direct task suggestions, a soft cue like <code>Useful here:</code> above one or two useful commands Jini found in the repo, and at most one quiet adoption hint for existing Jini work.</p>
+  <p>That repo-aware start surface should stay light: skip the generic empty-state sentence, show one calm repo-context line, offer direct task suggestions, use a soft cue like <code>Useful here:</code> above one or two useful commands Jini found in the repo, and keep at most one quiet adoption hint for existing Jini work.</p>
   <p>Internal diagnostics like <code>repo-map</code> and setup surfaces like <code>doctor</code> should stay off the first screen. A Claude Code, Codex, or GitHub CLI user should see task suggestions first, then at most a small <code>Already have Jini work?</code> note with <code>status /path/to/work</code> when an existing Jini work path actually needs adoption.</p>
   <p>The three starter suggestions should also stay brief and action-first: <code>Review the repo and suggest the next move.</code>, <code>Fix the failing tests in this repo.</code>, and <code>Review the current branch and call out risks.</code></p>
   <p>Inside a repo, the first suggestions should be concrete asks like <code>jini review this repo</code>, <code>jini fix failing tests</code>, and <code>jini review this branch</code>, not examples and setup trivia.</p>
