@@ -529,10 +529,13 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("Detected here:", result.stdout)
         self.assertIn("make test", result.stdout)
         self.assertIn("make start", result.stdout)
-        self.assertIn("If needed:", result.stdout)
+        self.assertIn("Only if needed:", result.stdout)
+        self.assertIn("jini status /path/to/work", result.stdout)
+        self.assertIn("jini doctor", result.stdout)
         self.assertNotIn("START WITH THE TASK", result.stdout)
         self.assertNotIn("DETECTED ENTRYPOINTS", result.stdout)
         self.assertNotIn("FALLBACKS", result.stdout)
+        self.assertNotIn("jini repo-map .", result.stdout)
         self.assertNotIn("jini try-example research-prd", result.stdout)
 
     def test_zero_arg_cli_prompts_for_task_in_interactive_repo_mode(self) -> None:

@@ -9350,13 +9350,11 @@ def print_repo_start_surface(repo_context: dict[str, Any]) -> None:
     if not surfaced:
         print("  repo     Repo detected, but no standard startup or test entrypoints were found.")
     print()
-    print("If needed:")
-    print(f"  {cli} repo-map .")
-    print("    Inspect the current repo surface Jini can see.")
-    print(f"  {cli} doctor")
-    print("    Check route and setup before execution.")
+    print("Only if needed:")
     print(f"  {cli} status /path/to/work")
     print("    Resume existing Jini work when this repo already has it.")
+    print(f"  {cli} doctor")
+    print("    Check route and setup before execution.")
 
 
 def interactive_front_door_enabled() -> bool:
