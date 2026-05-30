@@ -541,12 +541,16 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(result)
         self.assertIn("What do you want Jini to do?", result.stdout)
         self.assertIn("Type the task directly. Use `exit` to leave.", result.stdout)
+        self.assertIn("Repo: sample-repo", result.stdout)
         self.assertIn("jini> ", result.stdout)
         self.assertIn("TASK    fix failing tests", result.stdout)
         self.assertIn("NEXT    make test", result.stdout)
         self.assertEqual(1, result.stdout.count("Jini CLI 0.1.0"))
         self.assertNotIn("ALSO    ", result.stdout)
         self.assertNotIn("What next?", result.stdout)
+        self.assertNotIn("PATH   ", result.stdout)
+        self.assertNotIn("GIT    ", result.stdout)
+        self.assertNotIn("REPO   ", result.stdout)
         self.assertIn("Session closed.", result.stdout)
         self.assertNotIn("START WITH THE TASK", result.stdout)
         self.assertNotIn("REQUEST fix failing tests", result.stdout)
@@ -703,6 +707,7 @@ class JiniCliConformanceTests(unittest.TestCase):
             input_text="plan this change\nexit\n",
         )
         self.assert_ok(result)
+        self.assertIn("Repo: sample-repo", result.stdout)
         self.assertIn("TASK    fix failing tests", result.stdout)
         self.assertIn("NEXT    make test", result.stdout)
         self.assertNotIn("What next?", result.stdout)
@@ -740,6 +745,8 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual(1, result.stdout.count("Jini CLI 0.1.0"))
         self.assertNotIn("BEST NEXT MOVE", result.stdout)
         self.assertNotIn("KEEP MOVING", result.stdout)
+        self.assertNotIn("PATH   ", result.stdout)
+        self.assertNotIn("GIT    ", result.stdout)
         self.assertNotIn("PATH    /", result.stdout)
 
     def test_unknown_single_token_suggests_closest_command(self) -> None:
