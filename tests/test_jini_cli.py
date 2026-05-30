@@ -505,6 +505,16 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("OPEN JINI", result.stdout)
         self.assertEqual("", result.stderr)
 
+    def test_dash_help_with_request_tail_shows_corrective_hint(self) -> None:
+        result = self.run_cli("--help", "me", "edit", "pear fellow script.txt")
+        self.assert_error(result)
+        self.assertIn("ERROR `jini --help` shows the CLI overview", result.stdout)
+        self.assertIn('it does not take a request like "me edit pear fellow script.txt"', result.stdout)
+        self.assertIn("Start with `jini` and type the request in the shell.", result.stdout)
+        self.assertIn("`jini open` or `jini status`", result.stdout)
+        self.assertNotIn("OPEN JINI", result.stdout)
+        self.assertEqual("", result.stderr)
+
     def test_help_all_shows_public_command_inventory(self) -> None:
         result = self.run_cli("help", "--all")
         self.assert_ok(result)
@@ -537,6 +547,16 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("Admin and developer command inventory", result.stdout)
         self.assertIn("stage-framework-experiment", result.stdout)
         self.assertIn("capture-evidence", result.stdout)
+
+    def test_admin_help_with_request_tail_shows_corrective_hint(self) -> None:
+        result = self.run_cli("admin", "help", "me", "edit", "pear fellow script.txt")
+        self.assert_error(result)
+        self.assertIn("ERROR `jini admin help` shows the admin command inventory", result.stdout)
+        self.assertIn('it does not take a request like "me edit pear fellow script.txt"', result.stdout)
+        self.assertIn("Start with `jini` and type the request in the shell.", result.stdout)
+        self.assertIn("`jini open` or `jini status`", result.stdout)
+        self.assertNotIn("Admin and developer command inventory", result.stdout)
+        self.assertEqual("", result.stderr)
 
     def test_admin_namespace_routes_internal_command(self) -> None:
         result = self.run_cli("admin", "list-schemas")

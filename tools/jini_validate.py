@@ -9355,6 +9355,16 @@ def print_help_request_hint(request_tokens: list[str]) -> None:
     print(f"Or use `{cli} open` or `{cli} status` if you want the current work surface.")
 
 
+def print_help_variant_request_hint(help_invocation: str, request_tokens: list[str], inventory_name: str) -> None:
+    cli = cli_invocation()
+    request = " ".join(request_tokens).strip()
+    print(
+        f'ERROR `{cli} {help_invocation}` shows the {inventory_name}; it does not take a request like "{request}".'
+    )
+    print(f"Start with `{cli}` and type the request in the shell.")
+    print(f"Or use `{cli} open` or `{cli} status` if you want the current work surface.")
+
+
 def resolve_display_path(path_text: str) -> Path:
     path = Path(path_text).expanduser()
     if path.is_absolute():
@@ -22413,7 +22423,17 @@ def main() -> int:
         return 0
     if argv[0] == "admin":
         admin_argv = argv[1:]
-        if not admin_argv or admin_argv[0] in {"-h", "--help", "help"}:
+        if not admin_argv:
+            print_admin_command_inventory()
+            return 0
+        if admin_argv[0] in {"-h", "--help", "help"}:
+            if len(admin_argv) > 1:
+                print_help_variant_request_hint(
+                    f"admin {admin_argv[0]}",
+                    admin_argv[1:],
+                    "admin command inventory",
+                )
+                return 2
             print_admin_command_inventory()
             return 0
         argv = admin_argv
@@ -22428,6 +22448,10 @@ def main() -> int:
         if provider_argv[0] == "doctor":
             argv = ["doctor", *provider_argv[1:]]
     if argv[0] in {"-h", "--help"}:
+        extra_help_tokens = [token for token in argv[1:] if token not in {"--admin", "--all"}]
+        if extra_help_tokens:
+            print_help_variant_request_hint(argv[0], argv[1:], "CLI overview")
+            return 2
         if "--admin" in argv[1:]:
             print_admin_command_inventory()
         elif "--all" in argv[1:]:
@@ -22436,13 +22460,14 @@ def main() -> int:
             print_cli_overview()
         return 0
     if argv[0] == "help":
+        extra_help_tokens = [token for token in argv[1:] if token not in {"--admin", "--all"}]
+        if extra_help_tokens:
+            print_help_request_hint(argv[1:])
+            return 2
         if "--admin" in argv[1:]:
             print_admin_command_inventory()
         elif "--all" in argv[1:]:
             print_public_command_inventory()
-        elif argv[1:]:
-            print_help_request_hint(argv[1:])
-            return 2
         else:
             print_cli_overview()
         return 0
