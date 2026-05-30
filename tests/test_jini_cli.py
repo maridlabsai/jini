@@ -807,6 +807,19 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual(130, result)
         self.assertEqual("\nCancelled.\n", stderr.getvalue())
 
+    def test_run_cli_converts_broken_pipe_into_quiet_exit(self) -> None:
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with (
+            mock.patch("tools.jini_validate.main", side_effect=BrokenPipeError),
+            redirect_stdout(stdout),
+            redirect_stderr(stderr),
+        ):
+            result = jini_validate.run_cli()
+        self.assertEqual(141, result)
+        self.assertEqual("", stdout.getvalue())
+        self.assertEqual("", stderr.getvalue())
+
     def test_interactive_repo_mode_uses_compact_follow_up_cards(self) -> None:
         repo = self.create_repo_fixture()
         result = self.run_cli_in_cwd(

@@ -24920,6 +24920,8 @@ def main() -> int:
 def run_cli() -> int:
     try:
         return main()
+    except BrokenPipeError:
+        return 141
     except KeyboardInterrupt:
         print(file=sys.stderr)
         print("Cancelled.", file=sys.stderr)
