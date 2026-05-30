@@ -9346,9 +9346,9 @@ def print_repo_start_surface(repo_context: dict[str, Any]) -> None:
         if not command:
             continue
         surfaced = True
-        print(f"  {category:<8}{command}")
+        print(f"  {command}")
     if not surfaced:
-        print("  repo     Repo detected, but no standard startup or test entrypoints were found.")
+        print("  Repo detected, but no standard startup or test entrypoints were found.")
     print()
     print("Only if needed:")
     print(f"  {cli} status /path/to/work")
