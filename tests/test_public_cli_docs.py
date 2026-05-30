@@ -101,7 +101,7 @@ class PublicCliDocsTests(unittest.TestCase):
             with self.subTest(marker=marker):
                 self.assertNotIn(marker, text)
         self.assertIn(
-            "Or use `jini open` or `jini status` if you want the current work surface.",
+            "If you already have work to adopt, use `jini status /path/to/work` once.",
             text,
         )
 
@@ -110,14 +110,14 @@ class PublicCliDocsTests(unittest.TestCase):
         for marker in (
             "jini commands",
             "small public command list",
-            "jini admin help",
-            "routes, bundles, or release plumbing",
-            "Help surfaces and <code>jini commands</code> are catalogs, not request entrypoints.",
-            "If you paste a work request after <code>help</code>, <code>--help</code>, or <code>commands</code>",
-            "starting with <code>jini</code> in the shell",
-        ):
-            with self.subTest(marker=marker):
-                self.assertIn(marker, text)
+                "jini admin help",
+                "routes, bundles, or release plumbing",
+                "Help surfaces and <code>jini commands</code> are catalogs, not request entrypoints.",
+                "If you paste a work request after <code>help</code>, <code>--help</code>, or <code>commands</code>",
+                "starting with <code>jini</code> for the start surface",
+            ):
+                with self.subTest(marker=marker):
+                    self.assertIn(marker, text)
 
     def test_install_page_lists_help_variant_matrix(self) -> None:
         text = read(INSTALL_PATH)

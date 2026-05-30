@@ -496,6 +496,26 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("jini run --repo /path/to/repo --harness codex", result.stdout)
         self.assertNotIn("usage: jini", result.stdout)
 
+    def test_zero_arg_cli_shows_start_surface_without_current_work(self) -> None:
+        result = self.run_cli()
+        self.assert_ok(result)
+        self.assertIn("Nothing is in progress yet.", result.stdout)
+        self.assertIn("START HERE", result.stdout)
+        self.assertIn("jini try-example research-prd", result.stdout)
+        self.assertIn("jini status /path/to/work", result.stdout)
+        self.assertIn("jini doctor", result.stdout)
+
+    def test_zero_arg_cli_resumes_current_work_surface(self) -> None:
+        example_output = self.tmp / "research-example"
+        seeded = self.run_cli("try-example", "research-prd", "--output", example_output)
+        self.assert_ok(seeded)
+
+        result = self.run_cli()
+        self.assert_ok(result)
+        self.assertIn("WORK   example-research-prd", result.stdout)
+        self.assertIn("READY NOW", result.stdout)
+        self.assertNotIn("START HERE", result.stdout)
+
     def test_help_with_request_tail_shows_corrective_hint(self) -> None:
         request_tokens = HELP_TAIL_EXAMPLE_REQUEST.split()
         result = self.run_cli("help", *request_tokens)
@@ -2043,7 +2063,9 @@ class JiniCliConformanceTests(unittest.TestCase):
     def test_status_without_current_work_fails_cleanly(self) -> None:
         result = self.run_cli("status")
         self.assert_error(result)
-        self.assertIn("Nothing is in progress yet. Run `jini` to start something", result.stdout)
+        self.assertIn("Nothing is in progress yet. Run `jini` to see start options", result.stdout)
+        self.assertIn("jini try-example research-prd", result.stdout)
+        self.assertIn("jini status /path/to/work", result.stdout)
 
     def test_status_missing_path_returns_friendly_error(self) -> None:
         result = self.run_cli("status", self.tmp / "missing-pack")

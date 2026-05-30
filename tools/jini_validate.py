@@ -7913,7 +7913,8 @@ def resolve_context_pack_dir(
     context = load_current_work_context()
     if context is None:
         raise ValueError(
-            "Nothing is in progress yet. Run `jini` to start something, or pass a path once."
+            "Nothing is in progress yet. Run `jini` to see start options, try `jini try-example research-prd`, "
+            "or adopt existing work with `jini status /path/to/work`."
         )
 
     resolved = Path(str(context.get("pack_dir", ""))).expanduser().resolve()
@@ -7923,6 +7924,33 @@ def resolve_context_pack_dir(
         )
     remember_current_work(resolved, registry, source=command_label)
     return resolved
+
+
+def render_cli_front_door(registry: dict[str, Any]) -> int:
+    context = load_current_work_context()
+    if context is None:
+        print_cli_start_surface()
+        return 0
+
+    remembered_pack = Path(str(context.get("pack_dir", ""))).expanduser()
+    if remembered_pack and remembered_pack.exists():
+        try:
+            pack_dir = resolve_context_pack_dir(None, registry, command_label="jini")
+            report = build_outcome_view(pack_dir, registry)
+        except (FileNotFoundError, OSError, TypeError, ValueError):
+            print_cli_start_surface()
+            return 0
+        print_outcome_view(report)
+        return 0
+
+    session_context = load_current_session_context()
+    if session_context is not None:
+        report = build_outcome_view_from_projection(session_context)
+        print_outcome_view(report)
+        return 0
+
+    print_cli_start_surface()
+    return 0
 
 
 def artifact_label_from_stem(stem: str) -> str:
@@ -9234,6 +9262,26 @@ def print_cli_overview() -> None:
     print("ADMIN TOOLS")
     print(f"  {cli} help --admin")
     print(f"  {cli} <command> --help")
+
+
+def print_cli_start_surface() -> None:
+    cli = cli_invocation()
+    print(f"Jini CLI {load_version()}")
+    print("Nothing is in progress yet.")
+    print()
+    print("START HERE")
+    print(f"  {cli} try-example research-prd")
+    print("    Materialize a public example and inspect the result.")
+    print(f"  {cli} status /path/to/work")
+    print("    Adopt existing work, then keep using pathless commands.")
+    print(f"  {cli} doctor")
+    print("    See what route and setup Jini can use right now.")
+    print(f"  {cli} setup --harness codex")
+    print("    Connect a preferred harness when you need a fixed route.")
+    print()
+    print("MORE")
+    print(f"  {cli} commands")
+    print(f"  {cli} help --admin")
 
 
 PUBLIC_HELP_GROUPS: list[tuple[str, list[tuple[str, str]]]] = [
@@ -22472,16 +22520,16 @@ def main() -> int:
     )
     bootstrap_parser.add_argument("--output", type=Path, required=True, help="Target output directory")
 
+    registry = load_registry()
+
     argv = sys.argv[1:]
     if not argv:
-        print_cli_overview()
-        return 0
+        return render_cli_front_door(registry)
     argv, catalog_exit = dispatch_catalog_entrypoint(argv)
     if catalog_exit is not None:
         return catalog_exit
 
     args = parser.parse_args(normalize_cli_argv(argv))
-    registry = load_registry()
 
     def merged_stakeholders(owner: str, stakeholders: list[str]) -> list[str]:
         ordered = [owner, *stakeholders]
@@ -23380,8 +23428,12 @@ def main() -> int:
                 kit_id=args.kit,
                 prefix=args.prefix,
             )
-        except (FileNotFoundError, KeyError, TypeError, ValueError) as exc:
-            print(f"ERROR {exc}")
+        except (FileNotFoundError, KeyError, OSError, TypeError, ValueError) as exc:
+            print(
+                "ERROR Setup could not materialize the selected harness. "
+                f"{exc}. Re-run with `jini setup --harness {args.harness or 'codex'} --prefix /safe/path` "
+                "if you want a user-writable install root."
+            )
             return 1
         if args.format == "json":
             print(json.dumps(result, indent=2))

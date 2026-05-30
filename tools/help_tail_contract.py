@@ -8,8 +8,8 @@ HELP_TAIL_EXAMPLE_REQUEST = "me edit pear fellow script.txt"
 
 def help_tail_redirect_lines(cli_name: str) -> tuple[str, str]:
     return (
-        f"Start with `{cli_name}` and type the request in the shell.",
-        f"Or use `{cli_name} open` or `{cli_name} status` if you want the current work surface.",
+        f"Start with `{cli_name}` to resume active work or see the start options.",
+        f"If you already have work to adopt, use `{cli_name} status /path/to/work` once.",
     )
 
 

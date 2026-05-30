@@ -37,14 +37,14 @@ quick_links:
 <pre><code class="language-bash">jini commands</code></pre>
 
   <p>Use this when you want the small product-facing command catalog. If you maintain routes, bundles, or release plumbing, use <code>jini admin help</code> instead of treating the full internal parser as the public surface.</p>
-  <p>Help surfaces and <code>jini commands</code> are catalogs, not request entrypoints. If you type <code>jini help me edit notes.txt</code>, <code>jini commands me edit notes.txt</code>, <code>jini --help me edit notes.txt</code>, or <code>jini provider help me edit notes.txt</code>, Jini should reject that tail text and tell you to start with <code>jini</code> instead.</p>
+  <p>Help surfaces and <code>jini commands</code> are catalogs, not request entrypoints. If you type <code>jini help me edit notes.txt</code>, <code>jini commands me edit notes.txt</code>, <code>jini --help me edit notes.txt</code>, or <code>jini provider help me edit notes.txt</code>, Jini should reject that tail text and tell you to start with <code>jini</code> for the start surface instead.</p>
 
 <pre><code class="language-bash">$ jini help me edit pear fellow script.txt
 ERROR `jini help` shows the CLI overview; it does not take a request like "me edit pear fellow script.txt".
-Start with `jini` and type the request in the shell.
-Or use `jini open` or `jini status` if you want the current work surface.</code></pre>
+Start with `jini` to resume active work or see the start options.
+If you already have work to adopt, use `jini status /path/to/work` once.</code></pre>
 
-  <p>That corrective output is the expected terminal shape for a help request tail. It should reject the request and redirect people to the shell instead of dumping the overview.</p>
+  <p>That corrective output is the expected terminal shape for a help request tail. It should reject the request and redirect people to the start surface instead of dumping the overview.</p>
   <p>The same redirect shape applies across the other help-entry variants too:</p>
   <ul class="compact-list">
     <li><code>jini commands me edit pear fellow script.txt</code> starts with <code>ERROR `jini commands` shows the public command inventory; it does not take a request like "me edit pear fellow script.txt".</code></li>
@@ -53,7 +53,7 @@ Or use `jini open` or `jini status` if you want the current work surface.</code>
     <li><code>jini provider help me edit pear fellow script.txt</code> starts with <code>ERROR `jini provider help` shows the admin command inventory; it does not take a request like "me edit pear fellow script.txt".</code></li>
     <li><code>jini provider --help me edit pear fellow script.txt</code> starts with <code>ERROR `jini provider --help` shows the admin command inventory; it does not take a request like "me edit pear fellow script.txt".</code></li>
   </ul>
-  <p>Only the first line changes. The redirect lines stay the same: start with <code>jini</code>, then use <code>jini open</code> or <code>jini status</code> if you want the current work surface.</p>
+  <p>Only the first line changes. The redirect lines stay the same: start with <code>jini</code> to resume active work or see the start options, then use <code>jini status /path/to/work</code> once if you already have work to adopt.</p>
 </div>
 
 <div class="section-card">
