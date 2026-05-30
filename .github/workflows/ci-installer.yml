@@ -53,3 +53,7 @@ jobs:
       - name: Run installer matrix tests
         shell: bash
         run: python3 -m unittest tests/test_install_sh.py -v
+
+      - name: Smoke release artifact contract
+        shell: bash
+        run: python3 -m unittest tests.test_install_sh.InstallScriptTests.test_release_smoke_artifact_matches_public_command_contract -v

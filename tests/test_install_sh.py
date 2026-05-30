@@ -249,6 +249,24 @@ class InstallScriptTests(unittest.TestCase):
         self.assertEqual(0, result.returncode, msg=f"STDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}")
         return output
 
+    def create_release_smoke_artifact(
+        self,
+        script_body: str,
+        *,
+        artifact_name: str = "jini-darwin-amd64.tar.gz",
+    ) -> Path:
+        release_root = self.tmp / f"release-smoke-{artifact_name.replace('.', '-')}"
+        release_root.mkdir(parents=True, exist_ok=True)
+        archive_path = release_root / artifact_name
+        staging = self.tmp / f"staging-{artifact_name.replace('.', '-')}"
+        staging.mkdir(parents=True, exist_ok=True)
+        binary = staging / "jini"
+        binary.write_text(script_body, encoding="utf-8")
+        binary.chmod(binary.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        with tarfile.open(archive_path, "w:gz") as archive:
+            archive.add(binary, arcname="jini")
+        return archive_path
+
     def assert_installed_flagship_example_flows(
         self,
         binary_path: Path,
@@ -743,6 +761,54 @@ printf 'fake release artifact\\n'
         launch = self.run_installed_jini(bin_dir / "jini", "doctor")
         self.assertEqual(0, launch.returncode, msg=f"STDOUT:\n{launch.stdout}\nSTDERR:\n{launch.stderr}")
         self.assertIn("Provider: fake release", launch.stdout)
+
+    def test_release_smoke_artifact_matches_public_command_contract(self) -> None:
+        archive_path = self.create_release_smoke_artifact(
+            """#!/usr/bin/env bash
+set -euo pipefail
+case "${1-}" in
+  ""|"--help")
+    cat <<'EOF'
+Jini CLI 0.1.0
+OPEN JINI
+EOF
+    ;;
+  commands)
+    printf 'Public command inventory\n'
+    ;;
+  help)
+    if [[ "${2-}" == "--all" ]]; then
+      printf 'Public command inventory\n'
+    else
+      printf 'Jini CLI 0.1.0\nOPEN JINI\n'
+    fi
+    ;;
+  admin)
+    if [[ "${2-}" == "help" ]]; then
+      printf 'Admin and developer command inventory\n'
+    else
+      printf 'Unknown command "admin %s".\n' "${2-}" >&2
+      exit 2
+    fi
+    ;;
+  doctor)
+    printf 'Provider: release smoke\n'
+    ;;
+  status)
+    printf 'WORK   research-prd-v1\n'
+    ;;
+  *)
+    printf 'Unknown command "%s".\n' "${1-}" >&2
+    exit 2
+    ;;
+esac
+"""
+        )
+        unpack_dir = self.tmp / "release-smoke-unpack"
+        unpack_dir.mkdir(parents=True, exist_ok=True)
+        with tarfile.open(archive_path, "r:gz") as archive:
+            archive.extractall(unpack_dir)
+        self.assert_go_public_command_contract(unpack_dir / "jini")
 
     def test_missing_release_asset_uses_source_runtime_with_release_unavailable_reason(self) -> None:
         remote_snapshot = self.create_remote_snapshot()
