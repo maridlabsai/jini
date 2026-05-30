@@ -9535,20 +9535,20 @@ def looks_like_path_token(token: str) -> bool:
 
 def print_repo_path_hint(token: str) -> None:
     cli = cli_invocation()
-    print(f"ERROR `{cli} {token}` is not a direct repo entrypoint.")
-    print(f"Use `{cli} review this repo` when you want Jini to inspect the current repo.")
-    print(f"Use `{cli} status /path/to/work` only for existing Jini work.")
+    print(f"ERROR `{cli} {token}` is not a direct repo entrypoint.", file=sys.stderr)
+    print(f"Use `{cli} review this repo` when you want Jini to inspect the current repo.", file=sys.stderr)
+    print(f"Use `{cli} status /path/to/work` only for existing Jini work.", file=sys.stderr)
 
 
 def print_unknown_command_hint(token: str, known_commands: set[str]) -> None:
     cli = cli_invocation()
     suggestions = difflib.get_close_matches(token, sorted(known_commands), n=3, cutoff=0.5)
-    print(f'ERROR Unknown command "{token}".')
+    print(f'ERROR Unknown command "{token}".', file=sys.stderr)
     if suggestions:
-        print("Closest matches:")
+        print("Closest matches:", file=sys.stderr)
         for suggestion in suggestions:
-            print(f"  {cli} {suggestion}")
-    print(f"Use `{cli}` to start from the current repo or `{cli} commands` for the public catalog.")
+            print(f"  {cli} {suggestion}", file=sys.stderr)
+    print(f"Use `{cli}` to start from the current repo or `{cli} commands` for the public catalog.", file=sys.stderr)
 
 
 def dispatch_request_entrypoint(argv: list[str], known_commands: set[str]) -> int | None:
@@ -9691,7 +9691,7 @@ def print_admin_command_inventory() -> None:
 def print_help_variant_request_hint(help_invocation: str, request_tokens: list[str], inventory_name: str) -> None:
     cli = cli_invocation()
     for line in help_tail_message_lines(cli, help_invocation, inventory_name, request_tokens):
-        print(line)
+        print(line, file=sys.stderr)
 
 
 CATALOG_NAMESPACE_HELP_TOKENS = frozenset({"-h", "--help", "help"})

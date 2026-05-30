@@ -606,22 +606,22 @@ class JiniCliConformanceTests(unittest.TestCase):
         result = self.run_cli("help", *request_tokens)
         self.assert_error(result)
         self.assertEqual(
-            result.stdout.strip().splitlines(),
+            result.stderr.strip().splitlines(),
             list(help_tail_message_lines("jini", "help", "CLI overview", request_tokens)),
         )
-        self.assertNotIn("OPEN JINI", result.stdout)
-        self.assertEqual("", result.stderr)
+        self.assertEqual("", result.stdout)
+        self.assertNotIn("OPEN JINI", result.stderr)
 
     def test_dash_help_with_request_tail_shows_corrective_hint(self) -> None:
         request_tokens = HELP_TAIL_EXAMPLE_REQUEST.split()
         result = self.run_cli("--help", *request_tokens)
         self.assert_error(result)
         self.assertEqual(
-            result.stdout.strip().splitlines(),
+            result.stderr.strip().splitlines(),
             list(help_tail_message_lines("jini", "--help", "CLI overview", request_tokens)),
         )
-        self.assertNotIn("OPEN JINI", result.stdout)
-        self.assertEqual("", result.stderr)
+        self.assertEqual("", result.stdout)
+        self.assertNotIn("OPEN JINI", result.stderr)
 
     def test_help_all_shows_public_command_inventory(self) -> None:
         result = self.run_cli("help", "--all")
@@ -646,11 +646,11 @@ class JiniCliConformanceTests(unittest.TestCase):
         result = self.run_cli("commands", *request_tokens)
         self.assert_error(result)
         self.assertEqual(
-            result.stdout.strip().splitlines(),
+            result.stderr.strip().splitlines(),
             list(help_tail_message_lines("jini", "commands", "public command inventory", request_tokens)),
         )
-        self.assertNotIn("Public command inventory", result.stdout)
-        self.assertEqual("", result.stderr)
+        self.assertEqual("", result.stdout)
+        self.assertNotIn("Public command inventory", result.stderr)
 
     def test_request_text_in_repo_surfaces_repo_intake_instead_of_argparse(self) -> None:
         repo = self.create_repo_fixture()
@@ -684,18 +684,20 @@ class JiniCliConformanceTests(unittest.TestCase):
     def test_unknown_single_token_suggests_closest_command(self) -> None:
         result = self.run_cli("stats")
         self.assert_error(result)
-        self.assertIn('ERROR Unknown command "stats".', result.stdout)
-        self.assertIn("Closest matches:", result.stdout)
-        self.assertIn("jini status", result.stdout)
-        self.assertNotIn("usage: jini", result.stdout)
+        self.assertEqual("", result.stdout)
+        self.assertIn('ERROR Unknown command "stats".', result.stderr)
+        self.assertIn("Closest matches:", result.stderr)
+        self.assertIn("jini status", result.stderr)
+        self.assertNotIn("usage: jini", result.stderr)
 
     def test_repo_path_token_shows_repo_specific_hint(self) -> None:
         result = self.run_cli(".")
         self.assert_error(result)
-        self.assertIn("is not a direct repo entrypoint", result.stdout)
-        self.assertIn("jini review this repo", result.stdout)
-        self.assertIn("jini status /path/to/work", result.stdout)
-        self.assertNotIn("usage: jini", result.stdout)
+        self.assertEqual("", result.stdout)
+        self.assertIn("is not a direct repo entrypoint", result.stderr)
+        self.assertIn("jini review this repo", result.stderr)
+        self.assertIn("jini status /path/to/work", result.stderr)
+        self.assertNotIn("usage: jini", result.stderr)
 
     def test_help_admin_shows_internal_inventory(self) -> None:
         result = self.run_cli("help", "--admin")
@@ -717,33 +719,33 @@ class JiniCliConformanceTests(unittest.TestCase):
         result = self.run_cli("admin", "help", *request_tokens)
         self.assert_error(result)
         self.assertEqual(
-            result.stdout.strip().splitlines(),
+            result.stderr.strip().splitlines(),
             list(help_tail_message_lines("jini", "admin help", "admin command inventory", request_tokens)),
         )
-        self.assertNotIn("Admin and developer command inventory", result.stdout)
-        self.assertEqual("", result.stderr)
+        self.assertEqual("", result.stdout)
+        self.assertNotIn("Admin and developer command inventory", result.stderr)
 
     def test_provider_help_with_request_tail_shows_corrective_hint(self) -> None:
         request_tokens = HELP_TAIL_EXAMPLE_REQUEST.split()
         result = self.run_cli("provider", "help", *request_tokens)
         self.assert_error(result)
         self.assertEqual(
-            result.stdout.strip().splitlines(),
+            result.stderr.strip().splitlines(),
             list(help_tail_message_lines("jini", "provider help", "admin command inventory", request_tokens)),
         )
-        self.assertNotIn("Admin and developer command inventory", result.stdout)
-        self.assertEqual("", result.stderr)
+        self.assertEqual("", result.stdout)
+        self.assertNotIn("Admin and developer command inventory", result.stderr)
 
     def test_provider_dash_help_with_request_tail_shows_corrective_hint(self) -> None:
         request_tokens = HELP_TAIL_EXAMPLE_REQUEST.split()
         result = self.run_cli("provider", "--help", *request_tokens)
         self.assert_error(result)
         self.assertEqual(
-            result.stdout.strip().splitlines(),
+            result.stderr.strip().splitlines(),
             list(help_tail_message_lines("jini", "provider --help", "admin command inventory", request_tokens)),
         )
-        self.assertNotIn("Admin and developer command inventory", result.stdout)
-        self.assertEqual("", result.stderr)
+        self.assertEqual("", result.stdout)
+        self.assertNotIn("Admin and developer command inventory", result.stderr)
 
     def test_provider_namespace_defaults_to_provider_doctor_surface(self) -> None:
         result = self.run_cli("provider")
