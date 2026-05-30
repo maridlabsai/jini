@@ -1,3 +1,4 @@
+import io
 import json
 import os
 import shutil
@@ -5,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
 from typing import Optional, Union
 from unittest import mock
@@ -15,6 +17,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from tools.yaml_compat import safe_load
 from tools.help_tail_contract import HELP_TAIL_EXAMPLE_REQUEST, help_tail_message_lines
+import tools.jini_validate as jini_validate
 
 
 CLI = [sys.executable, str(REPO_ROOT / "tools" / "jini.py")]
@@ -647,6 +650,25 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("READY NOW", result.stdout)
         self.assertNotIn("START HERE", result.stdout)
 
+    def test_zero_arg_cli_keeps_shell_open_when_current_work_exists(self) -> None:
+        repo = self.create_repo_fixture()
+        example_output = repo / ".jini-example"
+        seeded = self.run_cli_in_cwd(repo, "try-example", "research-prd", "--output", example_output)
+        self.assert_ok(seeded)
+
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\nexit\n",
+        )
+        self.assert_ok(result)
+        self.assertIn("WORK   example-research-prd", result.stdout)
+        self.assertIn("READY NOW", result.stdout)
+        self.assertIn("jini> ", result.stdout)
+        self.assertIn("TASK    fix failing tests", result.stdout)
+        self.assertIn("NEXT    make test", result.stdout)
+        self.assertIn("Session closed.", result.stdout)
+
     def test_help_with_request_tail_shows_corrective_hint(self) -> None:
         request_tokens = HELP_TAIL_EXAMPLE_REQUEST.split()
         result = self.run_cli("help", *request_tokens)
@@ -751,6 +773,32 @@ class JiniCliConformanceTests(unittest.TestCase):
         )
         self.assert_ok(result)
         self.assertIn("Type the next task, or `exit` to leave.", result.stdout)
+
+    def test_prompt_repo_task_keeps_shell_alive_after_keyboard_interrupt(self) -> None:
+        repo = self.create_repo_fixture()
+        repo_context = jini_validate.inspect_repo_context(repo)
+        output = io.StringIO()
+        with mock.patch("builtins.input", side_effect=[KeyboardInterrupt(), "exit"]), redirect_stdout(output):
+            result = jini_validate.prompt_repo_task(repo_context)
+        transcript = output.getvalue()
+        self.assertEqual(0, result)
+        self.assertIn("What do you want Jini to do?", transcript)
+        self.assertIn("Type the next task, or `exit` to leave.", transcript)
+        self.assertEqual(1, transcript.count("Session closed."))
+
+    def test_prompt_current_work_task_keeps_shell_alive_after_keyboard_interrupt(self) -> None:
+        repo = self.create_repo_fixture()
+        output = io.StringIO()
+        with (
+            mock.patch("tools.jini_validate.Path.cwd", return_value=repo),
+            mock.patch("builtins.input", side_effect=[KeyboardInterrupt(), "exit"]),
+            redirect_stdout(output),
+        ):
+            result = jini_validate.prompt_current_work_task(self.tmp / "pack", {})
+        transcript = output.getvalue()
+        self.assertEqual(0, result)
+        self.assertIn("Type the next task, or `exit` to leave.", transcript)
+        self.assertEqual(1, transcript.count("Session closed."))
 
     def test_interactive_repo_mode_uses_compact_follow_up_cards(self) -> None:
         repo = self.create_repo_fixture()

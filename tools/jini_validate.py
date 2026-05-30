@@ -7954,12 +7954,18 @@ def render_cli_front_door(registry: dict[str, Any]) -> int:
                 print_cli_start_surface()
             return 0
         print_outcome_view(report)
+        if interactive_front_door_enabled():
+            return prompt_current_work_task(pack_dir, registry)
         return 0
 
     session_context = load_current_session_context()
     if session_context is not None:
         report = build_outcome_view_from_projection(session_context)
         print_outcome_view(report)
+        if interactive_front_door_enabled():
+            remembered_pack = Path(str(session_context.get("pack_dir", ""))).expanduser()
+            if remembered_pack and remembered_pack.exists():
+                return prompt_current_work_task(remembered_pack, registry)
         return 0
 
     repo_context = inspect_repo_context(Path.cwd())
@@ -9429,6 +9435,10 @@ def prompt_repo_task(repo_context: dict[str, Any], *, initial_request: str | Non
             print()
             print("Session closed.")
             return 0
+        except KeyboardInterrupt:
+            print()
+            print("Type the next task, or `exit` to leave.")
+            continue
         if not request_text:
             print("Type the next task, or `exit` to leave.")
             continue
@@ -9440,6 +9450,42 @@ def prompt_repo_task(repo_context: dict[str, Any], *, initial_request: str | Non
         if request_text:
             print()
             print_repo_request_intake(request_text, repo_context, compact=True)
+
+
+def prompt_current_work_task(pack_dir: Path, registry: dict[str, Any]) -> int:
+    cli = cli_invocation()
+    repo_context = inspect_repo_context(Path.cwd())
+    while True:
+        try:
+            request_text = input(f"{cli}> ").strip()
+        except EOFError:
+            print()
+            print("Session closed.")
+            return 0
+        except KeyboardInterrupt:
+            print()
+            print("Type the next task, or `exit` to leave.")
+            continue
+        if not request_text:
+            print("Type the next task, or `exit` to leave.")
+            continue
+        normalized = normalize_interactive_entry(request_text).lower()
+        if normalized in {"exit", "quit"}:
+            print("Session closed.")
+            return 0
+        if handle_interactive_escape_hatch(request_text):
+            continue
+        print()
+        if repo_context.get("discovered"):
+            print_repo_request_intake(request_text, repo_context, compact=True)
+            continue
+        compact = build_compact_context(
+            pack_dir,
+            registry,
+            intent=request_text,
+            max_chars=700,
+        )
+        print_compact_context(compact, heading="TASK")
 
 
 def classify_request_intent(request_text: str) -> str:
