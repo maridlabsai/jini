@@ -662,14 +662,16 @@ class JiniCliConformanceTests(unittest.TestCase):
             input_text="fix failing tests\nexit\n",
         )
         self.assert_ok(result)
-        self.assertIn("WORK   example-research-prd", result.stdout)
-        self.assertIn("READY NOW", result.stdout)
+        self.assertIn("Repo: sample-repo", result.stdout)
+        self.assertIn("Working on: Jini Research To PRD", result.stdout)
         self.assertIn("What do you want Jini to do?", result.stdout)
         self.assertIn("Type the task directly. Use `exit` to leave.", result.stdout)
         self.assertIn("jini> ", result.stdout)
         self.assertIn("TASK    fix failing tests", result.stdout)
         self.assertIn("NEXT    make test", result.stdout)
         self.assertIn("Session closed.", result.stdout)
+        self.assertNotIn("WORK   example-research-prd", result.stdout)
+        self.assertNotIn("ARTIFACT SHELF", result.stdout)
 
     def test_zero_arg_cli_active_work_shell_uses_same_task_hint_as_repo_start(self) -> None:
         repo = self.create_repo_fixture()
@@ -685,6 +687,26 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(result)
         self.assertEqual(1, result.stdout.count("What do you want Jini to do?"))
         self.assertEqual(1, result.stdout.count("Type the task directly. Use `exit` to leave."))
+        self.assertEqual(1, result.stdout.count("Jini CLI 0.1.0"))
+
+    def test_zero_arg_cli_active_work_shell_skips_report_card_before_prompt(self) -> None:
+        repo = self.create_repo_fixture()
+        example_output = repo / ".jini-example"
+        seeded = self.run_cli_in_cwd(repo, "try-example", "research-prd", "--output", example_output)
+        self.assert_ok(seeded)
+
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="exit\n",
+        )
+        self.assert_ok(result)
+        self.assertIn("Repo: sample-repo", result.stdout)
+        self.assertIn("Working on: Jini Research To PRD", result.stdout)
+        self.assertNotIn("WORK   example-research-prd", result.stdout)
+        self.assertNotIn("TITLE  Jini Research To PRD", result.stdout)
+        self.assertNotIn("HEALTH ready-to-verify", result.stdout)
+        self.assertNotIn("STATE  awaiting_verification", result.stdout)
 
     def test_help_with_request_tail_shows_corrective_hint(self) -> None:
         request_tokens = HELP_TAIL_EXAMPLE_REQUEST.split()

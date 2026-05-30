@@ -34,6 +34,7 @@ quick_links:
   <p>Inside a repo, the first suggestions should be concrete asks like <code>jini review this repo</code>, <code>jini fix failing tests</code>, and <code>jini review this branch</code>, not examples and setup trivia.</p>
   <p>In a real terminal, bare <code>jini</code> should not print a launcher card and exit. It should stay open, detect the repo, show one calm repo-context line, ask <code>What do you want Jini to do?</code>, and accept the first task line immediately.</p>
   <p>That same calm task cue should appear when Jini resumes remembered work too, so zero-arg <code>jini</code> still feels like one shell instead of one prompt for fresh repo work and another prompt for active work.</p>
+  <p>In the interactive remembered-work path, Jini should skip the full outcome report and start with one calm active-work line like <code>Working on: ...</code> before the prompt.</p>
   <p>After the first answer it should keep the <code>jini&gt;</code> prompt open, let you type follow-up turns, and keep the controls in the background instead of teaching them before the task starts. If you need them, <code>commands</code>, <code>doctor</code>, <code>help --admin</code>, and <code>exit</code> should still work inside the same live session.</p>
   <p>Once the session is already in flow, Jini should only print a <code>NEXT</code> line when it is genuinely steering you toward a concrete action. Otherwise it should acknowledge the task and return to the prompt.</p>
 

@@ -7954,9 +7954,9 @@ def render_cli_front_door(registry: dict[str, Any]) -> int:
             else:
                 print_cli_start_surface()
             return 0
-        print_outcome_view(report)
         if interactive_front_door_enabled():
-            return prompt_current_work_task(pack_dir, registry)
+            return prompt_current_work_task(pack_dir, registry, report=report)
+        print_outcome_view(report)
         return 0
 
     session_context = load_current_session_context()
@@ -9452,10 +9452,10 @@ def prompt_repo_task(repo_context: dict[str, Any], *, initial_request: str | Non
             print_repo_request_intake(request_text, repo_context, compact=True)
 
 
-def prompt_current_work_task(pack_dir: Path, registry: dict[str, Any]) -> int:
+def prompt_current_work_task(pack_dir: Path, registry: dict[str, Any], *, report: dict[str, Any] | None = None) -> int:
     cli = cli_invocation()
     repo_context = inspect_repo_context(Path.cwd())
-    print()
+    print_active_work_shell_intro(pack_dir, repo_context, report=report)
     print_live_session_task_hint()
     while True:
         try:
@@ -9493,6 +9493,33 @@ def prompt_current_work_task(pack_dir: Path, registry: dict[str, Any]) -> int:
 def print_live_session_task_hint() -> None:
     print("What do you want Jini to do?")
     print("Type the task directly. Use `exit` to leave.")
+
+
+def print_active_work_shell_intro(
+    pack_dir: Path,
+    repo_context: dict[str, Any],
+    *,
+    report: dict[str, Any] | None = None,
+) -> None:
+    print(f"Jini CLI {load_version()}")
+    repo_root = str(repo_context.get("repo_root", "")).strip()
+    repo_name = Path(repo_root).name if repo_root else ""
+    if repo_name:
+        repo_line = f"Repo: {repo_name}"
+        git_info = repo_context.get("git", {})
+        if git_info.get("tracked"):
+            branch = str(git_info.get("branch", "")).strip() or "unknown"
+            dirty_files = int(git_info.get("dirty_files", 0))
+            dirty_label = "change" if dirty_files == 1 else "changes"
+            repo_line = f"{repo_line} ({branch}, {dirty_files} {dirty_label})"
+        print(repo_line)
+    title = ""
+    if report is not None:
+        title = str(report.get("title", "")).strip()
+    if not title:
+        title = pack_dir.name.replace("-", " ").replace("_", " ").strip().title()
+    print(f"Working on: {title}")
+    print()
 
 
 def classify_request_intent(request_text: str) -> str:

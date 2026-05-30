@@ -146,6 +146,7 @@ jini
       <p>The three starter suggestions should stay brief and action-first: <code>Review the repo and suggest the next move.</code>, <code>Fix the failing tests in this repo.</code>, and <code>Review the current branch and call out risks.</code></p>
       <p>In a real terminal, bare <code>jini</code> should stay open, show one calm repo-context line, ask <code>What do you want Jini to do?</code>, and let you type the first task directly at the <code>jini&gt;</code> prompt.</p>
       <p>That same calm task cue should appear when Jini resumes remembered work too, so zero-arg <code>jini</code> still feels like one shell instead of one prompt for fresh repo work and another prompt for active work.</p>
+      <p>In the interactive remembered-work path, Jini should skip the full outcome report and start with one calm active-work line like <code>Working on: ...</code> before the prompt.</p>
       <p>That prompt should remain open for follow-up turns. The task should stay primary, and the controls should stay in the background until you need them. If you do, <code>commands</code>, <code>doctor</code>, <code>help --admin</code>, and <code>exit</code> should still work as in-session escape hatches instead of forcing a relaunch.</p>
       <p>Once the session is already in flow, Jini should only print a <code>NEXT</code> line when it is actually steering you to a concrete action. Otherwise it should acknowledge the task and go straight back to the prompt.</p>
     </div>
