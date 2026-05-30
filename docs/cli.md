@@ -45,6 +45,14 @@ Start with `jini` and type the request in the shell.
 Or use `jini open` or `jini status` if you want the current work surface.</code></pre>
 
   <p>That corrective output is the expected terminal shape for a help request tail. It should reject the request and redirect people to the shell instead of dumping the overview.</p>
+  <p>The same redirect shape applies across the other help-entry variants too:</p>
+  <ul class="compact-list">
+    <li><code>jini --help me edit pear fellow script.txt</code> starts with <code>ERROR `jini --help` shows the CLI overview ...</code></li>
+    <li><code>jini admin help me edit pear fellow script.txt</code> starts with <code>ERROR `jini admin help` shows the admin command inventory ...</code></li>
+    <li><code>jini provider help me edit pear fellow script.txt</code> starts with <code>ERROR `jini provider help` shows the admin command inventory ...</code></li>
+    <li><code>jini provider --help me edit pear fellow script.txt</code> starts with <code>ERROR `jini provider --help` shows the admin command inventory ...</code></li>
+  </ul>
+  <p>Only the first line changes. The redirect lines stay the same: start with <code>jini</code>, then use <code>jini open</code> or <code>jini status</code> if you want the current work surface.</p>
 </div>
 
 <div class="section-card">

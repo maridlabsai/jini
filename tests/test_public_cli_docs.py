@@ -58,6 +58,23 @@ class PublicCliDocsTests(unittest.TestCase):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
 
+    def test_cli_guide_lists_help_variant_matrix(self) -> None:
+        text = read(CLI_PATH)
+        for marker in (
+            "The same redirect shape applies across the other help-entry variants too:",
+            "jini --help me edit pear fellow script.txt",
+            "ERROR `jini --help` shows the CLI overview ...",
+            "jini admin help me edit pear fellow script.txt",
+            "ERROR `jini admin help` shows the admin command inventory ...",
+            "jini provider help me edit pear fellow script.txt",
+            "ERROR `jini provider help` shows the admin command inventory ...",
+            "jini provider --help me edit pear fellow script.txt",
+            "ERROR `jini provider --help` shows the admin command inventory ...",
+            "Only the first line changes.",
+        ):
+            with self.subTest(marker=marker):
+                self.assertIn(marker, text)
+
     def test_cli_guide_keeps_support_commands_on_the_runtime_surface(self) -> None:
         text = read(CLI_PATH)
         for marker in (
