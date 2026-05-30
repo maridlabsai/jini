@@ -44,8 +44,9 @@ class PublicCliDocsTests(unittest.TestCase):
             "routes, bundles, or release plumbing",
             "Support commands when Jini points you there",
             "not because they are navigating a command tree by hand",
-            "Help surfaces are catalogs, not request entrypoints.",
+            "Help surfaces and <code>jini commands</code> are catalogs, not request entrypoints.",
             "jini help me edit notes.txt",
+            "jini commands me edit notes.txt",
             "jini --help me edit notes.txt",
             "jini provider help me edit notes.txt",
         ):
@@ -73,6 +74,8 @@ class PublicCliDocsTests(unittest.TestCase):
         request_tokens = HELP_TAIL_EXAMPLE_REQUEST.split()
         for marker in (
             "The same redirect shape applies across the other help-entry variants too:",
+            f"jini commands {HELP_TAIL_EXAMPLE_REQUEST}",
+            help_tail_error_line("jini", "commands", "public command inventory", request_tokens),
             f"jini --help {HELP_TAIL_EXAMPLE_REQUEST}",
             help_tail_error_line("jini", "--help", "CLI overview", request_tokens),
             f"jini admin help {HELP_TAIL_EXAMPLE_REQUEST}",
@@ -109,8 +112,8 @@ class PublicCliDocsTests(unittest.TestCase):
             "small public command list",
             "jini admin help",
             "routes, bundles, or release plumbing",
-            "Help surfaces are catalogs, not request entrypoints.",
-            "If you paste a work request after <code>help</code> or <code>--help</code>",
+            "Help surfaces and <code>jini commands</code> are catalogs, not request entrypoints.",
+            "If you paste a work request after <code>help</code>, <code>--help</code>, or <code>commands</code>",
             "starting with <code>jini</code> in the shell",
         ):
             with self.subTest(marker=marker):
@@ -120,6 +123,8 @@ class PublicCliDocsTests(unittest.TestCase):
         text = read(INSTALL_PATH)
         request_tokens = HELP_TAIL_EXAMPLE_REQUEST.split()
         for marker in (
+            f"jini commands {HELP_TAIL_EXAMPLE_REQUEST}",
+            help_tail_error_line("jini", "commands", "public command inventory", request_tokens),
             f"jini --help {HELP_TAIL_EXAMPLE_REQUEST}",
             help_tail_error_line("jini", "--help", "CLI overview", request_tokens),
             f"jini admin help {HELP_TAIL_EXAMPLE_REQUEST}",

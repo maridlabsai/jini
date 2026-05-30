@@ -536,6 +536,17 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("jini try-example research-prd", result.stdout)
         self.assertIn("jini help --admin", result.stdout)
 
+    def test_commands_with_request_tail_shows_corrective_hint(self) -> None:
+        request_tokens = HELP_TAIL_EXAMPLE_REQUEST.split()
+        result = self.run_cli("commands", *request_tokens)
+        self.assert_error(result)
+        self.assertEqual(
+            result.stdout.strip().splitlines(),
+            list(help_tail_message_lines("jini", "commands", "public command inventory", request_tokens)),
+        )
+        self.assertNotIn("Public command inventory", result.stdout)
+        self.assertEqual("", result.stderr)
+
     def test_help_admin_shows_internal_inventory(self) -> None:
         result = self.run_cli("help", "--admin")
         self.assert_ok(result)

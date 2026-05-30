@@ -22432,6 +22432,9 @@ def main() -> int:
             return 0
         argv = admin_argv
     if argv[0] == "commands":
+        if len(argv) > 1:
+            print_help_variant_request_hint("commands", argv[1:], "public command inventory")
+            return 2
         print_public_command_inventory()
         return 0
     if argv[0] == "provider":
