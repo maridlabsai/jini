@@ -708,6 +708,30 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("HEALTH ready-to-verify", result.stdout)
         self.assertNotIn("STATE  awaiting_verification", result.stdout)
 
+    def test_zero_arg_cli_saved_session_shell_skips_report_card_before_prompt(self) -> None:
+        repo = self.create_repo_fixture()
+        example_output = repo / ".jini-example"
+        seeded = self.run_cli_in_cwd(repo, "try-example", "research-prd", "--output", example_output)
+        self.assert_ok(seeded)
+
+        current_work = self.tmp / ".jini" / "current-work.json"
+        current_work.unlink()
+
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="exit\n",
+        )
+        self.assert_ok(result)
+        self.assertIn("Repo: sample-repo", result.stdout)
+        self.assertIn("Working on: Jini Research To PRD", result.stdout)
+        self.assertIn("What do you want Jini to do?", result.stdout)
+        self.assertIn("Session closed.", result.stdout)
+        self.assertNotIn("WORK   example-research-prd", result.stdout)
+        self.assertNotIn("TITLE  Jini Research To PRD", result.stdout)
+        self.assertNotIn("HEALTH ready-to-verify", result.stdout)
+        self.assertNotIn("STATE  awaiting_verification", result.stdout)
+
     def test_help_with_request_tail_shows_corrective_hint(self) -> None:
         request_tokens = HELP_TAIL_EXAMPLE_REQUEST.split()
         result = self.run_cli("help", *request_tokens)

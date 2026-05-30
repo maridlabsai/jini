@@ -7962,11 +7962,11 @@ def render_cli_front_door(registry: dict[str, Any]) -> int:
     session_context = load_current_session_context()
     if session_context is not None:
         report = build_outcome_view_from_projection(session_context)
-        print_outcome_view(report)
         if interactive_front_door_enabled():
             remembered_pack = Path(str(session_context.get("pack_dir", ""))).expanduser()
             if remembered_pack and remembered_pack.exists():
-                return prompt_current_work_task(remembered_pack, registry)
+                return prompt_current_work_task(remembered_pack, registry, report=report)
+        print_outcome_view(report)
         return 0
 
     repo_context = inspect_repo_context(Path.cwd())
