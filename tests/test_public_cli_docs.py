@@ -105,6 +105,22 @@ class PublicCliDocsTests(unittest.TestCase):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
 
+    def test_install_page_lists_help_variant_matrix(self) -> None:
+        text = read(INSTALL_PATH)
+        for marker in (
+            "jini --help me edit pear fellow script.txt",
+            "ERROR `jini --help` shows the CLI overview ...",
+            "jini admin help me edit pear fellow script.txt",
+            "ERROR `jini admin help` shows the admin command inventory ...",
+            "jini provider help me edit pear fellow script.txt",
+            "ERROR `jini provider help` shows the admin command inventory ...",
+            "jini provider --help me edit pear fellow script.txt",
+            "ERROR `jini provider --help` shows the admin command inventory ...",
+            "Only the first line changes. The redirect stays the same:",
+        ):
+            with self.subTest(marker=marker):
+                self.assertIn(marker, text)
+
     def test_install_page_explains_installer_provenance_summary(self) -> None:
         text = read(INSTALL_PATH)
         for marker in (
