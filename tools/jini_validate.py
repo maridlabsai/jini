@@ -9350,7 +9350,7 @@ def print_repo_start_surface(repo_context: dict[str, Any]) -> None:
     if not surfaced:
         print("  Repo detected, but no standard startup or test entrypoints were found.")
     print()
-    print("Only if needed:")
+    print("Already have Jini work?")
     print(f"  {cli} status /path/to/work")
     print("    Resume existing Jini work when this repo already has it.")
 
