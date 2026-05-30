@@ -9271,6 +9271,8 @@ def print_cli_overview() -> None:
     print()
     print("SUPPORT COMMANDS")
     print(f"  {cli} status")
+    print(f"  {cli} continue")
+    print(f"  {cli} open")
     print(f"  {cli} doctor")
     print()
     print("MORE")

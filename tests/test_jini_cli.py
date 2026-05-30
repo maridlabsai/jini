@@ -500,6 +500,8 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("Plan", result.stdout)
         self.assertIn("SUPPORT COMMANDS", result.stdout)
         self.assertIn("jini status", result.stdout)
+        self.assertIn("jini continue", result.stdout)
+        self.assertIn("jini open", result.stdout)
         self.assertIn("jini doctor", result.stdout)
         self.assertIn("MORE", result.stdout)
         self.assertIn("jini commands", result.stdout)
