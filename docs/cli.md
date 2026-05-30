@@ -6,7 +6,7 @@ context_line: "The command story should stay simple: one front door for most peo
 highlights:
   - "Start with `jini`"
   - "`jini commands`"
-  - Support commands only when needed
+  - Four support commands only
   - Admin help for operators
 quick_links:
   - label: Install
@@ -57,6 +57,7 @@ provider_id</code></pre>
 <pre><code class="language-bash">jini commands</code></pre>
 
   <p>Use this when you want the small product-facing command catalog. If you maintain routes, bundles, or release plumbing, use <code>jini admin help</code> instead of treating the full internal parser as the public surface.</p>
+  <p>A professional platform does not teach every command it happens to have. The public catalog should stay narrow: <code>jini</code>, then <code>status</code>, <code>continue</code>, <code>open</code>, and <code>doctor</code> when the live session actually needs them.</p>
   <p>Help surfaces and <code>jini commands</code> are catalogs, not request entrypoints. If you type <code>jini help me edit notes.txt</code>, <code>jini commands me edit notes.txt</code>, <code>jini --help me edit notes.txt</code>, or <code>jini provider help me edit notes.txt</code>, Jini should reject that tail text and tell you to start with <code>jini</code> for the start surface instead.</p>
 
 <pre><code class="language-bash">$ jini help me edit pear fellow script.txt
@@ -124,17 +125,26 @@ If you already have work to adopt, use `jini status /path/to/work` once.</code><
 <div class="section-card">
   <span class="section-kicker">Catalog entries</span>
   <h2>Support commands when Jini points you there</h2>
-  <p>These are still part of the public command catalog. They support the product front door, and most people should reach them because Jini asked for one of them, not because they are navigating a command tree by hand.</p>
+  <p>These are the only support commands that still deserve public teaching. They support the product front door, and most people should reach them because Jini asked for one of them, not because they are navigating a command tree by hand.</p>
   <div class="checklist-grid">
     <div class="checklist-card">
       <h3><code>jini status</code></h3>
       <p>Shows a calm work summary when you want the current work state outside the shell.</p>
     </div>
     <div class="checklist-card">
+      <h3><code>jini continue</code></h3>
+      <p>Shows the next useful artifact without rebuilding the current work state from scratch.</p>
+    </div>
+    <div class="checklist-card">
+      <h3><code>jini open</code></h3>
+      <p>Opens the richer artifact view when the shell preview is not enough.</p>
+    </div>
+    <div class="checklist-card">
       <h3><code>jini doctor</code></h3>
       <p>Local setup check when Jini needs route help or you are debugging access.</p>
     </div>
   </div>
+  <p>Commands like <code>try-example</code>, <code>get-started</code>, <code>show</code>, <code>expand</code>, <code>context</code>, <code>resume</code>, <code>metrics</code>, and <code>harnesses</code> should not sit in the public command story.</p>
 </div>
 
 <div class="section-card">
@@ -184,7 +194,7 @@ jini</code></pre>
 <div class="section-card section-card-cta">
   <span class="section-kicker">Next step</span>
   <h2>The public rule</h2>
-  <p>The normal path is still small: install once, run <code>jini</code>, paste the work you want finished. When you need a public command list, use <code>jini commands</code>. Use <code>status</code> and <code>doctor</code> when Jini points you there; the rest of the CLI should stay out of the way.</p>
+  <p>The normal path is still small: install once, run <code>jini</code>, paste the work you want finished. When you need a public command list, use <code>jini commands</code>. Use <code>status</code>, <code>continue</code>, <code>open</code>, and <code>doctor</code> when Jini points you there; the rest of the CLI should stay out of the way.</p>
   <div class="page-intro-links">
     <a href="{{ '/install.html' | relative_url }}">Install</a>
     <a href="{{ '/simple.html' | relative_url }}">Quickstart</a>

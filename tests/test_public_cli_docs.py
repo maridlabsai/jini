@@ -29,6 +29,10 @@ class PublicCliDocsTests(unittest.TestCase):
             "small public command catalog",
             "jini admin help",
             "routes, bundles, or release plumbing",
+            "`jini status`",
+            "`jini continue`",
+            "`jini open`",
+            "`jini doctor`",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
@@ -60,6 +64,11 @@ class PublicCliDocsTests(unittest.TestCase):
             "provider_id",
             "keep the <code>jini&gt;</code> prompt open",
             "<code>commands</code>, <code>doctor</code>, <code>help --admin</code>, and <code>exit</code> as escape hatches",
+            "The public catalog should stay narrow",
+            "<code>status</code>, <code>continue</code>, <code>open</code>, and <code>doctor</code>",
+            "<h3><code>jini continue</code></h3>",
+            "<h3><code>jini open</code></h3>",
+            "Commands like <code>try-example</code>, <code>get-started</code>, <code>show</code>, <code>expand</code>, <code>context</code>, <code>resume</code>, <code>metrics</code>, and <code>harnesses</code> should not sit in the public command story.",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
@@ -104,11 +113,20 @@ class PublicCliDocsTests(unittest.TestCase):
         text = read(CLI_PATH)
         for marker in (
             "jini status",
+            "jini continue",
+            "jini open",
             "jini doctor",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
-        for marker in ("jini check", "jini setup", "jini metrics"):
+        for marker in (
+            "jini check",
+            "jini setup",
+            "jini metrics",
+            "jini try-example research-prd",
+            "jini get-started --harness codex",
+            "jini harnesses",
+        ):
             with self.subTest(marker=marker):
                 self.assertNotIn(marker, text)
         self.assertIn(
@@ -121,20 +139,22 @@ class PublicCliDocsTests(unittest.TestCase):
         for marker in (
             "jini commands",
             "small public command list",
-                "jini admin help",
-                "routes, bundles, or release plumbing",
-                "Help surfaces and <code>jini commands</code> are catalogs, not request entrypoints.",
-                "If you paste a work request after <code>help</code>, <code>--help</code>, or <code>commands</code>",
-                "starting with <code>jini</code> for the start surface",
-                "jini review this repo",
-                "jini fix failing tests",
-                "jini plan this change",
-                "WHAT DO YOU WANT TO DO?",
-                "jini&gt;</code> prompt",
-                "<code>commands</code>, <code>doctor</code>, <code>help --admin</code>, and <code>exit</code> should all work as in-session escape hatches",
-            ):
-                with self.subTest(marker=marker):
-                    self.assertIn(marker, text)
+            "jini admin help",
+            "routes, bundles, or release plumbing",
+            "That public list should stay deliberately short",
+            "<code>status</code>, <code>continue</code>, <code>open</code>, and <code>doctor</code>",
+            "Help surfaces and <code>jini commands</code> are catalogs, not request entrypoints.",
+            "If you paste a work request after <code>help</code>, <code>--help</code>, or <code>commands</code>",
+            "starting with <code>jini</code> for the start surface",
+            "jini review this repo",
+            "jini fix failing tests",
+            "jini plan this change",
+            "WHAT DO YOU WANT TO DO?",
+            "jini&gt;</code> prompt",
+            "<code>commands</code>, <code>doctor</code>, <code>help --admin</code>, and <code>exit</code> should all work as in-session escape hatches",
+        ):
+            with self.subTest(marker=marker):
+                self.assertIn(marker, text)
 
     def test_install_page_lists_help_variant_matrix(self) -> None:
         text = read(INSTALL_PATH)
@@ -395,6 +415,7 @@ class PublicCliDocsTests(unittest.TestCase):
             "small public command list",
             "jini admin help",
             "routes, bundles, or release plumbing",
+            "<code>status</code>, <code>continue</code>, <code>open</code>, and <code>doctor</code>",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)

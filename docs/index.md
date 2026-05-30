@@ -277,7 +277,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <!-- ## Small front door. Clear paid boundary. -->
 <h3>Small front door. Clear paid boundary.</h3>
 
-<p class="page-lead closing-boundary-brief"><strong>Start with <code>jini</code>.</strong> If you need the small public command list, use <code>jini commands</code>. Setup and route debugging exist when the work needs them, but they are support tools, not the product story.</p>
+<p class="page-lead closing-boundary-brief"><strong>Start with <code>jini</code>.</strong> If you need the small public command list, use <code>jini commands</code>. Outside the front door, the public support list should stay short: <code>status</code>, <code>continue</code>, <code>open</code>, and <code>doctor</code>. Everything else is support plumbing, not the product story.</p>
 
 <div class="economics-table surface-story">
 <table>

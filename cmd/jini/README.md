@@ -8,11 +8,10 @@ Current scope:
 - `jini help`
 - `jini commands`
 - `jini admin help`
-- `jini check`
 - `jini status`
-- `jini doctor`
-- `jini provider doctor`
+- `jini continue`
 - `jini open`
+- `jini doctor`
 - `jini run` (launcher alias)
 
 This runtime is intentionally narrow.

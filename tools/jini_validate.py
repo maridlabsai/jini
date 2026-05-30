@@ -7914,7 +7914,7 @@ def resolve_context_pack_dir(
     context = load_current_work_context()
     if context is None:
         raise ValueError(
-            "Nothing is in progress yet. Run `jini` to see start options, try `jini try-example research-prd`, "
+            "Nothing is in progress yet. Run `jini` to start from the current repo or directory, "
             "or adopt existing work with `jini status /path/to/work`."
         )
 
@@ -9269,16 +9269,12 @@ def print_cli_overview() -> None:
     print("  Missing")
     print("  Plan")
     print()
-    print("POWER PATHS")
-    print(f"  {cli} setup --harness codex")
+    print("SUPPORT COMMANDS")
     print(f"  {cli} status")
-    print(f"  {cli} open")
     print(f"  {cli} doctor")
     print()
-    print("COMMAND CATALOG")
+    print("MORE")
     print(f"  {cli} commands")
-    print()
-    print("ADMIN TOOLS")
     print(f"  {cli} help --admin")
     print(f"  {cli} <command> --help")
 
@@ -9289,14 +9285,12 @@ def print_cli_start_surface() -> None:
     print("Nothing is in progress yet.")
     print()
     print("START HERE")
-    print(f"  {cli} try-example research-prd")
-    print("    Materialize a public example and inspect the result.")
+    print(f"  {cli}")
+    print("    Start from the repo or folder that needs work.")
     print(f"  {cli} status /path/to/work")
-    print("    Adopt existing work, then keep using pathless commands.")
+    print("    Adopt existing Jini work once, then go back to `jini`.")
     print(f"  {cli} doctor")
-    print("    See what route and setup Jini can use right now.")
-    print(f"  {cli} setup --harness codex")
-    print("    Connect a preferred harness when you need a fixed route.")
+    print("    Check route and setup only when execution is blocked.")
     print()
     print("MORE")
     print(f"  {cli} commands")
@@ -9579,35 +9573,18 @@ def dispatch_request_entrypoint(argv: list[str], known_commands: set[str]) -> in
 
 PUBLIC_HELP_GROUPS: list[tuple[str, list[tuple[str, str]]]] = [
     (
-        "GET STARTED",
+        "START WITH JINI",
         [
-            ("jini", "Open the shell and start from the work you want finished."),
-            ("jini setup --harness codex", "Connect a preferred harness when you need a fixed route."),
-            ("jini doctor", "Check what route and setup Jini can use safely."),
-            ("jini get-started --harness codex", "Show the smallest safe path for a chosen harness."),
-            ("jini try-example research-prd", "Materialize a public example and inspect the result."),
+            ("jini", "Open the live session and start from the work you want finished."),
         ],
     ),
     (
-        "WORK WITH JINI",
+        "SUPPORT THE CURRENT WORK",
         [
-            ("jini status", "See what is done, what is next, and what is still missing."),
+            ("jini status", "See the current work state or adopt existing Jini work with a path once."),
             ("jini continue", "Preview the next useful artifact without rebuilding the work state."),
             ("jini open", "Open the current artifact or human-facing view."),
-            ("jini show", "Print an artifact or ready-now view in the terminal."),
-            ("jini expand", "Open the next richer surface from the current artifact."),
-            ("jini context", "Show the compact context capsule that shaped the current artifact."),
-            ("jini rewrite checklist", "Refine the current markdown artifact after saving a restorable version."),
-            ("jini versions / undo", "Inspect or restore recent artifact versions without using file paths or git."),
-            ("jini resume", "Re-enter the latest active work cheaply."),
-            ("jini run --repo /path/to/repo --harness codex", "Execute the work on a chosen harness with explicit consent."),
-        ],
-    ),
-    (
-        "INSPECT ROUTING",
-        [
-            ("jini harnesses", "List the supported harness routes."),
-            ("jini metrics", "Show the taught command surface and route evidence posture."),
+            ("jini doctor", "Check route and setup when execution is blocked."),
         ],
     ),
 ]
@@ -23512,14 +23489,19 @@ def main() -> int:
         return 0
 
     if args.command == "recommend-execution":
-        recommendation = recommend_execution(
-            args.path,
-            registry,
-            intent=args.intent,
-            repo_path=args.repo,
-            home_path=args.home,
-            runtime_target=args.runtime_target,
-        )
+        try:
+            recommendation = recommend_execution(
+                args.path,
+                registry,
+                intent=args.intent,
+                repo_path=args.repo,
+                home_path=args.home,
+                runtime_target=args.runtime_target,
+            )
+        except (FileNotFoundError, TypeError, ValueError) as exc:
+            failing_path = args.path if args.path is not None else Path("<current-work>")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}", file=sys.stderr)
+            return 1
         if args.format == "json":
             print(json.dumps(recommendation, indent=2))
         else:
@@ -23860,7 +23842,7 @@ def main() -> int:
             )
         except (FileNotFoundError, TypeError, ValueError) as exc:
             failing_path = args.path if args.path is not None else Path("<current-work>")
-            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}", file=sys.stderr)
             return 1
         if args.format == "json":
             print(json.dumps(checklist, indent=2))
@@ -23912,7 +23894,7 @@ def main() -> int:
                             print_compact_context(compact)
                         return 0
             failing_path = args.path if args.path is not None else Path("<current-work>")
-            print(f"ERROR {format_pack_surface_error(failing_path, exc)}")
+            print(f"ERROR {format_pack_surface_error(failing_path, exc)}", file=sys.stderr)
             return 1
         if args.format == "json":
             print(json.dumps(compact, separators=(",", ":")))

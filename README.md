@@ -91,6 +91,16 @@ If you need the public command list, use `jini commands`. If you maintain
 routes, bundles, or release plumbing, use `jini admin help`. Those paths exist
 to support the product, not replace the normal `jini` front door.
 
+The public support surface outside the front door should stay short:
+
+- `jini status`
+- `jini continue`
+- `jini open`
+- `jini doctor`
+
+Everything else should stay behind `jini help --admin` unless Jini explicitly
+points you there.
+
 If multiple projects are already in flight, Jini should show `Active work`
 first, let you pick one, and keep sibling work visible under `Other active work`
 while one project stays in focus.

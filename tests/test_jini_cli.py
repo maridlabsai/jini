@@ -498,12 +498,13 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("IN THE SHELL", result.stdout)
         self.assertIn("Open", result.stdout)
         self.assertIn("Plan", result.stdout)
-        self.assertIn("POWER PATHS", result.stdout)
-        self.assertIn("jini setup --harness codex", result.stdout)
+        self.assertIn("SUPPORT COMMANDS", result.stdout)
+        self.assertIn("jini status", result.stdout)
         self.assertIn("jini doctor", result.stdout)
-        self.assertIn("COMMAND CATALOG", result.stdout)
+        self.assertIn("MORE", result.stdout)
         self.assertIn("jini commands", result.stdout)
-        self.assertIn("ADMIN TOOLS", result.stdout)
+        self.assertIn("jini help --admin", result.stdout)
+        self.assertNotIn("jini setup --harness codex", result.stdout)
         self.assertNotIn("jini run --repo /path/to/repo --harness codex", result.stdout)
         self.assertNotIn("usage: jini", result.stdout)
 
@@ -586,9 +587,11 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(result)
         self.assertIn("Nothing is in progress yet.", result.stdout)
         self.assertIn("START HERE", result.stdout)
-        self.assertIn("jini try-example research-prd", result.stdout)
+        self.assertIn("jini\n", result.stdout)
         self.assertIn("jini status /path/to/work", result.stdout)
         self.assertIn("jini doctor", result.stdout)
+        self.assertNotIn("jini try-example research-prd", result.stdout)
+        self.assertNotIn("jini setup --harness codex", result.stdout)
 
     def test_zero_arg_cli_resumes_current_work_surface(self) -> None:
         example_output = self.tmp / "research-example"
@@ -627,9 +630,13 @@ class JiniCliConformanceTests(unittest.TestCase):
         result = self.run_cli("help", "--all")
         self.assert_ok(result)
         self.assertIn("Public command inventory", result.stdout)
-        self.assertIn("WORK WITH JINI", result.stdout)
+        self.assertIn("SUPPORT THE CURRENT WORK", result.stdout)
         self.assertIn("jini status", result.stdout)
+        self.assertIn("jini continue", result.stdout)
+        self.assertIn("jini open", result.stdout)
         self.assertIn("jini help --admin", result.stdout)
+        self.assertNotIn("jini try-example research-prd", result.stdout)
+        self.assertNotIn("jini metrics", result.stdout)
         self.assertNotIn("usage: jini", result.stdout)
         self.assertNotIn("stage-framework-experiment", result.stdout)
 
@@ -637,9 +644,14 @@ class JiniCliConformanceTests(unittest.TestCase):
         result = self.run_cli("commands")
         self.assert_ok(result)
         self.assertIn("Public command inventory", result.stdout)
-        self.assertIn("GET STARTED", result.stdout)
-        self.assertIn("jini try-example research-prd", result.stdout)
+        self.assertIn("START WITH JINI", result.stdout)
+        self.assertIn("SUPPORT THE CURRENT WORK", result.stdout)
+        self.assertIn("jini continue", result.stdout)
+        self.assertIn("jini open", result.stdout)
         self.assertIn("jini help --admin", result.stdout)
+        self.assertNotIn("jini get-started --harness codex", result.stdout)
+        self.assertNotIn("jini try-example research-prd", result.stdout)
+        self.assertNotIn("jini metrics", result.stdout)
 
     def test_commands_with_request_tail_shows_corrective_hint(self) -> None:
         request_tokens = HELP_TAIL_EXAMPLE_REQUEST.split()
@@ -2214,8 +2226,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         result = self.run_cli("status")
         self.assert_error(result)
         self.assertEqual("", result.stdout)
-        self.assertIn("Nothing is in progress yet. Run `jini` to see start options", result.stderr)
-        self.assertIn("jini try-example research-prd", result.stderr)
+        self.assertIn("Nothing is in progress yet. Run `jini` to start from the current repo or directory", result.stderr)
         self.assertIn("jini status /path/to/work", result.stderr)
 
     def test_status_missing_path_returns_friendly_error(self) -> None:
@@ -2224,15 +2235,32 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("", result.stdout)
         self.assertIn("ERROR Pack path is missing required Jini files", result.stderr)
 
+    def test_next_missing_path_returns_friendly_error_on_stderr(self) -> None:
+        result = self.run_cli("next", self.tmp / "missing-pack")
+        self.assert_error(result)
+        self.assertEqual("", result.stdout)
+        self.assertIn("ERROR Pack path is missing required Jini files", result.stderr)
+
+    def test_resume_missing_path_returns_friendly_error_on_stderr(self) -> None:
+        result = self.run_cli("resume", self.tmp / "missing-pack")
+        self.assert_error(result)
+        self.assertEqual("", result.stdout)
+        self.assertIn("ERROR Pack path is missing required Jini files", result.stderr)
+
     def test_continue_without_current_work_fails_cleanly_on_stderr(self) -> None:
         result = self.run_cli("continue")
         self.assert_error(result)
         self.assertEqual("", result.stdout)
-        self.assertIn("Nothing is in progress yet. Run `jini` to see start options", result.stderr)
-        self.assertIn("jini try-example research-prd", result.stderr)
+        self.assertIn("Nothing is in progress yet. Run `jini` to start from the current repo or directory", result.stderr)
 
     def test_open_missing_path_returns_friendly_error_on_stderr(self) -> None:
         result = self.run_cli("open", "itinerary", "--from", self.tmp / "missing-pack", "--print-path")
+        self.assert_error(result)
+        self.assertEqual("", result.stdout)
+        self.assertIn("ERROR Pack path is missing required Jini files", result.stderr)
+
+    def test_recommend_execution_missing_path_returns_friendly_error_on_stderr(self) -> None:
+        result = self.run_cli("recommend-execution", self.tmp / "missing-pack")
         self.assert_error(result)
         self.assertEqual("", result.stdout)
         self.assertIn("ERROR Pack path is missing required Jini files", result.stderr)
@@ -5684,8 +5712,10 @@ class JiniCliConformanceTests(unittest.TestCase):
         result = self.run_cli("metrics")
         self.assert_ok(result)
         self.assertIn("STATUS   ok", result.stdout)
-        self.assertIn("CMDS     2", result.stdout)
+        self.assertIn("CMDS     4", result.stdout)
+        self.assertIn("  - continue", result.stdout)
         self.assertIn("  - doctor", result.stdout)
+        self.assertIn("  - open", result.stdout)
         self.assertIn("  - status", result.stdout)
         self.assertIn("ALIASES  0", result.stdout)
         self.assertIn("SAMPLES  count=5 ok=5", result.stdout)
@@ -5707,9 +5737,9 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(result)
         payload = json.loads(result.stdout)
         self.assertEqual("ok", payload["status"])
-        self.assertEqual(2, payload["command_surface_count"])
+        self.assertEqual(4, payload["command_surface_count"])
         self.assertEqual(0, payload["compatibility_alias_count"])
-        self.assertEqual(["doctor", "status"], payload["taught_commands"])
+        self.assertEqual(["continue", "doctor", "open", "status"], payload["taught_commands"])
         self.assertEqual(5, payload["latency_sample"]["sample_count"])
         self.assertEqual(5, payload["latency_sample"]["successful_sample_count"])
         self.assertEqual("jini commands", payload["command_samples"][0]["command"])
