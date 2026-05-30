@@ -541,12 +541,15 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(result)
         self.assertIn("What do you want Jini to do?", result.stdout)
         self.assertIn("jini> ", result.stdout)
-        self.assertIn("REQUEST fix failing tests", result.stdout)
-        self.assertIn("REPO    sample-repo", result.stdout)
-        self.assertIn("INTENT  verify", result.stdout)
+        self.assertIn("TASK    fix failing tests", result.stdout)
+        self.assertIn("NEXT    make test", result.stdout)
+        self.assertIn("ALSO    make verify", result.stdout)
         self.assertIn("What next?", result.stdout)
         self.assertIn("Session closed.", result.stdout)
         self.assertNotIn("START WITH THE TASK", result.stdout)
+        self.assertNotIn("REQUEST fix failing tests", result.stdout)
+        self.assertNotIn("REPO    sample-repo", result.stdout)
+        self.assertNotIn("INTENT  verify", result.stdout)
 
     def test_zero_arg_cli_interactive_repo_mode_explains_empty_exit(self) -> None:
         repo = self.create_repo_fixture()
@@ -567,9 +570,9 @@ class JiniCliConformanceTests(unittest.TestCase):
             input_text="fix failing tests\nplan this change\nexit\n",
         )
         self.assert_ok(result)
-        self.assertGreaterEqual(result.stdout.count("REQUEST "), 2)
-        self.assertIn("REQUEST fix failing tests", result.stdout)
-        self.assertIn("REQUEST plan this change", result.stdout)
+        self.assertGreaterEqual(result.stdout.count("TASK    "), 2)
+        self.assertIn("TASK    fix failing tests", result.stdout)
+        self.assertIn("TASK    plan this change", result.stdout)
         self.assertGreaterEqual(result.stdout.count("What next?"), 2)
 
     def test_zero_arg_cli_interactive_repo_mode_routes_escape_hatches(self) -> None:
@@ -696,12 +699,16 @@ class JiniCliConformanceTests(unittest.TestCase):
             input_text="plan this change\nexit\n",
         )
         self.assert_ok(result)
-        self.assertIn("REQUEST fix failing tests", result.stdout)
+        self.assertIn("TASK    fix failing tests", result.stdout)
+        self.assertIn("NEXT    make test", result.stdout)
         self.assertIn("What next?", result.stdout)
         self.assertIn("jini> ", result.stdout)
-        self.assertIn("REQUEST plan this change", result.stdout)
+        self.assertIn("TASK    plan this change", result.stdout)
+        self.assertIn("NEXT    ", result.stdout)
+        self.assertIn("README.md", result.stdout)
         self.assertIn("Session closed.", result.stdout)
         self.assertNotIn("usage: jini", result.stdout)
+        self.assertNotIn("REQUEST fix failing tests", result.stdout)
 
     def test_zero_arg_cli_interactive_repo_mode_uses_calm_empty_input_prompt(self) -> None:
         repo = self.create_repo_fixture()
@@ -712,6 +719,21 @@ class JiniCliConformanceTests(unittest.TestCase):
         )
         self.assert_ok(result)
         self.assertIn("Type the next task, or `exit` to leave.", result.stdout)
+
+    def test_interactive_repo_mode_uses_compact_follow_up_cards(self) -> None:
+        repo = self.create_repo_fixture()
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\nexit\n",
+        )
+        self.assert_ok(result)
+        self.assertIn("TASK    fix failing tests", result.stdout)
+        self.assertIn("NEXT    make test", result.stdout)
+        self.assertIn("ALSO    make verify", result.stdout)
+        self.assertNotIn("BEST NEXT MOVE", result.stdout)
+        self.assertNotIn("KEEP MOVING", result.stdout)
+        self.assertNotIn("PATH    /", result.stdout)
 
     def test_unknown_single_token_suggests_closest_command(self) -> None:
         result = self.run_cli("stats")

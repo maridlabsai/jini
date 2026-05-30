@@ -42,7 +42,9 @@ What do you want Jini to do?
 jini&gt; fix failing tests
 
 Jini CLI 0.1.0
-REQUEST fix failing tests
+TASK    fix failing tests
+NEXT    make test
+ALSO    make verify
 
 What next?
 jini&gt; doctor

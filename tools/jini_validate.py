@@ -9422,7 +9422,7 @@ def prompt_repo_task(repo_context: dict[str, Any], *, initial_request: str | Non
         print(f"GIT    branch={branch} dirty_files={dirty_files}")
     print()
     if initial_request:
-        print_repo_request_intake(initial_request, repo_context)
+        print_repo_request_intake(initial_request, repo_context, compact=True)
         print()
         print("What next?")
     else:
@@ -9447,7 +9447,7 @@ def prompt_repo_task(repo_context: dict[str, Any], *, initial_request: str | Non
             continue
         if request_text:
             print()
-            print_repo_request_intake(request_text, repo_context)
+            print_repo_request_intake(request_text, repo_context, compact=True)
             print()
             print("What next?")
 
@@ -9465,12 +9465,37 @@ def classify_request_intent(request_text: str) -> str:
     return "general"
 
 
-def print_repo_request_intake(request_text: str, repo_context: dict[str, Any]) -> None:
+def print_repo_request_intake(request_text: str, repo_context: dict[str, Any], *, compact: bool = False) -> None:
     cli = cli_invocation()
     repo_root = str(repo_context.get("repo_root", "")).strip()
     repo_name = Path(repo_root).name if repo_root else "repo"
     git_info = repo_context.get("git", {})
     intent = classify_request_intent(request_text)
+    primary_categories = {
+        "verify": ("test", "verify", "startup"),
+        "plan": ("docs", "startup", "test"),
+        "review": ("docs", "test", "startup"),
+        "make": ("startup", "test", "build"),
+        "general": ("docs", "startup", "test"),
+    }[intent]
+    surfaced_commands: list[tuple[str, str]] = []
+    for category in primary_categories:
+        command = _repo_entrypoint_command(repo_context, category)
+        if not command:
+            continue
+        surfaced_commands.append((category, command))
+    if compact:
+        print(f"TASK    {request_text}")
+        if surfaced_commands:
+            lead_category, lead_command = surfaced_commands[0]
+            print(f"NEXT    {lead_command}")
+            for category, command in surfaced_commands[1:3]:
+                print(f"ALSO    {command}")
+        else:
+            print("NEXT    Repo detected, but Jini could not find a standard entrypoint yet.")
+            print(f"TRY     {cli} repo-map .")
+            print(f"TRY     {cli} doctor")
+        return
     print(f"Jini CLI {load_version()}")
     print(f"REQUEST {request_text}")
     print(f"REPO    {repo_name}")
@@ -9483,21 +9508,10 @@ def print_repo_request_intake(request_text: str, repo_context: dict[str, Any]) -
     print(f"INTENT  {intent}")
     print()
     print("BEST NEXT MOVE")
-    primary_categories = {
-        "verify": ("test", "verify", "startup"),
-        "plan": ("docs", "startup", "test"),
-        "review": ("docs", "test", "startup"),
-        "make": ("startup", "test", "build"),
-        "general": ("docs", "startup", "test"),
-    }[intent]
-    surfaced = False
-    for category in primary_categories:
-        command = _repo_entrypoint_command(repo_context, category)
-        if not command:
-            continue
-        surfaced = True
-        print(f"  {category:<8}{command}")
-    if not surfaced:
+    if surfaced_commands:
+        for category, command in surfaced_commands:
+            print(f"  {category:<8}{command}")
+    else:
         print("  repo     Repo detected, but Jini could not find standard entrypoints yet.")
     print()
     print("KEEP MOVING")
