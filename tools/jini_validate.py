@@ -9347,16 +9347,50 @@ def print_admin_command_inventory() -> None:
         print()
 
 
-def print_help_request_hint(request_tokens: list[str]) -> None:
-    cli = cli_invocation()
-    for line in help_tail_message_lines(cli, "help", "CLI overview", request_tokens):
-        print(line)
-
-
 def print_help_variant_request_hint(help_invocation: str, request_tokens: list[str], inventory_name: str) -> None:
     cli = cli_invocation()
     for line in help_tail_message_lines(cli, help_invocation, inventory_name, request_tokens):
         print(line)
+
+
+CATALOG_NAMESPACE_HELP_TAIL_RULES: tuple[tuple[str, str, frozenset[str]], ...] = (
+    ("admin", "admin command inventory", frozenset({"-h", "--help", "help"})),
+    ("provider", "admin command inventory", frozenset({"-h", "--help", "help"})),
+)
+
+CATALOG_DIRECT_HELP_TAIL_RULES: tuple[tuple[str, str, frozenset[str]], ...] = (
+    ("commands", "public command inventory", frozenset()),
+    ("-h", "CLI overview", frozenset({"--admin", "--all"})),
+    ("--help", "CLI overview", frozenset({"--admin", "--all"})),
+    ("help", "CLI overview", frozenset({"--admin", "--all"})),
+)
+
+
+def dispatch_catalog_request_tail(argv: list[str]) -> int | None:
+    if not argv:
+        return None
+    head = argv[0]
+    for namespace, inventory_name, help_tokens in CATALOG_NAMESPACE_HELP_TAIL_RULES:
+        if head != namespace:
+            continue
+        nested_argv = argv[1:]
+        if len(nested_argv) > 1 and nested_argv[0] in help_tokens:
+            print_help_variant_request_hint(
+                f"{namespace} {nested_argv[0]}",
+                nested_argv[1:],
+                inventory_name,
+            )
+            return 2
+        return None
+    for invocation, inventory_name, ignored_tokens in CATALOG_DIRECT_HELP_TAIL_RULES:
+        if head != invocation:
+            continue
+        extra_tokens = [token for token in argv[1:] if token not in ignored_tokens]
+        if extra_tokens:
+            print_help_variant_request_hint(invocation, argv[1:], inventory_name)
+            return 2
+        return None
+    return None
 
 
 def resolve_display_path(path_text: str) -> Path:
@@ -22415,26 +22449,19 @@ def main() -> int:
     if not argv:
         print_cli_overview()
         return 0
+    request_tail_result = dispatch_catalog_request_tail(argv)
+    if request_tail_result is not None:
+        return request_tail_result
     if argv[0] == "admin":
         admin_argv = argv[1:]
         if not admin_argv:
             print_admin_command_inventory()
             return 0
         if admin_argv[0] in {"-h", "--help", "help"}:
-            if len(admin_argv) > 1:
-                print_help_variant_request_hint(
-                    f"admin {admin_argv[0]}",
-                    admin_argv[1:],
-                    "admin command inventory",
-                )
-                return 2
             print_admin_command_inventory()
             return 0
         argv = admin_argv
     if argv[0] == "commands":
-        if len(argv) > 1:
-            print_help_variant_request_hint("commands", argv[1:], "public command inventory")
-            return 2
         print_public_command_inventory()
         return 0
     if argv[0] == "provider":
@@ -22443,22 +22470,11 @@ def main() -> int:
             print_admin_command_inventory()
             return 0
         if provider_argv[0] in {"-h", "--help", "help"}:
-            if len(provider_argv) > 1:
-                print_help_variant_request_hint(
-                    f"provider {provider_argv[0]}",
-                    provider_argv[1:],
-                    "admin command inventory",
-                )
-                return 2
             print_admin_command_inventory()
             return 0
         if provider_argv[0] == "doctor":
             argv = ["doctor", *provider_argv[1:]]
     if argv[0] in {"-h", "--help"}:
-        extra_help_tokens = [token for token in argv[1:] if token not in {"--admin", "--all"}]
-        if extra_help_tokens:
-            print_help_variant_request_hint(argv[0], argv[1:], "CLI overview")
-            return 2
         if "--admin" in argv[1:]:
             print_admin_command_inventory()
         elif "--all" in argv[1:]:
@@ -22467,10 +22483,6 @@ def main() -> int:
             print_cli_overview()
         return 0
     if argv[0] == "help":
-        extra_help_tokens = [token for token in argv[1:] if token not in {"--admin", "--all"}]
-        if extra_help_tokens:
-            print_help_request_hint(argv[1:])
-            return 2
         if "--admin" in argv[1:]:
             print_admin_command_inventory()
         elif "--all" in argv[1:]:
