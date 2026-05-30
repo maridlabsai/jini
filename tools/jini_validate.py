@@ -9380,6 +9380,38 @@ def interactive_front_door_enabled() -> bool:
     return sys.stdin.isatty() and sys.stdout.isatty()
 
 
+def normalize_interactive_entry(request_text: str) -> str:
+    normalized = " ".join(request_text.strip().split())
+    cli = cli_invocation()
+    if normalized.startswith(f"{cli} "):
+        return normalized[len(cli) + 1 :].strip()
+    return normalized
+
+
+def handle_interactive_escape_hatch(request_text: str) -> bool:
+    normalized = normalize_interactive_entry(request_text)
+    if normalized in {"commands"}:
+        print()
+        print_public_command_inventory()
+        return True
+    if normalized in {"doctor"}:
+        print()
+        print_provider_doctor(build_provider_doctor())
+        return True
+    if normalized in {"help --admin", "admin help", "admin --help"}:
+        print()
+        print_admin_command_inventory()
+        return True
+    if normalized in {"setup --harness codex", "setup", "setup --harness"} or normalized.startswith("setup --harness "):
+        print()
+        print("SETUP ESCAPE HATCH")
+        print("Run the setup command directly when you need to bind a fixed route:")
+        print(f"  {cli_invocation()} {normalized}")
+        print("Then return to `jini` for task intake.")
+        return True
+    return False
+
+
 def prompt_repo_task(repo_context: dict[str, Any]) -> int:
     cli = cli_invocation()
     repo_root = str(repo_context.get("repo_root", "")).strip()
@@ -9395,19 +9427,29 @@ def prompt_repo_task(repo_context: dict[str, Any]) -> int:
         print(f"GIT    branch={branch} dirty_files={dirty_files}")
     print()
     print("WHAT DO YOU WANT TO DO?")
+    print("Type the task directly. Use `commands`, `doctor`, `help --admin`, or `exit` when needed.")
     while True:
         try:
             request_text = input(f"{cli}> ").strip()
         except EOFError:
             print()
-            print("No task entered.")
-            print(f"Try `{cli} review this repo`, or rerun `{cli}` and type the task at the prompt.")
+            print("Session closed.")
             return 0
+        if not request_text:
+            print("Enter the task you want Jini to do, or type `exit` to leave.")
+            continue
+        if normalize_interactive_entry(request_text).lower() in {"exit", "quit"}:
+            print("Session closed.")
+            return 0
+        if handle_interactive_escape_hatch(request_text):
+            print()
+            print("WHAT NEXT?")
+            continue
         if request_text:
             print()
             print_repo_request_intake(request_text, repo_context)
-            return 0
-        print("Enter the task you want Jini to do, or press Ctrl-D to exit.")
+            print()
+            print("WHAT NEXT?")
 
 
 def classify_request_intent(request_text: str) -> str:

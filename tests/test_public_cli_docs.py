@@ -55,6 +55,11 @@ class PublicCliDocsTests(unittest.TestCase):
             "WHAT DO YOU WANT TO DO?",
             "jini&gt; fix failing tests",
             "REQUEST fix failing tests",
+            "WHAT NEXT?",
+            "jini&gt; doctor",
+            "provider_id",
+            "keep the <code>jini&gt;</code> prompt open",
+            "<code>commands</code>, <code>doctor</code>, <code>help --admin</code>, and <code>exit</code> as escape hatches",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
@@ -126,6 +131,7 @@ class PublicCliDocsTests(unittest.TestCase):
                 "jini plan this change",
                 "WHAT DO YOU WANT TO DO?",
                 "jini&gt;</code> prompt",
+                "<code>commands</code>, <code>doctor</code>, <code>help --admin</code>, and <code>exit</code> should all work as in-session escape hatches",
             ):
                 with self.subTest(marker=marker):
                     self.assertIn(marker, text)

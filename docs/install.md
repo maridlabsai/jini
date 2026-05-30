@@ -142,6 +142,7 @@ jini
       <h3>Run <code>jini</code></h3>
       <p>Do not start with provider jargon unless Jini tells you setup is missing. Inside a repo, Jini should immediately steer toward task-first asks like <code>jini review this repo</code> or <code>jini fix failing tests</code>.</p>
       <p>In a real terminal, bare <code>jini</code> should stay open, show the repo it found, ask <code>WHAT DO YOU WANT TO DO?</code>, and let you type the first task directly at the <code>jini&gt;</code> prompt.</p>
+      <p>That prompt should remain open for follow-up turns. <code>commands</code>, <code>doctor</code>, <code>help --admin</code>, and <code>exit</code> should all work as in-session escape hatches instead of forcing a relaunch.</p>
     </div>
     <div class="step-card">
       <span class="step-number">2</span>

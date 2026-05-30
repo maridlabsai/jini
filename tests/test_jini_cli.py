@@ -526,7 +526,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         result = self.run_cli_in_cwd(
             repo,
             env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
-            input_text="fix failing tests\n",
+            input_text="fix failing tests\nexit\n",
         )
         self.assert_ok(result)
         self.assertIn("WHAT DO YOU WANT TO DO?", result.stdout)
@@ -534,6 +534,8 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("REQUEST fix failing tests", result.stdout)
         self.assertIn("REPO    sample-repo", result.stdout)
         self.assertIn("INTENT  verify", result.stdout)
+        self.assertIn("WHAT NEXT?", result.stdout)
+        self.assertIn("Session closed.", result.stdout)
         self.assertNotIn("START WITH THE TASK", result.stdout)
 
     def test_zero_arg_cli_interactive_repo_mode_explains_empty_exit(self) -> None:
@@ -545,8 +547,36 @@ class JiniCliConformanceTests(unittest.TestCase):
         )
         self.assert_ok(result)
         self.assertIn("WHAT DO YOU WANT TO DO?", result.stdout)
-        self.assertIn("No task entered.", result.stdout)
-        self.assertIn("rerun `jini` and type the task at the prompt", result.stdout)
+        self.assertIn("Session closed.", result.stdout)
+
+    def test_zero_arg_cli_interactive_repo_mode_keeps_prompt_open_for_follow_up_turns(self) -> None:
+        repo = self.create_repo_fixture()
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\nplan this change\nexit\n",
+        )
+        self.assert_ok(result)
+        self.assertGreaterEqual(result.stdout.count("REQUEST "), 2)
+        self.assertIn("REQUEST fix failing tests", result.stdout)
+        self.assertIn("REQUEST plan this change", result.stdout)
+        self.assertGreaterEqual(result.stdout.count("WHAT NEXT?"), 2)
+
+    def test_zero_arg_cli_interactive_repo_mode_routes_escape_hatches(self) -> None:
+        repo = self.create_repo_fixture()
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="commands\ndoctor\nhelp --admin\nsetup --harness codex\nexit\n",
+        )
+        self.assert_ok(result)
+        self.assertIn("Public command inventory", result.stdout)
+        self.assertIn("Admin and developer command inventory", result.stdout)
+        self.assertIn("SETUP ESCAPE HATCH", result.stdout)
+        self.assertIn("Run the setup command directly when you need to bind a fixed route:", result.stdout)
+        self.assertIn("jini setup --harness codex", result.stdout)
+        self.assertIn("Provider", result.stdout)
+        self.assertIn("Local preview", result.stdout)
 
     def test_zero_arg_cli_shows_generic_start_surface_without_repo_or_current_work(self) -> None:
         empty_dir = self.tmp / "empty"
