@@ -534,6 +534,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("Detected here:", result.stdout)
         self.assertIn("make test", result.stdout)
         self.assertIn("make start", result.stdout)
+        self.assertEqual(2, result.stdout.count("  make "))
         self.assertNotIn("test    ", result.stdout)
         self.assertNotIn("startup ", result.stdout)
         self.assertNotIn("verify  ", result.stdout)

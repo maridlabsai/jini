@@ -9323,6 +9323,20 @@ def _repo_entrypoint_command(repo_context: dict[str, Any], category: str) -> str
     return str(entry.get("command") or entry.get("path") or entry.get("label", "")).strip()
 
 
+def _repo_start_surface_commands(repo_context: dict[str, Any], limit: int = 2) -> list[str]:
+    commands: list[str] = []
+    seen: set[str] = set()
+    for category in ("test", "startup", "build", "docs", "verify"):
+        command = _repo_entrypoint_command(repo_context, category)
+        if not command or command in seen:
+            continue
+        seen.add(command)
+        commands.append(command)
+        if len(commands) >= limit:
+            break
+    return commands
+
+
 def print_repo_start_surface(repo_context: dict[str, Any]) -> None:
     cli = cli_invocation()
     repo_root = str(repo_context.get("repo_root", "")).strip()
@@ -9340,14 +9354,10 @@ def print_repo_start_surface(repo_context: dict[str, Any]) -> None:
     print("    Review the current branch and call out risks.")
     print()
     print("Detected here:")
-    surfaced = False
-    for category in ("test", "verify", "startup", "build", "docs"):
-        command = _repo_entrypoint_command(repo_context, category)
-        if not command:
-            continue
-        surfaced = True
+    surfaced_commands = _repo_start_surface_commands(repo_context)
+    for command in surfaced_commands:
         print(f"  {command}")
-    if not surfaced:
+    if not surfaced_commands:
         print("  Repo detected, but no standard startup or test entrypoints were found.")
     print()
     print("Already have Jini work?")
