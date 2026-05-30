@@ -522,7 +522,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(result)
         self.assertIn("Repo: sample-repo", result.stdout)
         self.assertNotIn("Nothing is in progress yet.", result.stdout)
-        self.assertIn("Try one of these:", result.stdout)
+        self.assertNotIn("Try one of these:", result.stdout)
         self.assertIn("jini review this repo", result.stdout)
         self.assertIn("jini fix failing tests", result.stdout)
         self.assertIn("jini review this branch", result.stdout)

@@ -9344,7 +9344,6 @@ def print_repo_start_surface(repo_context: dict[str, Any]) -> None:
     print(f"Jini CLI {load_version()}")
     print(f"Repo: {repo_name}")
     print()
-    print("Try one of these:")
     print(f"  {cli} review this repo")
     print("    Review the repo and suggest the next move.")
     print(f"  {cli} fix failing tests")
