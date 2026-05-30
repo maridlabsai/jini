@@ -121,6 +121,18 @@ class PublicCliDocsTests(unittest.TestCase):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
 
+    def test_install_page_shows_provider_help_request_tail_transcript(self) -> None:
+        text = read(INSTALL_PATH)
+        for marker in (
+            "$ jini provider help me edit pear fellow script.txt",
+            'ERROR `jini provider help` shows the admin command inventory; it does not take a request like "me edit pear fellow script.txt".',
+            "Start with `jini` and type the request in the shell.",
+            "Or use `jini open` or `jini status` if you want the current work surface.",
+            "Use that provider-help example when someone drifts into the admin/provider tree during first run.",
+        ):
+            with self.subTest(marker=marker):
+                self.assertIn(marker, text)
+
     def test_install_page_explains_installer_provenance_summary(self) -> None:
         text = read(INSTALL_PATH)
         for marker in (
