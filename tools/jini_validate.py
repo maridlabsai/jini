@@ -9459,6 +9459,12 @@ def classify_request_intent(request_text: str) -> str:
     return "general"
 
 
+def should_surface_compact_next(intent: str, surfaced_commands: list[tuple[str, str]]) -> bool:
+    if not surfaced_commands:
+        return False
+    return intent == "verify"
+
+
 def print_repo_request_intake(request_text: str, repo_context: dict[str, Any], *, compact: bool = False) -> None:
     cli = cli_invocation()
     repo_root = str(repo_context.get("repo_root", "")).strip()
@@ -9481,8 +9487,9 @@ def print_repo_request_intake(request_text: str, repo_context: dict[str, Any], *
     if compact:
         print(f"TASK    {request_text}")
         if surfaced_commands:
-            _, lead_command = surfaced_commands[0]
-            print(f"NEXT    {lead_command}")
+            if should_surface_compact_next(intent, surfaced_commands):
+                _, lead_command = surfaced_commands[0]
+                print(f"NEXT    {lead_command}")
         else:
             print("NEXT    Repo detected, but Jini could not find a standard entrypoint yet.")
             print(f"TRY     {cli} repo-map .")

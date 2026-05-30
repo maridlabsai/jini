@@ -70,6 +70,7 @@ class PublicCliDocsTests(unittest.TestCase):
             "keep the <code>jini&gt;</code> prompt open",
             "keep the controls in the background instead of teaching them before the task starts",
             "<code>commands</code>, <code>doctor</code>, <code>help --admin</code>, and <code>exit</code> should still work inside the same live session",
+            "should only print a <code>NEXT</code> line when it is genuinely steering you toward a concrete action",
             "Keep typing the next thing",
             "fix failing tests",
             "open the latest artifact",
@@ -167,6 +168,7 @@ class PublicCliDocsTests(unittest.TestCase):
             "jini&gt;</code> prompt",
             "The task should stay primary, and the controls should stay in the background until you need them.",
             "<code>commands</code>, <code>doctor</code>, <code>help --admin</code>, and <code>exit</code> should still work as in-session escape hatches",
+            "should only print a <code>NEXT</code> line when it is actually steering you to a concrete action",
             "keep typing plain follow-up asks like <code>fix failing tests</code>, <code>what is blocked?</code>, or <code>open the latest artifact</code> instead of learning Jini-specific action words",
         ):
             with self.subTest(marker=marker):

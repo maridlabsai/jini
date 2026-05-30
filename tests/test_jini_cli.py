@@ -575,6 +575,8 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertGreaterEqual(result.stdout.count("TASK    "), 2)
         self.assertIn("TASK    fix failing tests", result.stdout)
         self.assertIn("TASK    plan this change", result.stdout)
+        self.assertIn("NEXT    make test", result.stdout)
+        self.assertEqual(1, result.stdout.count("NEXT    "))
         self.assertNotIn("What next?", result.stdout)
 
     def test_zero_arg_cli_interactive_repo_mode_routes_escape_hatches(self) -> None:
@@ -706,8 +708,8 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("What next?", result.stdout)
         self.assertIn("jini> ", result.stdout)
         self.assertIn("TASK    plan this change", result.stdout)
-        self.assertIn("NEXT    ", result.stdout)
-        self.assertIn("README.md", result.stdout)
+        self.assertEqual(1, result.stdout.count("NEXT    "))
+        self.assertNotIn("README.md", result.stdout)
         self.assertEqual(1, result.stdout.count("Jini CLI 0.1.0"))
         self.assertIn("Session closed.", result.stdout)
         self.assertNotIn("usage: jini", result.stdout)
@@ -734,6 +736,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("TASK    fix failing tests", result.stdout)
         self.assertIn("NEXT    make test", result.stdout)
         self.assertNotIn("ALSO    ", result.stdout)
+        self.assertEqual(1, result.stdout.count("NEXT    "))
         self.assertEqual(1, result.stdout.count("Jini CLI 0.1.0"))
         self.assertNotIn("BEST NEXT MOVE", result.stdout)
         self.assertNotIn("KEEP MOVING", result.stdout)
