@@ -6,7 +6,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from typing import Optional, Union
 from unittest import mock
@@ -799,6 +799,13 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual(0, result)
         self.assertIn("Type the next task, or `exit` to leave.", transcript)
         self.assertEqual(1, transcript.count("Session closed."))
+
+    def test_run_cli_converts_top_level_keyboard_interrupt_into_clean_cancel(self) -> None:
+        stderr = io.StringIO()
+        with mock.patch("tools.jini_validate.main", side_effect=KeyboardInterrupt), redirect_stdout(io.StringIO()), redirect_stderr(stderr):
+            result = jini_validate.run_cli()
+        self.assertEqual(130, result)
+        self.assertEqual("\nCancelled.\n", stderr.getvalue())
 
     def test_interactive_repo_mode_uses_compact_follow_up_cards(self) -> None:
         repo = self.create_repo_fixture()

@@ -24917,5 +24917,14 @@ def main() -> int:
     return 0
 
 
+def run_cli() -> int:
+    try:
+        return main()
+    except KeyboardInterrupt:
+        print(file=sys.stderr)
+        print("Cancelled.", file=sys.stderr)
+        return 130
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(run_cli())
