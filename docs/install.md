@@ -148,6 +148,7 @@ jini
       <span class="step-number">2</span>
       <h3>Paste the work</h3>
       <p>Start from the notes, draft, screenshot, transcript, or rough ask you already have.</p>
+      <p>After the first answer, keep typing plain follow-up asks like <code>fix failing tests</code>, <code>what is blocked?</code>, or <code>open the latest artifact</code> instead of learning Jini-specific action words.</p>
     </div>
     <div class="step-card">
       <span class="step-number">3</span>

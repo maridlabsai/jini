@@ -33,6 +33,10 @@ class PublicCliDocsTests(unittest.TestCase):
             "`jini continue`",
             "`jini open`",
             "`jini doctor`",
+            "`what is blocked?`",
+            "`open the latest artifact`",
+            "`plan this change`",
+            "Jini should tell you what to connect instead of making you memorize route phrases",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
@@ -64,6 +68,14 @@ class PublicCliDocsTests(unittest.TestCase):
             "provider_id",
             "keep the <code>jini&gt;</code> prompt open",
             "<code>commands</code>, <code>doctor</code>, <code>help --admin</code>, and <code>exit</code> as escape hatches",
+            "Keep typing the next thing",
+            "fix failing tests",
+            "open the latest artifact",
+            "what is blocked?",
+            "switch to the other repo",
+            "start from these notes",
+            "You should not have to memorize product words like <code>Missing</code> or <code>Switch</code>",
+            "plain asks like <code>plan this change</code> should still trigger the structured path",
             "The public catalog should stay narrow",
             "<code>status</code>, <code>continue</code>, <code>open</code>, and <code>doctor</code>",
             "<h3><code>jini continue</code></h3>",
@@ -152,6 +164,7 @@ class PublicCliDocsTests(unittest.TestCase):
             "WHAT DO YOU WANT TO DO?",
             "jini&gt;</code> prompt",
             "<code>commands</code>, <code>doctor</code>, <code>help --admin</code>, and <code>exit</code> should all work as in-session escape hatches",
+            "keep typing plain follow-up asks like <code>fix failing tests</code>, <code>what is blocked?</code>, or <code>open the latest artifact</code> instead of learning Jini-specific action words",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)

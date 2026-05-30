@@ -70,12 +70,11 @@ Inside the shell you can work naturally:
 
 - paste messy notes
 - say what outcome you want
-- if setup is missing, type `Use Auto`
-- type `Connect Claude`, `Connect Bedrock`, `Connect Azure OpenAI`, or `Connect Local SLM` if you want to steer the route
-- choose `Show what's ready`
-- choose `Show what is missing`
-- choose `Help me plan this` when the work needs a structured plan before execution
-- choose `Switch project` when more than one project is active
+- ask `what is blocked?`
+- ask `open the latest artifact`
+- ask `plan this change` when the work needs a structured path before execution
+- ask `switch to the other repo` when more than one project is active
+- if setup is missing, Jini should tell you what to connect instead of making you memorize route phrases
 
 The first screen should keep one obvious move in front of you:
 

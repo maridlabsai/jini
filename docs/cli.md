@@ -80,17 +80,18 @@ If you already have work to adopt, use `jini status /path/to/work` once.</code><
 
 <div class="section-card">
   <span class="section-kicker">Inside Jini</span>
-  <h2>Main in-shell actions</h2>
+  <h2>Keep typing the next thing</h2>
   <div class="pill-list">
-    <span>Continue</span>
-    <span>Open</span>
-    <span>Missing</span>
-    <span>Plan</span>
-    <span>Switch</span>
-    <span>Start</span>
+    <span>fix failing tests</span>
+    <span>open the latest artifact</span>
+    <span>what is blocked?</span>
+    <span>plan this change</span>
+    <span>switch to the other repo</span>
+    <span>start from these notes</span>
   </div>
 
-  <p><code>Plan</code> is the structured mode. Use it when the work is still fuzzy and you want Jini to turn it into goal, requirements, design, steps, and run.</p>
+  <p>Daily use should feel like one calm conversation. You should not have to memorize product words like <code>Missing</code> or <code>Switch</code> before Jini becomes useful.</p>
+  <p>If the work is fuzzy, plain asks like <code>plan this change</code> should still trigger the structured path without forcing you to translate into Jini-specific vocabulary first.</p>
 </div>
 
 <div class="section-card">
