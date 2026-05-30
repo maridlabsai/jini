@@ -9336,8 +9336,8 @@ def print_repo_start_surface(repo_context: dict[str, Any]) -> None:
     print("    Review the repo and suggest the next move.")
     print(f"  {cli} fix failing tests")
     print("    Fix the failing tests in this repo.")
-    print(f"  {cli} plan this change")
-    print("    Plan the change before editing.")
+    print(f"  {cli} review this branch")
+    print("    Review the current branch and call out risks.")
     print()
     print("Detected here:")
     surfaced = False
