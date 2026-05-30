@@ -9362,7 +9362,6 @@ def print_repo_start_surface(repo_context: dict[str, Any]) -> None:
     print()
     print("Already have Jini work?")
     print(f"  {cli} status /path/to/work")
-    print("    Resume existing Jini work when this repo already has it.")
 
 
 def interactive_front_door_enabled() -> bool:

@@ -540,6 +540,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("verify  ", result.stdout)
         self.assertIn("Already have Jini work?", result.stdout)
         self.assertIn("jini status /path/to/work", result.stdout)
+        self.assertNotIn("Resume existing Jini work when this repo already has it.", result.stdout)
         self.assertNotIn("Only if needed:", result.stdout)
         self.assertNotIn("jini doctor", result.stdout)
         self.assertNotIn("Triage the current repo and surface the strongest next move.", result.stdout)
