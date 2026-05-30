@@ -22442,7 +22442,17 @@ def main() -> int:
         return 0
     if argv[0] == "provider":
         provider_argv = argv[1:]
-        if not provider_argv or provider_argv[0] in {"-h", "--help", "help"}:
+        if not provider_argv:
+            print_admin_command_inventory()
+            return 0
+        if provider_argv[0] in {"-h", "--help", "help"}:
+            if len(provider_argv) > 1:
+                print_help_variant_request_hint(
+                    f"provider {provider_argv[0]}",
+                    provider_argv[1:],
+                    "admin command inventory",
+                )
+                return 2
             print_admin_command_inventory()
             return 0
         if provider_argv[0] == "doctor":
