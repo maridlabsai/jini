@@ -28,8 +28,8 @@ quick_links:
 <pre><code class="language-bash">jini</code></pre>
 
   <p>That should be the normal entry. Jini should either continue the thing you were already working on, show <code>Active work</code> when several projects are in flight, or offer a repo-aware task-first start surface if nothing is active yet.</p>
-  <p>That repo-aware start surface should stay light: one calm repo-context line, direct task suggestions, detected entrypoints, and only the recovery commands a daily user actually needs.</p>
-  <p>Internal diagnostics like <code>repo-map</code> should stay off the first screen. A Claude Code, Codex, or GitHub CLI user should see task suggestions first, then only <code>status /path/to/work</code> or <code>doctor</code> if adoption or setup is actually relevant.</p>
+  <p>That repo-aware start surface should stay light: one calm repo-context line, direct task suggestions, detected entrypoints, and only the adoption recovery a daily user actually needs.</p>
+  <p>Internal diagnostics like <code>repo-map</code> and setup surfaces like <code>doctor</code> should stay off the first screen. A Claude Code, Codex, or GitHub CLI user should see task suggestions first, then only <code>status /path/to/work</code> when an existing Jini work path actually needs adoption.</p>
   <p>Inside a repo, the first suggestions should be concrete asks like <code>jini review this repo</code>, <code>jini fix failing tests</code>, and <code>jini plan this change</code>, not examples and setup trivia.</p>
   <p>In a real terminal, bare <code>jini</code> should not print a launcher card and exit. It should stay open, detect the repo, show one calm repo-context line, ask <code>What do you want Jini to do?</code>, and accept the first task line immediately.</p>
   <p>After the first answer it should keep the <code>jini&gt;</code> prompt open, let you type follow-up turns, and keep the controls in the background instead of teaching them before the task starts. If you need them, <code>commands</code>, <code>doctor</code>, <code>help --admin</code>, and <code>exit</code> should still work inside the same live session.</p>

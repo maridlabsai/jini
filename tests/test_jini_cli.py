@@ -531,7 +531,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("make start", result.stdout)
         self.assertIn("Only if needed:", result.stdout)
         self.assertIn("jini status /path/to/work", result.stdout)
-        self.assertIn("jini doctor", result.stdout)
+        self.assertNotIn("jini doctor", result.stdout)
         self.assertNotIn("START WITH THE TASK", result.stdout)
         self.assertNotIn("DETECTED ENTRYPOINTS", result.stdout)
         self.assertNotIn("FALLBACKS", result.stdout)

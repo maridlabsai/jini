@@ -9353,8 +9353,6 @@ def print_repo_start_surface(repo_context: dict[str, Any]) -> None:
     print("Only if needed:")
     print(f"  {cli} status /path/to/work")
     print("    Resume existing Jini work when this repo already has it.")
-    print(f"  {cli} doctor")
-    print("    Check route and setup before execution.")
 
 
 def interactive_front_door_enabled() -> bool:
