@@ -9353,12 +9353,8 @@ def print_help_variant_request_hint(help_invocation: str, request_tokens: list[s
         print(line)
 
 
-CATALOG_NAMESPACE_HELP_TAIL_RULES: tuple[tuple[str, str, frozenset[str]], ...] = (
-    ("admin", "admin command inventory", frozenset({"-h", "--help", "help"})),
-    ("provider", "admin command inventory", frozenset({"-h", "--help", "help"})),
-)
-
-CATALOG_DIRECT_HELP_TAIL_RULES: tuple[tuple[str, str, frozenset[str]], ...] = (
+CATALOG_NAMESPACE_HELP_TOKENS = frozenset({"-h", "--help", "help"})
+CATALOG_DIRECT_HELP_RULES: tuple[tuple[str, str, frozenset[str]], ...] = (
     ("commands", "public command inventory", frozenset()),
     ("-h", "CLI overview", frozenset({"--admin", "--all"})),
     ("--help", "CLI overview", frozenset({"--admin", "--all"})),
@@ -9366,31 +9362,62 @@ CATALOG_DIRECT_HELP_TAIL_RULES: tuple[tuple[str, str, frozenset[str]], ...] = (
 )
 
 
-def dispatch_catalog_request_tail(argv: list[str]) -> int | None:
+def dispatch_catalog_entrypoint(argv: list[str]) -> tuple[list[str], int | None]:
     if not argv:
-        return None
+        return argv, None
     head = argv[0]
-    for namespace, inventory_name, help_tokens in CATALOG_NAMESPACE_HELP_TAIL_RULES:
-        if head != namespace:
-            continue
+    if head == "admin":
         nested_argv = argv[1:]
-        if len(nested_argv) > 1 and nested_argv[0] in help_tokens:
-            print_help_variant_request_hint(
-                f"{namespace} {nested_argv[0]}",
-                nested_argv[1:],
-                inventory_name,
-            )
-            return 2
-        return None
-    for invocation, inventory_name, ignored_tokens in CATALOG_DIRECT_HELP_TAIL_RULES:
+        if not nested_argv:
+            print_admin_command_inventory()
+            return [], 0
+        if nested_argv[0] in CATALOG_NAMESPACE_HELP_TOKENS:
+            if len(nested_argv) > 1:
+                print_help_variant_request_hint(
+                    f"admin {nested_argv[0]}",
+                    nested_argv[1:],
+                    "admin command inventory",
+                )
+                return [], 2
+            print_admin_command_inventory()
+            return [], 0
+        return nested_argv, None
+    if head == "provider":
+        nested_argv = argv[1:]
+        if not nested_argv:
+            print_admin_command_inventory()
+            return [], 0
+        if nested_argv[0] in CATALOG_NAMESPACE_HELP_TOKENS:
+            if len(nested_argv) > 1:
+                print_help_variant_request_hint(
+                    f"provider {nested_argv[0]}",
+                    nested_argv[1:],
+                    "admin command inventory",
+                )
+                return [], 2
+            print_admin_command_inventory()
+            return [], 0
+        if nested_argv[0] == "doctor":
+            return ["doctor", *nested_argv[1:]], None
+        return argv, None
+    for invocation, inventory_name, ignored_tokens in CATALOG_DIRECT_HELP_RULES:
         if head != invocation:
             continue
         extra_tokens = [token for token in argv[1:] if token not in ignored_tokens]
         if extra_tokens:
             print_help_variant_request_hint(invocation, argv[1:], inventory_name)
-            return 2
-        return None
-    return None
+            return [], 2
+        if invocation == "commands":
+            print_public_command_inventory()
+            return [], 0
+        if "--admin" in argv[1:]:
+            print_admin_command_inventory()
+        elif "--all" in argv[1:]:
+            print_public_command_inventory()
+        else:
+            print_cli_overview()
+        return [], 0
+    return argv, None
 
 
 def resolve_display_path(path_text: str) -> Path:
@@ -22449,47 +22476,9 @@ def main() -> int:
     if not argv:
         print_cli_overview()
         return 0
-    request_tail_result = dispatch_catalog_request_tail(argv)
-    if request_tail_result is not None:
-        return request_tail_result
-    if argv[0] == "admin":
-        admin_argv = argv[1:]
-        if not admin_argv:
-            print_admin_command_inventory()
-            return 0
-        if admin_argv[0] in {"-h", "--help", "help"}:
-            print_admin_command_inventory()
-            return 0
-        argv = admin_argv
-    if argv[0] == "commands":
-        print_public_command_inventory()
-        return 0
-    if argv[0] == "provider":
-        provider_argv = argv[1:]
-        if not provider_argv:
-            print_admin_command_inventory()
-            return 0
-        if provider_argv[0] in {"-h", "--help", "help"}:
-            print_admin_command_inventory()
-            return 0
-        if provider_argv[0] == "doctor":
-            argv = ["doctor", *provider_argv[1:]]
-    if argv[0] in {"-h", "--help"}:
-        if "--admin" in argv[1:]:
-            print_admin_command_inventory()
-        elif "--all" in argv[1:]:
-            print_public_command_inventory()
-        else:
-            print_cli_overview()
-        return 0
-    if argv[0] == "help":
-        if "--admin" in argv[1:]:
-            print_admin_command_inventory()
-        elif "--all" in argv[1:]:
-            print_public_command_inventory()
-        else:
-            print_cli_overview()
-        return 0
+    argv, catalog_exit = dispatch_catalog_entrypoint(argv)
+    if catalog_exit is not None:
+        return catalog_exit
 
     args = parser.parse_args(normalize_cli_argv(argv))
     registry = load_registry()
