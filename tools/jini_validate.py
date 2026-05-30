@@ -22,6 +22,7 @@ import ast
 import base64
 import difflib
 import hashlib
+import io
 import json
 import os
 import re
@@ -24921,11 +24922,32 @@ def run_cli() -> int:
     try:
         return main()
     except BrokenPipeError:
+        suppress_broken_pipe_stdout()
         return 141
     except KeyboardInterrupt:
         print(file=sys.stderr)
         print("Cancelled.", file=sys.stderr)
         return 130
+
+
+def suppress_broken_pipe_stdout() -> None:
+    try:
+        stdout_fd = sys.stdout.fileno()
+    except (AttributeError, OSError, ValueError, io.UnsupportedOperation):
+        return
+    try:
+        devnull_fd = os.open(os.devnull, os.O_WRONLY)
+    except OSError:
+        return
+    try:
+        os.dup2(devnull_fd, stdout_fd)
+    except OSError:
+        pass
+    finally:
+        try:
+            os.close(devnull_fd)
+        except OSError:
+            pass
 
 
 if __name__ == "__main__":

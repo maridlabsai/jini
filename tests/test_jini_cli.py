@@ -812,13 +812,29 @@ class JiniCliConformanceTests(unittest.TestCase):
         stderr = io.StringIO()
         with (
             mock.patch("tools.jini_validate.main", side_effect=BrokenPipeError),
+            mock.patch("tools.jini_validate.suppress_broken_pipe_stdout") as suppress_stdout,
             redirect_stdout(stdout),
             redirect_stderr(stderr),
         ):
             result = jini_validate.run_cli()
         self.assertEqual(141, result)
+        suppress_stdout.assert_called_once_with()
         self.assertEqual("", stdout.getvalue())
         self.assertEqual("", stderr.getvalue())
+
+    def test_suppress_broken_pipe_stdout_redirects_stdout_to_devnull(self) -> None:
+        fake_stdout = mock.Mock()
+        fake_stdout.fileno.return_value = 7
+        with (
+            mock.patch("tools.jini_validate.sys.stdout", fake_stdout),
+            mock.patch("tools.jini_validate.os.open", return_value=11) as open_devnull,
+            mock.patch("tools.jini_validate.os.dup2") as dup2,
+            mock.patch("tools.jini_validate.os.close") as close_fd,
+        ):
+            jini_validate.suppress_broken_pipe_stdout()
+        open_devnull.assert_called_once_with(os.devnull, os.O_WRONLY)
+        dup2.assert_called_once_with(11, 7)
+        close_fd.assert_called_once_with(11)
 
     def test_interactive_repo_mode_uses_compact_follow_up_cards(self) -> None:
         repo = self.create_repo_fixture()
