@@ -9424,9 +9424,9 @@ def prompt_repo_task(repo_context: dict[str, Any], *, initial_request: str | Non
     if initial_request:
         print_repo_request_intake(initial_request, repo_context)
         print()
-        print("WHAT NEXT?")
+        print("What next?")
     else:
-        print("WHAT DO YOU WANT TO DO?")
+        print("What do you want Jini to do?")
         print("Type the task directly. Use `commands`, `doctor`, `help --admin`, or `exit` when needed.")
     while True:
         try:
@@ -9436,20 +9436,20 @@ def prompt_repo_task(repo_context: dict[str, Any], *, initial_request: str | Non
             print("Session closed.")
             return 0
         if not request_text:
-            print("Enter the task you want Jini to do, or type `exit` to leave.")
+            print("Type the next task, or `exit` to leave.")
             continue
         if normalize_interactive_entry(request_text).lower() in {"exit", "quit"}:
             print("Session closed.")
             return 0
         if handle_interactive_escape_hatch(request_text):
             print()
-            print("WHAT NEXT?")
+            print("What next?")
             continue
         if request_text:
             print()
             print_repo_request_intake(request_text, repo_context)
             print()
-            print("WHAT NEXT?")
+            print("What next?")
 
 
 def classify_request_intent(request_text: str) -> str:
