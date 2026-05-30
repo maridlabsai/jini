@@ -144,6 +144,10 @@ class PublicCliDocsTests(unittest.TestCase):
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
+        self.assertIn(
+            "The contrast is simple: <code>--help</code> stays on the CLI-overview path, while <code>provider help</code> crosses into the admin-inventory path, even though both redirects send the user back to <code>jini</code>.",
+            text,
+        )
 
     def test_install_page_explains_installer_provenance_summary(self) -> None:
         text = read(INSTALL_PATH)

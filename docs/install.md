@@ -177,6 +177,7 @@ Start with `jini` and type the request in the shell.
 Or use `jini open` or `jini status` if you want the current work surface.</code></pre>
 
   <p>Use that provider-help example when someone drifts into the admin/provider tree during first run. It should reject the request and send them back to the normal shell path.</p>
+  <p>The contrast is simple: <code>--help</code> stays on the CLI-overview path, while <code>provider help</code> crosses into the admin-inventory path, even though both redirects send the user back to <code>jini</code>.</p>
 </div>
 
 <div class="section-card">
