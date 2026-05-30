@@ -745,6 +745,24 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("Admin and developer command inventory", result.stdout)
         self.assertEqual("", result.stderr)
 
+    def test_provider_namespace_defaults_to_provider_doctor_surface(self) -> None:
+        result = self.run_cli("provider")
+        self.assert_ok(result)
+        self.assertIn("Provider", result.stdout)
+        self.assertIn("Status", result.stdout)
+        self.assertNotIn("Admin and developer command inventory", result.stdout)
+
+    def test_provider_namespace_accepts_doctor_flags_directly(self) -> None:
+        env = {
+            "JINI_PROVIDER": "claude",
+            "ANTHROPIC_API_KEY": "sk-live-secret",
+            "JINI_MODEL": "sonnet",
+        }
+        result = self.run_cli("provider", "--format", "json", env=env)
+        self.assert_ok(result)
+        report = json.loads(result.stdout)
+        self.assertEqual("anthropic", report["provider_id"])
+
     def test_admin_namespace_routes_internal_command(self) -> None:
         result = self.run_cli("admin", "list-schemas")
         self.assert_ok(result)

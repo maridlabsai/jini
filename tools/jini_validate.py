@@ -9726,8 +9726,7 @@ def dispatch_catalog_entrypoint(argv: list[str]) -> tuple[list[str], int | None]
     if head == "provider":
         nested_argv = argv[1:]
         if not nested_argv:
-            print_admin_command_inventory()
-            return [], 0
+            return ["doctor"], None
         if nested_argv[0] in CATALOG_NAMESPACE_HELP_TOKENS:
             if len(nested_argv) > 1:
                 print_help_variant_request_hint(
@@ -9736,11 +9735,10 @@ def dispatch_catalog_entrypoint(argv: list[str]) -> tuple[list[str], int | None]
                     "admin command inventory",
                 )
                 return [], 2
-            print_admin_command_inventory()
-            return [], 0
+            return ["doctor", "--help"], None
         if nested_argv[0] == "doctor":
             return ["doctor", *nested_argv[1:]], None
-        return argv, None
+        return ["doctor", *nested_argv], None
     for invocation, inventory_name, ignored_tokens in CATALOG_DIRECT_HELP_RULES:
         if head != invocation:
             continue
