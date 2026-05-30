@@ -1176,6 +1176,75 @@ class JiniCliConformanceTests(unittest.TestCase):
         current_work = json.loads((self.tmp / ".jini" / "current-work.json").read_text(encoding="utf-8"))
         self.assertEqual(str(pack_dir.resolve()), current_work["pack_dir"])
 
+    def test_delegate_updates_status_continue_show_and_resume_focus(self) -> None:
+        pack_dir = self.compile_research_pack()
+        self.assert_ok(self.run_cli("status", pack_dir))
+
+        delegate_result = self.run_cli("delegate", "reviewer", "--instruction", "Focus on risks.", "--format", "json")
+        self.assert_ok(delegate_result)
+        delegation = json.loads(delegate_result.stdout)
+        summary_path = Path(delegation["summary_path"])
+
+        status_result = self.run_cli("status", "--format", "json")
+        self.assert_ok(status_result)
+        status_payload = json.loads(status_result.stdout)
+        self.assertEqual("reviewer-brief", status_payload["current_focus"]["id"])
+        self.assertEqual("Reviewer delegation brief", status_payload["current_focus"]["label"])
+        self.assertEqual("jini continue", status_payload["current_focus"]["show_command"])
+
+        continue_result = self.run_cli("continue", "--print-path")
+        self.assert_ok(continue_result)
+        self.assertEqual(display := str(summary_path.relative_to(REPO_ROOT)) if summary_path.is_relative_to(REPO_ROOT) else str(summary_path), continue_result.stdout.strip())
+
+        show_result = self.run_cli("show")
+        self.assert_ok(show_result)
+        self.assertIn("# Delegation: Reviewer", show_result.stdout)
+        self.assertIn("## Instruction", show_result.stdout)
+
+        resume_result = self.run_cli("resume", "--format", "json")
+        self.assert_ok(resume_result)
+        resume_payload = json.loads(resume_result.stdout)
+        self.assertEqual("reviewer-brief", resume_payload["current_focus"]["id"])
+        self.assertEqual("Reviewer delegation brief", resume_payload["current_focus"]["label"])
+        self.assertEqual("Reviewer delegation brief", resume_payload["recent_artifacts"][0]["artifact_type"])
+        self.assertTrue(any("Focused delegation brief: `Reviewer delegation brief`" in item for item in resume_payload["resume_items"]))
+
+        skills_result = self.run_cli("skills", "--format", "json")
+        self.assert_ok(skills_result)
+        skills_payload = json.loads(skills_result.stdout)
+        self.assertEqual("reviewer", skills_payload["skills"][0]["skill_id"])
+        feedback = skills_payload["skills"][0]["feedback"]
+        self.assertEqual(1, feedback["repo_signals"]["delegated"])
+        self.assertEqual(1, feedback["repo_signals"]["continued"])
+        self.assertEqual(1, feedback["repo_signals"]["shown"])
+        self.assertGreater(feedback["repo_score"], 0)
+
+    def test_skills_feedback_stays_repo_specific(self) -> None:
+        repo_a = self.create_repo_fixture()
+        repo_b = self.tmp / "other-repo"
+        shutil.copytree(repo_a, repo_b)
+        pack_dir = self.compile_research_pack()
+
+        self.assert_ok(self.run_cli_in_cwd(repo_a, "status", pack_dir))
+        delegate_result = self.run_cli_in_cwd(repo_a, "delegate", "reviewer", "--instruction", "Focus on risks.", "--format", "json")
+        self.assert_ok(delegate_result)
+
+        repo_a_skills = self.run_cli_in_cwd(repo_a, "skills", "reviewer", "--format", "json")
+        self.assert_ok(repo_a_skills)
+        repo_a_payload = json.loads(repo_a_skills.stdout)
+        repo_a_feedback = repo_a_payload["skills"][0]["feedback"]
+        self.assertEqual(1, repo_a_feedback["repo_signals"]["delegated"])
+        self.assertGreater(repo_a_feedback["repo_score"], 0)
+
+        repo_b_skills = self.run_cli_in_cwd(repo_b, "skills", "reviewer", "--format", "json")
+        self.assert_ok(repo_b_skills)
+        repo_b_payload = json.loads(repo_b_skills.stdout)
+        repo_b_feedback = repo_b_payload["skills"][0]["feedback"]
+        self.assertEqual({}, repo_b_feedback["repo_signals"])
+        self.assertEqual(0, repo_b_feedback["repo_score"])
+        self.assertEqual(1, repo_b_feedback["global_signals"]["delegated"])
+        self.assertGreater(repo_b_feedback["global_score"], 0)
+
     def test_continue_command_resolves_next_useful_artifact(self) -> None:
         pack_dir = self.compile_research_pack()
 

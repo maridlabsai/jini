@@ -649,8 +649,14 @@ DOCUMENT_READ_ERRORS = (OSError, json.JSONDecodeError) + YAML_ERROR_TYPES
 
 def load_document(path: Path) -> Any:
     text = path.read_text(encoding="utf-8")
+    stripped = text.lstrip()
     if path.suffix.lower() == ".json":
         return json.loads(text)
+    if stripped.startswith("{") or stripped.startswith("["):
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            pass
     return _yaml_load_text(text)
 
 
@@ -6815,6 +6821,154 @@ def load_skill_definition(skill_dir: Path, *, scope: str, source_root: Path) -> 
     }
 
 
+SKILL_FEEDBACK_EVENT_WEIGHTS = {
+    "delegated": 4,
+    "continued": 3,
+    "shown": 2,
+    "opened": 2,
+}
+
+
+def skill_feedback_path() -> Path:
+    return session_state_root() / "skill-feedback.json"
+
+
+def load_skill_feedback_store() -> dict[str, Any]:
+    path = skill_feedback_path()
+    if not path.exists():
+        return {}
+    try:
+        payload = load_json_file(path)
+    except (json.JSONDecodeError, OSError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def save_skill_feedback_store(payload: dict[str, Any]) -> Path:
+    path = skill_feedback_path()
+    path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    return path
+
+
+def skill_feedback_workspace_key(workspace_root: Path | None = None) -> str:
+    resolved = (workspace_root or Path.cwd()).expanduser().resolve()
+    repo_context = inspect_repo_context(resolved, repo_path=resolved)
+    repo_root = str(repo_context.get("repo_root", "")).strip()
+    return repo_root or str(resolved)
+
+
+def _skill_feedback_counter_map(payload: dict[str, Any]) -> dict[str, int]:
+    signals = payload.get("signals", {})
+    if not isinstance(signals, dict):
+        signals = {}
+        payload["signals"] = signals
+    normalized: dict[str, int] = {}
+    for key, value in signals.items():
+        normalized[str(key)] = int(value or 0)
+    payload["signals"] = normalized
+    return normalized
+
+
+def skill_feedback_score(signals: dict[str, int]) -> int:
+    total = 0
+    for event, weight in SKILL_FEEDBACK_EVENT_WEIGHTS.items():
+        total += int(signals.get(event, 0) or 0) * weight
+    return total
+
+
+def record_skill_feedback_event(
+    skill_id: str,
+    *,
+    event: str,
+    workspace_root: Path | None = None,
+    scope: str = "",
+    delegation_id: str = "",
+) -> Path | None:
+    normalized_skill_id = skill_id.strip()
+    normalized_event = event.strip().lower()
+    if not normalized_skill_id or normalized_event not in SKILL_FEEDBACK_EVENT_WEIGHTS:
+        return None
+    workspace_key = skill_feedback_workspace_key(workspace_root)
+    payload = load_skill_feedback_store()
+    payload["schema_version"] = "0.1.0"
+    payload["context_type"] = "JiniSkillFeedback"
+    payload["updated_at"] = now_utc()
+    skills = payload.setdefault("skills", {})
+    if not isinstance(skills, dict):
+        skills = {}
+        payload["skills"] = skills
+    skill_payload = skills.setdefault(normalized_skill_id, {})
+    if not isinstance(skill_payload, dict):
+        skill_payload = {}
+        skills[normalized_skill_id] = skill_payload
+    if scope.strip():
+        skill_payload["scope"] = scope.strip()
+    global_payload = skill_payload.setdefault("global", {})
+    if not isinstance(global_payload, dict):
+        global_payload = {}
+        skill_payload["global"] = global_payload
+    workspace_payloads = skill_payload.setdefault("workspaces", {})
+    if not isinstance(workspace_payloads, dict):
+        workspace_payloads = {}
+        skill_payload["workspaces"] = workspace_payloads
+    workspace_payload = workspace_payloads.setdefault(workspace_key, {})
+    if not isinstance(workspace_payload, dict):
+        workspace_payload = {}
+        workspace_payloads[workspace_key] = workspace_payload
+    workspace_payload["workspace_key"] = workspace_key
+    workspace_payload["workspace_label"] = Path(workspace_key).name or workspace_key
+    timestamp = now_utc()
+    for target in (global_payload, workspace_payload):
+        signals = _skill_feedback_counter_map(target)
+        signals[normalized_event] = signals.get(normalized_event, 0) + 1
+        target["last_used_at"] = timestamp
+        if delegation_id.strip():
+            target["last_delegation_id"] = delegation_id.strip()
+    return save_skill_feedback_store(payload)
+
+
+def build_skill_feedback_summary(
+    skill_id: str,
+    *,
+    workspace_root: Path | None = None,
+    payload: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    store = payload if isinstance(payload, dict) else load_skill_feedback_store()
+    workspace_key = skill_feedback_workspace_key(workspace_root)
+    skills = store.get("skills", {})
+    if not isinstance(skills, dict):
+        skills = {}
+    skill_payload = skills.get(skill_id, {})
+    if not isinstance(skill_payload, dict):
+        skill_payload = {}
+    global_payload = skill_payload.get("global", {})
+    if not isinstance(global_payload, dict):
+        global_payload = {}
+    workspace_payloads = skill_payload.get("workspaces", {})
+    if not isinstance(workspace_payloads, dict):
+        workspace_payloads = {}
+    workspace_payload = workspace_payloads.get(workspace_key, {})
+    if not isinstance(workspace_payload, dict):
+        workspace_payload = {}
+    global_signals = _skill_feedback_counter_map(global_payload)
+    repo_signals = _skill_feedback_counter_map(workspace_payload)
+    global_signal_count = sum(int(value or 0) for value in global_signals.values())
+    repo_signal_count = sum(int(value or 0) for value in repo_signals.values())
+    return {
+        "workspace_key": workspace_key,
+        "workspace_label": str(workspace_payload.get("workspace_label", "")).strip()
+        or (Path(workspace_key).name or workspace_key),
+        "repo_signals": repo_signals,
+        "repo_signal_count": repo_signal_count,
+        "repo_score": skill_feedback_score(repo_signals),
+        "global_signals": global_signals,
+        "global_signal_count": global_signal_count,
+        "global_score": skill_feedback_score(global_signals),
+        "last_used_at": str(workspace_payload.get("last_used_at", "")).strip()
+        or str(global_payload.get("last_used_at", "")).strip(),
+    }
+
+
 def discover_skills(
     *,
     workspace_root: Path | None = None,
@@ -6822,6 +6976,7 @@ def discover_skills(
     include_disabled: bool = False,
 ) -> dict[str, Any]:
     discovered: list[dict[str, Any]] = []
+    feedback_store = load_skill_feedback_store()
     winning_ids: set[str] = set()
     for scope, root in skill_lookup_roots(workspace_root):
         if not root.exists():
@@ -6839,7 +6994,19 @@ def discover_skills(
             if query and not _skill_matches_query(skill, query):
                 continue
             winning_ids.add(skill_id)
+            skill["feedback"] = build_skill_feedback_summary(
+                skill_id,
+                workspace_root=workspace_root,
+                payload=feedback_store,
+            )
             discovered.append(skill)
+    discovered.sort(
+        key=lambda item: (
+            -int(item.get("feedback", {}).get("repo_score", 0) or 0),
+            -int(item.get("feedback", {}).get("global_score", 0) or 0),
+            str(item.get("skill_id", "")),
+        )
+    )
     return {
         "schema_version": "0.1.0",
         "result_type": "JiniSkillCatalog",
@@ -6919,6 +7086,32 @@ def record_active_delegation(pack_dir: Path, result: dict[str, Any]) -> Path:
     }
     payload["updated_at"] = now_utc()
     return save_thread_state(pack_dir, payload)
+
+
+def load_active_delegation_focus(pack_dir: Path) -> dict[str, Any] | None:
+    payload = load_thread_state(pack_dir)
+    focus = payload.get("current_focus", {})
+    if not isinstance(focus, dict):
+        return None
+    if str(focus.get("kind", "")).strip() != "delegation":
+        return None
+    artifact_path_text = str(focus.get("artifact_path", "")).strip()
+    if not artifact_path_text:
+        return None
+    artifact_path = Path(artifact_path_text).expanduser()
+    if not artifact_path.exists():
+        return None
+    skill_id = str(payload.get("active_skill_id", "")).strip() or "delegation"
+    label = str(focus.get("artifact_label", "")).strip() or f"{skill_id} delegation brief"
+    return {
+        "id": f"{skill_id}-brief",
+        "skill_id": skill_id,
+        "label": label,
+        "path": str(artifact_path),
+        "status": str(payload.get("active_delegation_status", "")).strip() or "staged",
+        "show_command": f"{cli_invocation()} continue",
+        "open_command": f"{cli_invocation()} continue",
+    }
 
 
 def build_skill_delegation(
@@ -11218,6 +11411,7 @@ def build_compact_context(
     runtime_readout = build_runtime_readout(recommendation, efficiency_posture=efficiency_posture)
     runtime_readout.pop("model", None)
     runtime_readout.pop("context_policy", None)
+    delegation_focus = load_active_delegation_focus(pack_dir)
     recent_artifacts = memory_context.get("recent_artifacts", [])[: min(max(1, max_items), 3)]
     resume_items = memory_context.get("resume_items", [])[: max(2, max_items + 1)]
     stale_signals = memory_context.get("stale_signals", [])[: max(1, max_items)]
@@ -11246,6 +11440,27 @@ def build_compact_context(
         }
         for item in recent_artifacts
     ]
+    compact_current_focus = {}
+    if delegation_focus is not None:
+        compact_current_focus = {
+            "id": str(delegation_focus.get("id", "")).strip(),
+            "label": str(delegation_focus.get("label", "")).strip(),
+            "show_command": str(delegation_focus.get("show_command", "")).strip(),
+            "open_command": str(delegation_focus.get("open_command", "")).strip(),
+        }
+        compact_recent_artifacts = [
+            {
+                "artifact_type": str(delegation_focus.get("label", "")).strip(),
+                "path": shorten_path(str(delegation_focus.get("path", ""))),
+                "status": str(delegation_focus.get("status", "")).strip() or "staged",
+                "revision": 1,
+            },
+            *compact_recent_artifacts,
+        ][: max(1, min(max_items, 3))]
+        resume_items = [
+            f"Focused delegation brief: `{str(delegation_focus.get('label', '')).strip()}` via `{cli_invocation()} continue`.",
+            *resume_items,
+        ][: max(2, max_items + 1)]
     compact = {
         "schema_version": "0.1.0",
         "context_type": "JiniCompactContext",
@@ -11293,6 +11508,8 @@ def build_compact_context(
             else None
         ),
     }
+    if compact_current_focus:
+        compact["current_focus"] = compact_current_focus
 
     def compact_chars(payload: dict[str, Any]) -> int:
         return len(json.dumps(payload, sort_keys=True))
@@ -18190,7 +18407,8 @@ def build_outcome_view(
         }
         for item in artifact_catalog.get("ready_now", [])
     ], projection)
-    current_focus = ready_now[0] if ready_now else {}
+    delegation_focus = load_active_delegation_focus(pack_dir)
+    current_focus = delegation_focus or (ready_now[0] if ready_now else {})
     input_items = projection.get("input_items", [])
     if not isinstance(input_items, list):
         input_items = []
@@ -23436,6 +23654,13 @@ def main() -> int:
         except ValueError as exc:
             print(f"ERROR {exc}", file=sys.stderr)
             return 1
+        record_skill_feedback_event(
+            normalized_skill_id,
+            event="delegated",
+            workspace_root=Path.cwd(),
+            scope=str(skill.get("scope", "")).strip(),
+            delegation_id=str(result.get("delegation_id", "")).strip(),
+        )
         append_learning_event(
             "delegate-skill",
             {
@@ -23677,13 +23902,22 @@ def main() -> int:
     if args.command == "show":
         try:
             pack_dir = resolve_context_pack_dir(args.path, registry, command_label="show")
-            artifact = (
-                resolve_artifact_item(pack_dir, registry, args.artifact)
-                if args.artifact
-                else resolve_default_artifact_item(pack_dir, registry)
-            )
-            persist_projection_focus(pack_dir, artifact)
-            print(Path(str(artifact["resolved_path"])).read_text(encoding="utf-8"))
+            delegation_focus = load_active_delegation_focus(pack_dir) if args.artifact is None else None
+            if delegation_focus is not None:
+                record_skill_feedback_event(
+                    str(delegation_focus.get("skill_id", "")).strip(),
+                    event="shown",
+                    workspace_root=Path.cwd(),
+                )
+                print(Path(str(delegation_focus["path"])).read_text(encoding="utf-8"))
+            else:
+                artifact = (
+                    resolve_artifact_item(pack_dir, registry, args.artifact)
+                    if args.artifact
+                    else resolve_default_artifact_item(pack_dir, registry)
+                )
+                persist_projection_focus(pack_dir, artifact)
+                print(Path(str(artifact["resolved_path"])).read_text(encoding="utf-8"))
         except (FileNotFoundError, OSError, TypeError, ValueError) as exc:
             if args.path is None:
                 context = load_current_session_context()
@@ -23803,19 +24037,40 @@ def main() -> int:
     if args.command == "continue":
         try:
             pack_dir = resolve_context_pack_dir(args.path, registry, command_label="continue")
-            artifact = resolve_continue_item(pack_dir, registry)
-            persist_projection_focus(pack_dir, artifact)
-            artifact_path = Path(str(artifact["resolved_path"]))
-            if args.print_path:
-                print(display_path(artifact_path))
-            else:
-                summary = summarise_pack(pack_dir, registry)
-                print_continue_preview(
-                    artifact,
-                    artifact_path,
-                    pack_dir=pack_dir if args.path is not None else None,
-                    publication_links=latest_publication_links(summary),
+            delegation_focus = load_active_delegation_focus(pack_dir)
+            if delegation_focus is not None:
+                record_skill_feedback_event(
+                    str(delegation_focus.get("skill_id", "")).strip(),
+                    event="continued",
+                    workspace_root=Path.cwd(),
                 )
+                artifact = {
+                    "id": str(delegation_focus["id"]),
+                    "label": str(delegation_focus["label"]),
+                }
+                artifact_path = Path(str(delegation_focus["path"]))
+                if args.print_path:
+                    print(display_path(artifact_path))
+                else:
+                    print_continue_preview(
+                        artifact,
+                        artifact_path,
+                        pack_dir=pack_dir if args.path is not None else None,
+                    )
+            else:
+                artifact = resolve_continue_item(pack_dir, registry)
+                persist_projection_focus(pack_dir, artifact)
+                artifact_path = Path(str(artifact["resolved_path"]))
+                if args.print_path:
+                    print(display_path(artifact_path))
+                else:
+                    summary = summarise_pack(pack_dir, registry)
+                    print_continue_preview(
+                        artifact,
+                        artifact_path,
+                        pack_dir=pack_dir if args.path is not None else None,
+                        publication_links=latest_publication_links(summary),
+                    )
         except (FileNotFoundError, OSError, TypeError, ValueError) as exc:
             if args.path is None:
                 context = load_current_session_context()
