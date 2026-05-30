@@ -9296,7 +9296,6 @@ def print_cli_start_surface() -> None:
     print()
     print("MORE")
     print(f"  {cli} commands")
-    print(f"  {cli} help --admin")
 
 
 REQUEST_ENTRY_VERBS = frozenset(

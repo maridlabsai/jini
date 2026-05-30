@@ -592,8 +592,10 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("jini\n", result.stdout)
         self.assertIn("jini status /path/to/work", result.stdout)
         self.assertIn("jini doctor", result.stdout)
+        self.assertIn("jini commands", result.stdout)
         self.assertNotIn("jini try-example research-prd", result.stdout)
         self.assertNotIn("jini setup --harness codex", result.stdout)
+        self.assertNotIn("jini help --admin", result.stdout)
 
     def test_zero_arg_cli_resumes_current_work_surface(self) -> None:
         example_output = self.tmp / "research-example"
