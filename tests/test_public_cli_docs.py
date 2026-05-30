@@ -1,10 +1,16 @@
 from __future__ import annotations
 
+import sys
 import unittest
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from tools.help_tail_contract import HELP_TAIL_EXAMPLE_REQUEST, help_tail_error_line, help_tail_message_lines
+
 README_PATH = ROOT / "README.md"
 CLI_PATH = ROOT / "docs" / "cli.md"
 INSTALL_PATH = ROOT / "docs" / "install.md"
@@ -48,11 +54,15 @@ class PublicCliDocsTests(unittest.TestCase):
 
     def test_cli_guide_shows_help_request_tail_transcript(self) -> None:
         text = read(CLI_PATH)
+        help_lines = help_tail_message_lines(
+            "jini",
+            "help",
+            "CLI overview",
+            HELP_TAIL_EXAMPLE_REQUEST.split(),
+        )
         for marker in (
-            "$ jini help me edit pear fellow script.txt",
-            'ERROR `jini help` shows the CLI overview; it does not take a request like "me edit pear fellow script.txt".',
-            "Start with `jini` and type the request in the shell.",
-            "Or use `jini open` or `jini status` if you want the current work surface.",
+            f"$ jini help {HELP_TAIL_EXAMPLE_REQUEST}",
+            *help_lines,
             "That corrective output is the expected terminal shape for a help request tail.",
         ):
             with self.subTest(marker=marker):
@@ -60,16 +70,17 @@ class PublicCliDocsTests(unittest.TestCase):
 
     def test_cli_guide_lists_help_variant_matrix(self) -> None:
         text = read(CLI_PATH)
+        request_tokens = HELP_TAIL_EXAMPLE_REQUEST.split()
         for marker in (
             "The same redirect shape applies across the other help-entry variants too:",
-            "jini --help me edit pear fellow script.txt",
-            "ERROR `jini --help` shows the CLI overview ...",
-            "jini admin help me edit pear fellow script.txt",
-            "ERROR `jini admin help` shows the admin command inventory ...",
-            "jini provider help me edit pear fellow script.txt",
-            "ERROR `jini provider help` shows the admin command inventory ...",
-            "jini provider --help me edit pear fellow script.txt",
-            "ERROR `jini provider --help` shows the admin command inventory ...",
+            f"jini --help {HELP_TAIL_EXAMPLE_REQUEST}",
+            help_tail_error_line("jini", "--help", "CLI overview", request_tokens),
+            f"jini admin help {HELP_TAIL_EXAMPLE_REQUEST}",
+            help_tail_error_line("jini", "admin help", "admin command inventory", request_tokens),
+            f"jini provider help {HELP_TAIL_EXAMPLE_REQUEST}",
+            help_tail_error_line("jini", "provider help", "admin command inventory", request_tokens),
+            f"jini provider --help {HELP_TAIL_EXAMPLE_REQUEST}",
+            help_tail_error_line("jini", "provider --help", "admin command inventory", request_tokens),
             "Only the first line changes.",
         ):
             with self.subTest(marker=marker):
@@ -107,15 +118,16 @@ class PublicCliDocsTests(unittest.TestCase):
 
     def test_install_page_lists_help_variant_matrix(self) -> None:
         text = read(INSTALL_PATH)
+        request_tokens = HELP_TAIL_EXAMPLE_REQUEST.split()
         for marker in (
-            "jini --help me edit pear fellow script.txt",
-            "ERROR `jini --help` shows the CLI overview ...",
-            "jini admin help me edit pear fellow script.txt",
-            "ERROR `jini admin help` shows the admin command inventory ...",
-            "jini provider help me edit pear fellow script.txt",
-            "ERROR `jini provider help` shows the admin command inventory ...",
-            "jini provider --help me edit pear fellow script.txt",
-            "ERROR `jini provider --help` shows the admin command inventory ...",
+            f"jini --help {HELP_TAIL_EXAMPLE_REQUEST}",
+            help_tail_error_line("jini", "--help", "CLI overview", request_tokens),
+            f"jini admin help {HELP_TAIL_EXAMPLE_REQUEST}",
+            help_tail_error_line("jini", "admin help", "admin command inventory", request_tokens),
+            f"jini provider help {HELP_TAIL_EXAMPLE_REQUEST}",
+            help_tail_error_line("jini", "provider help", "admin command inventory", request_tokens),
+            f"jini provider --help {HELP_TAIL_EXAMPLE_REQUEST}",
+            help_tail_error_line("jini", "provider --help", "admin command inventory", request_tokens),
             "Only the first line changes. The redirect stays the same:",
         ):
             with self.subTest(marker=marker):
@@ -123,11 +135,15 @@ class PublicCliDocsTests(unittest.TestCase):
 
     def test_install_page_shows_provider_help_request_tail_transcript(self) -> None:
         text = read(INSTALL_PATH)
+        help_lines = help_tail_message_lines(
+            "jini",
+            "provider help",
+            "admin command inventory",
+            HELP_TAIL_EXAMPLE_REQUEST.split(),
+        )
         for marker in (
-            "$ jini provider help me edit pear fellow script.txt",
-            'ERROR `jini provider help` shows the admin command inventory; it does not take a request like "me edit pear fellow script.txt".',
-            "Start with `jini` and type the request in the shell.",
-            "Or use `jini open` or `jini status` if you want the current work surface.",
+            f"$ jini provider help {HELP_TAIL_EXAMPLE_REQUEST}",
+            *help_lines,
             "Use that provider-help example when someone drifts into the admin/provider tree during first run.",
         ):
             with self.subTest(marker=marker):
@@ -135,11 +151,15 @@ class PublicCliDocsTests(unittest.TestCase):
 
     def test_install_page_shows_dash_help_request_tail_transcript(self) -> None:
         text = read(INSTALL_PATH)
+        help_lines = help_tail_message_lines(
+            "jini",
+            "--help",
+            "CLI overview",
+            HELP_TAIL_EXAMPLE_REQUEST.split(),
+        )
         for marker in (
-            "$ jini --help me edit pear fellow script.txt",
-            'ERROR `jini --help` shows the CLI overview; it does not take a request like "me edit pear fellow script.txt".',
-            "Start with `jini` and type the request in the shell.",
-            "Or use `jini open` or `jini status` if you want the current work surface.",
+            f"$ jini --help {HELP_TAIL_EXAMPLE_REQUEST}",
+            *help_lines,
             "Use that <code>--help</code> example when someone pastes work after the overview flag on first run.",
         ):
             with self.subTest(marker=marker):

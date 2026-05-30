@@ -48,6 +48,7 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for older Python
     tomllib = None
 
 try:
+    from .help_tail_contract import help_tail_message_lines
     from .lean_metrics_support import (
         build_lean_platform_report,
         build_route_cost,
@@ -64,6 +65,7 @@ try:
     from .yaml_compat import safe_dump as compat_yaml_dump
     from .yaml_compat import safe_load as compat_yaml_load
 except ImportError:  # pragma: no cover - script execution path
+    from help_tail_contract import help_tail_message_lines
     from lean_metrics_support import (
         build_lean_platform_report,
         build_route_cost,
@@ -9347,22 +9349,14 @@ def print_admin_command_inventory() -> None:
 
 def print_help_request_hint(request_tokens: list[str]) -> None:
     cli = cli_invocation()
-    request = " ".join(request_tokens).strip()
-    print(
-        f'ERROR `{cli} help` shows the CLI overview; it does not take a request like "{request}".'
-    )
-    print(f"Start with `{cli}` and type the request in the shell.")
-    print(f"Or use `{cli} open` or `{cli} status` if you want the current work surface.")
+    for line in help_tail_message_lines(cli, "help", "CLI overview", request_tokens):
+        print(line)
 
 
 def print_help_variant_request_hint(help_invocation: str, request_tokens: list[str], inventory_name: str) -> None:
     cli = cli_invocation()
-    request = " ".join(request_tokens).strip()
-    print(
-        f'ERROR `{cli} {help_invocation}` shows the {inventory_name}; it does not take a request like "{request}".'
-    )
-    print(f"Start with `{cli}` and type the request in the shell.")
-    print(f"Or use `{cli} open` or `{cli} status` if you want the current work surface.")
+    for line in help_tail_message_lines(cli, help_invocation, inventory_name, request_tokens):
+        print(line)
 
 
 def resolve_display_path(path_text: str) -> Path:

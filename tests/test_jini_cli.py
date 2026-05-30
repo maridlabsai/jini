@@ -13,6 +13,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from tools.yaml_compat import safe_load
+from tools.help_tail_contract import HELP_TAIL_EXAMPLE_REQUEST, help_tail_message_lines
 
 
 CLI = [sys.executable, str(REPO_ROOT / "tools" / "jini.py")]
@@ -496,22 +497,24 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("usage: jini", result.stdout)
 
     def test_help_with_request_tail_shows_corrective_hint(self) -> None:
-        result = self.run_cli("help", "me", "edit", "pear fellow script.txt")
+        request_tokens = HELP_TAIL_EXAMPLE_REQUEST.split()
+        result = self.run_cli("help", *request_tokens)
         self.assert_error(result)
-        self.assertIn("ERROR `jini help` shows the CLI overview", result.stdout)
-        self.assertIn('it does not take a request like "me edit pear fellow script.txt"', result.stdout)
-        self.assertIn("Start with `jini` and type the request in the shell.", result.stdout)
-        self.assertIn("`jini open` or `jini status`", result.stdout)
+        self.assertEqual(
+            result.stdout.strip().splitlines(),
+            list(help_tail_message_lines("jini", "help", "CLI overview", request_tokens)),
+        )
         self.assertNotIn("OPEN JINI", result.stdout)
         self.assertEqual("", result.stderr)
 
     def test_dash_help_with_request_tail_shows_corrective_hint(self) -> None:
-        result = self.run_cli("--help", "me", "edit", "pear fellow script.txt")
+        request_tokens = HELP_TAIL_EXAMPLE_REQUEST.split()
+        result = self.run_cli("--help", *request_tokens)
         self.assert_error(result)
-        self.assertIn("ERROR `jini --help` shows the CLI overview", result.stdout)
-        self.assertIn('it does not take a request like "me edit pear fellow script.txt"', result.stdout)
-        self.assertIn("Start with `jini` and type the request in the shell.", result.stdout)
-        self.assertIn("`jini open` or `jini status`", result.stdout)
+        self.assertEqual(
+            result.stdout.strip().splitlines(),
+            list(help_tail_message_lines("jini", "--help", "CLI overview", request_tokens)),
+        )
         self.assertNotIn("OPEN JINI", result.stdout)
         self.assertEqual("", result.stderr)
 
@@ -549,32 +552,35 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("capture-evidence", result.stdout)
 
     def test_admin_help_with_request_tail_shows_corrective_hint(self) -> None:
-        result = self.run_cli("admin", "help", "me", "edit", "pear fellow script.txt")
+        request_tokens = HELP_TAIL_EXAMPLE_REQUEST.split()
+        result = self.run_cli("admin", "help", *request_tokens)
         self.assert_error(result)
-        self.assertIn("ERROR `jini admin help` shows the admin command inventory", result.stdout)
-        self.assertIn('it does not take a request like "me edit pear fellow script.txt"', result.stdout)
-        self.assertIn("Start with `jini` and type the request in the shell.", result.stdout)
-        self.assertIn("`jini open` or `jini status`", result.stdout)
+        self.assertEqual(
+            result.stdout.strip().splitlines(),
+            list(help_tail_message_lines("jini", "admin help", "admin command inventory", request_tokens)),
+        )
         self.assertNotIn("Admin and developer command inventory", result.stdout)
         self.assertEqual("", result.stderr)
 
     def test_provider_help_with_request_tail_shows_corrective_hint(self) -> None:
-        result = self.run_cli("provider", "help", "me", "edit", "pear fellow script.txt")
+        request_tokens = HELP_TAIL_EXAMPLE_REQUEST.split()
+        result = self.run_cli("provider", "help", *request_tokens)
         self.assert_error(result)
-        self.assertIn("ERROR `jini provider help` shows the admin command inventory", result.stdout)
-        self.assertIn('it does not take a request like "me edit pear fellow script.txt"', result.stdout)
-        self.assertIn("Start with `jini` and type the request in the shell.", result.stdout)
-        self.assertIn("`jini open` or `jini status`", result.stdout)
+        self.assertEqual(
+            result.stdout.strip().splitlines(),
+            list(help_tail_message_lines("jini", "provider help", "admin command inventory", request_tokens)),
+        )
         self.assertNotIn("Admin and developer command inventory", result.stdout)
         self.assertEqual("", result.stderr)
 
     def test_provider_dash_help_with_request_tail_shows_corrective_hint(self) -> None:
-        result = self.run_cli("provider", "--help", "me", "edit", "pear fellow script.txt")
+        request_tokens = HELP_TAIL_EXAMPLE_REQUEST.split()
+        result = self.run_cli("provider", "--help", *request_tokens)
         self.assert_error(result)
-        self.assertIn("ERROR `jini provider --help` shows the admin command inventory", result.stdout)
-        self.assertIn('it does not take a request like "me edit pear fellow script.txt"', result.stdout)
-        self.assertIn("Start with `jini` and type the request in the shell.", result.stdout)
-        self.assertIn("`jini open` or `jini status`", result.stdout)
+        self.assertEqual(
+            result.stdout.strip().splitlines(),
+            list(help_tail_message_lines("jini", "provider --help", "admin command inventory", request_tokens)),
+        )
         self.assertNotIn("Admin and developer command inventory", result.stdout)
         self.assertEqual("", result.stderr)
 

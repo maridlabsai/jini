@@ -157,10 +157,10 @@ jini
   <p>If you want the small public command list before doing anything else, run <code>jini commands</code>. If you maintain routes, bundles, or release plumbing, the deeper inventory lives under <code>jini admin help</code>.</p>
   <p>Help surfaces are catalogs, not request entrypoints. If you paste a work request after <code>help</code> or <code>--help</code>, Jini should reject that tail text and point you back to starting with <code>jini</code> in the shell.</p>
   <ul class="compact-list">
-    <li><code>jini --help me edit pear fellow script.txt</code> should start with <code>ERROR `jini --help` shows the CLI overview ...</code></li>
-    <li><code>jini admin help me edit pear fellow script.txt</code> should start with <code>ERROR `jini admin help` shows the admin command inventory ...</code></li>
-    <li><code>jini provider help me edit pear fellow script.txt</code> should start with <code>ERROR `jini provider help` shows the admin command inventory ...</code></li>
-    <li><code>jini provider --help me edit pear fellow script.txt</code> should start with <code>ERROR `jini provider --help` shows the admin command inventory ...</code></li>
+    <li><code>jini --help me edit pear fellow script.txt</code> should start with <code>ERROR `jini --help` shows the CLI overview; it does not take a request like "me edit pear fellow script.txt".</code></li>
+    <li><code>jini admin help me edit pear fellow script.txt</code> should start with <code>ERROR `jini admin help` shows the admin command inventory; it does not take a request like "me edit pear fellow script.txt".</code></li>
+    <li><code>jini provider help me edit pear fellow script.txt</code> should start with <code>ERROR `jini provider help` shows the admin command inventory; it does not take a request like "me edit pear fellow script.txt".</code></li>
+    <li><code>jini provider --help me edit pear fellow script.txt</code> should start with <code>ERROR `jini provider --help` shows the admin command inventory; it does not take a request like "me edit pear fellow script.txt".</code></li>
   </ul>
   <p>Only the first line changes. The redirect stays the same: start with <code>jini</code>, then use <code>jini open</code> or <code>jini status</code> if you want the current work surface.</p>
 
