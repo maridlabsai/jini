@@ -4201,6 +4201,75 @@ class JiniCliConformanceTests(unittest.TestCase):
             recommendation["runtime_guidance"]["notes"],
         )
 
+    def test_recommend_execution_restores_policy_runtime_target_after_recovered_signal(self) -> None:
+        pack_dir = self.compile_research_pack()
+        rollout_dir = pack_dir / "runtime" / "policy-rollouts"
+        rollout_dir.mkdir(parents=True, exist_ok=True)
+        rollout_path = rollout_dir / "runtime-routing-active.json"
+        rollout_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.1.0",
+                    "policy_type": "JiniPolicyRollout",
+                    "policy_id": "runtime-routing",
+                    "candidate_id": "runtime-routing-recovered-target-test",
+                    "status": "active",
+                    "recommended_runtime_target": "kiro-cli",
+                    "intent_overrides": {},
+                    "route_feedback_drivers": {},
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        self.assert_ok(
+            self.run_cli(
+                "record-runtime-target-outcome",
+                pack_dir,
+                "--runtime-target",
+                "kiro-cli",
+                "--status",
+                "throttled",
+                "--reason",
+                "Observed CLI throttling during execution.",
+                "--format",
+                "json",
+            )
+        )
+        self.assert_ok(
+            self.run_cli(
+                "record-runtime-target-outcome",
+                pack_dir,
+                "--runtime-target",
+                "kiro-cli",
+                "--status",
+                "recovered",
+                "--reason",
+                "Observed runtime recovery after retry.",
+                "--format",
+                "json",
+            )
+        )
+
+        result = self.run_cli("recommend-execution", pack_dir, "--intent", "make", "--format", "json")
+        self.assert_ok(result)
+
+        recommendation = json.loads(result.stdout)
+        self.assertEqual("kiro-cli", recommendation["active_policy"]["recommended_runtime_target"])
+        self.assertEqual("kiro-cli", recommendation["runtime_guidance"]["selected"]["id"])
+        recovered = next(item for item in recommendation["runtime_guidance"]["matches"] if item["id"] == "kiro-cli")
+        self.assertEqual("ready", recovered["health_status"])
+        self.assertEqual("recovered", recovered["health_last_status"])
+        self.assertEqual("learning-events", recovered["health_source"])
+        self.assertEqual(2, recovered["health_signal_count"])
+        self.assertTrue(
+            any(
+                "Preferred adapter `kiro-cli` was selected explicitly." in note
+                for note in recommendation["runtime_guidance"]["notes"]
+            )
+        )
+
     def test_compact_context_includes_home_memory_and_compression_ratio(self) -> None:
         pack_dir = self.compile_research_pack()
         home = self.personal_home()

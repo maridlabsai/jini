@@ -12757,6 +12757,9 @@ def build_adapter_resolution(
             entry["health_adjustment"] = health_adjustment
             entry["health_source"] = str(health_row.get("source", "default") or "default").strip()
             entry["health_signal_count"] = int(health_row.get("signal_count", 0) or 0)
+            entry["health_last_status"] = str(health_row.get("last_status", health_status) or health_status).strip().lower()
+            entry["health_last_recorded_at"] = str(health_row.get("last_recorded_at", "") or "").strip()
+            entry["health_last_reason"] = str(health_row.get("last_reason", "") or "").strip()
             entry["effective_priority"] = int(entry["priority"]) + health_adjustment
         else:
             entry["effective_priority"] = int(entry["priority"])
