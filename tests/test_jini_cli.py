@@ -4143,6 +4143,60 @@ class JiniCliConformanceTests(unittest.TestCase):
             )
         )
 
+    def test_recommend_execution_keeps_policy_runtime_target_when_no_healthier_target_is_available(self) -> None:
+        pack_dir = self.compile_research_pack()
+        rollout_dir = pack_dir / "runtime" / "policy-rollouts"
+        rollout_dir.mkdir(parents=True, exist_ok=True)
+        rollout_path = rollout_dir / "runtime-routing-active.json"
+        rollout_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.1.0",
+                    "policy_type": "JiniPolicyRollout",
+                    "policy_id": "runtime-routing",
+                    "candidate_id": "runtime-routing-no-healthier-target-test",
+                    "status": "active",
+                    "recommended_runtime_target": "kiro-cli",
+                    "intent_overrides": {},
+                    "route_feedback_drivers": {},
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        env = os.environ.copy()
+        env["JINI_RUNTIME_TARGET_HEALTH"] = ",".join(
+            [
+                "kiro-cli=throttled",
+                "codex=unavailable",
+                "claude-code=unavailable",
+                "github-copilot=unavailable",
+                "junie=unavailable",
+                "augment=unavailable",
+            ]
+        )
+
+        result = self.run_cli("recommend-execution", pack_dir, "--intent", "make", "--format", "json", env=env)
+        self.assert_ok(result)
+
+        recommendation = json.loads(result.stdout)
+        self.assertEqual("kiro-cli", recommendation["active_policy"]["recommended_runtime_target"])
+        self.assertEqual("kiro-cli", recommendation["runtime_guidance"]["selected"]["id"])
+        self.assertTrue(
+            any(
+                "Policy-preferred adapter `kiro-cli` remained `throttled`; kept it as the selected runtime target." in note
+                for note in recommendation["runtime_guidance"]["notes"]
+            )
+        )
+        self.assertTrue(
+            any(
+                "Selected runtime target `kiro-cli` despite `throttled` status because no healthier higher-priority target was available."
+                in note
+                for note in recommendation["runtime_guidance"]["notes"]
+            )
+        )
+
     def test_recommend_execution_keeps_explicit_runtime_target_pin_under_throttle(self) -> None:
         pack_dir = self.compile_research_pack()
         env = os.environ.copy()

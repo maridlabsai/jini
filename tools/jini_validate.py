@@ -12780,6 +12780,7 @@ def build_adapter_resolution(
     notes: list[str] = []
     preferred_origin_label = "Policy-preferred adapter" if preferred_origin == "policy" else "Preferred adapter"
     selected_via_preference = False
+    selected_via_explicit_preference = False
     if preferred:
         preferred_match = next((item for item in matches if item.get("id") == preferred), None)
         if preferred_match is not None:
@@ -12797,6 +12798,7 @@ def build_adapter_resolution(
                 else:
                     selected = preferred_match
                     selected_via_preference = True
+                    selected_via_explicit_preference = preferred_origin != "policy"
                     if preferred_origin == "policy":
                         notes.append(
                             f"Policy-preferred adapter `{preferred}` remained `{preferred_status}`; kept it as the selected runtime target."
@@ -12806,6 +12808,7 @@ def build_adapter_resolution(
             else:
                 selected = preferred_match
                 selected_via_preference = True
+                selected_via_explicit_preference = preferred_origin != "policy"
                 if preferred_origin == "policy":
                     notes.append(f"Policy-preferred adapter `{preferred}` was selected.")
                 else:
@@ -12816,7 +12819,7 @@ def build_adapter_resolution(
     fallbacks = [item["id"] for item in matches if item["id"] != selected["id"]]
     if layer == "runtime-target":
         status = str(selected.get("health_status", "ready")).strip().lower()
-        if status and status not in {"ok", "ready", "healthy", "available"} and not selected_via_preference:
+        if status and status not in {"ok", "ready", "healthy", "available"} and not selected_via_explicit_preference:
             notes.append(
                 f"Selected runtime target `{selected['id']}` despite `{status}` status because no healthier higher-priority target was available."
             )
