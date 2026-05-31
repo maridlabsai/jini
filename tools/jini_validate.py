@@ -12697,15 +12697,18 @@ def load_runtime_target_health(
         if isinstance(row, dict):
             merged[runtime_target] = deepcopy(row)
     for runtime_target, status in parse_runtime_target_health_overrides(env=env).items():
+        prior = merged.get(runtime_target, {})
+        if not isinstance(prior, dict):
+            prior = {}
         merged[runtime_target] = {
             "runtime_target": runtime_target,
             "status": status,
             "source": "env",
-            "signal_count": 0,
-            "score": runtime_target_health_adjustment(status),
-            "last_status": status,
-            "last_recorded_at": "",
-            "last_reason": "",
+            "signal_count": int(prior.get("signal_count", 0) or 0),
+            "score": int(prior.get("score", 0) or 0),
+            "last_status": str(prior.get("last_status", "") or "").strip().lower(),
+            "last_recorded_at": str(prior.get("last_recorded_at", "") or "").strip(),
+            "last_reason": str(prior.get("last_reason", "") or "").strip(),
         }
     return merged
 

@@ -4143,6 +4143,53 @@ class JiniCliConformanceTests(unittest.TestCase):
             )
         )
 
+    def test_env_runtime_target_override_preserves_persisted_health_evidence(self) -> None:
+        pack_dir = self.compile_research_pack()
+        self.assert_ok(
+            self.run_cli(
+                "record-runtime-target-outcome",
+                pack_dir,
+                "--runtime-target",
+                "kiro-cli",
+                "--status",
+                "throttled",
+                "--reason",
+                "Observed CLI throttling during execution.",
+                "--format",
+                "json",
+            )
+        )
+        env = os.environ.copy()
+        env["JINI_RUNTIME_TARGET_HEALTH"] = "kiro-cli=unavailable"
+        merged = jini_validate.load_runtime_target_health(
+            path=jini_validate.runtime_events_path(pack_dir),
+            env=env,
+        )
+        merged_row = merged["kiro-cli"]
+        self.assertEqual("unavailable", merged_row["status"])
+        self.assertEqual("env", merged_row["source"])
+        self.assertEqual(1, merged_row["signal_count"])
+        self.assertEqual("throttled", merged_row["last_status"])
+        self.assertEqual("Observed CLI throttling during execution.", merged_row["last_reason"])
+        self.assertTrue(merged_row["last_recorded_at"])
+
+        with mock.patch.dict(os.environ, env, clear=False):
+            resolution = jini_validate.build_adapter_resolution(
+                capability="pack-guidance",
+                layer="runtime-target",
+                preferred="kiro-cli",
+                learning_events_path=jini_validate.runtime_events_path(pack_dir),
+            )
+        selected = resolution["selected"]
+        self.assertEqual("kiro-cli", selected["id"])
+        self.assertEqual("unavailable", selected["health_status"])
+        self.assertEqual("env", selected["health_source"])
+        self.assertEqual(1, selected["health_signal_count"])
+        self.assertEqual("throttled", selected["health_last_status"])
+        self.assertEqual("Observed CLI throttling during execution.", selected["health_last_reason"])
+        self.assertTrue(selected["health_last_recorded_at"])
+        self.assertIn("Preferred adapter `kiro-cli` was selected explicitly.", resolution["notes"])
+
     def test_recommend_execution_keeps_policy_runtime_target_when_no_healthier_target_is_available(self) -> None:
         pack_dir = self.compile_research_pack()
         rollout_dir = pack_dir / "runtime" / "policy-rollouts"
