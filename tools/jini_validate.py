@@ -8429,18 +8429,21 @@ def resolve_context_pack_dir(
 
 
 def render_cli_front_door(registry: dict[str, Any]) -> int:
-    context = load_current_work_context()
-    if context is None:
+    def render_start_surface_for_cwd() -> int:
         repo_context = inspect_repo_context(Path.cwd())
         if repo_context.get("discovered"):
             if interactive_front_door_enabled():
                 return prompt_repo_task(repo_context)
             print_repo_start_surface(repo_context)
-        else:
-            if interactive_front_door_enabled():
-                return prompt_generic_task()
-            print_cli_start_surface()
+            return 0
+        if interactive_front_door_enabled():
+            return prompt_generic_task()
+        print_cli_start_surface()
         return 0
+
+    context = load_current_work_context()
+    if context is None:
+        return render_start_surface_for_cwd()
 
     remembered_pack = Path(str(context.get("pack_dir", ""))).expanduser()
     if remembered_pack and remembered_pack.exists():
@@ -8448,16 +8451,7 @@ def render_cli_front_door(registry: dict[str, Any]) -> int:
             pack_dir = resolve_context_pack_dir(None, registry, command_label="jini")
             report = build_outcome_view(pack_dir, registry)
         except (FileNotFoundError, OSError, TypeError, ValueError):
-            repo_context = inspect_repo_context(Path.cwd())
-            if repo_context.get("discovered"):
-                if interactive_front_door_enabled():
-                    return prompt_repo_task(repo_context)
-                print_repo_start_surface(repo_context)
-            else:
-                if interactive_front_door_enabled():
-                    return prompt_generic_task()
-                print_cli_start_surface()
-            return 0
+            return render_start_surface_for_cwd()
         if interactive_front_door_enabled():
             return prompt_current_work_task(pack_dir, registry)
         print_outcome_view(report)
@@ -8473,16 +8467,7 @@ def render_cli_front_door(registry: dict[str, Any]) -> int:
         print_outcome_view(report)
         return 0
 
-    repo_context = inspect_repo_context(Path.cwd())
-    if repo_context.get("discovered"):
-        if interactive_front_door_enabled():
-            return prompt_repo_task(repo_context)
-        print_repo_start_surface(repo_context)
-    else:
-        if interactive_front_door_enabled():
-            return prompt_generic_task()
-        print_cli_start_surface()
-    return 0
+    return render_start_surface_for_cwd()
 
 
 def artifact_label_from_stem(stem: str) -> str:
