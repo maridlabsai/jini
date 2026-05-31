@@ -4046,6 +4046,9 @@ class JiniCliConformanceTests(unittest.TestCase):
             "Preferred adapter `codex` was selected explicitly.",
             resolution["notes"],
         )
+        self.assertFalse(
+            any("no healthier higher-priority target was available" in note for note in resolution["notes"])
+        )
 
     def test_recommend_execution_falls_back_from_throttled_policy_runtime_target(self) -> None:
         pack_dir = self.compile_research_pack()
@@ -4163,6 +4166,12 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn(
             "Preferred adapter `kiro-cli` was selected explicitly.",
             recommendation["runtime_guidance"]["notes"],
+        )
+        self.assertFalse(
+            any(
+                "no healthier higher-priority target was available" in note
+                for note in recommendation["runtime_guidance"]["notes"]
+            )
         )
 
     def test_recommend_execution_keeps_explicit_runtime_target_pin_under_persisted_throttle(self) -> None:
