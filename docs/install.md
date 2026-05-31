@@ -168,6 +168,7 @@ jini&gt; fix failing tests
 
   <p>If you want the small public command list before doing anything else, run <code>jini commands</code>. If you maintain routes, bundles, or release plumbing, the deeper inventory lives under <code>jini admin help</code>.</p>
   <p>That public list should stay deliberately short: <code>jini</code> first, then <code>status</code>, <code>continue</code>, <code>open</code>, and <code>doctor</code> only when the live session needs them.</p>
+  <p>When someone types a direct task outside a repo, Jini should stay concise there too: acknowledge the task, then tell them to run it from a repo or adopt existing Jini work. It should not drop back to startup cards, examples, or setup teaching.</p>
   <p>Direct task text belongs on the normal front door. Inside a repo, <code>jini review this repo</code>, <code>jini fix failing tests</code>, and <code>jini review this branch</code> should surface repo-aware intake instead of dropping into argparse usage output.</p>
   <p>Help surfaces and <code>jini commands</code> are catalogs, not request entrypoints. If you paste a work request after <code>help</code>, <code>--help</code>, or <code>commands</code>, Jini should reject that tail text and point you back to starting with <code>jini</code> for the start surface.</p>
   <ul class="compact-list">

@@ -65,6 +65,7 @@ If you already have work to adopt, use `jini status /path/to/work` once.</code><
 
   <p>That corrective output is the expected terminal shape for a help request tail. It should reject the request and redirect people to the start surface instead of dumping the overview.</p>
   <p>Direct task intake should still work on the normal front door. Inside a repo, <code>jini fix failing tests</code> and <code>jini review this repo</code> should use the same calm shell language instead of an argparse usage wall or a separate intake report.</p>
+  <p>Outside a repo, the same direct task ask should stay concise too: acknowledge the task, then tell the user to run it from a repo or adopt existing Jini work. It should not fall back to startup cards, examples, or setup teaching.</p>
   <p>The same redirect shape applies across the other help-entry variants too:</p>
   <ul class="compact-list">
     <li><code>jini commands me edit pear fellow script.txt</code> starts with <code>ERROR `jini commands` shows the public command inventory; it does not take a request like "me edit pear fellow script.txt".</code></li>

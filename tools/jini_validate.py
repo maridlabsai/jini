@@ -10041,17 +10041,8 @@ def print_repo_request_intake(request_text: str, repo_context: dict[str, Any], *
 
 def print_generic_request_intake(request_text: str) -> None:
     cli = cli_invocation()
-    print(f"Jini CLI {load_version()}")
-    print(f"REQUEST {request_text}")
-    print("Jini needs either a repo-backed working directory or an existing Jini work path to act on this directly.")
-    print()
-    print("START HERE")
-    print(f"  {cli} doctor")
-    print("    Check what route and setup Jini can use right now.")
-    print(f"  {cli} try-example research-prd")
-    print("    Materialize a public example and inspect the result.")
-    print(f"  {cli} status /path/to/work")
-    print("    Resume existing Jini work when you already have it.")
+    print(f"Working on: {request_text}")
+    print(f"Run this from a repo, or use `{cli} status /path/to/work` for existing Jini work.")
 
 
 def looks_like_path_token(token: str) -> bool:

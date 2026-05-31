@@ -842,6 +842,20 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("jini doctor", result.stdout)
         self.assertNotIn("usage: jini", result.stdout)
 
+    def test_request_text_outside_repo_returns_concise_recovery_hint(self) -> None:
+        empty_dir = self.tmp / "generic-request"
+        empty_dir.mkdir()
+        result = self.run_cli_in_cwd(empty_dir, "fix", "failing", "tests")
+        self.assert_ok(result)
+        self.assertIn("Working on: fix failing tests", result.stdout)
+        self.assertIn("Run this from a repo, or use `jini status /path/to/work` for existing Jini work.", result.stdout)
+        self.assertNotIn("Jini CLI 0.1.0", result.stdout)
+        self.assertNotIn("REQUEST fix failing tests", result.stdout)
+        self.assertNotIn("START HERE", result.stdout)
+        self.assertNotIn("jini try-example research-prd", result.stdout)
+        self.assertNotIn("jini doctor", result.stdout)
+        self.assertNotIn("usage: jini", result.stdout)
+
     def test_request_text_in_interactive_repo_mode_keeps_live_session_open(self) -> None:
         repo = self.create_repo_fixture()
         result = self.run_cli_in_cwd(
