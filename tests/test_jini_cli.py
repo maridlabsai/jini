@@ -4001,6 +4001,112 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("kiro-cli", runtime_guidance["selected"]["id"])
         self.assertIn("codex", runtime_guidance["fallbacks"])
 
+    def test_resolve_adapter_demotes_throttled_runtime_target_when_unpinned(self) -> None:
+        env = os.environ.copy()
+        env["JINI_RUNTIME_TARGET_HEALTH"] = "codex=throttled"
+
+        result = self.run_cli(
+            "resolve-adapter",
+            "--capability",
+            "pack-guidance",
+            "--layer",
+            "runtime-target",
+            "--format",
+            "json",
+            env=env,
+        )
+        self.assert_ok(result)
+
+        resolution = json.loads(result.stdout)
+        self.assertEqual("claude-code", resolution["selected"]["id"])
+        self.assertEqual("throttled", next(item for item in resolution["matches"] if item["id"] == "codex")["health_status"])
+        self.assertIn("codex", resolution["fallbacks"])
+
+    def test_resolve_adapter_keeps_explicit_runtime_target_pin_under_throttle(self) -> None:
+        env = os.environ.copy()
+        env["JINI_RUNTIME_TARGET_HEALTH"] = "codex=throttled"
+
+        result = self.run_cli(
+            "resolve-adapter",
+            "--capability",
+            "pack-guidance",
+            "--layer",
+            "runtime-target",
+            "--preferred",
+            "codex",
+            "--format",
+            "json",
+            env=env,
+        )
+        self.assert_ok(result)
+
+        resolution = json.loads(result.stdout)
+        self.assertEqual("codex", resolution["selected"]["id"])
+        self.assertIn(
+            "Preferred adapter `codex` was selected explicitly.",
+            resolution["notes"],
+        )
+
+    def test_recommend_execution_falls_back_from_throttled_policy_runtime_target(self) -> None:
+        pack_dir = self.compile_research_pack()
+        rollout_dir = pack_dir / "runtime" / "policy-rollouts"
+        rollout_dir.mkdir(parents=True, exist_ok=True)
+        rollout_path = rollout_dir / "runtime-routing-active.json"
+        rollout_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.1.0",
+                    "policy_type": "JiniPolicyRollout",
+                    "policy_id": "runtime-routing",
+                    "candidate_id": "runtime-routing-throttle-test",
+                    "status": "active",
+                    "recommended_runtime_target": "kiro-cli",
+                    "intent_overrides": {},
+                    "route_feedback_drivers": {},
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        env = os.environ.copy()
+        env["JINI_RUNTIME_TARGET_HEALTH"] = "kiro-cli=throttled"
+
+        result = self.run_cli("recommend-execution", pack_dir, "--intent", "make", "--format", "json", env=env)
+        self.assert_ok(result)
+
+        recommendation = json.loads(result.stdout)
+        self.assertEqual("kiro-cli", recommendation["active_policy"]["recommended_runtime_target"])
+        self.assertEqual("codex", recommendation["runtime_guidance"]["selected"]["id"])
+        self.assertTrue(
+            any("Preferred adapter `kiro-cli` is `throttled`; switched to `codex`" in note for note in recommendation["runtime_guidance"]["notes"])
+        )
+
+    def test_recommend_execution_keeps_explicit_runtime_target_pin_under_throttle(self) -> None:
+        pack_dir = self.compile_research_pack()
+        env = os.environ.copy()
+        env["JINI_RUNTIME_TARGET_HEALTH"] = "kiro-cli=throttled"
+
+        result = self.run_cli(
+            "recommend-execution",
+            pack_dir,
+            "--intent",
+            "make",
+            "--runtime-target",
+            "kiro-cli",
+            "--format",
+            "json",
+            env=env,
+        )
+        self.assert_ok(result)
+
+        recommendation = json.loads(result.stdout)
+        self.assertEqual("kiro-cli", recommendation["runtime_guidance"]["selected"]["id"])
+        self.assertIn(
+            "Preferred adapter `kiro-cli` was selected explicitly.",
+            recommendation["runtime_guidance"]["notes"],
+        )
+
     def test_compact_context_includes_home_memory_and_compression_ratio(self) -> None:
         pack_dir = self.compile_research_pack()
         home = self.personal_home()

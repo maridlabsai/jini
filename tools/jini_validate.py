@@ -12568,16 +12568,67 @@ def adapter_priority(adapter: dict[str, Any]) -> int:
     return defaults.get(maturity, 10)
 
 
+def load_runtime_target_health(*, env: dict[str, str] | None = None) -> dict[str, str]:
+    env_map = os.environ if env is None else env
+    raw = str(
+        env_map.get("JINI_RUNTIME_TARGET_HEALTH", "")
+        or env_map.get("JINI_RUNTIME_TARGET_STATUS", "")
+        or ""
+    ).strip()
+    if not raw:
+        return {}
+
+    parsed: dict[str, str] = {}
+    if raw.startswith("{"):
+        try:
+            candidate = json.loads(raw)
+        except json.JSONDecodeError:
+            candidate = None
+        if isinstance(candidate, dict):
+            for key, value in candidate.items():
+                target_id = str(key).strip()
+                status = str(value).strip().lower()
+                if target_id and status:
+                    parsed[target_id] = status
+            return parsed
+
+    for item in raw.split(","):
+        entry = item.strip()
+        if not entry or "=" not in entry:
+            continue
+        target_id, status = entry.split("=", 1)
+        target_id = target_id.strip()
+        status = status.strip().lower()
+        if target_id and status:
+            parsed[target_id] = status
+    return parsed
+
+
+def runtime_target_health_adjustment(status: str) -> int:
+    normalized = str(status).strip().lower()
+    if normalized in {"ok", "ready", "healthy", "available"}:
+        return 0
+    if normalized in {"busy", "warming", "degraded"}:
+        return -12
+    if normalized in {"throttled", "rate-limited", "quota-limited", "quota-uncertain"}:
+        return -25
+    if normalized in {"blocked", "offline", "unavailable", "failed"}:
+        return -60
+    return 0
+
+
 def build_adapter_resolution(
     *,
     capability: str,
     layer: str | None = None,
     preferred: str | None = None,
+    adaptive_preferred: bool = False,
 ) -> dict[str, Any]:
     if not capability.strip():
         raise ValueError("resolve-adapter requires a non-empty capability")
 
     registry = load_adapter_registry()
+    runtime_target_health = load_runtime_target_health() if layer == "runtime-target" else {}
     matches: list[dict[str, Any]] = []
     for adapter in registry["adapters"]:
         if not isinstance(adapter, dict):
@@ -12589,23 +12640,56 @@ def build_adapter_resolution(
             continue
         entry = deepcopy(adapter)
         entry["priority"] = adapter_priority(adapter)
+        if layer == "runtime-target":
+            health_status = str(runtime_target_health.get(str(entry.get("id", "")).strip(), "ready") or "ready").strip().lower()
+            health_adjustment = runtime_target_health_adjustment(health_status)
+            entry["health_status"] = health_status
+            entry["health_adjustment"] = health_adjustment
+            entry["effective_priority"] = int(entry["priority"]) + health_adjustment
+        else:
+            entry["effective_priority"] = int(entry["priority"])
         matches.append(entry)
 
     if not matches:
         raise ValueError(f"No adapters expose capability {capability!r}")
 
-    matches.sort(key=lambda item: (-int(item.get("priority", 0)), item.get("id", "")))
+    matches.sort(
+        key=lambda item: (
+            -int(item.get("effective_priority", item.get("priority", 0))),
+            -int(item.get("priority", 0)),
+            item.get("id", ""),
+        )
+    )
     selected = matches[0]
     notes: list[str] = []
     if preferred:
         preferred_match = next((item for item in matches if item.get("id") == preferred), None)
         if preferred_match is not None:
-            selected = preferred_match
-            notes.append(f"Preferred adapter `{preferred}` was selected explicitly.")
+            if adaptive_preferred and layer == "runtime-target":
+                preferred_status = str(preferred_match.get("health_status", "ready")).strip().lower()
+                preferred_adjustment = int(preferred_match.get("health_adjustment", 0))
+                if preferred_adjustment < 0 and preferred_match["id"] != matches[0]["id"]:
+                    selected = matches[0]
+                    notes.append(
+                        f"Preferred adapter `{preferred}` is `{preferred_status}`; switched to "
+                        f"`{selected['id']}` for a healthier runtime target."
+                    )
+                else:
+                    selected = preferred_match
+                    notes.append(f"Preferred adapter `{preferred}` was selected explicitly.")
+            else:
+                selected = preferred_match
+                notes.append(f"Preferred adapter `{preferred}` was selected explicitly.")
         else:
             notes.append(f"Preferred adapter `{preferred}` does not expose capability `{capability}`.")
 
     fallbacks = [item["id"] for item in matches if item["id"] != selected["id"]]
+    if layer == "runtime-target":
+        status = str(selected.get("health_status", "ready")).strip().lower()
+        if status and status not in {"ok", "ready", "healthy", "available"}:
+            notes.append(
+                f"Selected runtime target `{selected['id']}` despite `{status}` status because no healthier higher-priority target was available."
+            )
     notes.append(
         f"Selected `{selected['id']}` because it is the highest-priority adapter for `{capability}`."
     )
@@ -17597,6 +17681,7 @@ def recommend_execution(
         capability="pack-guidance",
         layer="runtime-target",
         preferred=runtime_target or policy_runtime_target or None,
+        adaptive_preferred=bool(policy_runtime_target and not runtime_target),
     )
     route_snapshot = build_local_runtime_route_snapshot()
     route_evidence = route_snapshot["route_evidence"]
