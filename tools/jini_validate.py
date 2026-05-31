@@ -10029,9 +10029,8 @@ def print_repo_request_intake(request_text: str, repo_context: dict[str, Any], *
 
 
 def print_generic_request_intake(request_text: str) -> None:
-    cli = cli_invocation()
     print(f"Working on: {request_text}")
-    print(f"Run this from a repo, or use `{cli} status /path/to/work` for existing Jini work.")
+    print("Run this from the repo that needs work.")
 
 
 def looks_like_path_token(token: str) -> bool:
