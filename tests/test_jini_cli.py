@@ -1201,6 +1201,17 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("# Delegation: Reviewer", show_result.stdout)
         self.assertIn("## Instruction", show_result.stdout)
 
+        open_result = self.run_cli("open", "--print-path")
+        self.assert_ok(open_result)
+        self.assertEqual(display, open_result.stdout.strip())
+
+        open_json_result = self.run_cli("open", "--print-path", "--format", "json")
+        self.assert_ok(open_json_result)
+        open_payload = json.loads(open_json_result.stdout)
+        self.assertEqual("reviewer-brief", open_payload["artifact"]["id"])
+        self.assertEqual("Reviewer delegation brief", open_payload["artifact"]["label"])
+        self.assertEqual(display, open_payload["path"])
+
         resume_result = self.run_cli("resume", "--format", "json")
         self.assert_ok(resume_result)
         resume_payload = json.loads(resume_result.stdout)
@@ -1217,6 +1228,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual(1, feedback["repo_signals"]["delegated"])
         self.assertEqual(1, feedback["repo_signals"]["continued"])
         self.assertEqual(1, feedback["repo_signals"]["shown"])
+        self.assertEqual(2, feedback["repo_signals"]["opened"])
         self.assertGreater(feedback["repo_score"], 0)
 
     def test_skills_feedback_stays_repo_specific(self) -> None:

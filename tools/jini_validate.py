@@ -23944,6 +23944,51 @@ def main() -> int:
     if args.command == "open":
         try:
             pack_dir = resolve_context_pack_dir(args.path, registry, command_label="open")
+            delegation_focus = load_active_delegation_focus(pack_dir) if args.artifact is None else None
+            if delegation_focus is not None:
+                artifact = {
+                    "id": str(delegation_focus.get("id", "")).strip(),
+                    "label": str(delegation_focus.get("label", "")).strip(),
+                    "kind": "delegation",
+                    "category": "focus",
+                    "selection_mode": "delegation",
+                }
+                artifact_path = Path(str(delegation_focus["path"]))
+                record_skill_feedback_event(
+                    str(delegation_focus.get("skill_id", "")).strip(),
+                    event="opened",
+                    workspace_root=Path.cwd(),
+                )
+                if args.print_path:
+                    if args.format == "json":
+                        print(
+                            json.dumps(
+                                build_open_artifact_report(
+                                    artifact,
+                                    artifact_path,
+                                    open_mode="print-path",
+                                ),
+                                indent=2,
+                            )
+                        )
+                    else:
+                        print(display_path(artifact_path))
+                else:
+                    launch_open_path(artifact_path)
+                    if args.format == "json":
+                        print(
+                            json.dumps(
+                                build_open_artifact_report(
+                                    artifact,
+                                    artifact_path,
+                                    open_mode="launch",
+                                ),
+                                indent=2,
+                            )
+                        )
+                    else:
+                        print(f"OPENED {display_path(artifact_path)}")
+                return 0
             catalog = build_artifact_catalog(pack_dir, registry)
             if args.artifact is None and not args.print_path:
                 shelf = build_open_shelf(catalog)
