@@ -150,7 +150,7 @@ jini
       <pre><code class="language-bash">$ jini
 jini&gt; fix failing tests
 </code></pre>
-      <p>That prompt should remain open for follow-up turns. The task should stay primary, and the controls should stay in the background until you need them. If you do, <code>commands</code>, <code>doctor</code>, <code>help --admin</code>, and <code>exit</code> should still work as in-session escape hatches instead of forcing a relaunch.</p>
+      <p>That prompt should remain open for follow-up turns. The task should stay primary, and the controls should stay in the background until you need them. If you do, <code>commands</code>, <code>doctor</code>, <code>help --admin</code>, and <code>exit</code> should still work as in-session escape hatches instead of forcing a relaunch, but they should answer with concise in-shell summaries instead of dumping the full catalog or operator cards.</p>
       <p>Once the session is already in flow, Jini should only print a <code>NEXT</code> line when it is actually steering you to a concrete action. Otherwise it should acknowledge the task and go straight back to the prompt.</p>
     </div>
     <div class="step-card">

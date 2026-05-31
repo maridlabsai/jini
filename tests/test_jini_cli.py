@@ -648,13 +648,16 @@ class JiniCliConformanceTests(unittest.TestCase):
             input_text="commands\ndoctor\nhelp --admin\nsetup --harness codex\nexit\n",
         )
         self.assert_ok(result)
-        self.assertIn("Public command inventory", result.stdout)
-        self.assertIn("Admin and developer command inventory", result.stdout)
-        self.assertIn("SETUP ESCAPE HATCH", result.stdout)
-        self.assertIn("Run the setup command directly when you need to bind a fixed route:", result.stdout)
-        self.assertIn("jini setup --harness codex", result.stdout)
-        self.assertIn("Provider", result.stdout)
-        self.assertIn("Local preview", result.stdout)
+        self.assertIn("COMMANDS  status  continue  open  doctor", result.stdout)
+        self.assertIn("ADMIN     help --admin", result.stdout)
+        self.assertIn("DOCTOR   Local preview [ok]", result.stdout)
+        self.assertIn("ADMIN    validate  publish  route-feedback  skills  delegate", result.stdout)
+        self.assertIn("MORE     run `jini help --admin` for the full inventory", result.stdout)
+        self.assertIn("SETUP   run `jini setup --harness codex` if you need a fixed route", result.stdout)
+        self.assertNotIn("Public command inventory", result.stdout)
+        self.assertNotIn("Admin and developer command inventory", result.stdout)
+        self.assertNotIn("SETUP ESCAPE HATCH", result.stdout)
+        self.assertNotIn("Provider\n", result.stdout)
 
     def test_zero_arg_cli_shows_generic_start_surface_without_repo_or_current_work(self) -> None:
         empty_dir = self.tmp / "empty"

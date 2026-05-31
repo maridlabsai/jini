@@ -9890,24 +9890,40 @@ def handle_interactive_escape_hatch(request_text: str) -> bool:
     normalized = normalize_interactive_entry(request_text)
     if normalized in {"commands"}:
         print()
-        print_public_command_inventory()
+        print_interactive_command_summary()
         return True
     if normalized in {"doctor"}:
         print()
-        print_provider_doctor(build_provider_doctor())
+        print_interactive_doctor_summary(build_provider_doctor())
         return True
     if normalized in {"help --admin", "admin help", "admin --help"}:
         print()
-        print_admin_command_inventory()
+        print_interactive_admin_summary()
         return True
     if normalized in {"setup --harness codex", "setup", "setup --harness"} or normalized.startswith("setup --harness "):
         print()
-        print("SETUP ESCAPE HATCH")
-        print("Run the setup command directly when you need to bind a fixed route:")
-        print(f"  {cli_invocation()} {normalized}")
-        print("Then return to `jini` for task intake.")
+        print(f"SETUP   run `{cli_invocation()} {normalized}` if you need a fixed route")
         return True
     return False
+
+
+def print_interactive_command_summary() -> None:
+    print("COMMANDS  status  continue  open  doctor")
+    print("ADMIN     help --admin")
+
+
+def print_interactive_doctor_summary(report: dict[str, Any]) -> None:
+    label = str(report.get("label", "")).strip() or str(report.get("provider_id", "")).strip() or "unknown"
+    status = str(report.get("status", "")).strip() or "unknown"
+    print(f"DOCTOR   {label} [{status}]")
+    missing = [str(item).strip() for item in report.get("missing", []) if str(item).strip()]
+    if missing:
+        print(f"MISSING  {', '.join(missing)}")
+
+
+def print_interactive_admin_summary() -> None:
+    print("ADMIN    validate  publish  route-feedback  skills  delegate")
+    print("MORE     run `jini help --admin` for the full inventory")
 
 
 def prompt_repo_task(repo_context: dict[str, Any], *, initial_request: str | None = None) -> int:
