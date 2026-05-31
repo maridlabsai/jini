@@ -148,6 +148,28 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("Use `jini open` outside the live shell for Jini artifacts.", result.stderr)
         self.assertNotIn("usage: jini", result.stderr)
 
+    def assert_interactive_numeric_and_filename_recovery_hints(self, result: subprocess.CompletedProcess[str]) -> None:
+        self.assert_ok(result)
+        self.assertIn("Working on: fix failing tests", result.stdout)
+        self.assertNotIn("Working on: 1", result.stdout)
+        self.assertNotIn("Working on: 2", result.stdout)
+        self.assertNotIn("Working on: notes.md", result.stdout)
+        self.assertIn("Use `jini open 1` outside the live shell.", result.stderr)
+        self.assertIn("Use `jini open 2` outside the live shell.", result.stderr)
+        self.assertIn("Open `notes.md` from your shell or editor, not as a live-shell task.", result.stderr)
+        self.assertIn("Use `jini open` outside the live shell for Jini artifacts.", result.stderr)
+        self.assertNotIn("usage: jini", result.stderr)
+
+    def assert_interactive_existing_file_recovery_hints(self, result: subprocess.CompletedProcess[str]) -> None:
+        self.assert_ok(result)
+        self.assertIn("Working on: fix failing tests", result.stdout)
+        self.assertNotIn("Working on: Makefile", result.stdout)
+        self.assertNotIn("Working on: .env", result.stdout)
+        self.assertIn("Open `Makefile` from your shell or editor, not as a live-shell task.", result.stderr)
+        self.assertIn("Open `.env` from your shell or editor, not as a live-shell task.", result.stderr)
+        self.assertIn("Use `jini open` outside the live shell for Jini artifacts.", result.stderr)
+        self.assertNotIn("usage: jini", result.stderr)
+
     def compile_research_pack(self) -> Path:
         output = self.tmp / "research-pack"
         result = self.run_cli(
@@ -777,6 +799,16 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("Open `./notes.md` from your shell or editor, not as a live-shell task.", result.stderr)
         self.assertIn("Use `jini open` outside the live shell for Jini artifacts.", result.stderr)
 
+    def test_zero_arg_cli_interactive_repo_mode_routes_existing_file_follow_up_hints(self) -> None:
+        repo = self.create_repo_fixture()
+        (repo / ".env").write_text("FOO=bar\n", encoding="utf-8")
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\nMakefile\n.env\nexit\n",
+        )
+        self.assert_interactive_existing_file_recovery_hints(result)
+
     def test_zero_arg_cli_shows_generic_start_surface_without_repo_or_current_work(self) -> None:
         empty_dir = self.tmp / "empty"
         empty_dir.mkdir()
@@ -875,6 +907,18 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("Working on: ./notes.md", result.stdout)
         self.assertIn("Open `./notes.md` from your shell or editor, not as a live-shell task.", result.stderr)
         self.assertIn("Use `jini open` outside the live shell for Jini artifacts.", result.stderr)
+
+    def test_zero_arg_cli_interactive_no_repo_mode_routes_existing_file_follow_up_hints(self) -> None:
+        empty_dir = self.tmp / "empty-interactive-files"
+        empty_dir.mkdir()
+        (empty_dir / "Makefile").write_text("test:\n\t@echo ok\n", encoding="utf-8")
+        (empty_dir / ".env").write_text("FOO=bar\n", encoding="utf-8")
+        result = self.run_cli_in_cwd(
+            empty_dir,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\nMakefile\n.env\nexit\n",
+        )
+        self.assert_interactive_existing_file_recovery_hints(result)
 
     def test_zero_arg_cli_resumes_current_work_surface(self) -> None:
         example_output = self.tmp / "research-example"
@@ -1114,6 +1158,37 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("WORK   example-research-prd", result.stdout)
         self.assertNotIn("ARTIFACT SHELF", result.stdout)
 
+    def test_zero_arg_cli_active_work_shell_routes_numeric_and_filename_follow_up_hints(self) -> None:
+        repo = self.create_repo_fixture()
+        example_output = repo / ".jini-example"
+        seeded = self.run_cli_in_cwd(repo, "try-example", "research-prd", "--output", example_output)
+        self.assert_ok(seeded)
+
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\n1\n2\nnotes.md\nexit\n",
+        )
+        self.assert_interactive_numeric_and_filename_recovery_hints(result)
+        self.assertNotIn("WORK   example-research-prd", result.stdout)
+        self.assertNotIn("ARTIFACT SHELF", result.stdout)
+
+    def test_zero_arg_cli_active_work_shell_routes_existing_file_follow_up_hints(self) -> None:
+        repo = self.create_repo_fixture()
+        (repo / ".env").write_text("FOO=bar\n", encoding="utf-8")
+        example_output = repo / ".jini-example"
+        seeded = self.run_cli_in_cwd(repo, "try-example", "research-prd", "--output", example_output)
+        self.assert_ok(seeded)
+
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\nMakefile\n.env\nexit\n",
+        )
+        self.assert_interactive_existing_file_recovery_hints(result)
+        self.assertNotIn("WORK   example-research-prd", result.stdout)
+        self.assertNotIn("ARTIFACT SHELF", result.stdout)
+
     def test_zero_arg_cli_saved_session_shell_routes_escape_hatches(self) -> None:
         repo = self.create_repo_fixture()
         example_output = repo / ".jini-example"
@@ -1285,6 +1360,43 @@ class JiniCliConformanceTests(unittest.TestCase):
             input_text="fix failing tests\ntasks\nprd\n./notes.md\nexit\n",
         )
         self.assert_interactive_artifact_and_path_recovery_hints(result)
+        self.assertNotIn("WORK   example-research-prd", result.stdout)
+        self.assertNotIn("ARTIFACT SHELF", result.stdout)
+
+    def test_zero_arg_cli_saved_session_shell_routes_numeric_and_filename_follow_up_hints(self) -> None:
+        repo = self.create_repo_fixture()
+        example_output = repo / ".jini-example"
+        seeded = self.run_cli_in_cwd(repo, "try-example", "research-prd", "--output", example_output)
+        self.assert_ok(seeded)
+
+        current_work = self.tmp / ".jini" / "current-work.json"
+        current_work.unlink()
+
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\n1\n2\nnotes.md\nexit\n",
+        )
+        self.assert_interactive_numeric_and_filename_recovery_hints(result)
+        self.assertNotIn("WORK   example-research-prd", result.stdout)
+        self.assertNotIn("ARTIFACT SHELF", result.stdout)
+
+    def test_zero_arg_cli_saved_session_shell_routes_existing_file_follow_up_hints(self) -> None:
+        repo = self.create_repo_fixture()
+        (repo / ".env").write_text("FOO=bar\n", encoding="utf-8")
+        example_output = repo / ".jini-example"
+        seeded = self.run_cli_in_cwd(repo, "try-example", "research-prd", "--output", example_output)
+        self.assert_ok(seeded)
+
+        current_work = self.tmp / ".jini" / "current-work.json"
+        current_work.unlink()
+
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\nMakefile\n.env\nexit\n",
+        )
+        self.assert_interactive_existing_file_recovery_hints(result)
         self.assertNotIn("WORK   example-research-prd", result.stdout)
         self.assertNotIn("ARTIFACT SHELF", result.stdout)
 

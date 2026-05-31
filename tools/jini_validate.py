@@ -9943,6 +9943,9 @@ def interactive_current_artifact_hint(token: str) -> str | None:
         return None
     normalized = slugify(token)
     for item in open_shelf_items(catalog):
+        shelf_number = str(item.get("shelf_number", "")).strip()
+        if token == shelf_number:
+            return shelf_number
         item_id = slugify(str(item.get("id", "")))
         item_label = slugify(str(item.get("label", "")))
         item_aliases = {slugify(str(alias)) for alias in item.get("aliases", [])}
@@ -9955,7 +9958,13 @@ def looks_like_file_like_token(token: str) -> bool:
     if looks_like_path_token(token):
         return True
     candidate = Path(token)
-    return bool(candidate.suffix) or "/" in token
+    if bool(candidate.suffix) or "/" in token or token.startswith("."):
+        return True
+    try:
+        lookup = candidate if candidate.is_absolute() else Path.cwd() / candidate
+        return lookup.exists()
+    except OSError:
+        return False
 
 
 def handle_interactive_multi_token_hint(request_text: str) -> bool:
@@ -9994,11 +10003,11 @@ def handle_interactive_single_token_hint(request_text: str) -> bool:
     if artifact_id:
         print_interactive_support_command_hint(f"open {artifact_id}")
         return True
-    if looks_like_file_like_token(parts[0]):
-        print_interactive_path_hint(parts[0])
-        return True
     if token in INTERACTIVE_EXTERNAL_SUPPORT_COMMANDS:
         print_interactive_support_command_hint(token)
+        return True
+    if looks_like_file_like_token(parts[0]):
+        print_interactive_path_hint(parts[0])
         return True
     if token not in INTERACTIVE_HINT_COMMANDS:
         print_unknown_command_hint(parts[0], set(INTERACTIVE_HINT_COMMANDS))
