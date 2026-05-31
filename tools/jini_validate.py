@@ -9800,6 +9800,26 @@ REQUEST_ENTRY_VERBS = frozenset(
     }
 )
 
+INTERACTIVE_EXTERNAL_SUPPORT_COMMANDS = frozenset({"status", "continue", "open"})
+INTERACTIVE_HINT_COMMANDS = frozenset(
+    set(REQUEST_ENTRY_VERBS)
+    | INTERACTIVE_EXTERNAL_SUPPORT_COMMANDS
+    | {
+        "admin",
+        "artifacts",
+        "commands",
+        "delegate",
+        "doctor",
+        "help",
+        "provider",
+        "repo-map",
+        "resume",
+        "setup",
+        "show",
+        "skills",
+    }
+)
+
 
 def _repo_entrypoint_command(repo_context: dict[str, Any], category: str) -> str:
     entries = repo_context.get("entrypoints", {}).get(category, [])
@@ -9887,8 +9907,34 @@ def handle_interactive_escape_hatch(request_text: str) -> bool:
 
 
 def print_interactive_command_summary() -> None:
-    print("COMMANDS  status  continue  open  doctor")
-    print("ADMIN     help --admin")
+    cli = cli_invocation()
+    print("IN-SHELL  commands  doctor  help --admin  exit")
+    print(f"SUPPORT   run `{cli} status`, `{cli} continue`, or `{cli} open` outside the shell")
+
+
+def print_interactive_support_command_hint(token: str) -> None:
+    cli = cli_invocation()
+    print(f"Use `{cli} {token}` outside the live shell.", file=sys.stderr)
+
+
+def handle_interactive_single_token_hint(request_text: str) -> bool:
+    normalized = normalize_interactive_entry(request_text)
+    parts = normalized.split()
+    if len(parts) != 1:
+        return False
+    token = parts[0].lower()
+    if token in REQUEST_ENTRY_VERBS:
+        return False
+    if looks_like_path_token(parts[0]):
+        print_repo_path_hint(parts[0])
+        return True
+    if token in INTERACTIVE_EXTERNAL_SUPPORT_COMMANDS:
+        print_interactive_support_command_hint(token)
+        return True
+    if token not in INTERACTIVE_HINT_COMMANDS:
+        print_unknown_command_hint(parts[0], set(INTERACTIVE_HINT_COMMANDS))
+        return True
+    return False
 
 
 def print_interactive_doctor_summary(report: dict[str, Any]) -> None:
@@ -9921,6 +9967,8 @@ def run_interactive_shell_loop(render_request: Callable[[str], None]) -> int:
         if normalize_interactive_entry(request_text).lower() in {"exit", "quit"}:
             return 0
         if handle_interactive_escape_hatch(request_text):
+            continue
+        if handle_interactive_single_token_hint(request_text):
             continue
         print()
         render_request(request_text)

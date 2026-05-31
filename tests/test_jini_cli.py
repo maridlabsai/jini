@@ -76,8 +76,8 @@ class JiniCliConformanceTests(unittest.TestCase):
 
     def assert_compact_interactive_escape_hatch_surface(self, stdout: str) -> None:
         self.assertIn("jini> ", stdout)
-        self.assertIn("COMMANDS  status  continue  open  doctor", stdout)
-        self.assertIn("ADMIN     help --admin", stdout)
+        self.assertIn("IN-SHELL  commands  doctor  help --admin  exit", stdout)
+        self.assertIn("SUPPORT   run `jini status`, `jini continue`, or `jini open` outside the shell", stdout)
         self.assertIn("DOCTOR   Local preview [ok]", stdout)
         self.assertIn("ADMIN    validate  publish  route-feedback  skills  delegate", stdout)
         self.assertIn("MORE     run `jini help --admin` for the full inventory", stdout)
@@ -87,6 +87,19 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("START HERE", stdout)
         self.assertNotIn("Jini CLI 0.1.0", stdout)
         self.assertNotIn("Session closed.", stdout)
+
+    def assert_interactive_single_token_recovery_hints(self, result: subprocess.CompletedProcess[str]) -> None:
+        self.assert_ok(result)
+        self.assertIn("Working on: fix failing tests", result.stdout)
+        self.assertNotIn("Working on: status", result.stdout)
+        self.assertNotIn("Working on: continue", result.stdout)
+        self.assertNotIn("Working on: open", result.stdout)
+        self.assertNotIn("Working on: stats", result.stdout)
+        self.assertIn("Use `jini status` outside the live shell.", result.stderr)
+        self.assertIn("Use `jini continue` outside the live shell.", result.stderr)
+        self.assertIn("Use `jini open` outside the live shell.", result.stderr)
+        self.assertIn('ERROR Unknown command "stats".', result.stderr)
+        self.assertNotIn("usage: jini", result.stderr)
 
     def compile_research_pack(self) -> Path:
         output = self.tmp / "research-pack"
@@ -668,6 +681,15 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("SETUP ESCAPE HATCH", result.stdout)
         self.assertNotIn("Provider\n", result.stdout)
 
+    def test_zero_arg_cli_interactive_repo_mode_routes_single_token_support_hints_after_initial_request(self) -> None:
+        repo = self.create_repo_fixture()
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\nstatus\ncontinue\nopen\nstats\nexit\n",
+        )
+        self.assert_interactive_single_token_recovery_hints(result)
+
     def test_zero_arg_cli_shows_generic_start_surface_without_repo_or_current_work(self) -> None:
         empty_dir = self.tmp / "empty"
         empty_dir.mkdir()
@@ -712,6 +734,16 @@ class JiniCliConformanceTests(unittest.TestCase):
         )
         self.assert_ok(result)
         self.assert_compact_interactive_escape_hatch_surface(result.stdout)
+
+    def test_zero_arg_cli_interactive_no_repo_mode_routes_single_token_support_hints_after_initial_request(self) -> None:
+        empty_dir = self.tmp / "empty-interactive-support"
+        empty_dir.mkdir()
+        result = self.run_cli_in_cwd(
+            empty_dir,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\nstatus\ncontinue\nopen\nstats\nexit\n",
+        )
+        self.assert_interactive_single_token_recovery_hints(result)
 
     def test_zero_arg_cli_resumes_current_work_surface(self) -> None:
         example_output = self.tmp / "research-example"
@@ -876,6 +908,21 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("WORK   example-research-prd", result.stdout)
         self.assertNotIn("ARTIFACT SHELF", result.stdout)
 
+    def test_zero_arg_cli_active_work_shell_routes_single_token_support_hints_after_initial_request(self) -> None:
+        repo = self.create_repo_fixture()
+        example_output = repo / ".jini-example"
+        seeded = self.run_cli_in_cwd(repo, "try-example", "research-prd", "--output", example_output)
+        self.assert_ok(seeded)
+
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\nstatus\ncontinue\nopen\nstats\nexit\n",
+        )
+        self.assert_interactive_single_token_recovery_hints(result)
+        self.assertNotIn("WORK   example-research-prd", result.stdout)
+        self.assertNotIn("ARTIFACT SHELF", result.stdout)
+
     def test_zero_arg_cli_saved_session_shell_routes_escape_hatches(self) -> None:
         repo = self.create_repo_fixture()
         example_output = repo / ".jini-example"
@@ -957,6 +1004,24 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("Working on: fix failing tests", result.stdout)
         self.assertIn("Start with `make test`.", result.stdout)
         self.assert_compact_interactive_escape_hatch_surface(result.stdout)
+        self.assertNotIn("WORK   example-research-prd", result.stdout)
+        self.assertNotIn("ARTIFACT SHELF", result.stdout)
+
+    def test_zero_arg_cli_saved_session_shell_routes_single_token_support_hints_after_initial_request(self) -> None:
+        repo = self.create_repo_fixture()
+        example_output = repo / ".jini-example"
+        seeded = self.run_cli_in_cwd(repo, "try-example", "research-prd", "--output", example_output)
+        self.assert_ok(seeded)
+
+        current_work = self.tmp / ".jini" / "current-work.json"
+        current_work.unlink()
+
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\nstatus\ncontinue\nopen\nstats\nexit\n",
+        )
+        self.assert_interactive_single_token_recovery_hints(result)
         self.assertNotIn("WORK   example-research-prd", result.stdout)
         self.assertNotIn("ARTIFACT SHELF", result.stdout)
 
