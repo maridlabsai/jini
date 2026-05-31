@@ -12585,6 +12585,17 @@ RUNTIME_TARGET_HEALTH_STATUSES = {
 }
 
 
+def normalize_runtime_target_health_override_status(status: str) -> str:
+    normalized = str(status).strip().lower()
+    if normalized == "ok":
+        return "ready"
+    if normalized == "recovered":
+        return "ready"
+    if normalized in RUNTIME_TARGET_HEALTH_STATUSES:
+        return normalized
+    return ""
+
+
 def parse_runtime_target_health_overrides(*, env: dict[str, str] | None = None) -> dict[str, str]:
     env_map = os.environ if env is None else env
     raw = str(
@@ -12604,7 +12615,7 @@ def parse_runtime_target_health_overrides(*, env: dict[str, str] | None = None) 
         if isinstance(candidate, dict):
             for key, value in candidate.items():
                 target_id = str(key).strip()
-                status = str(value).strip().lower()
+                status = normalize_runtime_target_health_override_status(value)
                 if target_id and status:
                     parsed[target_id] = status
             return parsed
@@ -12615,7 +12626,7 @@ def parse_runtime_target_health_overrides(*, env: dict[str, str] | None = None) 
             continue
         target_id, status = entry.split("=", 1)
         target_id = target_id.strip()
-        status = status.strip().lower()
+        status = normalize_runtime_target_health_override_status(status)
         if target_id and status:
             parsed[target_id] = status
     return parsed

@@ -4190,6 +4190,53 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue(selected["health_last_recorded_at"])
         self.assertIn("Preferred adapter `kiro-cli` was selected explicitly.", resolution["notes"])
 
+    def test_env_runtime_target_override_normalizes_recovered_to_ready(self) -> None:
+        env = os.environ.copy()
+        env["JINI_RUNTIME_TARGET_HEALTH"] = "kiro-cli=recovered"
+
+        parsed = jini_validate.parse_runtime_target_health_overrides(env=env)
+        self.assertEqual({"kiro-cli": "ready"}, parsed)
+
+        with mock.patch.dict(os.environ, env, clear=False):
+            resolution = jini_validate.build_adapter_resolution(
+                capability="pack-guidance",
+                layer="runtime-target",
+                preferred="kiro-cli",
+            )
+        self.assertEqual("kiro-cli", resolution["selected"]["id"])
+        self.assertEqual("ready", resolution["selected"]["health_status"])
+
+    def test_env_runtime_target_override_ignores_unknown_status(self) -> None:
+        pack_dir = self.compile_research_pack()
+        self.assert_ok(
+            self.run_cli(
+                "record-runtime-target-outcome",
+                pack_dir,
+                "--runtime-target",
+                "kiro-cli",
+                "--status",
+                "throttled",
+                "--reason",
+                "Observed CLI throttling during execution.",
+                "--format",
+                "json",
+            )
+        )
+        env = os.environ.copy()
+        env["JINI_RUNTIME_TARGET_HEALTH"] = "kiro-cli=throttle"
+
+        parsed = jini_validate.parse_runtime_target_health_overrides(env=env)
+        self.assertEqual({}, parsed)
+
+        merged = jini_validate.load_runtime_target_health(
+            path=jini_validate.runtime_events_path(pack_dir),
+            env=env,
+        )
+        merged_row = merged["kiro-cli"]
+        self.assertEqual("throttled", merged_row["status"])
+        self.assertEqual("learning-events", merged_row["source"])
+        self.assertEqual("throttled", merged_row["last_status"])
+
     def test_recommend_execution_keeps_policy_runtime_target_when_no_healthier_target_is_available(self) -> None:
         pack_dir = self.compile_research_pack()
         rollout_dir = pack_dir / "runtime" / "policy-rollouts"
