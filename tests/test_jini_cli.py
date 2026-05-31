@@ -74,6 +74,20 @@ class JiniCliConformanceTests(unittest.TestCase):
         if result.returncode == 0:
             self.fail(f"Expected command to fail.\nSTDOUT:\n{result.stdout}")
 
+    def assert_compact_interactive_escape_hatch_surface(self, stdout: str) -> None:
+        self.assertIn("jini> ", stdout)
+        self.assertIn("COMMANDS  status  continue  open  doctor", stdout)
+        self.assertIn("ADMIN     help --admin", stdout)
+        self.assertIn("DOCTOR   Local preview [ok]", stdout)
+        self.assertIn("ADMIN    validate  publish  route-feedback  skills  delegate", stdout)
+        self.assertIn("MORE     run `jini help --admin` for the full inventory", stdout)
+        self.assertIn("SETUP   run `jini setup --harness codex` if you need a fixed route", stdout)
+        self.assertNotIn("Public command inventory", stdout)
+        self.assertNotIn("Admin and developer command inventory", stdout)
+        self.assertNotIn("START HERE", stdout)
+        self.assertNotIn("Jini CLI 0.1.0", stdout)
+        self.assertNotIn("Session closed.", stdout)
+
     def compile_research_pack(self) -> Path:
         output = self.tmp / "research-pack"
         result = self.run_cli(
@@ -650,14 +664,7 @@ class JiniCliConformanceTests(unittest.TestCase):
             input_text="commands\ndoctor\nhelp --admin\nsetup --harness codex\nexit\n",
         )
         self.assert_ok(result)
-        self.assertIn("COMMANDS  status  continue  open  doctor", result.stdout)
-        self.assertIn("ADMIN     help --admin", result.stdout)
-        self.assertIn("DOCTOR   Local preview [ok]", result.stdout)
-        self.assertIn("ADMIN    validate  publish  route-feedback  skills  delegate", result.stdout)
-        self.assertIn("MORE     run `jini help --admin` for the full inventory", result.stdout)
-        self.assertIn("SETUP   run `jini setup --harness codex` if you need a fixed route", result.stdout)
-        self.assertNotIn("Public command inventory", result.stdout)
-        self.assertNotIn("Admin and developer command inventory", result.stdout)
+        self.assert_compact_interactive_escape_hatch_surface(result.stdout)
         self.assertNotIn("SETUP ESCAPE HATCH", result.stdout)
         self.assertNotIn("Provider\n", result.stdout)
 
@@ -704,16 +711,7 @@ class JiniCliConformanceTests(unittest.TestCase):
             input_text="commands\ndoctor\nhelp --admin\nsetup --harness codex\nexit\n",
         )
         self.assert_ok(result)
-        self.assertIn("jini> ", result.stdout)
-        self.assertIn("COMMANDS  status  continue  open  doctor", result.stdout)
-        self.assertIn("ADMIN     help --admin", result.stdout)
-        self.assertIn("DOCTOR   Local preview [ok]", result.stdout)
-        self.assertIn("ADMIN    validate  publish  route-feedback  skills  delegate", result.stdout)
-        self.assertIn("MORE     run `jini help --admin` for the full inventory", result.stdout)
-        self.assertIn("SETUP   run `jini setup --harness codex` if you need a fixed route", result.stdout)
-        self.assertNotIn("Session closed.", result.stdout)
-        self.assertNotIn("START HERE", result.stdout)
-        self.assertNotIn("Jini CLI 0.1.0", result.stdout)
+        self.assert_compact_interactive_escape_hatch_surface(result.stdout)
 
     def test_zero_arg_cli_resumes_current_work_surface(self) -> None:
         example_output = self.tmp / "research-example"
@@ -805,6 +803,41 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("STATE  awaiting_verification", result.stdout)
         self.assertNotIn("Repo: sample-repo", result.stdout)
         self.assertNotIn("Working on: Jini Research To PRD", result.stdout)
+
+    def test_zero_arg_cli_active_work_shell_routes_escape_hatches(self) -> None:
+        repo = self.create_repo_fixture()
+        example_output = repo / ".jini-example"
+        seeded = self.run_cli_in_cwd(repo, "try-example", "research-prd", "--output", example_output)
+        self.assert_ok(seeded)
+
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="commands\ndoctor\nhelp --admin\nsetup --harness codex\nexit\n",
+        )
+        self.assert_ok(result)
+        self.assert_compact_interactive_escape_hatch_surface(result.stdout)
+        self.assertNotIn("WORK   example-research-prd", result.stdout)
+        self.assertNotIn("ARTIFACT SHELF", result.stdout)
+
+    def test_zero_arg_cli_saved_session_shell_routes_escape_hatches(self) -> None:
+        repo = self.create_repo_fixture()
+        example_output = repo / ".jini-example"
+        seeded = self.run_cli_in_cwd(repo, "try-example", "research-prd", "--output", example_output)
+        self.assert_ok(seeded)
+
+        current_work = self.tmp / ".jini" / "current-work.json"
+        current_work.unlink()
+
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="commands\ndoctor\nhelp --admin\nsetup --harness codex\nexit\n",
+        )
+        self.assert_ok(result)
+        self.assert_compact_interactive_escape_hatch_surface(result.stdout)
+        self.assertNotIn("WORK   example-research-prd", result.stdout)
+        self.assertNotIn("ARTIFACT SHELF", result.stdout)
 
     def test_help_with_request_tail_shows_corrective_hint(self) -> None:
         request_tokens = HELP_TAIL_EXAMPLE_REQUEST.split()
@@ -916,6 +949,22 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("Jini CLI 0.1.0", result.stdout)
         self.assertNotIn("Session closed.", result.stdout)
 
+    def test_request_text_in_interactive_no_repo_mode_routes_escape_hatches_after_initial_request(self) -> None:
+        empty_dir = self.tmp / "generic-request-interactive-escapes"
+        empty_dir.mkdir()
+        result = self.run_cli_in_cwd(
+            empty_dir,
+            "fix",
+            "failing",
+            "tests",
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="commands\ndoctor\nhelp --admin\nsetup --harness codex\nexit\n",
+        )
+        self.assert_ok(result)
+        self.assertIn("Working on: fix failing tests", result.stdout)
+        self.assertIn("Run this from the repo or folder that needs work.", result.stdout)
+        self.assert_compact_interactive_escape_hatch_surface(result.stdout)
+
     def test_request_text_in_interactive_repo_mode_keeps_live_session_open(self) -> None:
         repo = self.create_repo_fixture()
         result = self.run_cli_in_cwd(
@@ -940,6 +989,21 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("Session closed.", result.stdout)
         self.assertNotIn("usage: jini", result.stdout)
         self.assertNotIn("REQUEST fix failing tests", result.stdout)
+
+    def test_request_text_in_interactive_repo_mode_routes_escape_hatches_after_initial_request(self) -> None:
+        repo = self.create_repo_fixture()
+        result = self.run_cli_in_cwd(
+            repo,
+            "fix",
+            "failing",
+            "tests",
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="commands\ndoctor\nhelp --admin\nsetup --harness codex\nexit\n",
+        )
+        self.assert_ok(result)
+        self.assertIn("Working on: fix failing tests", result.stdout)
+        self.assertIn("Start with `make test`.", result.stdout)
+        self.assert_compact_interactive_escape_hatch_surface(result.stdout)
 
     def test_zero_arg_cli_interactive_repo_mode_uses_calm_empty_input_prompt(self) -> None:
         repo = self.create_repo_fixture()
