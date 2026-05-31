@@ -9921,6 +9921,43 @@ def print_interactive_builtin_command_hint(command: str) -> None:
     print(f"Use `{command}` by itself inside the live shell.", file=sys.stderr)
 
 
+def print_interactive_path_hint(token: str) -> None:
+    cli = cli_invocation()
+    print(f"Open `{token}` from your shell or editor, not as a live-shell task.", file=sys.stderr)
+    print(f"Use `{cli} open` outside the live shell for Jini artifacts.", file=sys.stderr)
+
+
+def interactive_current_artifact_hint(token: str) -> str | None:
+    context = load_current_work_context()
+    if context is None:
+        return None
+    pack_dir_raw = str(context.get("pack_dir", "")).strip()
+    if not pack_dir_raw:
+        return None
+    pack_dir = Path(pack_dir_raw).expanduser()
+    if not pack_dir.exists():
+        return None
+    try:
+        catalog = build_artifact_catalog(pack_dir, load_registry())
+    except (FileNotFoundError, OSError, TypeError, ValueError):
+        return None
+    normalized = slugify(token)
+    for item in open_shelf_items(catalog):
+        item_id = slugify(str(item.get("id", "")))
+        item_label = slugify(str(item.get("label", "")))
+        item_aliases = {slugify(str(alias)) for alias in item.get("aliases", [])}
+        if normalized in {item_id, item_label, *item_aliases}:
+            return str(item.get("id", "")).strip() or token
+    return None
+
+
+def looks_like_file_like_token(token: str) -> bool:
+    if looks_like_path_token(token):
+        return True
+    candidate = Path(token)
+    return bool(candidate.suffix) or "/" in token
+
+
 def handle_interactive_multi_token_hint(request_text: str) -> bool:
     normalized = normalize_interactive_entry(request_text)
     parts = normalized.split()
@@ -9953,8 +9990,12 @@ def handle_interactive_single_token_hint(request_text: str) -> bool:
     token = parts[0].lower()
     if token in REQUEST_ENTRY_VERBS:
         return False
-    if looks_like_path_token(parts[0]):
-        print_repo_path_hint(parts[0])
+    artifact_id = interactive_current_artifact_hint(parts[0])
+    if artifact_id:
+        print_interactive_support_command_hint(f"open {artifact_id}")
+        return True
+    if looks_like_file_like_token(parts[0]):
+        print_interactive_path_hint(parts[0])
         return True
     if token in INTERACTIVE_EXTERNAL_SUPPORT_COMMANDS:
         print_interactive_support_command_hint(token)

@@ -136,6 +136,18 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("Use `jini doctor --format json` outside the live shell.", result.stderr)
         self.assertNotIn("usage: jini", result.stderr)
 
+    def assert_interactive_artifact_and_path_recovery_hints(self, result: subprocess.CompletedProcess[str]) -> None:
+        self.assert_ok(result)
+        self.assertIn("Working on: fix failing tests", result.stdout)
+        self.assertNotIn("Working on: tasks", result.stdout)
+        self.assertNotIn("Working on: prd", result.stdout)
+        self.assertNotIn("Working on: ./notes.md", result.stdout)
+        self.assertIn("Use `jini open tasks` outside the live shell.", result.stderr)
+        self.assertIn("Use `jini open prd` outside the live shell.", result.stderr)
+        self.assertIn("Open `./notes.md` from your shell or editor, not as a live-shell task.", result.stderr)
+        self.assertIn("Use `jini open` outside the live shell for Jini artifacts.", result.stderr)
+        self.assertNotIn("usage: jini", result.stderr)
+
     def compile_research_pack(self) -> Path:
         output = self.tmp / "research-pack"
         result = self.run_cli(
@@ -752,6 +764,19 @@ class JiniCliConformanceTests(unittest.TestCase):
         )
         self.assert_prefixed_interactive_support_recovery_hints(result)
 
+    def test_zero_arg_cli_interactive_repo_mode_routes_path_like_follow_up_hints(self) -> None:
+        repo = self.create_repo_fixture()
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\n./notes.md\nexit\n",
+        )
+        self.assert_ok(result)
+        self.assertIn("Working on: fix failing tests", result.stdout)
+        self.assertNotIn("Working on: ./notes.md", result.stdout)
+        self.assertIn("Open `./notes.md` from your shell or editor, not as a live-shell task.", result.stderr)
+        self.assertIn("Use `jini open` outside the live shell for Jini artifacts.", result.stderr)
+
     def test_zero_arg_cli_shows_generic_start_surface_without_repo_or_current_work(self) -> None:
         empty_dir = self.tmp / "empty"
         empty_dir.mkdir()
@@ -836,6 +861,20 @@ class JiniCliConformanceTests(unittest.TestCase):
             input_text="fix failing tests\njini status /tmp/work\njini continue --print-path\njini open prd\njini doctor --format json\njini exit\n",
         )
         self.assert_prefixed_interactive_support_recovery_hints(result)
+
+    def test_zero_arg_cli_interactive_no_repo_mode_routes_path_like_follow_up_hints(self) -> None:
+        empty_dir = self.tmp / "empty-interactive-path-like"
+        empty_dir.mkdir()
+        result = self.run_cli_in_cwd(
+            empty_dir,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\n./notes.md\nexit\n",
+        )
+        self.assert_ok(result)
+        self.assertIn("Working on: fix failing tests", result.stdout)
+        self.assertNotIn("Working on: ./notes.md", result.stdout)
+        self.assertIn("Open `./notes.md` from your shell or editor, not as a live-shell task.", result.stderr)
+        self.assertIn("Use `jini open` outside the live shell for Jini artifacts.", result.stderr)
 
     def test_zero_arg_cli_resumes_current_work_surface(self) -> None:
         example_output = self.tmp / "research-example"
@@ -1060,6 +1099,21 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("WORK   example-research-prd", result.stdout)
         self.assertNotIn("ARTIFACT SHELF", result.stdout)
 
+    def test_zero_arg_cli_active_work_shell_routes_artifact_and_path_follow_up_hints(self) -> None:
+        repo = self.create_repo_fixture()
+        example_output = repo / ".jini-example"
+        seeded = self.run_cli_in_cwd(repo, "try-example", "research-prd", "--output", example_output)
+        self.assert_ok(seeded)
+
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\ntasks\nprd\n./notes.md\nexit\n",
+        )
+        self.assert_interactive_artifact_and_path_recovery_hints(result)
+        self.assertNotIn("WORK   example-research-prd", result.stdout)
+        self.assertNotIn("ARTIFACT SHELF", result.stdout)
+
     def test_zero_arg_cli_saved_session_shell_routes_escape_hatches(self) -> None:
         repo = self.create_repo_fixture()
         example_output = repo / ".jini-example"
@@ -1213,6 +1267,24 @@ class JiniCliConformanceTests(unittest.TestCase):
             input_text="fix failing tests\njini status /tmp/work\njini continue --print-path\njini open prd\njini doctor --format json\njini exit\n",
         )
         self.assert_prefixed_interactive_support_recovery_hints(result)
+        self.assertNotIn("WORK   example-research-prd", result.stdout)
+        self.assertNotIn("ARTIFACT SHELF", result.stdout)
+
+    def test_zero_arg_cli_saved_session_shell_routes_artifact_and_path_follow_up_hints(self) -> None:
+        repo = self.create_repo_fixture()
+        example_output = repo / ".jini-example"
+        seeded = self.run_cli_in_cwd(repo, "try-example", "research-prd", "--output", example_output)
+        self.assert_ok(seeded)
+
+        current_work = self.tmp / ".jini" / "current-work.json"
+        current_work.unlink()
+
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\ntasks\nprd\n./notes.md\nexit\n",
+        )
+        self.assert_interactive_artifact_and_path_recovery_hints(result)
         self.assertNotIn("WORK   example-research-prd", result.stdout)
         self.assertNotIn("ARTIFACT SHELF", result.stdout)
 
