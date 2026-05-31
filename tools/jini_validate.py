@@ -9887,7 +9887,7 @@ def normalize_interactive_entry(request_text: str) -> str:
 
 def handle_interactive_escape_hatch(request_text: str) -> bool:
     normalized = normalize_interactive_entry(request_text)
-    if normalized in {"commands"}:
+    if normalized in {"commands", "help", "--help", "-h"}:
         print()
         print_interactive_command_summary()
         return True
@@ -9978,6 +9978,9 @@ def handle_interactive_multi_token_hint(request_text: str) -> bool:
         return True
     if command == "commands":
         print_interactive_builtin_command_hint("commands")
+        return True
+    if command in {"help", "--help", "-h"} and normalized not in {"help --admin"}:
+        print_interactive_builtin_command_hint("help")
         return True
     if normalized.startswith("help --admin "):
         print_interactive_builtin_command_hint("help --admin")
