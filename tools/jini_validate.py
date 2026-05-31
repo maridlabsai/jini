@@ -12623,6 +12623,8 @@ def parse_runtime_target_health_overrides(*, env: dict[str, str] | None = None) 
 
 def derive_runtime_target_health_status(*, last_status: str, score: int) -> str:
     normalized = str(last_status).strip().lower()
+    if normalized == "recovered":
+        return "ready"
     if normalized in {"blocked", "offline", "unavailable", "failed"}:
         return normalized
     if normalized in {"throttled", "rate-limited", "quota-limited", "quota-uncertain"}:
@@ -13557,6 +13559,21 @@ def print_runtime_target_outcome(outcome: dict[str, Any]) -> None:
     print(f"SIGNALS {outcome.get('health_signal_count', 0)}")
 
 
+def runtime_target_status_is_unhealthy(status: str) -> bool:
+    normalized = str(status).strip().lower()
+    return normalized in {
+        "degraded",
+        "throttled",
+        "rate-limited",
+        "quota-limited",
+        "quota-uncertain",
+        "blocked",
+        "offline",
+        "unavailable",
+        "failed",
+    }
+
+
 def record_passive_route_outcome_from_current_selection(
     pack_dir: Path,
     registry: dict[str, Any],
@@ -13740,93 +13757,120 @@ def activate_runtime_target(
     if not target_id:
         raise ValueError("Runtime handoff is missing a selected runtime target")
 
-    install_result = install_bundles(
-        bundle_ids=["jini-core"],
-        target_ids=[target_id],
-        prefix=prefix,
-    )
-    activation_root = runtime_activation_root(
-        install_result,
-        target_id,
-        str(handoff.get("pack_id", "")),
-        str(handoff.get("work_unit_id", "")),
-    )
-    if activation_root.exists():
-        remove_installed_path(activation_root)
-    activation_root.mkdir(parents=True, exist_ok=True)
+    health_snapshot = build_runtime_target_health_snapshot(path=runtime_events_path(pack_dir))
+    prior_health = health_snapshot.get("targets", {}).get(target_id, {}) if isinstance(health_snapshot.get("targets", {}), dict) else {}
+    if not isinstance(prior_health, dict):
+        prior_health = {}
 
-    handoff_copy_path = activation_root / "handoff.json"
-    handoff_copy_path.write_text(json.dumps(handoff, indent=2) + "\n", encoding="utf-8")
-    compact_context_path = activation_root / "compact-context.json"
-    compact_context_path.write_text(json.dumps(handoff.get("compact_context", {}), indent=2) + "\n", encoding="utf-8")
-    execution_checklist_path = activation_root / "execution-checklist.json"
-    execution_checklist_path.write_text(json.dumps(handoff.get("execution_checklist", {}), indent=2) + "\n", encoding="utf-8")
-    if isinstance(handoff.get("repo_map"), dict):
-        repo_map_path = activation_root / "repo-map.json"
-        repo_map_path.write_text(json.dumps(handoff.get("repo_map", {}), indent=2) + "\n", encoding="utf-8")
-    else:
-        repo_map_path = None
-    activation_markdown_path = activation_root / "Jini-RUNTIME.md"
-    activation_markdown_path.write_text(render_runtime_activation_markdown(handoff), encoding="utf-8")
+    try:
+        install_result = install_bundles(
+            bundle_ids=["jini-core"],
+            target_ids=[target_id],
+            prefix=prefix,
+        )
+        activation_root = runtime_activation_root(
+            install_result,
+            target_id,
+            str(handoff.get("pack_id", "")),
+            str(handoff.get("work_unit_id", "")),
+        )
+        if activation_root.exists():
+            remove_installed_path(activation_root)
+        activation_root.mkdir(parents=True, exist_ok=True)
 
-    home_binding = resolve_home_binding(pack_dir, explicit_home=home_path)
-    home_observation = append_home_observation(
-        pack_dir,
-        home_binding=home_binding,
-        line=(
-            f"Activated runtime target {target_id} for {handoff.get('pack_id', '')} "
-            f"at state {handoff.get('state', '')} with intent {handoff.get('intent', '')}."
-        ),
-    )
-    active_policy = handoff.get("active_policy", {})
-    route_feedback_drivers = active_policy.get("route_feedback_drivers", {})
-    route_feedback_driver_preview = route_feedback_driver_preview_text(handoff)
+        handoff_copy_path = activation_root / "handoff.json"
+        handoff_copy_path.write_text(json.dumps(handoff, indent=2) + "\n", encoding="utf-8")
+        compact_context_path = activation_root / "compact-context.json"
+        compact_context_path.write_text(json.dumps(handoff.get("compact_context", {}), indent=2) + "\n", encoding="utf-8")
+        execution_checklist_path = activation_root / "execution-checklist.json"
+        execution_checklist_path.write_text(json.dumps(handoff.get("execution_checklist", {}), indent=2) + "\n", encoding="utf-8")
+        if isinstance(handoff.get("repo_map"), dict):
+            repo_map_path = activation_root / "repo-map.json"
+            repo_map_path.write_text(json.dumps(handoff.get("repo_map", {}), indent=2) + "\n", encoding="utf-8")
+        else:
+            repo_map_path = None
+        activation_markdown_path = activation_root / "Jini-RUNTIME.md"
+        activation_markdown_path.write_text(render_runtime_activation_markdown(handoff), encoding="utf-8")
 
-    receipt = {
-        "schema_version": "0.1.0",
-        "activation_type": "JiniRuntimeActivation",
-        "generated_at": now_utc(),
-        "pack_id": handoff.get("pack_id", ""),
-        "work_unit_id": handoff.get("work_unit_id", ""),
-        "runtime_target": target_id,
-        "state": handoff.get("state", ""),
-        "intent": handoff.get("intent", ""),
-        "execution_class": handoff.get("execution_class", ""),
-        "source_handoff_path": display_path(selected_handoff_path),
-        "activation_root": str(activation_root),
-        "activation_files": [
-            str(handoff_copy_path),
-            str(compact_context_path),
-            str(execution_checklist_path),
-            *( [str(repo_map_path)] if repo_map_path is not None else [] ),
-            str(activation_markdown_path),
-        ],
-        "install_receipt_path": install_result.get("receipt_path", ""),
-        "install_status": install_result.get("status", ""),
-        "home_observation": home_observation,
-        "guardrails": handoff.get("guardrails", {}),
-    }
-    if isinstance(route_feedback_drivers, dict) and route_feedback_drivers:
-        receipt["route_feedback_drivers"] = deepcopy(route_feedback_drivers)
-    if route_feedback_driver_preview:
-        receipt["route_feedback_driver_preview"] = route_feedback_driver_preview
-    receipt_path = next_runtime_activation_receipt_path(pack_dir, target_id)
-    receipt_path.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
-    append_learning_event(
-        "activate-runtime-target",
-        {
-            "pack_id": receipt["pack_id"],
-            "work_unit_id": receipt["work_unit_id"],
+        home_binding = resolve_home_binding(pack_dir, explicit_home=home_path)
+        home_observation = append_home_observation(
+            pack_dir,
+            home_binding=home_binding,
+            line=(
+                f"Activated runtime target {target_id} for {handoff.get('pack_id', '')} "
+                f"at state {handoff.get('state', '')} with intent {handoff.get('intent', '')}."
+            ),
+        )
+        active_policy = handoff.get("active_policy", {})
+        route_feedback_drivers = active_policy.get("route_feedback_drivers", {})
+        route_feedback_driver_preview = route_feedback_driver_preview_text(handoff)
+
+        receipt = {
+            "schema_version": "0.1.0",
+            "activation_type": "JiniRuntimeActivation",
+            "generated_at": now_utc(),
+            "pack_id": handoff.get("pack_id", ""),
+            "work_unit_id": handoff.get("work_unit_id", ""),
             "runtime_target": target_id,
-            "intent": receipt["intent"],
-            "execution_class": receipt["execution_class"],
+            "state": handoff.get("state", ""),
+            "intent": handoff.get("intent", ""),
+            "execution_class": handoff.get("execution_class", ""),
+            "source_handoff_path": display_path(selected_handoff_path),
             "activation_root": str(activation_root),
-            "activation_file_count": len(receipt["activation_files"]),
-            "memory_appended": bool(home_observation.get("appended")),
-            "home_bound": bool(home_binding.get("bound")),
-        },
-        pack_dir=pack_dir,
-    )
+            "activation_files": [
+                str(handoff_copy_path),
+                str(compact_context_path),
+                str(execution_checklist_path),
+                *([str(repo_map_path)] if repo_map_path is not None else []),
+                str(activation_markdown_path),
+            ],
+            "install_receipt_path": install_result.get("receipt_path", ""),
+            "install_status": install_result.get("status", ""),
+            "home_observation": home_observation,
+            "guardrails": handoff.get("guardrails", {}),
+        }
+        if isinstance(route_feedback_drivers, dict) and route_feedback_drivers:
+            receipt["route_feedback_drivers"] = deepcopy(route_feedback_drivers)
+        if route_feedback_driver_preview:
+            receipt["route_feedback_driver_preview"] = route_feedback_driver_preview
+        receipt_path = next_runtime_activation_receipt_path(pack_dir, target_id)
+        receipt_path.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
+        append_learning_event(
+            "activate-runtime-target",
+            {
+                "pack_id": receipt["pack_id"],
+                "work_unit_id": receipt["work_unit_id"],
+                "runtime_target": target_id,
+                "intent": receipt["intent"],
+                "execution_class": receipt["execution_class"],
+                "activation_root": str(activation_root),
+                "activation_file_count": len(receipt["activation_files"]),
+                "memory_appended": bool(home_observation.get("appended")),
+                "home_bound": bool(home_binding.get("bound")),
+            },
+            pack_dir=pack_dir,
+        )
+    except (OSError, ValueError, TypeError) as exc:
+        record_runtime_target_outcome(
+            pack_dir,
+            registry,
+            runtime_target=target_id,
+            status="unavailable",
+            reason=f"Runtime activation failed: {exc.__class__.__name__}: {exc}",
+            intent=str(handoff.get("intent", "")).strip() or None,
+        )
+        raise
+
+    prior_status = str(prior_health.get("status", "")).strip().lower()
+    if runtime_target_status_is_unhealthy(prior_status):
+        record_runtime_target_outcome(
+            pack_dir,
+            registry,
+            runtime_target=target_id,
+            status="recovered",
+            reason=f"Runtime activation succeeded after prior `{prior_status}` status.",
+            intent=str(handoff.get("intent", "")).strip() or None,
+        )
     return receipt, receipt_path
 
 

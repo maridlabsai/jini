@@ -5550,6 +5550,147 @@ class JiniCliConformanceTests(unittest.TestCase):
         event_types = [item["event_type"] for item in json.loads(events.stdout)["events"]]
         self.assertIn("activate-runtime-target", event_types)
 
+    def test_activate_runtime_target_records_unavailable_runtime_target_outcome_on_install_failure(self) -> None:
+        pack_dir = self.compile_research_pack()
+        repo = self.create_repo_fixture()
+        self.assert_ok(self.run_cli("bootstrap-steering", repo))
+        home = self.personal_home()
+        prefix = self.install_prefix()
+        self.assert_ok(self.run_cli("bootstrap-home", home))
+        self.assert_ok(self.run_cli("bind-home", pack_dir, "--home", home))
+
+        registry = jini_validate.load_registry()
+        with mock.patch("tools.jini_validate.install_bundles", side_effect=ValueError("throttled by harness")):
+            with self.assertRaisesRegex(ValueError, "throttled by harness"):
+                jini_validate.activate_runtime_target(
+                    pack_dir,
+                    registry,
+                    repo_path=repo,
+                    home_path=home,
+                    runtime_target="codex",
+                    prefix=prefix,
+                )
+
+        events = jini_validate.read_learning_events(
+            path=jini_validate.runtime_events_path(pack_dir),
+            event_type="runtime-target-outcome",
+        )
+        codex_events = [item for item in events if item.get("runtime_target") == "codex"]
+        self.assertEqual(1, len(codex_events))
+        self.assertEqual("unavailable", codex_events[0]["status"])
+        self.assertIn("Runtime activation failed: ValueError: throttled by harness", codex_events[0]["reason"])
+
+        snapshot = jini_validate.build_runtime_target_health_snapshot(path=jini_validate.runtime_events_path(pack_dir))
+        codex_health = snapshot["targets"]["codex"]
+        self.assertEqual("unavailable", codex_health["status"])
+        self.assertEqual("unavailable", codex_health["last_status"])
+        self.assertEqual(1, codex_health["signal_count"])
+
+    def test_activate_runtime_target_records_recovered_runtime_target_outcome_after_prior_throttle(self) -> None:
+        pack_dir = self.compile_research_pack()
+        repo = self.create_repo_fixture()
+        self.assert_ok(self.run_cli("bootstrap-steering", repo))
+        home = self.personal_home()
+        prefix = self.install_prefix()
+        self.assert_ok(self.run_cli("bootstrap-home", home))
+        self.assert_ok(self.run_cli("bind-home", pack_dir, "--home", home))
+
+        registry = jini_validate.load_registry()
+        initial = jini_validate.record_runtime_target_outcome(
+            pack_dir,
+            registry,
+            runtime_target="codex",
+            status="throttled",
+            reason="Observed CLI throttling during activation warmup.",
+            intent="make",
+        )
+        self.assertEqual("throttled", initial["health_status"])
+        self.assertEqual(1, initial["health_signal_count"])
+
+        activation, _receipt_path = jini_validate.activate_runtime_target(
+            pack_dir,
+            registry,
+            repo_path=repo,
+            home_path=home,
+            runtime_target="codex",
+            prefix=prefix,
+        )
+        self.assertEqual("codex", activation["runtime_target"])
+
+        events = jini_validate.read_learning_events(
+            path=jini_validate.runtime_events_path(pack_dir),
+            event_type="runtime-target-outcome",
+        )
+        codex_statuses = [item["status"] for item in events if item.get("runtime_target") == "codex"]
+        self.assertIn("throttled", codex_statuses)
+        self.assertIn("recovered", codex_statuses)
+        recovered = next(item for item in events if item.get("runtime_target") == "codex" and item.get("status") == "recovered")
+        self.assertIn("Runtime activation succeeded after prior `throttled` status.", recovered["reason"])
+
+        snapshot = jini_validate.build_runtime_target_health_snapshot(path=jini_validate.runtime_events_path(pack_dir))
+        codex_health = snapshot["targets"]["codex"]
+        self.assertEqual("ready", codex_health["status"])
+        self.assertEqual("recovered", codex_health["last_status"])
+        self.assertEqual(2, codex_health["signal_count"])
+
+    def test_recommend_execution_falls_back_after_activation_failure_records_unavailable_target(self) -> None:
+        pack_dir = self.compile_research_pack()
+        repo = self.create_repo_fixture()
+        self.assert_ok(self.run_cli("bootstrap-steering", repo))
+        home = self.personal_home()
+        prefix = self.install_prefix()
+        self.assert_ok(self.run_cli("bootstrap-home", home))
+        self.assert_ok(self.run_cli("bind-home", pack_dir, "--home", home))
+
+        rollout_dir = pack_dir / "runtime" / "policy-rollouts"
+        rollout_dir.mkdir(parents=True, exist_ok=True)
+        rollout_path = rollout_dir / "runtime-routing-active.json"
+        rollout_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.1.0",
+                    "policy_type": "JiniPolicyRollout",
+                    "policy_id": "runtime-routing",
+                    "candidate_id": "runtime-routing-activation-failure-test",
+                    "status": "active",
+                    "recommended_runtime_target": "codex",
+                    "intent_overrides": {},
+                    "route_feedback_drivers": {},
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        registry = jini_validate.load_registry()
+        with mock.patch("tools.jini_validate.install_bundles", side_effect=ValueError("runtime target unavailable")):
+            with self.assertRaisesRegex(ValueError, "runtime target unavailable"):
+                jini_validate.activate_runtime_target(
+                    pack_dir,
+                    registry,
+                    repo_path=repo,
+                    home_path=home,
+                    runtime_target="codex",
+                    prefix=prefix,
+                )
+
+        result = self.run_cli("recommend-execution", pack_dir, "--intent", "make", "--format", "json")
+        self.assert_ok(result)
+
+        recommendation = json.loads(result.stdout)
+        self.assertEqual("codex", recommendation["active_policy"]["recommended_runtime_target"])
+        self.assertEqual("claude-code", recommendation["runtime_guidance"]["selected"]["id"])
+        codex = next(item for item in recommendation["runtime_guidance"]["matches"] if item["id"] == "codex")
+        self.assertEqual("unavailable", codex["health_status"])
+        self.assertEqual("learning-events", codex["health_source"])
+        self.assertTrue(
+            any(
+                "Preferred adapter `codex` is `unavailable`; switched to `claude-code`" in note
+                for note in recommendation["runtime_guidance"]["notes"]
+            )
+        )
+
     def test_run_collapses_activation_run_and_local_publish(self) -> None:
         pack_dir = self.compile_research_pack()
         repo = self.create_repo_fixture()
