@@ -10058,7 +10058,7 @@ def print_repo_request_intake(request_text: str, repo_context: dict[str, Any], *
 
 def print_generic_request_intake(request_text: str) -> None:
     print(f"Working on: {request_text}")
-    print("Run this from the repo that needs work.")
+    print("Run this from the repo or folder that needs work.")
 
 
 def looks_like_path_token(token: str) -> bool:

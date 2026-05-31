@@ -689,7 +689,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(result)
         self.assertIn("jini> ", result.stdout)
         self.assertIn("Working on: fix failing tests", result.stdout)
-        self.assertIn("Run this from the repo that needs work.", result.stdout)
+        self.assertIn("Run this from the repo or folder that needs work.", result.stdout)
         self.assertNotIn("Run `jini` from the repo or folder that needs work.", result.stdout)
         self.assertNotIn("Jini CLI 0.1.0", result.stdout)
         self.assertNotIn("START HERE", result.stdout)
@@ -701,7 +701,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         result = self.run_cli_in_cwd(
             empty_dir,
             env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
-            input_text="commands\ndoctor\nhelp --admin\nexit\n",
+            input_text="commands\ndoctor\nhelp --admin\nsetup --harness codex\nexit\n",
         )
         self.assert_ok(result)
         self.assertIn("jini> ", result.stdout)
@@ -710,6 +710,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("DOCTOR   Local preview [ok]", result.stdout)
         self.assertIn("ADMIN    validate  publish  route-feedback  skills  delegate", result.stdout)
         self.assertIn("MORE     run `jini help --admin` for the full inventory", result.stdout)
+        self.assertIn("SETUP   run `jini setup --harness codex` if you need a fixed route", result.stdout)
         self.assertNotIn("Session closed.", result.stdout)
         self.assertNotIn("START HERE", result.stdout)
         self.assertNotIn("Jini CLI 0.1.0", result.stdout)
@@ -886,7 +887,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         result = self.run_cli_in_cwd(empty_dir, "fix", "failing", "tests")
         self.assert_ok(result)
         self.assertIn("Working on: fix failing tests", result.stdout)
-        self.assertIn("Run this from the repo that needs work.", result.stdout)
+        self.assertIn("Run this from the repo or folder that needs work.", result.stdout)
         self.assertNotIn("Jini CLI 0.1.0", result.stdout)
         self.assertNotIn("REQUEST fix failing tests", result.stdout)
         self.assertNotIn("START HERE", result.stdout)
@@ -908,10 +909,10 @@ class JiniCliConformanceTests(unittest.TestCase):
         )
         self.assert_ok(result)
         self.assertIn("Working on: fix failing tests", result.stdout)
-        self.assertIn("Run this from the repo that needs work.", result.stdout)
+        self.assertIn("Run this from the repo or folder that needs work.", result.stdout)
         self.assertIn("jini> ", result.stdout)
         self.assertIn("Working on: plan this change", result.stdout)
-        self.assertEqual(2, result.stdout.count("Run this from the repo that needs work."))
+        self.assertEqual(2, result.stdout.count("Run this from the repo or folder that needs work."))
         self.assertNotIn("Jini CLI 0.1.0", result.stdout)
         self.assertNotIn("Session closed.", result.stdout)
 
