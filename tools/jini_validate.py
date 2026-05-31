@@ -10041,6 +10041,18 @@ def print_unknown_command_hint(token: str, known_commands: set[str]) -> None:
     print(f"Use `{cli}` to start from the current repo or `{cli} commands` for the public catalog.", file=sys.stderr)
 
 
+def render_request_entry_surface(request_text: str, repo_context: dict[str, Any]) -> int:
+    if repo_context.get("discovered"):
+        if interactive_front_door_enabled():
+            return prompt_repo_task(repo_context, initial_request=request_text)
+        print_repo_request_intake(request_text, repo_context)
+        return 0
+    if interactive_front_door_enabled():
+        return prompt_generic_task(initial_request=request_text)
+    print_generic_request_intake(request_text)
+    return 0
+
+
 def dispatch_request_entrypoint(argv: list[str], known_commands: set[str]) -> int | None:
     if not argv:
         return None
@@ -10056,15 +10068,7 @@ def dispatch_request_entrypoint(argv: list[str], known_commands: set[str]) -> in
     repo_context = inspect_repo_context(Path.cwd())
     if len(argv) > 1 or head.lower() in REQUEST_ENTRY_VERBS:
         request_text = " ".join(argv).strip()
-        if repo_context.get("discovered"):
-            if interactive_front_door_enabled():
-                return prompt_repo_task(repo_context, initial_request=request_text)
-            print_repo_request_intake(request_text, repo_context)
-        else:
-            if interactive_front_door_enabled():
-                return prompt_generic_task(initial_request=request_text)
-            print_generic_request_intake(request_text)
-        return 0
+        return render_request_entry_surface(request_text, repo_context)
     print_unknown_command_hint(head, known_commands)
     return 2
 
