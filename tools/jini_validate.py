@@ -12568,7 +12568,24 @@ def adapter_priority(adapter: dict[str, Any]) -> int:
     return defaults.get(maturity, 10)
 
 
-def load_runtime_target_health(*, env: dict[str, str] | None = None) -> dict[str, str]:
+RUNTIME_TARGET_HEALTH_STATUSES = {
+    "ready",
+    "healthy",
+    "available",
+    "recovered",
+    "degraded",
+    "throttled",
+    "rate-limited",
+    "quota-limited",
+    "quota-uncertain",
+    "blocked",
+    "offline",
+    "unavailable",
+    "failed",
+}
+
+
+def parse_runtime_target_health_overrides(*, env: dict[str, str] | None = None) -> dict[str, str]:
     env_map = os.environ if env is None else env
     raw = str(
         env_map.get("JINI_RUNTIME_TARGET_HEALTH", "")
@@ -12604,6 +12621,93 @@ def load_runtime_target_health(*, env: dict[str, str] | None = None) -> dict[str
     return parsed
 
 
+def derive_runtime_target_health_status(*, last_status: str, score: int) -> str:
+    normalized = str(last_status).strip().lower()
+    if normalized in {"blocked", "offline", "unavailable", "failed"}:
+        return normalized
+    if normalized in {"throttled", "rate-limited", "quota-limited", "quota-uncertain"}:
+        return normalized
+    if score <= -25:
+        return "throttled"
+    if score < 0:
+        return "degraded"
+    return "ready"
+
+
+def build_runtime_target_health_snapshot(
+    *,
+    path: Path | None = None,
+    limit: int = 200,
+) -> dict[str, Any]:
+    events = read_learning_events(path=path if path is not None else LEARNING_EVENTS_PATH, limit=limit, event_type="runtime-target-outcome")
+    by_target: dict[str, dict[str, Any]] = {}
+    event_count = 0
+    for event in events:
+        runtime_target = str(event.get("runtime_target", "")).strip()
+        status = str(event.get("status", "")).strip().lower()
+        if not runtime_target or status not in RUNTIME_TARGET_HEALTH_STATUSES:
+            continue
+        event_count += 1
+        row = by_target.setdefault(
+            runtime_target,
+            {
+                "runtime_target": runtime_target,
+                "signal_count": 0,
+                "score": 0,
+                "last_status": "ready",
+                "last_recorded_at": "",
+                "last_reason": "",
+            },
+        )
+        row["signal_count"] += 1
+        row["score"] += runtime_target_health_adjustment(status)
+        row["last_status"] = status
+        row["last_recorded_at"] = str(event.get("recorded_at", "")).strip()
+        row["last_reason"] = str(event.get("reason", "")).strip()
+
+    targets: dict[str, dict[str, Any]] = {}
+    for runtime_target, row in by_target.items():
+        derived_status = derive_runtime_target_health_status(
+            last_status=str(row.get("last_status", "")),
+            score=int(row.get("score", 0) or 0),
+        )
+        targets[runtime_target] = {
+            "runtime_target": runtime_target,
+            "status": derived_status,
+            "source": "learning-events",
+            "signal_count": int(row.get("signal_count", 0) or 0),
+            "score": int(row.get("score", 0) or 0),
+            "last_status": str(row.get("last_status", "")),
+            "last_recorded_at": str(row.get("last_recorded_at", "")),
+            "last_reason": str(row.get("last_reason", "")),
+        }
+    return {"event_count": event_count, "targets": targets}
+
+
+def load_runtime_target_health(
+    *,
+    path: Path | None = None,
+    env: dict[str, str] | None = None,
+) -> dict[str, dict[str, Any]]:
+    snapshot = build_runtime_target_health_snapshot(path=path)
+    merged: dict[str, dict[str, Any]] = {}
+    for runtime_target, row in snapshot.get("targets", {}).items():
+        if isinstance(row, dict):
+            merged[runtime_target] = deepcopy(row)
+    for runtime_target, status in parse_runtime_target_health_overrides(env=env).items():
+        merged[runtime_target] = {
+            "runtime_target": runtime_target,
+            "status": status,
+            "source": "env",
+            "signal_count": 0,
+            "score": runtime_target_health_adjustment(status),
+            "last_status": status,
+            "last_recorded_at": "",
+            "last_reason": "",
+        }
+    return merged
+
+
 def runtime_target_health_adjustment(status: str) -> int:
     normalized = str(status).strip().lower()
     if normalized in {"ok", "ready", "healthy", "available"}:
@@ -12623,12 +12727,13 @@ def build_adapter_resolution(
     layer: str | None = None,
     preferred: str | None = None,
     adaptive_preferred: bool = False,
+    learning_events_path: Path | None = None,
 ) -> dict[str, Any]:
     if not capability.strip():
         raise ValueError("resolve-adapter requires a non-empty capability")
 
     registry = load_adapter_registry()
-    runtime_target_health = load_runtime_target_health() if layer == "runtime-target" else {}
+    runtime_target_health = load_runtime_target_health(path=learning_events_path) if layer == "runtime-target" else {}
     matches: list[dict[str, Any]] = []
     for adapter in registry["adapters"]:
         if not isinstance(adapter, dict):
@@ -12641,10 +12746,15 @@ def build_adapter_resolution(
         entry = deepcopy(adapter)
         entry["priority"] = adapter_priority(adapter)
         if layer == "runtime-target":
-            health_status = str(runtime_target_health.get(str(entry.get("id", "")).strip(), "ready") or "ready").strip().lower()
+            health_row = runtime_target_health.get(str(entry.get("id", "")).strip(), {})
+            if not isinstance(health_row, dict):
+                health_row = {}
+            health_status = str(health_row.get("status", "ready") or "ready").strip().lower()
             health_adjustment = runtime_target_health_adjustment(health_status)
             entry["health_status"] = health_status
             entry["health_adjustment"] = health_adjustment
+            entry["health_source"] = str(health_row.get("source", "default") or "default").strip()
+            entry["health_signal_count"] = int(health_row.get("signal_count", 0) or 0)
             entry["effective_priority"] = int(entry["priority"]) + health_adjustment
         else:
             entry["effective_priority"] = int(entry["priority"])
@@ -12670,9 +12780,11 @@ def build_adapter_resolution(
                 preferred_adjustment = int(preferred_match.get("health_adjustment", 0))
                 if preferred_adjustment < 0 and preferred_match["id"] != matches[0]["id"]:
                     selected = matches[0]
+                    preferred_source = str(preferred_match.get("health_source", "default")).strip()
+                    source_suffix = f" from {preferred_source}" if preferred_source and preferred_source != "default" else ""
                     notes.append(
                         f"Preferred adapter `{preferred}` is `{preferred_status}`; switched to "
-                        f"`{selected['id']}` for a healthier runtime target."
+                        f"`{selected['id']}` for a healthier runtime target{source_suffix}."
                     )
                 else:
                     selected = preferred_match
@@ -13379,6 +13491,70 @@ def print_route_outcome_feedback(feedback: dict[str, Any]) -> None:
     print(f"OUTCOME {feedback.get('outcome', '')}")
     print(f"BIAS    {feedback.get('feedback_bias', 0):+}")
     print(f"REPORT  {feedback.get('capability_report_path', '')}")
+
+
+def record_runtime_target_outcome(
+    pack_dir: Path,
+    registry: dict[str, Any],
+    *,
+    runtime_target: str | None = None,
+    status: str,
+    reason: str = "",
+    intent: str | None = None,
+) -> dict[str, Any]:
+    summary = summarise_pack(pack_dir, registry)
+    latest_flow = build_latest_execute_flow_summary(path=runtime_events_path(pack_dir))
+    selected_target = str(runtime_target or latest_flow.get("runtime_target", "")).strip()
+    if not selected_target:
+        raise ValueError("Runtime target is required because no previous runtime target was found for this work.")
+    normalized_status = str(status).strip().lower()
+    if normalized_status not in RUNTIME_TARGET_HEALTH_STATUSES:
+        raise ValueError(
+            f"Unsupported runtime target status {status!r}; expected one of {', '.join(sorted(RUNTIME_TARGET_HEALTH_STATUSES))}"
+        )
+    chosen_intent = str(intent or latest_flow.get("intent", "") or summary.get("next_operation", "")).strip().lower()
+    event_paths = append_learning_event(
+        "runtime-target-outcome",
+        {
+            "pack_id": summary.get("pack_id", ""),
+            "work_unit_id": summary.get("work_unit", {}).get("work_unit_id", ""),
+            "runtime_target": selected_target,
+            "status": normalized_status,
+            "reason": reason.strip(),
+            "intent": chosen_intent,
+        },
+        pack_dir=pack_dir,
+    )
+    snapshot = build_runtime_target_health_snapshot(path=runtime_events_path(pack_dir))
+    target_row = snapshot.get("targets", {}).get(selected_target, {}) if isinstance(snapshot.get("targets", {}), dict) else {}
+    if not isinstance(target_row, dict):
+        target_row = {}
+    return {
+        "schema_version": "0.1.0",
+        "result_type": "JiniRuntimeTargetOutcome",
+        "recorded_at": now_utc(),
+        "pack_id": summary.get("pack_id", ""),
+        "work_unit_id": summary.get("work_unit", {}).get("work_unit_id", ""),
+        "runtime_target": selected_target,
+        "status": normalized_status,
+        "reason": reason.strip(),
+        "intent": chosen_intent,
+        "health_status": str(target_row.get("status", normalized_status)),
+        "health_signal_count": int(target_row.get("signal_count", 0) or 0),
+        "health_score": int(target_row.get("score", 0) or 0),
+        "event_paths": event_paths,
+    }
+
+
+def print_runtime_target_outcome(outcome: dict[str, Any]) -> None:
+    print(f"TARGET {outcome.get('runtime_target', '')}")
+    print(f"STATUS {outcome.get('status', '')}")
+    if outcome.get("intent"):
+        print(f"INTENT {outcome.get('intent', '')}")
+    if outcome.get("reason"):
+        print(f"REASON {outcome.get('reason', '')}")
+    print(f"HEALTH {outcome.get('health_status', '')}")
+    print(f"SIGNALS {outcome.get('health_signal_count', 0)}")
 
 
 def record_passive_route_outcome_from_current_selection(
@@ -17682,6 +17858,7 @@ def recommend_execution(
         layer="runtime-target",
         preferred=runtime_target or policy_runtime_target or None,
         adaptive_preferred=bool(policy_runtime_target and not runtime_target),
+        learning_events_path=runtime_events_path(pack_dir),
     )
     route_snapshot = build_local_runtime_route_snapshot()
     route_evidence = route_snapshot["route_evidence"]
@@ -22892,6 +23069,32 @@ def main() -> int:
         help="Output format for the route outcome feedback receipt",
     )
 
+    runtime_target_outcome_parser = subparsers.add_parser(
+        "record-runtime-target-outcome",
+        help="Record observed throttle or availability drift for a runtime target",
+    )
+    runtime_target_outcome_parser.add_argument("path", type=Path, help="Pack path associated with the runtime target outcome")
+    runtime_target_outcome_parser.add_argument(
+        "--runtime-target",
+        "--harness",
+        dest="runtime_target",
+        help="Optional runtime target; defaults to the latest recorded runtime target for the pack",
+    )
+    runtime_target_outcome_parser.add_argument(
+        "--status",
+        required=True,
+        choices=sorted(RUNTIME_TARGET_HEALTH_STATUSES),
+        help="Observed health status for the runtime target",
+    )
+    runtime_target_outcome_parser.add_argument("--intent", help="Optional intent associated with the outcome")
+    runtime_target_outcome_parser.add_argument("--reason", default="", help="Optional short reason for the recorded outcome")
+    runtime_target_outcome_parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for the runtime target outcome receipt",
+    )
+
     handoff_parser = subparsers.add_parser(
         "stage-runtime-handoff",
         help="Persist a runtime-ready handoff bundle with compact context, checklist, adapter target, and install preview",
@@ -25066,6 +25269,26 @@ def main() -> int:
             print(json.dumps(feedback, indent=2))
         else:
             print_route_outcome_feedback(feedback)
+        return 0
+
+    if args.command == "record-runtime-target-outcome":
+        try:
+            pack_dir = resolve_context_pack_dir(args.path, registry, command_label="record-runtime-target-outcome")
+            outcome = record_runtime_target_outcome(
+                pack_dir,
+                registry,
+                runtime_target=args.runtime_target,
+                status=args.status,
+                reason=args.reason,
+                intent=args.intent,
+            )
+        except (FileNotFoundError, TypeError, ValueError, KeyError) as exc:
+            print(f"ERROR {format_pack_surface_error(args.path, exc)}")
+            return 1
+        if args.format == "json":
+            print(json.dumps(outcome, indent=2))
+        else:
+            print_runtime_target_outcome(outcome)
         return 0
 
     if args.command == "stage-runtime-handoff":

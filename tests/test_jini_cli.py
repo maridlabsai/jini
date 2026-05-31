@@ -4082,6 +4082,64 @@ class JiniCliConformanceTests(unittest.TestCase):
             any("Preferred adapter `kiro-cli` is `throttled`; switched to `codex`" in note for note in recommendation["runtime_guidance"]["notes"])
         )
 
+    def test_recommend_execution_falls_back_from_persisted_throttled_runtime_target(self) -> None:
+        pack_dir = self.compile_research_pack()
+        rollout_dir = pack_dir / "runtime" / "policy-rollouts"
+        rollout_dir.mkdir(parents=True, exist_ok=True)
+        rollout_path = rollout_dir / "runtime-routing-active.json"
+        rollout_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.1.0",
+                    "policy_type": "JiniPolicyRollout",
+                    "policy_id": "runtime-routing",
+                    "candidate_id": "runtime-routing-persisted-throttle-test",
+                    "status": "active",
+                    "recommended_runtime_target": "kiro-cli",
+                    "intent_overrides": {},
+                    "route_feedback_drivers": {},
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        recorded = self.run_cli(
+            "record-runtime-target-outcome",
+            pack_dir,
+            "--runtime-target",
+            "kiro-cli",
+            "--status",
+            "throttled",
+            "--reason",
+            "Observed CLI throttling during execution.",
+            "--format",
+            "json",
+        )
+        self.assert_ok(recorded)
+        recorded_payload = json.loads(recorded.stdout)
+        self.assertEqual("kiro-cli", recorded_payload["runtime_target"])
+        self.assertEqual("throttled", recorded_payload["status"])
+        self.assertEqual("throttled", recorded_payload["health_status"])
+        self.assertEqual(1, recorded_payload["health_signal_count"])
+
+        result = self.run_cli("recommend-execution", pack_dir, "--intent", "make", "--format", "json")
+        self.assert_ok(result)
+
+        recommendation = json.loads(result.stdout)
+        self.assertEqual("kiro-cli", recommendation["active_policy"]["recommended_runtime_target"])
+        self.assertEqual("codex", recommendation["runtime_guidance"]["selected"]["id"])
+        persisted = next(item for item in recommendation["runtime_guidance"]["matches"] if item["id"] == "kiro-cli")
+        self.assertEqual("throttled", persisted["health_status"])
+        self.assertEqual("learning-events", persisted["health_source"])
+        self.assertEqual(1, persisted["health_signal_count"])
+        self.assertTrue(
+            any(
+                "Preferred adapter `kiro-cli` is `throttled`; switched to `codex`" in note
+                for note in recommendation["runtime_guidance"]["notes"]
+            )
+        )
+
     def test_recommend_execution_keeps_explicit_runtime_target_pin_under_throttle(self) -> None:
         pack_dir = self.compile_research_pack()
         env = os.environ.copy()
@@ -4097,6 +4155,42 @@ class JiniCliConformanceTests(unittest.TestCase):
             "--format",
             "json",
             env=env,
+        )
+        self.assert_ok(result)
+
+        recommendation = json.loads(result.stdout)
+        self.assertEqual("kiro-cli", recommendation["runtime_guidance"]["selected"]["id"])
+        self.assertIn(
+            "Preferred adapter `kiro-cli` was selected explicitly.",
+            recommendation["runtime_guidance"]["notes"],
+        )
+
+    def test_recommend_execution_keeps_explicit_runtime_target_pin_under_persisted_throttle(self) -> None:
+        pack_dir = self.compile_research_pack()
+        self.assert_ok(
+            self.run_cli(
+                "record-runtime-target-outcome",
+                pack_dir,
+                "--runtime-target",
+                "kiro-cli",
+                "--status",
+                "throttled",
+                "--reason",
+                "Observed CLI throttling during execution.",
+                "--format",
+                "json",
+            )
+        )
+
+        result = self.run_cli(
+            "recommend-execution",
+            pack_dir,
+            "--intent",
+            "make",
+            "--runtime-target",
+            "kiro-cli",
+            "--format",
+            "json",
         )
         self.assert_ok(result)
 
