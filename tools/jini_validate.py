@@ -10028,42 +10028,15 @@ def print_repo_request_intake(request_text: str, repo_context: dict[str, Any], *
         if not command:
             continue
         surfaced_commands.append((category, command))
-    if compact:
-        print(f"Working on: {request_text}")
-        if surfaced_commands:
-            if should_surface_compact_next(intent, surfaced_commands):
-                _, lead_command = surfaced_commands[0]
-                print(f"Start with `{lead_command}`.")
-        else:
-            print("Repo detected, but Jini could not find a standard entrypoint yet.")
-            print(f"Try `{cli} repo-map .`.")
-            print(f"Try `{cli} doctor`.")
-        return
-    print(f"Jini CLI {load_version()}")
-    print(f"REQUEST {request_text}")
-    print(f"REPO    {repo_name}")
-    if repo_root:
-        print(f"PATH    {repo_root}")
-    if git_info.get("tracked"):
-        branch = str(git_info.get("branch", "")).strip() or "unknown"
-        dirty_files = int(git_info.get("dirty_files", 0))
-        print(f"GIT     branch={branch} dirty_files={dirty_files}")
-    print(f"INTENT  {intent}")
-    print()
-    print("BEST NEXT MOVE")
+    print(f"Working on: {request_text}")
     if surfaced_commands:
-        for category, command in surfaced_commands:
-            print(f"  {category:<8}{command}")
-    else:
-        print("  repo     Repo detected, but Jini could not find standard entrypoints yet.")
-    print()
-    print("KEEP MOVING")
-    print(f"  {cli} repo-map .")
-    print("    Inspect the current repo surface Jini can see.")
-    print(f"  {cli} doctor")
-    print("    Check route and setup before execution.")
-    print(f"  {cli} status /path/to/work")
-    print("    Resume existing Jini work when this repo already has it.")
+        if should_surface_compact_next(intent, surfaced_commands):
+            _, lead_command = surfaced_commands[0]
+            print(f"Start with `{lead_command}`.")
+        return
+    print("Repo detected, but Jini could not find a standard entrypoint yet.")
+    print(f"Try `{cli} repo-map .`.")
+    print(f"Try `{cli} doctor`.")
 
 
 def print_generic_request_intake(request_text: str) -> None:

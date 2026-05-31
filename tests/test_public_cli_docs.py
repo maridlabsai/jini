@@ -79,6 +79,7 @@ class PublicCliDocsTests(unittest.TestCase):
             "keep the controls in the background instead of teaching them before the task starts",
             "<code>commands</code>, <code>doctor</code>, <code>help --admin</code>, and <code>exit</code> should still work inside the same live session, but they should answer with concise in-shell summaries instead of relaunching the full catalog or operator cards.",
             "should only print one short steering line when it is genuinely pointing you toward a concrete action",
+            "<code>jini fix failing tests</code> and <code>jini review this repo</code> should use the same calm shell language instead of an argparse usage wall or a separate intake report",
             "Keep typing the next thing",
             "fix failing tests",
             "open the latest artifact",
