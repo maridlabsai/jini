@@ -4422,6 +4422,12 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual(2, recovered["health_signal_count"])
         self.assertTrue(
             any(
+                "Policy-preferred adapter `kiro-cli` recovered to `ready`; kept it as the selected runtime target."
+                for note in recommendation["runtime_guidance"]["notes"]
+            )
+        )
+        self.assertFalse(
+            any(
                 "Policy-preferred adapter `kiro-cli` remained `ready`; kept it as the selected runtime target." in note
                 for note in recommendation["runtime_guidance"]["notes"]
             )

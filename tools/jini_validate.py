@@ -12823,9 +12823,17 @@ def build_adapter_resolution(
                     selected_via_preference = True
                     selected_via_explicit_preference = preferred_origin != "policy"
                     if preferred_origin == "policy":
-                        notes.append(
-                            f"Policy-preferred adapter `{preferred}` remained `{preferred_status}`; kept it as the selected runtime target."
-                        )
+                        preferred_last_status = str(
+                            preferred_match.get("health_last_status", preferred_status) or preferred_status
+                        ).strip().lower()
+                        if preferred_status == "ready" and preferred_last_status == "recovered":
+                            notes.append(
+                                f"Policy-preferred adapter `{preferred}` recovered to `ready`; kept it as the selected runtime target."
+                            )
+                        else:
+                            notes.append(
+                                f"Policy-preferred adapter `{preferred}` remained `{preferred_status}`; kept it as the selected runtime target."
+                            )
                     else:
                         notes.append(f"Preferred adapter `{preferred}` was selected explicitly.")
             else:
