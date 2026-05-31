@@ -165,6 +165,14 @@ The stable public story is:
   stronger continuity convenience
 - paid services and support are separate from paid product capability
 
+That adaptive optimization must include:
+
+- changing the underlying platform or runtime target when throttle pressure,
+  quota pressure, or availability drift makes another route better
+- changing the model or local profile for the task based on task shape,
+  modality, and complexity instead of assuming one fixed model is right for all
+  work
+
 ## Upgrade Trigger
 
 The user should upgrade only when the open version is already useful and the
@@ -188,6 +196,9 @@ The commercial layer may monetize:
 - subscription-limit forecasting
 - preemptive throttle avoidance
 - automatic fallback and resume
+- automatic platform switching across managed routes when throttling or quotas
+  make the current route the wrong choice
+- task-shaped model and profile selection across local and managed routes
 - sync and continuity convenience
 - shared team workflows
 - governance and enterprise controls

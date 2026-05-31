@@ -8,6 +8,11 @@ This gate keeps Jini lean, efficient, cheap to run, and easy to buy.
 
 The product must preserve `lowest-total-cost-to-useful-outcome` and `cheap-by-default`.
 
+That includes:
+
+- `throttle-driven-platform-switching`
+- `task-shaped-model-selection`
+
 ### 2. Latency Discipline
 
 The product must preserve `time-to-first-useful-result` and `resume-cost`.
@@ -34,6 +39,10 @@ Reject any change that:
 - slows first-turn or continuation paths without a measurable user benefit
 - increases premium routing without measurable quality or speed gain
 - adds product ceremony before useful output
+- prevents Jini from moving between underlying platforms when throttling or
+  quota pressure makes the current route the wrong one
+- removes or weakens task-shaped model selection so a single model/profile is
+  used regardless of task depth, modality, or complexity
 
 ## Required Regression Inputs
 
@@ -49,3 +58,5 @@ Reject any change that:
 - `route-feedback-health`
 - `route-feedback-impact`
 - `no-compatibility-aliases`
+- `throttle-driven-platform-switching`
+- `task-shaped-model-selection`

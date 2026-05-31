@@ -52,6 +52,19 @@ Every paid escalation should be justified by one of:
 - materially lower operator burden
 - materially lower failure risk
 
+This policy must apply at two levels:
+
+- the underlying platform/runtime target, such as `claude-code`, `codex`,
+  `github-copilot`, or `kiro-cli`
+- the model/profile used inside that route, such as `local-fast`,
+  `local-workhorse`, `local-deep`, or the managed provider/model selected for
+  the task
+
+Jini should be able to switch platform when throttling, quota pressure,
+availability drift, or interruption risk makes the current route worse for the
+user. Jini should also be able to adjust the model or local profile based on
+task shape and complexity instead of pinning one model across all work.
+
 ### 4. Visible Efficiency
 
 Jini should make efficiency legible.
@@ -164,6 +177,10 @@ Jini should be easy to buy because it is:
 - premium routing only when justified
 - no hidden escalation as the default happy path
 - no duplicate shells or duplicate steps when one stable path is enough
+- throttle-driven platform switching should be automatic when a better route is
+  available
+- task-shaped model selection should choose the smallest model or profile that
+  can do the job well, then escalate only when the task truly needs more depth
 
 ## Measures
 
@@ -177,6 +194,9 @@ Jini should track:
 - recovery-time-after-interruption
 - command-surface-count
 - premium-route-regret-rate
+- throttle-avoided-interruption-rate
+- platform-switch-success-rate
+- task-to-model-fit accuracy
 
 ## Reject Conditions
 
@@ -191,3 +211,7 @@ Reject changes that:
 - add a supported surface that cannot resume the same session model
 - add UX complexity that makes route, state, or next action harder to
   understand
+- pin users to one managed platform when a cheaper or more available route is
+  clearly better under throttle pressure
+- choose a stronger or more expensive model by default when task-shaped
+  selection could have completed the work well

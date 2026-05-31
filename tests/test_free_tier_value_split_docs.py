@@ -20,6 +20,10 @@ class FreeTierValueSplitDocsTests(unittest.TestCase):
             "provider-specific optimization",
             "subscription-limit forecasting",
             "automatic fallback and resume",
+            "changing the underlying platform or runtime target when throttle pressure",
+            "changing the model or local profile for the task based on task shape",
+            "automatic platform switching across managed routes when throttling or quotas",
+            "task-shaped model and profile selection across local and managed routes",
             "free structural efficiency patterns",
         ):
             with self.subTest(marker=marker):

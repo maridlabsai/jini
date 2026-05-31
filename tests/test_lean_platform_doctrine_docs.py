@@ -81,6 +81,12 @@ class LeanPlatformDoctrineDocsTests(unittest.TestCase):
             "recovery-time-after-interruption",
             "command-surface-count",
             "premium-route-regret-rate",
+            "throttle-driven platform switching should be automatic",
+            "task-shaped model selection should choose the smallest model or profile",
+            "can do the job well, then escalate only when the task truly needs more depth",
+            "throttle-avoided-interruption-rate",
+            "platform-switch-success-rate",
+            "task-to-model-fit accuracy",
             "## Reject Conditions",
             "compatibility aliases should not be taught",
             "add a supported surface that cannot resume the same session model",
@@ -113,6 +119,8 @@ class LeanPlatformDoctrineDocsTests(unittest.TestCase):
             "`route-feedback-health`",
             "`route-feedback-impact`",
             "`no-compatibility-aliases`",
+            "`throttle-driven-platform-switching`",
+            "`task-shaped-model-selection`",
         ]
         for marker in required_markers:
             with self.subTest(marker=marker):
