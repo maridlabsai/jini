@@ -36,16 +36,16 @@ quick_links:
   <p>That same calm shell shape should appear when Jini resumes remembered work too, so zero-arg <code>jini</code> still feels like one shell instead of one prompt for fresh repo work and another prompt for active work.</p>
   <p>For parity with Claude Code, Codex, and GitHub CLI expectations, the shell should drop the version banner, repo receipt, active-work receipt, and startup coaching line. It should skip the full outcome report before the prompt and open directly at <code>jini&gt;</code>.</p>
   <p>After the first answer it should keep the <code>jini&gt;</code> prompt open, let you type follow-up turns, and keep the controls in the background instead of teaching them before the task starts. If you need them, <code>commands</code>, <code>doctor</code>, <code>help --admin</code>, and <code>exit</code> should still work inside the same live session, but they should answer with concise in-shell summaries instead of relaunching the full catalog or operator cards.</p>
-  <p>Once the session is already in flow, Jini should only print a <code>NEXT</code> line when it is genuinely steering you toward a concrete action. Otherwise it should acknowledge the task and return to the prompt.</p>
+  <p>Once the session is already in flow, Jini should only print one short steering line when it is genuinely pointing you toward a concrete action. Otherwise it should acknowledge the task and return to the prompt.</p>
 
 <pre><code class="language-bash">$ jini
 jini&gt; fix failing tests
 
-TASK    fix failing tests
-NEXT    make test
+Working on: fix failing tests
+Start with `make test`.
 jini&gt; doctor
 
-provider_id</code></pre>
+DOCTOR   Local preview [ok]</code></pre>
 </div>
 
 <div class="section-card">

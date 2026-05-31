@@ -10029,15 +10029,15 @@ def print_repo_request_intake(request_text: str, repo_context: dict[str, Any], *
             continue
         surfaced_commands.append((category, command))
     if compact:
-        print(f"TASK    {request_text}")
+        print(f"Working on: {request_text}")
         if surfaced_commands:
             if should_surface_compact_next(intent, surfaced_commands):
                 _, lead_command = surfaced_commands[0]
-                print(f"NEXT    {lead_command}")
+                print(f"Start with `{lead_command}`.")
         else:
-            print("NEXT    Repo detected, but Jini could not find a standard entrypoint yet.")
-            print(f"TRY     {cli} repo-map .")
-            print(f"TRY     {cli} doctor")
+            print("Repo detected, but Jini could not find a standard entrypoint yet.")
+            print(f"Try `{cli} repo-map .`.")
+            print(f"Try `{cli} doctor`.")
         return
     print(f"Jini CLI {load_version()}")
     print(f"REQUEST {request_text}")
