@@ -9914,8 +9914,6 @@ def prompt_repo_task(repo_context: dict[str, Any], *, initial_request: str | Non
     cli = cli_invocation()
     if initial_request:
         print_repo_request_intake(initial_request, repo_context, compact=True)
-    else:
-        print_live_session_task_hint()
     while True:
         try:
             request_text = input(f"{cli}> ").strip()
@@ -9940,7 +9938,6 @@ def prompt_current_work_task(pack_dir: Path, registry: dict[str, Any], *, report
     cli = cli_invocation()
     repo_context = inspect_repo_context(Path.cwd())
     print_active_work_shell_intro(pack_dir, repo_context, report=report)
-    print_live_session_task_hint()
     while True:
         try:
             request_text = input(f"{cli}> ").strip()
@@ -9968,12 +9965,6 @@ def prompt_current_work_task(pack_dir: Path, registry: dict[str, Any], *, report
             max_chars=700,
         )
         print_compact_context(compact, heading="TASK")
-
-
-def print_live_session_task_hint() -> None:
-    print("Type a task. Use `exit` to leave.")
-
-
 def print_active_work_shell_intro(
     pack_dir: Path,
     repo_context: dict[str, Any],

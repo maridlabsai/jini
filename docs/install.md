@@ -145,10 +145,9 @@ jini
       <p>Internal diagnostics like <code>repo-map</code> and setup surfaces like <code>doctor</code> should stay off the first screen. A Claude Code, Codex, or GitHub CLI user should see task suggestions first, then at most a small <code>Already have Jini work?</code> note with <code>status /path/to/work</code> when an existing Jini work path actually needs adoption.</p>
       <p>The three starter suggestions should stay brief and action-first: <code>Review the repo and suggest the next move.</code>, <code>Fix the failing tests in this repo.</code>, and <code>Review the current branch and call out risks.</code></p>
       <p>In a real terminal, bare <code>jini</code> should stay open and let you type the first task directly at the <code>jini&gt;</code> prompt.</p>
-      <p>That same calm task cue should appear when Jini resumes remembered work too, so zero-arg <code>jini</code> still feels like one shell instead of one prompt for fresh repo work and another prompt for active work.</p>
-      <p>For parity with Claude Code, Codex, and GitHub CLI expectations, the shell should drop the version banner, repo receipt, and active-work receipt. It should skip the full outcome report before the prompt.</p>
+      <p>That same calm shell shape should appear when Jini resumes remembered work too, so zero-arg <code>jini</code> still feels like one shell instead of one prompt for fresh repo work and another prompt for active work.</p>
+      <p>For parity with Claude Code, Codex, and GitHub CLI expectations, the shell should drop the version banner, repo receipt, active-work receipt, and startup coaching line. It should skip the full outcome report before the prompt and open directly at <code>jini&gt;</code>.</p>
       <pre><code class="language-bash">$ jini
-Type a task. Use `exit` to leave.
 jini&gt; fix failing tests
 </code></pre>
       <p>That prompt should remain open for follow-up turns. The task should stay primary, and the controls should stay in the background until you need them. If you do, <code>commands</code>, <code>doctor</code>, <code>help --admin</code>, and <code>exit</code> should still work as in-session escape hatches instead of forcing a relaunch.</p>

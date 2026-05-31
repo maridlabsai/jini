@@ -596,7 +596,6 @@ class JiniCliConformanceTests(unittest.TestCase):
             input_text="fix failing tests\nexit\n",
         )
         self.assert_ok(result)
-        self.assertIn("Type a task. Use `exit` to leave.", result.stdout)
         self.assertIn("jini> ", result.stdout)
         self.assertIn("TASK    fix failing tests", result.stdout)
         self.assertIn("NEXT    make test", result.stdout)
@@ -622,7 +621,8 @@ class JiniCliConformanceTests(unittest.TestCase):
             input_text="",
         )
         self.assert_ok(result)
-        self.assertIn("Type a task. Use `exit` to leave.", result.stdout)
+        self.assertIn("jini> ", result.stdout)
+        self.assertNotIn("Type a task. Use `exit` to leave.", result.stdout)
         self.assertNotIn("Session closed.", result.stdout)
 
     def test_zero_arg_cli_interactive_repo_mode_keeps_prompt_open_for_follow_up_turns(self) -> None:
@@ -694,7 +694,6 @@ class JiniCliConformanceTests(unittest.TestCase):
             input_text="fix failing tests\nexit\n",
         )
         self.assert_ok(result)
-        self.assertIn("Type a task. Use `exit` to leave.", result.stdout)
         self.assertIn("jini> ", result.stdout)
         self.assertIn("TASK    fix failing tests", result.stdout)
         self.assertIn("NEXT    make test", result.stdout)
@@ -716,7 +715,7 @@ class JiniCliConformanceTests(unittest.TestCase):
             input_text="exit\n",
         )
         self.assert_ok(result)
-        self.assertEqual(1, result.stdout.count("Type a task. Use `exit` to leave."))
+        self.assertEqual(0, result.stdout.count("Type a task. Use `exit` to leave."))
         self.assertNotIn("Jini CLI 0.1.0", result.stdout)
 
     def test_zero_arg_cli_active_work_shell_skips_report_card_before_prompt(self) -> None:
@@ -753,7 +752,8 @@ class JiniCliConformanceTests(unittest.TestCase):
             input_text="exit\n",
         )
         self.assert_ok(result)
-        self.assertIn("Type a task. Use `exit` to leave.", result.stdout)
+        self.assertIn("jini> ", result.stdout)
+        self.assertNotIn("Type a task. Use `exit` to leave.", result.stdout)
         self.assertNotIn("Session closed.", result.stdout)
         self.assertNotIn("WORK   example-research-prd", result.stdout)
         self.assertNotIn("TITLE  Jini Research To PRD", result.stdout)
@@ -876,7 +876,7 @@ class JiniCliConformanceTests(unittest.TestCase):
             result = jini_validate.prompt_repo_task(repo_context)
         transcript = output.getvalue()
         self.assertEqual(0, result)
-        self.assertIn("Type a task. Use `exit` to leave.", transcript)
+        self.assertNotIn("Type a task. Use `exit` to leave.", transcript)
         self.assertNotIn("Type the next task, or `exit` to leave.", transcript)
         self.assertEqual(0, transcript.count("Session closed."))
 
