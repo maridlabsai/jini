@@ -695,6 +695,25 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("START HERE", result.stdout)
         self.assertNotIn("Session closed.", result.stdout)
 
+    def test_zero_arg_cli_interactive_no_repo_mode_routes_escape_hatches(self) -> None:
+        empty_dir = self.tmp / "empty-interactive-escapes"
+        empty_dir.mkdir()
+        result = self.run_cli_in_cwd(
+            empty_dir,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="commands\ndoctor\nhelp --admin\nexit\n",
+        )
+        self.assert_ok(result)
+        self.assertIn("jini> ", result.stdout)
+        self.assertIn("COMMANDS  status  continue  open  doctor", result.stdout)
+        self.assertIn("ADMIN     help --admin", result.stdout)
+        self.assertIn("DOCTOR   Local preview [ok]", result.stdout)
+        self.assertIn("ADMIN    validate  publish  route-feedback  skills  delegate", result.stdout)
+        self.assertIn("MORE     run `jini help --admin` for the full inventory", result.stdout)
+        self.assertNotIn("Session closed.", result.stdout)
+        self.assertNotIn("START HERE", result.stdout)
+        self.assertNotIn("Jini CLI 0.1.0", result.stdout)
+
     def test_zero_arg_cli_resumes_current_work_surface(self) -> None:
         example_output = self.tmp / "research-example"
         seeded = self.run_cli("try-example", "research-prd", "--output", example_output)
