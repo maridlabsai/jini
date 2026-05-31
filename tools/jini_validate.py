@@ -5714,6 +5714,8 @@ def _normalize_provider_mode(value: str) -> str:
     normalized = (value or "").strip().lower().replace("_", "-").replace(" ", "-")
     if normalized in {"", "auto"}:
         return "auto"
+    if normalized in {"local-slm", "localslm", "local-model"}:
+        return "local-slm"
     if normalized in {"local", "local-preview", "localpreview"}:
         return "local-preview"
     if normalized in {"azure", "azure-openai", "azure-open-ai"}:
@@ -5818,6 +5820,119 @@ def _detect_local_preview_provider(*, env: dict[str, str] | None = None) -> dict
         "settings": [{"name": "JINI_PROVIDER", "presence": _provider_setting_value("Local preview", env=env)}],
         "secrets": [],
         "missing": [],
+    }
+
+
+def _load_device_profile_payload(*, env: dict[str, str] | None = None) -> dict[str, Any]:
+    env_map = os.environ if env is None else env
+    override = str(env_map.get("JINI_DEVICE_CLASS_OVERRIDE", "")).strip()
+    default_payload = {
+        "device_class": override,
+        "accelerator_class": "",
+        "local_runtime_class": "",
+        "os": "",
+        "os_version": "",
+        "arch": "",
+    }
+    path = Path(str(env_map.get("JINI_STATE_DIR", "")).strip() or str(session_state_root())) / "device-profile.json"
+    if not path.exists():
+        return default_payload
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return default_payload
+    if not isinstance(payload, dict):
+        return default_payload
+    merged = {**default_payload, **payload}
+    if override:
+        merged["device_class"] = override
+    return merged
+
+
+def _local_slm_setting_presence(name: str, *, env: dict[str, str] | None = None, state: str = "") -> str:
+    presence = _env_presence(name, env=os.environ if env is None else env)
+    if state:
+        return f"{presence} ({state} on this device)"
+    return presence
+
+
+def _detect_local_slm_provider(*, env: dict[str, str] | None = None) -> dict[str, Any]:
+    env_map = os.environ if env is None else env
+    capabilities = load_local_runtime_capabilities_payload()
+    device_profile = _load_device_profile_payload(env=env_map)
+    missing: list[str] = []
+    if _env_presence("JINI_LOCAL_SLM_ENDPOINT", env=env_map) == "missing":
+        missing.append("JINI_LOCAL_SLM_ENDPOINT")
+    if _env_presence("JINI_LOCAL_SLM_MODEL", env=env_map) == "missing":
+        missing.append("JINI_LOCAL_SLM_MODEL")
+
+    device_class = str(device_profile.get("device_class", "")).strip() or "unknown"
+    accelerator_class = str(device_profile.get("accelerator_class", "")).strip() or "unknown"
+    local_runtime_class = (
+        str(device_profile.get("local_runtime_class", "")).strip()
+        or str(capabilities.get("local_runtime_class", "")).strip()
+        or "unknown"
+    )
+    os_name = str(device_profile.get("os", "")).strip() or "unknown"
+    os_version = str(device_profile.get("os_version", "")).strip() or "unknown"
+    os_readout = f"{os_name} {os_version}".strip()
+    local_profile_states = device_profile.get("local_profile_states", {})
+    if not isinstance(local_profile_states, dict):
+        local_profile_states = {}
+
+    settings = [
+        {"name": "JINI_PROVIDER", "presence": _provider_setting_value("Local SLM", env=env)},
+        {"name": "JINI_LOCAL_SLM_ENDPOINT", "presence": _env_presence("JINI_LOCAL_SLM_ENDPOINT", env=env_map)},
+        {"name": "DEVICE_CLASS", "presence": device_class},
+        {"name": "DEVICE_OS", "presence": os_readout},
+        {"name": "LOCAL_ACCELERATOR", "presence": accelerator_class},
+        {"name": "LOCAL_RUNTIME_CLASS", "presence": local_runtime_class},
+        {
+            "name": "JINI_LOCAL_SLM_MODEL",
+            "presence": _local_slm_setting_presence("JINI_LOCAL_SLM_MODEL", env=env_map),
+        },
+        {
+            "name": "JINI_LOCAL_SLM_FAST_MODEL",
+            "presence": _local_slm_setting_presence(
+                "JINI_LOCAL_SLM_FAST_MODEL",
+                env=env_map,
+                state=str(local_profile_states.get("local-fast", "")).strip(),
+            ),
+        },
+        {
+            "name": "JINI_LOCAL_SLM_WORKHORSE_MODEL",
+            "presence": _local_slm_setting_presence(
+                "JINI_LOCAL_SLM_WORKHORSE_MODEL",
+                env=env_map,
+                state=str(local_profile_states.get("local-workhorse", "")).strip(),
+            ),
+        },
+        {
+            "name": "JINI_LOCAL_SLM_DEEP_MODEL",
+            "presence": _local_slm_setting_presence(
+                "JINI_LOCAL_SLM_DEEP_MODEL",
+                env=env_map,
+                state=str(local_profile_states.get("local-deep", "")).strip(),
+            ),
+        },
+        {
+            "name": "JINI_LOCAL_SLM_MULTIMODAL_MODEL",
+            "presence": _local_slm_setting_presence(
+                "JINI_LOCAL_SLM_MULTIMODAL_MODEL",
+                env=env_map,
+                state=str(local_profile_states.get("local-multimodal", "")).strip(),
+            ),
+        },
+    ]
+    return {
+        "schema_version": "0.1.0",
+        "result_type": "JiniProviderDoctor",
+        "provider_id": "local-slm",
+        "label": "Local SLM",
+        "status": "ok" if not missing else "needs setup",
+        "settings": settings,
+        "secrets": [{"name": "JINI_LOCAL_SLM_API_KEY", "presence": _env_presence("JINI_LOCAL_SLM_API_KEY", env=env_map)}],
+        "missing": missing,
     }
 
 
@@ -5954,11 +6069,13 @@ def build_provider_doctor(*, env: dict[str, str] | None = None) -> dict[str, Any
         if forced:
             provider_id = forced
         else:
-            for candidate in ("anthropic", "azure-openai", "bedrock"):
+            for candidate in ("local-slm", "anthropic", "azure-openai", "bedrock"):
                 report = build_provider_doctor(env={**env_map, "JINI_PROVIDER": candidate})
                 if report.get("status") == "ok":
                     return _with_auto_provider_setting(report)
             return _detect_local_preview_provider(env=env_map)
+    if provider_id == "local-slm":
+        return _detect_local_slm_provider(env=env_map)
     if provider_id == "local-preview":
         return _detect_local_preview_provider(env=env_map)
     if provider_id == "azure-openai":
@@ -5975,7 +6092,7 @@ def build_provider_doctor(*, env: dict[str, str] | None = None) -> dict[str, Any
         "status": "needs setup",
         "settings": [],
         "secrets": [],
-        "missing": ["Supported JINI_PROVIDER value: auto, claude, azure-openai, bedrock, or local-preview"],
+        "missing": ["Supported JINI_PROVIDER value: auto, claude, azure-openai, bedrock, local-slm, or local-preview"],
     }
 
 

@@ -298,11 +298,7 @@ def collect_core_command_samples(root: Path, cli_path: Path) -> tuple[list[dict[
         tmp_root = Path(tmp_dir)
         sample, _ = sample_cli(["commands"])
         command_samples.append(sample)
-        doctor_sample, doctor_payload = sample_cli(
-            ["doctor", "--format", "json"],
-            env_overrides={"JINI_PROVIDER": "local-preview"},
-            parse_json_output=True,
-        )
+        doctor_sample, doctor_payload = sample_cli(["doctor", "--format", "json"], parse_json_output=True)
         command_samples.append(doctor_sample)
         if isinstance(doctor_payload, dict):
             provider_evidence = {

@@ -6351,6 +6351,109 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("ANTHROPIC_API_KEY", rendered)
         self.assertNotIn("super-secret-key", rendered)
 
+    def test_provider_doctor_reports_local_slm_with_device_runtime_evidence(self) -> None:
+        state_root = self.tmp / ".jini"
+        state_root.mkdir(parents=True, exist_ok=True)
+        (state_root / "device-profile.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.2.0",
+                    "context_type": "JiniDeviceProfile",
+                    "captured_at": "2026-05-30T14:00:00Z",
+                    "os": "darwin",
+                    "os_version": "15.5",
+                    "arch": "arm64",
+                    "accelerator_class": "apple-gpu",
+                    "local_runtime_class": "local-ollama",
+                    "device_class": "laptop-strong",
+                    "local_profile_states": {
+                        "local-fast": "ready",
+                        "local-workhorse": "ready",
+                        "local-deep": "degraded",
+                        "local-multimodal": "ready",
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        env = os.environ.copy()
+        env.update(
+            {
+                "JINI_PROVIDER": "local-slm",
+                "JINI_LOCAL_SLM_ENDPOINT": "http://127.0.0.1:11434/v1",
+                "JINI_LOCAL_SLM_MODEL": "qwen3:8b",
+                "JINI_LOCAL_SLM_FAST_MODEL": "phi4-mini",
+                "JINI_LOCAL_SLM_API_KEY": "top-secret-local-key",
+            }
+        )
+        result = self.run_cli("doctor", "--format", "json", env=env)
+        self.assert_ok(result)
+
+        report = json.loads(result.stdout)
+        self.assertEqual("local-slm", report["provider_id"])
+        self.assertEqual("ok", report["status"])
+        self.assertEqual("Local SLM", report["label"])
+        settings = {item["name"]: item["presence"] for item in report["settings"]}
+        self.assertEqual("set", settings["JINI_LOCAL_SLM_ENDPOINT"])
+        self.assertEqual("laptop-strong", settings["DEVICE_CLASS"])
+        self.assertEqual("darwin 15.5", settings["DEVICE_OS"])
+        self.assertEqual("apple-gpu", settings["LOCAL_ACCELERATOR"])
+        self.assertEqual("local-ollama", settings["LOCAL_RUNTIME_CLASS"])
+        self.assertEqual("set", settings["JINI_LOCAL_SLM_MODEL"])
+        self.assertEqual("set (ready on this device)", settings["JINI_LOCAL_SLM_FAST_MODEL"])
+        self.assertEqual("missing (ready on this device)", settings["JINI_LOCAL_SLM_WORKHORSE_MODEL"])
+        self.assertEqual("missing (degraded on this device)", settings["JINI_LOCAL_SLM_DEEP_MODEL"])
+        rendered = json.dumps(report)
+        self.assertIn("JINI_LOCAL_SLM_API_KEY", rendered)
+        self.assertNotIn("top-secret-local-key", rendered)
+
+    def test_provider_doctor_local_slm_requires_endpoint_and_model(self) -> None:
+        env = os.environ.copy()
+        env["JINI_PROVIDER"] = "local-slm"
+        result = self.run_cli("doctor", "--format", "json", env=env)
+        self.assertNotEqual(0, result.returncode)
+
+        report = json.loads(result.stdout)
+        self.assertEqual("local-slm", report["provider_id"])
+        self.assertEqual("needs setup", report["status"])
+        self.assertIn("JINI_LOCAL_SLM_ENDPOINT", report["missing"])
+        self.assertIn("JINI_LOCAL_SLM_MODEL", report["missing"])
+
+    def test_provider_doctor_auto_prefers_local_slm_when_ready(self) -> None:
+        state_root = self.tmp / ".jini"
+        state_root.mkdir(parents=True, exist_ok=True)
+        (state_root / "device-profile.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.2.0",
+                    "context_type": "JiniDeviceProfile",
+                    "captured_at": "2026-05-30T14:00:00Z",
+                    "os": "darwin",
+                    "os_version": "15.5",
+                    "accelerator_class": "apple-gpu",
+                    "local_runtime_class": "local-ollama",
+                    "device_class": "laptop-strong",
+                }
+            ),
+            encoding="utf-8",
+        )
+        env = os.environ.copy()
+        env.update(
+            {
+                "JINI_PROVIDER": "auto",
+                "JINI_LOCAL_SLM_ENDPOINT": "http://127.0.0.1:11434/v1",
+                "JINI_LOCAL_SLM_MODEL": "qwen3:8b",
+            }
+        )
+        result = self.run_cli("doctor", "--format", "json", env=env)
+        self.assert_ok(result)
+
+        report = json.loads(result.stdout)
+        self.assertEqual("local-slm", report["provider_id"])
+        self.assertEqual("ok", report["status"])
+        provider_setting = next(item for item in report["settings"] if item["name"] == "JINI_PROVIDER")
+        self.assertEqual("auto -> Local SLM", provider_setting["presence"])
+
     def test_provider_doctor_auto_prefers_bedrock_for_sonnet_46(self) -> None:
         env = os.environ.copy()
         env.update(
@@ -7270,6 +7373,40 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("strong", adapters["local-workhorse"]["structured_reliability"])
         self.assertEqual(95, adapters["local-fast"]["latency_ms"])
         self.assertEqual("usable", adapters["local-fast"]["structured_reliability"])
+
+    def test_metrics_json_surfaces_local_slm_provider_when_configured(self) -> None:
+        state_root = self.tmp / ".jini"
+        state_root.mkdir(parents=True, exist_ok=True)
+        (state_root / "device-profile.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.2.0",
+                    "context_type": "JiniDeviceProfile",
+                    "captured_at": "2026-05-30T14:00:00Z",
+                    "os": "darwin",
+                    "os_version": "15.5",
+                    "accelerator_class": "apple-gpu",
+                    "local_runtime_class": "local-ollama",
+                    "device_class": "laptop-strong",
+                }
+            ),
+            encoding="utf-8",
+        )
+        env = os.environ.copy()
+        env.update(
+            {
+                "JINI_PROVIDER": "local-slm",
+                "JINI_LOCAL_SLM_ENDPOINT": "http://127.0.0.1:11434/v1",
+                "JINI_LOCAL_SLM_MODEL": "qwen3:8b",
+            }
+        )
+        result = self.run_cli("metrics", "--format", "json", env=env)
+        self.assert_ok(result)
+        payload = json.loads(result.stdout)
+        self.assertTrue(payload["provider_evidence"]["available"])
+        self.assertEqual("local-slm", payload["provider_evidence"]["provider_id"])
+        self.assertEqual("Local SLM", payload["provider_evidence"]["label"])
+        self.assertEqual("ok", payload["provider_evidence"]["status"])
 
 
 if __name__ == "__main__":
