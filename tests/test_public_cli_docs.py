@@ -83,6 +83,7 @@ class PublicCliDocsTests(unittest.TestCase):
             "keep the <code>jini&gt;</code> prompt open",
             "keep the controls in the background instead of teaching them before the task starts",
             "<code>commands</code>, <code>doctor</code>, <code>help --admin</code>, and <code>exit</code> should still work inside the same live session, but they should answer with concise in-shell summaries instead of relaunching the full catalog or operator cards.",
+            "Habitual prefixed input like <code>jini commands</code> or <code>jini status /tmp/work</code> typed inside the shell should still recover cleanly instead of turning into fake tasks.",
             "should only print one short steering line when it is genuinely pointing you toward a concrete action",
             "<code>jini fix failing tests</code> and <code>jini review this repo</code> should use the same calm shell language instead of an argparse usage wall or a separate intake report",
             "Outside a repo, the same direct task ask should stay concise too: acknowledge the task, then tell the user to run it from the repo or folder that needs work.",
@@ -199,6 +200,7 @@ class PublicCliDocsTests(unittest.TestCase):
             "jini&gt;</code> prompt",
             "The task should stay primary, and the controls should stay in the background until you need them.",
             "<code>commands</code>, <code>doctor</code>, <code>help --admin</code>, and <code>exit</code> should still work as in-session escape hatches instead of forcing a relaunch, but they should answer with concise in-shell summaries instead of dumping the full catalog or operator cards.",
+            "Prefixed habits like <code>jini commands</code> or <code>jini status /tmp/work</code> typed inside the shell should recover cleanly too.",
             "should only print one short steering line when it is actually pointing you to a concrete action",
             "keep typing plain follow-up asks like <code>fix failing tests</code>, <code>what is blocked?</code>, or <code>open the latest artifact</code> instead of learning Jini-specific action words",
         ):

@@ -118,6 +118,24 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("Use `help --admin` by itself inside the live shell.", result.stderr)
         self.assertNotIn("usage: jini", result.stderr)
 
+    def assert_prefixed_interactive_escape_hatch_surface(self, result: subprocess.CompletedProcess[str]) -> None:
+        self.assert_ok(result)
+        self.assert_compact_interactive_escape_hatch_surface(result.stdout)
+        self.assertEqual("", result.stderr)
+
+    def assert_prefixed_interactive_support_recovery_hints(self, result: subprocess.CompletedProcess[str]) -> None:
+        self.assert_ok(result)
+        self.assertIn("Working on: fix failing tests", result.stdout)
+        self.assertNotIn("Working on: jini status /tmp/work", result.stdout)
+        self.assertNotIn("Working on: jini continue --print-path", result.stdout)
+        self.assertNotIn("Working on: jini open prd", result.stdout)
+        self.assertNotIn("Working on: jini doctor --format json", result.stdout)
+        self.assertIn("Use `jini status /tmp/work` outside the live shell.", result.stderr)
+        self.assertIn("Use `jini continue --print-path` outside the live shell.", result.stderr)
+        self.assertIn("Use `jini open prd` outside the live shell.", result.stderr)
+        self.assertIn("Use `jini doctor --format json` outside the live shell.", result.stderr)
+        self.assertNotIn("usage: jini", result.stderr)
+
     def compile_research_pack(self) -> Path:
         output = self.tmp / "research-pack"
         result = self.run_cli(
@@ -698,6 +716,15 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("SETUP ESCAPE HATCH", result.stdout)
         self.assertNotIn("Provider\n", result.stdout)
 
+    def test_zero_arg_cli_interactive_repo_mode_accepts_prefixed_escape_hatches(self) -> None:
+        repo = self.create_repo_fixture()
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="jini commands\njini doctor\njini help --admin\njini setup --harness codex\njini exit\n",
+        )
+        self.assert_prefixed_interactive_escape_hatch_surface(result)
+
     def test_zero_arg_cli_interactive_repo_mode_routes_single_token_support_hints_after_initial_request(self) -> None:
         repo = self.create_repo_fixture()
         result = self.run_cli_in_cwd(
@@ -715,6 +742,15 @@ class JiniCliConformanceTests(unittest.TestCase):
             input_text="fix failing tests\nstatus /tmp/work\ncontinue --print-path\nopen prd\ndoctor --format json\ncommands please\nhelp --admin please\nexit\n",
         )
         self.assert_interactive_multi_token_recovery_hints(result)
+
+    def test_zero_arg_cli_interactive_repo_mode_routes_prefixed_support_hints_after_initial_request(self) -> None:
+        repo = self.create_repo_fixture()
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\njini status /tmp/work\njini continue --print-path\njini open prd\njini doctor --format json\njini exit\n",
+        )
+        self.assert_prefixed_interactive_support_recovery_hints(result)
 
     def test_zero_arg_cli_shows_generic_start_surface_without_repo_or_current_work(self) -> None:
         empty_dir = self.tmp / "empty"
@@ -761,6 +797,16 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(result)
         self.assert_compact_interactive_escape_hatch_surface(result.stdout)
 
+    def test_zero_arg_cli_interactive_no_repo_mode_accepts_prefixed_escape_hatches(self) -> None:
+        empty_dir = self.tmp / "empty-interactive-prefixed-escapes"
+        empty_dir.mkdir()
+        result = self.run_cli_in_cwd(
+            empty_dir,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="jini commands\njini doctor\njini help --admin\njini setup --harness codex\njini exit\n",
+        )
+        self.assert_prefixed_interactive_escape_hatch_surface(result)
+
     def test_zero_arg_cli_interactive_no_repo_mode_routes_single_token_support_hints_after_initial_request(self) -> None:
         empty_dir = self.tmp / "empty-interactive-support"
         empty_dir.mkdir()
@@ -780,6 +826,16 @@ class JiniCliConformanceTests(unittest.TestCase):
             input_text="fix failing tests\nstatus /tmp/work\ncontinue --print-path\nopen prd\ndoctor --format json\ncommands please\nhelp --admin please\nexit\n",
         )
         self.assert_interactive_multi_token_recovery_hints(result)
+
+    def test_zero_arg_cli_interactive_no_repo_mode_routes_prefixed_support_hints_after_initial_request(self) -> None:
+        empty_dir = self.tmp / "empty-interactive-prefixed-support"
+        empty_dir.mkdir()
+        result = self.run_cli_in_cwd(
+            empty_dir,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\njini status /tmp/work\njini continue --print-path\njini open prd\njini doctor --format json\njini exit\n",
+        )
+        self.assert_prefixed_interactive_support_recovery_hints(result)
 
     def test_zero_arg_cli_resumes_current_work_surface(self) -> None:
         example_output = self.tmp / "research-example"
@@ -944,6 +1000,21 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("WORK   example-research-prd", result.stdout)
         self.assertNotIn("ARTIFACT SHELF", result.stdout)
 
+    def test_zero_arg_cli_active_work_shell_accepts_prefixed_escape_hatches_after_initial_request(self) -> None:
+        repo = self.create_repo_fixture()
+        example_output = repo / ".jini-example"
+        seeded = self.run_cli_in_cwd(repo, "try-example", "research-prd", "--output", example_output)
+        self.assert_ok(seeded)
+
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\njini commands\njini doctor\njini help --admin\njini setup --harness codex\njini exit\n",
+        )
+        self.assert_prefixed_interactive_escape_hatch_surface(result)
+        self.assertNotIn("WORK   example-research-prd", result.stdout)
+        self.assertNotIn("ARTIFACT SHELF", result.stdout)
+
     def test_zero_arg_cli_active_work_shell_routes_single_token_support_hints_after_initial_request(self) -> None:
         repo = self.create_repo_fixture()
         example_output = repo / ".jini-example"
@@ -971,6 +1042,21 @@ class JiniCliConformanceTests(unittest.TestCase):
             input_text="fix failing tests\nstatus /tmp/work\ncontinue --print-path\nopen prd\ndoctor --format json\ncommands please\nhelp --admin please\nexit\n",
         )
         self.assert_interactive_multi_token_recovery_hints(result)
+        self.assertNotIn("WORK   example-research-prd", result.stdout)
+        self.assertNotIn("ARTIFACT SHELF", result.stdout)
+
+    def test_zero_arg_cli_active_work_shell_routes_prefixed_support_hints_after_initial_request(self) -> None:
+        repo = self.create_repo_fixture()
+        example_output = repo / ".jini-example"
+        seeded = self.run_cli_in_cwd(repo, "try-example", "research-prd", "--output", example_output)
+        self.assert_ok(seeded)
+
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\njini status /tmp/work\njini continue --print-path\njini open prd\njini doctor --format json\njini exit\n",
+        )
+        self.assert_prefixed_interactive_support_recovery_hints(result)
         self.assertNotIn("WORK   example-research-prd", result.stdout)
         self.assertNotIn("ARTIFACT SHELF", result.stdout)
 
@@ -1058,6 +1144,24 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("WORK   example-research-prd", result.stdout)
         self.assertNotIn("ARTIFACT SHELF", result.stdout)
 
+    def test_zero_arg_cli_saved_session_shell_accepts_prefixed_escape_hatches_after_initial_request(self) -> None:
+        repo = self.create_repo_fixture()
+        example_output = repo / ".jini-example"
+        seeded = self.run_cli_in_cwd(repo, "try-example", "research-prd", "--output", example_output)
+        self.assert_ok(seeded)
+
+        current_work = self.tmp / ".jini" / "current-work.json"
+        current_work.unlink()
+
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\njini commands\njini doctor\njini help --admin\njini setup --harness codex\njini exit\n",
+        )
+        self.assert_prefixed_interactive_escape_hatch_surface(result)
+        self.assertNotIn("WORK   example-research-prd", result.stdout)
+        self.assertNotIn("ARTIFACT SHELF", result.stdout)
+
     def test_zero_arg_cli_saved_session_shell_routes_single_token_support_hints_after_initial_request(self) -> None:
         repo = self.create_repo_fixture()
         example_output = repo / ".jini-example"
@@ -1091,6 +1195,24 @@ class JiniCliConformanceTests(unittest.TestCase):
             input_text="fix failing tests\nstatus /tmp/work\ncontinue --print-path\nopen prd\ndoctor --format json\ncommands please\nhelp --admin please\nexit\n",
         )
         self.assert_interactive_multi_token_recovery_hints(result)
+        self.assertNotIn("WORK   example-research-prd", result.stdout)
+        self.assertNotIn("ARTIFACT SHELF", result.stdout)
+
+    def test_zero_arg_cli_saved_session_shell_routes_prefixed_support_hints_after_initial_request(self) -> None:
+        repo = self.create_repo_fixture()
+        example_output = repo / ".jini-example"
+        seeded = self.run_cli_in_cwd(repo, "try-example", "research-prd", "--output", example_output)
+        self.assert_ok(seeded)
+
+        current_work = self.tmp / ".jini" / "current-work.json"
+        current_work.unlink()
+
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\njini status /tmp/work\njini continue --print-path\njini open prd\njini doctor --format json\njini exit\n",
+        )
+        self.assert_prefixed_interactive_support_recovery_hints(result)
         self.assertNotIn("WORK   example-research-prd", result.stdout)
         self.assertNotIn("ARTIFACT SHELF", result.stdout)
 
