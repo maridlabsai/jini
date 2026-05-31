@@ -678,6 +678,23 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("jini setup --harness codex", result.stdout)
         self.assertNotIn("jini help --admin", result.stdout)
 
+    def test_zero_arg_cli_prompts_for_task_in_interactive_no_repo_mode(self) -> None:
+        empty_dir = self.tmp / "empty-interactive"
+        empty_dir.mkdir()
+        result = self.run_cli_in_cwd(
+            empty_dir,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\nexit\n",
+        )
+        self.assert_ok(result)
+        self.assertIn("jini> ", result.stdout)
+        self.assertIn("Working on: fix failing tests", result.stdout)
+        self.assertIn("Run this from the repo that needs work.", result.stdout)
+        self.assertNotIn("Run `jini` from the repo or folder that needs work.", result.stdout)
+        self.assertNotIn("Jini CLI 0.1.0", result.stdout)
+        self.assertNotIn("START HERE", result.stdout)
+        self.assertNotIn("Session closed.", result.stdout)
+
     def test_zero_arg_cli_resumes_current_work_surface(self) -> None:
         example_output = self.tmp / "research-example"
         seeded = self.run_cli("try-example", "research-prd", "--output", example_output)
@@ -859,6 +876,26 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("jini status /path/to/work", result.stdout)
         self.assertNotIn("usage: jini", result.stdout)
 
+    def test_request_text_in_interactive_no_repo_mode_keeps_live_session_open(self) -> None:
+        empty_dir = self.tmp / "generic-request-interactive"
+        empty_dir.mkdir()
+        result = self.run_cli_in_cwd(
+            empty_dir,
+            "fix",
+            "failing",
+            "tests",
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="plan this change\nexit\n",
+        )
+        self.assert_ok(result)
+        self.assertIn("Working on: fix failing tests", result.stdout)
+        self.assertIn("Run this from the repo that needs work.", result.stdout)
+        self.assertIn("jini> ", result.stdout)
+        self.assertIn("Working on: plan this change", result.stdout)
+        self.assertEqual(2, result.stdout.count("Run this from the repo that needs work."))
+        self.assertNotIn("Jini CLI 0.1.0", result.stdout)
+        self.assertNotIn("Session closed.", result.stdout)
+
     def test_request_text_in_interactive_repo_mode_keeps_live_session_open(self) -> None:
         repo = self.create_repo_fixture()
         result = self.run_cli_in_cwd(
@@ -917,6 +954,16 @@ class JiniCliConformanceTests(unittest.TestCase):
             result = jini_validate.prompt_current_work_task(self.tmp / "pack", {})
         transcript = output.getvalue()
         self.assertEqual(0, result)
+        self.assertNotIn("Type the next task, or `exit` to leave.", transcript)
+        self.assertEqual(0, transcript.count("Session closed."))
+
+    def test_prompt_generic_task_keeps_shell_alive_after_keyboard_interrupt(self) -> None:
+        output = io.StringIO()
+        with mock.patch("builtins.input", side_effect=[KeyboardInterrupt(), "exit"]), redirect_stdout(output):
+            result = jini_validate.prompt_generic_task()
+        transcript = output.getvalue()
+        self.assertEqual(0, result)
+        self.assertNotIn("Type a task. Use `exit` to leave.", transcript)
         self.assertNotIn("Type the next task, or `exit` to leave.", transcript)
         self.assertEqual(0, transcript.count("Session closed."))
 

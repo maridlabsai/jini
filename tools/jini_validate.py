@@ -8437,6 +8437,8 @@ def render_cli_front_door(registry: dict[str, Any]) -> int:
                 return prompt_repo_task(repo_context)
             print_repo_start_surface(repo_context)
         else:
+            if interactive_front_door_enabled():
+                return prompt_generic_task()
             print_cli_start_surface()
         return 0
 
@@ -8452,6 +8454,8 @@ def render_cli_front_door(registry: dict[str, Any]) -> int:
                     return prompt_repo_task(repo_context)
                 print_repo_start_surface(repo_context)
             else:
+                if interactive_front_door_enabled():
+                    return prompt_generic_task()
                 print_cli_start_surface()
             return 0
         if interactive_front_door_enabled():
@@ -8475,6 +8479,8 @@ def render_cli_front_door(registry: dict[str, Any]) -> int:
             return prompt_repo_task(repo_context)
         print_repo_start_surface(repo_context)
     else:
+        if interactive_front_door_enabled():
+            return prompt_generic_task()
         print_cli_start_surface()
     return 0
 
@@ -9914,6 +9920,29 @@ def print_interactive_admin_summary() -> None:
     print("MORE     run `jini help --admin` for the full inventory")
 
 
+def prompt_generic_task(*, initial_request: str | None = None) -> int:
+    cli = cli_invocation()
+    if initial_request:
+        print_generic_request_intake(initial_request)
+    while True:
+        try:
+            request_text = input(f"{cli}> ").strip()
+        except EOFError:
+            print()
+            return 0
+        except KeyboardInterrupt:
+            print()
+            continue
+        if not request_text:
+            continue
+        if normalize_interactive_entry(request_text).lower() in {"exit", "quit"}:
+            return 0
+        if handle_interactive_escape_hatch(request_text):
+            continue
+        print()
+        print_generic_request_intake(request_text)
+
+
 def prompt_repo_task(repo_context: dict[str, Any], *, initial_request: str | None = None) -> int:
     cli = cli_invocation()
     if initial_request:
@@ -10074,6 +10103,8 @@ def dispatch_request_entrypoint(argv: list[str], known_commands: set[str]) -> in
                 return prompt_repo_task(repo_context, initial_request=request_text)
             print_repo_request_intake(request_text, repo_context)
         else:
+            if interactive_front_door_enabled():
+                return prompt_generic_task(initial_request=request_text)
             print_generic_request_intake(request_text)
         return 0
     print_unknown_command_hint(head, known_commands)
