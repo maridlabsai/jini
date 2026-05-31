@@ -12728,6 +12728,7 @@ def build_adapter_resolution(
     capability: str,
     layer: str | None = None,
     preferred: str | None = None,
+    preferred_origin: str = "explicit",
     adaptive_preferred: bool = False,
     learning_events_path: Path | None = None,
 ) -> dict[str, Any]:
@@ -12777,6 +12778,7 @@ def build_adapter_resolution(
     )
     selected = matches[0]
     notes: list[str] = []
+    preferred_origin_label = "Policy-preferred adapter" if preferred_origin == "policy" else "Preferred adapter"
     if preferred:
         preferred_match = next((item for item in matches if item.get("id") == preferred), None)
         if preferred_match is not None:
@@ -12788,17 +12790,25 @@ def build_adapter_resolution(
                     preferred_source = str(preferred_match.get("health_source", "default")).strip()
                     source_suffix = f" from {preferred_source}" if preferred_source and preferred_source != "default" else ""
                     notes.append(
-                        f"Preferred adapter `{preferred}` is `{preferred_status}`; switched to "
+                        f"{preferred_origin_label} `{preferred}` is `{preferred_status}`; switched to "
                         f"`{selected['id']}` for a healthier runtime target{source_suffix}."
                     )
                 else:
                     selected = preferred_match
-                    notes.append(f"Preferred adapter `{preferred}` was selected explicitly.")
+                    if preferred_origin == "policy":
+                        notes.append(
+                            f"Policy-preferred adapter `{preferred}` remained `{preferred_status}`; kept it as the selected runtime target."
+                        )
+                    else:
+                        notes.append(f"Preferred adapter `{preferred}` was selected explicitly.")
             else:
                 selected = preferred_match
-                notes.append(f"Preferred adapter `{preferred}` was selected explicitly.")
+                if preferred_origin == "policy":
+                    notes.append(f"Policy-preferred adapter `{preferred}` was selected.")
+                else:
+                    notes.append(f"Preferred adapter `{preferred}` was selected explicitly.")
         else:
-            notes.append(f"Preferred adapter `{preferred}` does not expose capability `{capability}`.")
+            notes.append(f"{preferred_origin_label} `{preferred}` does not expose capability `{capability}`.")
 
     fallbacks = [item["id"] for item in matches if item["id"] != selected["id"]]
     if layer == "runtime-target":
@@ -17904,6 +17914,7 @@ def recommend_execution(
         capability="pack-guidance",
         layer="runtime-target",
         preferred=runtime_target or policy_runtime_target or None,
+        preferred_origin="policy" if policy_runtime_target and not runtime_target else "explicit",
         adaptive_preferred=bool(policy_runtime_target and not runtime_target),
         learning_events_path=runtime_events_path(pack_dir),
     )

@@ -4079,7 +4079,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("kiro-cli", recommendation["active_policy"]["recommended_runtime_target"])
         self.assertEqual("codex", recommendation["runtime_guidance"]["selected"]["id"])
         self.assertTrue(
-            any("Preferred adapter `kiro-cli` is `throttled`; switched to `codex`" in note for note in recommendation["runtime_guidance"]["notes"])
+            any("Policy-preferred adapter `kiro-cli` is `throttled`; switched to `codex`" in note for note in recommendation["runtime_guidance"]["notes"])
         )
 
     def test_recommend_execution_falls_back_from_persisted_throttled_runtime_target(self) -> None:
@@ -4135,7 +4135,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual(1, persisted["health_signal_count"])
         self.assertTrue(
             any(
-                "Preferred adapter `kiro-cli` is `throttled`; switched to `codex`" in note
+                "Policy-preferred adapter `kiro-cli` is `throttled`; switched to `codex`" in note
                 for note in recommendation["runtime_guidance"]["notes"]
             )
         )
@@ -4265,7 +4265,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual(2, recovered["health_signal_count"])
         self.assertTrue(
             any(
-                "Preferred adapter `kiro-cli` was selected explicitly." in note
+                "Policy-preferred adapter `kiro-cli` remained `ready`; kept it as the selected runtime target." in note
                 for note in recommendation["runtime_guidance"]["notes"]
             )
         )
