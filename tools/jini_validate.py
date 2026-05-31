@@ -37,7 +37,7 @@ from copy import deepcopy
 from datetime import datetime, timezone
 from itertools import zip_longest
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 try:
     import yaml
@@ -8459,7 +8459,7 @@ def render_cli_front_door(registry: dict[str, Any]) -> int:
                 print_cli_start_surface()
             return 0
         if interactive_front_door_enabled():
-            return prompt_current_work_task(pack_dir, registry, report=report)
+            return prompt_current_work_task(pack_dir, registry)
         print_outcome_view(report)
         return 0
 
@@ -8469,7 +8469,7 @@ def render_cli_front_door(registry: dict[str, Any]) -> int:
         if interactive_front_door_enabled():
             remembered_pack = Path(str(session_context.get("pack_dir", ""))).expanduser()
             if remembered_pack and remembered_pack.exists():
-                return prompt_current_work_task(remembered_pack, registry, report=report)
+                return prompt_current_work_task(remembered_pack, registry)
         print_outcome_view(report)
         return 0
 
@@ -9920,10 +9920,8 @@ def print_interactive_admin_summary() -> None:
     print("MORE     run `jini help --admin` for the full inventory")
 
 
-def prompt_generic_task(*, initial_request: str | None = None) -> int:
+def run_interactive_shell_loop(render_request: Callable[[str], None]) -> int:
     cli = cli_invocation()
-    if initial_request:
-        print_generic_request_intake(initial_request)
     while True:
         try:
             request_text = input(f"{cli}> ").strip()
@@ -9940,71 +9938,49 @@ def prompt_generic_task(*, initial_request: str | None = None) -> int:
         if handle_interactive_escape_hatch(request_text):
             continue
         print()
-        print_generic_request_intake(request_text)
+        render_request(request_text)
+
+
+def prompt_generic_task(*, initial_request: str | None = None) -> int:
+    if initial_request:
+        print_generic_request_intake(initial_request)
+    return run_interactive_shell_loop(print_generic_request_intake)
+
+
+def render_current_work_request_intake(
+    request_text: str,
+    pack_dir: Path,
+    registry: dict[str, Any],
+    repo_context: dict[str, Any],
+) -> None:
+    if repo_context.get("discovered"):
+        print_repo_request_intake(request_text, repo_context)
+        return
+    compact = build_compact_context(
+        pack_dir,
+        registry,
+        intent=request_text,
+        max_chars=700,
+    )
+    print_compact_context(compact, heading="TASK")
 
 
 def prompt_repo_task(repo_context: dict[str, Any], *, initial_request: str | None = None) -> int:
-    cli = cli_invocation()
     if initial_request:
-        print_repo_request_intake(initial_request, repo_context, compact=True)
-    while True:
-        try:
-            request_text = input(f"{cli}> ").strip()
-        except EOFError:
-            print()
-            return 0
-        except KeyboardInterrupt:
-            print()
-            continue
-        if not request_text:
-            continue
-        if normalize_interactive_entry(request_text).lower() in {"exit", "quit"}:
-            return 0
-        if handle_interactive_escape_hatch(request_text):
-            continue
-        if request_text:
-            print()
-            print_repo_request_intake(request_text, repo_context, compact=True)
+        print_repo_request_intake(initial_request, repo_context)
+    return run_interactive_shell_loop(lambda request_text: print_repo_request_intake(request_text, repo_context))
 
 
-def prompt_current_work_task(pack_dir: Path, registry: dict[str, Any], *, report: dict[str, Any] | None = None) -> int:
-    cli = cli_invocation()
+def prompt_current_work_task(pack_dir: Path, registry: dict[str, Any]) -> int:
     repo_context = inspect_repo_context(Path.cwd())
-    print_active_work_shell_intro(pack_dir, repo_context, report=report)
-    while True:
-        try:
-            request_text = input(f"{cli}> ").strip()
-        except EOFError:
-            print()
-            return 0
-        except KeyboardInterrupt:
-            print()
-            continue
-        if not request_text:
-            continue
-        normalized = normalize_interactive_entry(request_text).lower()
-        if normalized in {"exit", "quit"}:
-            return 0
-        if handle_interactive_escape_hatch(request_text):
-            continue
-        print()
-        if repo_context.get("discovered"):
-            print_repo_request_intake(request_text, repo_context, compact=True)
-            continue
-        compact = build_compact_context(
+    return run_interactive_shell_loop(
+        lambda request_text: render_current_work_request_intake(
+            request_text,
             pack_dir,
             registry,
-            intent=request_text,
-            max_chars=700,
+            repo_context,
         )
-        print_compact_context(compact, heading="TASK")
-def print_active_work_shell_intro(
-    pack_dir: Path,
-    repo_context: dict[str, Any],
-    *,
-    report: dict[str, Any] | None = None,
-) -> None:
-    return
+    )
 
 
 def classify_request_intent(request_text: str) -> str:
@@ -10026,11 +10002,8 @@ def should_surface_compact_next(intent: str, surfaced_commands: list[tuple[str, 
     return intent == "verify"
 
 
-def print_repo_request_intake(request_text: str, repo_context: dict[str, Any], *, compact: bool = False) -> None:
+def print_repo_request_intake(request_text: str, repo_context: dict[str, Any]) -> None:
     cli = cli_invocation()
-    repo_root = str(repo_context.get("repo_root", "")).strip()
-    repo_name = Path(repo_root).name if repo_root else "repo"
-    git_info = repo_context.get("git", {})
     intent = classify_request_intent(request_text)
     primary_categories = {
         "verify": ("test", "verify", "startup"),
