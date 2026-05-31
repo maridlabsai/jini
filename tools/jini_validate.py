@@ -9792,7 +9792,6 @@ def print_cli_start_surface() -> None:
     cli = cli_invocation()
     print(f"Run `{cli}` from the repo or folder that needs work.")
     print(f"Use `{cli} status /path/to/work` for existing Jini work.")
-    print(f"Use `{cli} doctor` only when execution is blocked.")
 
 
 REQUEST_ENTRY_VERBS = frozenset(
