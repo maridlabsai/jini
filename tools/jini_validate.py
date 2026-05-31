@@ -9790,19 +9790,9 @@ def print_cli_overview() -> None:
 
 def print_cli_start_surface() -> None:
     cli = cli_invocation()
-    print(f"Jini CLI {load_version()}")
-    print("Nothing is in progress yet.")
-    print()
-    print("START HERE")
-    print(f"  {cli}")
-    print("    Start from the repo or folder that needs work.")
-    print(f"  {cli} status /path/to/work")
-    print("    Adopt existing Jini work once, then go back to `jini`.")
-    print(f"  {cli} doctor")
-    print("    Check route and setup only when execution is blocked.")
-    print()
-    print("MORE")
-    print(f"  {cli} commands")
+    print(f"Run `{cli}` from the repo or folder that needs work.")
+    print(f"Use `{cli} status /path/to/work` for existing Jini work.")
+    print(f"Use `{cli} doctor` only when execution is blocked.")
 
 
 REQUEST_ENTRY_VERBS = frozenset(
