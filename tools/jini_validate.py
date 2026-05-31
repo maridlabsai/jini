@@ -12584,6 +12584,13 @@ RUNTIME_TARGET_HEALTH_STATUSES = {
     "failed",
 }
 
+RUNTIME_TARGET_HEALTH_RESET_STATUSES = {
+    "ready",
+    "healthy",
+    "available",
+    "recovered",
+}
+
 
 def normalize_runtime_target_health_override_status(status: str) -> str:
     normalized = str(status).strip().lower()
@@ -12673,6 +12680,8 @@ def build_runtime_target_health_snapshot(
             },
         )
         row["signal_count"] += 1
+        if status in RUNTIME_TARGET_HEALTH_RESET_STATUSES:
+            row["score"] = 0
         row["score"] += runtime_target_health_adjustment(status)
         row["last_status"] = status
         row["last_recorded_at"] = str(event.get("recorded_at", "")).strip()

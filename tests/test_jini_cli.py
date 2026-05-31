@@ -4427,6 +4427,82 @@ class JiniCliConformanceTests(unittest.TestCase):
             )
         )
 
+    def test_recommend_execution_treats_post_recovery_degraded_target_as_degraded_not_throttled(self) -> None:
+        pack_dir = self.compile_research_pack()
+        rollout_dir = pack_dir / "runtime" / "policy-rollouts"
+        rollout_dir.mkdir(parents=True, exist_ok=True)
+        rollout_path = rollout_dir / "runtime-routing-active.json"
+        rollout_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.1.0",
+                    "policy_type": "JiniPolicyRollout",
+                    "policy_id": "runtime-routing",
+                    "candidate_id": "runtime-routing-post-recovery-degraded-test",
+                    "status": "active",
+                    "recommended_runtime_target": "kiro-cli",
+                    "intent_overrides": {},
+                    "route_feedback_drivers": {},
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        for status, reason in [
+            ("throttled", "Observed CLI throttling during execution."),
+            ("recovered", "Observed runtime recovery after retry."),
+            ("degraded", "Observed slower but usable runtime after recovery."),
+        ]:
+            self.assert_ok(
+                self.run_cli(
+                    "record-runtime-target-outcome",
+                    pack_dir,
+                    "--runtime-target",
+                    "kiro-cli",
+                    "--status",
+                    status,
+                    "--reason",
+                    reason,
+                    "--format",
+                    "json",
+                )
+            )
+
+        env = os.environ.copy()
+        env["JINI_RUNTIME_TARGET_HEALTH"] = ",".join(
+            [
+                "codex=unavailable",
+                "claude-code=unavailable",
+                "github-copilot=unavailable",
+                "junie=unavailable",
+                "augment=unavailable",
+            ]
+        )
+
+        result = self.run_cli("recommend-execution", pack_dir, "--intent", "make", "--format", "json", env=env)
+        self.assert_ok(result)
+
+        recommendation = json.loads(result.stdout)
+        self.assertEqual("kiro-cli", recommendation["runtime_guidance"]["selected"]["id"])
+        selected = recommendation["runtime_guidance"]["selected"]
+        self.assertEqual("degraded", selected["health_status"])
+        self.assertEqual("degraded", selected["health_last_status"])
+        self.assertEqual(-12, selected["health_adjustment"])
+        self.assertTrue(
+            any(
+                "Policy-preferred adapter `kiro-cli` remained `degraded`; kept it as the selected runtime target." in note
+                for note in recommendation["runtime_guidance"]["notes"]
+            )
+        )
+        self.assertTrue(
+            any(
+                "Selected runtime target `kiro-cli` despite `degraded` status because no healthier higher-priority target was available."
+                in note
+                for note in recommendation["runtime_guidance"]["notes"]
+            )
+        )
+
     def test_compact_context_includes_home_memory_and_compression_ratio(self) -> None:
         pack_dir = self.compile_research_pack()
         home = self.personal_home()
