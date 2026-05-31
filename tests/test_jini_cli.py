@@ -820,6 +820,62 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("WORK   example-research-prd", result.stdout)
         self.assertNotIn("ARTIFACT SHELF", result.stdout)
 
+    def test_zero_arg_cli_active_work_shell_keeps_prompt_open_for_follow_up_turns(self) -> None:
+        repo = self.create_repo_fixture()
+        example_output = repo / ".jini-example"
+        seeded = self.run_cli_in_cwd(repo, "try-example", "research-prd", "--output", example_output)
+        self.assert_ok(seeded)
+
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\nplan this change\nexit\n",
+        )
+        self.assert_ok(result)
+        self.assertIn("jini> ", result.stdout)
+        self.assertIn("Working on: fix failing tests", result.stdout)
+        self.assertIn("Working on: plan this change", result.stdout)
+        self.assertIn("Start with `make test`.", result.stdout)
+        self.assertEqual(1, result.stdout.count("Start with `"))
+        self.assertNotIn("WORK   example-research-prd", result.stdout)
+        self.assertNotIn("ARTIFACT SHELF", result.stdout)
+        self.assertNotIn("Session closed.", result.stdout)
+
+    def test_zero_arg_cli_active_work_shell_ignores_blank_input_after_initial_request(self) -> None:
+        repo = self.create_repo_fixture()
+        example_output = repo / ".jini-example"
+        seeded = self.run_cli_in_cwd(repo, "try-example", "research-prd", "--output", example_output)
+        self.assert_ok(seeded)
+
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\n\nplan this change\nexit\n",
+        )
+        self.assert_ok(result)
+        self.assertIn("Working on: fix failing tests", result.stdout)
+        self.assertIn("Working on: plan this change", result.stdout)
+        self.assertNotIn("Type the next task, or `exit` to leave.", result.stdout)
+        self.assertNotIn("Session closed.", result.stdout)
+
+    def test_zero_arg_cli_active_work_shell_routes_escape_hatches_after_initial_request(self) -> None:
+        repo = self.create_repo_fixture()
+        example_output = repo / ".jini-example"
+        seeded = self.run_cli_in_cwd(repo, "try-example", "research-prd", "--output", example_output)
+        self.assert_ok(seeded)
+
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\ncommands\ndoctor\nhelp --admin\nsetup --harness codex\nexit\n",
+        )
+        self.assert_ok(result)
+        self.assertIn("Working on: fix failing tests", result.stdout)
+        self.assertIn("Start with `make test`.", result.stdout)
+        self.assert_compact_interactive_escape_hatch_surface(result.stdout)
+        self.assertNotIn("WORK   example-research-prd", result.stdout)
+        self.assertNotIn("ARTIFACT SHELF", result.stdout)
+
     def test_zero_arg_cli_saved_session_shell_routes_escape_hatches(self) -> None:
         repo = self.create_repo_fixture()
         example_output = repo / ".jini-example"
@@ -835,6 +891,71 @@ class JiniCliConformanceTests(unittest.TestCase):
             input_text="commands\ndoctor\nhelp --admin\nsetup --harness codex\nexit\n",
         )
         self.assert_ok(result)
+        self.assert_compact_interactive_escape_hatch_surface(result.stdout)
+        self.assertNotIn("WORK   example-research-prd", result.stdout)
+        self.assertNotIn("ARTIFACT SHELF", result.stdout)
+
+    def test_zero_arg_cli_saved_session_shell_keeps_prompt_open_for_follow_up_turns(self) -> None:
+        repo = self.create_repo_fixture()
+        example_output = repo / ".jini-example"
+        seeded = self.run_cli_in_cwd(repo, "try-example", "research-prd", "--output", example_output)
+        self.assert_ok(seeded)
+
+        current_work = self.tmp / ".jini" / "current-work.json"
+        current_work.unlink()
+
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\nplan this change\nexit\n",
+        )
+        self.assert_ok(result)
+        self.assertIn("jini> ", result.stdout)
+        self.assertIn("Working on: fix failing tests", result.stdout)
+        self.assertIn("Working on: plan this change", result.stdout)
+        self.assertIn("Start with `make test`.", result.stdout)
+        self.assertEqual(1, result.stdout.count("Start with `"))
+        self.assertNotIn("WORK   example-research-prd", result.stdout)
+        self.assertNotIn("ARTIFACT SHELF", result.stdout)
+        self.assertNotIn("Session closed.", result.stdout)
+
+    def test_zero_arg_cli_saved_session_shell_ignores_blank_input_after_initial_request(self) -> None:
+        repo = self.create_repo_fixture()
+        example_output = repo / ".jini-example"
+        seeded = self.run_cli_in_cwd(repo, "try-example", "research-prd", "--output", example_output)
+        self.assert_ok(seeded)
+
+        current_work = self.tmp / ".jini" / "current-work.json"
+        current_work.unlink()
+
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\n\nplan this change\nexit\n",
+        )
+        self.assert_ok(result)
+        self.assertIn("Working on: fix failing tests", result.stdout)
+        self.assertIn("Working on: plan this change", result.stdout)
+        self.assertNotIn("Type the next task, or `exit` to leave.", result.stdout)
+        self.assertNotIn("Session closed.", result.stdout)
+
+    def test_zero_arg_cli_saved_session_shell_routes_escape_hatches_after_initial_request(self) -> None:
+        repo = self.create_repo_fixture()
+        example_output = repo / ".jini-example"
+        seeded = self.run_cli_in_cwd(repo, "try-example", "research-prd", "--output", example_output)
+        self.assert_ok(seeded)
+
+        current_work = self.tmp / ".jini" / "current-work.json"
+        current_work.unlink()
+
+        result = self.run_cli_in_cwd(
+            repo,
+            env={**os.environ, "JINI_FORCE_INTERACTIVE": "1"},
+            input_text="fix failing tests\ncommands\ndoctor\nhelp --admin\nsetup --harness codex\nexit\n",
+        )
+        self.assert_ok(result)
+        self.assertIn("Working on: fix failing tests", result.stdout)
+        self.assertIn("Start with `make test`.", result.stdout)
         self.assert_compact_interactive_escape_hatch_surface(result.stdout)
         self.assertNotIn("WORK   example-research-prd", result.stdout)
         self.assertNotIn("ARTIFACT SHELF", result.stdout)
