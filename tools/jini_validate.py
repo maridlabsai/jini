@@ -9921,17 +9921,13 @@ def prompt_repo_task(repo_context: dict[str, Any], *, initial_request: str | Non
             request_text = input(f"{cli}> ").strip()
         except EOFError:
             print()
-            print("Session closed.")
             return 0
         except KeyboardInterrupt:
             print()
-            print("Type the next task, or `exit` to leave.")
             continue
         if not request_text:
-            print("Type the next task, or `exit` to leave.")
             continue
         if normalize_interactive_entry(request_text).lower() in {"exit", "quit"}:
-            print("Session closed.")
             return 0
         if handle_interactive_escape_hatch(request_text):
             continue
@@ -9950,18 +9946,14 @@ def prompt_current_work_task(pack_dir: Path, registry: dict[str, Any], *, report
             request_text = input(f"{cli}> ").strip()
         except EOFError:
             print()
-            print("Session closed.")
             return 0
         except KeyboardInterrupt:
             print()
-            print("Type the next task, or `exit` to leave.")
             continue
         if not request_text:
-            print("Type the next task, or `exit` to leave.")
             continue
         normalized = normalize_interactive_entry(request_text).lower()
         if normalized in {"exit", "quit"}:
-            print("Session closed.")
             return 0
         if handle_interactive_escape_hatch(request_text):
             continue

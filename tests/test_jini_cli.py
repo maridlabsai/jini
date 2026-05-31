@@ -608,7 +608,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("REPO   ", result.stdout)
         self.assertNotIn("Repo: sample-repo", result.stdout)
         self.assertNotIn("Working on:", result.stdout)
-        self.assertIn("Session closed.", result.stdout)
+        self.assertNotIn("Session closed.", result.stdout)
         self.assertNotIn("START WITH THE TASK", result.stdout)
         self.assertNotIn("REQUEST fix failing tests", result.stdout)
         self.assertNotIn("REPO    sample-repo", result.stdout)
@@ -623,7 +623,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         )
         self.assert_ok(result)
         self.assertIn("Type a task. Use `exit` to leave.", result.stdout)
-        self.assertIn("Session closed.", result.stdout)
+        self.assertNotIn("Session closed.", result.stdout)
 
     def test_zero_arg_cli_interactive_repo_mode_keeps_prompt_open_for_follow_up_turns(self) -> None:
         repo = self.create_repo_fixture()
@@ -698,7 +698,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertIn("jini> ", result.stdout)
         self.assertIn("TASK    fix failing tests", result.stdout)
         self.assertIn("NEXT    make test", result.stdout)
-        self.assertIn("Session closed.", result.stdout)
+        self.assertNotIn("Session closed.", result.stdout)
         self.assertNotIn("WORK   example-research-prd", result.stdout)
         self.assertNotIn("ARTIFACT SHELF", result.stdout)
         self.assertNotIn("Repo: sample-repo", result.stdout)
@@ -754,7 +754,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         )
         self.assert_ok(result)
         self.assertIn("Type a task. Use `exit` to leave.", result.stdout)
-        self.assertIn("Session closed.", result.stdout)
+        self.assertNotIn("Session closed.", result.stdout)
         self.assertNotIn("WORK   example-research-prd", result.stdout)
         self.assertNotIn("TITLE  Jini Research To PRD", result.stdout)
         self.assertNotIn("HEALTH ready-to-verify", result.stdout)
@@ -854,7 +854,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("Jini CLI 0.1.0", result.stdout)
         self.assertNotIn("Repo: sample-repo", result.stdout)
         self.assertNotIn("Type a task. Use `exit` to leave.", result.stdout)
-        self.assertIn("Session closed.", result.stdout)
+        self.assertNotIn("Session closed.", result.stdout)
         self.assertNotIn("usage: jini", result.stdout)
         self.assertNotIn("REQUEST fix failing tests", result.stdout)
 
@@ -866,7 +866,7 @@ class JiniCliConformanceTests(unittest.TestCase):
             input_text="\nexit\n",
         )
         self.assert_ok(result)
-        self.assertIn("Type the next task, or `exit` to leave.", result.stdout)
+        self.assertNotIn("Type the next task, or `exit` to leave.", result.stdout)
 
     def test_prompt_repo_task_keeps_shell_alive_after_keyboard_interrupt(self) -> None:
         repo = self.create_repo_fixture()
@@ -877,8 +877,8 @@ class JiniCliConformanceTests(unittest.TestCase):
         transcript = output.getvalue()
         self.assertEqual(0, result)
         self.assertIn("Type a task. Use `exit` to leave.", transcript)
-        self.assertIn("Type the next task, or `exit` to leave.", transcript)
-        self.assertEqual(1, transcript.count("Session closed."))
+        self.assertNotIn("Type the next task, or `exit` to leave.", transcript)
+        self.assertEqual(0, transcript.count("Session closed."))
 
     def test_prompt_current_work_task_keeps_shell_alive_after_keyboard_interrupt(self) -> None:
         repo = self.create_repo_fixture()
@@ -891,8 +891,8 @@ class JiniCliConformanceTests(unittest.TestCase):
             result = jini_validate.prompt_current_work_task(self.tmp / "pack", {})
         transcript = output.getvalue()
         self.assertEqual(0, result)
-        self.assertIn("Type the next task, or `exit` to leave.", transcript)
-        self.assertEqual(1, transcript.count("Session closed."))
+        self.assertNotIn("Type the next task, or `exit` to leave.", transcript)
+        self.assertEqual(0, transcript.count("Session closed."))
 
     def test_run_cli_converts_top_level_keyboard_interrupt_into_clean_cancel(self) -> None:
         stderr = io.StringIO()
