@@ -13850,7 +13850,7 @@ def activate_runtime_target(
             },
             pack_dir=pack_dir,
         )
-    except (OSError, ValueError, TypeError) as exc:
+    except (OSError, RuntimeError, TypeError, ValueError, subprocess.CalledProcessError) as exc:
         record_runtime_target_outcome(
             pack_dir,
             registry,

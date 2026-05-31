@@ -5586,6 +5586,43 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("unavailable", codex_health["last_status"])
         self.assertEqual(1, codex_health["signal_count"])
 
+    def test_activate_runtime_target_records_unavailable_runtime_target_outcome_on_subprocess_failure(self) -> None:
+        pack_dir = self.compile_research_pack()
+        repo = self.create_repo_fixture()
+        self.assert_ok(self.run_cli("bootstrap-steering", repo))
+        home = self.personal_home()
+        prefix = self.install_prefix()
+        self.assert_ok(self.run_cli("bootstrap-home", home))
+        self.assert_ok(self.run_cli("bind-home", pack_dir, "--home", home))
+
+        registry = jini_validate.load_registry()
+        failure = subprocess.CalledProcessError(17, ["codex", "install"], stderr="quota limited")
+        with mock.patch("tools.jini_validate.install_bundles", side_effect=failure):
+            with self.assertRaises(subprocess.CalledProcessError):
+                jini_validate.activate_runtime_target(
+                    pack_dir,
+                    registry,
+                    repo_path=repo,
+                    home_path=home,
+                    runtime_target="codex",
+                    prefix=prefix,
+                )
+
+        events = jini_validate.read_learning_events(
+            path=jini_validate.runtime_events_path(pack_dir),
+            event_type="runtime-target-outcome",
+        )
+        codex_events = [item for item in events if item.get("runtime_target") == "codex"]
+        self.assertEqual(1, len(codex_events))
+        self.assertEqual("unavailable", codex_events[0]["status"])
+        self.assertIn("Runtime activation failed: CalledProcessError:", codex_events[0]["reason"])
+
+        snapshot = jini_validate.build_runtime_target_health_snapshot(path=jini_validate.runtime_events_path(pack_dir))
+        codex_health = snapshot["targets"]["codex"]
+        self.assertEqual("unavailable", codex_health["status"])
+        self.assertEqual("unavailable", codex_health["last_status"])
+        self.assertEqual(1, codex_health["signal_count"])
+
     def test_activate_runtime_target_records_recovered_runtime_target_outcome_after_prior_throttle(self) -> None:
         pack_dir = self.compile_research_pack()
         repo = self.create_repo_fixture()
