@@ -9917,6 +9917,34 @@ def print_interactive_support_command_hint(token: str) -> None:
     print(f"Use `{cli} {token}` outside the live shell.", file=sys.stderr)
 
 
+def print_interactive_builtin_command_hint(command: str) -> None:
+    print(f"Use `{command}` by itself inside the live shell.", file=sys.stderr)
+
+
+def handle_interactive_multi_token_hint(request_text: str) -> bool:
+    normalized = normalize_interactive_entry(request_text)
+    parts = normalized.split()
+    if len(parts) < 2:
+        return False
+    command = parts[0].lower()
+    if command in INTERACTIVE_EXTERNAL_SUPPORT_COMMANDS | {"doctor"}:
+        print_interactive_support_command_hint(normalized)
+        return True
+    if command == "commands":
+        print_interactive_builtin_command_hint("commands")
+        return True
+    if normalized.startswith("help --admin "):
+        print_interactive_builtin_command_hint("help --admin")
+        return True
+    if normalized.startswith("admin help ") or normalized.startswith("admin --help "):
+        print_interactive_builtin_command_hint("help --admin")
+        return True
+    if normalized.startswith("setup --harness ") and normalized not in {"setup --harness codex"}:
+        print(f"Use `jini {normalized}` outside the live shell.", file=sys.stderr)
+        return True
+    return False
+
+
 def handle_interactive_single_token_hint(request_text: str) -> bool:
     normalized = normalize_interactive_entry(request_text)
     parts = normalized.split()
@@ -9967,6 +9995,8 @@ def run_interactive_shell_loop(render_request: Callable[[str], None]) -> int:
         if normalize_interactive_entry(request_text).lower() in {"exit", "quit"}:
             return 0
         if handle_interactive_escape_hatch(request_text):
+            continue
+        if handle_interactive_multi_token_hint(request_text):
             continue
         if handle_interactive_single_token_hint(request_text):
             continue
