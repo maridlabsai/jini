@@ -2509,6 +2509,87 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual({"outcome_replaced": 1}, backtest_adapter["counters"])
         self.assertEqual(-7, backtest_adapter["latest_feedback_bias"])
 
+    def test_route_feedback_notes_when_feedback_adjusts_but_keeps_local_winner(self) -> None:
+        pack_dir = self.compile_research_pack()
+        state_root = self.tmp / ".jini"
+        state_root.mkdir(parents=True, exist_ok=True)
+        capabilities_path = state_root / "local-runtime-capabilities.json"
+        capabilities_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.4.0",
+                    "context_type": "JiniLocalRuntimeCapabilities",
+                    "captured_at": "2026-05-21T19:00:00Z",
+                    "local_runtime_class": "local-ollama",
+                    "adapters": {
+                        "local-workhorse": {
+                            "status": "ok",
+                            "latency_ms": 190,
+                            "warm_latency_ms": 160,
+                            "cold_start_cost_ms": 30,
+                            "tokens_per_second": 22.5,
+                            "quality_class": "strong",
+                            "structured_reliability": "strong",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        },
+                        "local-fast": {
+                            "status": "ok",
+                            "latency_ms": 85,
+                            "warm_latency_ms": 70,
+                            "cold_start_cost_ms": 5,
+                            "tokens_per_second": 40.0,
+                            "quality_class": "usable",
+                            "structured_reliability": "usable",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        },
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        feedback = self.run_cli(
+            "record-route-outcome",
+            pack_dir,
+            "--adapter-id",
+            "local-workhorse",
+            "--intent",
+            "make",
+            "--outcome",
+            "replaced-this",
+            "--reason",
+            "Needed cleanup before use.",
+            "--format",
+            "json",
+        )
+        self.assert_ok(feedback)
+
+        result = self.run_cli("recommend-execution", pack_dir, "--intent", "make", "--format", "json")
+        self.assert_ok(result)
+        payload = json.loads(result.stdout)
+        execution_route = payload["runtime_guidance"]["execution_route"]
+        self.assertEqual("local-workhorse", execution_route["selected"]["id"])
+        self.assertEqual(["local-workhorse"], execution_route["feedback_adjusted_adapters"])
+        selection_delta = execution_route["feedback_evidence"]["selection_delta"]
+        self.assertFalse(selection_delta["selected_changed"])
+        self.assertEqual("local-workhorse", selection_delta["baseline_selected_adapter"])
+        self.assertEqual("local-workhorse", selection_delta["feedback_selected_adapter"])
+        self.assertTrue(
+            any(
+                "Measured local runtime `local-ollama` kept `local-workhorse` after `make` feedback adjusted local-workhorse"
+                in note
+                for note in payload["runtime_guidance"]["notes"]
+            )
+        )
+
+        status_result = self.run_cli("status", pack_dir, "--format", "json")
+        self.assert_ok(status_result)
+        status_payload = json.loads(status_result.stdout)
+        self.assertIn(
+            "Measured local runtime `local-ollama` kept `local-workhorse` after `make` feedback adjusted local-workhorse",
+            status_payload["runtime_readout"]["reason"],
+        )
+
     def test_stale_route_outcome_feedback_does_not_permanently_steer_selection(self) -> None:
         pack_dir = self.compile_research_pack()
         state_root = self.tmp / ".jini"

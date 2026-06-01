@@ -1968,6 +1968,13 @@ def summarize_selected_execution_route(execution_route: dict[str, Any]) -> str:
                 f"from `{feedback_cohort or 'local-route'}` feedback with `{threshold}` quality threshold; "
                 f"fallbacks: {fallback_text}."
             )
+    adjusted_adapters = [str(item).strip() for item in execution_route.get("feedback_adjusted_adapters", []) if str(item).strip()]
+    if adjusted_adapters:
+        adjusted_text = ", ".join(adjusted_adapters[:3])
+        return (
+            f"Measured local runtime `{runtime_class}` kept `{selected_id}` after `{feedback_cohort or 'local-route'}` "
+            f"feedback adjusted {adjusted_text} with `{threshold}` quality threshold; fallbacks: {fallback_text}."
+        )
     return (
         f"Measured local runtime `{runtime_class}` selects `{selected_id}` "
         f"with `{threshold}` quality threshold; fallbacks: {fallback_text}."
