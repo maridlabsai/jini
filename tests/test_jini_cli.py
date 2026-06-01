@@ -2437,7 +2437,8 @@ class JiniCliConformanceTests(unittest.TestCase):
 
         corrected = self.run_cli("recommend-execution", pack_dir, "--intent", "export", "--format", "json")
         self.assert_ok(corrected)
-        execution_route = json.loads(corrected.stdout)["runtime_guidance"]["execution_route"]
+        corrected_payload = json.loads(corrected.stdout)
+        execution_route = corrected_payload["runtime_guidance"]["execution_route"]
         self.assertEqual("local-workhorse", execution_route["selected"]["id"])
         self.assertEqual("export", execution_route["feedback_cohort"])
         self.assertEqual(1, execution_route["outcome_signal_count"])
@@ -2459,10 +2460,35 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual(["local-workhorse", "local-fast"], selection_delta["feedback_rank"])
         self.assertEqual(["local-fast"], selection_delta["demoted_adapters"])
         self.assertEqual(["local-workhorse"], selection_delta["promoted_adapters"])
+        self.assertTrue(
+            any(
+                "Measured local runtime `local-ollama` reranked `local-fast` to `local-workhorse` from `export` feedback"
+                in note
+                for note in corrected_payload["runtime_guidance"]["notes"]
+            )
+        )
 
         corrected_text = self.run_cli("recommend-execution", pack_dir, "--intent", "export")
         self.assert_ok(corrected_text)
         self.assertIn("IMPACT baseline=local-fast feedback=local-workhorse changed=yes", corrected_text.stdout)
+
+        resume_result = self.run_cli(
+            "resume",
+            pack_dir,
+            "--intent",
+            "export",
+            "--format",
+            "json",
+            "--max-chars",
+            "1100",
+        )
+        self.assert_ok(resume_result)
+        resume_payload = json.loads(resume_result.stdout)
+        self.assertTrue(
+            resume_payload["runtime_readout"]["reason"].startswith(
+                "Measured local runtime `local-ollama` reranked `local-fast` to `local-workhorse` from `export"
+            )
+        )
 
         events = self.run_cli("show-learning-events", pack_dir, "--event-type", "route-outcome-feedback", "--format", "json")
         self.assert_ok(events)

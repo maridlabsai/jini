@@ -1952,6 +1952,22 @@ def summarize_selected_execution_route(execution_route: dict[str, Any]) -> str:
     threshold = str(execution_route.get("quality_threshold", "")).strip() or "measured"
     fallbacks = [str(item).strip() for item in execution_route.get("fallbacks", []) if str(item).strip()]
     fallback_text = ", ".join(fallbacks[:3]) if fallbacks else "none"
+    feedback_cohort = str(execution_route.get("feedback_cohort", "")).strip()
+    feedback_evidence = execution_route.get("feedback_evidence", {})
+    selection_delta = (
+        feedback_evidence.get("selection_delta", {})
+        if isinstance(feedback_evidence, dict)
+        else {}
+    )
+    if isinstance(selection_delta, dict) and selection_delta.get("selected_changed"):
+        baseline_selected = str(selection_delta.get("baseline_selected_adapter", "")).strip()
+        feedback_selected = str(selection_delta.get("feedback_selected_adapter", "")).strip()
+        if baseline_selected and feedback_selected:
+            return (
+                f"Measured local runtime `{runtime_class}` reranked `{baseline_selected}` to `{feedback_selected}` "
+                f"from `{feedback_cohort or 'local-route'}` feedback with `{threshold}` quality threshold; "
+                f"fallbacks: {fallback_text}."
+            )
     return (
         f"Measured local runtime `{runtime_class}` selects `{selected_id}` "
         f"with `{threshold}` quality threshold; fallbacks: {fallback_text}."
