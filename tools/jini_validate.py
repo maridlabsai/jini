@@ -11688,7 +11688,11 @@ def build_compact_context(
     repo_context = recommendation["repo_context"]
     home_context = memory_context.get("home", {})
     efficiency_posture = build_efficiency_posture(recommendation, max_rationale=2)
-    runtime_readout = build_runtime_readout(recommendation, efficiency_posture=efficiency_posture)
+    runtime_readout = build_runtime_readout(
+        recommendation,
+        pack_dir=pack_dir,
+        efficiency_posture=efficiency_posture,
+    )
     runtime_readout.pop("model", None)
     runtime_readout.pop("context_policy", None)
     delegation_focus = load_active_delegation_focus(pack_dir)
@@ -12349,6 +12353,18 @@ def print_compact_context(compact: dict[str, Any], *, heading: str = "RESUME") -
             f"model={runtime.get('model', '')} "
             f"effort={runtime.get('effort', '')}"
         )
+        if runtime.get("connectivity_mode"):
+            print(
+                "OFFLINE "
+                f"mode={runtime.get('connectivity_mode', '')} "
+                f"online={runtime.get('online_capability', '')}"
+            )
+        if runtime.get("reconciliation_debt_count"):
+            print(
+                "DEBT "
+                f"count={runtime.get('reconciliation_debt_count', 0)} "
+                f"summary={runtime.get('reconciliation_summary', '')}"
+            )
         if runtime.get("reason"):
             print(f"REASON  {runtime.get('reason', '')}")
     if compact.get("unresolved_tasks"):
@@ -18382,9 +18398,109 @@ def configured_model_readout(*, env: dict[str, str] | None = None) -> str:
     return f"auto -> {label}" if label else "auto"
 
 
+def runtime_target_status_online_capability(status: str) -> str:
+    normalized = str(status).strip().lower()
+    if normalized in {"ok", "ready", "healthy", "available"}:
+        return "available"
+    if normalized in {"degraded", "throttled", "rate-limited", "quota-limited", "quota-uncertain"}:
+        return "degraded"
+    if normalized in {"blocked", "offline", "unavailable", "failed"}:
+        return "unavailable"
+    return "unknown"
+
+
+def summarize_runtime_connectivity(
+    runtime_guidance: dict[str, Any],
+    *,
+    route_id: str,
+) -> dict[str, Any]:
+    matches = runtime_guidance.get("matches", []) if isinstance(runtime_guidance, dict) else []
+    managed_capabilities: list[str] = []
+    local_route_selected = route_id.startswith("local-")
+    if isinstance(matches, list):
+        for item in matches:
+            if not isinstance(item, dict):
+                continue
+            capability = runtime_target_status_online_capability(str(item.get("health_status", "")).strip())
+            if capability != "unknown":
+                managed_capabilities.append(capability)
+
+    online_capability = "unknown"
+    if "available" in managed_capabilities:
+        online_capability = "available"
+    elif "degraded" in managed_capabilities:
+        online_capability = "degraded"
+    elif "unavailable" in managed_capabilities:
+        online_capability = "unavailable"
+
+    connectivity_mode = "online"
+    summary = ""
+    if local_route_selected and online_capability in {"degraded", "unavailable"}:
+        connectivity_mode = "offline"
+        if online_capability == "degraded":
+            summary = "Jini is operating in offline mode; managed runtime targets are currently degraded or throttled."
+        else:
+            summary = "Jini is operating in offline mode; no healthy managed runtime target is currently available."
+
+    return {
+        "connectivity_mode": connectivity_mode,
+        "online_capability": online_capability,
+        "summary": summary,
+    }
+
+
+def collect_reconciliation_debt(pack_dir: Path) -> dict[str, Any]:
+    publish_root = pack_dir / "exports" / "publish"
+    if not publish_root.exists():
+        return {"count": 0, "summary": "", "items": []}
+
+    items: list[dict[str, Any]] = []
+    for plan_path in sorted(publish_root.glob("*/*/publish-plan.json")):
+        try:
+            plan = load_json_file(plan_path)
+        except (OSError, json.JSONDecodeError):
+            continue
+        if not isinstance(plan, dict):
+            continue
+        adapter = str(plan.get("adapter", "")).strip()
+        execution_mode = str(plan.get("execution_mode", "")).strip()
+        if not adapter or adapter == "markdown":
+            continue
+        executed_dir = plan_path.parent / "executed"
+        executed_receipts = sorted(executed_dir.glob("receipt-*.json")) if executed_dir.exists() else []
+        executed = False
+        for receipt_path in executed_receipts:
+            try:
+                receipt = load_json_file(receipt_path)
+            except (OSError, json.JSONDecodeError):
+                continue
+            if isinstance(receipt, dict) and str(receipt.get("status", "")).strip() == "executed":
+                executed = True
+                break
+        if executed:
+            continue
+        items.append(
+            {
+                "adapter": adapter,
+                "execution_mode": execution_mode,
+                "plan_path": display_path(plan_path),
+            }
+        )
+
+    count = len(items)
+    if count == 0:
+        summary = ""
+    elif count == 1:
+        summary = f"1 staged publish plan needs reconciliation when online capability returns."
+    else:
+        summary = f"{count} staged publish plans need reconciliation when online capability returns."
+    return {"count": count, "summary": summary, "items": items}
+
+
 def build_runtime_readout(
     recommendation: dict[str, Any] | None = None,
     *,
+    pack_dir: Path | None = None,
     efficiency_posture: dict[str, Any] | None = None,
     route: dict[str, Any] | None = None,
     selection_mode: str = "auto",
@@ -18426,6 +18542,14 @@ def build_runtime_readout(
         "reason": reason,
     }
     if isinstance(recommendation, dict):
+        connectivity = summarize_runtime_connectivity(runtime_guidance, route_id=route_id)
+        reconciliation_debt = collect_reconciliation_debt(pack_dir) if pack_dir is not None else {"count": 0, "summary": ""}
+        if connectivity.get("summary"):
+            readout["connectivity_mode"] = connectivity["connectivity_mode"]
+            readout["online_capability"] = connectivity["online_capability"]
+        if reconciliation_debt.get("count"):
+            readout["reconciliation_debt_count"] = int(reconciliation_debt.get("count", 0) or 0)
+            readout["reconciliation_summary"] = str(reconciliation_debt.get("summary", "")).strip()
         route_evidence = recommendation.get("route_evidence", {})
         route_cost = recommendation.get("route_cost", {})
         guidance_reason = select_runtime_guidance_reason(runtime_guidance.get("notes", [])) if isinstance(runtime_guidance, dict) else ""
@@ -18466,6 +18590,16 @@ def build_runtime_readout(
                     readout["reason"] = f"{reason}; {guidance_reason}"
                 else:
                     readout["reason"] = guidance_reason
+        runtime_extras: list[str] = []
+        connectivity_summary = str(connectivity.get("summary", "")).strip()
+        if connectivity_summary:
+            runtime_extras.append(connectivity_summary)
+        debt_summary = str(reconciliation_debt.get("summary", "")).strip()
+        if debt_summary:
+            runtime_extras.append(debt_summary)
+        if runtime_extras:
+            existing_reason = str(readout.get("reason", "")).strip()
+            readout["reason"] = "; ".join([*runtime_extras, *([existing_reason] if existing_reason else [])])
     return readout
 
 
@@ -19332,7 +19466,11 @@ def build_outcome_view(
         route_snapshot["route_cost"],
         route_snapshot["route_payload"],
     )
-    runtime_readout = build_runtime_readout(recommendation, efficiency_posture=efficiency_posture)
+    runtime_readout = build_runtime_readout(
+        recommendation,
+        pack_dir=pack_dir,
+        efficiency_posture=efficiency_posture,
+    )
     runtime_readout["route_feedback_health"] = route_feedback_health
     runtime_readout["route_feedback_impact"] = route_feedback_impact
     return {
@@ -19733,6 +19871,18 @@ def print_outcome_view(report: dict[str, Any]) -> None:
             f"model={runtime.get('model', '')} "
             f"effort={runtime.get('effort', '')}"
         )
+        if runtime.get("connectivity_mode"):
+            print(
+                "  "
+                f"offline-mode={runtime.get('connectivity_mode', '')} "
+                f"online-capability={runtime.get('online_capability', '')}"
+            )
+        if runtime.get("reconciliation_debt_count"):
+            print(
+                "  "
+                f"reconciliation-debt={runtime.get('reconciliation_debt_count', 0)} "
+                f"summary={runtime.get('reconciliation_summary', '')}"
+            )
         if runtime.get("reason"):
             print(f"  reason={runtime.get('reason', '')}")
     route_feedback_health = report.get("route_feedback_health", {})

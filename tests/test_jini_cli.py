@@ -2366,6 +2366,93 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("local-fast", resume_readout["route_evidence"]["cheapest_ready_adapter"])
         self.assertEqual("local-fast", resume_readout["route_evidence"]["selected_ready_adapter"])
 
+    def test_runtime_readouts_surface_offline_mode_and_reconciliation_debt(self) -> None:
+        pack_dir = self.compile_research_pack()
+        state_root = self.tmp / ".jini"
+        state_root.mkdir(parents=True, exist_ok=True)
+        (state_root / "local-runtime-capabilities.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.4.0",
+                    "context_type": "JiniLocalRuntimeCapabilities",
+                    "captured_at": "2026-05-21T19:00:00Z",
+                    "local_runtime_class": "local-ollama",
+                    "adapters": {
+                        "local-workhorse": {
+                            "status": "ok",
+                            "latency_ms": 180,
+                            "warm_latency_ms": 150,
+                            "cold_start_cost_ms": 30,
+                            "tokens_per_second": 22.5,
+                            "quality_class": "strong",
+                            "structured_reliability": "strong",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        },
+                        "local-fast": {
+                            "status": "ok",
+                            "latency_ms": 95,
+                            "warm_latency_ms": 90,
+                            "cold_start_cost_ms": 5,
+                            "tokens_per_second": 38.2,
+                            "quality_class": "usable",
+                            "structured_reliability": "usable",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        },
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        self.assert_ok(self.run_cli("publish-issues", pack_dir, "--adapter", "github"))
+        env = os.environ.copy()
+        env["JINI_HOME"] = str(state_root)
+        env["JINI_RUNTIME_TARGET_HEALTH"] = ",".join(
+            [
+                "codex=unavailable",
+                "claude-code=unavailable",
+                "github-copilot=unavailable",
+                "kiro-cli=unavailable",
+                "junie=unavailable",
+                "augment=unavailable",
+            ]
+        )
+
+        status_result = self.run_cli("status", pack_dir, "--format", "json", env=env)
+        self.assert_ok(status_result)
+        status_payload = json.loads(status_result.stdout)
+        status_readout = status_payload["runtime_readout"]
+        self.assertEqual("offline", status_readout["connectivity_mode"])
+        self.assertEqual("unavailable", status_readout["online_capability"])
+        self.assertEqual(1, status_readout["reconciliation_debt_count"])
+        self.assertEqual(
+            "1 staged publish plan needs reconciliation when online capability returns.",
+            status_readout["reconciliation_summary"],
+        )
+        self.assertIn("Jini is operating in offline mode", status_readout["reason"])
+        self.assertIn("reconciliation when online capability returns", status_readout["reason"])
+
+        status_text = self.run_cli("status", pack_dir, env=env)
+        self.assert_ok(status_text)
+        self.assertIn("offline-mode=offline online-capability=unavailable", status_text.stdout)
+        self.assertIn("reconciliation-debt=1", status_text.stdout)
+
+        resume_result = self.run_cli(
+            "resume",
+            pack_dir,
+            "--format",
+            "json",
+            "--max-chars",
+            "1600",
+            env=env,
+        )
+        self.assert_ok(resume_result)
+        resume_payload = json.loads(resume_result.stdout)
+        resume_readout = resume_payload["runtime_readout"]
+        self.assertEqual("offline", resume_readout["connectivity_mode"])
+        self.assertEqual("unavailable", resume_readout["online_capability"])
+        self.assertEqual(1, resume_readout["reconciliation_debt_count"])
+        self.assertIn("Jini is operating in offline mode", resume_readout["reason"])
+
     def test_runtime_readouts_explain_when_no_ready_local_route_is_available(self) -> None:
         pack_dir = self.compile_research_pack()
         state_root = self.tmp / ".jini"
