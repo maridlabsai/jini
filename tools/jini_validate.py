@@ -12942,7 +12942,12 @@ def build_adapter_resolution(
                                 f"Policy-preferred adapter `{preferred}` remained `{preferred_status}`; kept it as the selected runtime target."
                             )
                     else:
-                        notes.append(f"Preferred adapter `{preferred}` was selected explicitly.")
+                        if preferred_status in {"ok", "ready", "healthy", "available"}:
+                            notes.append(f"Preferred adapter `{preferred}` was selected explicitly.")
+                        else:
+                            notes.append(
+                                f"Preferred adapter `{preferred}` was selected explicitly despite `{preferred_status}` status."
+                            )
             else:
                 selected = preferred_match
                 selected_via_preference = True
@@ -12950,7 +12955,13 @@ def build_adapter_resolution(
                 if preferred_origin == "policy":
                     notes.append(f"Policy-preferred adapter `{preferred}` was selected.")
                 else:
-                    notes.append(f"Preferred adapter `{preferred}` was selected explicitly.")
+                    preferred_status = str(preferred_match.get("health_status", "ready")).strip().lower()
+                    if layer == "runtime-target" and preferred_status not in {"ok", "ready", "healthy", "available"}:
+                        notes.append(
+                            f"Preferred adapter `{preferred}` was selected explicitly despite `{preferred_status}` status."
+                        )
+                    else:
+                        notes.append(f"Preferred adapter `{preferred}` was selected explicitly.")
         else:
             notes.append(f"{preferred_origin_label} `{preferred}` does not expose capability `{capability}`.")
 

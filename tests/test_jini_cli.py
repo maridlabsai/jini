@@ -2753,7 +2753,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         env["JINI_RUNTIME_TARGET_HEALTH"] = "kiro-cli=throttled"
         expected_reason = (
             "State `operational` requires stronger verification posture; "
-            "Preferred adapter `kiro-cli` was selected explicitly."
+            "Preferred adapter `kiro-cli` was selected explicitly despite `throttled` status."
         )
 
         status_result = self.run_cli(
@@ -4573,7 +4573,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         resolution = json.loads(result.stdout)
         self.assertEqual("codex", resolution["selected"]["id"])
         self.assertIn(
-            "Preferred adapter `codex` was selected explicitly.",
+            "Preferred adapter `codex` was selected explicitly despite `throttled` status.",
             resolution["notes"],
         )
         self.assertFalse(
@@ -4718,7 +4718,10 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("throttled", selected["health_last_status"])
         self.assertEqual("Observed CLI throttling during execution.", selected["health_last_reason"])
         self.assertTrue(selected["health_last_recorded_at"])
-        self.assertIn("Preferred adapter `kiro-cli` was selected explicitly.", resolution["notes"])
+        self.assertIn(
+            "Preferred adapter `kiro-cli` was selected explicitly despite `unavailable` status.",
+            resolution["notes"],
+        )
 
     def test_env_runtime_target_override_normalizes_recovered_to_ready(self) -> None:
         env = os.environ.copy()
@@ -4842,7 +4845,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         recommendation = json.loads(result.stdout)
         self.assertEqual("kiro-cli", recommendation["runtime_guidance"]["selected"]["id"])
         self.assertIn(
-            "Preferred adapter `kiro-cli` was selected explicitly.",
+            "Preferred adapter `kiro-cli` was selected explicitly despite `throttled` status.",
             recommendation["runtime_guidance"]["notes"],
         )
         self.assertFalse(
@@ -4884,7 +4887,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         recommendation = json.loads(result.stdout)
         self.assertEqual("kiro-cli", recommendation["runtime_guidance"]["selected"]["id"])
         self.assertIn(
-            "Preferred adapter `kiro-cli` was selected explicitly.",
+            "Preferred adapter `kiro-cli` was selected explicitly despite `throttled` status.",
             recommendation["runtime_guidance"]["notes"],
         )
 
