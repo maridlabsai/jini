@@ -5,6 +5,13 @@ from pathlib import Path
 from typing import Any
 
 
+FRAMEWORK_CONTEXT_SOURCES = (
+    ("claude-code", "Claude Code", Path("CLAUDE.md")),
+    ("codex", "Codex", Path("AGENTS.md")),
+    ("github", "GitHub", Path(".github/copilot-instructions.md")),
+)
+
+
 def _build_snapshot_markdown(path: Path, *, max_chars: int = 700) -> tuple[str, bool]:
     try:
         raw = path.read_text(encoding="utf-8").strip()
@@ -160,6 +167,32 @@ def _input_extraction_summary(item: dict[str, Any], extraction_status: str) -> s
     return _compact_preview(f"Extracted {origin}{suffix}", max_chars=180)
 
 
+def _projection_repo_root(pack_dir: Path) -> Path:
+    current = pack_dir.expanduser().resolve()
+    for candidate in (current, *current.parents):
+        if (candidate / ".git").exists():
+            return candidate
+    return current
+
+
+def discover_framework_context_files(pack_dir: Path) -> list[dict[str, str]]:
+    repo_root = _projection_repo_root(pack_dir)
+    discovered: list[dict[str, str]] = []
+    for framework_id, label, relative_path in FRAMEWORK_CONTEXT_SOURCES:
+        candidate = repo_root / relative_path
+        if not candidate.exists() or not candidate.is_file():
+            continue
+        discovered.append(
+            {
+                "framework_id": framework_id,
+                "label": label,
+                "origin_ref": str(relative_path),
+                "path": str(candidate.resolve()),
+            }
+        )
+    return discovered
+
+
 def normalize_input_item(item: dict[str, Any]) -> dict[str, Any]:
     normalized = dict(item)
     extraction_status = _input_extraction_status(normalized)
@@ -175,6 +208,7 @@ def normalize_input_item(item: dict[str, Any]) -> dict[str, Any]:
 def build_input_items(
     *,
     session_id: str,
+    pack_dir: Path,
     summary: dict[str, Any],
     ready_now: list[dict[str, Any]],
     updated_at: str,
@@ -188,6 +222,8 @@ def build_input_items(
             for item in previous_items:
                 if isinstance(item, dict) and item.get("input_id") == "initial-request":
                     previous_initial = item
+                elif isinstance(item, dict) and str(item.get("input_id", "")).strip().startswith("framework-context:"):
+                    continue
                 elif isinstance(item, dict):
                     preserved_items.append(normalize_input_item(item))
 
@@ -222,8 +258,32 @@ def build_input_items(
         }
     )
 
+    framework_items = [
+        normalize_input_item(
+            {
+                "input_id": f"framework-context:{item['framework_id']}:{item['origin_ref']}",
+                "thread_id": session_id,
+                "kind": "file",
+                "title": f"{item['label']} context",
+                "source_actor": item["framework_id"],
+                "status": "processed",
+                "preview": _compact_preview(
+                    f"{item['label']} context attached from {item['origin_ref']} for offline continuation."
+                ),
+                "origin_ref": item["origin_ref"],
+                "derived_artifact_ids": [],
+                "created_at": updated_at,
+                "updated_at": updated_at,
+                "extraction_status": "extracted",
+                "extraction_summary": f"Imported local {item['label']} context from {item['origin_ref']} so Jini can reuse it offline.",
+            }
+        )
+        for item in discover_framework_context_files(pack_dir)
+    ]
+
     return [
         initial_item,
+        *framework_items,
         *preserved_items,
     ]
 
@@ -560,6 +620,7 @@ def build_session_projection(
     progress_snapshot = build_progress_snapshot(summary, ready_now)
     input_items = build_input_items(
         session_id=session_id,
+        pack_dir=pack_dir,
         summary=summary,
         ready_now=ready_now,
         updated_at=updated_at,

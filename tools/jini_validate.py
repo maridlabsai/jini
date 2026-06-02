@@ -61,6 +61,7 @@ try:
     from .session_projection import build_progress_snapshot
     from .session_projection import build_session_projection
     from .session_projection import build_turn_record
+    from .session_projection import discover_framework_context_files
     from .session_projection import normalize_input_item
     from .session_store import SessionStore
     from .yaml_compat import YAMLError as CompatYAMLError
@@ -78,6 +79,7 @@ except ImportError:  # pragma: no cover - script execution path
     from session_projection import build_progress_snapshot
     from session_projection import build_session_projection
     from session_projection import build_turn_record
+    from session_projection import discover_framework_context_files
     from session_projection import normalize_input_item
     from session_store import SessionStore
     from yaml_compat import YAMLError as CompatYAMLError
@@ -12365,6 +12367,12 @@ def print_compact_context(compact: dict[str, Any], *, heading: str = "RESUME") -
                 f"count={runtime.get('reconciliation_debt_count', 0)} "
                 f"summary={runtime.get('reconciliation_summary', '')}"
             )
+        if runtime.get("imported_context_count"):
+            print(
+                "CONTEXT "
+                f"count={runtime.get('imported_context_count', 0)} "
+                f"summary={runtime.get('imported_context_summary', '')}"
+            )
         if runtime.get("reason"):
             print(f"REASON  {runtime.get('reason', '')}")
     if compact.get("unresolved_tasks"):
@@ -18497,6 +18505,19 @@ def collect_reconciliation_debt(pack_dir: Path) -> dict[str, Any]:
     return {"count": count, "summary": summary, "items": items}
 
 
+def summarize_imported_framework_context(pack_dir: Path) -> dict[str, Any]:
+    items = discover_framework_context_files(pack_dir)
+    if not items:
+        return {"count": 0, "summary": "", "items": []}
+    labels = [f"{item['label']} ({item['origin_ref']})" for item in items[:3]]
+    remaining = len(items) - len(labels)
+    summary = "Imported framework context remains available offline: " + ", ".join(labels)
+    if remaining > 0:
+        summary += f", plus {remaining} more"
+    summary += "."
+    return {"count": len(items), "summary": summary, "items": items}
+
+
 def build_runtime_readout(
     recommendation: dict[str, Any] | None = None,
     *,
@@ -18544,12 +18565,20 @@ def build_runtime_readout(
     if isinstance(recommendation, dict):
         connectivity = summarize_runtime_connectivity(runtime_guidance, route_id=route_id)
         reconciliation_debt = collect_reconciliation_debt(pack_dir) if pack_dir is not None else {"count": 0, "summary": ""}
+        imported_framework_context = (
+            summarize_imported_framework_context(pack_dir)
+            if pack_dir is not None and connectivity.get("connectivity_mode") == "offline"
+            else {"count": 0, "summary": ""}
+        )
         if connectivity.get("summary"):
             readout["connectivity_mode"] = connectivity["connectivity_mode"]
             readout["online_capability"] = connectivity["online_capability"]
         if reconciliation_debt.get("count"):
             readout["reconciliation_debt_count"] = int(reconciliation_debt.get("count", 0) or 0)
             readout["reconciliation_summary"] = str(reconciliation_debt.get("summary", "")).strip()
+        if imported_framework_context.get("count"):
+            readout["imported_context_count"] = int(imported_framework_context.get("count", 0) or 0)
+            readout["imported_context_summary"] = str(imported_framework_context.get("summary", "")).strip()
         route_evidence = recommendation.get("route_evidence", {})
         route_cost = recommendation.get("route_cost", {})
         guidance_reason = select_runtime_guidance_reason(runtime_guidance.get("notes", [])) if isinstance(runtime_guidance, dict) else ""
@@ -18597,6 +18626,9 @@ def build_runtime_readout(
         debt_summary = str(reconciliation_debt.get("summary", "")).strip()
         if debt_summary:
             runtime_extras.append(debt_summary)
+        imported_context_summary = str(imported_framework_context.get("summary", "")).strip()
+        if imported_context_summary:
+            runtime_extras.append(imported_context_summary)
         if runtime_extras:
             existing_reason = str(readout.get("reason", "")).strip()
             readout["reason"] = "; ".join([*runtime_extras, *([existing_reason] if existing_reason else [])])
@@ -19882,6 +19914,12 @@ def print_outcome_view(report: dict[str, Any]) -> None:
                 "  "
                 f"reconciliation-debt={runtime.get('reconciliation_debt_count', 0)} "
                 f"summary={runtime.get('reconciliation_summary', '')}"
+            )
+        if runtime.get("imported_context_count"):
+            print(
+                "  "
+                f"imported-context={runtime.get('imported_context_count', 0)} "
+                f"summary={runtime.get('imported_context_summary', '')}"
             )
         if runtime.get("reason"):
             print(f"  reason={runtime.get('reason', '')}")

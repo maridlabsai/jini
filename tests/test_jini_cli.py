@@ -2368,6 +2368,15 @@ class JiniCliConformanceTests(unittest.TestCase):
 
     def test_runtime_readouts_surface_offline_mode_and_reconciliation_debt(self) -> None:
         pack_dir = self.compile_research_pack()
+        (self.tmp / ".git").mkdir(parents=True, exist_ok=True)
+        (self.tmp / "CLAUDE.md").write_text("# Claude context\n\nRemember the repo conventions.\n", encoding="utf-8")
+        (self.tmp / "AGENTS.md").write_text("# Codex context\n\nPrefer the active artifact.\n", encoding="utf-8")
+        github_dir = self.tmp / ".github"
+        github_dir.mkdir(parents=True, exist_ok=True)
+        (github_dir / "copilot-instructions.md").write_text(
+            "# GitHub context\n\nKeep issue updates concise.\n",
+            encoding="utf-8",
+        )
         state_root = self.tmp / ".jini"
         state_root.mkdir(parents=True, exist_ok=True)
         (state_root / "local-runtime-capabilities.json").write_text(
@@ -2428,13 +2437,28 @@ class JiniCliConformanceTests(unittest.TestCase):
             "1 staged publish plan needs reconciliation when online capability returns.",
             status_readout["reconciliation_summary"],
         )
+        self.assertEqual(3, status_readout["imported_context_count"])
+        self.assertIn("CLAUDE.md", status_readout["imported_context_summary"])
+        self.assertIn("AGENTS.md", status_readout["imported_context_summary"])
+        self.assertIn(".github/copilot-instructions.md", status_readout["imported_context_summary"])
         self.assertIn("Jini is operating in offline mode", status_readout["reason"])
         self.assertIn("reconciliation when online capability returns", status_readout["reason"])
+        self.assertIn("Imported framework context remains available offline", status_readout["reason"])
+        imported_inputs = {
+            str(item.get("input_id", "")): str(item.get("extraction_summary", ""))
+            for item in status_payload.get("input_items", [])
+            if str(item.get("input_id", "")).startswith("framework-context:")
+        }
+        self.assertEqual(3, len(imported_inputs))
+        self.assertTrue(any("Claude Code context" in summary for summary in imported_inputs.values()))
+        self.assertTrue(any("Codex context" in summary for summary in imported_inputs.values()))
+        self.assertTrue(any("GitHub context" in summary for summary in imported_inputs.values()))
 
         status_text = self.run_cli("status", pack_dir, env=env)
         self.assert_ok(status_text)
         self.assertIn("offline-mode=offline online-capability=unavailable", status_text.stdout)
         self.assertIn("reconciliation-debt=1", status_text.stdout)
+        self.assertIn("imported-context=3", status_text.stdout)
 
         resume_result = self.run_cli(
             "resume",
@@ -2451,7 +2475,9 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("offline", resume_readout["connectivity_mode"])
         self.assertEqual("unavailable", resume_readout["online_capability"])
         self.assertEqual(1, resume_readout["reconciliation_debt_count"])
+        self.assertEqual(3, resume_readout["imported_context_count"])
         self.assertIn("Jini is operating in offline mode", resume_readout["reason"])
+        self.assertIn("Imported framework context remains available offline", resume_readout["reason"])
 
     def test_runtime_readouts_explain_when_no_ready_local_route_is_available(self) -> None:
         pack_dir = self.compile_research_pack()
