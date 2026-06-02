@@ -13,12 +13,16 @@ personas:
     label: Pragmatic "just make it work" user
     group: beginner-trust
     priority: critical
-  - id: student-user
-    label: Student user
+  - id: college-student-user
+    label: College student user
     group: beginner-trust
     priority: high
-  - id: homemaker-user
-    label: Homemaker user
+  - id: high-school-student-user
+    label: High school student user
+    group: beginner-trust
+    priority: high
+  - id: household-manager-user
+    label: Household manager user
     group: beginner-trust
     priority: high
   - id: aws-bedrock-user
@@ -49,6 +53,10 @@ personas:
     label: Power user
     group: expert-operator
     priority: high
+  - id: software-engineer-user
+    label: Software engineer user
+    group: expert-operator
+    priority: high
   - id: hardcore-developer
     label: Hardcore developer
     group: expert-operator
@@ -73,6 +81,10 @@ personas:
     label: Software VP user
     group: product-and-exec
     priority: medium
+  - id: realtor-user
+    label: Realtor user
+    group: domain-specific
+    priority: high
   - id: travel-advisor-user
     label: Travel advisor user
     group: domain-specific

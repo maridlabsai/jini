@@ -78,9 +78,6 @@ Users should be able to see:
 - whether Jini is currently operating in offline mode
 - whether online capability is currently available
 - what reconciliation debt was accrued while working offline
-- whether Jini is currently operating in offline mode
-- whether online capability is currently available
-- what reconciliation debt was accrued while working offline
 
 Efficiency that cannot be explained will not be trusted.
 
@@ -117,11 +114,6 @@ Users should be able to:
 - resume from any supported surface
 - inspect ready and missing state everywhere
 - continue without rebuilding context
-
-When Jini is offline, it should still be able to benefit from locally available
-context and memory already curated under supported framework surfaces, such as
-Claude Code, Codex, or GitHub CLI, once that context has been bound into the
-same session model.
 
 When Jini is offline, it should still be able to benefit from locally available
 context and memory already curated under supported framework surfaces, such as
@@ -186,11 +178,6 @@ Jini should be easy to buy because it is:
 - switching devices must not require context reconstruction
 - artifacts, route evidence, and ready/missing state must travel with the
   session
-- offline mode should be visible to the user instead of being inferred later
-- online capability should be checked efficiently and surfaced when it changes
-- reconciliation debt from offline work should be tracked and shown before sync
-- locally imported context from Claude Code, Codex, or GitHub CLI should remain
-  reusable offline when it has already been attached to the session
 - offline mode should be visible to the user instead of being inferred later
 - online capability should be checked efficiently and surfaced when it changes
 - reconciliation debt from offline work should be tracked and shown before sync

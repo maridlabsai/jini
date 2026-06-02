@@ -253,8 +253,10 @@ Primary scenarios affected:
 
 Must pass:
 
-- student user
-- homemaker user
+- college student user
+- high school student user
+- household manager user
+- realtor user
 - travel advisor user
 - architect user
 

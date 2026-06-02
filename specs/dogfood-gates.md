@@ -34,34 +34,37 @@ full panel below:
 
 1. Low-literacy first-time user
 2. Pragmatic “just make it work” user
-3. Student user
-4. Homemaker user
+3. College student user
+4. High school student user
+5. Household manager user
 
 ### Platform And Policy
 
-5. AWS Bedrock user
-6. Enterprise Azure user
-7. Claude user
-8. Codex user
-9. ChatGPT user
-10. Gemini user
+6. AWS Bedrock user
+7. Enterprise Azure user
+8. Claude user
+9. Codex user
+10. ChatGPT user
+11. Gemini user
 
 ### Expert Operator
 
-11. Power user
-12. Hardcore developer
-13. AI engineer
-14. QA tester
-15. Architect user
+12. Power user
+13. Software engineer user
+14. Hardcore developer
+15. AI engineer
+16. QA tester
+17. Architect user
 
 ### Product And Executive
 
-16. AI PM
-17. Software VP user
+18. AI PM
+19. Software VP user
 
 ### Domain-Specific
 
-18. Travel advisor user
+20. Realtor user
+21. Travel advisor user
 
 These are not optional research personas. They are merge blockers for install,
 configuration, and usage work.
@@ -159,6 +162,8 @@ Pass only if all are true:
 
 - Domain users such as a travel advisor can understand the first-run path
   without software vocabulary.
+- Domain users such as a realtor can trust offline capture, follow-up, and
+  privacy boundaries without learning provider jargon.
 - Examples stay grounded in real outcomes, not system terminology.
 
 Fail if any are true:

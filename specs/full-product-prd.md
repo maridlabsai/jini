@@ -152,8 +152,10 @@ Secondary users:
 
 - AWS Bedrock users
 - enterprise Azure users
-- students
-- homemakers
+- college students
+- high school students
+- household managers
+- realtors
 - travel advisors
 - software leaders who care about quality, cost, and control
 

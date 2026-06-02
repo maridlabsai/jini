@@ -225,9 +225,9 @@ If any answer is `no`, stop and fix it before merge.
 - [ ] Did the Azure enterprise user pass the Azure-only confidence gate?
 - [ ] Did the pragmatic “just make it work” user pass the no-jargon value gate?
 - [ ] Did the Claude, Codex, ChatGPT, and Gemini personas pass the platform-path gate?
-- [ ] Did the power user, hardcore developer, AI engineer, QA tester, and architect personas pass the expert-operator gate?
+- [ ] Did the power user, software engineer, hardcore developer, AI engineer, QA tester, and architect personas pass the expert-operator gate?
 - [ ] Did the AI PM and software VP personas pass the product-clarity and cost-governance gate?
-- [ ] Did the student, homemaker, and travel-advisor personas pass the beginner/domain clarity gate?
+- [ ] Did the college-student, high-school-student, household-manager, realtor, and travel-advisor personas pass the beginner/domain clarity gate?
 - [ ] If any persona failed, was the failure fixed or explicitly recorded as a non-goal before merge?
 
 ### J. Rewrite Momentum
