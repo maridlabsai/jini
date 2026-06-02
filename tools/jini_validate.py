@@ -1393,6 +1393,11 @@ def summarize_local_runtime_route(
     runtime_class = str(route_evidence.get("local_runtime_class", "")).strip() or "local-runtime"
     ready_count = int(route_evidence.get("ready_adapter_count", 0) or 0)
     adapter_count = int(route_evidence.get("adapter_count", 0) or 0)
+    if ready_count <= 0:
+        return (
+            f"Measured local runtime `{runtime_class}` has {ready_count}/{adapter_count} ready adapter(s); "
+            "no ready local route is available for this task, so Jini must leave the device-local path."
+        )
     cheapest = route_cost.get("cheapest_ready_adapter") if isinstance(route_cost, dict) else None
     cheapest_id = str(cheapest.get("adapter_id", "")).strip() if isinstance(cheapest, dict) else ""
     posture = str(route_cost.get("posture", "")).strip() if isinstance(route_cost, dict) else ""

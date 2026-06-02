@@ -2363,6 +2363,94 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("local-fast", resume_readout["route_evidence"]["cheapest_ready_adapter"])
         self.assertEqual("local-fast", resume_readout["route_evidence"]["selected_ready_adapter"])
 
+    def test_runtime_readouts_explain_when_no_ready_local_route_is_available(self) -> None:
+        pack_dir = self.compile_research_pack()
+        state_root = self.tmp / ".jini"
+        state_root.mkdir(parents=True, exist_ok=True)
+        (state_root / "local-runtime-capabilities.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.4.0",
+                    "context_type": "JiniLocalRuntimeCapabilities",
+                    "captured_at": "2026-05-21T19:00:00Z",
+                    "local_runtime_class": "local-ollama",
+                    "adapters": {
+                        "local-workhorse": {
+                            "status": "offline",
+                            "latency_ms": 0,
+                            "warm_latency_ms": 0,
+                            "cold_start_cost_ms": 0,
+                            "tokens_per_second": 0,
+                            "quality_class": "strong",
+                            "structured_reliability": "strong",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        },
+                        "local-fast": {
+                            "status": "blocked",
+                            "latency_ms": 0,
+                            "warm_latency_ms": 0,
+                            "cold_start_cost_ms": 0,
+                            "tokens_per_second": 0,
+                            "quality_class": "usable",
+                            "structured_reliability": "usable",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        },
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        recommendation_result = self.run_cli("recommend-execution", pack_dir, "--format", "json")
+        self.assert_ok(recommendation_result)
+        recommendation = json.loads(recommendation_result.stdout)
+        self.assertTrue(recommendation["route_evidence"]["available"])
+        self.assertEqual("local-ollama", recommendation["route_evidence"]["local_runtime_class"])
+        self.assertEqual("unavailable", recommendation["route_cost"]["status"])
+        self.assertEqual("unknown", recommendation["route_cost"]["posture"])
+        self.assertEqual({}, recommendation["runtime_guidance"].get("execution_route", {}))
+        self.assertTrue(
+            any(
+                "no ready local route is available for this task, so Jini must leave the device-local path."
+                in note
+                for note in recommendation["rationale"]
+            )
+        )
+
+        status_result = self.run_cli("status", pack_dir, "--format", "json")
+        self.assert_ok(status_result)
+        status_payload = json.loads(status_result.stdout)
+        status_readout = status_payload["runtime_readout"]
+        self.assertEqual("local-ollama", status_readout["route_evidence"]["local_runtime_class"])
+        self.assertEqual(0, status_readout["route_evidence"]["ready_adapter_count"])
+        self.assertEqual("unavailable", status_readout["route_evidence"]["cost_status"])
+        self.assertIn(
+            "no ready local route is available for this task, so Jini must leave the device-local path.",
+            status_readout["reason"],
+        )
+
+        resume_result = self.run_cli(
+            "resume",
+            pack_dir,
+            "--intent",
+            "export",
+            "--format",
+            "json",
+            "--max-chars",
+            "1100",
+        )
+        self.assert_ok(resume_result)
+        resume_payload = json.loads(resume_result.stdout)
+        resume_readout = resume_payload["runtime_readout"]
+        self.assertEqual("local-ollama", resume_readout["route_evidence"]["local_runtime_class"])
+        self.assertEqual(0, resume_readout["route_evidence"]["ready_adapter_count"])
+        self.assertEqual("unavailable", resume_readout["route_evidence"]["cost_status"])
+        self.assertTrue(
+            resume_readout["reason"].startswith(
+                "Measured local runtime `local-ollama` has 0/2 ready adapter(s); no ready local route is avail"
+            )
+        )
+
     def test_route_outcome_feedback_self_corrects_measured_local_selection(self) -> None:
         pack_dir = self.compile_research_pack()
         state_root = self.tmp / ".jini"
