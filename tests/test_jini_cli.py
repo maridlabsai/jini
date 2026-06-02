@@ -3045,6 +3045,28 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("token_budget", femto_resume_payload)
         self.assertLessEqual(len(femto_resume_result.stdout.strip()), 225)
 
+        atto_resume_result = self.run_cli(
+            "resume",
+            pack_dir,
+            "--runtime-target",
+            "kiro-cli",
+            "--format",
+            "json",
+            "--max-chars",
+            "170",
+            env=env,
+        )
+        self.assert_ok(atto_resume_result)
+        atto_resume_payload = json.loads(atto_resume_result.stdout)
+        self.assertEqual("local-workhorse", atto_resume_payload["runtime_readout"]["route"])
+        self.assertEqual("kiro-cli", atto_resume_payload["runtime_target"]["selected"])
+        self.assertTrue(
+            atto_resume_payload["runtime_readout"]["reason"].startswith(
+                "State `operational` requires stronger verification postur"
+            )
+        )
+        self.assertLessEqual(len(atto_resume_result.stdout.strip()), 170)
+
     def test_route_outcome_feedback_self_corrects_measured_local_selection(self) -> None:
         pack_dir = self.compile_research_pack()
         state_root = self.tmp / ".jini"

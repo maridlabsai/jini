@@ -12256,6 +12256,15 @@ def build_compact_context(
             refresh_token_budget()
         if compact_chars(compact) > max_chars:
             compact.pop("token_budget", None)
+        if compact_chars(compact) > max_chars:
+            runtime = compact.get("runtime_readout", {})
+            if isinstance(runtime, dict):
+                reason = str(runtime.get("reason", "")).strip()
+                for target_len in (95, 90, 85, 80, 75, 70, 65, 60):
+                    if compact_chars(compact) <= max_chars:
+                        break
+                    if len(reason) > target_len:
+                        runtime["reason"] = reason[: target_len - 3] + "..."
     return compact
 
 
