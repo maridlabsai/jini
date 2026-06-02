@@ -12260,7 +12260,7 @@ def build_compact_context(
             runtime = compact.get("runtime_readout", {})
             if isinstance(runtime, dict):
                 reason = str(runtime.get("reason", "")).strip()
-                for target_len in (95, 90, 85, 80, 75, 70, 65, 60):
+                for target_len in (95, 90, 85, 80, 75, 70, 65, 60, 58, 55, 52, 50, 48, 46, 44, 42, 40):
                     if compact_chars(compact) <= max_chars:
                         break
                     if len(reason) > target_len:
