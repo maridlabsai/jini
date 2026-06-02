@@ -2993,6 +2993,33 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("schema_version", nano_resume_payload)
         self.assertNotIn("resume_items", nano_resume_payload)
         self.assertLessEqual(nano_resume_payload["token_budget"]["estimated_chars"], 375)
+        self.assertLessEqual(len(nano_resume_result.stdout.strip()), 375)
+
+        pico_resume_result = self.run_cli(
+            "resume",
+            pack_dir,
+            "--runtime-target",
+            "kiro-cli",
+            "--format",
+            "json",
+            "--max-chars",
+            "300",
+            env=env,
+        )
+        self.assert_ok(pico_resume_result)
+        pico_resume_payload = json.loads(pico_resume_result.stdout)
+        self.assertEqual("local-workhorse", pico_resume_payload["runtime_readout"]["route"])
+        self.assertEqual("kiro-cli", pico_resume_payload["runtime_target"]["selected"])
+        self.assertTrue(
+            pico_resume_payload["runtime_readout"]["reason"].startswith(
+                "State `operational` requires stronger verification posture; Preferred adapter `kiro-cli` was ..."
+            )
+        )
+        self.assertNotIn("pack_id", pico_resume_payload)
+        self.assertNotIn("work_unit_id", pico_resume_payload)
+        self.assertNotIn("efficiency_posture", pico_resume_payload)
+        self.assertLessEqual(pico_resume_payload["token_budget"]["estimated_chars"], 300)
+        self.assertLessEqual(len(pico_resume_result.stdout.strip()), 300)
 
     def test_route_outcome_feedback_self_corrects_measured_local_selection(self) -> None:
         pack_dir = self.compile_research_pack()

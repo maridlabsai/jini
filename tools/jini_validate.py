@@ -12213,6 +12213,41 @@ def build_compact_context(
         "trimmed": final_chars < original_chars,
         "compression_ratio": round(final_chars / max(1, original_chars), 3),
     }
+
+    def refresh_token_budget() -> None:
+        budget = compact.get("token_budget", {})
+        if not isinstance(budget, dict):
+            return
+        actual_chars = compact_chars(compact)
+        budget["estimated_chars"] = actual_chars
+        budget["trimmed"] = actual_chars > max_chars or final_chars < original_chars
+        if "estimated_tokens" in budget:
+            budget["estimated_tokens"] = estimate_tokens(compact)
+        if "compression_ratio" in budget:
+            budget["compression_ratio"] = round(actual_chars / max(1, original_chars), 3)
+
+    if max_chars > 0:
+        refresh_token_budget()
+        if compact_chars(compact) > max_chars:
+            budget = compact.get("token_budget", {})
+            if isinstance(budget, dict):
+                for key in ("estimated_tokens_before_trim", "compression_ratio", "estimated_tokens", "max_chars"):
+                    if compact_chars(compact) <= max_chars:
+                        break
+                    budget.pop(key, None)
+                    refresh_token_budget()
+        if compact_chars(compact) > max_chars:
+            compact["token_budget"] = {"estimated_chars": 0, "trimmed": True}
+            refresh_token_budget()
+        if compact_chars(compact) > max_chars:
+            compact.pop("pack_id", None)
+            refresh_token_budget()
+        if compact_chars(compact) > max_chars:
+            compact.pop("work_unit_id", None)
+            refresh_token_budget()
+        if compact_chars(compact) > max_chars:
+            compact.pop("efficiency_posture", None)
+            refresh_token_budget()
     return compact
 
 
@@ -12221,9 +12256,15 @@ def print_compact_context(compact: dict[str, Any], *, heading: str = "RESUME") -
     intent = str(compact.get("intent", efficiency.get("intent", ""))).strip()
     execution_class = str(compact.get("execution_class", efficiency.get("execution_class", ""))).strip()
     health = str(compact.get("health", "")).strip()
-    print(f"PACK   {compact['pack_id']}")
-    print(f"WORK   {compact['work_unit_id']}")
-    print(f"STATE  {compact['state']}")
+    pack_id = str(compact.get("pack_id", "")).strip()
+    work_unit_id = str(compact.get("work_unit_id", "")).strip()
+    state = str(compact.get("state", "")).strip()
+    if pack_id:
+        print(f"PACK   {pack_id}")
+    if work_unit_id:
+        print(f"WORK   {work_unit_id}")
+    if state:
+        print(f"STATE  {state}")
     if health:
         print(f"HEALTH {health}")
     if intent:
@@ -25519,10 +25560,10 @@ def main() -> int:
         append_learning_event(
             "compact-context",
             {
-                "pack_id": compact["pack_id"],
-                "work_unit_id": compact["work_unit_id"],
+                "pack_id": compact.get("pack_id", pack_dir.name),
+                "work_unit_id": compact.get("work_unit_id", ""),
                 "intent": compact.get("intent", compact.get("efficiency_posture", {}).get("intent", "")),
-                "state": compact["state"],
+                "state": compact.get("state", ""),
                 "execution_class": compact.get(
                     "execution_class",
                     compact.get("efficiency_posture", {}).get("execution_class", ""),
