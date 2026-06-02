@@ -12180,6 +12180,18 @@ def build_compact_context(
                 and compact.get("intent") == efficiency.get("intent")
             ):
                 compact.pop("intent", None)
+        if compact_chars(compact) > max_chars:
+            runtime = compact.get("runtime_readout", {})
+            if isinstance(runtime, dict) and runtime.get("effort"):
+                runtime.pop("effort", None)
+        if compact_chars(compact) > max_chars:
+            runtime = compact.get("runtime_readout", {})
+            if isinstance(runtime, dict) and runtime.get("selection_mode") == "auto":
+                runtime.pop("selection_mode", None)
+        if compact_chars(compact) > max_chars:
+            compact.pop("generated_at", None)
+        if compact_chars(compact) > max_chars:
+            compact.pop("health", None)
     final_chars = compact_chars(compact)
     compact["token_budget"] = {
         "max_chars": max_chars,
@@ -12193,12 +12205,19 @@ def build_compact_context(
 
 
 def print_compact_context(compact: dict[str, Any], *, heading: str = "RESUME") -> None:
+    efficiency = compact.get("efficiency_posture", {})
+    intent = str(compact.get("intent", efficiency.get("intent", ""))).strip()
+    execution_class = str(compact.get("execution_class", efficiency.get("execution_class", ""))).strip()
+    health = str(compact.get("health", "")).strip()
     print(f"PACK   {compact['pack_id']}")
     print(f"WORK   {compact['work_unit_id']}")
     print(f"STATE  {compact['state']}")
-    print(f"HEALTH {compact['health']}")
-    print(f"INTENT {compact['intent']}")
-    print(f"CLASS  {compact['execution_class']}")
+    if health:
+        print(f"HEALTH {health}")
+    if intent:
+        print(f"INTENT {intent}")
+    if execution_class:
+        print(f"CLASS  {execution_class}")
     token_budget = compact.get("token_budget", {})
     if token_budget:
         print(
