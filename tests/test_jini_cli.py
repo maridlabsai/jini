@@ -4510,8 +4510,46 @@ class JiniCliConformanceTests(unittest.TestCase):
             "# GitHub context\n\nKeep issue updates concise.\n",
             encoding="utf-8",
         )
+        state_root = self.tmp / ".jini"
+        state_root.mkdir(parents=True, exist_ok=True)
+        (state_root / "local-runtime-capabilities.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.4.0",
+                    "context_type": "JiniLocalRuntimeCapabilities",
+                    "captured_at": "2026-05-21T19:00:00Z",
+                    "local_runtime_class": "local-ollama",
+                    "adapters": {
+                        "local-workhorse": {
+                            "status": "ok",
+                            "latency_ms": 180,
+                            "warm_latency_ms": 150,
+                            "cold_start_cost_ms": 30,
+                            "tokens_per_second": 22.5,
+                            "quality_class": "strong",
+                            "structured_reliability": "strong",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        }
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        self.assert_ok(self.run_cli("publish-issues", pack_dir, "--adapter", "github"))
+        env = os.environ.copy()
+        env["JINI_HOME"] = str(state_root)
+        env["JINI_RUNTIME_TARGET_HEALTH"] = ",".join(
+            [
+                "codex=unavailable",
+                "claude-code=unavailable",
+                "github-copilot=unavailable",
+                "kiro-cli=unavailable",
+                "junie=unavailable",
+                "augment=unavailable",
+            ]
+        )
 
-        status_refresh = self.run_cli("status", pack_dir, "--format", "json")
+        status_refresh = self.run_cli("status", pack_dir, "--format", "json", env=env)
         self.assert_ok(status_refresh)
 
         shutil.rmtree(pack_dir)
@@ -4525,6 +4563,9 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(status_result)
         status_payload = json.loads(status_result.stdout)
         self.assertEqual("session-only", status_payload["health"])
+        self.assertEqual("offline", status_payload["runtime_readout"]["connectivity_mode"])
+        self.assertEqual("unavailable", status_payload["runtime_readout"]["online_capability"])
+        self.assertEqual(1, status_payload["runtime_readout"]["reconciliation_debt_count"])
         status_imported_context = status_payload.get("imported_context", [])
         self.assertEqual(3, len(status_imported_context))
         self.assertTrue(any("Remember the repo conventions." in str(item.get("snapshot_markdown", "")) for item in status_imported_context))
@@ -4536,6 +4577,9 @@ class JiniCliConformanceTests(unittest.TestCase):
         compact = json.loads(result.stdout)
         self.assertEqual("projection-resume", compact["execution_class"])
         self.assertEqual("test-research-pack", compact["work_unit_id"])
+        self.assertEqual("offline", compact["runtime_readout"]["connectivity_mode"])
+        self.assertEqual("unavailable", compact["runtime_readout"]["online_capability"])
+        self.assertEqual(1, compact["runtime_readout"]["reconciliation_debt_count"])
         self.assertEqual(2, compact["runtime_readout"]["imported_context_count"])
         self.assertIn("Imported framework context remains available offline", compact["runtime_readout"]["reason"])
 

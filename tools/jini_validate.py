@@ -8573,6 +8573,42 @@ def load_current_session_context() -> dict[str, Any] | None:
     return payload
 
 
+def build_projection_runtime_snapshot(
+    pack_dir: Path,
+    registry: dict[str, Any],
+    summary: dict[str, Any],
+) -> dict[str, Any]:
+    recommendation = recommend_execution(
+        pack_dir,
+        registry,
+        intent=str(summary.get("next_operation", "")).strip().lower(),
+    )
+    efficiency_posture = build_efficiency_posture(
+        recommendation,
+        max_rationale=2,
+        include_rate_limits=True,
+    )
+    runtime_readout = build_runtime_readout(
+        recommendation,
+        pack_dir=pack_dir,
+        efficiency_posture=efficiency_posture,
+    )
+    snapshot: dict[str, Any] = {}
+    for key in (
+        "connectivity_mode",
+        "online_capability",
+        "reconciliation_debt_count",
+        "reconciliation_summary",
+        "imported_context_count",
+        "imported_context_summary",
+        "reason",
+    ):
+        value = runtime_readout.get(key)
+        if value not in ("", None, [], {}):
+            snapshot[key] = value
+    return snapshot
+
+
 def remember_current_work(pack_dir: Path, registry: dict[str, Any], *, source: str) -> dict[str, Any]:
     resolved = pack_dir.expanduser().resolve()
     summary = summarise_pack(resolved, registry)
@@ -8594,6 +8630,7 @@ def remember_current_work(pack_dir: Path, registry: dict[str, Any], *, source: s
         updated_at=updated_at,
         previous_projection=previous_projection,
     )
+    projection["runtime_snapshot"] = build_projection_runtime_snapshot(resolved, registry, summary)
     current_artifact_id = projection_focus_artifact_id(projection)
     if not current_artifact_id and projection.get("ready"):
         current_artifact_id = str(projection["ready"][0].get("id", ""))
@@ -19760,6 +19797,12 @@ def build_outcome_view_from_projection(
         selection_mode="projection",
         model="saved session projection",
     )
+    runtime_snapshot = projection.get("runtime_snapshot", {}) if isinstance(projection, dict) else {}
+    if isinstance(runtime_snapshot, dict):
+        for key in ("connectivity_mode", "online_capability", "reconciliation_debt_count", "reconciliation_summary"):
+            value = runtime_snapshot.get(key)
+            if value not in ("", None, [], {}):
+                runtime_readout[key] = value
     if imported_framework_context["count"]:
         runtime_readout["imported_context_count"] = imported_framework_context["count"]
         runtime_readout["imported_context_summary"] = imported_framework_context["summary"]
@@ -19865,6 +19908,12 @@ def build_compact_context_from_projection(
         selection_mode="projection",
         model="saved session projection",
     )
+    runtime_snapshot = projection.get("runtime_snapshot", {}) if isinstance(projection, dict) else {}
+    if isinstance(runtime_snapshot, dict):
+        for key in ("connectivity_mode", "online_capability", "reconciliation_debt_count", "reconciliation_summary"):
+            value = runtime_snapshot.get(key)
+            if value not in ("", None, [], {}):
+                runtime_readout[key] = value
     if imported_context:
         labels = [f"{item['label']} ({item['origin_ref']})" for item in imported_context[:2]]
         imported_summary = "Imported framework context remains available offline: " + ", ".join(labels) + "."
