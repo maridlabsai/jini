@@ -12230,6 +12230,7 @@ def build_compact_context(
                 break
 
     if max_chars > 0:
+        preserved_runtime_target = str(compact.get("runtime_target", {}).get("selected", "")).strip()
         refresh_token_budget()
         if compact_chars(compact) > max_chars:
             budget = compact.get("token_budget", {})
@@ -12271,6 +12272,13 @@ def build_compact_context(
                 runtime.pop("reason", None)
         if compact_chars(compact) > max_chars:
             compact.pop("runtime_target", None)
+        if compact_chars(compact) > max_chars:
+            target_only = {"runtime_target": {"selected": preserved_runtime_target}}
+            if preserved_runtime_target and compact_chars(target_only) <= max_chars:
+                compact.pop("runtime_readout", None)
+                compact["runtime_target"] = target_only["runtime_target"]
+            else:
+                compact.pop("runtime_readout", None)
     return compact
 
 

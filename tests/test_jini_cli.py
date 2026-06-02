@@ -3104,6 +3104,23 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertNotIn("reason", edge_resume_payload["runtime_readout"])
         self.assertLessEqual(len(edge_resume_result.stdout.strip()), 88)
 
+        target_only_resume_result = self.run_cli(
+            "resume",
+            pack_dir,
+            "--runtime-target",
+            "kiro-cli",
+            "--format",
+            "json",
+            "--max-chars",
+            "42",
+            env=env,
+        )
+        self.assert_ok(target_only_resume_result)
+        target_only_resume_payload = json.loads(target_only_resume_result.stdout)
+        self.assertEqual("kiro-cli", target_only_resume_payload["runtime_target"]["selected"])
+        self.assertNotIn("runtime_readout", target_only_resume_payload)
+        self.assertLessEqual(len(target_only_resume_result.stdout.strip()), 42)
+
         squashed_resume_result = self.run_cli(
             "resume",
             pack_dir,
@@ -3112,15 +3129,13 @@ class JiniCliConformanceTests(unittest.TestCase):
             "--format",
             "json",
             "--max-chars",
-            "80",
+            "30",
             env=env,
         )
         self.assert_ok(squashed_resume_result)
         squashed_resume_payload = json.loads(squashed_resume_result.stdout)
-        self.assertEqual("local-workhorse", squashed_resume_payload["runtime_readout"]["route"])
-        self.assertNotIn("reason", squashed_resume_payload["runtime_readout"])
-        self.assertNotIn("runtime_target", squashed_resume_payload)
-        self.assertLessEqual(len(squashed_resume_result.stdout.strip()), 80)
+        self.assertFalse(squashed_resume_payload)
+        self.assertLessEqual(len(squashed_resume_result.stdout.strip()), 30)
 
     def test_route_outcome_feedback_self_corrects_measured_local_selection(self) -> None:
         pack_dir = self.compile_research_pack()
