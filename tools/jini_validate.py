@@ -1387,6 +1387,8 @@ def build_local_runtime_route_snapshot() -> dict[str, Any]:
 def summarize_local_runtime_route(
     route_evidence: dict[str, Any],
     route_cost: dict[str, Any],
+    *,
+    execution_class: str = "",
 ) -> str:
     if not isinstance(route_evidence, dict) or not route_evidence.get("available"):
         return ""
@@ -1398,6 +1400,26 @@ def summarize_local_runtime_route(
             f"Measured local runtime `{runtime_class}` has {ready_count}/{adapter_count} ready adapter(s); "
             "no ready local route is available for this task, so Jini must leave the device-local path."
         )
+    threshold = measured_local_route_threshold(execution_class) if execution_class else 0
+    threshold_label = "usable" if threshold == 2 else "strong" if threshold == 3 else ""
+    if threshold_label:
+        qualified_count = 0
+        for item in route_evidence.get("adapters", []):
+            if not isinstance(item, dict):
+                continue
+            if str(item.get("status", "")).strip().lower() not in {"ok", "degraded"}:
+                continue
+            if route_quality_rank(item.get("quality_class", "")) < threshold:
+                continue
+            if route_reliability_rank(item.get("structured_reliability", "")) < threshold:
+                continue
+            qualified_count += 1
+        if qualified_count <= 0:
+            return (
+                f"Measured local runtime `{runtime_class}` has {ready_count}/{adapter_count} ready adapter(s), "
+                f"but none meet the `{threshold_label}` quality threshold for this task, so Jini must leave the "
+                "device-local path."
+            )
     cheapest = route_cost.get("cheapest_ready_adapter") if isinstance(route_cost, dict) else None
     cheapest_id = str(cheapest.get("adapter_id", "")).strip() if isinstance(cheapest, dict) else ""
     posture = str(route_cost.get("posture", "")).strip() if isinstance(route_cost, dict) else ""
@@ -18007,7 +18029,7 @@ def recommend_execution(
     selected_route_reason = summarize_selected_execution_route(execution_route)
     if selected_route_reason:
         rationale.append(selected_route_reason)
-    local_route_reason = summarize_local_runtime_route(route_evidence, route_cost)
+    local_route_reason = summarize_local_runtime_route(route_evidence, route_cost, execution_class=execution_class)
     if local_route_reason:
         rationale.append(local_route_reason)
     return recommendation
@@ -18123,7 +18145,11 @@ def build_runtime_readout(
             execution_route = runtime_guidance.get("execution_route", {}) if isinstance(runtime_guidance, dict) else {}
             route_reason = summarize_selected_execution_route(execution_route)
             if not route_reason:
-                route_reason = summarize_local_runtime_route(route_evidence, route_cost)
+                route_reason = summarize_local_runtime_route(
+                    route_evidence,
+                    route_cost,
+                    execution_class=str(posture.get("execution_class", "")).strip(),
+                )
             if route_reason:
                 readout["reason"] = route_reason
     return readout

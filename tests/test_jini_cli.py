@@ -2451,6 +2451,93 @@ class JiniCliConformanceTests(unittest.TestCase):
             )
         )
 
+    def test_runtime_readouts_explain_when_ready_local_adapters_miss_threshold(self) -> None:
+        pack_dir = self.compile_research_pack()
+        state_root = self.tmp / ".jini"
+        state_root.mkdir(parents=True, exist_ok=True)
+        (state_root / "local-runtime-capabilities.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.4.0",
+                    "context_type": "JiniLocalRuntimeCapabilities",
+                    "captured_at": "2026-05-21T19:00:00Z",
+                    "local_runtime_class": "local-ollama",
+                    "adapters": {
+                        "local-workhorse": {
+                            "status": "ok",
+                            "latency_ms": 180,
+                            "warm_latency_ms": 150,
+                            "cold_start_cost_ms": 30,
+                            "tokens_per_second": 22.5,
+                            "quality_class": "usable",
+                            "structured_reliability": "usable",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        },
+                        "local-fast": {
+                            "status": "degraded",
+                            "latency_ms": 95,
+                            "warm_latency_ms": 90,
+                            "cold_start_cost_ms": 5,
+                            "tokens_per_second": 38.2,
+                            "quality_class": "usable",
+                            "structured_reliability": "usable",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        },
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        recommendation_result = self.run_cli("recommend-execution", pack_dir, "--intent", "make", "--format", "json")
+        self.assert_ok(recommendation_result)
+        recommendation = json.loads(recommendation_result.stdout)
+        self.assertTrue(recommendation["route_evidence"]["available"])
+        self.assertEqual("local-ollama", recommendation["route_evidence"]["local_runtime_class"])
+        self.assertEqual("measured", recommendation["route_cost"]["status"])
+        self.assertEqual({}, recommendation["runtime_guidance"].get("execution_route", {}))
+        self.assertTrue(
+            any(
+                "but none meet the `strong` quality threshold for this task, so Jini must leave the device-local path."
+                in note
+                for note in recommendation["rationale"]
+            )
+        )
+
+        status_result = self.run_cli("status", pack_dir, "--format", "json")
+        self.assert_ok(status_result)
+        status_payload = json.loads(status_result.stdout)
+        status_readout = status_payload["runtime_readout"]
+        self.assertEqual("local-ollama", status_readout["route_evidence"]["local_runtime_class"])
+        self.assertEqual(2, status_readout["route_evidence"]["ready_adapter_count"])
+        self.assertEqual("measured", status_readout["route_evidence"]["cost_status"])
+        self.assertIn(
+            "but none meet the `strong` quality threshold for this task, so Jini must leave the device-local path.",
+            status_readout["reason"],
+        )
+
+        resume_result = self.run_cli(
+            "resume",
+            pack_dir,
+            "--intent",
+            "make",
+            "--format",
+            "json",
+            "--max-chars",
+            "1100",
+        )
+        self.assert_ok(resume_result)
+        resume_payload = json.loads(resume_result.stdout)
+        resume_readout = resume_payload["runtime_readout"]
+        self.assertEqual("local-ollama", resume_readout["route_evidence"]["local_runtime_class"])
+        self.assertEqual(2, resume_readout["route_evidence"]["ready_adapter_count"])
+        self.assertEqual("measured", resume_readout["route_evidence"]["cost_status"])
+        self.assertTrue(
+            resume_readout["reason"].startswith(
+                "Measured local runtime `local-ollama` has 2/2 ready adapter(s), but none meet the `strong` qu"
+            )
+        )
+
     def test_route_outcome_feedback_self_corrects_measured_local_selection(self) -> None:
         pack_dir = self.compile_research_pack()
         state_root = self.tmp / ".jini"
