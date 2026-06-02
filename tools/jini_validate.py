@@ -12141,6 +12141,22 @@ def build_compact_context(
             efficiency = compact.get("efficiency_posture", {})
             if isinstance(runtime, dict) and isinstance(efficiency, dict) and runtime.get("route"):
                 efficiency.pop("selected_runtime", None)
+        if compact_chars(compact) > max_chars:
+            runtime = compact.get("runtime_readout", {})
+            efficiency = compact.get("efficiency_posture", {})
+            rationale = efficiency.get("rationale", []) if isinstance(efficiency, dict) else []
+            if (
+                isinstance(runtime, dict)
+                and isinstance(efficiency, dict)
+                and isinstance(rationale, list)
+                and rationale
+                and runtime.get("reason")
+            ):
+                efficiency["rationale"] = []
+        if compact_chars(compact) > max_chars:
+            efficiency = compact.get("efficiency_posture", {})
+            if isinstance(efficiency, dict) and efficiency.get("context_policy"):
+                efficiency.pop("context_policy", None)
     final_chars = compact_chars(compact)
     compact["token_budget"] = {
         "max_chars": max_chars,
