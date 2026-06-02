@@ -11781,6 +11781,25 @@ def build_compact_context(
     def compact_chars(payload: dict[str, Any]) -> int:
         return len(json.dumps(payload, sort_keys=True))
 
+    def should_preserve_compact_runtime_target(payload: dict[str, Any]) -> bool:
+        runtime = payload.get("runtime_readout")
+        runtime_target = payload.get("runtime_target")
+        if not isinstance(runtime, dict) or not isinstance(runtime_target, dict):
+            return False
+        selected_runtime_target = str(runtime_target.get("selected", "")).strip()
+        runtime_route = str(runtime.get("route", "")).strip()
+        if not selected_runtime_target or not runtime_route or selected_runtime_target == runtime_route:
+            return False
+        reason = str(runtime.get("reason", "")).strip().lower()
+        return any(
+            marker in reason
+            for marker in (
+                "preferred adapter `",
+                "policy-preferred adapter `",
+                "selected runtime target `",
+            )
+        )
+
     def shrink_compact(payload: dict[str, Any]) -> bool:
         for key in ("steering", "resume_items", "home_memory", "repo_actions", "stale_signals", "unresolved_tasks", "recent_artifacts", "freshness", "publication_links"):
             values = payload.get(key, [])
@@ -11789,6 +11808,18 @@ def build_compact_context(
                 return True
         runtime_target = payload.get("runtime_target")
         if isinstance(runtime_target, dict):
+            selected_runtime_target = str(runtime_target.get("selected", "")).strip()
+            runtime = payload.get("runtime_readout")
+            runtime_route = str(runtime.get("route", "")).strip() if isinstance(runtime, dict) else ""
+            if not selected_runtime_target and not runtime_target.get("fallbacks"):
+                payload.pop("runtime_target", None)
+                return True
+            if selected_runtime_target and runtime_route and selected_runtime_target == runtime_route:
+                payload.pop("runtime_target", None)
+                return True
+            if selected_runtime_target and not should_preserve_compact_runtime_target(payload):
+                payload.pop("runtime_target", None)
+                return True
             fallbacks = runtime_target.get("fallbacks", [])
             if isinstance(fallbacks, list) and len(fallbacks) > 1:
                 runtime_target["fallbacks"] = fallbacks[:-1]
@@ -11826,6 +11857,15 @@ def build_compact_context(
                 return True
             if runtime.get("context_policy"):
                 runtime.pop("context_policy", None)
+                return True
+            runtime_target = payload.get("runtime_target", {})
+            selected_runtime_target = (
+                str(runtime_target.get("selected", "")).strip()
+                if isinstance(runtime_target, dict)
+                else ""
+            )
+            if selected_runtime_target and str(runtime.get("runtime_target", "")).strip() == selected_runtime_target:
+                runtime.pop("runtime_target", None)
                 return True
             efficiency = payload.get("efficiency_posture", {})
             rationale = efficiency.get("rationale", []) if isinstance(efficiency, dict) else []
@@ -11882,6 +11922,15 @@ def build_compact_context(
             if runtime.get("context_policy"):
                 runtime.pop("context_policy", None)
                 return True
+            runtime_target = payload.get("runtime_target", {})
+            selected_runtime_target = (
+                str(runtime_target.get("selected", "")).strip()
+                if isinstance(runtime_target, dict)
+                else ""
+            )
+            if selected_runtime_target and str(runtime.get("runtime_target", "")).strip() == selected_runtime_target:
+                runtime.pop("runtime_target", None)
+                return True
             reason = str(runtime.get("reason", "")).strip()
             if len(reason) > 96:
                 runtime["reason"] = reason[:93] + "..."
@@ -11891,9 +11940,18 @@ def build_compact_context(
             return True
         runtime_target = payload.get("runtime_target")
         runtime = payload.get("runtime_readout")
-        if isinstance(runtime_target, dict) and isinstance(runtime, dict) and runtime.get("route"):
-            payload["runtime_target"] = {}
-            return True
+        if isinstance(runtime_target, dict):
+            selected_runtime_target = str(runtime_target.get("selected", "")).strip()
+            runtime_route = str(runtime.get("route", "")).strip() if isinstance(runtime, dict) else ""
+            if not selected_runtime_target and isinstance(runtime, dict):
+                runtime_target.setdefault("selected", str(runtime.get("runtime_target", "")).strip())
+                selected_runtime_target = str(runtime_target.get("selected", "")).strip()
+            if selected_runtime_target and runtime_route and selected_runtime_target == runtime_route:
+                payload["runtime_target"] = {}
+                return True
+            if selected_runtime_target and runtime_target.get("fallbacks"):
+                payload["runtime_target"] = {"selected": selected_runtime_target}
+                return True
         efficiency = payload.get("efficiency_posture")
         if isinstance(efficiency, dict):
             rationale = efficiency.get("rationale", [])
@@ -11905,11 +11963,6 @@ def build_compact_context(
                 if len(item) > 96:
                     rationale[0] = item[:93] + "..."
                     return True
-                efficiency["rationale"] = []
-                return True
-            if efficiency.get("selected_runtime"):
-                efficiency.pop("selected_runtime", None)
-                return True
         return False
 
     baseline_tokens = estimate_tokens(compact)
@@ -12006,7 +12059,10 @@ def build_compact_context(
                 "execution_class": str(efficiency.get("execution_class", compact.get("execution_class", ""))).strip(),
                 "cheap_path": bool(efficiency.get("cheap_path", False)),
                 "context_policy": str(efficiency.get("context_policy", "")).strip(),
-                "selected_runtime": str(efficiency.get("selected_runtime", "")).strip(),
+                "selected_runtime": (
+                    str(efficiency.get("selected_runtime", "")).strip()
+                    or str(runtime.get("route", "")).strip()
+                ),
                 "rationale": [preserved_reason] if preserved_reason else [],
             }
             compact["recent_artifacts"] = []
@@ -12030,15 +12086,26 @@ def build_compact_context(
                 }
                 for item in compact.get("unresolved_tasks", [])[:1]
             ]
-            compact["runtime_target"] = {
-                "selected": compact.get("runtime_target", {}).get("selected", "")
-            }
+            compact["runtime_target"] = (
+                {"selected": str(compact.get("runtime_target", {}).get("selected", "")).strip()}
+                if should_preserve_compact_runtime_target(compact)
+                else {}
+            )
             for key in ("profile_id", "next_operation", "repo_root", "latest_run", "latest_harvest"):
                 compact.pop(key, None)
         if compact_chars(compact) > max_chars:
             compact["resume_items"] = []
             compact["unresolved_tasks"] = []
-            compact["runtime_target"] = {}
+            preserved_runtime_target = (
+                str(compact.get("runtime_target", {}).get("selected", "")).strip()
+                or str(compact.get("runtime_readout", {}).get("runtime_target", "")).strip()
+            )
+            runtime_route = str(compact.get("runtime_readout", {}).get("route", "")).strip()
+            compact["runtime_target"] = (
+                {"selected": preserved_runtime_target}
+                if preserved_runtime_target and preserved_runtime_target != runtime_route and should_preserve_compact_runtime_target(compact)
+                else {}
+            )
             for key in (
                 "recent_artifacts",
                 "publication_links",

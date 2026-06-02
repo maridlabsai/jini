@@ -2275,7 +2275,6 @@ class JiniCliConformanceTests(unittest.TestCase):
         resume_runtime = compact["runtime_readout"]
         self.assertEqual("auto", resume_runtime["selection_mode"])
         self.assertEqual(resume_posture["selected_runtime"], resume_runtime["route"])
-        self.assertEqual(resume_runtime["route"], resume_runtime["runtime_target"])
         self.assertEqual("cheap", resume_runtime["effort"])
         self.assertIn("export", resume_runtime["reason"])
         self.assertLessEqual(compact["token_budget"]["estimated_chars"], 900)
@@ -2363,7 +2362,6 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("local-fast", resume_payload["efficiency_posture"]["selected_runtime"])
         resume_readout = resume_payload["runtime_readout"]
         self.assertEqual("local-fast", resume_readout["route"])
-        self.assertEqual(selected_runtime_target, resume_readout["runtime_target"])
         self.assertEqual("local-ollama", resume_readout["route_evidence"]["local_runtime_class"])
         self.assertEqual("local-fast", resume_readout["route_evidence"]["cheapest_ready_adapter"])
         self.assertEqual("local-fast", resume_readout["route_evidence"]["selected_ready_adapter"])
@@ -2874,7 +2872,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(resume_result)
         resume_payload = json.loads(resume_result.stdout)
         self.assertEqual("local-workhorse", resume_payload["runtime_readout"]["route"])
-        self.assertEqual("kiro-cli", resume_payload["runtime_readout"]["runtime_target"])
+        self.assertEqual("kiro-cli", resume_payload["runtime_target"]["selected"])
         self.assertTrue(
             resume_payload["runtime_readout"]["reason"].startswith(
                 "State `operational` requires stronger verification posture; Preferred adapter `kiro-cli` was ..."
