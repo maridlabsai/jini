@@ -12134,6 +12134,10 @@ def build_compact_context(
                 runtime.pop("reason", None)
         if compact_chars(compact) > max_chars:
             runtime = compact.get("runtime_readout", {})
+            if isinstance(runtime, dict) and runtime.get("route_evidence"):
+                runtime.pop("route_evidence", None)
+        if compact_chars(compact) > max_chars:
+            runtime = compact.get("runtime_readout", {})
             efficiency = compact.get("efficiency_posture", {})
             if isinstance(runtime, dict) and isinstance(efficiency, dict) and runtime.get("route"):
                 efficiency.pop("selected_runtime", None)
