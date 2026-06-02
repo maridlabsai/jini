@@ -3137,6 +3137,18 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertFalse(squashed_resume_payload)
         self.assertLessEqual(len(squashed_resume_result.stdout.strip()), 30)
 
+    def test_max_chars_rejects_impossible_budgets_across_compact_surfaces(self) -> None:
+        pack_dir = self.compile_research_pack()
+        for command in (
+            ("resume", pack_dir, "--format", "json", "--max-chars", "1"),
+            ("stage-runtime-handoff", pack_dir, "--format", "json", "--max-chars", "0"),
+            ("activate-runtime-target", pack_dir, "--format", "json", "--max-chars", "1"),
+            ("run", pack_dir, "--format", "json", "--max-chars", "0"),
+        ):
+            result = self.run_cli(*command)
+            self.assertEqual(2, result.returncode, result.stderr)
+            self.assertIn("--max-chars must be >= 2", result.stderr)
+
     def test_route_outcome_feedback_self_corrects_measured_local_selection(self) -> None:
         pack_dir = self.compile_research_pack()
         state_root = self.tmp / ".jini"

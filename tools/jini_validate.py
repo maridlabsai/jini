@@ -10614,6 +10614,19 @@ def trim_output(text: str | bytes | None, limit: int = 1200) -> str:
     return normalized[-limit:]
 
 
+def min_int_arg(minimum: int, flag: str) -> Callable[[str], int]:
+    def parse(value: str) -> int:
+        try:
+            parsed = int(value)
+        except ValueError as exc:
+            raise argparse.ArgumentTypeError(f"{flag} must be an integer") from exc
+        if parsed < minimum:
+            raise argparse.ArgumentTypeError(f"{flag} must be >= {minimum}")
+        return parsed
+
+    return parse
+
+
 def runtime_events_path(pack_dir: Path) -> Path:
     runtime_dir = pack_dir / "runtime"
     runtime_dir.mkdir(parents=True, exist_ok=True)
@@ -23372,7 +23385,7 @@ def main() -> int:
     )
     compact_context_parser.add_argument(
         "--max-chars",
-        type=int,
+        type=min_int_arg(2, "--max-chars"),
         default=1200,
         help="Soft character budget for the compact context payload",
     )
@@ -23575,7 +23588,7 @@ def main() -> int:
     )
     handoff_parser.add_argument(
         "--max-chars",
-        type=int,
+        type=min_int_arg(2, "--max-chars"),
         default=1200,
         help="Soft character budget for the embedded compact context payload",
     )
@@ -23610,7 +23623,7 @@ def main() -> int:
     )
     activate_runtime_parser.add_argument(
         "--max-chars",
-        type=int,
+        type=min_int_arg(2, "--max-chars"),
         default=1200,
         help="Soft character budget for an on-demand compact context",
     )
@@ -23677,7 +23690,7 @@ def main() -> int:
     )
     execute_flow_parser.add_argument(
         "--max-chars",
-        type=int,
+        type=min_int_arg(2, "--max-chars"),
         default=900,
         help="Soft character budget for the compact context payload",
     )
