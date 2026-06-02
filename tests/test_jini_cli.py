@@ -2250,6 +2250,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         runtime = report["runtime_readout"]
         self.assertEqual("auto", runtime["selection_mode"])
         self.assertEqual(posture["selected_runtime"], runtime["route"])
+        self.assertEqual(runtime["route"], runtime["runtime_target"])
         self.assertTrue(runtime["model"])
         self.assertEqual("standard", runtime["effort"])
         self.assertEqual("targeted", runtime["context_policy"])
@@ -2274,6 +2275,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         resume_runtime = compact["runtime_readout"]
         self.assertEqual("auto", resume_runtime["selection_mode"])
         self.assertEqual(resume_posture["selected_runtime"], resume_runtime["route"])
+        self.assertEqual(resume_runtime["route"], resume_runtime["runtime_target"])
         self.assertEqual("cheap", resume_runtime["effort"])
         self.assertIn("export", resume_runtime["reason"])
         self.assertLessEqual(compact["token_budget"]["estimated_chars"], 900)
@@ -2324,6 +2326,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("measured", recommendation["route_cost"]["status"])
         self.assertEqual("local-fast", recommendation["route_cost"]["cheapest_ready_adapter"]["adapter_id"])
         execution_route = recommendation["runtime_guidance"]["execution_route"]
+        selected_runtime_target = recommendation["runtime_guidance"]["selected"]["id"]
         self.assertEqual("local-workhorse", execution_route["selected"]["id"])
         self.assertEqual("measured-local-runtime", execution_route["selection_basis"])
         self.assertEqual("local-fast", execution_route["cheapest_ready_adapter"])
@@ -2336,6 +2339,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("local-workhorse", status_payload["efficiency_posture"]["selected_runtime"])
         status_readout = status_payload["runtime_readout"]
         self.assertEqual("local-workhorse", status_readout["route"])
+        self.assertEqual(selected_runtime_target, status_readout["runtime_target"])
         self.assertEqual("local-ollama", status_readout["route_evidence"]["local_runtime_class"])
         self.assertEqual(2, status_readout["route_evidence"]["ready_adapter_count"])
         self.assertEqual("measured", status_readout["route_evidence"]["cost_status"])
@@ -2359,6 +2363,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("local-fast", resume_payload["efficiency_posture"]["selected_runtime"])
         resume_readout = resume_payload["runtime_readout"]
         self.assertEqual("local-fast", resume_readout["route"])
+        self.assertEqual(selected_runtime_target, resume_readout["runtime_target"])
         self.assertEqual("local-ollama", resume_readout["route_evidence"]["local_runtime_class"])
         self.assertEqual("local-fast", resume_readout["route_evidence"]["cheapest_ready_adapter"])
         self.assertEqual("local-fast", resume_readout["route_evidence"]["selected_ready_adapter"])
@@ -2852,6 +2857,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(status_result)
         status_payload = json.loads(status_result.stdout)
         self.assertEqual("local-workhorse", status_payload["runtime_readout"]["route"])
+        self.assertEqual("kiro-cli", status_payload["runtime_readout"]["runtime_target"])
         self.assertEqual(expected_reason, status_payload["runtime_readout"]["reason"])
 
         resume_result = self.run_cli(
@@ -2868,6 +2874,7 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(resume_result)
         resume_payload = json.loads(resume_result.stdout)
         self.assertEqual("local-workhorse", resume_payload["runtime_readout"]["route"])
+        self.assertEqual("kiro-cli", resume_payload["runtime_readout"]["runtime_target"])
         self.assertTrue(
             resume_payload["runtime_readout"]["reason"].startswith(
                 "State `operational` requires stronger verification posture; Preferred adapter `kiro-cli` was ..."

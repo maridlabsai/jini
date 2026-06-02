@@ -18175,6 +18175,7 @@ def build_runtime_readout(
             selected_execution_route = (
                 execution_route.get("selected", {}) if isinstance(execution_route.get("selected", {}), dict) else {}
             )
+    runtime_target_id = str(selected_runtime.get("id", "")).strip()
     rationale = posture.get("rationale", [])
     if not isinstance(rationale, list) and isinstance(recommendation, dict):
         rationale = recommendation.get("rationale", [])
@@ -18192,6 +18193,7 @@ def build_runtime_readout(
     readout = {
         "selection_mode": selection_mode,
         "route": route_id,
+        "runtime_target": runtime_target_id or route_id,
         "model": str(model if model is not None else configured_model_readout()).strip() or "auto",
         "effort": execution_class,
         "context_policy": str(posture.get("context_policy", "")).strip(),
@@ -18230,6 +18232,9 @@ def build_runtime_readout(
                 combined_reasons.append(route_reason)
                 readout["reason"] = "; ".join(combined_reasons)
         elif isinstance(runtime_guidance, dict):
+            if guidance_reason:
+                if reason and "highest-priority adapter" in guidance_reason.lower():
+                    guidance_reason = ""
             if guidance_reason:
                 if preserve_execution_reason and reason and guidance_reason != reason:
                     readout["reason"] = f"{reason}; {guidance_reason}"
