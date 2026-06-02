@@ -12218,13 +12218,16 @@ def build_compact_context(
         budget = compact.get("token_budget", {})
         if not isinstance(budget, dict):
             return
-        actual_chars = compact_chars(compact)
-        budget["estimated_chars"] = actual_chars
-        budget["trimmed"] = actual_chars > max_chars or final_chars < original_chars
-        if "estimated_tokens" in budget:
-            budget["estimated_tokens"] = estimate_tokens(compact)
-        if "compression_ratio" in budget:
-            budget["compression_ratio"] = round(actual_chars / max(1, original_chars), 3)
+        for _ in range(4):
+            actual_chars = compact_chars(compact)
+            budget["estimated_chars"] = actual_chars
+            budget["trimmed"] = actual_chars > max_chars or final_chars < original_chars
+            if "estimated_tokens" in budget:
+                budget["estimated_tokens"] = estimate_tokens(compact)
+            if "compression_ratio" in budget:
+                budget["compression_ratio"] = round(actual_chars / max(1, original_chars), 3)
+            if compact_chars(compact) == actual_chars:
+                break
 
     if max_chars > 0:
         refresh_token_budget()
@@ -12248,6 +12251,11 @@ def build_compact_context(
         if compact_chars(compact) > max_chars:
             compact.pop("efficiency_posture", None)
             refresh_token_budget()
+        if compact_chars(compact) > max_chars:
+            compact.pop("state", None)
+            refresh_token_budget()
+        if compact_chars(compact) > max_chars:
+            compact.pop("token_budget", None)
     return compact
 
 
