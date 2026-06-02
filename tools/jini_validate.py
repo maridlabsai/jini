@@ -18200,6 +18200,7 @@ def build_runtime_readout(
     if isinstance(recommendation, dict):
         route_evidence = recommendation.get("route_evidence", {})
         route_cost = recommendation.get("route_cost", {})
+        guidance_reason = select_runtime_guidance_reason(runtime_guidance.get("notes", [])) if isinstance(runtime_guidance, dict) else ""
         compact_route_evidence = compact_route_evidence_for_readout(
             route_evidence,
             route_cost,
@@ -18216,12 +18217,19 @@ def build_runtime_readout(
                     execution_class=execution_class,
                 )
             if route_reason:
-                if preserve_execution_reason and reason and route_reason != reason:
-                    readout["reason"] = f"{reason}; {route_reason}"
-                else:
-                    readout["reason"] = route_reason
+                combined_reasons: list[str] = []
+                if preserve_execution_reason and reason and reason != route_reason:
+                    combined_reasons.append(reason)
+                if guidance_reason and guidance_reason not in {reason, route_reason}:
+                    if (
+                        "preferred adapter `" in guidance_reason.lower()
+                        or "policy-preferred adapter `" in guidance_reason.lower()
+                        or "selected runtime target `" in guidance_reason.lower()
+                    ):
+                        combined_reasons.append(guidance_reason)
+                combined_reasons.append(route_reason)
+                readout["reason"] = "; ".join(combined_reasons)
         elif isinstance(runtime_guidance, dict):
-            guidance_reason = select_runtime_guidance_reason(runtime_guidance.get("notes", []))
             if guidance_reason:
                 if preserve_execution_reason and reason and guidance_reason != reason:
                     readout["reason"] = f"{reason}; {guidance_reason}"
