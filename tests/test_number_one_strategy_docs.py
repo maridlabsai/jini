@@ -72,6 +72,7 @@ class NumberOneStrategyDocsTests(unittest.TestCase):
         text = read(PRD_PATH)
         required_markers = [
             "# Number One Platform PRD",
+            "[jini-next-initiative-plan.md](./jini-next-initiative-plan.md)",
             "## Product Decision",
             "## Mission",
             "## Category Definition",
@@ -126,6 +127,13 @@ class NumberOneStrategyDocsTests(unittest.TestCase):
         for marker in required_markers:
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
+
+    def test_full_product_execution_plan_links_to_next_initiative_contract(self) -> None:
+        text = read(ROOT / "specs" / "full-product-prd-execution-plan.md")
+        self.assertIn(
+            "[jini-next-initiative-plan.md](./jini-next-initiative-plan.md)",
+            text,
+        )
 
 
 if __name__ == "__main__":

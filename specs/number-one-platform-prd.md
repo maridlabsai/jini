@@ -2,6 +2,10 @@
 
 Updated: 2026-05-27
 
+The current execution contract for the next major product and architecture
+initiative lives in
+[jini-next-initiative-plan.md](./jini-next-initiative-plan.md).
+
 ## Product Decision
 
 Jini should be built as a self-learning and self-correcting work operating

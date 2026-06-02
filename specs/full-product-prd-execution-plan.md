@@ -8,6 +8,10 @@ This plan converts [full-product-prd.md](./full-product-prd.md) into a staged
 rewrite sequence with concrete slice goals, scorecard intent, benchmark intent,
 and merge gates.
 
+The broader current initiative contract, including archive policy, persona
+outcomes, Go-core migration direction, and SLO/SLA posture, lives in
+[jini-next-initiative-plan.md](./jini-next-initiative-plan.md).
+
 This is not a backlog dump.
 
 It is the approved order of operations for turning the current rewrite into a
