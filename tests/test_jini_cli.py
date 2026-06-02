@@ -2737,11 +2737,8 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assert_ok(resume_result)
         resume_payload = json.loads(resume_result.stdout)
         self.assertEqual("deep", resume_payload["efficiency_posture"]["execution_class"])
-        self.assertTrue(
-            resume_payload["runtime_readout"]["reason"].startswith(
-                "State `operational` requires stronger verification posture; Policy-preferred adapter `kiro-cl..."
-            )
-        )
+        self.assertEqual(expected_reason, resume_payload["runtime_readout"]["reason"])
+        self.assertLessEqual(len(resume_result.stdout.strip()), 1200)
 
     def test_runtime_readouts_surface_explicit_unhealthy_runtime_target_pin(self) -> None:
         pack_dir = self.compile_research_pack()
@@ -3088,6 +3085,42 @@ class JiniCliConformanceTests(unittest.TestCase):
             )
         )
         self.assertLessEqual(len(zepto_resume_result.stdout.strip()), 140)
+
+        edge_resume_result = self.run_cli(
+            "resume",
+            pack_dir,
+            "--runtime-target",
+            "kiro-cli",
+            "--format",
+            "json",
+            "--max-chars",
+            "88",
+            env=env,
+        )
+        self.assert_ok(edge_resume_result)
+        edge_resume_payload = json.loads(edge_resume_result.stdout)
+        self.assertEqual("local-workhorse", edge_resume_payload["runtime_readout"]["route"])
+        self.assertEqual("kiro-cli", edge_resume_payload["runtime_target"]["selected"])
+        self.assertNotIn("reason", edge_resume_payload["runtime_readout"])
+        self.assertLessEqual(len(edge_resume_result.stdout.strip()), 88)
+
+        squashed_resume_result = self.run_cli(
+            "resume",
+            pack_dir,
+            "--runtime-target",
+            "kiro-cli",
+            "--format",
+            "json",
+            "--max-chars",
+            "80",
+            env=env,
+        )
+        self.assert_ok(squashed_resume_result)
+        squashed_resume_payload = json.loads(squashed_resume_result.stdout)
+        self.assertEqual("local-workhorse", squashed_resume_payload["runtime_readout"]["route"])
+        self.assertNotIn("reason", squashed_resume_payload["runtime_readout"])
+        self.assertNotIn("runtime_target", squashed_resume_payload)
+        self.assertLessEqual(len(squashed_resume_result.stdout.strip()), 80)
 
     def test_route_outcome_feedback_self_corrects_measured_local_selection(self) -> None:
         pack_dir = self.compile_research_pack()

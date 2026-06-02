@@ -11779,7 +11779,7 @@ def build_compact_context(
         compact["current_focus"] = compact_current_focus
 
     def compact_chars(payload: dict[str, Any]) -> int:
-        return len(json.dumps(payload, sort_keys=True))
+        return len(json.dumps(payload, separators=(",", ":"), sort_keys=True))
 
     def should_preserve_compact_runtime_target(payload: dict[str, Any]) -> bool:
         runtime = payload.get("runtime_readout")
@@ -12265,6 +12265,12 @@ def build_compact_context(
                         break
                     if len(reason) > target_len:
                         runtime["reason"] = reason[: target_len - 3] + "..."
+        if compact_chars(compact) > max_chars:
+            runtime = compact.get("runtime_readout", {})
+            if isinstance(runtime, dict) and "reason" in runtime:
+                runtime.pop("reason", None)
+        if compact_chars(compact) > max_chars:
+            compact.pop("runtime_target", None)
     return compact
 
 
