@@ -1443,6 +1443,32 @@ def measured_local_route_threshold(execution_class: str) -> int:
     return 2 if execution_class == "cheap" else 3
 
 
+def select_runtime_execution_reason(
+    rationale: list[Any] | tuple[Any, ...] | None,
+    execution_class: str,
+) -> tuple[str, bool]:
+    if not isinstance(rationale, (list, tuple)):
+        return "", False
+    items = [str(item).strip() for item in rationale if str(item).strip()]
+    if not items:
+        return "", False
+    priority_checks = (
+        ("overrides intent", True),
+        ("increases the execution class", True),
+        ("requires stronger verification posture", True),
+    )
+    for needle, preserve in priority_checks:
+        for item in items:
+            if needle in item.lower():
+                return item, preserve
+    if execution_class in {"cheap", "deep"}:
+        default_phrase = f"defaults to `{execution_class}` execution"
+        for item in items:
+            if default_phrase in item.lower():
+                return item, True
+    return items[0], False
+
+
 ROUTE_OUTCOME_COUNTERS = {
     "used-this": "outcome_used",
     "shared-this": "outcome_shared",
@@ -18110,11 +18136,8 @@ def build_runtime_readout(
     rationale = posture.get("rationale", [])
     if not isinstance(rationale, list) and isinstance(recommendation, dict):
         rationale = recommendation.get("rationale", [])
-    reason = ""
-    for item in rationale if isinstance(rationale, list) else []:
-        reason = str(item).strip()
-        if reason:
-            break
+    execution_class = str(posture.get("execution_class", "")).strip()
+    reason, preserve_execution_reason = select_runtime_execution_reason(rationale, execution_class)
     if not reason and isinstance(route, dict):
         reason = str(route.get("reason", "")).strip()
     route_id = str(posture.get("selected_runtime", "")).strip()
@@ -18128,7 +18151,7 @@ def build_runtime_readout(
         "selection_mode": selection_mode,
         "route": route_id,
         "model": str(model if model is not None else configured_model_readout()).strip() or "auto",
-        "effort": str(posture.get("execution_class", "")).strip(),
+        "effort": execution_class,
         "context_policy": str(posture.get("context_policy", "")).strip(),
         "reason": reason,
     }
@@ -18148,10 +18171,13 @@ def build_runtime_readout(
                 route_reason = summarize_local_runtime_route(
                     route_evidence,
                     route_cost,
-                    execution_class=str(posture.get("execution_class", "")).strip(),
+                    execution_class=execution_class,
                 )
             if route_reason:
-                readout["reason"] = route_reason
+                if preserve_execution_reason and reason and route_reason != reason:
+                    readout["reason"] = f"{reason}; {route_reason}"
+                else:
+                    readout["reason"] = route_reason
     return readout
 
 
