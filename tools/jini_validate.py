@@ -1475,6 +1475,13 @@ def select_runtime_guidance_reason(notes: list[Any] | tuple[Any, ...] | None) ->
     items = [str(item).strip() for item in notes if str(item).strip()]
     if not items:
         return ""
+    remained_note = next((item for item in items if "remained `" in item.lower()), "")
+    despite_note = next(
+        (item for item in items if "no healthier higher-priority target was available" in item.lower()),
+        "",
+    )
+    if remained_note and despite_note:
+        return f"{remained_note}; {despite_note}"
     priority_needles = (
         "switched to",
         "recovered to `ready`",
