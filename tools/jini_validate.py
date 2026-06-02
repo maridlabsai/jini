@@ -19013,6 +19013,7 @@ def build_outcome_view(
     registry: dict[str, Any],
     *,
     repo_path: Path | None = None,
+    runtime_target: str | None = None,
 ) -> dict[str, Any]:
     summary = summarise_pack(pack_dir, registry)
     remember_current_work(pack_dir, registry, source="outcome")
@@ -19021,6 +19022,7 @@ def build_outcome_view(
         registry,
         intent=str(summary["next_operation"]).strip().lower(),
         repo_path=repo_path,
+        runtime_target=runtime_target,
     )
     work_unit = summary["work_unit"]
     task_summary = summary["task_summary"]
@@ -22656,6 +22658,12 @@ def main() -> int:
     outcome_parser.add_argument("path", nargs="?", type=Path)
     outcome_parser.add_argument("--repo", type=Path, help="Optional repo or worktree path for follow-on commands")
     outcome_parser.add_argument(
+        "--runtime-target",
+        "--harness",
+        dest="runtime_target",
+        help="Optional preferred harness",
+    )
+    outcome_parser.add_argument(
         "--format",
         choices=["text", "json"],
         default="text",
@@ -24524,7 +24532,12 @@ def main() -> int:
     if args.command == "status":
         try:
             pack_dir = resolve_context_pack_dir(args.path, registry, command_label="status")
-            report = build_outcome_view(pack_dir, registry, repo_path=args.repo)
+            report = build_outcome_view(
+                pack_dir,
+                registry,
+                repo_path=args.repo,
+                runtime_target=args.runtime_target,
+            )
         except (FileNotFoundError, TypeError, ValueError) as exc:
             if args.path is None:
                 context = load_current_session_context()

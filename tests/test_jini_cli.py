@@ -2740,6 +2740,52 @@ class JiniCliConformanceTests(unittest.TestCase):
             )
         )
 
+    def test_runtime_readouts_surface_explicit_unhealthy_runtime_target_pin(self) -> None:
+        pack_dir = self.compile_research_pack()
+        work_unit_path = pack_dir / "work-unit.yaml"
+        work_unit_text = work_unit_path.read_text(encoding="utf-8")
+        self.assertIn("current_state: decided", work_unit_text)
+        work_unit_path.write_text(
+            work_unit_text.replace("current_state: decided", "current_state: operational"),
+            encoding="utf-8",
+        )
+        env = os.environ.copy()
+        env["JINI_RUNTIME_TARGET_HEALTH"] = "kiro-cli=throttled"
+        expected_reason = (
+            "State `operational` requires stronger verification posture; "
+            "Preferred adapter `kiro-cli` was selected explicitly."
+        )
+
+        status_result = self.run_cli(
+            "status",
+            pack_dir,
+            "--runtime-target",
+            "kiro-cli",
+            "--format",
+            "json",
+            env=env,
+        )
+        self.assert_ok(status_result)
+        status_payload = json.loads(status_result.stdout)
+        self.assertEqual("deep", status_payload["efficiency_posture"]["execution_class"])
+        self.assertEqual(expected_reason, status_payload["runtime_readout"]["reason"])
+
+        resume_result = self.run_cli(
+            "resume",
+            pack_dir,
+            "--runtime-target",
+            "kiro-cli",
+            "--format",
+            "json",
+            "--max-chars",
+            "1200",
+            env=env,
+        )
+        self.assert_ok(resume_result)
+        resume_payload = json.loads(resume_result.stdout)
+        self.assertEqual("deep", resume_payload["efficiency_posture"]["execution_class"])
+        self.assertEqual(expected_reason, resume_payload["runtime_readout"]["reason"])
+
     def test_route_outcome_feedback_self_corrects_measured_local_selection(self) -> None:
         pack_dir = self.compile_research_pack()
         state_root = self.tmp / ".jini"
