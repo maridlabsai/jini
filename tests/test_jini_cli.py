@@ -4583,6 +4583,74 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual(2, compact["runtime_readout"]["imported_context_count"])
         self.assertIn("Imported framework context remains available offline", compact["runtime_readout"]["reason"])
 
+    def test_pathless_text_surfaces_keep_offline_continuity_context(self) -> None:
+        pack_dir = self.compile_research_pack()
+        (self.tmp / ".git").mkdir(parents=True, exist_ok=True)
+        (self.tmp / "CLAUDE.md").write_text("# Claude context\n\nRemember the repo conventions.\n", encoding="utf-8")
+        github_dir = self.tmp / ".github"
+        github_dir.mkdir(parents=True, exist_ok=True)
+        (github_dir / "copilot-instructions.md").write_text(
+            "# GitHub context\n\nKeep issue updates concise.\n",
+            encoding="utf-8",
+        )
+        state_root = self.tmp / ".jini"
+        state_root.mkdir(parents=True, exist_ok=True)
+        (state_root / "local-runtime-capabilities.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.4.0",
+                    "context_type": "JiniLocalRuntimeCapabilities",
+                    "captured_at": "2026-05-21T19:00:00Z",
+                    "local_runtime_class": "local-ollama",
+                    "adapters": {
+                        "local-workhorse": {
+                            "status": "ok",
+                            "latency_ms": 180,
+                            "warm_latency_ms": 150,
+                            "cold_start_cost_ms": 30,
+                            "tokens_per_second": 22.5,
+                            "quality_class": "strong",
+                            "structured_reliability": "strong",
+                            "benchmarked_at": "2026-05-21T19:00:00Z",
+                        }
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        self.assert_ok(self.run_cli("publish-issues", pack_dir, "--adapter", "github"))
+        env = os.environ.copy()
+        env["JINI_HOME"] = str(state_root)
+        env["JINI_RUNTIME_TARGET_HEALTH"] = ",".join(
+            [
+                "codex=unavailable",
+                "claude-code=unavailable",
+                "github-copilot=unavailable",
+                "kiro-cli=unavailable",
+                "junie=unavailable",
+                "augment=unavailable",
+            ]
+        )
+        self.assert_ok(self.run_cli("status", pack_dir, env=env))
+
+        shutil.rmtree(pack_dir)
+        (self.tmp / "CLAUDE.md").unlink()
+        (github_dir / "copilot-instructions.md").unlink()
+        current_work = self.tmp / ".jini" / "current-work.json"
+        current_work.unlink()
+
+        status_result = self.run_cli("status")
+        self.assert_ok(status_result)
+        self.assertIn("offline-mode=offline online-capability=unavailable", status_result.stdout)
+        self.assertIn("reconciliation-debt=1", status_result.stdout)
+        self.assertIn("imported-context=2", status_result.stdout)
+
+        continue_result = self.run_cli("continue")
+        self.assert_ok(continue_result)
+        self.assertIn("OFFLINE mode=offline online=unavailable", continue_result.stdout)
+        self.assertIn("DEBT count=1", continue_result.stdout)
+        self.assertIn("CONTEXT count=2", continue_result.stdout)
+
     def test_pathless_resume_prefers_saved_focus_when_pack_is_missing(self) -> None:
         pack_dir = self.compile_travel_pack()
 

@@ -9743,6 +9743,9 @@ def print_projection_artifact_snapshot(
     *,
     heading: str = "SNAPSHOT",
 ) -> None:
+    projection = context.get("projection", {}) if isinstance(context, dict) else {}
+    runtime_snapshot = projection.get("runtime_snapshot", {}) if isinstance(projection, dict) else {}
+    input_items = projection.get("input_items", []) if isinstance(projection, dict) else []
     artifact_id = str(artifact.get("id", "")).strip() or "artifact"
     label = str(artifact.get("label", "")).strip() or artifact_id
     snapshot = str(artifact.get("snapshot_markdown", "")).strip()
@@ -9751,6 +9754,23 @@ def print_projection_artifact_snapshot(
     print(f"NEXT   {artifact_id}")
     print(f"LABEL  {label}")
     print(f"HEALTH session-only")
+    if isinstance(runtime_snapshot, dict):
+        connectivity_mode = str(runtime_snapshot.get("connectivity_mode", "")).strip()
+        online_capability = str(runtime_snapshot.get("online_capability", "")).strip()
+        if connectivity_mode:
+            print(f"OFFLINE mode={connectivity_mode} online={online_capability}")
+        debt_count = runtime_snapshot.get("reconciliation_debt_count")
+        debt_summary = str(runtime_snapshot.get("reconciliation_summary", "")).strip()
+        if debt_count:
+            print(f"DEBT count={debt_count} summary={debt_summary}")
+    imported_context = collect_imported_framework_context_items(
+        [normalize_input_item(item) for item in input_items if isinstance(item, dict)],
+        max_items=2,
+        snapshot_max_chars=120,
+    )
+    if imported_context:
+        labels = [f"{item['label']} ({item['origin_ref']})" for item in imported_context[:2]]
+        print(f"CONTEXT count={len(imported_context)} summary=Imported framework context remains available offline: {', '.join(labels)}.")
     print()
     print(heading)
     if snapshot:
