@@ -75,6 +75,12 @@ Users should be able to see:
 - why it stayed cheap or escalated
 - what state was reused
 - what work was avoided
+- whether Jini is currently operating in offline mode
+- whether online capability is currently available
+- what reconciliation debt was accrued while working offline
+- whether Jini is currently operating in offline mode
+- whether online capability is currently available
+- what reconciliation debt was accrued while working offline
 
 Efficiency that cannot be explained will not be trusted.
 
@@ -111,6 +117,16 @@ Users should be able to:
 - resume from any supported surface
 - inspect ready and missing state everywhere
 - continue without rebuilding context
+
+When Jini is offline, it should still be able to benefit from locally available
+context and memory already curated under supported framework surfaces, such as
+Claude Code, Codex, or GitHub CLI, once that context has been bound into the
+same session model.
+
+When Jini is offline, it should still be able to benefit from locally available
+context and memory already curated under supported framework surfaces, such as
+Claude Code, Codex, or GitHub CLI, once that context has been bound into the
+same session model.
 
 ### 7. Fewer Product Ideas, Better Execution
 
@@ -170,6 +186,16 @@ Jini should be easy to buy because it is:
 - switching devices must not require context reconstruction
 - artifacts, route evidence, and ready/missing state must travel with the
   session
+- offline mode should be visible to the user instead of being inferred later
+- online capability should be checked efficiently and surfaced when it changes
+- reconciliation debt from offline work should be tracked and shown before sync
+- locally imported context from Claude Code, Codex, or GitHub CLI should remain
+  reusable offline when it has already been attached to the session
+- offline mode should be visible to the user instead of being inferred later
+- online capability should be checked efficiently and surfaced when it changes
+- reconciliation debt from offline work should be tracked and shown before sync
+- locally imported context from Claude Code, Codex, or GitHub CLI should remain
+  reusable offline when it has already been attached to the session
 
 ### Cost Discipline
 
@@ -197,6 +223,12 @@ Jini should track:
 - throttle-avoided-interruption-rate
 - platform-switch-success-rate
 - task-to-model-fit accuracy
+- offline-mode-transparency-rate
+- reconciliation-debt-clearance-rate
+- imported-context-reuse-rate
+- offline-mode-transparency-rate
+- reconciliation-debt-clearance-rate
+- imported-context-reuse-rate
 
 ## Reject Conditions
 
@@ -215,3 +247,11 @@ Reject changes that:
   clearly better under throttle pressure
 - choose a stronger or more expensive model by default when task-shaped
   selection could have completed the work well
+- hide that Jini is operating offline when route or sync behavior materially
+  changed because of it
+- lose or silently ignore reconciliation debt accrued while the user was
+  productively offline
+- hide that Jini is operating offline when route or sync behavior materially
+  changed because of it
+- lose or silently ignore reconciliation debt accrued while the user was
+  productively offline

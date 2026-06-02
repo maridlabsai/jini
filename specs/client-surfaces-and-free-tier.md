@@ -139,6 +139,10 @@ The open version should give users:
 - artifact-first continuation
 - compact resume and status views
 - checkpoints, projections, and visible route proof
+- offline-first continuation when the device can keep working locally
+- explicit offline mode and reconciliation-debt visibility
+- reuse of locally attached context imported from Claude Code, Codex, or
+  GitHub CLI when the same Jini session goes offline
 
 The open version should adopt the common efficiency patterns that serious tools
 already converge on:
@@ -200,6 +204,8 @@ The commercial layer may monetize:
   make the current route the wrong choice
 - task-shaped model and profile selection across local and managed routes
 - sync and continuity convenience
+- online-capability detection, reconciliation scheduling, and managed recovery
+  convenience
 - shared team workflows
 - governance and enterprise controls
 
@@ -222,6 +228,13 @@ A user should be able to:
 - return to desktop or CLI
 
 without losing the thread, artifact identity, or routing transparency.
+
+If the same session continues offline, Jini should:
+
+- say that it is operating in offline mode
+- keep using local or BYO context that is already attached to the session
+- surface any reconciliation debt that must be cleared once online capability
+  returns
 
 ## Trust, Identity, And Export Boundary
 

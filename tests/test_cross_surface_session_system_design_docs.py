@@ -42,6 +42,10 @@ class CrossSurfaceSessionSystemDesignDocsTests(unittest.TestCase):
             "## Migration From Current Runtime",
             "## Acceptance Proof For Slice 1",
             "## Definition Of Done",
+            "connectivity_mode",
+            "reconciliation_debt_count",
+            "reconciliation_debt_cleared",
+            "external_framework_context_imported",
         ]
         for marker in required_markers:
             with self.subTest(marker=marker):
@@ -60,6 +64,10 @@ class CrossSurfaceSessionSystemDesignDocsTests(unittest.TestCase):
             "Continuation should be cheaper than restart",
             "Make the CLI speak the canonical session model",
             "`status` and `resume` should become the first public proof",
+            "Jini should state that it is working in offline mode",
+            "Claude Code",
+            "Codex",
+            "GitHub CLI",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)

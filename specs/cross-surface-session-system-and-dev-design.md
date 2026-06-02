@@ -194,6 +194,10 @@ route:
   model: string|null
   effort: low|standard|high|unknown
   reason: string|null
+connectivity_mode: offline|online|degraded|unknown
+online_capability: available|unavailable|unknown
+reconciliation_debt_count: integer
+reconciliation_summary: string|null
 cost_posture:
   current_path: cheap|balanced|premium|unknown
   continuation_saved_work: string|null
@@ -270,6 +274,11 @@ Examples:
 - review_state_changed
 - resumed_on_surface
 - sync_merged
+- went_offline
+- came_online
+- reconciliation_debt_accrued
+- reconciliation_debt_cleared
+- external_framework_context_imported
 
 #### `sync.json`
 
@@ -279,6 +288,10 @@ Fields:
 
 - last_local_clock
 - last_sync_clock
+- last_online_at
+- online_capability_status
+- reconciliation_debt_count
+- reconciliation_debt_summary
 - remote_session_etag
 - conflict_state
 
@@ -313,6 +326,8 @@ They enable:
 - trust inspection
 - cost analysis
 - interruption recovery analysis
+- offline debt reconciliation
+- imported framework-context reuse while offline
 
 ## Resume Contract
 
@@ -335,6 +350,8 @@ Every surface resume action must return:
 - missing blockers
 - next action
 - route evidence summary
+- visible offline/online mode
+- reconciliation debt summary when non-empty
 - review/share boundary
 
 ### Resume Algorithm
@@ -345,6 +362,7 @@ Every surface resume action must return:
 4. if projection is stale, rebuild from `events.ndjson` and current artifacts
 5. emit `resumed_on_surface`
 6. show the same semantic frame on the current surface
+7. if offline, say so explicitly and surface any reconciliation debt
 
 ### Continuation Savings Logic
 
@@ -355,6 +373,18 @@ Before any regeneration:
 3. check for reusable route/context state
 4. decide whether reuse is enough
 5. only then consider new generation or route escalation
+
+### Offline Continuity Rules
+
+When online capability is unavailable or degraded:
+
+- Jini should state that it is working in offline mode
+- Jini should prefer locally available route, artifact, and session reuse
+- Jini may reuse locally stored context imported from Claude Code, Codex, or
+  GitHub CLI if that context has already been attached to the current session
+- Jini should record reconciliation debt for work that must be synced,
+  published, reconciled, or replayed once online capability returns
+- Jini should surface that debt before the user is surprised by delayed sync
 
 ## Routing And Cost Engine
 
@@ -369,6 +399,9 @@ The routing engine should optimize continuation cost, not just one-turn cost.
 - route evidence
 - local runtime availability
 - provider availability
+- online capability status
+- reconciliation debt pressure
+- imported framework context availability
 - task class
 - risk class
 - interruption recovery value
@@ -380,6 +413,8 @@ The routing engine should optimize continuation cost, not just one-turn cost.
 - cheaper fallback
 - stronger fallback
 - continuation savings explanation
+- offline mode status
+- reconciliation debt update
 
 ### Continuation Reuse Scorer
 
@@ -497,6 +532,8 @@ Rules:
 - envelope conflicts resolve by newest valid state transition
 - artifact conflicts produce sibling revisions, not silent overwrite
 - review/send boundary conflicts must never auto-resolve to a riskier state
+- reconciliation debt clears only after the required online reconciliation
+  action actually succeeds
 
 ### Identity
 
@@ -505,6 +542,26 @@ Every synced session needs:
 - local stable session id
 - optional account-scoped remote id
 - exportable session package format
+
+### External Framework Context Import
+
+Jini should be able to reuse locally available context and memory captured in
+the current session under other supported framework surfaces when the user goes
+offline.
+
+Supported initial imports:
+
+- Claude Code
+- Codex
+- GitHub CLI
+
+Rules:
+
+- imported context must be attached to the canonical Jini session object, not
+  stored as a parallel session model
+- imported context must remain inspectable and removable
+- imported context may improve offline continuation, but it must not silently
+  override Jini artifacts or route evidence
 
 ## Security And Privacy
 

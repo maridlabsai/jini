@@ -16,6 +16,10 @@ class FreeTierValueSplitDocsTests(unittest.TestCase):
             "structural token savings",
             "context compaction",
             "artifact reuse instead of transcript replay",
+            "offline-first continuation when the device can keep working locally",
+            "explicit offline mode and reconciliation-debt visibility",
+            "Claude Code, Codex, or",
+            "GitHub CLI when the same Jini session goes offline",
             "## Upgrade Trigger",
             "provider-specific optimization",
             "subscription-limit forecasting",
@@ -24,6 +28,7 @@ class FreeTierValueSplitDocsTests(unittest.TestCase):
             "changing the model or local profile for the task based on task shape",
             "automatic platform switching across managed routes when throttling or quotas",
             "task-shaped model and profile selection across local and managed routes",
+            "online-capability detection, reconciliation scheduling, and managed recovery",
             "free structural efficiency patterns",
         ):
             with self.subTest(marker=marker):

@@ -84,12 +84,21 @@ class LeanPlatformDoctrineDocsTests(unittest.TestCase):
             "throttle-driven platform switching should be automatic",
             "task-shaped model selection should choose the smallest model or profile",
             "can do the job well, then escalate only when the task truly needs more depth",
+            "whether Jini is currently operating in offline mode",
+            "whether online capability is currently available",
+            "what reconciliation debt was accrued while working offline",
+            "Claude Code, Codex, or GitHub CLI",
             "throttle-avoided-interruption-rate",
             "platform-switch-success-rate",
             "task-to-model-fit accuracy",
+            "offline-mode-transparency-rate",
+            "reconciliation-debt-clearance-rate",
+            "imported-context-reuse-rate",
             "## Reject Conditions",
             "compatibility aliases should not be taught",
             "add a supported surface that cannot resume the same session model",
+            "hide that Jini is operating offline",
+            "lose or silently ignore reconciliation debt",
         ]
         for marker in required_markers:
             with self.subTest(marker=marker):
