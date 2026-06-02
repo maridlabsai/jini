@@ -2,6 +2,10 @@ from __future__ import annotations
 
 import unittest
 from pathlib import Path
+import json
+import os
+import subprocess
+import tempfile
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -9,6 +13,8 @@ PLAN_PATH = ROOT / "specs" / "jini-next-initiative-plan.md"
 ARCHIVE_PATH = ROOT / "docs" / "archive" / "2026-06-02-codebase-snapshot-manifest.md"
 PERSONAS_PATH = ROOT / "specs" / "dogfood-personas.yaml"
 DOCTRINE_PATH = ROOT / "specs" / "lean-platform-doctrine.md"
+PUBLISH_TOOL_PATH = ROOT / "tools" / "jini_validate.py"
+CLI = ["/usr/bin/python3", str(ROOT / "tools" / "jini.py")]
 
 
 def read(path: Path) -> str:
@@ -17,6 +23,30 @@ def read(path: Path) -> str:
 
 class JiniNextInitiativePlanDocsTests(unittest.TestCase):
     maxDiff = None
+
+    def setUp(self) -> None:
+        self.temp_dir = tempfile.TemporaryDirectory(prefix="jini-next-initiative-tests-")
+        self.tmp = Path(self.temp_dir.name)
+
+    def tearDown(self) -> None:
+        self.temp_dir.cleanup()
+
+    def run_cli(self, *args: object) -> subprocess.CompletedProcess[str]:
+        env = dict(os.environ)
+        env["JINI_STATE_DIR"] = str((self.tmp / ".jini").resolve())
+        return subprocess.run(
+            [*CLI, *[str(arg) for arg in args]],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            env=env,
+        )
+
+    def assert_ok(self, result: subprocess.CompletedProcess[str]) -> None:
+        if result.returncode != 0:
+            self.fail(
+                f"Expected command to succeed.\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
+            )
 
     def test_plan_exists_and_covers_strategy_pillars(self) -> None:
         text = read(PLAN_PATH)
@@ -97,6 +127,28 @@ class JiniNextInitiativePlanDocsTests(unittest.TestCase):
             ),
         )
         self.assertEqual(1, text.count("offline mode should be visible to the user instead of being inferred later"))
+
+    def test_publish_readiness_includes_next_initiative_contract(self) -> None:
+        publish_tool = read(PUBLISH_TOOL_PATH)
+        self.assertIn("jini-next-initiative-plan.md", publish_tool)
+        self.assertIn("2026-06-02-codebase-snapshot-manifest.md", publish_tool)
+        self.assertIn("next-initiative", publish_tool)
+
+        result = self.run_cli("publish-readiness", "--format", "json")
+        self.assert_ok(result)
+        report = json.loads(result.stdout)
+        sections = {section["id"]: section for section in report["sections"]}
+        self.assertEqual("ok", sections["next-initiative"]["status"])
+        checks = sections["next-initiative"]["checks"]
+        self.assertTrue(
+            any(check.get("path") == "specs/jini-next-initiative-plan.md" for check in checks)
+        )
+        self.assertTrue(
+            any(
+                check.get("path") == "docs/archive/2026-06-02-codebase-snapshot-manifest.md"
+                for check in checks
+            )
+        )
 
 
 if __name__ == "__main__":

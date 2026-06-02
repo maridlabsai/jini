@@ -109,6 +109,8 @@ FRICTION_REDUCTION_RESEARCH_PATH = ROOT / "specs" / "friction-reduction-research
 FRICTION_REDUCTION_GATE_PATH = ROOT / "specs" / "friction-reduction-gate.md"
 LEAN_PLATFORM_DOCTRINE_PATH = ROOT / "specs" / "lean-platform-doctrine.md"
 LEAN_PLATFORM_GATE_PATH = ROOT / "specs" / "lean-platform-gate.md"
+NEXT_INITIATIVE_PLAN_PATH = ROOT / "specs" / "jini-next-initiative-plan.md"
+CODEBASE_SNAPSHOT_MANIFEST_PATH = ROOT / "docs" / "archive" / "2026-06-02-codebase-snapshot-manifest.md"
 CLI_DOC_PATH = ROOT / "docs" / "cli.md"
 DEVICE_CAPABILITY_ROUTING_PATH = ROOT / "specs" / "device-capability-routing.md"
 DEVICE_RUNTIME_GATE_PATH = ROOT / "specs" / "device-runtime-gate.md"
@@ -4272,6 +4274,56 @@ def build_publish_readiness() -> dict[str, Any]:
         "status": "ok" if all(item["status"] == "ok" for item in lean_platform_checks) else "warning",
         "checks": lean_platform_checks,
     }
+    next_initiative_requirements = [
+        {
+            "path": NEXT_INITIATIVE_PLAN_PATH,
+            "markers": [
+                "# Jini Next Initiative Plan",
+                "## Archive Before Change",
+                "## Architect Verdict",
+                "move the execution kernel to Go",
+                "keep Python as the compatibility shell",
+                "### Software Engineer",
+                "### College Student",
+                "### High School Student",
+                "### Realtor",
+                "## SLO And SLA Framework",
+                "offline continuation success rate",
+                "adaptive platform switch success rate",
+                "### Phase 2: Go Kernel Slice",
+            ],
+        },
+        {
+            "path": CODEBASE_SNAPSHOT_MANIFEST_PATH,
+            "markers": [
+                "# Codebase Snapshot Manifest",
+                "jini-fe5b94e.bundle",
+                "jini-commercial-b40ebff.bundle",
+                "git clone /Users/sharad.sharma/Developer/jini-archives/2026-06-02/jini-fe5b94e.bundle jini-restored",
+                "git clone /Users/sharad.sharma/Developer/jini-archives/2026-06-02/jini-commercial-b40ebff.bundle jini-commercial-restored",
+            ],
+        },
+    ]
+    next_initiative_checks: list[dict[str, Any]] = []
+    for requirement in next_initiative_requirements:
+        path = requirement["path"]
+        markers = [str(marker) for marker in requirement["markers"]]
+        text = path.read_text(encoding="utf-8") if path.exists() else ""
+        normalized_text = text.lower()
+        missing_markers = [marker for marker in markers if marker.lower() not in normalized_text]
+        next_initiative_checks.append(
+            {
+                "path": display_path(path),
+                "exists": path.exists(),
+                "markers": markers,
+                "missing_markers": missing_markers,
+                "status": "ok" if path.exists() and not missing_markers else "warning",
+            }
+        )
+    next_initiative_gate = {
+        "status": "ok" if all(item["status"] == "ok" for item in next_initiative_checks) else "warning",
+        "checks": next_initiative_checks,
+    }
     lean_platform_metrics = build_lean_platform_metrics()
     open_source_prompt_report = validate_open_source_prompt_corpus()
     public_boundary_report = validate_public_repo_boundary()
@@ -4380,6 +4432,12 @@ def build_publish_readiness() -> dict[str, Any]:
                     "measurement": lean_platform_metrics,
                 },
             ],
+        },
+        {
+            "id": "next-initiative",
+            "label": "Next initiative contract",
+            "status": next_initiative_gate["status"],
+            "checks": next_initiative_gate["checks"],
         },
         {
             "id": "open-source-prompt-validation",
