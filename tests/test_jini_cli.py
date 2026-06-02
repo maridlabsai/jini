@@ -2925,6 +2925,28 @@ class JiniCliConformanceTests(unittest.TestCase):
         )
         self.assertLessEqual(tighter_resume_payload["token_budget"]["estimated_chars"], 750)
 
+        minimal_resume_result = self.run_cli(
+            "resume",
+            pack_dir,
+            "--runtime-target",
+            "kiro-cli",
+            "--format",
+            "json",
+            "--max-chars",
+            "600",
+            env=env,
+        )
+        self.assert_ok(minimal_resume_result)
+        minimal_resume_payload = json.loads(minimal_resume_result.stdout)
+        self.assertEqual("local-workhorse", minimal_resume_payload["runtime_readout"]["route"])
+        self.assertEqual("kiro-cli", minimal_resume_payload["runtime_target"]["selected"])
+        self.assertTrue(
+            minimal_resume_payload["runtime_readout"]["reason"].startswith(
+                "State `operational` requires stronger verification posture; Preferred adapter `kiro-cli` was ..."
+            )
+        )
+        self.assertLessEqual(minimal_resume_payload["token_budget"]["estimated_chars"], 600)
+
     def test_route_outcome_feedback_self_corrects_measured_local_selection(self) -> None:
         pack_dir = self.compile_research_pack()
         state_root = self.tmp / ".jini"

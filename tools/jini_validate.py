@@ -12157,6 +12157,29 @@ def build_compact_context(
             efficiency = compact.get("efficiency_posture", {})
             if isinstance(efficiency, dict) and efficiency.get("context_policy"):
                 efficiency.pop("context_policy", None)
+        if compact_chars(compact) > max_chars:
+            if compact.get("recent_artifacts") == []:
+                compact.pop("recent_artifacts", None)
+        if compact_chars(compact) > max_chars:
+            efficiency = compact.get("efficiency_posture", {})
+            if isinstance(efficiency, dict) and "cheap_path" in efficiency:
+                efficiency.pop("cheap_path", None)
+        if compact_chars(compact) > max_chars:
+            efficiency = compact.get("efficiency_posture", {})
+            if (
+                isinstance(efficiency, dict)
+                and compact.get("execution_class")
+                and compact.get("execution_class") == efficiency.get("execution_class")
+            ):
+                compact.pop("execution_class", None)
+        if compact_chars(compact) > max_chars:
+            efficiency = compact.get("efficiency_posture", {})
+            if (
+                isinstance(efficiency, dict)
+                and compact.get("intent")
+                and compact.get("intent") == efficiency.get("intent")
+            ):
+                compact.pop("intent", None)
     final_chars = compact_chars(compact)
     compact["token_budget"] = {
         "max_chars": max_chars,
@@ -25467,9 +25490,12 @@ def main() -> int:
             {
                 "pack_id": compact["pack_id"],
                 "work_unit_id": compact["work_unit_id"],
-                "intent": compact["intent"],
+                "intent": compact.get("intent", compact.get("efficiency_posture", {}).get("intent", "")),
                 "state": compact["state"],
-                "execution_class": compact["execution_class"],
+                "execution_class": compact.get(
+                    "execution_class",
+                    compact.get("efficiency_posture", {}).get("execution_class", ""),
+                ),
                 "resume_item_count": len(compact.get("resume_items", [])),
                 "stale_signal_count": len(compact.get("stale_signals", [])),
                 "estimated_tokens": compact.get("token_budget", {}).get("estimated_tokens", 0),
