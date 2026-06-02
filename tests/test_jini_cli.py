@@ -2453,6 +2453,24 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertTrue(any("Claude Code context" in summary for summary in imported_inputs.values()))
         self.assertTrue(any("Codex context" in summary for summary in imported_inputs.values()))
         self.assertTrue(any("GitHub context" in summary for summary in imported_inputs.values()))
+        imported_context = status_payload.get("imported_context", [])
+        self.assertEqual(3, len(imported_context))
+        self.assertTrue(any("Remember the repo conventions." in str(item.get("snapshot_markdown", "")) for item in imported_context))
+        self.assertTrue(any("Prefer the active artifact." in str(item.get("snapshot_markdown", "")) for item in imported_context))
+        self.assertTrue(any("Keep issue updates concise." in str(item.get("snapshot_markdown", "")) for item in imported_context))
+
+        (self.tmp / "CLAUDE.md").unlink()
+        (self.tmp / "AGENTS.md").unlink()
+        (github_dir / "copilot-instructions.md").unlink()
+
+        status_after_delete = self.run_cli("status", pack_dir, "--format", "json", env=env)
+        self.assert_ok(status_after_delete)
+        status_after_delete_payload = json.loads(status_after_delete.stdout)
+        imported_context_after_delete = status_after_delete_payload.get("imported_context", [])
+        self.assertEqual(3, len(imported_context_after_delete))
+        self.assertTrue(any("Remember the repo conventions." in str(item.get("snapshot_markdown", "")) for item in imported_context_after_delete))
+        self.assertTrue(any("Prefer the active artifact." in str(item.get("snapshot_markdown", "")) for item in imported_context_after_delete))
+        self.assertTrue(any("Keep issue updates concise." in str(item.get("snapshot_markdown", "")) for item in imported_context_after_delete))
 
         status_text = self.run_cli("status", pack_dir, env=env)
         self.assert_ok(status_text)
@@ -2478,6 +2496,9 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual(3, resume_readout["imported_context_count"])
         self.assertIn("Jini is operating in offline mode", resume_readout["reason"])
         self.assertIn("Imported framework context remains available offline", resume_readout["reason"])
+        resume_imported_context = resume_payload.get("imported_context", [])
+        self.assertGreaterEqual(len(resume_imported_context), 1)
+        self.assertTrue(any("Remember the repo conventions." in str(item.get("snapshot_markdown", "")) for item in resume_imported_context))
 
     def test_runtime_readouts_explain_when_no_ready_local_route_is_available(self) -> None:
         pack_dir = self.compile_research_pack()
@@ -4477,6 +4498,46 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertEqual("test-travel-pack", compact["work_unit_id"])
         self.assertTrue(compact["resume_items"])
         self.assertIn("saved session projection", compact["stale_signals"][0])
+
+    def test_pathless_projection_resume_keeps_imported_framework_context(self) -> None:
+        pack_dir = self.compile_research_pack()
+        (self.tmp / ".git").mkdir(parents=True, exist_ok=True)
+        (self.tmp / "CLAUDE.md").write_text("# Claude context\n\nRemember the repo conventions.\n", encoding="utf-8")
+        (self.tmp / "AGENTS.md").write_text("# Codex context\n\nPrefer the active artifact.\n", encoding="utf-8")
+        github_dir = self.tmp / ".github"
+        github_dir.mkdir(parents=True, exist_ok=True)
+        (github_dir / "copilot-instructions.md").write_text(
+            "# GitHub context\n\nKeep issue updates concise.\n",
+            encoding="utf-8",
+        )
+
+        status_refresh = self.run_cli("status", pack_dir, "--format", "json")
+        self.assert_ok(status_refresh)
+
+        shutil.rmtree(pack_dir)
+        (self.tmp / "CLAUDE.md").unlink()
+        (self.tmp / "AGENTS.md").unlink()
+        (github_dir / "copilot-instructions.md").unlink()
+        current_work = self.tmp / ".jini" / "current-work.json"
+        current_work.unlink()
+
+        status_result = self.run_cli("status", "--format", "json")
+        self.assert_ok(status_result)
+        status_payload = json.loads(status_result.stdout)
+        self.assertEqual("session-only", status_payload["health"])
+        status_imported_context = status_payload.get("imported_context", [])
+        self.assertEqual(3, len(status_imported_context))
+        self.assertTrue(any("Remember the repo conventions." in str(item.get("snapshot_markdown", "")) for item in status_imported_context))
+        self.assertTrue(any("Prefer the active artifact." in str(item.get("snapshot_markdown", "")) for item in status_imported_context))
+        self.assertTrue(any("Keep issue updates concise." in str(item.get("snapshot_markdown", "")) for item in status_imported_context))
+
+        result = self.run_cli("resume", "--format", "json", "--max-chars", "1600")
+        self.assert_ok(result)
+        compact = json.loads(result.stdout)
+        self.assertEqual("projection-resume", compact["execution_class"])
+        self.assertEqual("test-research-pack", compact["work_unit_id"])
+        self.assertEqual(2, compact["runtime_readout"]["imported_context_count"])
+        self.assertIn("Imported framework context remains available offline", compact["runtime_readout"]["reason"])
 
     def test_pathless_resume_prefers_saved_focus_when_pack_is_missing(self) -> None:
         pack_dir = self.compile_travel_pack()

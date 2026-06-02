@@ -193,6 +193,41 @@ def discover_framework_context_files(pack_dir: Path) -> list[dict[str, str]]:
     return discovered
 
 
+def _framework_context_input_item(
+    *,
+    session_id: str,
+    framework_id: str,
+    label: str,
+    origin_ref: str,
+    path: str,
+    updated_at: str,
+) -> dict[str, Any]:
+    snapshot_markdown, snapshot_trimmed = _build_snapshot_markdown(Path(path), max_chars=320)
+    preview = _compact_preview(
+        snapshot_markdown or f"{label} context attached from {origin_ref} for offline continuation.",
+        max_chars=220,
+    )
+    return normalize_input_item(
+        {
+            "input_id": f"framework-context:{framework_id}:{origin_ref}",
+            "thread_id": session_id,
+            "kind": "file",
+            "title": f"{label} context",
+            "source_actor": framework_id,
+            "status": "processed",
+            "preview": preview,
+            "origin_ref": origin_ref,
+            "derived_artifact_ids": [],
+            "created_at": updated_at,
+            "updated_at": updated_at,
+            "extraction_status": "extracted",
+            "extraction_summary": f"Imported local {label} context from {origin_ref} so Jini can reuse it offline.",
+            "snapshot_markdown": snapshot_markdown,
+            "snapshot_trimmed": snapshot_trimmed,
+        }
+    )
+
+
 def normalize_input_item(item: dict[str, Any]) -> dict[str, Any]:
     normalized = dict(item)
     extraction_status = _input_extraction_status(normalized)
@@ -216,6 +251,7 @@ def build_input_items(
 ) -> list[dict[str, Any]]:
     previous_initial: dict[str, Any] = {}
     preserved_items: list[dict[str, Any]] = []
+    previous_framework_items: dict[str, dict[str, Any]] = {}
     if isinstance(previous_projection, dict):
         previous_items = previous_projection.get("input_items")
         if isinstance(previous_items, list) and previous_items:
@@ -223,7 +259,9 @@ def build_input_items(
                 if isinstance(item, dict) and item.get("input_id") == "initial-request":
                     previous_initial = item
                 elif isinstance(item, dict) and str(item.get("input_id", "")).strip().startswith("framework-context:"):
-                    continue
+                    input_id = str(item.get("input_id", "")).strip()
+                    if input_id:
+                        previous_framework_items[input_id] = normalize_input_item(item)
                 elif isinstance(item, dict):
                     preserved_items.append(normalize_input_item(item))
 
@@ -258,28 +296,23 @@ def build_input_items(
         }
     )
 
-    framework_items = [
-        normalize_input_item(
-            {
-                "input_id": f"framework-context:{item['framework_id']}:{item['origin_ref']}",
-                "thread_id": session_id,
-                "kind": "file",
-                "title": f"{item['label']} context",
-                "source_actor": item["framework_id"],
-                "status": "processed",
-                "preview": _compact_preview(
-                    f"{item['label']} context attached from {item['origin_ref']} for offline continuation."
-                ),
-                "origin_ref": item["origin_ref"],
-                "derived_artifact_ids": [],
-                "created_at": updated_at,
-                "updated_at": updated_at,
-                "extraction_status": "extracted",
-                "extraction_summary": f"Imported local {item['label']} context from {item['origin_ref']} so Jini can reuse it offline.",
-            }
+    discovered_framework_items: dict[str, dict[str, Any]] = {}
+    for item in discover_framework_context_files(pack_dir):
+        input_id = f"framework-context:{item['framework_id']}:{item['origin_ref']}"
+        discovered_framework_items[input_id] = _framework_context_input_item(
+            session_id=session_id,
+            framework_id=item["framework_id"],
+            label=item["label"],
+            origin_ref=item["origin_ref"],
+            path=item["path"],
+            updated_at=updated_at,
         )
-        for item in discover_framework_context_files(pack_dir)
-    ]
+    framework_items = []
+    for input_id in sorted(set(previous_framework_items) | set(discovered_framework_items)):
+        if input_id in discovered_framework_items:
+            framework_items.append(discovered_framework_items[input_id])
+        else:
+            framework_items.append(previous_framework_items[input_id])
 
     return [
         initial_item,

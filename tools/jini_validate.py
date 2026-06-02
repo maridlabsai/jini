@@ -11707,6 +11707,11 @@ def build_compact_context(
     latest_run = latest_run_report_summary(pack_dir)
     latest_harvest = latest_harvest_report_summary(pack_dir)
     publication_links = memory_context.get("publication_links", [])[: max(1, min(max_items, 3))]
+    imported_context = imported_framework_context_for_pack(
+        pack_dir,
+        max_items=min(max(1, max_items), 2),
+        snapshot_max_chars=120,
+    ).get("items", [])
 
     def shorten_path(path_text: Any) -> str:
         if not isinstance(path_text, str) or not path_text.strip():
@@ -11770,6 +11775,7 @@ def build_compact_context(
         "unresolved_tasks": unresolved_tasks,
         "repo_root": repo_context.get("repo_root", ""),
         "repo_actions": repo_actions,
+        "imported_context": imported_context,
         "steering": memory_context.get("steering_paths", [])[: max(1, max_items)],
         "runtime_target": {
             "selected": recommendation["runtime_guidance"]["selected"]["id"],
@@ -11820,7 +11826,18 @@ def build_compact_context(
         )
 
     def shrink_compact(payload: dict[str, Any]) -> bool:
-        for key in ("steering", "resume_items", "home_memory", "repo_actions", "stale_signals", "unresolved_tasks", "recent_artifacts", "freshness", "publication_links"):
+        for key in (
+            "steering",
+            "resume_items",
+            "home_memory",
+            "repo_actions",
+            "stale_signals",
+            "unresolved_tasks",
+            "recent_artifacts",
+            "freshness",
+            "publication_links",
+            "imported_context",
+        ):
             values = payload.get(key, [])
             if isinstance(values, list) and len(values) > 1:
                 payload[key] = values[:-1]
@@ -11861,7 +11878,7 @@ def build_compact_context(
         if isinstance(payload.get("repo_root"), str) and payload["repo_root"]:
             payload["repo_root"] = Path(payload["repo_root"]).name
             return True
-        for key in ("publication_links", "stale_signals", "home_memory", "freshness", "repo_actions", "steering"):
+        for key in ("publication_links", "stale_signals", "home_memory", "freshness", "repo_actions", "steering", "imported_context"):
             if payload.get(key) == []:
                 payload.pop(key, None)
                 return True
@@ -18505,8 +18522,81 @@ def collect_reconciliation_debt(pack_dir: Path) -> dict[str, Any]:
     return {"count": count, "summary": summary, "items": items}
 
 
-def summarize_imported_framework_context(pack_dir: Path) -> dict[str, Any]:
-    items = discover_framework_context_files(pack_dir)
+def collect_imported_framework_context_items(
+    input_items: list[dict[str, Any]],
+    *,
+    max_items: int = 3,
+    snapshot_max_chars: int = 260,
+) -> list[dict[str, Any]]:
+    collected: list[dict[str, Any]] = []
+    for item in input_items:
+        if not isinstance(item, dict):
+            continue
+        input_id = str(item.get("input_id", "")).strip()
+        if not input_id.startswith("framework-context:"):
+            continue
+        label = str(item.get("title", "")).strip() or "Framework context"
+        origin_ref = str(item.get("origin_ref", "")).strip()
+        snapshot_markdown = str(item.get("snapshot_markdown", "")).strip()
+        snapshot_trimmed = bool(item.get("snapshot_trimmed", False))
+        if snapshot_markdown:
+            snapshot_markdown, extra_trimmed = build_terminal_preview(
+                snapshot_markdown,
+                max_chars=snapshot_max_chars,
+            )
+            snapshot_trimmed = snapshot_trimmed or extra_trimmed
+        else:
+            fallback_snapshot = (
+                str(item.get("preview", "")).strip()
+                or str(item.get("extraction_summary", "")).strip()
+            )
+            if fallback_snapshot:
+                snapshot_markdown, extra_trimmed = build_terminal_preview(
+                    fallback_snapshot,
+                    max_chars=min(snapshot_max_chars, 180),
+                )
+                snapshot_trimmed = snapshot_trimmed or extra_trimmed
+        collected.append(
+            {
+                "input_id": input_id,
+                "label": label.replace(" context", "").strip() or label,
+                "origin_ref": origin_ref,
+                "snapshot_markdown": snapshot_markdown,
+                "snapshot_trimmed": snapshot_trimmed,
+            }
+        )
+        if len(collected) >= max_items:
+            break
+    return collected
+
+
+def imported_framework_context_for_pack(
+    pack_dir: Path,
+    *,
+    max_items: int = 3,
+    snapshot_max_chars: int = 260,
+) -> dict[str, Any]:
+    input_items: list[dict[str, Any]] = []
+    context = current_session_context_for_pack(pack_dir)
+    projection = context.get("projection", {}) if isinstance(context, dict) else {}
+    raw_input_items = projection.get("input_items", []) if isinstance(projection, dict) else []
+    if isinstance(raw_input_items, list):
+        input_items = [normalize_input_item(item) for item in raw_input_items if isinstance(item, dict)]
+    items = collect_imported_framework_context_items(
+        input_items,
+        max_items=max_items,
+        snapshot_max_chars=snapshot_max_chars,
+    )
+    if not items:
+        for item in discover_framework_context_files(pack_dir)[:max_items]:
+            items.append(
+                {
+                    "label": item["label"],
+                    "origin_ref": item["origin_ref"],
+                    "snapshot_markdown": "",
+                    "snapshot_trimmed": False,
+                }
+            )
     if not items:
         return {"count": 0, "summary": "", "items": []}
     labels = [f"{item['label']} ({item['origin_ref']})" for item in items[:3]]
@@ -18516,6 +18606,10 @@ def summarize_imported_framework_context(pack_dir: Path) -> dict[str, Any]:
         summary += f", plus {remaining} more"
     summary += "."
     return {"count": len(items), "summary": summary, "items": items}
+
+
+def summarize_imported_framework_context(pack_dir: Path) -> dict[str, Any]:
+    return imported_framework_context_for_pack(pack_dir, max_items=3, snapshot_max_chars=260)
 
 
 def build_runtime_readout(
@@ -19498,6 +19592,11 @@ def build_outcome_view(
         route_snapshot["route_cost"],
         route_snapshot["route_payload"],
     )
+    imported_framework_context = imported_framework_context_for_pack(
+        pack_dir,
+        max_items=3,
+        snapshot_max_chars=260,
+    )
     runtime_readout = build_runtime_readout(
         recommendation,
         pack_dir=pack_dir,
@@ -19539,6 +19638,7 @@ def build_outcome_view(
             "summary": progress_snapshot.get("working_with_summary", "") if isinstance(progress_snapshot, dict) else "",
             "input_items": input_items,
         },
+        "imported_context": imported_framework_context.get("items", []),
         "input_items": input_items,
         "artifact_shelf": artifact_shelf,
         "artifact_cards": artifact_cards,
@@ -19636,6 +19736,40 @@ def build_outcome_view_from_projection(
             "Pack files are unavailable, so Jini uses the saved projection before reloading larger context."
         ],
     }
+    imported_framework_context = {
+        "count": 0,
+        "summary": "",
+        "items": collect_imported_framework_context_items(
+            input_items,
+            max_items=3,
+            snapshot_max_chars=260,
+        ),
+    }
+    if imported_framework_context["items"]:
+        labels = [
+            f"{item['label']} ({item['origin_ref']})"
+            for item in imported_framework_context["items"][:3]
+        ]
+        imported_framework_context["count"] = len(imported_framework_context["items"])
+        imported_framework_context["summary"] = (
+            "Imported framework context remains available offline: " + ", ".join(labels) + "."
+        )
+    runtime_readout = build_runtime_readout(
+        efficiency_posture=efficiency_posture,
+        route=turn_record.get("route_decision", {}) if isinstance(turn_record, dict) else {},
+        selection_mode="projection",
+        model="saved session projection",
+    )
+    if imported_framework_context["count"]:
+        runtime_readout["imported_context_count"] = imported_framework_context["count"]
+        runtime_readout["imported_context_summary"] = imported_framework_context["summary"]
+        reason = str(runtime_readout.get("reason", "")).strip()
+        if imported_framework_context["summary"] not in reason:
+            runtime_readout["reason"] = (
+                f"{reason} {imported_framework_context['summary']}".strip()
+                if reason
+                else imported_framework_context["summary"]
+            )
     return {
         "schema_version": "0.1.0",
         "view_type": "JiniOutcomeView",
@@ -19647,12 +19781,7 @@ def build_outcome_view_from_projection(
         "state": str(context.get("state", "")),
         "next_operation": next_operation,
         "efficiency_posture": efficiency_posture,
-        "runtime_readout": build_runtime_readout(
-            efficiency_posture=efficiency_posture,
-            route=turn_record.get("route_decision", {}) if isinstance(turn_record, dict) else {},
-            selection_mode="projection",
-            model="saved session projection",
-        ),
+        "runtime_readout": runtime_readout,
         "task_summary": {
             "done": task_done,
             "total": task_done,
@@ -19668,6 +19797,7 @@ def build_outcome_view_from_projection(
             "summary": progress_snapshot.get("working_with_summary", "") if isinstance(progress_snapshot, dict) else "",
             "input_items": input_items,
         },
+        "imported_context": imported_framework_context["items"],
         "input_items": input_items,
         "artifact_shelf": artifact_shelf,
         "artifact_cards": artifact_cards,
@@ -19721,6 +19851,28 @@ def build_compact_context_from_projection(
             "Pack files are unavailable, so Jini uses the saved projection before reloading larger context."
         ],
     }
+    input_items = projection.get("input_items", [])
+    if not isinstance(input_items, list):
+        input_items = []
+    imported_context = collect_imported_framework_context_items(
+        [normalize_input_item(item) for item in input_items if isinstance(item, dict)],
+        max_items=2,
+        snapshot_max_chars=120,
+    )
+    runtime_readout = build_runtime_readout(
+        efficiency_posture=efficiency_posture,
+        route=projection.get("route", {}) if isinstance(projection.get("route", {}), dict) else {},
+        selection_mode="projection",
+        model="saved session projection",
+    )
+    if imported_context:
+        labels = [f"{item['label']} ({item['origin_ref']})" for item in imported_context[:2]]
+        imported_summary = "Imported framework context remains available offline: " + ", ".join(labels) + "."
+        runtime_readout["imported_context_count"] = len(imported_context)
+        runtime_readout["imported_context_summary"] = imported_summary
+        reason = str(runtime_readout.get("reason", "")).strip()
+        if imported_summary not in reason:
+            runtime_readout["reason"] = f"{reason} {imported_summary}".strip() if reason else imported_summary
 
     compact = {
         "schema_version": "0.1.0",
@@ -19733,12 +19885,7 @@ def build_compact_context_from_projection(
         "health": "session-only",
         "execution_class": execution_class,
         "efficiency_posture": efficiency_posture,
-        "runtime_readout": build_runtime_readout(
-            efficiency_posture=efficiency_posture,
-            route=projection.get("route", {}) if isinstance(projection.get("route", {}), dict) else {},
-            selection_mode="projection",
-            model="saved session projection",
-        ),
+        "runtime_readout": runtime_readout,
         "next_operation": str(projection.get("next", "")),
         "current_focus": (
             {
@@ -19775,6 +19922,7 @@ def build_compact_context_from_projection(
         "unresolved_tasks": [{"task": str(item).strip(), "status": "pending"} for item in missing[:4] if str(item).strip()],
         "repo_root": display_path(repo_path) if repo_path is not None else "",
         "repo_actions": [],
+        "imported_context": imported_context,
         "steering": [],
         "runtime_target": {
             "selected": "session-projection",
@@ -19786,6 +19934,32 @@ def build_compact_context_from_projection(
     estimated_chars = len(json.dumps(compact, sort_keys=True))
     if estimated_chars > max_chars and len(compact["resume_items"]) > 2:
         compact["resume_items"] = compact["resume_items"][:2]
+        estimated_chars = len(json.dumps(compact, sort_keys=True))
+    for key in ("publication_links", "repo_actions", "steering", "home_memory", "freshness"):
+        if estimated_chars > max_chars and compact.get(key) == []:
+            compact.pop(key, None)
+            estimated_chars = len(json.dumps(compact, sort_keys=True))
+    for key in ("latest_run", "latest_harvest"):
+        if estimated_chars > max_chars and compact.get(key) is None:
+            compact.pop(key, None)
+            estimated_chars = len(json.dumps(compact, sort_keys=True))
+    if estimated_chars > max_chars and not str(compact.get("repo_root", "")).strip():
+        compact.pop("repo_root", None)
+        estimated_chars = len(json.dumps(compact, sort_keys=True))
+    if estimated_chars > max_chars:
+        runtime_target = compact.get("runtime_target", {})
+        if (
+            isinstance(runtime_target, dict)
+            and runtime_target.get("selected")
+            and runtime_target.get("fallbacks") == []
+        ):
+            compact["runtime_target"] = {"selected": runtime_target["selected"]}
+            estimated_chars = len(json.dumps(compact, sort_keys=True))
+    if estimated_chars > max_chars and len(compact.get("imported_context", [])) > 1:
+        compact["imported_context"] = compact["imported_context"][:1]
+        estimated_chars = len(json.dumps(compact, sort_keys=True))
+    if estimated_chars > max_chars and compact.get("imported_context"):
+        compact.pop("imported_context", None)
         estimated_chars = len(json.dumps(compact, sort_keys=True))
     compact["token_budget"] = {
         "max_chars": max_chars,
