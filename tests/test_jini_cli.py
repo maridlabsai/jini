@@ -2611,6 +2611,65 @@ class JiniCliConformanceTests(unittest.TestCase):
             )
         )
 
+    def test_runtime_readouts_surface_managed_runtime_target_fallback_reason(self) -> None:
+        pack_dir = self.compile_research_pack()
+        work_unit_path = pack_dir / "work-unit.yaml"
+        work_unit_text = work_unit_path.read_text(encoding="utf-8")
+        self.assertIn("current_state: decided", work_unit_text)
+        work_unit_path.write_text(
+            work_unit_text.replace("current_state: decided", "current_state: operational"),
+            encoding="utf-8",
+        )
+        rollout_dir = pack_dir / "runtime" / "policy-rollouts"
+        rollout_dir.mkdir(parents=True, exist_ok=True)
+        (rollout_dir / "runtime-routing-active.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": "0.1.0",
+                    "policy_type": "JiniPolicyRollout",
+                    "policy_id": "runtime-routing",
+                    "candidate_id": "runtime-readout-managed-fallback-test",
+                    "status": "active",
+                    "recommended_runtime_target": "kiro-cli",
+                    "intent_overrides": {},
+                    "route_feedback_drivers": {},
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        env = os.environ.copy()
+        env["JINI_RUNTIME_TARGET_HEALTH"] = "kiro-cli=throttled"
+
+        status_result = self.run_cli("status", pack_dir, "--format", "json", env=env)
+        self.assert_ok(status_result)
+        status_payload = json.loads(status_result.stdout)
+        self.assertEqual("deep", status_payload["efficiency_posture"]["execution_class"])
+        self.assertEqual(
+            "State `operational` requires stronger verification posture; "
+            "Policy-preferred adapter `kiro-cli` is `throttled`; switched to `codex` for a healthier runtime target from env.",
+            status_payload["runtime_readout"]["reason"],
+        )
+
+        resume_result = self.run_cli(
+            "resume",
+            pack_dir,
+            "--format",
+            "json",
+            "--max-chars",
+            "1200",
+            env=env,
+        )
+        self.assert_ok(resume_result)
+        resume_payload = json.loads(resume_result.stdout)
+        self.assertEqual("deep", resume_payload["efficiency_posture"]["execution_class"])
+        self.assertEqual(
+            "State `operational` requires stronger verification posture; "
+            "Policy-preferred adapter `kiro-cli` is `throttled`; switched to `codex` for a healthier runtime target from env.",
+            resume_payload["runtime_readout"]["reason"],
+        )
+
     def test_route_outcome_feedback_self_corrects_measured_local_selection(self) -> None:
         pack_dir = self.compile_research_pack()
         state_root = self.tmp / ".jini"

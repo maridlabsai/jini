@@ -1469,6 +1469,30 @@ def select_runtime_execution_reason(
     return items[0], False
 
 
+def select_runtime_guidance_reason(notes: list[Any] | tuple[Any, ...] | None) -> str:
+    if not isinstance(notes, (list, tuple)):
+        return ""
+    items = [str(item).strip() for item in notes if str(item).strip()]
+    if not items:
+        return ""
+    priority_needles = (
+        "switched to",
+        "recovered to `ready`",
+        "remained `",
+        "was selected explicitly",
+        "was selected.",
+        "does not expose capability",
+    )
+    for needle in priority_needles:
+        for item in items:
+            if needle in item.lower():
+                return item
+    for item in items:
+        if "highest-priority adapter" not in item.lower():
+            return item
+    return items[0]
+
+
 ROUTE_OUTCOME_COUNTERS = {
     "used-this": "outcome_used",
     "shared-this": "outcome_shared",
@@ -18178,6 +18202,13 @@ def build_runtime_readout(
                     readout["reason"] = f"{reason}; {route_reason}"
                 else:
                     readout["reason"] = route_reason
+        elif isinstance(runtime_guidance, dict):
+            guidance_reason = select_runtime_guidance_reason(runtime_guidance.get("notes", []))
+            if guidance_reason:
+                if preserve_execution_reason and reason and guidance_reason != reason:
+                    readout["reason"] = f"{reason}; {guidance_reason}"
+                else:
+                    readout["reason"] = guidance_reason
     return readout
 
 
