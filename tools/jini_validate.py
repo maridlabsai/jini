@@ -12192,6 +12192,18 @@ def build_compact_context(
             compact.pop("generated_at", None)
         if compact_chars(compact) > max_chars:
             compact.pop("health", None)
+        if compact_chars(compact) > max_chars:
+            if compact.get("resume_items") == []:
+                compact.pop("resume_items", None)
+        if compact_chars(compact) > max_chars:
+            efficiency = compact.get("efficiency_posture", {})
+            rationale = efficiency.get("rationale") if isinstance(efficiency, dict) else None
+            if rationale == []:
+                efficiency.pop("rationale", None)
+        if compact_chars(compact) > max_chars:
+            compact.pop("schema_version", None)
+        if compact_chars(compact) > max_chars:
+            compact.pop("context_type", None)
     final_chars = compact_chars(compact)
     compact["token_budget"] = {
         "max_chars": max_chars,
