@@ -356,8 +356,17 @@ func TestSelectLegacyPythonEntrypointRejectsUnrecognizedCurrentWorkingDirectoryS
 func TestFindExecutableLegacyPythonEntrypointUsesStagedSourceRuntime(t *testing.T) {
 	installRoot := t.TempDir()
 	stagedSourceRoot := filepath.Join(installRoot, "source-runtime")
+	if err := os.MkdirAll(filepath.Join(stagedSourceRoot, "cmd", "jini"), 0o755); err != nil {
+		t.Fatalf("mkdir staged cmd/jini: %v", err)
+	}
 	if err := os.MkdirAll(filepath.Join(stagedSourceRoot, "tools"), 0o755); err != nil {
 		t.Fatalf("mkdir staged tools: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(stagedSourceRoot, "go.mod"), []byte("module github.com/maridlabsai/jini\n"), 0o644); err != nil {
+		t.Fatalf("write staged go.mod: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(stagedSourceRoot, "cmd", "jini", "main.go"), []byte("package main\n"), 0o644); err != nil {
+		t.Fatalf("write staged main.go: %v", err)
 	}
 	expectedScriptPath := filepath.Join(stagedSourceRoot, "tools", "jini_validate.py")
 	if err := os.WriteFile(expectedScriptPath, []byte("print('staged')\n"), 0o755); err != nil {
@@ -392,6 +401,21 @@ func TestFindExecutableLegacyPythonEntrypointRejectsAncestorScriptHijack(t *test
 	sourceRoot, scriptPath, ok := findExecutableLegacyPythonEntrypoint(installRoot)
 	if ok {
 		t.Fatalf("expected ancestor script hijack to be rejected, got source=%q script=%q", sourceRoot, scriptPath)
+	}
+}
+
+func TestFindExecutableLegacyPythonEntrypointRejectsUnrecognizedDirectRootScript(t *testing.T) {
+	installRoot := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(installRoot, "tools"), 0o755); err != nil {
+		t.Fatalf("mkdir install tools: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(installRoot, "tools", "jini_validate.py"), []byte("print('direct-root')\n"), 0o755); err != nil {
+		t.Fatalf("write direct-root legacy script: %v", err)
+	}
+
+	sourceRoot, scriptPath, ok := findExecutableLegacyPythonEntrypoint(installRoot)
+	if ok {
+		t.Fatalf("expected unrecognized direct-root script to be rejected, got source=%q script=%q", sourceRoot, scriptPath)
 	}
 }
 
