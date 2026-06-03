@@ -84,6 +84,53 @@ func TestRunLegacyPythonDelegatesUnsupportedCommand(t *testing.T) {
 	}
 }
 
+func TestRunLegacyPythonRejectsProbeTimeScriptMutation(t *testing.T) {
+	root := createRecognizedLegacySourceRoot(t, "print('legacy-before-mutation')\n")
+	pythonPath := resolvePythonExecutableForTest(t)
+	scriptPath := filepath.Join(root, "tools", "jini_validate.py")
+	markerPath := filepath.Join(t.TempDir(), "probe-marker")
+	wrapperPath := filepath.Join(t.TempDir(), "python-wrapper")
+	wrapper := "#!/bin/sh\n" +
+		"printf 'used' > \"" + markerPath + "\"\n" +
+		"printf 'print(\\\"legacy-after-mutation\\\")\\n' > \"" + scriptPath + "\"\n" +
+		"exec \"" + pythonPath + "\" \"$@\"\n"
+	if err := os.WriteFile(wrapperPath, []byte(wrapper), 0o755); err != nil {
+		t.Fatalf("write wrapper: %v", err)
+	}
+
+	t.Setenv("JINI_SOURCE_DIR", root)
+	t.Setenv("JINI_LEGACY_PYTHON", wrapperPath)
+	t.Setenv("PATH", "")
+
+	previousDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	neutralDir := t.TempDir()
+	if err := os.Chdir(neutralDir); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer func() {
+		_ = os.Chdir(previousDir)
+	}()
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := runLegacyPython([]string{"publish-readiness", "--format", "json"}, nil, &stdout, &stderr)
+	if exitCode != 1 {
+		t.Fatalf("expected exit code 1, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+	if !strings.Contains(stderr.String(), `Could not run legacy Python command "publish-readiness": legacy entrypoint changed during launch`) {
+		t.Fatalf("expected mutation guard message, got:\n%s", stderr.String())
+	}
+	if strings.Contains(stdout.String(), "legacy-before-mutation") || strings.Contains(stdout.String(), "legacy-after-mutation") {
+		t.Fatalf("expected neither original nor mutated script to execute, got stdout:\n%s", stdout.String())
+	}
+	if _, err := os.Stat(markerPath); err != nil {
+		t.Fatalf("expected probe wrapper to run and create marker: %v", err)
+	}
+}
+
 func TestRunLegacyPythonPreservesCallerWorkingDirectory(t *testing.T) {
 	script := "import os\nprint(os.getcwd())\n"
 	root := createRecognizedLegacySourceRoot(t, script)

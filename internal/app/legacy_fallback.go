@@ -64,11 +64,20 @@ func runLegacyPython(args []string, stdin io.Reader, stdout, stderr io.Writer) i
 		fmt.Fprintln(stderr, "Set JINI_SOURCE_DIR to a Jini checkout or run the command from the repo while the Go move is still in progress.")
 		return 1
 	}
+	scriptFingerprint, ok := fingerprintLegacyScript(scriptPath)
+	if !ok {
+		fmt.Fprintf(stderr, "Could not run legacy Python command %q: legacy entrypoint is unavailable\n", commandLabel)
+		return 1
+	}
 
 	commandArgs := append([]string{scriptPath}, args...)
 	pythonCommand, err := resolveLegacyPythonExecutable()
 	if err != nil {
 		fmt.Fprintf(stderr, "Could not run legacy Python command %q: %v\n", commandLabel, err)
+		return 1
+	}
+	if !legacyScriptMatchesFingerprint(scriptPath, scriptFingerprint) {
+		fmt.Fprintf(stderr, "Could not run legacy Python command %q: legacy entrypoint changed during launch\n", commandLabel)
 		return 1
 	}
 	return runLegacyPythonWithExecutable(sourceRoot, pythonCommand, commandLabel, commandArgs, stdin, stdout, stderr)
