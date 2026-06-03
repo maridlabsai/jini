@@ -6,7 +6,45 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
+
+func shouldUseLegacySurface(args []string) bool {
+	if len(args) == 0 {
+		return false
+	}
+	first := normalizeCommandName(args[0])
+	switch first {
+	case "help":
+		if len(args) == 1 {
+			return false
+		}
+		second := normalizeCommandName(args[1])
+		return second != "all" && second != "commands" && second != "admin"
+	case "commands":
+		return len(args) > 1
+	case "admin":
+		return !(len(args) == 1 || (len(args) == 2 && normalizeCommandName(args[1]) == "help"))
+	case "doctor":
+		return len(args) > 1
+	case "provider":
+		return !(len(args) == 1 || (len(args) == 2 && normalizeCommandName(args[1]) == "doctor"))
+	case "status", "continue":
+		return len(args) > 1
+	case "open":
+		if len(args) <= 1 {
+			return false
+		}
+		if len(args) > 2 {
+			return true
+		}
+		return strings.HasPrefix(strings.TrimSpace(args[1]), "-")
+	case "run":
+		return !(len(args) == 1 || (len(args) == 2 && (normalizeCommandName(args[1]) == "new" || strings.TrimSpace(args[1]) == "--new")))
+	default:
+		return false
+	}
+}
 
 func runLegacyPython(args []string, stdout, stderr io.Writer) int {
 	sourceRoot, scriptPath, ok := resolveLegacyPythonEntrypoint()

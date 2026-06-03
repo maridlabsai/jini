@@ -81,6 +81,9 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 			fmt.Fprintf(stderr, "Unknown command %q.\n", args[0])
 			return 1
 		}
+		if shouldUseLegacySurface(args) {
+			return runLegacyPython(args, stdout, stderr)
+		}
 
 		switch normalizeCommandName(args[0]) {
 		case "help":

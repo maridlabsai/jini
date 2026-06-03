@@ -557,6 +557,39 @@ class InstallScriptTests(unittest.TestCase):
         payload = json.loads(readiness.stdout)
         self.assertEqual("ok", payload["status"])
 
+    def test_local_go_install_preserves_legacy_doctor_json_surface(self) -> None:
+        bin_dir = self.tmp / "go-legacy-doctor-bin"
+        install_dir = self.tmp / "go-legacy-doctor-share" / "jini"
+        result = self.run_installer(
+            "--source-dir",
+            str(REPO_ROOT),
+            "--bin-dir",
+            str(bin_dir),
+            "--install-dir",
+            str(install_dir),
+            "--force",
+            env=self.go_ready_env(),
+        )
+        self.assert_ok(result)
+
+        doctor = self.run_installed_jini(
+            bin_dir / "jini",
+            "doctor",
+            "--format",
+            "json",
+            env={
+                "JINI_PROVIDER": "azure-openai",
+                "AZURE_OPENAI_ENDPOINT": "https://example.openai.azure.com",
+                "AZURE_OPENAI_API_KEY": "super-secret-key",
+                "AZURE_OPENAI_DEPLOYMENT": "gpt-4o-prod",
+                "AZURE_OPENAI_API_VERSION": "2024-10-21",
+            },
+        )
+        self.assertEqual(0, doctor.returncode, msg=f"STDOUT:\n{doctor.stdout}\nSTDERR:\n{doctor.stderr}")
+        payload = json.loads(doctor.stdout)
+        self.assertEqual("JiniProviderDoctor", payload["result_type"])
+        self.assertEqual("azure-openai", payload["provider_id"])
+
     def test_python_fallback_install_supports_taught_public_command_contract(self) -> None:
         bin_dir = self.tmp / "python-bin"
         install_dir = self.tmp / "python-share" / "jini"
