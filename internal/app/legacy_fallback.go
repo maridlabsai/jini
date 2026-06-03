@@ -102,7 +102,9 @@ func resolveLegacyPythonWorkingDir(sourceRoot string) string {
 func resolveLegacyPythonExecutable() (string, error) {
 	if configured := strings.TrimSpace(os.Getenv("JINI_LEGACY_PYTHON")); configured != "" {
 		if resolved, err := exec.LookPath(configured); err == nil {
-			return canonicalPythonExecutable(resolved)
+			if canonical, canonicalErr := canonicalPythonExecutable(resolved); canonicalErr == nil {
+				return canonical, nil
+			}
 		}
 	}
 	resolved, err := exec.LookPath("python3")
@@ -124,7 +126,7 @@ func canonicalPythonExecutable(command string) (string, error) {
 			return candidate, nil
 		}
 	}
-	return filepath.EvalSymlinks(command)
+	return "", fmt.Errorf("%q is not a usable Python interpreter", command)
 }
 
 func isUsableWorkingDirectory(path string) bool {
