@@ -597,6 +597,24 @@ class InstallScriptTests(unittest.TestCase):
         self.assertEqual(0, commands.returncode, msg=f"STDOUT:\n{commands.stdout}\nSTDERR:\n{commands.stderr}")
         self.assertIn("Public command inventory", commands.stdout)
 
+    def test_local_go_install_exports_legacy_python_for_fallback_commands(self) -> None:
+        bin_dir = self.tmp / "go-legacy-python-bin"
+        install_dir = self.tmp / "go-legacy-python-share" / "jini"
+        result = self.run_installer(
+            "--source-dir",
+            str(REPO_ROOT),
+            "--bin-dir",
+            str(bin_dir),
+            "--install-dir",
+            str(install_dir),
+            "--force",
+            env=self.go_ready_env(),
+        )
+        self.assert_ok(result)
+
+        wrapper = (install_dir / "jini").read_text(encoding="utf-8")
+        self.assertIn('export JINI_LEGACY_PYTHON="${JINI_LEGACY_PYTHON:-', wrapper)
+
     def test_local_go_install_keeps_provider_doctor_compatibility_alias(self) -> None:
         bin_dir = self.tmp / "go-provider-bin"
         install_dir = self.tmp / "go-provider-share" / "jini"

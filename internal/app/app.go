@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -226,7 +225,7 @@ func shouldUseLegacyFrontDoor() bool {
 }
 
 func canExecuteLegacyPython() bool {
-	_, err := exec.LookPath("python3")
+	_, err := resolveLegacyPythonExecutable()
 	return err == nil
 }
 

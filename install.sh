@@ -123,6 +123,19 @@ python_source_fallback_ready() {
   command -v python3 >/dev/null 2>&1 || return 1
 }
 
+detect_python_command_path() {
+  command -v python3 >/dev/null 2>&1 || return 1
+  PYTHON_COMMAND_PATH="$(
+    python3 - <<'PY'
+import os
+import sys
+
+print(os.path.realpath(sys.executable))
+PY
+  )"
+  [[ -n "${PYTHON_COMMAND_PATH}" ]]
+}
+
 ensure_python_yaml_runtime() {
   local app_dir="$1"
   local vendor_dir="${app_dir}/vendor"
@@ -430,6 +443,9 @@ if [[ ${INSTALLED_FROM_RELEASE} -ne 1 ]]; then
         LEGACY_PYTHONPATH="${local_legacy_vendor}/vendor"
       fi
     fi
+    if ! detect_python_command_path; then
+      fail "Python fallback runtime could not determine a working interpreter path."
+    fi
     if [[ ${SOURCE_DIR_EXPLICIT} -eq 1 ]]; then
       cat >"${TARGET_BINARY}" <<EOF
 #!/usr/bin/env bash
@@ -437,6 +453,7 @@ set -euo pipefail
 export JINI_SOURCE_DIR="${LEGACY_SOURCE_DIR}"
 export JINI_USE_LEGACY_FRONT_DOOR="${JINI_USE_LEGACY_FRONT_DOOR:-1}"
 export JINI_CALLER_CWD="\${PWD}"
+export JINI_LEGACY_PYTHON="\${JINI_LEGACY_PYTHON:-${PYTHON_COMMAND_PATH}}"
 if [[ -n "${LEGACY_PYTHONPATH}" ]]; then
   export JINI_LEGACY_PYTHONPATH="${LEGACY_PYTHONPATH}"
 fi
@@ -470,6 +487,7 @@ set -euo pipefail
 export JINI_SOURCE_DIR="${LEGACY_SOURCE_DIR}"
 export JINI_USE_LEGACY_FRONT_DOOR="${JINI_USE_LEGACY_FRONT_DOOR:-1}"
 export JINI_CALLER_CWD="\${PWD}"
+export JINI_LEGACY_PYTHON="\${JINI_LEGACY_PYTHON:-${PYTHON_COMMAND_PATH}}"
 if [[ -n "${LEGACY_PYTHONPATH}" ]]; then
   export JINI_LEGACY_PYTHONPATH="${LEGACY_PYTHONPATH}"
 fi

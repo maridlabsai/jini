@@ -64,7 +64,12 @@ func runLegacyPython(args []string, stdin io.Reader, stdout, stderr io.Writer) i
 	}
 
 	commandArgs := append([]string{scriptPath}, args...)
-	command := exec.Command("python3", commandArgs...)
+	pythonCommand, err := resolveLegacyPythonExecutable()
+	if err != nil {
+		fmt.Fprintf(stderr, "Could not run legacy Python command %q: %v\n", commandLabel, err)
+		return 1
+	}
+	command := exec.Command(pythonCommand, commandArgs...)
 	command.Stdout = stdout
 	command.Stderr = stderr
 	if stdin != nil {
@@ -92,6 +97,15 @@ func resolveLegacyPythonWorkingDir(sourceRoot string) string {
 		return cwd
 	}
 	return sourceRoot
+}
+
+func resolveLegacyPythonExecutable() (string, error) {
+	if configured := strings.TrimSpace(os.Getenv("JINI_LEGACY_PYTHON")); configured != "" {
+		if info, err := os.Stat(configured); err == nil && !info.IsDir() {
+			return configured, nil
+		}
+	}
+	return exec.LookPath("python3")
 }
 
 func isUsableWorkingDirectory(path string) bool {

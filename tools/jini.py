@@ -76,6 +76,7 @@ def main(argv: list[str] | None = None) -> int:
     env.setdefault("JINI_SOURCE_DIR", str(ROOT))
     env.setdefault("JINI_USE_LEGACY_FRONT_DOOR", "1")
     env.setdefault("JINI_CALLER_CWD", os.getcwd())
+    env.setdefault("JINI_LEGACY_PYTHON", os.path.realpath(sys.executable))
     env.setdefault("GOCACHE", "/private/tmp/jini-go-cache")
     completed = subprocess.run(command, cwd=ROOT, env=env)
     return completed.returncode

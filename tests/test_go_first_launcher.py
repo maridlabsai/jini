@@ -2,6 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
+import sys
 
 import tools.jini as go_launcher
 
@@ -40,6 +41,17 @@ class GoFirstLauncherTests(unittest.TestCase):
                 command = go_launcher._go_command(["doctor"])
 
             self.assertEqual([str(built_binary), "doctor"], command)
+
+    def test_main_exports_legacy_python_for_go_boundary(self) -> None:
+        with mock.patch.object(go_launcher, "_should_use_go", return_value=True), mock.patch.object(
+            go_launcher, "_go_command", return_value=["go", "run", "./cmd/jini", "doctor"]
+        ), mock.patch("tools.jini.subprocess.run") as run_mock:
+            run_mock.return_value.returncode = 0
+            exit_code = go_launcher.main(["doctor"])
+
+        self.assertEqual(0, exit_code)
+        _, kwargs = run_mock.call_args
+        self.assertEqual(str(Path(sys.executable).resolve()), kwargs["env"]["JINI_LEGACY_PYTHON"])
 
 
 if __name__ == "__main__":
