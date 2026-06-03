@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+const jiniModuleDeclaration = "module github.com/maridlabsai/jini"
+
 func shouldUseLegacySurface(args []string) bool {
 	if len(args) == 0 {
 		return false
@@ -238,6 +240,13 @@ func isRecognizedJiniSourceRoot(root string) bool {
 		if err != nil || info.IsDir() {
 			return false
 		}
+	}
+	goModBytes, err := os.ReadFile(filepath.Join(root, "go.mod"))
+	if err != nil {
+		return false
+	}
+	if !strings.Contains(string(goModBytes), jiniModuleDeclaration) {
+		return false
 	}
 	return true
 }

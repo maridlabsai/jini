@@ -251,7 +251,7 @@ func TestResolveLegacyPythonEntrypointPrefersConfiguredSourceOverUnrelatedCwdScr
 	if err := os.MkdirAll(filepath.Join(envRoot, "tools"), 0o755); err != nil {
 		t.Fatalf("mkdir env tools: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(envRoot, "go.mod"), []byte("module example.com/jini\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(envRoot, "go.mod"), []byte("module github.com/maridlabsai/jini\n"), 0o644); err != nil {
 		t.Fatalf("write env go.mod: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(envRoot, "cmd", "jini", "main.go"), []byte("package main\n"), 0o644); err != nil {
@@ -336,6 +336,29 @@ func TestSelectLegacyPythonEntrypointIgnoresUnrecognizedConfiguredSource(t *test
 	}
 	if scriptPath != execScript {
 		t.Fatalf("expected executable-root script %q, got %q", execScript, scriptPath)
+	}
+}
+
+func TestIsRecognizedJiniSourceRootRejectsWrongModuleDeclaration(t *testing.T) {
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "cmd", "jini"), 0o755); err != nil {
+		t.Fatalf("mkdir cmd/jini: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(root, "tools"), 0o755); err != nil {
+		t.Fatalf("mkdir tools: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module example.com/jini\n"), 0o644); err != nil {
+		t.Fatalf("write go.mod: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "cmd", "jini", "main.go"), []byte("package main\n"), 0o644); err != nil {
+		t.Fatalf("write main.go: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "tools", "jini_validate.py"), []byte("print('fake')\n"), 0o755); err != nil {
+		t.Fatalf("write legacy script: %v", err)
+	}
+
+	if isRecognizedJiniSourceRoot(root) {
+		t.Fatalf("expected wrong module declaration to be rejected")
 	}
 }
 
