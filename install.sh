@@ -148,6 +148,11 @@ go_source_fallback_ready() {
   go version >/dev/null 2>&1 || return 1
 }
 
+detect_go_command_path() {
+  GO_COMMAND_PATH="$(command -v go 2>/dev/null || true)"
+  [[ -n "${GO_COMMAND_PATH}" ]]
+}
+
 should_try_release_install() {
   [[ -z "${SOURCE_DIR}" && "${REPO_URL}" == "${DEFAULT_REPO_URL}" ]]
 }
@@ -371,6 +376,7 @@ BUILD_OUTPUT="${TEMP_ROOT}/${PROGRAM_NAME}"
 GO_SOURCE_BINARY="${INSTALL_DIR}/${PROGRAM_NAME}-go"
 LEGACY_SOURCE_DIR=""
 LEGACY_PYTHONPATH=""
+GO_COMMAND_PATH=""
 INSTALLED_FROM_RELEASE=0
 INSTALL_MODE="source-runtime"
 INSTALL_DETAIL="unknown"
@@ -403,6 +409,7 @@ if [[ ${INSTALLED_FROM_RELEASE} -ne 1 ]]; then
   fi
   detect_local_source "${SOURCE_DIR}" || fail "source directory does not look like the Jini repo: ${SOURCE_DIR}"
   if go_source_fallback_ready; then
+    detect_go_command_path || fail "Go executable path could not be resolved."
     LEGACY_SOURCE_DIR="${SOURCE_DIR}"
     if [[ ${SOURCE_DIR_EXPLICIT} -eq 0 ]]; then
       LEGACY_SOURCE_DIR="${INSTALL_DIR}/source-runtime"
@@ -414,17 +421,40 @@ if [[ ${INSTALLED_FROM_RELEASE} -ne 1 ]]; then
       if [[ -d "${LEGACY_SOURCE_DIR}/vendor" ]]; then
         LEGACY_PYTHONPATH="${LEGACY_SOURCE_DIR}/vendor"
       fi
+    else
+      local_legacy_vendor="${INSTALL_DIR}/legacy-python"
+      rm -rf "${local_legacy_vendor}"
+      mkdir -p "${local_legacy_vendor}"
+      ensure_python_yaml_runtime "${local_legacy_vendor}" || fail "Python fallback runtime could not be prepared."
+      if [[ -d "${local_legacy_vendor}/vendor" ]]; then
+        LEGACY_PYTHONPATH="${local_legacy_vendor}/vendor"
+      fi
     fi
-    rm -f "${GO_SOURCE_BINARY}"
-    if ! (
-      cd "${SOURCE_DIR}"
-      go build -o "${BUILD_OUTPUT}" ./cmd/jini
-    ); then
-      fail "Go build failed."
-    fi
-    mv "${BUILD_OUTPUT}" "${GO_SOURCE_BINARY}"
-    chmod 0755 "${GO_SOURCE_BINARY}"
-    cat >"${TARGET_BINARY}" <<EOF
+    if [[ ${SOURCE_DIR_EXPLICIT} -eq 1 ]]; then
+      cat >"${TARGET_BINARY}" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+export JINI_SOURCE_DIR="${LEGACY_SOURCE_DIR}"
+if [[ -n "${LEGACY_PYTHONPATH}" ]]; then
+  export JINI_LEGACY_PYTHONPATH="${LEGACY_PYTHONPATH}"
+fi
+export GOCACHE="\${GOCACHE:-/private/tmp/jini-go-cache}"
+cd "${SOURCE_DIR}"
+exec "${GO_COMMAND_PATH}" run ./cmd/jini "\$@"
+EOF
+      chmod 0755 "${TARGET_BINARY}"
+      INSTALL_DETAIL="go-source-live-run"
+    else
+      rm -f "${GO_SOURCE_BINARY}"
+      if ! (
+        cd "${SOURCE_DIR}"
+        go build -o "${BUILD_OUTPUT}" ./cmd/jini
+      ); then
+        fail "Go build failed."
+      fi
+      mv "${BUILD_OUTPUT}" "${GO_SOURCE_BINARY}"
+      chmod 0755 "${GO_SOURCE_BINARY}"
+      cat >"${TARGET_BINARY}" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
 export JINI_SOURCE_DIR="${LEGACY_SOURCE_DIR}"
@@ -433,8 +463,9 @@ if [[ -n "${LEGACY_PYTHONPATH}" ]]; then
 fi
 exec "${GO_SOURCE_BINARY}" "\$@"
 EOF
-    chmod 0755 "${TARGET_BINARY}"
-    INSTALL_DETAIL="go-source-build"
+      chmod 0755 "${TARGET_BINARY}"
+      INSTALL_DETAIL="go-source-build"
+    fi
   elif ! try_install_python_source_runtime; then
     go_source_fallback_ready || fail "Jini could not install a release binary, and source fallback needs either Python 3 (Jini will try to add PyYAML automatically) or Go."
   else

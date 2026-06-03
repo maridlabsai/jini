@@ -514,6 +514,39 @@ class InstallScriptTests(unittest.TestCase):
         self.assert_ok(result)
         self.assert_go_public_command_contract(bin_dir / "jini")
 
+    def test_explicit_source_go_install_tracks_checkout_changes(self) -> None:
+        source_copy = self.tmp / "explicit-source"
+        shutil.copytree(
+            REPO_ROOT,
+            source_copy,
+            ignore=shutil.ignore_patterns(".git", ".gocache", ".jini", "__pycache__"),
+        )
+        bin_dir = self.tmp / "go-live-bin"
+        install_dir = self.tmp / "go-live-share" / "jini"
+        result = self.run_installer(
+            "--source-dir",
+            str(source_copy),
+            "--bin-dir",
+            str(bin_dir),
+            "--install-dir",
+            str(install_dir),
+            "--force",
+            env=self.go_ready_env(),
+        )
+        self.assert_ok(result)
+
+        app_go = source_copy / "internal" / "app" / "app.go"
+        text = app_go.read_text(encoding="utf-8")
+        self.assertIn("Public command inventory", text)
+        app_go.write_text(
+            text.replace("Public command inventory", "Public command inventory patched", 1),
+            encoding="utf-8",
+        )
+
+        commands = self.run_installed_jini(bin_dir / "jini", "commands", env=self.go_ready_env())
+        self.assertEqual(0, commands.returncode, msg=f"STDOUT:\n{commands.stdout}\nSTDERR:\n{commands.stderr}")
+        self.assertIn("Public command inventory patched", commands.stdout)
+
     def test_local_go_install_keeps_provider_doctor_compatibility_alias(self) -> None:
         bin_dir = self.tmp / "go-provider-bin"
         install_dir = self.tmp / "go-provider-share" / "jini"
