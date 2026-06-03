@@ -353,6 +353,53 @@ func TestRunLegacyPythonFallsBackWhenConfiguredInterpreterIsNotExecutable(t *tes
 	}
 }
 
+func TestRunLegacyPythonReplacesBrokenConfiguredInterpreterInChildEnv(t *testing.T) {
+	root := t.TempDir()
+	toolsDir := filepath.Join(root, "tools")
+	if err := os.MkdirAll(toolsDir, 0o755); err != nil {
+		t.Fatalf("mkdir tools: %v", err)
+	}
+	scriptPath := filepath.Join(toolsDir, "jini_validate.py")
+	script := "import os\nprint(os.environ['JINI_LEGACY_PYTHON'])\n"
+	if err := os.WriteFile(scriptPath, []byte(script), 0o755); err != nil {
+		t.Fatalf("write legacy script: %v", err)
+	}
+
+	badPython := filepath.Join(t.TempDir(), "bad-python")
+	if err := os.WriteFile(badPython, []byte("not executable\n"), 0o644); err != nil {
+		t.Fatalf("write bad python: %v", err)
+	}
+
+	pythonPath := resolvePythonExecutableForTest(t)
+	previousDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	neutralDir := t.TempDir()
+	if err := os.Chdir(neutralDir); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer func() {
+		_ = os.Chdir(previousDir)
+	}()
+
+	t.Setenv("JINI_SOURCE_DIR", root)
+	t.Setenv("JINI_LEGACY_PYTHON", badPython)
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := runLegacyPython(nil, nil, &stdout, &stderr)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+	if !strings.Contains(stdout.String(), pythonPath) {
+		t.Fatalf("expected child env to carry resolved python path %q, got:\n%s", pythonPath, stdout.String())
+	}
+	if strings.Contains(stdout.String(), badPython) {
+		t.Fatalf("expected broken configured interpreter %q to be replaced, got:\n%s", badPython, stdout.String())
+	}
+}
+
 func TestRecognizedGoCommandFallsBackToLegacyForUnsupportedFlags(t *testing.T) {
 	root := t.TempDir()
 	toolsDir := filepath.Join(root, "tools")
@@ -393,8 +440,9 @@ func TestLegacyPythonEnvPrependsConfiguredPythonPath(t *testing.T) {
 	t.Setenv("PYTHONPATH", "/existing/site-packages")
 	t.Setenv("JINI_LEGACY_PYTHONPATH", "/stable/vendor")
 	t.Setenv("JINI_SOURCE_DIR", "/stale/source")
+	t.Setenv("JINI_LEGACY_PYTHON", "/stale/python")
 
-	env := legacyPythonEnv("/tmp/jini-source")
+	env := legacyPythonEnv("/tmp/jini-source", "/tmp/jini-python")
 	joined := strings.Join(env, "\n")
 
 	if !strings.Contains(joined, "JINI_SOURCE_DIR=/tmp/jini-source") {
@@ -402,6 +450,12 @@ func TestLegacyPythonEnvPrependsConfiguredPythonPath(t *testing.T) {
 	}
 	if strings.Contains(joined, "JINI_SOURCE_DIR=/stale/source") {
 		t.Fatalf("expected stale source dir to be removed, got:\n%s", joined)
+	}
+	if !strings.Contains(joined, "JINI_LEGACY_PYTHON=/tmp/jini-python") {
+		t.Fatalf("expected resolved legacy python in env, got:\n%s", joined)
+	}
+	if strings.Contains(joined, "JINI_LEGACY_PYTHON=/stale/python") {
+		t.Fatalf("expected stale legacy python to be removed, got:\n%s", joined)
 	}
 	if !strings.Contains(joined, "PYTHONPATH=/stable/vendor"+string(os.PathListSeparator)+"/existing/site-packages") {
 		t.Fatalf("expected prepended PYTHONPATH, got:\n%s", joined)

@@ -78,7 +78,7 @@ func runLegacyPython(args []string, stdin io.Reader, stdout, stderr io.Writer) i
 		command.Stdin = os.Stdin
 	}
 	command.Dir = resolveLegacyPythonWorkingDir(sourceRoot)
-	command.Env = legacyPythonEnv(sourceRoot)
+	command.Env = legacyPythonEnv(sourceRoot, pythonCommand)
 	if err := command.Run(); err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
 			return exitErr.ExitCode()
@@ -102,10 +102,29 @@ func resolveLegacyPythonWorkingDir(sourceRoot string) string {
 func resolveLegacyPythonExecutable() (string, error) {
 	if configured := strings.TrimSpace(os.Getenv("JINI_LEGACY_PYTHON")); configured != "" {
 		if resolved, err := exec.LookPath(configured); err == nil {
-			return resolved, nil
+			return canonicalPythonExecutable(resolved)
 		}
 	}
-	return exec.LookPath("python3")
+	resolved, err := exec.LookPath("python3")
+	if err != nil {
+		return "", err
+	}
+	return canonicalPythonExecutable(resolved)
+}
+
+func canonicalPythonExecutable(command string) (string, error) {
+	output, err := exec.Command(
+		command,
+		"-c",
+		"import os, sys; print(os.path.realpath(sys.executable))",
+	).Output()
+	if err == nil {
+		candidate := strings.TrimSpace(string(output))
+		if info, statErr := os.Stat(candidate); statErr == nil && !info.IsDir() {
+			return candidate, nil
+		}
+	}
+	return filepath.EvalSymlinks(command)
 }
 
 func isUsableWorkingDirectory(path string) bool {
@@ -116,8 +135,9 @@ func isUsableWorkingDirectory(path string) bool {
 	return err == nil && info.IsDir()
 }
 
-func legacyPythonEnv(sourceRoot string) []string {
+func legacyPythonEnv(sourceRoot, pythonCommand string) []string {
 	env := overrideEnvVar(os.Environ(), "JINI_SOURCE_DIR", sourceRoot)
+	env = overrideEnvVar(env, "JINI_LEGACY_PYTHON", pythonCommand)
 	if extraPythonPath := os.Getenv("JINI_LEGACY_PYTHONPATH"); extraPythonPath != "" {
 		if currentPythonPath := os.Getenv("PYTHONPATH"); currentPythonPath != "" {
 			extraPythonPath = extraPythonPath + string(os.PathListSeparator) + currentPythonPath
