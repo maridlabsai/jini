@@ -70,7 +70,7 @@ func TestProviderDoctorDetectsAzureOpenAIWithoutLeakingSecrets(t *testing.T) {
 	t.Setenv("AZURE_OPENAI_API_VERSION", "2024-10-21")
 
 	var stdout bytes.Buffer
-exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
+	exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -95,6 +95,39 @@ exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
 	}
 }
 
+func TestProviderDoctorJSONDetectsAzureOpenAIWithoutLeakingSecrets(t *testing.T) {
+	t.Setenv("JINI_PROVIDER", "azure-openai")
+	t.Setenv("AZURE_OPENAI_ENDPOINT", "https://example.openai.azure.com")
+	t.Setenv("AZURE_OPENAI_API_KEY", "super-secret-key")
+	t.Setenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o-prod")
+	t.Setenv("AZURE_OPENAI_API_VERSION", "2024-10-21")
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"doctor", "--format", "json"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	var report struct {
+		ResultType string `json:"result_type"`
+		ProviderID string `json:"provider_id"`
+		Status     string `json:"status"`
+	}
+	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil {
+		t.Fatalf("decode doctor json: %v\n%s", err, stdout.String())
+	}
+	if report.ResultType != "JiniProviderDoctor" || report.ProviderID != "azure-openai" || report.Status != "ok" {
+		t.Fatalf("unexpected provider doctor json: %#v", report)
+	}
+	rendered := stdout.String()
+	if !strings.Contains(rendered, "AZURE_OPENAI_API_KEY") {
+		t.Fatalf("expected secret presence marker in JSON, got:\n%s", rendered)
+	}
+	if strings.Contains(rendered, "super-secret-key") {
+		t.Fatalf("provider doctor leaked secret value:\n%s", rendered)
+	}
+}
+
 func TestProviderDoctorDetectsBedrockWithoutLeakingCredentials(t *testing.T) {
 	t.Setenv("JINI_PROVIDER", "bedrock")
 	t.Setenv("AWS_REGION", "us-east-1")
@@ -102,7 +135,7 @@ func TestProviderDoctorDetectsBedrockWithoutLeakingCredentials(t *testing.T) {
 	t.Setenv("BEDROCK_MODEL_ID", "anthropic.claude-3-5-sonnet-20240620-v1:0")
 
 	var stdout bytes.Buffer
-exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
+	exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -130,7 +163,7 @@ func TestProviderDoctorReportsMissingRequiredSettings(t *testing.T) {
 	t.Setenv("JINI_PROVIDER", "azure-openai")
 
 	var stdout bytes.Buffer
-exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
+	exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
 	if exitCode != 1 {
 		t.Fatalf("expected exit code 1, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -158,7 +191,7 @@ func TestProviderDoctorDetectsAnthropicDirectSetup(t *testing.T) {
 	t.Setenv("JINI_MODEL", "sonnet")
 
 	var stdout bytes.Buffer
-exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
+	exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -192,7 +225,7 @@ func TestProviderDoctorAutoChoosesBedrockForSonnet46Alias(t *testing.T) {
 	t.Setenv("AWS_SECRET_ACCESS_KEY", "SECRETEXAMPLE")
 
 	var stdout bytes.Buffer
-exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
+	exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -219,7 +252,7 @@ func TestProviderDoctorRejectsSonnet46ShortcutForDirectClaude(t *testing.T) {
 	t.Setenv("JINI_MODEL", "sonnet-4.6")
 
 	var stdout bytes.Buffer
-exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
+	exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
 	if exitCode != 1 {
 		t.Fatalf("expected exit code 1, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -394,6 +427,29 @@ func TestProviderDoctorSubcommandMatchesTopLevelDoctor(t *testing.T) {
 	}
 }
 
+func TestProviderDoctorJSONSubcommandMatchesTopLevelDoctor(t *testing.T) {
+	t.Setenv("JINI_PROVIDER", "azure-openai")
+	t.Setenv("AZURE_OPENAI_ENDPOINT", "https://example.openai.azure.com")
+	t.Setenv("AZURE_OPENAI_API_KEY", "super-secret-key")
+	t.Setenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o-prod")
+
+	var topLevel bytes.Buffer
+	topExit := app.Run([]string{"doctor", "--format", "json"}, &topLevel, &topLevel)
+	if topExit != 0 {
+		t.Fatalf("expected top-level doctor json to succeed, got %d with output:\n%s", topExit, topLevel.String())
+	}
+
+	var subcommand bytes.Buffer
+	subExit := app.Run([]string{"provider", "doctor", "--format", "json"}, &subcommand, &subcommand)
+	if subExit != 0 {
+		t.Fatalf("expected provider doctor json to succeed, got %d with output:\n%s", subExit, subcommand.String())
+	}
+
+	if topLevel.String() != subcommand.String() {
+		t.Fatalf("expected provider doctor json to match top-level doctor json.\nTOP LEVEL:\n%s\nSUBCOMMAND:\n%s", topLevel.String(), subcommand.String())
+	}
+}
+
 func TestCheckAliasRendersCurrentWorkScreen(t *testing.T) {
 	stateDir := t.TempDir()
 	packDir := seedResearchPRDWork(t)
@@ -426,7 +482,7 @@ func TestInteractiveSetupCanSaveClaudeProfileInsideJini(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-exitCode := app.RunInteractive(nil, strings.NewReader("Claude\nsk-test-key\n\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("Claude\nsk-test-key\n\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -450,7 +506,7 @@ exitCode := app.RunInteractive(nil, strings.NewReader("Claude\nsk-test-key\n\n")
 	}
 
 	stdout.Reset()
-exitCode = app.Run([]string{"doctor"}, &stdout, &stdout)
+	exitCode = app.Run([]string{"doctor"}, &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected saved profile to drive provider doctor, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -530,7 +586,7 @@ func TestProviderDoctorShowsAutoToolDecision(t *testing.T) {
 	t.Setenv("ANTHROPIC_API_KEY", "super-secret-key")
 
 	var stdout bytes.Buffer
-exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
+	exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -562,7 +618,7 @@ func TestProviderDoctorDetectsLocalSLMWithoutLeakingOptionalKey(t *testing.T) {
 	t.Setenv("JINI_SKIP_LOCAL_BENCHMARK", "1")
 
 	var stdout bytes.Buffer
-exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
+	exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -600,7 +656,7 @@ func TestProviderDoctorShowsSubtypeScopedMultimodalLearning(t *testing.T) {
 	writeLocalRuntimeCapabilitiesFixture(t, stateDir)
 
 	var stdout bytes.Buffer
-exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
+	exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}

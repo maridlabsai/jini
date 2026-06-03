@@ -18,13 +18,27 @@ def _normalize_command(value: str) -> str:
     return value.strip().lower()
 
 
+def _optional_format(argv: list[str]) -> str | None:
+    if len(argv) >= 2 and argv[-2] == "--format":
+        return _normalize_command(argv[-1])
+    if argv and argv[-1].startswith("--format="):
+        return _normalize_command(argv[-1].split("=", 1)[1])
+    return None
+
+
 def _should_use_go(argv: list[str]) -> bool:
     if not argv:
         return True
-    if "--format" in argv:
-        return False
 
     first = _normalize_command(argv[0])
+    format_name = _optional_format(argv)
+    if format_name is not None:
+        if first == "doctor":
+            return format_name in {"json", "text"} and len(argv) in {2, 3}
+        if first == "provider":
+            return len(argv) in {3, 4} and _normalize_command(argv[1]) == "doctor" and format_name in {"json", "text"}
+        return False
+
     if first in {"help", "--help", "-h", "commands"}:
         return True
     if first == "admin":

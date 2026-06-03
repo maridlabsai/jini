@@ -855,12 +855,12 @@ func TestRecognizedGoCommandFallsBackToLegacyForUnsupportedFlags(t *testing.T) {
 
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
-	exitCode := Run([]string{"doctor", "--format", "json"}, &stdout, &stderr)
+	exitCode := Run([]string{"status", "/tmp/work"}, &stdout, &stderr)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
 	}
-	if !strings.Contains(stdout.String(), `"argv": ["doctor", "--format", "json"]`) {
-		t.Fatalf("expected legacy doctor argv passthrough, got:\n%s", stdout.String())
+	if !strings.Contains(stdout.String(), `"argv": ["status", "/tmp/work"]`) {
+		t.Fatalf("expected legacy status argv passthrough, got:\n%s", stdout.String())
 	}
 }
 

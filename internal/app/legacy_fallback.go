@@ -28,9 +28,14 @@ func shouldUseLegacySurface(args []string) bool {
 	case "admin":
 		return !(len(args) == 1 || (len(args) == 2 && normalizeCommandName(args[1]) == "help"))
 	case "doctor":
-		return len(args) > 1
+		_, ok := parseOptionalFormatArgs(args[1:])
+		return !ok
 	case "provider":
-		return !(len(args) == 1 || (len(args) == 2 && normalizeCommandName(args[1]) == "doctor"))
+		if len(args) < 2 || normalizeCommandName(args[1]) != "doctor" {
+			return true
+		}
+		_, ok := parseOptionalFormatArgs(args[2:])
+		return !ok
 	case "status", "continue":
 		return len(args) > 1
 	case "open":

@@ -31,6 +31,24 @@ type providerGenerationRequest struct {
 	Source string
 }
 
+type providerDoctorField struct {
+	Name     string   `json:"name"`
+	Presence string   `json:"presence"`
+	Default  string   `json:"default,omitempty"`
+	Aliases  []string `json:"aliases,omitempty"`
+}
+
+type providerDoctorReport struct {
+	SchemaVersion string                `json:"schema_version"`
+	ResultType    string                `json:"result_type"`
+	ProviderID    string                `json:"provider_id"`
+	Label         string                `json:"label"`
+	Status        string                `json:"status"`
+	Settings      []providerDoctorField `json:"settings"`
+	Secrets       []providerDoctorField `json:"secrets"`
+	Missing       []string              `json:"missing"`
+}
+
 type localRouteFeedbackStats struct {
 	SchemaVersion   string                                       `json:"schema_version"`
 	ContextType     string                                       `json:"context_type"`
@@ -563,6 +581,257 @@ func providerSettingLine(mode string) string {
 		return "JINI_PROVIDER: auto"
 	}
 	return "JINI_PROVIDER: " + mode
+}
+
+func buildProviderDoctorReport() providerDoctorReport {
+	providerID := configuredProviderMode()
+	if providerID == "auto" {
+		if forced := forcedAutoProviderMode(); forced != "" {
+			return withAutoProviderDoctorSetting(buildProviderDoctorReportForMode(forced))
+		}
+		for _, mode := range []string{"local-slm", "anthropic", "azure-openai", "bedrock"} {
+			report := buildProviderDoctorReportForMode(mode)
+			if report.Status == "ok" {
+				return withAutoProviderDoctorSetting(report)
+			}
+		}
+		return withAutoProviderDoctorSetting(buildLocalPreviewProviderDoctorReport())
+	}
+	return buildProviderDoctorReportForMode(providerID)
+}
+
+func buildProviderDoctorReportForMode(mode string) providerDoctorReport {
+	switch mode {
+	case "local-slm":
+		return buildLocalSLMProviderDoctorReport()
+	case "local-preview":
+		return buildLocalPreviewProviderDoctorReport()
+	case "azure-openai":
+		return buildAzureProviderDoctorReport()
+	case "bedrock":
+		return buildBedrockProviderDoctorReport()
+	case "anthropic":
+		return buildAnthropicProviderDoctorReport()
+	default:
+		return providerDoctorReport{
+			SchemaVersion: "0.1.0",
+			ResultType:    "JiniProviderDoctor",
+			ProviderID:    mode,
+			Label:         mode,
+			Status:        "needs setup",
+			Settings:      []providerDoctorField{},
+			Secrets:       []providerDoctorField{},
+			Missing:       []string{"Supported JINI_PROVIDER value: auto, claude, azure-openai, bedrock, local-slm, or local-preview"},
+		}
+	}
+}
+
+func withAutoProviderDoctorSetting(report providerDoctorReport) providerDoctorReport {
+	injected := providerDoctorField{
+		Name:     "JINI_PROVIDER",
+		Presence: "auto -> " + report.Label,
+	}
+	if len(report.Settings) > 0 && report.Settings[0].Name == "JINI_PROVIDER" {
+		report.Settings[0] = injected
+		return report
+	}
+	report.Settings = append([]providerDoctorField{injected}, report.Settings...)
+	return report
+}
+
+func buildLocalPreviewProviderDoctorReport() providerDoctorReport {
+	return providerDoctorReport{
+		SchemaVersion: "0.1.0",
+		ResultType:    "JiniProviderDoctor",
+		ProviderID:    "local-preview",
+		Label:         "Local preview",
+		Status:        "ok",
+		Settings: []providerDoctorField{
+			{Name: "JINI_PROVIDER", Presence: providerSettingValue("Local preview")},
+		},
+		Secrets: []providerDoctorField{},
+		Missing: []string{},
+	}
+}
+
+func buildLocalSLMProviderDoctorReport() providerDoctorReport {
+	capabilities := loadLocalRuntimeCapabilities()
+	device := currentDeviceProfile()
+	missing := []string{}
+	if presentOrMissing("JINI_LOCAL_SLM_ENDPOINT") == "missing" {
+		missing = append(missing, "JINI_LOCAL_SLM_ENDPOINT")
+	}
+	if presentOrMissing("JINI_LOCAL_SLM_MODEL") == "missing" {
+		missing = append(missing, "JINI_LOCAL_SLM_MODEL")
+	}
+
+	deviceClass := firstNonEmpty(device.DeviceClass, "unknown")
+	acceleratorClass := firstNonEmpty(device.AcceleratorClass, "unknown")
+	localRuntimeClass := firstNonEmpty(device.LocalRuntimeClass, firstNonEmpty(capabilities.LocalRuntimeClass, "unknown"))
+	osReadout := strings.TrimSpace(firstNonEmpty(device.OS, "unknown") + " " + firstNonEmpty(device.OSVersion, "unknown"))
+	settings := []providerDoctorField{
+		{Name: "JINI_PROVIDER", Presence: providerSettingValue("Local SLM")},
+		{Name: "JINI_LOCAL_SLM_ENDPOINT", Presence: presentOrMissing("JINI_LOCAL_SLM_ENDPOINT")},
+		{Name: "DEVICE_CLASS", Presence: deviceClass},
+		{Name: "DEVICE_OS", Presence: osReadout},
+		{Name: "LOCAL_ACCELERATOR", Presence: acceleratorClass},
+		{Name: "LOCAL_RUNTIME_CLASS", Presence: localRuntimeClass},
+		{Name: "JINI_LOCAL_SLM_MODEL", Presence: localSLMSettingPresence("JINI_LOCAL_SLM_MODEL", "")},
+		{Name: "JINI_LOCAL_SLM_FAST_MODEL", Presence: localSLMSettingPresence("JINI_LOCAL_SLM_FAST_MODEL", strings.TrimSpace(device.LocalProfileStates["local-fast"]))},
+		{Name: "JINI_LOCAL_SLM_WORKHORSE_MODEL", Presence: localSLMSettingPresence("JINI_LOCAL_SLM_WORKHORSE_MODEL", strings.TrimSpace(device.LocalProfileStates["local-workhorse"]))},
+		{Name: "JINI_LOCAL_SLM_DEEP_MODEL", Presence: localSLMSettingPresence("JINI_LOCAL_SLM_DEEP_MODEL", strings.TrimSpace(device.LocalProfileStates["local-deep"]))},
+		{Name: "JINI_LOCAL_SLM_MULTIMODAL_MODEL", Presence: localSLMSettingPresence("JINI_LOCAL_SLM_MULTIMODAL_MODEL", strings.TrimSpace(device.LocalProfileStates["local-multimodal"]))},
+	}
+	return providerDoctorReport{
+		SchemaVersion: "0.1.0",
+		ResultType:    "JiniProviderDoctor",
+		ProviderID:    "local-slm",
+		Label:         "Local SLM",
+		Status:        statusFromMissing(missing),
+		Settings:      settings,
+		Secrets:       []providerDoctorField{{Name: "JINI_LOCAL_SLM_API_KEY", Presence: presentOrMissing("JINI_LOCAL_SLM_API_KEY")}},
+		Missing:       missing,
+	}
+}
+
+func buildAzureProviderDoctorReport() providerDoctorReport {
+	missing := missingEnvVars([]string{
+		"AZURE_OPENAI_ENDPOINT",
+		"AZURE_OPENAI_API_KEY",
+		"AZURE_OPENAI_DEPLOYMENT",
+	})
+	label := "Azure OpenAI"
+	if deployment := configValue("AZURE_OPENAI_DEPLOYMENT"); deployment != "" {
+		label += " / " + deployment
+	}
+	settings := []providerDoctorField{
+		{Name: "JINI_PROVIDER", Presence: providerSettingValue(label)},
+		{Name: "AZURE_OPENAI_ENDPOINT", Presence: presentOrMissing("AZURE_OPENAI_ENDPOINT")},
+		{Name: "AZURE_OPENAI_DEPLOYMENT", Presence: presentOrMissing("AZURE_OPENAI_DEPLOYMENT")},
+		{Name: "AZURE_OPENAI_API_VERSION", Presence: presentOrMissing("AZURE_OPENAI_API_VERSION"), Default: "2024-10-21"},
+	}
+	if raw := configuredModelInput(); normalizeName(raw) != "auto" {
+		settings = append(settings, providerDoctorField{
+			Name:     "JINI_MODEL",
+			Presence: raw + " -> deployment decides the actual Azure model",
+		})
+	}
+	return providerDoctorReport{
+		SchemaVersion: "0.1.0",
+		ResultType:    "JiniProviderDoctor",
+		ProviderID:    "azure-openai",
+		Label:         label,
+		Status:        statusFromMissing(missing),
+		Settings:      settings,
+		Secrets:       []providerDoctorField{{Name: "AZURE_OPENAI_API_KEY", Presence: presentOrMissing("AZURE_OPENAI_API_KEY")}},
+		Missing:       missing,
+	}
+}
+
+func buildBedrockProviderDoctorReport() providerDoctorReport {
+	missing := []string{}
+	if presentOrMissingEither("AWS_REGION", "AWS_DEFAULT_REGION") == "missing" {
+		missing = append(missing, "AWS_REGION or AWS_DEFAULT_REGION")
+	}
+	if presentOrMissing("AWS_PROFILE") == "missing" && (presentOrMissing("AWS_ACCESS_KEY_ID") == "missing" || presentOrMissing("AWS_SECRET_ACCESS_KEY") == "missing") {
+		missing = append(missing, "AWS_PROFILE or AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY")
+	}
+	_, modelLabel := resolveBedrockModel()
+	label := "Amazon Bedrock"
+	if modelLabel != "" {
+		label += " / " + modelLabel
+	}
+	rawModelID := strings.TrimSpace(configValue("BEDROCK_MODEL_ID"))
+	modelInput := configuredModelInput()
+	modelPresence := "auto -> " + modelLabel
+	switch {
+	case rawModelID != "":
+		modelPresence = "set -> " + modelLabel
+	case normalizeName(modelInput) != "auto":
+		modelPresence = modelInput + " -> " + modelLabel
+	}
+	return providerDoctorReport{
+		SchemaVersion: "0.1.0",
+		ResultType:    "JiniProviderDoctor",
+		ProviderID:    "bedrock",
+		Label:         label,
+		Status:        statusFromMissing(missing),
+		Settings: []providerDoctorField{
+			{Name: "JINI_PROVIDER", Presence: providerSettingValue(label)},
+			{Name: "AWS_REGION", Presence: presentOrMissingEither("AWS_REGION", "AWS_DEFAULT_REGION"), Aliases: []string{"AWS_DEFAULT_REGION"}},
+			{Name: modelSettingName(rawModelID), Presence: modelPresence},
+		},
+		Secrets: []providerDoctorField{
+			{Name: "AWS_PROFILE", Presence: presentOrMissing("AWS_PROFILE")},
+			{Name: "AWS_ACCESS_KEY_ID", Presence: presentOrMissing("AWS_ACCESS_KEY_ID")},
+			{Name: "AWS_SECRET_ACCESS_KEY", Presence: presentOrMissing("AWS_SECRET_ACCESS_KEY")},
+		},
+		Missing: missing,
+	}
+}
+
+func buildAnthropicProviderDoctorReport() providerDoctorReport {
+	missing := []string{}
+	if presentOrMissing("ANTHROPIC_API_KEY") == "missing" {
+		missing = append(missing, "ANTHROPIC_API_KEY")
+	}
+	_, modelLabel, modelIssue := resolveAnthropicModel()
+	if modelIssue != "" {
+		missing = append(missing, modelIssue)
+	}
+	label := "Claude API"
+	if modelLabel != "" {
+		label += " / " + modelLabel
+	}
+	rawModel := strings.TrimSpace(firstNonEmpty(configValue("ANTHROPIC_MODEL"), configValue("JINI_MODEL"), "auto"))
+	modelPresence := "auto"
+	if normalizeName(rawModel) == "auto" || rawModel == "" {
+		if modelLabel != "" {
+			modelPresence = "auto -> " + modelLabel
+		}
+	} else if modelIssue != "" {
+		modelPresence = rawModel
+	} else {
+		modelPresence = rawModel + " -> " + modelLabel
+	}
+	return providerDoctorReport{
+		SchemaVersion: "0.1.0",
+		ResultType:    "JiniProviderDoctor",
+		ProviderID:    "anthropic",
+		Label:         label,
+		Status:        statusFromMissing(missing),
+		Settings: []providerDoctorField{
+			{Name: "JINI_PROVIDER", Presence: providerSettingValue(label)},
+			{Name: "JINI_MODEL", Presence: modelPresence},
+			{Name: "ANTHROPIC_BASE_URL", Presence: presentOrMissing("ANTHROPIC_BASE_URL"), Default: "https://api.anthropic.com"},
+		},
+		Secrets: []providerDoctorField{
+			{Name: "ANTHROPIC_API_KEY", Presence: presentOrMissing("ANTHROPIC_API_KEY")},
+		},
+		Missing: missing,
+	}
+}
+
+func providerSettingValue(label string) string {
+	if configuredProviderMode() == "auto" {
+		return "auto -> " + label
+	}
+	return configuredProviderMode()
+}
+
+func localSLMSettingPresence(name, state string) string {
+	presence := presentOrMissing(name)
+	if strings.TrimSpace(state) != "" {
+		return presence + " (" + strings.TrimSpace(state) + " on this device)"
+	}
+	return presence
+}
+
+func modelSettingName(rawModelID string) string {
+	if strings.TrimSpace(rawModelID) != "" {
+		return "BEDROCK_MODEL_ID"
+	}
+	return "JINI_MODEL"
 }
 
 func resolveBedrockModel() (string, string) {

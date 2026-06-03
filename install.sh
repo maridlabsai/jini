@@ -140,14 +140,15 @@ ensure_python_yaml_runtime() {
   local app_dir="$1"
   local vendor_dir="${app_dir}/vendor"
 
+  command -v python3 >/dev/null 2>&1 || return 1
   if python3 -c 'import yaml' >/dev/null 2>&1; then
     return 0
   fi
 
-  python3 -m pip --version >/dev/null 2>&1 || return 1
+  python3 -m pip --version >/dev/null 2>&1 || return 0
   mkdir -p "${vendor_dir}"
-  python3 -m pip install --disable-pip-version-check --no-input --target "${vendor_dir}" "PyYAML>=6,<7" >/dev/null 2>&1 || return 1
-  JINI_VENDOR_DIR="${vendor_dir}" python3 - <<'PY' >/dev/null 2>&1 || return 1
+  python3 -m pip install --disable-pip-version-check --no-input --target "${vendor_dir}" "PyYAML>=6,<7" >/dev/null 2>&1 || return 0
+  JINI_VENDOR_DIR="${vendor_dir}" python3 - <<'PY' >/dev/null 2>&1 || return 0
 import os
 import sys
 

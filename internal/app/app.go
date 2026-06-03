@@ -100,7 +100,7 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 		case "continue":
 			return runContinue(stdout, stderr)
 		case "doctor":
-			return runProvider(nil, stdout, stderr)
+			return runProvider(args[1:], stdout, stderr)
 		case "provider":
 			return runProvider(args[1:], stdout, stderr)
 		case "route":
@@ -465,13 +465,35 @@ type providerConfig struct {
 }
 
 func runProvider(args []string, stdout, stderr io.Writer) int {
-	if len(args) > 0 && normalizeName(args[0]) != "doctor" {
+	originalArgs := append([]string(nil), args...)
+	if len(args) > 0 && normalizeName(args[0]) == "doctor" {
+		args = args[1:]
+	}
+	format, ok := parseOptionalFormatArgs(args)
+	if !ok && len(originalArgs) > 0 && normalizeName(originalArgs[0]) != "doctor" {
 		fmt.Fprintf(stderr, "Unknown provider command %q.\n", args[0])
 		fmt.Fprintln(stderr, "Try `jini doctor`.")
 		return 1
 	}
+	if !ok {
+		fmt.Fprintln(stderr, "Unsupported doctor format. Try `jini doctor` or `jini doctor --format json`.")
+		return 1
+	}
 	if shouldRefreshLocalBenchmarkForDoctor() {
 		_ = currentLocalRuntimeCapabilities(context.Background())
+	}
+	if format == "json" {
+		report := buildProviderDoctorReport()
+		encoder := json.NewEncoder(stdout)
+		encoder.SetIndent("", "  ")
+		if err := encoder.Encode(report); err != nil {
+			fmt.Fprintf(stderr, "Could not render provider doctor report: %v\n", err)
+			return 1
+		}
+		if report.Status == "ok" {
+			return 0
+		}
+		return 1
 	}
 	provider := detectProvider()
 	renderProviderDoctor(stdout, provider)
@@ -479,6 +501,21 @@ func runProvider(args []string, stdout, stderr io.Writer) int {
 		return 0
 	}
 	return 1
+}
+
+func parseOptionalFormatArgs(args []string) (string, bool) {
+	if len(args) == 0 {
+		return "", true
+	}
+	if len(args) == 1 && strings.HasPrefix(strings.TrimSpace(args[0]), "--format=") {
+		format := normalizeName(strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(args[0]), "--format=")))
+		return format, format == "json" || format == "text"
+	}
+	if len(args) == 2 && strings.TrimSpace(args[0]) == "--format" {
+		format := normalizeName(args[1])
+		return format, format == "json" || format == "text"
+	}
+	return "", false
 }
 
 func runStatus(stdout, stderr io.Writer) int {
