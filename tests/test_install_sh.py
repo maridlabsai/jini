@@ -154,12 +154,12 @@ class InstallScriptTests(unittest.TestCase):
             command_env.update(env)
 
         smoke_cases = [
-            (["--help"], 0, "OPEN JINI"),
+            (["--help"], 0, "Goal"),
             (["commands"], 0, "Public command inventory"),
             (["help", "--all"], 0, "Public command inventory"),
             (["admin", "help"], 0, "Admin and developer command inventory"),
             (["doctor"], 0, "Provider"),
-            (["status"], 0, "WORK   research-prd-v1"),
+            (["status"], 0, "Jini Research To PRD"),
         ]
         for args, expected_code, marker in smoke_cases:
             with self.subTest(args=args):
@@ -536,6 +536,26 @@ class InstallScriptTests(unittest.TestCase):
         )
         self.assertEqual(0, provider.returncode, msg=provider.stderr)
         self.assertIn("Provider", provider.stdout)
+
+    def test_local_go_install_preserves_legacy_publish_readiness_command(self) -> None:
+        bin_dir = self.tmp / "go-legacy-bin"
+        install_dir = self.tmp / "go-legacy-share" / "jini"
+        result = self.run_installer(
+            "--source-dir",
+            str(REPO_ROOT),
+            "--bin-dir",
+            str(bin_dir),
+            "--install-dir",
+            str(install_dir),
+            "--force",
+            env=self.go_ready_env(),
+        )
+        self.assert_ok(result)
+
+        readiness = self.run_installed_jini(bin_dir / "jini", "publish-readiness", "--format", "json")
+        self.assertEqual(0, readiness.returncode, msg=f"STDOUT:\n{readiness.stdout}\nSTDERR:\n{readiness.stderr}")
+        payload = json.loads(readiness.stdout)
+        self.assertEqual("ok", payload["status"])
 
     def test_python_fallback_install_supports_taught_public_command_contract(self) -> None:
         bin_dir = self.tmp / "python-bin"

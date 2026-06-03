@@ -368,6 +368,7 @@ else
 fi
 
 BUILD_OUTPUT="${TEMP_ROOT}/${PROGRAM_NAME}"
+GO_SOURCE_BINARY="${INSTALL_DIR}/${PROGRAM_NAME}-go"
 INSTALLED_FROM_RELEASE=0
 INSTALL_MODE="source-runtime"
 INSTALL_DETAIL="unknown"
@@ -399,17 +400,26 @@ if [[ ${INSTALLED_FROM_RELEASE} -ne 1 ]]; then
     SOURCE_REASON="${SOURCE_REASON:-cloned-repo-source}"
   fi
   detect_local_source "${SOURCE_DIR}" || fail "source directory does not look like the Jini repo: ${SOURCE_DIR}"
-  if ! try_install_python_source_runtime; then
-    go_source_fallback_ready || fail "Jini could not install a release binary, and source fallback needs either Python 3 (Jini will try to add PyYAML automatically) or Go."
+  if go_source_fallback_ready; then
+    rm -f "${GO_SOURCE_BINARY}"
     if ! (
       cd "${SOURCE_DIR}"
       go build -o "${BUILD_OUTPUT}" ./cmd/jini
     ); then
       fail "Go build failed."
     fi
-    mv "${BUILD_OUTPUT}" "${TARGET_BINARY}"
+    mv "${BUILD_OUTPUT}" "${GO_SOURCE_BINARY}"
+    chmod 0755 "${GO_SOURCE_BINARY}"
+    cat >"${TARGET_BINARY}" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+export JINI_SOURCE_DIR="${SOURCE_DIR}"
+exec "${GO_SOURCE_BINARY}" "\$@"
+EOF
     chmod 0755 "${TARGET_BINARY}"
     INSTALL_DETAIL="go-source-build"
+  elif ! try_install_python_source_runtime; then
+    go_source_fallback_ready || fail "Jini could not install a release binary, and source fallback needs either Python 3 (Jini will try to add PyYAML automatically) or Go."
   else
     INSTALL_DETAIL="python-source-runtime"
   fi

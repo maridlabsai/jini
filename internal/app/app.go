@@ -77,6 +77,10 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 		if len(args) == 0 {
 			return runLauncher(stdin, stdout, stderr)
 		}
+		if isSlashCommandInput(args[0]) {
+			fmt.Fprintf(stderr, "Unknown command %q.\n", args[0])
+			return 1
+		}
 
 		switch normalizeCommandName(args[0]) {
 		case "help":
@@ -133,9 +137,7 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 			}
 			return runLauncher(stdin, stdout, stderr)
 		default:
-			fmt.Fprintf(stderr, "Unknown command %q.\n", args[0])
-			fmt.Fprintln(stderr, "Try `jini`, `jini doctor`, or a scriptable command such as `jini status`.")
-			return 1
+			return runLegacyPython(args, stdout, stderr)
 		}
 	})
 }
