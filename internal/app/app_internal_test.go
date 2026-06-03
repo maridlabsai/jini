@@ -34,6 +34,17 @@ func TestRunLegacyPythonDelegatesUnsupportedCommand(t *testing.T) {
 	}
 
 	t.Setenv("JINI_SOURCE_DIR", root)
+	previousDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	neutralDir := t.TempDir()
+	if err := os.Chdir(neutralDir); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer func() {
+		_ = os.Chdir(previousDir)
+	}()
 
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
@@ -161,6 +172,65 @@ func TestRunLegacyPythonReplacesStaleSourceRootEnvForChildProcess(t *testing.T) 
 	}
 }
 
+func TestResolveLegacyPythonEntrypointPrefersCurrentCheckoutOverStaleEnv(t *testing.T) {
+	liveRoot := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(liveRoot, "tools"), 0o755); err != nil {
+		t.Fatalf("mkdir live tools: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(liveRoot, "tools", "jini_validate.py"), []byte("print('live')\n"), 0o755); err != nil {
+		t.Fatalf("write live legacy script: %v", err)
+	}
+
+	staleRoot := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(staleRoot, "tools"), 0o755); err != nil {
+		t.Fatalf("mkdir stale tools: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(staleRoot, "tools", "jini_validate.py"), []byte("print('stale')\n"), 0o755); err != nil {
+		t.Fatalf("write stale legacy script: %v", err)
+	}
+
+	previousDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	if err := os.Chdir(liveRoot); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer func() {
+		_ = os.Chdir(previousDir)
+	}()
+
+	t.Setenv("JINI_SOURCE_DIR", staleRoot)
+
+	sourceRoot, scriptPath, ok := resolveLegacyPythonEntrypoint()
+	if !ok {
+		t.Fatalf("expected to resolve legacy Python entrypoint")
+	}
+	resolvedSourceRoot, err := filepath.EvalSymlinks(sourceRoot)
+	if err != nil {
+		t.Fatalf("eval source root symlinks: %v", err)
+	}
+	resolvedLiveRoot, err := filepath.EvalSymlinks(liveRoot)
+	if err != nil {
+		t.Fatalf("eval live root symlinks: %v", err)
+	}
+	if resolvedSourceRoot != resolvedLiveRoot {
+		t.Fatalf("expected current checkout %q to win over stale env %q, got %q", resolvedLiveRoot, staleRoot, resolvedSourceRoot)
+	}
+	expectedScriptPath := filepath.Join(liveRoot, "tools", "jini_validate.py")
+	resolvedScriptPath, err := filepath.EvalSymlinks(scriptPath)
+	if err != nil {
+		t.Fatalf("eval script path symlinks: %v", err)
+	}
+	resolvedExpectedScriptPath, err := filepath.EvalSymlinks(expectedScriptPath)
+	if err != nil {
+		t.Fatalf("eval expected script path symlinks: %v", err)
+	}
+	if resolvedScriptPath != resolvedExpectedScriptPath {
+		t.Fatalf("expected script path %q, got %q", resolvedExpectedScriptPath, resolvedScriptPath)
+	}
+}
+
 func TestRunLegacyPythonZeroArgFailureDoesNotPanic(t *testing.T) {
 	root := t.TempDir()
 	toolsDir := filepath.Join(root, "tools")
@@ -199,6 +269,17 @@ func TestRecognizedGoCommandFallsBackToLegacyForUnsupportedFlags(t *testing.T) {
 	}
 
 	t.Setenv("JINI_SOURCE_DIR", root)
+	previousDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	neutralDir := t.TempDir()
+	if err := os.Chdir(neutralDir); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer func() {
+		_ = os.Chdir(previousDir)
+	}()
 
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer

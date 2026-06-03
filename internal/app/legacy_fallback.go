@@ -126,22 +126,39 @@ func overrideEnvVar(env []string, key, value string) []string {
 }
 
 func resolveLegacyPythonEntrypoint() (string, string, bool) {
-	candidates := []string{}
-	if envRoot := os.Getenv("JINI_SOURCE_DIR"); envRoot != "" {
-		candidates = append(candidates, envRoot)
-	}
-	if cwd, err := os.Getwd(); err == nil {
-		candidates = append(candidates, cwd)
-	}
-	if executablePath, err := os.Executable(); err == nil {
-		candidates = append(candidates, filepath.Dir(executablePath))
-	}
-	for _, candidate := range candidates {
+	for _, candidate := range legacyEntrypointCandidates() {
 		if sourceRoot, scriptPath, ok := findLegacyPythonEntrypoint(candidate); ok {
 			return sourceRoot, scriptPath, true
 		}
 	}
 	return "", "", false
+}
+
+func legacyEntrypointCandidates() []string {
+	candidates := []string{}
+	seen := map[string]struct{}{}
+	addCandidate := func(path string) {
+		path = strings.TrimSpace(path)
+		if path == "" {
+			return
+		}
+		if _, ok := seen[path]; ok {
+			return
+		}
+		seen[path] = struct{}{}
+		candidates = append(candidates, path)
+	}
+
+	if cwd, err := os.Getwd(); err == nil {
+		addCandidate(cwd)
+	}
+	if envRoot := os.Getenv("JINI_SOURCE_DIR"); envRoot != "" {
+		addCandidate(envRoot)
+	}
+	if executablePath, err := os.Executable(); err == nil {
+		addCandidate(filepath.Dir(executablePath))
+	}
+	return candidates
 }
 
 func findLegacyPythonEntrypoint(start string) (string, string, bool) {
