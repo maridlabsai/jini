@@ -103,14 +103,26 @@ func isUsableWorkingDirectory(path string) bool {
 }
 
 func legacyPythonEnv(sourceRoot string) []string {
-	env := append(os.Environ(), "JINI_SOURCE_DIR="+sourceRoot)
+	env := overrideEnvVar(os.Environ(), "JINI_SOURCE_DIR", sourceRoot)
 	if extraPythonPath := os.Getenv("JINI_LEGACY_PYTHONPATH"); extraPythonPath != "" {
 		if currentPythonPath := os.Getenv("PYTHONPATH"); currentPythonPath != "" {
 			extraPythonPath = extraPythonPath + string(os.PathListSeparator) + currentPythonPath
 		}
-		env = append(env, "PYTHONPATH="+extraPythonPath)
+		env = overrideEnvVar(env, "PYTHONPATH", extraPythonPath)
 	}
 	return env
+}
+
+func overrideEnvVar(env []string, key, value string) []string {
+	prefix := key + "="
+	filtered := make([]string, 0, len(env)+1)
+	for _, entry := range env {
+		if strings.HasPrefix(entry, prefix) {
+			continue
+		}
+		filtered = append(filtered, entry)
+	}
+	return append(filtered, prefix+value)
 }
 
 func resolveLegacyPythonEntrypoint() (string, string, bool) {

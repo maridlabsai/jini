@@ -121,6 +121,46 @@ func TestRunLegacyPythonFallsBackWhenCallerWorkingDirectoryIsInvalid(t *testing.
 	}
 }
 
+func TestRunLegacyPythonReplacesStaleSourceRootEnvForChildProcess(t *testing.T) {
+	root := t.TempDir()
+	toolsDir := filepath.Join(root, "tools")
+	if err := os.MkdirAll(toolsDir, 0o755); err != nil {
+		t.Fatalf("mkdir tools: %v", err)
+	}
+	scriptPath := filepath.Join(toolsDir, "jini_validate.py")
+	script := "import os\nprint(os.environ['JINI_SOURCE_DIR'])\n"
+	if err := os.WriteFile(scriptPath, []byte(script), 0o755); err != nil {
+		t.Fatalf("write legacy script: %v", err)
+	}
+
+	staleRoot := t.TempDir()
+	previousDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	if err := os.Chdir(root); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer func() {
+		_ = os.Chdir(previousDir)
+	}()
+
+	t.Setenv("JINI_SOURCE_DIR", staleRoot)
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := runLegacyPython(nil, nil, &stdout, &stderr)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+	if !strings.Contains(stdout.String(), root) {
+		t.Fatalf("expected child process to receive resolved source root %q, got:\n%s", root, stdout.String())
+	}
+	if strings.Contains(stdout.String(), staleRoot) {
+		t.Fatalf("expected stale source root %q to be replaced, got:\n%s", staleRoot, stdout.String())
+	}
+}
+
 func TestRunLegacyPythonZeroArgFailureDoesNotPanic(t *testing.T) {
 	root := t.TempDir()
 	toolsDir := filepath.Join(root, "tools")
@@ -174,12 +214,16 @@ func TestRecognizedGoCommandFallsBackToLegacyForUnsupportedFlags(t *testing.T) {
 func TestLegacyPythonEnvPrependsConfiguredPythonPath(t *testing.T) {
 	t.Setenv("PYTHONPATH", "/existing/site-packages")
 	t.Setenv("JINI_LEGACY_PYTHONPATH", "/stable/vendor")
+	t.Setenv("JINI_SOURCE_DIR", "/stale/source")
 
 	env := legacyPythonEnv("/tmp/jini-source")
 	joined := strings.Join(env, "\n")
 
 	if !strings.Contains(joined, "JINI_SOURCE_DIR=/tmp/jini-source") {
 		t.Fatalf("expected source dir in env, got:\n%s", joined)
+	}
+	if strings.Contains(joined, "JINI_SOURCE_DIR=/stale/source") {
+		t.Fatalf("expected stale source dir to be removed, got:\n%s", joined)
 	}
 	if !strings.Contains(joined, "PYTHONPATH=/stable/vendor"+string(os.PathListSeparator)+"/existing/site-packages") {
 		t.Fatalf("expected prepended PYTHONPATH, got:\n%s", joined)
