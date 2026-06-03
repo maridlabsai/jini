@@ -69,6 +69,18 @@ func runLegacyPython(args []string, stdin io.Reader, stdout, stderr io.Writer) i
 		fmt.Fprintf(stderr, "Could not run legacy Python command %q: %v\n", commandLabel, err)
 		return 1
 	}
+	return runLegacyPythonWithExecutable(sourceRoot, pythonCommand, commandLabel, commandArgs, stdin, stdout, stderr)
+}
+
+func runLegacyPythonWithExecutable(
+	sourceRoot string,
+	pythonCommand string,
+	commandLabel string,
+	commandArgs []string,
+	stdin io.Reader,
+	stdout io.Writer,
+	stderr io.Writer,
+) int {
 	command := exec.Command(pythonCommand, commandArgs...)
 	command.Stdout = stdout
 	command.Stderr = stderr

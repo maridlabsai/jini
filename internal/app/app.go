@@ -166,14 +166,31 @@ func runLauncher(stdin io.Reader, stdout, stderr io.Writer) int {
 			return runActiveWorkLauncher(active, stdin, stdout, stderr)
 		}
 		if shouldUseLegacyFrontDoor() && canUseLegacyFrontDoor() {
-			if !canExecuteLegacyPython() {
+			pythonCommand, pythonErr := resolveLegacyPythonExecutable()
+			if pythonErr != nil {
 				if stdin != nil {
 					return runNewWorkIntake(stdin, stdout, stderr)
 				}
 				renderNewWorkPrompt(stdout)
 				return 0
 			}
-			return runLegacyPython(nil, stdin, stdout, stderr)
+			sourceRoot, scriptPath, ok := resolveLegacyPythonEntrypoint()
+			if !ok {
+				if stdin != nil {
+					return runNewWorkIntake(stdin, stdout, stderr)
+				}
+				renderNewWorkPrompt(stdout)
+				return 0
+			}
+			return runLegacyPythonWithExecutable(
+				sourceRoot,
+				pythonCommand,
+				"jini",
+				[]string{scriptPath},
+				stdin,
+				stdout,
+				stderr,
+			)
 		}
 		if stdin != nil {
 			return runNewWorkIntake(stdin, stdout, stderr)
@@ -222,11 +239,6 @@ func shouldUseLegacyFrontDoor() bool {
 	default:
 		return false
 	}
-}
-
-func canExecuteLegacyPython() bool {
-	_, err := resolveLegacyPythonExecutable()
-	return err == nil
 }
 
 func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio.Scanner, stdout, stderr io.Writer) int {

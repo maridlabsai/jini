@@ -771,6 +771,67 @@ func TestRunLauncherUsesConfiguredLegacyPythonWhenTempDirIsInvalid(t *testing.T)
 	}
 }
 
+func TestRunLauncherProbesConfiguredLegacyPythonOnlyOnceBeforeExecution(t *testing.T) {
+	root := t.TempDir()
+	toolsDir := filepath.Join(root, "tools")
+	if err := os.MkdirAll(toolsDir, 0o755); err != nil {
+		t.Fatalf("mkdir tools: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(toolsDir, "jini_validate.py"), []byte("print('legacy-front-door-once')\n"), 0o755); err != nil {
+		t.Fatalf("write legacy script: %v", err)
+	}
+
+	pythonPath := resolvePythonExecutableForTest(t)
+	countFile := filepath.Join(t.TempDir(), "python-count.txt")
+	wrapperPath := filepath.Join(t.TempDir(), "python-wrapper")
+	wrapper := "#!/bin/sh\n" +
+		"count_file=\"" + countFile + "\"\n" +
+		"count=0\n" +
+		"if [ -f \"$count_file\" ]; then count=$(cat \"$count_file\"); fi\n" +
+		"count=$((count + 1))\n" +
+		"printf '%s' \"$count\" > \"$count_file\"\n" +
+		"exec \"" + pythonPath + "\" \"$@\"\n"
+	if err := os.WriteFile(wrapperPath, []byte(wrapper), 0o755); err != nil {
+		t.Fatalf("write wrapper: %v", err)
+	}
+
+	stateDir := t.TempDir()
+	workingDir := t.TempDir()
+	previousDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	if err := os.Chdir(workingDir); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer func() {
+		_ = os.Chdir(previousDir)
+	}()
+
+	t.Setenv("JINI_SOURCE_DIR", root)
+	t.Setenv("JINI_USE_LEGACY_FRONT_DOOR", "1")
+	t.Setenv("JINI_LEGACY_PYTHON", wrapperPath)
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("PATH", "")
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := runLauncher(nil, &stdout, &stderr)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "legacy-front-door-once") {
+		t.Fatalf("expected legacy front door output, got:\n%s", stdout.String())
+	}
+	countText, err := os.ReadFile(countFile)
+	if err != nil {
+		t.Fatalf("read count file: %v", err)
+	}
+	if strings.TrimSpace(string(countText)) != "1" {
+		t.Fatalf("expected only one wrapper probe before real interpreter execution, got count %q", strings.TrimSpace(string(countText)))
+	}
+}
+
 func TestRunLauncherFallsBackToGoPromptWhenConfiguredLegacyPythonIsNotExecutable(t *testing.T) {
 	root := t.TempDir()
 	toolsDir := filepath.Join(root, "tools")
