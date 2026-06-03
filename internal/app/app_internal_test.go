@@ -376,6 +376,25 @@ func TestFindExecutableLegacyPythonEntrypointUsesStagedSourceRuntime(t *testing.
 	}
 }
 
+func TestFindExecutableLegacyPythonEntrypointRejectsAncestorScriptHijack(t *testing.T) {
+	ancestorRoot := t.TempDir()
+	installRoot := filepath.Join(ancestorRoot, "nested", "install")
+	if err := os.MkdirAll(filepath.Join(ancestorRoot, "tools"), 0o755); err != nil {
+		t.Fatalf("mkdir ancestor tools: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(ancestorRoot, "tools", "jini_validate.py"), []byte("print('ancestor')\n"), 0o755); err != nil {
+		t.Fatalf("write ancestor legacy script: %v", err)
+	}
+	if err := os.MkdirAll(installRoot, 0o755); err != nil {
+		t.Fatalf("mkdir install root: %v", err)
+	}
+
+	sourceRoot, scriptPath, ok := findExecutableLegacyPythonEntrypoint(installRoot)
+	if ok {
+		t.Fatalf("expected ancestor script hijack to be rejected, got source=%q script=%q", sourceRoot, scriptPath)
+	}
+}
+
 func TestRunLegacyPythonZeroArgFailureDoesNotPanic(t *testing.T) {
 	root := createRecognizedLegacySourceRoot(t, "print('ok')\n")
 

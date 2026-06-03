@@ -243,10 +243,18 @@ func isRecognizedJiniSourceRoot(root string) bool {
 }
 
 func findExecutableLegacyPythonEntrypoint(start string) (string, string, bool) {
-	if root, scriptPath, ok := findLegacyPythonEntrypoint(start); ok {
+	if root, scriptPath, ok := findLegacyPythonEntrypointAtRoot(start); ok {
 		return root, scriptPath, true
 	}
-	return findLegacyPythonEntrypoint(filepath.Join(start, "source-runtime"))
+	return findLegacyPythonEntrypointAtRoot(filepath.Join(start, "source-runtime"))
+}
+
+func findLegacyPythonEntrypointAtRoot(root string) (string, string, bool) {
+	scriptPath := filepath.Join(root, "tools", "jini_validate.py")
+	if info, err := os.Stat(scriptPath); err == nil && !info.IsDir() {
+		return root, scriptPath, true
+	}
+	return "", "", false
 }
 
 func findLegacyPythonEntrypoint(start string) (string, string, bool) {
