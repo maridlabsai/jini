@@ -115,15 +115,23 @@ func resolveLegacyPythonExecutable() (string, error) {
 }
 
 func canonicalPythonExecutable(command string) (string, error) {
-	output, err := exec.Command(
-		command,
-		"-c",
-		"import os, sys; print(os.path.realpath(sys.executable))",
-	).Output()
+	probeFile, err := os.CreateTemp("", "jini-python-probe-*.py")
 	if err == nil {
-		candidate := strings.TrimSpace(string(output))
-		if info, statErr := os.Stat(candidate); statErr == nil && !info.IsDir() {
-			return candidate, nil
+		defer os.Remove(probeFile.Name())
+		probe := "import os, sys\nprint(os.path.realpath(sys.executable))\nprint(sys.version_info[0])\n"
+		if _, writeErr := probeFile.WriteString(probe); writeErr == nil && probeFile.Close() == nil {
+			output, runErr := exec.Command(command, probeFile.Name()).Output()
+			if runErr == nil {
+				lines := strings.Split(strings.TrimSpace(string(output)), "\n")
+				if len(lines) == 2 && strings.TrimSpace(lines[1]) == "3" {
+					candidate := strings.TrimSpace(lines[0])
+					if info, statErr := os.Stat(candidate); statErr == nil && !info.IsDir() {
+						return candidate, nil
+					}
+				}
+			}
+		} else {
+			_ = probeFile.Close()
 		}
 	}
 	return "", fmt.Errorf("%q is not a usable Python interpreter", command)
