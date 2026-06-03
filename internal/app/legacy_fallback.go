@@ -218,7 +218,7 @@ func selectLegacyPythonEntrypoint(
 	if cwdOK && isRecognizedJiniSourceRoot(cwdRoot) {
 		return cwdRoot, cwdScript, true
 	}
-	if envOK {
+	if envOK && isRecognizedJiniSourceRoot(envRoot) {
 		return envRoot, envScript, true
 	}
 	if execOK {

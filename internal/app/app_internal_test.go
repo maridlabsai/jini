@@ -22,6 +22,27 @@ func resolvePythonExecutableForTest(t *testing.T) string {
 	return strings.TrimSpace(string(output))
 }
 
+func createRecognizedLegacySourceRoot(t *testing.T, script string) string {
+	t.Helper()
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "cmd", "jini"), 0o755); err != nil {
+		t.Fatalf("mkdir cmd/jini: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(root, "tools"), 0o755); err != nil {
+		t.Fatalf("mkdir tools: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module github.com/maridlabsai/jini\n"), 0o644); err != nil {
+		t.Fatalf("write go.mod: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "cmd", "jini", "main.go"), []byte("package main\n"), 0o644); err != nil {
+		t.Fatalf("write main.go: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "tools", "jini_validate.py"), []byte(script), 0o755); err != nil {
+		t.Fatalf("write legacy script: %v", err)
+	}
+	return root
+}
+
 func TestSafelyRunInteractiveRecoversPanics(t *testing.T) {
 	var stderr bytes.Buffer
 	exitCode := safelyRunInteractive(&stderr, func() int {
@@ -36,16 +57,8 @@ func TestSafelyRunInteractiveRecoversPanics(t *testing.T) {
 }
 
 func TestRunLegacyPythonDelegatesUnsupportedCommand(t *testing.T) {
-	root := t.TempDir()
-	toolsDir := filepath.Join(root, "tools")
-	if err := os.MkdirAll(toolsDir, 0o755); err != nil {
-		t.Fatalf("mkdir tools: %v", err)
-	}
-	scriptPath := filepath.Join(toolsDir, "jini_validate.py")
 	script := "import json, sys\nprint(json.dumps({'argv': sys.argv[1:]}))\n"
-	if err := os.WriteFile(scriptPath, []byte(script), 0o755); err != nil {
-		t.Fatalf("write legacy script: %v", err)
-	}
+	root := createRecognizedLegacySourceRoot(t, script)
 
 	t.Setenv("JINI_SOURCE_DIR", root)
 	previousDir, err := os.Getwd()
@@ -72,16 +85,8 @@ func TestRunLegacyPythonDelegatesUnsupportedCommand(t *testing.T) {
 }
 
 func TestRunLegacyPythonPreservesCallerWorkingDirectory(t *testing.T) {
-	root := t.TempDir()
-	toolsDir := filepath.Join(root, "tools")
-	if err := os.MkdirAll(toolsDir, 0o755); err != nil {
-		t.Fatalf("mkdir tools: %v", err)
-	}
-	scriptPath := filepath.Join(toolsDir, "jini_validate.py")
 	script := "import os\nprint(os.getcwd())\n"
-	if err := os.WriteFile(scriptPath, []byte(script), 0o755); err != nil {
-		t.Fatalf("write legacy script: %v", err)
-	}
+	root := createRecognizedLegacySourceRoot(t, script)
 
 	callerDir := t.TempDir()
 	previousDir, err := os.Getwd()
@@ -109,16 +114,8 @@ func TestRunLegacyPythonPreservesCallerWorkingDirectory(t *testing.T) {
 }
 
 func TestRunLegacyPythonFallsBackWhenCallerWorkingDirectoryIsInvalid(t *testing.T) {
-	root := t.TempDir()
-	toolsDir := filepath.Join(root, "tools")
-	if err := os.MkdirAll(toolsDir, 0o755); err != nil {
-		t.Fatalf("mkdir tools: %v", err)
-	}
-	scriptPath := filepath.Join(toolsDir, "jini_validate.py")
 	script := "import os\nprint(os.getcwd())\n"
-	if err := os.WriteFile(scriptPath, []byte(script), 0o755); err != nil {
-		t.Fatalf("write legacy script: %v", err)
-	}
+	root := createRecognizedLegacySourceRoot(t, script)
 
 	fallbackDir := t.TempDir()
 	previousDir, err := os.Getwd()
@@ -147,16 +144,8 @@ func TestRunLegacyPythonFallsBackWhenCallerWorkingDirectoryIsInvalid(t *testing.
 }
 
 func TestRunLegacyPythonReplacesStaleSourceRootEnvForChildProcess(t *testing.T) {
-	root := t.TempDir()
-	toolsDir := filepath.Join(root, "tools")
-	if err := os.MkdirAll(toolsDir, 0o755); err != nil {
-		t.Fatalf("mkdir tools: %v", err)
-	}
-	scriptPath := filepath.Join(toolsDir, "jini_validate.py")
 	script := "import os\nprint(os.environ['JINI_SOURCE_DIR'])\n"
-	if err := os.WriteFile(scriptPath, []byte(script), 0o755); err != nil {
-		t.Fatalf("write legacy script: %v", err)
-	}
+	root := createRecognizedLegacySourceRoot(t, script)
 
 	staleRoot := t.TempDir()
 	previousDir, err := os.Getwd()
@@ -256,8 +245,17 @@ func TestResolveLegacyPythonEntrypointPrefersCurrentCheckoutOverStaleEnv(t *test
 
 func TestResolveLegacyPythonEntrypointPrefersConfiguredSourceOverUnrelatedCwdScript(t *testing.T) {
 	envRoot := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(envRoot, "cmd", "jini"), 0o755); err != nil {
+		t.Fatalf("mkdir env cmd/jini: %v", err)
+	}
 	if err := os.MkdirAll(filepath.Join(envRoot, "tools"), 0o755); err != nil {
 		t.Fatalf("mkdir env tools: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(envRoot, "go.mod"), []byte("module example.com/jini\n"), 0o644); err != nil {
+		t.Fatalf("write env go.mod: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(envRoot, "cmd", "jini", "main.go"), []byte("package main\n"), 0o644); err != nil {
+		t.Fatalf("write env main.go: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(envRoot, "tools", "jini_validate.py"), []byte("print('env')\n"), 0o755); err != nil {
 		t.Fatalf("write env legacy script: %v", err)
@@ -319,6 +317,28 @@ func TestSelectLegacyPythonEntrypointPrefersExecutableRootOverUnrelatedCwdScript
 	}
 }
 
+func TestSelectLegacyPythonEntrypointIgnoresUnrecognizedConfiguredSource(t *testing.T) {
+	envRoot := "/tmp/unrecognized-env"
+	envScript := filepath.Join(envRoot, "tools", "jini_validate.py")
+	execRoot := "/tmp/installed-jini"
+	execScript := filepath.Join(execRoot, "tools", "jini_validate.py")
+
+	sourceRoot, scriptPath, ok := selectLegacyPythonEntrypoint(
+		"", "", false,
+		envRoot, envScript, true,
+		execRoot, execScript, true,
+	)
+	if !ok {
+		t.Fatalf("expected to resolve legacy Python entrypoint")
+	}
+	if sourceRoot != execRoot {
+		t.Fatalf("expected executable-root source %q to beat unrecognized configured source %q, got %q", execRoot, envRoot, sourceRoot)
+	}
+	if scriptPath != execScript {
+		t.Fatalf("expected executable-root script %q, got %q", execScript, scriptPath)
+	}
+}
+
 func TestFindExecutableLegacyPythonEntrypointUsesStagedSourceRuntime(t *testing.T) {
 	installRoot := t.TempDir()
 	stagedSourceRoot := filepath.Join(installRoot, "source-runtime")
@@ -343,15 +363,7 @@ func TestFindExecutableLegacyPythonEntrypointUsesStagedSourceRuntime(t *testing.
 }
 
 func TestRunLegacyPythonZeroArgFailureDoesNotPanic(t *testing.T) {
-	root := t.TempDir()
-	toolsDir := filepath.Join(root, "tools")
-	if err := os.MkdirAll(toolsDir, 0o755); err != nil {
-		t.Fatalf("mkdir tools: %v", err)
-	}
-	scriptPath := filepath.Join(toolsDir, "jini_validate.py")
-	if err := os.WriteFile(scriptPath, []byte("print('ok')\n"), 0o755); err != nil {
-		t.Fatalf("write legacy script: %v", err)
-	}
+	root := createRecognizedLegacySourceRoot(t, "print('ok')\n")
 
 	t.Setenv("JINI_SOURCE_DIR", root)
 	t.Setenv("PATH", "")
@@ -368,16 +380,8 @@ func TestRunLegacyPythonZeroArgFailureDoesNotPanic(t *testing.T) {
 }
 
 func TestRunLegacyPythonUsesConfiguredInterpreterWhenPathIsMissing(t *testing.T) {
-	root := t.TempDir()
-	toolsDir := filepath.Join(root, "tools")
-	if err := os.MkdirAll(toolsDir, 0o755); err != nil {
-		t.Fatalf("mkdir tools: %v", err)
-	}
-	scriptPath := filepath.Join(toolsDir, "jini_validate.py")
 	script := "print('legacy-ok')\n"
-	if err := os.WriteFile(scriptPath, []byte(script), 0o755); err != nil {
-		t.Fatalf("write legacy script: %v", err)
-	}
+	root := createRecognizedLegacySourceRoot(t, script)
 
 	pythonPath := resolvePythonExecutableForTest(t)
 	previousDir, err := os.Getwd()
@@ -408,16 +412,8 @@ func TestRunLegacyPythonUsesConfiguredInterpreterWhenPathIsMissing(t *testing.T)
 }
 
 func TestRunLegacyPythonUsesConfiguredInterpreterWhenTempDirIsInvalid(t *testing.T) {
-	root := t.TempDir()
-	toolsDir := filepath.Join(root, "tools")
-	if err := os.MkdirAll(toolsDir, 0o755); err != nil {
-		t.Fatalf("mkdir tools: %v", err)
-	}
-	scriptPath := filepath.Join(toolsDir, "jini_validate.py")
 	script := "print('legacy-tempdir-ok')\n"
-	if err := os.WriteFile(scriptPath, []byte(script), 0o755); err != nil {
-		t.Fatalf("write legacy script: %v", err)
-	}
+	root := createRecognizedLegacySourceRoot(t, script)
 
 	pythonPath := resolvePythonExecutableForTest(t)
 	previousDir, err := os.Getwd()
@@ -449,16 +445,8 @@ func TestRunLegacyPythonUsesConfiguredInterpreterWhenTempDirIsInvalid(t *testing
 }
 
 func TestRunLegacyPythonFallsBackWhenConfiguredInterpreterIsNotExecutable(t *testing.T) {
-	root := t.TempDir()
-	toolsDir := filepath.Join(root, "tools")
-	if err := os.MkdirAll(toolsDir, 0o755); err != nil {
-		t.Fatalf("mkdir tools: %v", err)
-	}
-	scriptPath := filepath.Join(toolsDir, "jini_validate.py")
 	script := "print('legacy-fallback-ok')\n"
-	if err := os.WriteFile(scriptPath, []byte(script), 0o755); err != nil {
-		t.Fatalf("write legacy script: %v", err)
-	}
+	root := createRecognizedLegacySourceRoot(t, script)
 
 	badPython := filepath.Join(t.TempDir(), "bad-python")
 	if err := os.WriteFile(badPython, []byte("not executable\n"), 0o644); err != nil {
@@ -492,16 +480,8 @@ func TestRunLegacyPythonFallsBackWhenConfiguredInterpreterIsNotExecutable(t *tes
 }
 
 func TestRunLegacyPythonFallsBackWhenConfiguredInterpreterIsNotPython(t *testing.T) {
-	root := t.TempDir()
-	toolsDir := filepath.Join(root, "tools")
-	if err := os.MkdirAll(toolsDir, 0o755); err != nil {
-		t.Fatalf("mkdir tools: %v", err)
-	}
-	scriptPath := filepath.Join(toolsDir, "jini_validate.py")
 	script := "print('legacy-python-fallback-ok')\n"
-	if err := os.WriteFile(scriptPath, []byte(script), 0o755); err != nil {
-		t.Fatalf("write legacy script: %v", err)
-	}
+	root := createRecognizedLegacySourceRoot(t, script)
 
 	notPython := filepath.Join(t.TempDir(), "not-python")
 	if err := os.WriteFile(notPython, []byte("#!/bin/sh\necho not-python\n"), 0o755); err != nil {
@@ -535,16 +515,8 @@ func TestRunLegacyPythonFallsBackWhenConfiguredInterpreterIsNotPython(t *testing
 }
 
 func TestRunLegacyPythonFallsBackWhenConfiguredInterpreterSpoofsProbe(t *testing.T) {
-	root := t.TempDir()
-	toolsDir := filepath.Join(root, "tools")
-	if err := os.MkdirAll(toolsDir, 0o755); err != nil {
-		t.Fatalf("mkdir tools: %v", err)
-	}
-	scriptPath := filepath.Join(toolsDir, "jini_validate.py")
 	script := "print('legacy-spoof-fallback-ok')\n"
-	if err := os.WriteFile(scriptPath, []byte(script), 0o755); err != nil {
-		t.Fatalf("write legacy script: %v", err)
-	}
+	root := createRecognizedLegacySourceRoot(t, script)
 
 	spoofPython := filepath.Join(t.TempDir(), "spoof-python")
 	spoofScript := "#!/bin/sh\necho /bin/sh\n"
@@ -579,16 +551,8 @@ func TestRunLegacyPythonFallsBackWhenConfiguredInterpreterSpoofsProbe(t *testing
 }
 
 func TestRunLegacyPythonReplacesBrokenConfiguredInterpreterInChildEnv(t *testing.T) {
-	root := t.TempDir()
-	toolsDir := filepath.Join(root, "tools")
-	if err := os.MkdirAll(toolsDir, 0o755); err != nil {
-		t.Fatalf("mkdir tools: %v", err)
-	}
-	scriptPath := filepath.Join(toolsDir, "jini_validate.py")
 	script := "import os\nprint(os.environ['JINI_LEGACY_PYTHON'])\n"
-	if err := os.WriteFile(scriptPath, []byte(script), 0o755); err != nil {
-		t.Fatalf("write legacy script: %v", err)
-	}
+	root := createRecognizedLegacySourceRoot(t, script)
 
 	badPython := filepath.Join(t.TempDir(), "bad-python")
 	if err := os.WriteFile(badPython, []byte("not executable\n"), 0o644); err != nil {
@@ -626,16 +590,8 @@ func TestRunLegacyPythonReplacesBrokenConfiguredInterpreterInChildEnv(t *testing
 }
 
 func TestRecognizedGoCommandFallsBackToLegacyForUnsupportedFlags(t *testing.T) {
-	root := t.TempDir()
-	toolsDir := filepath.Join(root, "tools")
-	if err := os.MkdirAll(toolsDir, 0o755); err != nil {
-		t.Fatalf("mkdir tools: %v", err)
-	}
-	scriptPath := filepath.Join(toolsDir, "jini_validate.py")
 	script := "import json, sys\nprint(json.dumps({'argv': sys.argv[1:]}))\n"
-	if err := os.WriteFile(scriptPath, []byte(script), 0o755); err != nil {
-		t.Fatalf("write legacy script: %v", err)
-	}
+	root := createRecognizedLegacySourceRoot(t, script)
 
 	t.Setenv("JINI_SOURCE_DIR", root)
 	previousDir, err := os.Getwd()
@@ -700,14 +656,7 @@ func TestShouldUseLegacyFrontDoorHonorsEnv(t *testing.T) {
 }
 
 func TestRunLauncherFallsBackToGoPromptWhenLegacyPythonIsUnavailable(t *testing.T) {
-	root := t.TempDir()
-	toolsDir := filepath.Join(root, "tools")
-	if err := os.MkdirAll(toolsDir, 0o755); err != nil {
-		t.Fatalf("mkdir tools: %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(toolsDir, "jini_validate.py"), []byte("print('legacy')\n"), 0o755); err != nil {
-		t.Fatalf("write legacy script: %v", err)
-	}
+	root := createRecognizedLegacySourceRoot(t, "print('legacy')\n")
 
 	stateDir := t.TempDir()
 	workingDir := t.TempDir()
@@ -742,14 +691,7 @@ func TestRunLauncherFallsBackToGoPromptWhenLegacyPythonIsUnavailable(t *testing.
 }
 
 func TestRunLauncherFallsBackToGoIntakeWhenLegacyPythonIsUnavailable(t *testing.T) {
-	root := t.TempDir()
-	toolsDir := filepath.Join(root, "tools")
-	if err := os.MkdirAll(toolsDir, 0o755); err != nil {
-		t.Fatalf("mkdir tools: %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(toolsDir, "jini_validate.py"), []byte("print('legacy')\n"), 0o755); err != nil {
-		t.Fatalf("write legacy script: %v", err)
-	}
+	root := createRecognizedLegacySourceRoot(t, "print('legacy')\n")
 
 	stateDir := t.TempDir()
 	workingDir := t.TempDir()
@@ -784,14 +726,7 @@ func TestRunLauncherFallsBackToGoIntakeWhenLegacyPythonIsUnavailable(t *testing.
 }
 
 func TestRunLauncherUsesConfiguredLegacyPythonWhenPathIsMissing(t *testing.T) {
-	root := t.TempDir()
-	toolsDir := filepath.Join(root, "tools")
-	if err := os.MkdirAll(toolsDir, 0o755); err != nil {
-		t.Fatalf("mkdir tools: %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(toolsDir, "jini_validate.py"), []byte("print('legacy-front-door')\n"), 0o755); err != nil {
-		t.Fatalf("write legacy script: %v", err)
-	}
+	root := createRecognizedLegacySourceRoot(t, "print('legacy-front-door')\n")
 
 	pythonPath := resolvePythonExecutableForTest(t)
 
@@ -826,14 +761,7 @@ func TestRunLauncherUsesConfiguredLegacyPythonWhenPathIsMissing(t *testing.T) {
 }
 
 func TestRunLauncherUsesConfiguredLegacyPythonWhenTempDirIsInvalid(t *testing.T) {
-	root := t.TempDir()
-	toolsDir := filepath.Join(root, "tools")
-	if err := os.MkdirAll(toolsDir, 0o755); err != nil {
-		t.Fatalf("mkdir tools: %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(toolsDir, "jini_validate.py"), []byte("print('legacy-front-door-tempdir')\n"), 0o755); err != nil {
-		t.Fatalf("write legacy script: %v", err)
-	}
+	root := createRecognizedLegacySourceRoot(t, "print('legacy-front-door-tempdir')\n")
 
 	pythonPath := resolvePythonExecutableForTest(t)
 
@@ -869,14 +797,7 @@ func TestRunLauncherUsesConfiguredLegacyPythonWhenTempDirIsInvalid(t *testing.T)
 }
 
 func TestRunLauncherProbesConfiguredLegacyPythonOnlyOnceBeforeExecution(t *testing.T) {
-	root := t.TempDir()
-	toolsDir := filepath.Join(root, "tools")
-	if err := os.MkdirAll(toolsDir, 0o755); err != nil {
-		t.Fatalf("mkdir tools: %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(toolsDir, "jini_validate.py"), []byte("print('legacy-front-door-once')\n"), 0o755); err != nil {
-		t.Fatalf("write legacy script: %v", err)
-	}
+	root := createRecognizedLegacySourceRoot(t, "print('legacy-front-door-once')\n")
 
 	pythonPath := resolvePythonExecutableForTest(t)
 	countFile := filepath.Join(t.TempDir(), "python-count.txt")
@@ -930,14 +851,7 @@ func TestRunLauncherProbesConfiguredLegacyPythonOnlyOnceBeforeExecution(t *testi
 }
 
 func TestRunLauncherFallsBackToGoPromptWhenConfiguredLegacyPythonIsNotExecutable(t *testing.T) {
-	root := t.TempDir()
-	toolsDir := filepath.Join(root, "tools")
-	if err := os.MkdirAll(toolsDir, 0o755); err != nil {
-		t.Fatalf("mkdir tools: %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(toolsDir, "jini_validate.py"), []byte("print('legacy')\n"), 0o755); err != nil {
-		t.Fatalf("write legacy script: %v", err)
-	}
+	root := createRecognizedLegacySourceRoot(t, "print('legacy')\n")
 
 	badPython := filepath.Join(t.TempDir(), "bad-python")
 	if err := os.WriteFile(badPython, []byte("not executable\n"), 0o644); err != nil {
@@ -978,14 +892,7 @@ func TestRunLauncherFallsBackToGoPromptWhenConfiguredLegacyPythonIsNotExecutable
 }
 
 func TestRunLauncherFallsBackToGoPromptWhenConfiguredLegacyPythonIsNotPython(t *testing.T) {
-	root := t.TempDir()
-	toolsDir := filepath.Join(root, "tools")
-	if err := os.MkdirAll(toolsDir, 0o755); err != nil {
-		t.Fatalf("mkdir tools: %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(toolsDir, "jini_validate.py"), []byte("print('legacy')\n"), 0o755); err != nil {
-		t.Fatalf("write legacy script: %v", err)
-	}
+	root := createRecognizedLegacySourceRoot(t, "print('legacy')\n")
 
 	notPython := filepath.Join(t.TempDir(), "not-python")
 	if err := os.WriteFile(notPython, []byte("#!/bin/sh\necho not-python\n"), 0o755); err != nil {
@@ -1026,14 +933,7 @@ func TestRunLauncherFallsBackToGoPromptWhenConfiguredLegacyPythonIsNotPython(t *
 }
 
 func TestRunLauncherFallsBackToGoPromptWhenConfiguredInterpreterSpoofsPython(t *testing.T) {
-	root := t.TempDir()
-	toolsDir := filepath.Join(root, "tools")
-	if err := os.MkdirAll(toolsDir, 0o755); err != nil {
-		t.Fatalf("mkdir tools: %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(toolsDir, "jini_validate.py"), []byte("print('legacy')\n"), 0o755); err != nil {
-		t.Fatalf("write legacy script: %v", err)
-	}
+	root := createRecognizedLegacySourceRoot(t, "print('legacy')\n")
 
 	spoofPython := filepath.Join(t.TempDir(), "spoof-python")
 	spoofScript := "#!/bin/sh\necho /bin/sh\n"
