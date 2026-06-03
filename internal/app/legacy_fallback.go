@@ -23,7 +23,7 @@ func runLegacyPython(args []string, stdout, stderr io.Writer) int {
 	command.Stderr = stderr
 	command.Stdin = os.Stdin
 	command.Dir = sourceRoot
-	command.Env = append(os.Environ(), "JINI_SOURCE_DIR="+sourceRoot)
+	command.Env = legacyPythonEnv(sourceRoot)
 	if err := command.Run(); err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
 			return exitErr.ExitCode()
@@ -32,6 +32,17 @@ func runLegacyPython(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	return 0
+}
+
+func legacyPythonEnv(sourceRoot string) []string {
+	env := append(os.Environ(), "JINI_SOURCE_DIR="+sourceRoot)
+	if extraPythonPath := os.Getenv("JINI_LEGACY_PYTHONPATH"); extraPythonPath != "" {
+		if currentPythonPath := os.Getenv("PYTHONPATH"); currentPythonPath != "" {
+			extraPythonPath = extraPythonPath + string(os.PathListSeparator) + currentPythonPath
+		}
+		env = append(env, "PYTHONPATH="+extraPythonPath)
+	}
+	return env
 }
 
 func resolveLegacyPythonEntrypoint() (string, string, bool) {

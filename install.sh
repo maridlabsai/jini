@@ -369,6 +369,8 @@ fi
 
 BUILD_OUTPUT="${TEMP_ROOT}/${PROGRAM_NAME}"
 GO_SOURCE_BINARY="${INSTALL_DIR}/${PROGRAM_NAME}-go"
+LEGACY_SOURCE_DIR=""
+LEGACY_PYTHONPATH=""
 INSTALLED_FROM_RELEASE=0
 INSTALL_MODE="source-runtime"
 INSTALL_DETAIL="unknown"
@@ -401,6 +403,18 @@ if [[ ${INSTALLED_FROM_RELEASE} -ne 1 ]]; then
   fi
   detect_local_source "${SOURCE_DIR}" || fail "source directory does not look like the Jini repo: ${SOURCE_DIR}"
   if go_source_fallback_ready; then
+    LEGACY_SOURCE_DIR="${SOURCE_DIR}"
+    if [[ ${SOURCE_DIR_EXPLICIT} -eq 0 ]]; then
+      LEGACY_SOURCE_DIR="${INSTALL_DIR}/source-runtime"
+      rm -rf "${LEGACY_SOURCE_DIR}"
+      mkdir -p "${LEGACY_SOURCE_DIR}"
+      cp -R "${SOURCE_DIR}/." "${LEGACY_SOURCE_DIR}"
+      rm -rf "${LEGACY_SOURCE_DIR}/.git" "${LEGACY_SOURCE_DIR}/.gocache" "${LEGACY_SOURCE_DIR}/.jini"
+      ensure_python_yaml_runtime "${LEGACY_SOURCE_DIR}" || fail "Python fallback runtime could not be prepared."
+      if [[ -d "${LEGACY_SOURCE_DIR}/vendor" ]]; then
+        LEGACY_PYTHONPATH="${LEGACY_SOURCE_DIR}/vendor"
+      fi
+    fi
     rm -f "${GO_SOURCE_BINARY}"
     if ! (
       cd "${SOURCE_DIR}"
@@ -413,7 +427,10 @@ if [[ ${INSTALLED_FROM_RELEASE} -ne 1 ]]; then
     cat >"${TARGET_BINARY}" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
-export JINI_SOURCE_DIR="${SOURCE_DIR}"
+export JINI_SOURCE_DIR="${LEGACY_SOURCE_DIR}"
+if [[ -n "${LEGACY_PYTHONPATH}" ]]; then
+  export JINI_LEGACY_PYTHONPATH="${LEGACY_PYTHONPATH}"
+fi
 exec "${GO_SOURCE_BINARY}" "\$@"
 EOF
     chmod 0755 "${TARGET_BINARY}"

@@ -45,3 +45,18 @@ func TestRunLegacyPythonDelegatesUnsupportedCommand(t *testing.T) {
 		t.Fatalf("expected legacy argv passthrough, got:\n%s", stdout.String())
 	}
 }
+
+func TestLegacyPythonEnvPrependsConfiguredPythonPath(t *testing.T) {
+	t.Setenv("PYTHONPATH", "/existing/site-packages")
+	t.Setenv("JINI_LEGACY_PYTHONPATH", "/stable/vendor")
+
+	env := legacyPythonEnv("/tmp/jini-source")
+	joined := strings.Join(env, "\n")
+
+	if !strings.Contains(joined, "JINI_SOURCE_DIR=/tmp/jini-source") {
+		t.Fatalf("expected source dir in env, got:\n%s", joined)
+	}
+	if !strings.Contains(joined, "PYTHONPATH=/stable/vendor"+string(os.PathListSeparator)+"/existing/site-packages") {
+		t.Fatalf("expected prepended PYTHONPATH, got:\n%s", joined)
+	}
+}

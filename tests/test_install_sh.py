@@ -636,6 +636,14 @@ class InstallScriptTests(unittest.TestCase):
         )
         self.assert_ok(result)
         self.assertIn("Installed Jini", result.stdout)
+        readiness = self.run_installed_jini(
+            remote_root / "bin" / "jini",
+            "publish-readiness",
+            "--format",
+            "json",
+        )
+        self.assertEqual(0, readiness.returncode, msg=f"STDOUT:\n{readiness.stdout}\nSTDERR:\n{readiness.stderr}")
+        self.assertEqual("ok", json.loads(readiness.stdout)["status"])
 
     def test_remote_style_install_without_go_uses_python_fallback(self) -> None:
         remote_snapshot = self.create_remote_snapshot()
