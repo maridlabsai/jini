@@ -297,6 +297,28 @@ func TestResolveLegacyPythonEntrypointPrefersConfiguredSourceOverUnrelatedCwdScr
 	}
 }
 
+func TestSelectLegacyPythonEntrypointPrefersExecutableRootOverUnrelatedCwdScript(t *testing.T) {
+	cwdRoot := "/tmp/unrelated"
+	cwdScript := filepath.Join(cwdRoot, "tools", "jini_validate.py")
+	execRoot := "/tmp/installed-jini"
+	execScript := filepath.Join(execRoot, "tools", "jini_validate.py")
+
+	sourceRoot, scriptPath, ok := selectLegacyPythonEntrypoint(
+		cwdRoot, cwdScript, true,
+		"", "", false,
+		execRoot, execScript, true,
+	)
+	if !ok {
+		t.Fatalf("expected to resolve legacy Python entrypoint")
+	}
+	if sourceRoot != execRoot {
+		t.Fatalf("expected executable-root source %q to beat unrelated cwd script, got %q", execRoot, sourceRoot)
+	}
+	if scriptPath != execScript {
+		t.Fatalf("expected executable-root script %q, got %q", execScript, scriptPath)
+	}
+}
+
 func TestRunLegacyPythonZeroArgFailureDoesNotPanic(t *testing.T) {
 	root := t.TempDir()
 	toolsDir := filepath.Join(root, "tools")

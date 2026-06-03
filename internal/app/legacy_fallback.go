@@ -197,17 +197,35 @@ func resolveLegacyPythonEntrypoint() (string, string, bool) {
 		execRoot, execScript, execOK = findLegacyPythonEntrypoint(filepath.Dir(executablePath))
 	}
 
+	return selectLegacyPythonEntrypoint(
+		cwdRoot, cwdScript, cwdOK,
+		envRoot, envScript, envOK,
+		execRoot, execScript, execOK,
+	)
+}
+
+func selectLegacyPythonEntrypoint(
+	cwdRoot string,
+	cwdScript string,
+	cwdOK bool,
+	envRoot string,
+	envScript string,
+	envOK bool,
+	execRoot string,
+	execScript string,
+	execOK bool,
+) (string, string, bool) {
 	if cwdOK && isRecognizedJiniSourceRoot(cwdRoot) {
 		return cwdRoot, cwdScript, true
 	}
 	if envOK {
 		return envRoot, envScript, true
 	}
-	if cwdOK {
-		return cwdRoot, cwdScript, true
-	}
 	if execOK {
 		return execRoot, execScript, true
+	}
+	if cwdOK {
+		return cwdRoot, cwdScript, true
 	}
 	return "", "", false
 }
