@@ -194,7 +194,7 @@ func resolveLegacyPythonEntrypoint() (string, string, bool) {
 		envRoot, envScript, envOK = findLegacyPythonEntrypoint(envCandidate)
 	}
 	if executablePath, err := os.Executable(); err == nil {
-		execRoot, execScript, execOK = findLegacyPythonEntrypoint(filepath.Dir(executablePath))
+		execRoot, execScript, execOK = findExecutableLegacyPythonEntrypoint(filepath.Dir(executablePath))
 	}
 
 	return selectLegacyPythonEntrypoint(
@@ -243,6 +243,13 @@ func isRecognizedJiniSourceRoot(root string) bool {
 		}
 	}
 	return true
+}
+
+func findExecutableLegacyPythonEntrypoint(start string) (string, string, bool) {
+	if root, scriptPath, ok := findLegacyPythonEntrypoint(start); ok {
+		return root, scriptPath, true
+	}
+	return findLegacyPythonEntrypoint(filepath.Join(start, "source-runtime"))
 }
 
 func findLegacyPythonEntrypoint(start string) (string, string, bool) {

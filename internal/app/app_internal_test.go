@@ -319,6 +319,29 @@ func TestSelectLegacyPythonEntrypointPrefersExecutableRootOverUnrelatedCwdScript
 	}
 }
 
+func TestFindExecutableLegacyPythonEntrypointUsesStagedSourceRuntime(t *testing.T) {
+	installRoot := t.TempDir()
+	stagedSourceRoot := filepath.Join(installRoot, "source-runtime")
+	if err := os.MkdirAll(filepath.Join(stagedSourceRoot, "tools"), 0o755); err != nil {
+		t.Fatalf("mkdir staged tools: %v", err)
+	}
+	expectedScriptPath := filepath.Join(stagedSourceRoot, "tools", "jini_validate.py")
+	if err := os.WriteFile(expectedScriptPath, []byte("print('staged')\n"), 0o755); err != nil {
+		t.Fatalf("write staged legacy script: %v", err)
+	}
+
+	sourceRoot, scriptPath, ok := findExecutableLegacyPythonEntrypoint(installRoot)
+	if !ok {
+		t.Fatalf("expected staged source runtime to resolve as legacy Python entrypoint")
+	}
+	if sourceRoot != stagedSourceRoot {
+		t.Fatalf("expected staged source root %q, got %q", stagedSourceRoot, sourceRoot)
+	}
+	if scriptPath != expectedScriptPath {
+		t.Fatalf("expected staged script path %q, got %q", expectedScriptPath, scriptPath)
+	}
+}
+
 func TestRunLegacyPythonZeroArgFailureDoesNotPanic(t *testing.T) {
 	root := t.TempDir()
 	toolsDir := filepath.Join(root, "tools")
