@@ -245,10 +245,24 @@ func isRecognizedJiniSourceRoot(root string) bool {
 	if err != nil {
 		return false
 	}
-	if !strings.Contains(string(goModBytes), jiniModuleDeclaration) {
+	if !hasJiniModuleDeclaration(string(goModBytes)) {
 		return false
 	}
 	return true
+}
+
+func hasJiniModuleDeclaration(goMod string) bool {
+	for _, line := range strings.Split(goMod, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "//") {
+			continue
+		}
+		if !strings.HasPrefix(trimmed, "module ") {
+			return false
+		}
+		return trimmed == jiniModuleDeclaration
+	}
+	return false
 }
 
 func findExecutableLegacyPythonEntrypoint(start string) (string, string, bool) {

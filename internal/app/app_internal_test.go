@@ -362,6 +362,30 @@ func TestIsRecognizedJiniSourceRootRejectsWrongModuleDeclaration(t *testing.T) {
 	}
 }
 
+func TestIsRecognizedJiniSourceRootRejectsSpoofedModuleSubstring(t *testing.T) {
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "cmd", "jini"), 0o755); err != nil {
+		t.Fatalf("mkdir cmd/jini: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(root, "tools"), 0o755); err != nil {
+		t.Fatalf("mkdir tools: %v", err)
+	}
+	goMod := "module example.com/not-jini\nrequire github.com/maridlabsai/jini v0.0.0\n"
+	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte(goMod), 0o644); err != nil {
+		t.Fatalf("write go.mod: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "cmd", "jini", "main.go"), []byte("package main\n"), 0o644); err != nil {
+		t.Fatalf("write main.go: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "tools", "jini_validate.py"), []byte("print('fake')\n"), 0o755); err != nil {
+		t.Fatalf("write legacy script: %v", err)
+	}
+
+	if isRecognizedJiniSourceRoot(root) {
+		t.Fatalf("expected spoofed go.mod substring to be rejected")
+	}
+}
+
 func TestSelectLegacyPythonEntrypointRejectsUnrecognizedCurrentWorkingDirectoryScript(t *testing.T) {
 	cwdRoot := "/tmp/unrelated"
 	cwdScript := filepath.Join(cwdRoot, "tools", "jini_validate.py")
