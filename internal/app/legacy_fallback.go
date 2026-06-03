@@ -252,8 +252,32 @@ func isRecognizedJiniSourceRoot(root string) bool {
 }
 
 func hasJiniModuleDeclaration(goMod string) bool {
+	inBlockComment := false
 	for _, line := range strings.Split(goMod, "\n") {
 		trimmed := strings.TrimSpace(line)
+		for {
+			if inBlockComment {
+				endIndex := strings.Index(trimmed, "*/")
+				if endIndex < 0 {
+					trimmed = ""
+					break
+				}
+				trimmed = strings.TrimSpace(trimmed[endIndex+2:])
+				inBlockComment = false
+				continue
+			}
+			if strings.HasPrefix(trimmed, "/*") {
+				endIndex := strings.Index(trimmed[2:], "*/")
+				if endIndex < 0 {
+					inBlockComment = true
+					trimmed = ""
+					break
+				}
+				trimmed = strings.TrimSpace(trimmed[endIndex+4:])
+				continue
+			}
+			break
+		}
 		if trimmed == "" || strings.HasPrefix(trimmed, "//") {
 			continue
 		}

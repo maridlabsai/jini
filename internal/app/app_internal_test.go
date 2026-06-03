@@ -410,6 +410,30 @@ func TestIsRecognizedJiniSourceRootAcceptsWhitespaceSeparatedModuleDeclaration(t
 	}
 }
 
+func TestIsRecognizedJiniSourceRootAcceptsLeadingBlockComments(t *testing.T) {
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "cmd", "jini"), 0o755); err != nil {
+		t.Fatalf("mkdir cmd/jini: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(root, "tools"), 0o755); err != nil {
+		t.Fatalf("mkdir tools: %v", err)
+	}
+	goMod := "/* generated install metadata */\n/* keep this in sync */ module github.com/maridlabsai/jini\n"
+	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte(goMod), 0o644); err != nil {
+		t.Fatalf("write go.mod: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "cmd", "jini", "main.go"), []byte("package main\n"), 0o644); err != nil {
+		t.Fatalf("write main.go: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "tools", "jini_validate.py"), []byte("print('real')\n"), 0o755); err != nil {
+		t.Fatalf("write legacy script: %v", err)
+	}
+
+	if !isRecognizedJiniSourceRoot(root) {
+		t.Fatalf("expected valid module declaration after block comments to be accepted")
+	}
+}
+
 func TestIsRecognizedJiniSourceRootRejectsExtraModuleTokensBeforeComment(t *testing.T) {
 	root := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(root, "cmd", "jini"), 0o755); err != nil {
