@@ -48,6 +48,10 @@ func shouldUseLegacySurface(args []string) bool {
 
 func runLegacyPython(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	sourceRoot, scriptPath, ok := resolveLegacyPythonEntrypoint()
+	commandLabel := "jini"
+	if len(args) > 0 {
+		commandLabel = args[0]
+	}
 	if !ok {
 		if len(args) > 0 {
 			fmt.Fprintf(stderr, "Unknown command %q.\n", args[0])
@@ -80,7 +84,7 @@ func runLegacyPython(args []string, stdin io.Reader, stdout, stderr io.Writer) i
 		if exitErr, ok := err.(*exec.ExitError); ok {
 			return exitErr.ExitCode()
 		}
-		fmt.Fprintf(stderr, "Could not run legacy Python command %q: %v\n", args[0], err)
+		fmt.Fprintf(stderr, "Could not run legacy Python command %q: %v\n", commandLabel, err)
 		return 1
 	}
 	return 0

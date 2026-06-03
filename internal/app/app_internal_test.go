@@ -83,6 +83,31 @@ func TestRunLegacyPythonPreservesCallerWorkingDirectory(t *testing.T) {
 	}
 }
 
+func TestRunLegacyPythonZeroArgFailureDoesNotPanic(t *testing.T) {
+	root := t.TempDir()
+	toolsDir := filepath.Join(root, "tools")
+	if err := os.MkdirAll(toolsDir, 0o755); err != nil {
+		t.Fatalf("mkdir tools: %v", err)
+	}
+	scriptPath := filepath.Join(toolsDir, "jini_validate.py")
+	if err := os.WriteFile(scriptPath, []byte("print('ok')\n"), 0o755); err != nil {
+		t.Fatalf("write legacy script: %v", err)
+	}
+
+	t.Setenv("JINI_SOURCE_DIR", root)
+	t.Setenv("PATH", "")
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := runLegacyPython(nil, nil, &stdout, &stderr)
+	if exitCode != 1 {
+		t.Fatalf("expected exit code 1, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+	if !strings.Contains(stderr.String(), `Could not run legacy Python command "jini":`) {
+		t.Fatalf("expected zero-arg failure message, got:\n%s", stderr.String())
+	}
+}
+
 func TestRecognizedGoCommandFallsBackToLegacyForUnsupportedFlags(t *testing.T) {
 	root := t.TempDir()
 	toolsDir := filepath.Join(root, "tools")
