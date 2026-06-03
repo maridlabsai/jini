@@ -115,23 +115,17 @@ func resolveLegacyPythonExecutable() (string, error) {
 }
 
 func canonicalPythonExecutable(command string) (string, error) {
-	probeFile, err := os.CreateTemp("", "jini-python-probe-*.py")
+	probe := "import os, sys\nprint(os.path.realpath(sys.executable))\nprint(sys.version_info[0])\n"
+	cmd := exec.Command(command, "-")
+	cmd.Stdin = strings.NewReader(probe)
+	output, err := cmd.Output()
 	if err == nil {
-		defer os.Remove(probeFile.Name())
-		probe := "import os, sys\nprint(os.path.realpath(sys.executable))\nprint(sys.version_info[0])\n"
-		if _, writeErr := probeFile.WriteString(probe); writeErr == nil && probeFile.Close() == nil {
-			output, runErr := exec.Command(command, probeFile.Name()).Output()
-			if runErr == nil {
-				lines := strings.Split(strings.TrimSpace(string(output)), "\n")
-				if len(lines) == 2 && strings.TrimSpace(lines[1]) == "3" {
-					candidate := strings.TrimSpace(lines[0])
-					if info, statErr := os.Stat(candidate); statErr == nil && !info.IsDir() {
-						return candidate, nil
-					}
-				}
+		lines := strings.Split(strings.TrimSpace(string(output)), "\n")
+		if len(lines) == 2 && strings.TrimSpace(lines[1]) == "3" {
+			candidate := strings.TrimSpace(lines[0])
+			if info, statErr := os.Stat(candidate); statErr == nil && !info.IsDir() {
+				return candidate, nil
 			}
-		} else {
-			_ = probeFile.Close()
 		}
 	}
 	return "", fmt.Errorf("%q is not a usable Python interpreter", command)
