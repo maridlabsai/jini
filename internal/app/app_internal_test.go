@@ -339,6 +339,20 @@ func TestSelectLegacyPythonEntrypointIgnoresUnrecognizedConfiguredSource(t *test
 	}
 }
 
+func TestSelectLegacyPythonEntrypointRejectsUnrecognizedCurrentWorkingDirectoryScript(t *testing.T) {
+	cwdRoot := "/tmp/unrelated"
+	cwdScript := filepath.Join(cwdRoot, "tools", "jini_validate.py")
+
+	sourceRoot, scriptPath, ok := selectLegacyPythonEntrypoint(
+		cwdRoot, cwdScript, true,
+		"", "", false,
+		"", "", false,
+	)
+	if ok {
+		t.Fatalf("expected unrecognized cwd script to be rejected, got source=%q script=%q", sourceRoot, scriptPath)
+	}
+}
+
 func TestFindExecutableLegacyPythonEntrypointUsesStagedSourceRuntime(t *testing.T) {
 	installRoot := t.TempDir()
 	stagedSourceRoot := filepath.Join(installRoot, "source-runtime")

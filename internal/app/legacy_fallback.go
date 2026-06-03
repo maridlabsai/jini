@@ -224,9 +224,6 @@ func selectLegacyPythonEntrypoint(
 	if execOK {
 		return execRoot, execScript, true
 	}
-	if cwdOK {
-		return cwdRoot, cwdScript, true
-	}
 	return "", "", false
 }
 
