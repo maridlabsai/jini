@@ -191,6 +191,15 @@ func TestResolveLegacyPythonEntrypointPrefersCurrentCheckoutOverStaleEnv(t *test
 	if err := os.MkdirAll(filepath.Join(liveRoot, "tools"), 0o755); err != nil {
 		t.Fatalf("mkdir live tools: %v", err)
 	}
+	if err := os.MkdirAll(filepath.Join(liveRoot, "cmd", "jini"), 0o755); err != nil {
+		t.Fatalf("mkdir live cmd: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(liveRoot, "go.mod"), []byte("module github.com/maridlabsai/jini\n"), 0o644); err != nil {
+		t.Fatalf("write live go.mod: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(liveRoot, "cmd", "jini", "main.go"), []byte("package main\n"), 0o644); err != nil {
+		t.Fatalf("write live main.go: %v", err)
+	}
 	if err := os.WriteFile(filepath.Join(liveRoot, "tools", "jini_validate.py"), []byte("print('live')\n"), 0o755); err != nil {
 		t.Fatalf("write live legacy script: %v", err)
 	}
@@ -242,6 +251,49 @@ func TestResolveLegacyPythonEntrypointPrefersCurrentCheckoutOverStaleEnv(t *test
 	}
 	if resolvedScriptPath != resolvedExpectedScriptPath {
 		t.Fatalf("expected script path %q, got %q", resolvedExpectedScriptPath, resolvedScriptPath)
+	}
+}
+
+func TestResolveLegacyPythonEntrypointPrefersConfiguredSourceOverUnrelatedCwdScript(t *testing.T) {
+	envRoot := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(envRoot, "tools"), 0o755); err != nil {
+		t.Fatalf("mkdir env tools: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(envRoot, "tools", "jini_validate.py"), []byte("print('env')\n"), 0o755); err != nil {
+		t.Fatalf("write env legacy script: %v", err)
+	}
+
+	unrelatedRoot := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(unrelatedRoot, "tools"), 0o755); err != nil {
+		t.Fatalf("mkdir unrelated tools: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(unrelatedRoot, "tools", "jini_validate.py"), []byte("print('unrelated')\n"), 0o755); err != nil {
+		t.Fatalf("write unrelated legacy script: %v", err)
+	}
+
+	previousDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	if err := os.Chdir(unrelatedRoot); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer func() {
+		_ = os.Chdir(previousDir)
+	}()
+
+	t.Setenv("JINI_SOURCE_DIR", envRoot)
+
+	sourceRoot, scriptPath, ok := resolveLegacyPythonEntrypoint()
+	if !ok {
+		t.Fatalf("expected to resolve legacy Python entrypoint")
+	}
+	if sourceRoot != envRoot {
+		t.Fatalf("expected configured source root %q to beat unrelated cwd script, got %q", envRoot, sourceRoot)
+	}
+	expectedScriptPath := filepath.Join(envRoot, "tools", "jini_validate.py")
+	if scriptPath != expectedScriptPath {
+		t.Fatalf("expected script path %q, got %q", expectedScriptPath, scriptPath)
 	}
 }
 

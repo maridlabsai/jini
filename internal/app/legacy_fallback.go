@@ -176,39 +176,55 @@ func overrideEnvVar(env []string, key, value string) []string {
 }
 
 func resolveLegacyPythonEntrypoint() (string, string, bool) {
-	for _, candidate := range legacyEntrypointCandidates() {
-		if sourceRoot, scriptPath, ok := findLegacyPythonEntrypoint(candidate); ok {
-			return sourceRoot, scriptPath, true
-		}
+	var (
+		cwdRoot    string
+		cwdScript  string
+		cwdOK      bool
+		envRoot    string
+		envScript  string
+		envOK      bool
+		execRoot   string
+		execScript string
+		execOK     bool
+	)
+	if cwd, err := os.Getwd(); err == nil {
+		cwdRoot, cwdScript, cwdOK = findLegacyPythonEntrypoint(cwd)
+	}
+	if envCandidate := strings.TrimSpace(os.Getenv("JINI_SOURCE_DIR")); envCandidate != "" {
+		envRoot, envScript, envOK = findLegacyPythonEntrypoint(envCandidate)
+	}
+	if executablePath, err := os.Executable(); err == nil {
+		execRoot, execScript, execOK = findLegacyPythonEntrypoint(filepath.Dir(executablePath))
+	}
+
+	if cwdOK && isRecognizedJiniSourceRoot(cwdRoot) {
+		return cwdRoot, cwdScript, true
+	}
+	if envOK {
+		return envRoot, envScript, true
+	}
+	if cwdOK {
+		return cwdRoot, cwdScript, true
+	}
+	if execOK {
+		return execRoot, execScript, true
 	}
 	return "", "", false
 }
 
-func legacyEntrypointCandidates() []string {
-	candidates := []string{}
-	seen := map[string]struct{}{}
-	addCandidate := func(path string) {
-		path = strings.TrimSpace(path)
-		if path == "" {
-			return
+func isRecognizedJiniSourceRoot(root string) bool {
+	requiredFiles := []string{
+		filepath.Join(root, "go.mod"),
+		filepath.Join(root, "cmd", "jini", "main.go"),
+		filepath.Join(root, "tools", "jini_validate.py"),
+	}
+	for _, required := range requiredFiles {
+		info, err := os.Stat(required)
+		if err != nil || info.IsDir() {
+			return false
 		}
-		if _, ok := seen[path]; ok {
-			return
-		}
-		seen[path] = struct{}{}
-		candidates = append(candidates, path)
 	}
-
-	if cwd, err := os.Getwd(); err == nil {
-		addCandidate(cwd)
-	}
-	if envRoot := os.Getenv("JINI_SOURCE_DIR"); envRoot != "" {
-		addCandidate(envRoot)
-	}
-	if executablePath, err := os.Executable(); err == nil {
-		addCandidate(filepath.Dir(executablePath))
-	}
-	return candidates
+	return true
 }
 
 func findLegacyPythonEntrypoint(start string) (string, string, bool) {
