@@ -3,6 +3,7 @@ package app
 import (
 	"bufio"
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -174,8 +175,23 @@ func runLauncher(stdin io.Reader, stdout, stderr io.Writer) int {
 				renderNewWorkPrompt(stdout)
 				return 0
 			}
+			scriptFingerprint, ok := fingerprintLegacyScript(scriptPath)
+			if !ok {
+				if stdin != nil {
+					return runNewWorkIntake(stdin, stdout, stderr)
+				}
+				renderNewWorkPrompt(stdout)
+				return 0
+			}
 			pythonCommand, pythonErr := resolveLegacyPythonExecutable()
 			if pythonErr != nil {
+				if stdin != nil {
+					return runNewWorkIntake(stdin, stdout, stderr)
+				}
+				renderNewWorkPrompt(stdout)
+				return 0
+			}
+			if !legacyScriptMatchesFingerprint(scriptPath, scriptFingerprint) {
 				if stdin != nil {
 					return runNewWorkIntake(stdin, stdout, stderr)
 				}
@@ -234,6 +250,19 @@ func shouldUseLegacyFrontDoor() bool {
 	default:
 		return false
 	}
+}
+
+func fingerprintLegacyScript(path string) ([32]byte, bool) {
+	contents, err := os.ReadFile(path)
+	if err != nil {
+		return [32]byte{}, false
+	}
+	return sha256.Sum256(contents), true
+}
+
+func legacyScriptMatchesFingerprint(path string, fingerprint [32]byte) bool {
+	currentFingerprint, ok := fingerprintLegacyScript(path)
+	return ok && currentFingerprint == fingerprint
 }
 
 func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio.Scanner, stdout, stderr io.Writer) int {

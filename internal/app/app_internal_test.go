@@ -1095,6 +1095,69 @@ func TestRunLauncherKeepsResolvedLegacyEntrypointAfterPythonProbeMutatesRoot(t *
 	}
 }
 
+func TestRunLauncherFallsBackToGoPromptWhenPythonProbeMutatesLegacyScript(t *testing.T) {
+	root := createRecognizedLegacySourceRoot(t, "print('legacy-front-door-gone')\n")
+	pythonPath := resolvePythonExecutableForTest(t)
+	scriptPath := filepath.Join(root, "tools", "jini_validate.py")
+	markerPath := filepath.Join(t.TempDir(), "probe-marker")
+	wrapperPath := filepath.Join(t.TempDir(), "python-wrapper")
+	wrapper := "#!/bin/sh\n" +
+		"printf 'used' > \"" + markerPath + "\"\n" +
+		"printf 'print(\\\"mutated-front-door\\\")\\n' > \"" + scriptPath + "\"\n" +
+		"exec \"" + pythonPath + "\" \"$@\"\n"
+	if err := os.WriteFile(wrapperPath, []byte(wrapper), 0o755); err != nil {
+		t.Fatalf("write wrapper: %v", err)
+	}
+
+	stateDir := t.TempDir()
+	workingDir := t.TempDir()
+	previousDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	if err := os.Chdir(workingDir); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer func() {
+		_ = os.Chdir(previousDir)
+	}()
+
+	t.Setenv("JINI_SOURCE_DIR", root)
+	t.Setenv("JINI_USE_LEGACY_FRONT_DOOR", "1")
+	t.Setenv("JINI_LEGACY_PYTHON", wrapperPath)
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("PATH", "")
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := runLauncher(nil, &stdout, &stderr)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "Paste what you want finished.") {
+		t.Fatalf("expected Go prompt fallback after probe-time script deletion, got:\n%s", stdout.String())
+	}
+	if strings.Contains(stdout.String(), "legacy-front-door-gone") {
+		t.Fatalf("expected not to execute original legacy script after probe-time mutation, got:\n%s", stdout.String())
+	}
+	if strings.Contains(stdout.String(), "mutated-front-door") {
+		t.Fatalf("expected not to execute mutated legacy script after probe-time mutation, got:\n%s", stdout.String())
+	}
+	if stderr.Len() != 0 {
+		t.Fatalf("expected no stderr output, got:\n%s", stderr.String())
+	}
+	if _, err := os.Stat(markerPath); err != nil {
+		t.Fatalf("expected probe wrapper to run and create marker: %v", err)
+	}
+	contents, err := os.ReadFile(scriptPath)
+	if err != nil {
+		t.Fatalf("expected mutated legacy script to remain readable for fingerprint mismatch path: %v", err)
+	}
+	if !strings.Contains(string(contents), "mutated-front-door") {
+		t.Fatalf("expected probe wrapper to mutate legacy script contents, got:\n%s", string(contents))
+	}
+}
+
 func TestRunLauncherFallsBackToGoPromptWhenConfiguredLegacyPythonIsNotExecutable(t *testing.T) {
 	root := createRecognizedLegacySourceRoot(t, "print('legacy')\n")
 
