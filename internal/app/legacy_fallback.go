@@ -254,30 +254,7 @@ func isRecognizedJiniSourceRoot(root string) bool {
 func hasJiniModuleDeclaration(goMod string) bool {
 	inBlockComment := false
 	for _, line := range strings.Split(goMod, "\n") {
-		trimmed := strings.TrimSpace(line)
-		for {
-			if inBlockComment {
-				endIndex := strings.Index(trimmed, "*/")
-				if endIndex < 0 {
-					trimmed = ""
-					break
-				}
-				trimmed = strings.TrimSpace(trimmed[endIndex+2:])
-				inBlockComment = false
-				continue
-			}
-			if strings.HasPrefix(trimmed, "/*") {
-				endIndex := strings.Index(trimmed[2:], "*/")
-				if endIndex < 0 {
-					inBlockComment = true
-					trimmed = ""
-					break
-				}
-				trimmed = strings.TrimSpace(trimmed[endIndex+4:])
-				continue
-			}
-			break
-		}
+		trimmed := strings.TrimSpace(stripGoModComments(line, &inBlockComment))
 		if trimmed == "" || strings.HasPrefix(trimmed, "//") {
 			continue
 		}
@@ -291,6 +268,29 @@ func hasJiniModuleDeclaration(goMod string) bool {
 		return fields[1] == "github.com/maridlabsai/jini"
 	}
 	return false
+}
+
+func stripGoModComments(line string, inBlockComment *bool) string {
+	var builder strings.Builder
+	for i := 0; i < len(line); {
+		if *inBlockComment {
+			endIndex := strings.Index(line[i:], "*/")
+			if endIndex < 0 {
+				return builder.String()
+			}
+			i += endIndex + 2
+			*inBlockComment = false
+			continue
+		}
+		if strings.HasPrefix(line[i:], "/*") {
+			*inBlockComment = true
+			i += 2
+			continue
+		}
+		builder.WriteByte(line[i])
+		i++
+	}
+	return builder.String()
 }
 
 func findExecutableLegacyPythonEntrypoint(start string) (string, string, bool) {
