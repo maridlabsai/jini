@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -166,6 +167,13 @@ func runLauncher(stdin io.Reader, stdout, stderr io.Writer) int {
 			return runActiveWorkLauncher(active, stdin, stdout, stderr)
 		}
 		if shouldUseLegacyFrontDoor() && canUseLegacyFrontDoor() {
+			if !canExecuteLegacyPython() {
+				if stdin != nil {
+					return runNewWorkIntake(stdin, stdout, stderr)
+				}
+				renderNewWorkPrompt(stdout)
+				return 0
+			}
 			return runLegacyPython(nil, stdin, stdout, stderr)
 		}
 		if stdin != nil {
@@ -215,6 +223,11 @@ func shouldUseLegacyFrontDoor() bool {
 	default:
 		return false
 	}
+}
+
+func canExecuteLegacyPython() bool {
+	_, err := exec.LookPath("python3")
+	return err == nil
 }
 
 func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
