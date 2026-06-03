@@ -72,13 +72,7 @@ func runLegacyPython(args []string, stdin io.Reader, stdout, stderr io.Writer) i
 	} else {
 		command.Stdin = os.Stdin
 	}
-	if cwd := strings.TrimSpace(os.Getenv("JINI_CALLER_CWD")); cwd != "" {
-		command.Dir = cwd
-	} else if cwd, err := os.Getwd(); err == nil && strings.TrimSpace(cwd) != "" {
-		command.Dir = cwd
-	} else {
-		command.Dir = sourceRoot
-	}
+	command.Dir = resolveLegacyPythonWorkingDir(sourceRoot)
 	command.Env = legacyPythonEnv(sourceRoot)
 	if err := command.Run(); err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
@@ -88,6 +82,24 @@ func runLegacyPython(args []string, stdin io.Reader, stdout, stderr io.Writer) i
 		return 1
 	}
 	return 0
+}
+
+func resolveLegacyPythonWorkingDir(sourceRoot string) string {
+	if cwd := strings.TrimSpace(os.Getenv("JINI_CALLER_CWD")); isUsableWorkingDirectory(cwd) {
+		return cwd
+	}
+	if cwd, err := os.Getwd(); err == nil && isUsableWorkingDirectory(cwd) {
+		return cwd
+	}
+	return sourceRoot
+}
+
+func isUsableWorkingDirectory(path string) bool {
+	if strings.TrimSpace(path) == "" {
+		return false
+	}
+	info, err := os.Stat(path)
+	return err == nil && info.IsDir()
 }
 
 func legacyPythonEnv(sourceRoot string) []string {

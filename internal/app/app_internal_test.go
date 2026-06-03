@@ -83,6 +83,44 @@ func TestRunLegacyPythonPreservesCallerWorkingDirectory(t *testing.T) {
 	}
 }
 
+func TestRunLegacyPythonFallsBackWhenCallerWorkingDirectoryIsInvalid(t *testing.T) {
+	root := t.TempDir()
+	toolsDir := filepath.Join(root, "tools")
+	if err := os.MkdirAll(toolsDir, 0o755); err != nil {
+		t.Fatalf("mkdir tools: %v", err)
+	}
+	scriptPath := filepath.Join(toolsDir, "jini_validate.py")
+	script := "import os\nprint(os.getcwd())\n"
+	if err := os.WriteFile(scriptPath, []byte(script), 0o755); err != nil {
+		t.Fatalf("write legacy script: %v", err)
+	}
+
+	fallbackDir := t.TempDir()
+	previousDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	if err := os.Chdir(fallbackDir); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer func() {
+		_ = os.Chdir(previousDir)
+	}()
+
+	t.Setenv("JINI_SOURCE_DIR", root)
+	t.Setenv("JINI_CALLER_CWD", filepath.Join(t.TempDir(), "missing"))
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := runLegacyPython(nil, nil, &stdout, &stderr)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+	if !strings.Contains(stdout.String(), fallbackDir) {
+		t.Fatalf("expected legacy run to fall back to working cwd %q, got:\n%s", fallbackDir, stdout.String())
+	}
+}
+
 func TestRunLegacyPythonZeroArgFailureDoesNotPanic(t *testing.T) {
 	root := t.TempDir()
 	toolsDir := filepath.Join(root, "tools")
