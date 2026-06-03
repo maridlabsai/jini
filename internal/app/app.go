@@ -2271,7 +2271,6 @@ func renderPublicCommandInventory(w io.Writer) {
 	fmt.Fprintln(w, "- jini doctor")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "MORE")
-	fmt.Fprintln(w, "- jini help --admin")
 	fmt.Fprintln(w, "- jini admin help")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "This runtime preview keeps the public surface small and inspectable.")
@@ -3591,7 +3590,7 @@ func renderCurrentWorkHelp(w io.Writer, summary *workSummary) {
 	fmt.Fprintln(w)
 	renderPrimaryActionMenu(w, summary, "Actions", "Open")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Commands: `status`, `doctor`, `memory`, `permissions`, `route`, `open`, `start`.")
+	fmt.Fprintln(w, "Commands: `open`, `status`, `doctor`.")
 }
 
 func runActiveWorkLauncher(active []*workSummary, stdin io.Reader, stdout, stderr io.Writer) int {

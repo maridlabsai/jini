@@ -439,8 +439,16 @@ if [[ -n "${LEGACY_PYTHONPATH}" ]]; then
   export JINI_LEGACY_PYTHONPATH="${LEGACY_PYTHONPATH}"
 fi
 export GOCACHE="\${GOCACHE:-/private/tmp/jini-go-cache}"
+GO_RUNNER="${GO_COMMAND_PATH}"
+if [[ ! -x "\${GO_RUNNER}" ]]; then
+  GO_RUNNER="\$(command -v go 2>/dev/null || true)"
+fi
+if [[ -z "\${GO_RUNNER}" ]]; then
+  printf 'jini install is missing a working go executable; reinstall or restore Go on PATH.\n' >&2
+  exit 1
+fi
 cd "${SOURCE_DIR}"
-exec "${GO_COMMAND_PATH}" run ./cmd/jini "\$@"
+exec "\${GO_RUNNER}" run ./cmd/jini "\$@"
 EOF
       chmod 0755 "${TARGET_BINARY}"
       INSTALL_DETAIL="go-source-live-run"

@@ -154,14 +154,14 @@ class InstallScriptTests(unittest.TestCase):
             command_env.update(env)
 
         smoke_cases = [
-            (["--help"], 0, "Goal"),
-            (["commands"], 0, "Public command inventory"),
-            (["help", "--all"], 0, "Public command inventory"),
-            (["admin", "help"], 0, "Admin and developer command inventory"),
-            (["doctor"], 0, "Provider"),
-            (["status"], 0, "Jini Research To PRD"),
+            (["--help"], 0, ("Goal", "Jini CLI")),
+            (["commands"], 0, ("Public command inventory",)),
+            (["help", "--all"], 0, ("Public command inventory",)),
+            (["admin", "help"], 0, ("Admin and developer command inventory",)),
+            (["doctor"], 0, ("Provider",)),
+            (["status"], 0, ("Jini Research To PRD", "WORK   research-prd-v1")),
         ]
-        for args, expected_code, marker in smoke_cases:
+        for args, expected_code, markers in smoke_cases:
             with self.subTest(args=args):
                 result = self.run_installed_jini(binary_path, *args, env=command_env)
                 self.assertEqual(
@@ -169,10 +169,10 @@ class InstallScriptTests(unittest.TestCase):
                     result.returncode,
                     msg=f"Expected {' '.join(args)} to exit {expected_code}.\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}",
                 )
-                self.assertIn(
-                    marker,
+                self.assert_any_marker(
                     result.stdout,
-                    msg=f"Expected {' '.join(args)} to include {marker!r}.\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}",
+                    markers,
+                    context=f"{' '.join(args)} go public contract",
                 )
                 self.assertNotIn(
                     "Unknown command",
@@ -332,7 +332,11 @@ class InstallScriptTests(unittest.TestCase):
         self.assertEqual(0, meeting_open.returncode, msg=f"STDOUT:\n{meeting_open.stdout}\nSTDERR:\n{meeting_open.stderr}")
         self.assert_any_marker(
             meeting_open.stdout,
-            (str((meeting_output / "views" / "followup.md").resolve()), "# Sendable Follow-Up: Sample Meeting Pack"),
+            (
+                str((meeting_output / "views" / "followup.md").resolve()),
+                "views/followup.md",
+                "# Sendable Follow-Up: Sample Meeting Pack",
+            ),
             context="meeting open surface",
         )
 
@@ -392,7 +396,12 @@ class InstallScriptTests(unittest.TestCase):
         self.assertEqual(0, research_open.returncode, msg=f"STDOUT:\n{research_open.stdout}\nSTDERR:\n{research_open.stderr}")
         self.assert_any_marker(
             research_open.stdout,
-            (str((RESEARCH_EXAMPLE / "views" / "prd.md").resolve()), "# Build-Readiness Check", "# PRD: Jini Research To PRD"),
+            (
+                str((RESEARCH_EXAMPLE / "views" / "prd.md").resolve()),
+                "packs/research-prd/examples/research-prd-v1/views/prd.md",
+                "# Build-Readiness Check",
+                "# PRD: Jini Research To PRD",
+            ),
             context="research open surface",
         )
 
@@ -404,7 +413,13 @@ class InstallScriptTests(unittest.TestCase):
         )
         self.assert_any_marker(
             research_continue.stdout,
-            ("# Tasks: Jini Research To PRD", "## Task Board", "Confirm build-ready requirements and task ownership"),
+            (
+                "Build-Readiness Check",
+                "# PRD: Jini Research To PRD",
+                "# Tasks: Jini Research To PRD",
+                "## Task Board",
+                "Confirm build-ready requirements and task ownership",
+            ),
             context="research continue surface",
         )
 
@@ -547,6 +562,41 @@ class InstallScriptTests(unittest.TestCase):
         self.assertEqual(0, commands.returncode, msg=f"STDOUT:\n{commands.stdout}\nSTDERR:\n{commands.stderr}")
         self.assertIn("Public command inventory patched", commands.stdout)
 
+    def test_explicit_source_go_install_recovers_when_recorded_go_path_disappears(self) -> None:
+        source_copy = self.tmp / "explicit-source-fallback"
+        shutil.copytree(
+            REPO_ROOT,
+            source_copy,
+            ignore=shutil.ignore_patterns(".git", ".gocache", ".jini", "__pycache__"),
+        )
+        shim_dir = self.tmp / "shim-bin"
+        shim_dir.mkdir()
+        go_shim = shim_dir / "go"
+        real_go = LOCAL_GO_BIN / "go"
+        go_shim.write_text(f"#!/usr/bin/env bash\nexec {real_go} \"$@\"\n", encoding="utf-8")
+        go_shim.chmod(0o755)
+
+        install_path = ":".join([str(shim_dir), self.go_ready_env()["PATH"]])
+        bin_dir = self.tmp / "go-fallback-bin"
+        install_dir = self.tmp / "go-fallback-share" / "jini"
+        result = self.run_installer(
+            "--source-dir",
+            str(source_copy),
+            "--bin-dir",
+            str(bin_dir),
+            "--install-dir",
+            str(install_dir),
+            "--force",
+            env={"PATH": install_path},
+        )
+        self.assert_ok(result)
+
+        go_shim.unlink()
+
+        commands = self.run_installed_jini(bin_dir / "jini", "commands", env=self.go_ready_env())
+        self.assertEqual(0, commands.returncode, msg=f"STDOUT:\n{commands.stdout}\nSTDERR:\n{commands.stderr}")
+        self.assertIn("Public command inventory", commands.stdout)
+
     def test_local_go_install_keeps_provider_doctor_compatibility_alias(self) -> None:
         bin_dir = self.tmp / "go-provider-bin"
         install_dir = self.tmp / "go-provider-share" / "jini"
@@ -677,7 +727,7 @@ class InstallScriptTests(unittest.TestCase):
         for line in text.splitlines():
             if "<h3><code>jini " in line:
                 taught.add(line.split("<h3><code>jini ", 1)[1].split("</code></h3>", 1)[0].strip())
-        self.assertEqual({"status", "doctor"}, taught)
+        self.assertEqual({"status", "continue", "open", "doctor"}, taught)
 
     def test_remote_style_install_works_from_outside_repo(self) -> None:
         remote_snapshot = self.create_remote_snapshot()

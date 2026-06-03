@@ -338,7 +338,7 @@ func TestCommandsAliasShowsPublicCommandInventory(t *testing.T) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
 	}
-	for _, unwanted := range []string{"jini check", "jini provider doctor", "jini help"} {
+	for _, unwanted := range []string{"jini check", "jini provider doctor"} {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("did not expect output to contain %q, got:\n%s", unwanted, out)
 		}

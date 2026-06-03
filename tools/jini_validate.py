@@ -4711,7 +4711,7 @@ def build_get_started_guide(
             f"{cli} run --repo /path/to/repo --harness {selected_target} --activate-runtime --consent write --consent publish",
         ],
         "notes": [
-            "Use `jini help --admin` when you need the deeper command inventory.",
+            "Use `jini admin help` when you need the deeper command inventory.",
         ],
     }
     guide = {
@@ -10116,7 +10116,7 @@ def print_cli_overview() -> None:
     print()
     print("MORE")
     print(f"  {cli} commands")
-    print(f"  {cli} help --admin")
+    print(f"  {cli} admin help")
     print(f"  {cli} <command> --help")
 
 
@@ -10249,7 +10249,7 @@ def handle_interactive_escape_hatch(request_text: str) -> bool:
 
 def print_interactive_command_summary() -> None:
     cli = cli_invocation()
-    print("IN-SHELL  commands  doctor  help --admin  exit")
+    print("IN-SHELL  commands  doctor  admin help  exit")
     print(f"SUPPORT   run `{cli} status`, `{cli} continue`, or `{cli} open` outside the shell")
 
 
@@ -10324,10 +10324,10 @@ def handle_interactive_multi_token_hint(request_text: str) -> bool:
         print_interactive_builtin_command_hint("help")
         return True
     if normalized.startswith("help --admin "):
-        print_interactive_builtin_command_hint("help --admin")
+        print_interactive_builtin_command_hint("admin help")
         return True
     if normalized.startswith("admin help ") or normalized.startswith("admin --help "):
-        print_interactive_builtin_command_hint("help --admin")
+        print_interactive_builtin_command_hint("admin help")
         return True
     if normalized.startswith("setup --harness ") and normalized not in {"setup --harness codex"}:
         print(f"Use `jini {normalized}` outside the live shell.", file=sys.stderr)
@@ -10370,7 +10370,7 @@ def print_interactive_doctor_summary(report: dict[str, Any]) -> None:
 
 def print_interactive_admin_summary() -> None:
     print("ADMIN    validate  publish  route-feedback  skills  delegate")
-    print("MORE     run `jini help --admin` for the full inventory")
+    print("MORE     run `jini admin help` for the full inventory")
 
 
 def run_interactive_shell_loop(render_request: Callable[[str], None]) -> int:
@@ -10622,9 +10622,9 @@ def print_public_command_inventory() -> None:
         for command, description in commands:
             print(f"  {command}")
             print(f"    {description}")
-        print()
+    print()
     print("ADMIN")
-    print(f"  {cli} help --admin")
+    print(f"  {cli} admin help")
     print("    Show the operator and developer command inventory.")
 
 
