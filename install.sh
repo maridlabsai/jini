@@ -435,6 +435,8 @@ if [[ ${INSTALLED_FROM_RELEASE} -ne 1 ]]; then
 #!/usr/bin/env bash
 set -euo pipefail
 export JINI_SOURCE_DIR="${LEGACY_SOURCE_DIR}"
+export JINI_USE_LEGACY_FRONT_DOOR="${JINI_USE_LEGACY_FRONT_DOOR:-1}"
+export JINI_CALLER_CWD="\${PWD}"
 if [[ -n "${LEGACY_PYTHONPATH}" ]]; then
   export JINI_LEGACY_PYTHONPATH="${LEGACY_PYTHONPATH}"
 fi
@@ -466,6 +468,8 @@ EOF
 #!/usr/bin/env bash
 set -euo pipefail
 export JINI_SOURCE_DIR="${LEGACY_SOURCE_DIR}"
+export JINI_USE_LEGACY_FRONT_DOOR="${JINI_USE_LEGACY_FRONT_DOOR:-1}"
+export JINI_CALLER_CWD="\${PWD}"
 if [[ -n "${LEGACY_PYTHONPATH}" ]]; then
   export JINI_LEGACY_PYTHONPATH="${LEGACY_PYTHONPATH}"
 fi

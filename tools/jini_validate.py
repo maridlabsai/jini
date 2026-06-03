@@ -10320,14 +10320,14 @@ def handle_interactive_multi_token_hint(request_text: str) -> bool:
     if command == "commands":
         print_interactive_builtin_command_hint("commands")
         return True
-    if command in {"help", "--help", "-h"} and normalized not in {"help --admin"}:
-        print_interactive_builtin_command_hint("help")
-        return True
     if normalized.startswith("help --admin "):
         print_interactive_builtin_command_hint("admin help")
         return True
     if normalized.startswith("admin help ") or normalized.startswith("admin --help "):
         print_interactive_builtin_command_hint("admin help")
+        return True
+    if command in {"help", "--help", "-h"} and normalized not in {"help --admin"}:
+        print_interactive_builtin_command_hint("help")
         return True
     if normalized.startswith("setup --harness ") and normalized not in {"setup --harness codex"}:
         print(f"Use `jini {normalized}` outside the live shell.", file=sys.stderr)

@@ -46,11 +46,15 @@ func shouldUseLegacySurface(args []string) bool {
 	}
 }
 
-func runLegacyPython(args []string, stdout, stderr io.Writer) int {
+func runLegacyPython(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	sourceRoot, scriptPath, ok := resolveLegacyPythonEntrypoint()
 	if !ok {
-		fmt.Fprintf(stderr, "Unknown command %q.\n", args[0])
-		fmt.Fprintln(stderr, "This command still lives in the legacy Python surface, but no compatible source checkout was found.")
+		if len(args) > 0 {
+			fmt.Fprintf(stderr, "Unknown command %q.\n", args[0])
+			fmt.Fprintln(stderr, "This command still lives in the legacy Python surface, but no compatible source checkout was found.")
+		} else {
+			fmt.Fprintln(stderr, "Jini could not open the legacy front door because no compatible source checkout was found.")
+		}
 		fmt.Fprintln(stderr, "Set JINI_SOURCE_DIR to a Jini checkout or run the command from the repo while the Go move is still in progress.")
 		return 1
 	}
@@ -59,8 +63,18 @@ func runLegacyPython(args []string, stdout, stderr io.Writer) int {
 	command := exec.Command("python3", commandArgs...)
 	command.Stdout = stdout
 	command.Stderr = stderr
-	command.Stdin = os.Stdin
-	command.Dir = sourceRoot
+	if stdin != nil {
+		command.Stdin = stdin
+	} else {
+		command.Stdin = os.Stdin
+	}
+	if cwd := strings.TrimSpace(os.Getenv("JINI_CALLER_CWD")); cwd != "" {
+		command.Dir = cwd
+	} else if cwd, err := os.Getwd(); err == nil && strings.TrimSpace(cwd) != "" {
+		command.Dir = cwd
+	} else {
+		command.Dir = sourceRoot
+	}
 	command.Env = legacyPythonEnv(sourceRoot)
 	if err := command.Run(); err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {

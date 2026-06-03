@@ -82,7 +82,7 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 			return 1
 		}
 		if shouldUseLegacySurface(args) {
-			return runLegacyPython(args, stdout, stderr)
+			return runLegacyPython(args, stdin, stdout, stderr)
 		}
 
 		switch normalizeCommandName(args[0]) {
@@ -140,7 +140,7 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 			}
 			return runLauncher(stdin, stdout, stderr)
 		default:
-			return runLegacyPython(args, stdout, stderr)
+			return runLegacyPython(args, stdin, stdout, stderr)
 		}
 	})
 }
@@ -164,6 +164,9 @@ func runLauncher(stdin io.Reader, stdout, stderr io.Writer) int {
 		active, activeErr := listActiveWorkSummaries(nil)
 		if activeErr == nil && len(active) > 0 {
 			return runActiveWorkLauncher(active, stdin, stdout, stderr)
+		}
+		if shouldUseLegacyFrontDoor() && canUseLegacyFrontDoor() {
+			return runLegacyPython(nil, stdin, stdout, stderr)
 		}
 		if stdin != nil {
 			return runNewWorkIntake(stdin, stdout, stderr)
@@ -198,6 +201,20 @@ func runLauncher(stdin io.Reader, stdout, stderr io.Writer) int {
 	}
 	fmt.Fprintln(stdout)
 	return handleCurrentWorkAction(action, summary, session, stdout, stderr)
+}
+
+func canUseLegacyFrontDoor() bool {
+	_, _, ok := resolveLegacyPythonEntrypoint()
+	return ok
+}
+
+func shouldUseLegacyFrontDoor() bool {
+	switch strings.ToLower(strings.TrimSpace(os.Getenv("JINI_USE_LEGACY_FRONT_DOOR"))) {
+	case "1", "true", "yes", "on":
+		return true
+	default:
+		return false
+	}
 }
 
 func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
