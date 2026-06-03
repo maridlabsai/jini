@@ -165,17 +165,17 @@ func runLauncher(stdin io.Reader, stdout, stderr io.Writer) int {
 		if activeErr == nil && len(active) > 0 {
 			return runActiveWorkLauncher(active, stdin, stdout, stderr)
 		}
-		if shouldUseLegacyFrontDoor() && canUseLegacyFrontDoor() {
-			pythonCommand, pythonErr := resolveLegacyPythonExecutable()
-			if pythonErr != nil {
+		if shouldUseLegacyFrontDoor() {
+			sourceRoot, scriptPath, ok := resolveLegacyPythonEntrypoint()
+			if !ok {
 				if stdin != nil {
 					return runNewWorkIntake(stdin, stdout, stderr)
 				}
 				renderNewWorkPrompt(stdout)
 				return 0
 			}
-			sourceRoot, scriptPath, ok := resolveLegacyPythonEntrypoint()
-			if !ok {
+			pythonCommand, pythonErr := resolveLegacyPythonExecutable()
+			if pythonErr != nil {
 				if stdin != nil {
 					return runNewWorkIntake(stdin, stdout, stderr)
 				}
@@ -225,11 +225,6 @@ func runLauncher(stdin io.Reader, stdout, stderr io.Writer) int {
 	}
 	fmt.Fprintln(stdout)
 	return handleCurrentWorkAction(action, summary, session, stdout, stderr)
-}
-
-func canUseLegacyFrontDoor() bool {
-	_, _, ok := resolveLegacyPythonEntrypoint()
-	return ok
 }
 
 func shouldUseLegacyFrontDoor() bool {

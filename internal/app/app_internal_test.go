@@ -1050,6 +1050,51 @@ func TestRunLauncherProbesConfiguredLegacyPythonOnlyOnceBeforeExecution(t *testi
 	}
 }
 
+func TestRunLauncherKeepsResolvedLegacyEntrypointAfterPythonProbeMutatesRoot(t *testing.T) {
+	root := createRecognizedLegacySourceRoot(t, "print('legacy-front-door-still-runs')\n")
+	pythonPath := resolvePythonExecutableForTest(t)
+	goModPath := filepath.Join(root, "go.mod")
+	wrapperPath := filepath.Join(t.TempDir(), "python-wrapper")
+	wrapper := "#!/bin/sh\n" +
+		"rm -f \"" + goModPath + "\"\n" +
+		"exec \"" + pythonPath + "\" \"$@\"\n"
+	if err := os.WriteFile(wrapperPath, []byte(wrapper), 0o755); err != nil {
+		t.Fatalf("write wrapper: %v", err)
+	}
+
+	stateDir := t.TempDir()
+	workingDir := t.TempDir()
+	previousDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	if err := os.Chdir(workingDir); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer func() {
+		_ = os.Chdir(previousDir)
+	}()
+
+	t.Setenv("JINI_SOURCE_DIR", root)
+	t.Setenv("JINI_USE_LEGACY_FRONT_DOOR", "1")
+	t.Setenv("JINI_LEGACY_PYTHON", wrapperPath)
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("PATH", "")
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := runLauncher(nil, &stdout, &stderr)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "legacy-front-door-still-runs") {
+		t.Fatalf("expected cached legacy front door to survive probe-time root mutation, got:\n%s", stdout.String())
+	}
+	if strings.Contains(stdout.String(), "Paste what you want finished.") {
+		t.Fatalf("expected not to fall back to Go prompt after probe-time mutation, got:\n%s", stdout.String())
+	}
+}
+
 func TestRunLauncherFallsBackToGoPromptWhenConfiguredLegacyPythonIsNotExecutable(t *testing.T) {
 	root := createRecognizedLegacySourceRoot(t, "print('legacy')\n")
 
