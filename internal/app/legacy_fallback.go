@@ -257,8 +257,11 @@ func hasJiniModuleDeclaration(goMod string) bool {
 		if trimmed == "" || strings.HasPrefix(trimmed, "//") {
 			continue
 		}
+		if commentIndex := strings.Index(trimmed, "//"); commentIndex >= 0 {
+			trimmed = strings.TrimSpace(trimmed[:commentIndex])
+		}
 		fields := strings.Fields(trimmed)
-		if len(fields) < 2 || fields[0] != "module" {
+		if len(fields) != 2 || fields[0] != "module" {
 			return false
 		}
 		return fields[1] == "github.com/maridlabsai/jini"
