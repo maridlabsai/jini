@@ -257,10 +257,11 @@ func hasJiniModuleDeclaration(goMod string) bool {
 		if trimmed == "" || strings.HasPrefix(trimmed, "//") {
 			continue
 		}
-		if !strings.HasPrefix(trimmed, "module ") {
+		fields := strings.Fields(trimmed)
+		if len(fields) < 2 || fields[0] != "module" {
 			return false
 		}
-		return trimmed == jiniModuleDeclaration
+		return fields[1] == "github.com/maridlabsai/jini"
 	}
 	return false
 }
