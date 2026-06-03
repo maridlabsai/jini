@@ -310,6 +310,49 @@ func TestRunLegacyPythonUsesConfiguredInterpreterWhenPathIsMissing(t *testing.T)
 	}
 }
 
+func TestRunLegacyPythonFallsBackWhenConfiguredInterpreterIsNotExecutable(t *testing.T) {
+	root := t.TempDir()
+	toolsDir := filepath.Join(root, "tools")
+	if err := os.MkdirAll(toolsDir, 0o755); err != nil {
+		t.Fatalf("mkdir tools: %v", err)
+	}
+	scriptPath := filepath.Join(toolsDir, "jini_validate.py")
+	script := "print('legacy-fallback-ok')\n"
+	if err := os.WriteFile(scriptPath, []byte(script), 0o755); err != nil {
+		t.Fatalf("write legacy script: %v", err)
+	}
+
+	badPython := filepath.Join(t.TempDir(), "bad-python")
+	if err := os.WriteFile(badPython, []byte("not executable\n"), 0o644); err != nil {
+		t.Fatalf("write bad python: %v", err)
+	}
+
+	previousDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	neutralDir := t.TempDir()
+	if err := os.Chdir(neutralDir); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer func() {
+		_ = os.Chdir(previousDir)
+	}()
+
+	t.Setenv("JINI_SOURCE_DIR", root)
+	t.Setenv("JINI_LEGACY_PYTHON", badPython)
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := runLegacyPython(nil, nil, &stdout, &stderr)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "legacy-fallback-ok") {
+		t.Fatalf("expected fallback interpreter to run legacy script, got:\n%s", stdout.String())
+	}
+}
+
 func TestRecognizedGoCommandFallsBackToLegacyForUnsupportedFlags(t *testing.T) {
 	root := t.TempDir()
 	toolsDir := filepath.Join(root, "tools")
@@ -500,5 +543,53 @@ func TestRunLauncherUsesConfiguredLegacyPythonWhenPathIsMissing(t *testing.T) {
 	}
 	if !strings.Contains(stdout.String(), "legacy-front-door") {
 		t.Fatalf("expected configured legacy python to keep front door alive, got:\n%s", stdout.String())
+	}
+}
+
+func TestRunLauncherFallsBackToGoPromptWhenConfiguredLegacyPythonIsNotExecutable(t *testing.T) {
+	root := t.TempDir()
+	toolsDir := filepath.Join(root, "tools")
+	if err := os.MkdirAll(toolsDir, 0o755); err != nil {
+		t.Fatalf("mkdir tools: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(toolsDir, "jini_validate.py"), []byte("print('legacy')\n"), 0o755); err != nil {
+		t.Fatalf("write legacy script: %v", err)
+	}
+
+	badPython := filepath.Join(t.TempDir(), "bad-python")
+	if err := os.WriteFile(badPython, []byte("not executable\n"), 0o644); err != nil {
+		t.Fatalf("write bad python: %v", err)
+	}
+
+	stateDir := t.TempDir()
+	workingDir := t.TempDir()
+	previousDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	if err := os.Chdir(workingDir); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer func() {
+		_ = os.Chdir(previousDir)
+	}()
+
+	t.Setenv("JINI_SOURCE_DIR", root)
+	t.Setenv("JINI_USE_LEGACY_FRONT_DOOR", "1")
+	t.Setenv("JINI_LEGACY_PYTHON", badPython)
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("PATH", "")
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := runLauncher(nil, &stdout, &stderr)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "Paste what you want finished.") {
+		t.Fatalf("expected Go prompt fallback, got:\n%s", stdout.String())
+	}
+	if stderr.Len() != 0 {
+		t.Fatalf("expected no stderr output, got:\n%s", stderr.String())
 	}
 }

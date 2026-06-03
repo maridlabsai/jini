@@ -101,8 +101,8 @@ func resolveLegacyPythonWorkingDir(sourceRoot string) string {
 
 func resolveLegacyPythonExecutable() (string, error) {
 	if configured := strings.TrimSpace(os.Getenv("JINI_LEGACY_PYTHON")); configured != "" {
-		if info, err := os.Stat(configured); err == nil && !info.IsDir() {
-			return configured, nil
+		if resolved, err := exec.LookPath(configured); err == nil {
+			return resolved, nil
 		}
 	}
 	return exec.LookPath("python3")
