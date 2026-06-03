@@ -41,13 +41,13 @@ def _should_use_go(argv: list[str]) -> bool:
 
 
 def _go_command(argv: list[str]) -> list[str]:
-    built_binary = ROOT / "jini"
-    if built_binary.is_file() and os.access(built_binary, os.X_OK):
-        return [str(built_binary), *argv]
     if LOCAL_GO.is_file() and os.access(LOCAL_GO, os.X_OK):
         return [str(LOCAL_GO), "run", "./cmd/jini", *argv]
     if shutil.which("go"):
         return ["go", "run", "./cmd/jini", *argv]
+    built_binary = ROOT / "jini"
+    if built_binary.is_file() and os.access(built_binary, os.X_OK):
+        return [str(built_binary), *argv]
     return []
 
 
