@@ -8,6 +8,12 @@ import tools.jini as go_launcher
 
 
 class GoFirstLauncherTests(unittest.TestCase):
+    def test_go_command_handles_native_single_token_inventory(self) -> None:
+        for command in ["help", "--help", "-h", "commands", "init", "memory", "new", "permissions", "route", "doctor"]:
+            with self.subTest(command=command):
+                self.assertTrue(go_launcher._should_use_go([command]))
+                self.assertFalse(go_launcher._should_use_go([command, "extra"]))
+
     def test_go_command_handles_doctor_json_surface(self) -> None:
         self.assertTrue(go_launcher._should_use_go(["doctor", "--format", "json"]))
         self.assertTrue(go_launcher._should_use_go(["provider", "--format", "json"]))
@@ -56,11 +62,6 @@ class GoFirstLauncherTests(unittest.TestCase):
         self.assertTrue(go_launcher._should_use_go(["new"]))
         self.assertTrue(go_launcher._should_use_go(["permissions"]))
         self.assertTrue(go_launcher._should_use_go(["route"]))
-        self.assertFalse(go_launcher._should_use_go(["init", "extra"]))
-        self.assertFalse(go_launcher._should_use_go(["memory", "extra"]))
-        self.assertFalse(go_launcher._should_use_go(["new", "extra"]))
-        self.assertFalse(go_launcher._should_use_go(["permissions", "extra"]))
-        self.assertFalse(go_launcher._should_use_go(["route", "extra"]))
 
     def test_go_command_prefers_local_go_over_repo_binary(self) -> None:
         with tempfile.TemporaryDirectory(prefix="jini-go-launcher-") as tempdir:

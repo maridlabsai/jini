@@ -13,6 +13,21 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 LOCAL_GO = ROOT.parent / ".local-go" / "bin" / "go"
 
+NATIVE_SINGLE_TOKEN_COMMANDS = {
+    "help",
+    "--help",
+    "-h",
+    "commands",
+    "init",
+    "memory",
+    "new",
+    "permissions",
+    "route",
+    "doctor",
+}
+
+NATIVE_MULTI_SHAPE_COMMANDS = {"observe"}
+
 
 def _normalize_command(value: str) -> str:
     return value.strip().lower()
@@ -52,24 +67,16 @@ def _should_use_go(argv: list[str]) -> bool:
             )
         return False
 
-    if first in {"help", "--help", "-h", "commands"}:
+    if first in NATIVE_SINGLE_TOKEN_COMMANDS:
+        return len(argv) == 1
+    if first in NATIVE_MULTI_SHAPE_COMMANDS:
         return True
     if first == "admin":
         return len(argv) <= 2 and (len(argv) == 1 or _normalize_command(argv[1]) in {"help", "--help", "-h"})
     if first == "check":
         return len(argv) <= 2
-    if first in {"init", "memory", "permissions"}:
-        return len(argv) == 1
-    if first == "new":
-        return len(argv) == 1
-    if first == "doctor":
-        return len(argv) == 1
     if first == "provider":
         return len(argv) == 1 or (len(argv) == 2 and _normalize_command(argv[1]) == "doctor")
-    if first == "observe":
-        return True
-    if first == "route":
-        return len(argv) == 1
     if first in {"status", "continue", "open"}:
         return len(argv) == 1
     if first == "run":
