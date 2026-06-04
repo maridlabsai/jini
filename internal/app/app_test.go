@@ -410,6 +410,32 @@ func TestHelpAllShowsPublicCommandInventory(t *testing.T) {
 	}
 }
 
+func TestHelpCommandAliasesShowPublicCommandInventory(t *testing.T) {
+	for _, args := range [][]string{{"help", "all"}, {"help", "commands"}} {
+		t.Run(strings.Join(args, " "), func(t *testing.T) {
+			var stdout bytes.Buffer
+			exitCode := app.Run(args, &stdout, &stdout)
+			if exitCode != 0 {
+				t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+			}
+			if !strings.Contains(stdout.String(), "Public command inventory") {
+				t.Fatalf("expected public command inventory, got:\n%s", stdout.String())
+			}
+		})
+	}
+}
+
+func TestHelpAdminAliasShowsAdminInventory(t *testing.T) {
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"help", "admin"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "Admin and developer command inventory") {
+		t.Fatalf("expected admin inventory, got:\n%s", stdout.String())
+	}
+}
+
 func TestAdminHelpAliasShowsAdminInventory(t *testing.T) {
 	var stdout bytes.Buffer
 	exitCode := app.Run([]string{"admin", "help"}, &stdout, &stdout)
