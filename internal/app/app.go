@@ -486,6 +486,7 @@ func runProvider(args []string, stdout, stderr io.Writer) int {
 		report := buildProviderDoctorReport()
 		encoder := json.NewEncoder(stdout)
 		encoder.SetIndent("", "  ")
+		encoder.SetEscapeHTML(false)
 		if err := encoder.Encode(report); err != nil {
 			fmt.Fprintf(stderr, "Could not render provider doctor report: %v\n", err)
 			return 1

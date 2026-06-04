@@ -450,6 +450,29 @@ func TestProviderDoctorJSONSubcommandMatchesTopLevelDoctor(t *testing.T) {
 	}
 }
 
+func TestProviderDoctorJSONDoesNotEscapeProviderArrows(t *testing.T) {
+	t.Setenv("JINI_PROVIDER", "auto")
+	t.Setenv("JINI_MODEL", "sonnet-4.6")
+	t.Setenv("ANTHROPIC_API_KEY", "anthropic-key")
+	t.Setenv("AWS_REGION", "us-east-1")
+	t.Setenv("AWS_ACCESS_KEY_ID", "AKIAEXAMPLE")
+	t.Setenv("AWS_SECRET_ACCESS_KEY", "SECRETEXAMPLE")
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"doctor", "--format", "json"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	if strings.Contains(out, `\u003e`) {
+		t.Fatalf("expected provider doctor json to preserve arrows, got:\n%s", out)
+	}
+	if !strings.Contains(out, `"presence": "auto -> Amazon Bedrock / Claude Sonnet 4.6"`) {
+		t.Fatalf("expected readable auto-provider arrow in json, got:\n%s", out)
+	}
+}
+
 func TestCheckAliasRendersCurrentWorkScreen(t *testing.T) {
 	stateDir := t.TempDir()
 	packDir := seedResearchPRDWork(t)
