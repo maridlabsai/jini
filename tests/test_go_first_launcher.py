@@ -45,6 +45,11 @@ class GoFirstLauncherTests(unittest.TestCase):
             )
         )
 
+    def test_go_command_handles_check_surface(self) -> None:
+        self.assertTrue(go_launcher._should_use_go(["check"]))
+        self.assertTrue(go_launcher._should_use_go(["check", "/tmp/example-pack"]))
+        self.assertFalse(go_launcher._should_use_go(["check", "/tmp/example-pack", "extra"]))
+
     def test_go_command_prefers_local_go_over_repo_binary(self) -> None:
         with tempfile.TemporaryDirectory(prefix="jini-go-launcher-") as tempdir:
             root = Path(tempdir)

@@ -56,6 +56,8 @@ def _should_use_go(argv: list[str]) -> bool:
         return True
     if first == "admin":
         return len(argv) <= 2 and (len(argv) == 1 or _normalize_command(argv[1]) in {"help", "--help", "-h"})
+    if first == "check":
+        return len(argv) <= 2
     if first == "doctor":
         return len(argv) == 1
     if first == "provider":
