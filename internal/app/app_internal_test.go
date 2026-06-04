@@ -1479,6 +1479,39 @@ func TestRunNewSurfacesDoNotRequireLegacyFallback(t *testing.T) {
 	}
 }
 
+func TestRunNewFlagMatchesRunNew(t *testing.T) {
+	workingDir := t.TempDir()
+	previousDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	if err := os.Chdir(workingDir); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer func() {
+		_ = os.Chdir(previousDir)
+	}()
+
+	t.Setenv("JINI_SOURCE_DIR", "")
+	t.Setenv("PATH", "")
+
+	var runNew bytes.Buffer
+	runNewExit := Run([]string{"run", "new"}, &runNew, &runNew)
+	if runNewExit != 0 {
+		t.Fatalf("expected run new to succeed, got %d with output:\n%s", runNewExit, runNew.String())
+	}
+
+	var runNewFlag bytes.Buffer
+	runNewFlagExit := Run([]string{"run", "--new"}, &runNewFlag, &runNewFlag)
+	if runNewFlagExit != 0 {
+		t.Fatalf("expected run --new to succeed, got %d with output:\n%s", runNewFlagExit, runNewFlag.String())
+	}
+
+	if runNew.String() != runNewFlag.String() {
+		t.Fatalf("expected run --new to match run new.\nRUN NEW:\n%s\nRUN --NEW:\n%s", runNew.String(), runNewFlag.String())
+	}
+}
+
 func TestRunLauncherFallsBackToGoPromptWhenConfiguredLegacyPythonIsNotPython(t *testing.T) {
 	root := createRecognizedLegacySourceRoot(t, "print('legacy')\n")
 
