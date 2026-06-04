@@ -83,6 +83,12 @@ class GoFirstLauncherTests(unittest.TestCase):
         self.assertFalse(go_launcher._should_use_go(["check", "--help"]))
         self.assertFalse(go_launcher._should_use_go(["check", "--format=json"]))
 
+    def test_go_command_handles_open_surface(self) -> None:
+        self.assertTrue(go_launcher._should_use_go(["open"]))
+        self.assertTrue(go_launcher._should_use_go(["open", "prd"]))
+        self.assertFalse(go_launcher._should_use_go(["open", "--print-path"]))
+        self.assertFalse(go_launcher._should_use_go(["open", "prd", "--print-path"]))
+
     def test_go_command_handles_native_utility_surfaces(self) -> None:
         self.assertTrue(go_launcher._should_use_go(["init"]))
         self.assertTrue(go_launcher._should_use_go(["memory"]))

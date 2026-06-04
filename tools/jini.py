@@ -110,8 +110,10 @@ def _should_use_go(argv: list[str]) -> bool:
         return len(argv) == 1 or (len(argv) == 2 and not argv[1].lstrip().startswith("-"))
     if first == "provider":
         return len(argv) == 1 or (len(argv) == 2 and _normalize_command(argv[1]) == "doctor")
-    if first in {"status", "continue", "open"}:
+    if first in {"status", "continue"}:
         return len(argv) == 1
+    if first == "open":
+        return len(argv) == 1 or (len(argv) == 2 and not argv[1].lstrip().startswith("-"))
     if first == "run":
         return len(argv) == 1 or (len(argv) == 2 and _normalize_command(argv[1]) in {"new", "--new"})
     return False
