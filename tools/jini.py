@@ -99,7 +99,9 @@ def _should_use_go(argv: list[str]) -> bool:
         return False
 
     if first == "help":
-        return len(argv) == 1 or (len(argv) == 2 and _normalize_command(argv[1]) in {"--all", "all", "commands", "admin"})
+        return len(argv) == 1 or (
+            len(argv) == 2 and _normalize_command(argv[1]) in {"--all", "all", "commands", "admin", "--admin"}
+        )
     if first in NATIVE_SINGLE_TOKEN_COMMANDS:
         return len(argv) == 1
     if first == "observe":
