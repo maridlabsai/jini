@@ -1,3 +1,4 @@
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -7,27 +8,18 @@ import sys
 import tools.jini as go_launcher
 
 
+BOUNDARY_FIXTURE = Path(__file__).resolve().parent / "fixtures" / "go_boundary_contract.json"
+
+
+def _load_boundary_cases() -> list[dict[str, object]]:
+    return json.loads(BOUNDARY_FIXTURE.read_text(encoding="utf-8"))
+
+
 class GoFirstLauncherTests(unittest.TestCase):
-    def test_go_command_handles_native_single_token_inventory(self) -> None:
-        for command in ["help", "--help", "-h", "commands", "init", "memory", "new", "permissions", "route", "doctor"]:
-            with self.subTest(command=command):
-                self.assertTrue(go_launcher._should_use_go([command]))
-                self.assertFalse(go_launcher._should_use_go([command, "extra"]))
-
-    def test_go_command_handles_help_all_surface(self) -> None:
-        self.assertTrue(go_launcher._should_use_go(["help", "--all"]))
-        self.assertTrue(go_launcher._should_use_go(["help", "all"]))
-        self.assertTrue(go_launcher._should_use_go(["help", "commands"]))
-        self.assertTrue(go_launcher._should_use_go(["help", "admin"]))
-        self.assertFalse(go_launcher._should_use_go(["help", "--all", "extra"]))
-        self.assertFalse(go_launcher._should_use_go(["help", "admin", "extra"]))
-
-    def test_go_command_handles_admin_help_aliases(self) -> None:
-        self.assertTrue(go_launcher._should_use_go(["admin"]))
-        self.assertTrue(go_launcher._should_use_go(["admin", "help"]))
-        self.assertTrue(go_launcher._should_use_go(["admin", "--help"]))
-        self.assertTrue(go_launcher._should_use_go(["admin", "-h"]))
-        self.assertFalse(go_launcher._should_use_go(["admin", "extra"]))
+    def test_go_command_matches_shared_boundary_fixture(self) -> None:
+        for case in _load_boundary_cases():
+            with self.subTest(case=case["name"]):
+                self.assertEqual(case["launcher_go"], go_launcher._should_use_go(case["args"]))
 
     def test_go_command_handles_doctor_json_surface(self) -> None:
         self.assertTrue(go_launcher._should_use_go(["doctor", "--format", "json"]))
@@ -78,25 +70,9 @@ class GoFirstLauncherTests(unittest.TestCase):
         self.assertFalse(go_launcher._should_use_go(["observe", "add", "one", "two"]))
         self.assertFalse(go_launcher._should_use_go(["observe", "add", "--connector"]))
 
-    def test_go_command_handles_check_surface(self) -> None:
-        self.assertTrue(go_launcher._should_use_go(["check"]))
-        self.assertTrue(go_launcher._should_use_go(["check", "/tmp/example-pack"]))
-        self.assertFalse(go_launcher._should_use_go(["check", "/tmp/example-pack", "extra"]))
-        self.assertFalse(go_launcher._should_use_go(["check", "--help"]))
-        self.assertFalse(go_launcher._should_use_go(["check", "--format=json"]))
-
     def test_go_command_handles_open_surface(self) -> None:
-        self.assertTrue(go_launcher._should_use_go(["open"]))
         self.assertTrue(go_launcher._should_use_go(["open", "prd"]))
-        self.assertFalse(go_launcher._should_use_go(["open", "--print-path"]))
         self.assertFalse(go_launcher._should_use_go(["open", "prd", "--print-path"]))
-
-    def test_go_command_handles_native_utility_surfaces(self) -> None:
-        self.assertTrue(go_launcher._should_use_go(["init"]))
-        self.assertTrue(go_launcher._should_use_go(["memory"]))
-        self.assertTrue(go_launcher._should_use_go(["new"]))
-        self.assertTrue(go_launcher._should_use_go(["permissions"]))
-        self.assertTrue(go_launcher._should_use_go(["route"]))
 
     def test_go_command_prefers_local_go_over_repo_binary(self) -> None:
         with tempfile.TemporaryDirectory(prefix="jini-go-launcher-") as tempdir:

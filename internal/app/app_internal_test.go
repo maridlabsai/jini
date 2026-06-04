@@ -2,10 +2,12 @@ package app
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -887,61 +889,39 @@ func TestRecognizedGoCommandFallsBackToLegacyForUnsupportedFlags(t *testing.T) {
 }
 
 func TestShouldUseLegacySurfaceBoundaryMatrix(t *testing.T) {
-	cases := []struct {
-		name string
-		args []string
-		want bool
-	}{
-		{name: "help", args: []string{"help"}, want: false},
-		{name: "help all", args: []string{"help", "all"}, want: false},
-		{name: "help commands", args: []string{"help", "commands"}, want: false},
-		{name: "help admin", args: []string{"help", "admin"}, want: false},
-		{name: "help admin extra", args: []string{"help", "admin", "extra"}, want: true},
-		{name: "commands", args: []string{"commands"}, want: false},
-		{name: "commands extra", args: []string{"commands", "extra"}, want: true},
-		{name: "admin", args: []string{"admin"}, want: false},
-		{name: "admin short help", args: []string{"admin", "-h"}, want: false},
-		{name: "admin unsupported", args: []string{"admin", "list-schemas"}, want: true},
-		{name: "check", args: []string{"check"}, want: false},
-		{name: "check path", args: []string{"check", "/tmp/work"}, want: false},
-		{name: "check flag", args: []string{"check", "--help"}, want: true},
-		{name: "doctor", args: []string{"doctor"}, want: false},
-		{name: "doctor json", args: []string{"doctor", "--format", "json"}, want: false},
-		{name: "doctor unsupported", args: []string{"doctor", "extra"}, want: true},
-		{name: "provider", args: []string{"provider"}, want: false},
-		{name: "provider text", args: []string{"provider", "--format", "text"}, want: false},
-		{name: "provider doctor json", args: []string{"provider", "doctor", "--format", "json"}, want: false},
-		{name: "provider unsupported", args: []string{"provider", "help"}, want: true},
-		{name: "observe", args: []string{"observe"}, want: false},
-		{name: "observe scan", args: []string{"observe", "scan"}, want: false},
-		{name: "observe add", args: []string{"observe", "add", "/tmp/file.md"}, want: false},
-		{name: "observe malformed", args: []string{"observe", "add"}, want: true},
-		{name: "open", args: []string{"open"}, want: false},
-		{name: "open artifact", args: []string{"open", "prd"}, want: false},
-		{name: "open flag", args: []string{"open", "--print-path"}, want: true},
-		{name: "init", args: []string{"init"}, want: false},
-		{name: "init extra", args: []string{"init", "extra"}, want: true},
-		{name: "memory", args: []string{"memory"}, want: false},
-		{name: "memory extra", args: []string{"memory", "extra"}, want: true},
-		{name: "new", args: []string{"new"}, want: false},
-		{name: "new extra", args: []string{"new", "extra"}, want: true},
-		{name: "permissions", args: []string{"permissions"}, want: false},
-		{name: "permissions extra", args: []string{"permissions", "extra"}, want: true},
-		{name: "route", args: []string{"route"}, want: false},
-		{name: "route extra", args: []string{"route", "extra"}, want: true},
-		{name: "run", args: []string{"run"}, want: false},
-		{name: "run new", args: []string{"run", "new"}, want: false},
-		{name: "run unsupported", args: []string{"run", "extra"}, want: true},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			got := shouldUseLegacySurface(tc.args)
-			if got != tc.want {
-				t.Fatalf("shouldUseLegacySurface(%v) = %v, want %v", tc.args, got, tc.want)
+	for _, tc := range loadBoundaryContractCases(t) {
+		t.Run(tc.Name, func(t *testing.T) {
+			got := shouldUseLegacySurface(tc.Args)
+			if got != tc.LegacyFallback {
+				t.Fatalf("shouldUseLegacySurface(%v) = %v, want %v", tc.Args, got, tc.LegacyFallback)
 			}
 		})
 	}
+}
+
+type boundaryContractCase struct {
+	Name           string   `json:"name"`
+	Args           []string `json:"args"`
+	LauncherGo     bool     `json:"launcher_go"`
+	LegacyFallback bool     `json:"legacy_fallback"`
+}
+
+func loadBoundaryContractCases(t *testing.T) []boundaryContractCase {
+	t.Helper()
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatalf("resolve caller path")
+	}
+	fixturePath := filepath.Join(filepath.Dir(filename), "..", "..", "tests", "fixtures", "go_boundary_contract.json")
+	data, err := os.ReadFile(fixturePath)
+	if err != nil {
+		t.Fatalf("read boundary fixture: %v", err)
+	}
+	var cases []boundaryContractCase
+	if err := json.Unmarshal(data, &cases); err != nil {
+		t.Fatalf("decode boundary fixture: %v", err)
+	}
+	return cases
 }
 
 func TestLegacyPythonEnvPrependsConfiguredPythonPath(t *testing.T) {
