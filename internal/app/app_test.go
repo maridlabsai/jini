@@ -543,6 +543,68 @@ func TestProviderDoctorTextSubcommandMatchesTopLevelDoctor(t *testing.T) {
 	}
 }
 
+func TestProviderDoctorInlineFormatMatchesSpacedFormat(t *testing.T) {
+	t.Setenv("JINI_PROVIDER", "azure-openai")
+	t.Setenv("AZURE_OPENAI_ENDPOINT", "https://example.openai.azure.com")
+	t.Setenv("AZURE_OPENAI_API_KEY", "super-secret-key")
+	t.Setenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o-prod")
+
+	for _, args := range []struct {
+		name   string
+		spaced []string
+		inline []string
+	}{
+		{
+			name:   "doctor json",
+			spaced: []string{"doctor", "--format", "json"},
+			inline: []string{"doctor", "--format=json"},
+		},
+		{
+			name:   "doctor text",
+			spaced: []string{"doctor", "--format", "text"},
+			inline: []string{"doctor", "--format=text"},
+		},
+		{
+			name:   "provider json",
+			spaced: []string{"provider", "--format", "json"},
+			inline: []string{"provider", "--format=json"},
+		},
+		{
+			name:   "provider text",
+			spaced: []string{"provider", "--format", "text"},
+			inline: []string{"provider", "--format=text"},
+		},
+		{
+			name:   "provider doctor json",
+			spaced: []string{"provider", "doctor", "--format", "json"},
+			inline: []string{"provider", "doctor", "--format=json"},
+		},
+		{
+			name:   "provider doctor text",
+			spaced: []string{"provider", "doctor", "--format", "text"},
+			inline: []string{"provider", "doctor", "--format=text"},
+		},
+	} {
+		t.Run(args.name, func(t *testing.T) {
+			var spaced bytes.Buffer
+			spacedExit := app.Run(args.spaced, &spaced, &spaced)
+			if spacedExit != 0 {
+				t.Fatalf("expected spaced format to succeed, got %d with output:\n%s", spacedExit, spaced.String())
+			}
+
+			var inline bytes.Buffer
+			inlineExit := app.Run(args.inline, &inline, &inline)
+			if inlineExit != 0 {
+				t.Fatalf("expected inline format to succeed, got %d with output:\n%s", inlineExit, inline.String())
+			}
+
+			if spaced.String() != inline.String() {
+				t.Fatalf("expected inline format to match spaced format.\nSPACED (%v):\n%s\nINLINE (%v):\n%s", args.spaced, spaced.String(), args.inline, inline.String())
+			}
+		})
+	}
+}
+
 func TestProviderDoctorJSONDoesNotEscapeProviderArrows(t *testing.T) {
 	t.Setenv("JINI_PROVIDER", "auto")
 	t.Setenv("JINI_MODEL", "sonnet-4.6")
