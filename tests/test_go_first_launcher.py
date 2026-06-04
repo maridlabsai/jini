@@ -45,6 +45,7 @@ class GoFirstLauncherTests(unittest.TestCase):
 
     def test_go_command_handles_direct_provider_surface(self) -> None:
         self.assertTrue(go_launcher._should_use_go(["provider"]))
+        self.assertTrue(go_launcher._should_use_go(["provider", "doctor"]))
         self.assertTrue(go_launcher._should_use_go(["provider", "--format", "text"]))
         self.assertTrue(go_launcher._should_use_go(["provider", "--format", "json"]))
         self.assertTrue(go_launcher._should_use_go(["provider", "--format=text"]))

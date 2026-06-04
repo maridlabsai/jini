@@ -1362,6 +1362,7 @@ func TestProviderSurfacesDoNotRequireLegacyFallback(t *testing.T) {
 		want string
 	}{
 		{args: []string{"provider"}, want: "Provider"},
+		{args: []string{"provider", "doctor"}, want: "Provider"},
 		{args: []string{"provider", "--format", "json"}, want: `"result_type": "JiniProviderDoctor"`},
 		{args: []string{"provider", "doctor", "--format", "json"}, want: `"result_type": "JiniProviderDoctor"`},
 	}

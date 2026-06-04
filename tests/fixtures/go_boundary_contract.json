@@ -32,6 +32,7 @@
   {"name": "doctor text inline", "args": ["doctor", "--format=text"], "launcher_go": true, "legacy_fallback": false},
   {"name": "doctor unsupported", "args": ["doctor", "extra"], "launcher_go": false, "legacy_fallback": true},
   {"name": "provider", "args": ["provider"], "launcher_go": true, "legacy_fallback": false},
+  {"name": "provider doctor", "args": ["provider", "doctor"], "launcher_go": true, "legacy_fallback": false},
   {"name": "provider json inline", "args": ["provider", "--format=json"], "launcher_go": true, "legacy_fallback": false},
   {"name": "provider text", "args": ["provider", "--format", "text"], "launcher_go": true, "legacy_fallback": false},
   {"name": "provider text inline", "args": ["provider", "--format=text"], "launcher_go": true, "legacy_fallback": false},
