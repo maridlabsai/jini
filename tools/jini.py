@@ -26,6 +26,15 @@ def _optional_format(argv: list[str]) -> str | None:
     return None
 
 
+def _matches_optional_format_shape(argv: list[str], *, command_words: int) -> bool:
+    suffix = argv[command_words:]
+    if len(suffix) == 2 and suffix[0] == "--format" and _normalize_command(suffix[1]) in {"json", "text"}:
+        return True
+    if len(suffix) == 1 and suffix[0].startswith("--format=") and _normalize_command(suffix[0].split("=", 1)[1]) in {"json", "text"}:
+        return True
+    return False
+
+
 def _should_use_go(argv: list[str]) -> bool:
     if not argv:
         return True
@@ -34,9 +43,11 @@ def _should_use_go(argv: list[str]) -> bool:
     format_name = _optional_format(argv)
     if format_name is not None:
         if first == "doctor":
-            return format_name in {"json", "text"} and len(argv) in {2, 3}
+            return _matches_optional_format_shape(argv, command_words=1)
         if first == "provider":
-            return len(argv) in {3, 4} and _normalize_command(argv[1]) == "doctor" and format_name in {"json", "text"}
+            return len(argv) >= 2 and _normalize_command(argv[1]) == "doctor" and _matches_optional_format_shape(
+                argv, command_words=2
+            )
         return False
 
     if first in {"help", "--help", "-h", "commands"}:
