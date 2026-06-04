@@ -44,7 +44,7 @@ func shouldUseLegacySurface(args []string) bool {
 		}
 		second := normalizeCommandName(args[1])
 		if second == "status" || second == "scan" {
-			return false
+			return len(args) != 2
 		}
 		if second != "add" {
 			return true

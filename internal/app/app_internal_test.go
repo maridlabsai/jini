@@ -859,6 +859,8 @@ func TestRecognizedGoCommandFallsBackToLegacyForUnsupportedFlags(t *testing.T) {
 		{"check", "--help"},
 		{"open", "--print-path"},
 		{"observe", "help"},
+		{"observe", "status", "extra"},
+		{"observe", "scan", "extra"},
 		{"observe", "add"},
 	} {
 		t.Run(strings.Join(args, " "), func(t *testing.T) {

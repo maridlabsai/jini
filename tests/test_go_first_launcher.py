@@ -72,6 +72,8 @@ class GoFirstLauncherTests(unittest.TestCase):
         )
         self.assertFalse(go_launcher._should_use_go(["observe", "help"]))
         self.assertFalse(go_launcher._should_use_go(["observe", "extra"]))
+        self.assertFalse(go_launcher._should_use_go(["observe", "status", "extra"]))
+        self.assertFalse(go_launcher._should_use_go(["observe", "scan", "extra"]))
         self.assertFalse(go_launcher._should_use_go(["observe", "add"]))
         self.assertFalse(go_launcher._should_use_go(["observe", "add", "one", "two"]))
         self.assertFalse(go_launcher._should_use_go(["observe", "add", "--connector"]))
