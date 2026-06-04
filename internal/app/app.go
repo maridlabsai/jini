@@ -86,8 +86,8 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 			return runLegacyPython(args, stdin, stdout, stderr)
 		}
 
-		switch normalizeCommandName(args[0]) {
-		case "help", "h":
+		switch canonicalTopLevelCommand(args[0]) {
+		case "help":
 			return runHelp(args[1:], stdout, stderr)
 		case "commands":
 			return runHelp([]string{"--all"}, stdout, stderr)
@@ -466,11 +466,11 @@ type providerConfig struct {
 
 func runProvider(args []string, stdout, stderr io.Writer) int {
 	originalArgs := append([]string(nil), args...)
-	if len(args) > 0 && normalizeName(args[0]) == "doctor" {
+	if len(args) > 0 && exactCommandToken(args[0]) == "doctor" {
 		args = args[1:]
 	}
 	format, ok := parseOptionalFormatArgs(args)
-	if !ok && len(originalArgs) > 0 && normalizeName(originalArgs[0]) != "doctor" {
+	if !ok && len(originalArgs) > 0 && exactCommandToken(originalArgs[0]) != "doctor" {
 		fmt.Fprintf(stderr, "Unknown provider command %q.\n", args[0])
 		fmt.Fprintln(stderr, "Try `jini doctor`.")
 		return 1
@@ -543,7 +543,7 @@ func runStatus(stdout, stderr io.Writer) int {
 
 func runHelp(args []string, stdout, stderr io.Writer) int {
 	if len(args) > 0 {
-		switch normalizeCommandName(args[0]) {
+		switch canonicalHelpTopic(args[0]) {
 		case "all", "commands":
 			renderPublicCommandInventory(stdout)
 			return 0
@@ -577,8 +577,7 @@ func runAdmin(args []string, stdout, stderr io.Writer) int {
 		renderAdminCommandInventory(stdout)
 		return 0
 	}
-	switch normalizeCommandName(args[0]) {
-	case "help", "h":
+	if isAdminHelpAlias(args[0]) {
 		renderAdminCommandInventory(stdout)
 		return 0
 	}
@@ -1869,7 +1868,7 @@ func runObserve(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "%v\n", err)
 		return 1
 	}
-	if len(args) == 0 || normalizeCommandName(args[0]) == "status" {
+	if len(args) == 0 || exactCommandToken(args[0]) == "status" {
 		if err := scanExternalObservations(summary.Dir); err != nil {
 			fmt.Fprintf(stderr, "Could not scan observed files: %v\n", err)
 			return 1
@@ -1877,7 +1876,7 @@ func runObserve(args []string, stdout, stderr io.Writer) int {
 		renderExternalObservationStatus(stdout, summary.Dir)
 		return 0
 	}
-	switch normalizeCommandName(args[0]) {
+	switch exactCommandToken(args[0]) {
 	case "add":
 		targetPath, connectorID, parseErr := parseObserveAddArgs(args[1:])
 		if parseErr != nil {
@@ -4072,6 +4071,43 @@ func normalizeName(value string) string {
 		}
 	}
 	return strings.Join(strings.Fields(builder.String()), " ")
+}
+
+func exactCommandToken(value string) string {
+	return strings.ToLower(strings.TrimSpace(value))
+}
+
+func canonicalTopLevelCommand(value string) string {
+	switch exactCommandToken(value) {
+	case "help", "--help", "-h":
+		return "help"
+	case "commands", "admin", "check", "status", "continue", "doctor", "provider", "route", "memory", "permissions", "init", "new", "observe", "open", "run":
+		return exactCommandToken(value)
+	default:
+		return ""
+	}
+}
+
+func canonicalHelpTopic(value string) string {
+	switch exactCommandToken(value) {
+	case "all", "--all":
+		return "all"
+	case "commands":
+		return "commands"
+	case "admin", "--admin":
+		return "admin"
+	default:
+		return ""
+	}
+}
+
+func isAdminHelpAlias(value string) bool {
+	switch exactCommandToken(value) {
+	case "help", "h", "--help", "-h":
+		return true
+	default:
+		return false
+	}
 }
 
 func normalizeCommandName(value string) string {

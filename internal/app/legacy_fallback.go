@@ -15,21 +15,20 @@ func shouldUseLegacySurface(args []string) bool {
 	if len(args) == 0 {
 		return false
 	}
-	first := normalizeCommandName(args[0])
+	first := canonicalTopLevelCommand(args[0])
 	switch first {
-	case "help", "h":
+	case "help":
 		if len(args) == 1 {
 			return false
 		}
 		if len(args) != 2 {
 			return true
 		}
-		second := normalizeCommandName(args[1])
-		return second != "all" && second != "commands" && second != "admin"
+		return canonicalHelpTopic(args[1]) == ""
 	case "commands":
 		return len(args) > 1
 	case "admin":
-		return !(len(args) == 1 || (len(args) == 2 && (normalizeCommandName(args[1]) == "help" || normalizeCommandName(args[1]) == "h")))
+		return !(len(args) == 1 || (len(args) == 2 && isAdminHelpAlias(args[1])))
 	case "init", "memory", "new", "permissions", "route":
 		return len(args) > 1
 	case "check":
@@ -41,7 +40,7 @@ func shouldUseLegacySurface(args []string) bool {
 		if len(args) == 1 {
 			return false
 		}
-		if normalizeCommandName(args[1]) == "doctor" {
+		if exactCommandToken(args[1]) == "doctor" {
 			_, ok := parseOptionalFormatArgs(args[2:])
 			return !ok
 		}
@@ -51,7 +50,7 @@ func shouldUseLegacySurface(args []string) bool {
 		if len(args) == 1 {
 			return false
 		}
-		second := normalizeCommandName(args[1])
+		second := exactCommandToken(args[1])
 		if second == "status" || second == "scan" {
 			return len(args) != 2
 		}
@@ -71,9 +70,9 @@ func shouldUseLegacySurface(args []string) bool {
 		}
 		return strings.HasPrefix(strings.TrimSpace(args[1]), "-")
 	case "run":
-		return !(len(args) == 1 || (len(args) == 2 && (normalizeCommandName(args[1]) == "new" || strings.TrimSpace(args[1]) == "--new")))
+		return !(len(args) == 1 || (len(args) == 2 && (exactCommandToken(args[1]) == "new" || strings.TrimSpace(args[1]) == "--new")))
 	default:
-		return false
+		return true
 	}
 }
 
