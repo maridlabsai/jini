@@ -573,7 +573,12 @@ func runHelp(args []string, stdout, stderr io.Writer) int {
 }
 
 func runAdmin(args []string, stdout, stderr io.Writer) int {
-	if len(args) == 0 || normalizeCommandName(args[0]) == "help" {
+	if len(args) == 0 {
+		renderAdminCommandInventory(stdout)
+		return 0
+	}
+	switch normalizeCommandName(args[0]) {
+	case "help", "h":
 		renderAdminCommandInventory(stdout)
 		return 0
 	}

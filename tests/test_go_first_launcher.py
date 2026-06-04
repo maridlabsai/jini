@@ -18,6 +18,13 @@ class GoFirstLauncherTests(unittest.TestCase):
         self.assertTrue(go_launcher._should_use_go(["help", "--all"]))
         self.assertFalse(go_launcher._should_use_go(["help", "--all", "extra"]))
 
+    def test_go_command_handles_admin_help_aliases(self) -> None:
+        self.assertTrue(go_launcher._should_use_go(["admin"]))
+        self.assertTrue(go_launcher._should_use_go(["admin", "help"]))
+        self.assertTrue(go_launcher._should_use_go(["admin", "--help"]))
+        self.assertTrue(go_launcher._should_use_go(["admin", "-h"]))
+        self.assertFalse(go_launcher._should_use_go(["admin", "extra"]))
+
     def test_go_command_handles_doctor_json_surface(self) -> None:
         self.assertTrue(go_launcher._should_use_go(["doctor", "--format", "json"]))
         self.assertTrue(go_launcher._should_use_go(["provider", "--format", "json"]))

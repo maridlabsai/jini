@@ -409,6 +409,21 @@ func TestAdminHelpAliasShowsAdminInventory(t *testing.T) {
 	}
 }
 
+func TestAdminHelpFlagAliasesShowAdminInventory(t *testing.T) {
+	for _, args := range [][]string{{"admin", "--help"}, {"admin", "-h"}} {
+		t.Run(strings.Join(args, " "), func(t *testing.T) {
+			var stdout bytes.Buffer
+			exitCode := app.Run(args, &stdout, &stdout)
+			if exitCode != 0 {
+				t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+			}
+			if !strings.Contains(stdout.String(), "Admin and developer command inventory") {
+				t.Fatalf("expected admin inventory, got:\n%s", stdout.String())
+			}
+		})
+	}
+}
+
 func TestProviderDoctorSubcommandMatchesTopLevelDoctor(t *testing.T) {
 	var topLevel bytes.Buffer
 	topExit := app.Run([]string{"doctor"}, &topLevel, &topLevel)
