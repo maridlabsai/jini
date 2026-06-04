@@ -854,7 +854,13 @@ func TestRecognizedGoCommandFallsBackToLegacyForUnsupportedFlags(t *testing.T) {
 		_ = os.Chdir(previousDir)
 	}()
 
-	for _, args := range [][]string{{"status", "/tmp/work"}, {"check", "--help"}, {"open", "--print-path"}} {
+	for _, args := range [][]string{
+		{"status", "/tmp/work"},
+		{"check", "--help"},
+		{"open", "--print-path"},
+		{"observe", "help"},
+		{"observe", "add"},
+	} {
 		t.Run(strings.Join(args, " "), func(t *testing.T) {
 			var stdout bytes.Buffer
 			var stderr bytes.Buffer

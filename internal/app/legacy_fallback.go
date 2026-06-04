@@ -38,6 +38,19 @@ func shouldUseLegacySurface(args []string) bool {
 		}
 		_, ok := parseOptionalFormatArgs(args[2:])
 		return !ok
+	case "observe":
+		if len(args) == 1 {
+			return false
+		}
+		second := normalizeCommandName(args[1])
+		if second == "status" || second == "scan" {
+			return false
+		}
+		if second != "add" {
+			return true
+		}
+		_, _, err := parseObserveAddArgs(args[2:])
+		return err != nil
 	case "status", "continue":
 		return len(args) > 1
 	case "open":
