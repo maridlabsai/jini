@@ -1246,6 +1246,36 @@ func TestRunLauncherFallsBackToGoPromptWhenConfiguredLegacyPythonIsNotExecutable
 	}
 }
 
+func TestAdminShortHelpDoesNotRequireLegacyFallback(t *testing.T) {
+	workingDir := t.TempDir()
+	previousDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	if err := os.Chdir(workingDir); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer func() {
+		_ = os.Chdir(previousDir)
+	}()
+
+	t.Setenv("JINI_SOURCE_DIR", "")
+	t.Setenv("PATH", "")
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := Run([]string{"admin", "-h"}, &stdout, &stderr)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "Admin and developer command inventory") {
+		t.Fatalf("expected admin help inventory, got:\n%s", stdout.String())
+	}
+	if stderr.Len() != 0 {
+		t.Fatalf("expected empty stderr, got:\n%s", stderr.String())
+	}
+}
+
 func TestRunLauncherFallsBackToGoPromptWhenConfiguredLegacyPythonIsNotPython(t *testing.T) {
 	root := createRecognizedLegacySourceRoot(t, "print('legacy')\n")
 
