@@ -50,6 +50,14 @@ class GoFirstLauncherTests(unittest.TestCase):
         self.assertTrue(go_launcher._should_use_go(["check", "/tmp/example-pack"]))
         self.assertFalse(go_launcher._should_use_go(["check", "/tmp/example-pack", "extra"]))
 
+    def test_go_command_handles_native_utility_surfaces(self) -> None:
+        self.assertTrue(go_launcher._should_use_go(["init"]))
+        self.assertTrue(go_launcher._should_use_go(["memory"]))
+        self.assertTrue(go_launcher._should_use_go(["permissions"]))
+        self.assertFalse(go_launcher._should_use_go(["init", "extra"]))
+        self.assertFalse(go_launcher._should_use_go(["memory", "extra"]))
+        self.assertFalse(go_launcher._should_use_go(["permissions", "extra"]))
+
     def test_go_command_prefers_local_go_over_repo_binary(self) -> None:
         with tempfile.TemporaryDirectory(prefix="jini-go-launcher-") as tempdir:
             root = Path(tempdir)
