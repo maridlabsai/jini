@@ -21,6 +21,9 @@ func shouldUseLegacySurface(args []string) bool {
 		if len(args) == 1 {
 			return false
 		}
+		if len(args) != 2 {
+			return true
+		}
 		second := normalizeCommandName(args[1])
 		return second != "all" && second != "commands" && second != "admin"
 	case "commands":
