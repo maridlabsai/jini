@@ -1364,7 +1364,13 @@ func TestProviderSurfacesDoNotRequireLegacyFallback(t *testing.T) {
 		{args: []string{"provider"}, want: "Provider"},
 		{args: []string{"provider", "doctor"}, want: "Provider"},
 		{args: []string{"provider", "--format", "json"}, want: `"result_type": "JiniProviderDoctor"`},
+		{args: []string{"provider", "--format", "text"}, want: "Provider"},
+		{args: []string{"provider", "--format=json"}, want: `"result_type": "JiniProviderDoctor"`},
+		{args: []string{"provider", "--format=text"}, want: "Provider"},
 		{args: []string{"provider", "doctor", "--format", "json"}, want: `"result_type": "JiniProviderDoctor"`},
+		{args: []string{"provider", "doctor", "--format", "text"}, want: "Provider"},
+		{args: []string{"provider", "doctor", "--format=json"}, want: `"result_type": "JiniProviderDoctor"`},
+		{args: []string{"provider", "doctor", "--format=text"}, want: "Provider"},
 	}
 
 	for _, tc := range cases {
