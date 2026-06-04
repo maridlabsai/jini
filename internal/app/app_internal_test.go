@@ -2,6 +2,7 @@ package app
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -853,14 +854,19 @@ func TestRecognizedGoCommandFallsBackToLegacyForUnsupportedFlags(t *testing.T) {
 		_ = os.Chdir(previousDir)
 	}()
 
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-	exitCode := Run([]string{"status", "/tmp/work"}, &stdout, &stderr)
-	if exitCode != 0 {
-		t.Fatalf("expected exit code 0, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
-	}
-	if !strings.Contains(stdout.String(), `"argv": ["status", "/tmp/work"]`) {
-		t.Fatalf("expected legacy status argv passthrough, got:\n%s", stdout.String())
+	for _, args := range [][]string{{"status", "/tmp/work"}, {"check", "--help"}} {
+		t.Run(strings.Join(args, " "), func(t *testing.T) {
+			var stdout bytes.Buffer
+			var stderr bytes.Buffer
+			exitCode := Run(args, &stdout, &stderr)
+			if exitCode != 0 {
+				t.Fatalf("expected exit code 0, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+			}
+			expected := fmt.Sprintf(`"argv": ["%s"`, args[0])
+			if !strings.Contains(stdout.String(), expected) {
+				t.Fatalf("expected legacy argv passthrough for %v, got:\n%s", args, stdout.String())
+			}
+		})
 	}
 }
 
