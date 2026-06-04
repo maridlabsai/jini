@@ -4103,7 +4103,7 @@ func canonicalHelpTopic(value string) string {
 
 func isAdminHelpAlias(value string) bool {
 	switch exactCommandToken(value) {
-	case "help", "h", "--help", "-h":
+	case "help", "--help", "-h":
 		return true
 	default:
 		return false

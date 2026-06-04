@@ -16,7 +16,7 @@
   {"name": "commands extra", "args": ["commands", "extra"], "launcher_go": false, "legacy_fallback": true},
   {"name": "admin", "args": ["admin"], "launcher_go": true, "legacy_fallback": false},
   {"name": "admin help", "args": ["admin", "help"], "launcher_go": true, "legacy_fallback": false},
-  {"name": "admin short alias", "args": ["admin", "h"], "launcher_go": true, "legacy_fallback": false},
+  {"name": "admin short alias", "args": ["admin", "h"], "launcher_go": false, "legacy_fallback": true},
   {"name": "admin help flag", "args": ["admin", "--help"], "launcher_go": true, "legacy_fallback": false},
   {"name": "admin short help", "args": ["admin", "-h"], "launcher_go": true, "legacy_fallback": false},
   {"name": "admin hidden flag alias", "args": ["admin", "--h"], "launcher_go": false, "legacy_fallback": true},

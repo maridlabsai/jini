@@ -868,6 +868,7 @@ func TestRecognizedGoCommandFallsBackToLegacyForUnsupportedFlags(t *testing.T) {
 		{"route", "extra"},
 		{"help", "admin", "extra"},
 		{"help", "--commands"},
+		{"admin", "h"},
 		{"help", "--all", "extra"},
 		{"admin", "--h"},
 		{"--doctor"},

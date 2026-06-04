@@ -441,7 +441,7 @@ func TestHelpAdminAliasShowsAdminInventory(t *testing.T) {
 }
 
 func TestAdminHelpAliasShowsAdminInventory(t *testing.T) {
-	for _, args := range [][]string{{"admin", "help"}, {"admin", "h"}} {
+	for _, args := range [][]string{{"admin", "help"}} {
 		t.Run(strings.Join(args, " "), func(t *testing.T) {
 			var stdout bytes.Buffer
 			exitCode := app.Run(args, &stdout, &stdout)
