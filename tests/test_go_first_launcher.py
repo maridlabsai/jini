@@ -34,6 +34,17 @@ class GoFirstLauncherTests(unittest.TestCase):
         self.assertTrue(go_launcher._should_use_go(["provider", "--format=text"]))
         self.assertTrue(go_launcher._should_use_go(["provider", "--format=json"]))
 
+    def test_go_command_handles_observe_surface(self) -> None:
+        self.assertTrue(go_launcher._should_use_go(["observe"]))
+        self.assertTrue(go_launcher._should_use_go(["observe", "status"]))
+        self.assertTrue(go_launcher._should_use_go(["observe", "scan"]))
+        self.assertTrue(go_launcher._should_use_go(["observe", "add", "/tmp/outside-notes.md"]))
+        self.assertTrue(
+            go_launcher._should_use_go(
+                ["observe", "add", "--connector", "markdown", "/tmp/outside-notes.md"]
+            )
+        )
+
     def test_go_command_prefers_local_go_over_repo_binary(self) -> None:
         with tempfile.TemporaryDirectory(prefix="jini-go-launcher-") as tempdir:
             root = Path(tempdir)

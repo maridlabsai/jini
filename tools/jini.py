@@ -60,6 +60,8 @@ def _should_use_go(argv: list[str]) -> bool:
         return len(argv) == 1
     if first == "provider":
         return len(argv) == 1 or (len(argv) == 2 and _normalize_command(argv[1]) == "doctor")
+    if first == "observe":
+        return True
     if first in {"status", "continue", "open"}:
         return len(argv) == 1
     if first == "run":
