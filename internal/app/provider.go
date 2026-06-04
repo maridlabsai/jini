@@ -656,7 +656,7 @@ func buildLocalPreviewProviderDoctorReport() providerDoctorReport {
 
 func buildLocalSLMProviderDoctorReport() providerDoctorReport {
 	capabilities := loadLocalRuntimeCapabilities()
-	device := currentDeviceProfile()
+	device := providerDoctorDeviceProfile()
 	missing := []string{}
 	if presentOrMissing("JINI_LOCAL_SLM_ENDPOINT") == "missing" {
 		missing = append(missing, "JINI_LOCAL_SLM_ENDPOINT")
@@ -692,6 +692,15 @@ func buildLocalSLMProviderDoctorReport() providerDoctorReport {
 		Secrets:       []providerDoctorField{{Name: "JINI_LOCAL_SLM_API_KEY", Presence: presentOrMissing("JINI_LOCAL_SLM_API_KEY")}},
 		Missing:       missing,
 	}
+}
+
+func providerDoctorDeviceProfile() deviceProfile {
+	if override := strings.TrimSpace(configValue("JINI_DEVICE_CLASS_OVERRIDE")); override != "" {
+		profile := loadDeviceProfile()
+		profile.DeviceClass = override
+		return profile
+	}
+	return loadDeviceProfile()
 }
 
 func buildAzureProviderDoctorReport() providerDoctorReport {

@@ -666,6 +666,85 @@ func TestProviderDoctorDetectsLocalSLMWithoutLeakingOptionalKey(t *testing.T) {
 	}
 }
 
+func TestProviderDoctorJSONUsesCachedDeviceProfileEvidence(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_PROVIDER", "local-slm")
+	t.Setenv("JINI_LOCAL_SLM_ENDPOINT", "http://127.0.0.1:11434/v1")
+	t.Setenv("JINI_LOCAL_SLM_MODEL", "qwen3:8b")
+	t.Setenv("JINI_LOCAL_SLM_FAST_MODEL", "phi4-mini")
+	t.Setenv("JINI_LOCAL_SLM_API_KEY", "top-secret-local-key")
+
+	deviceProfilePayload := `{
+  "schema_version": "0.2.0",
+  "context_type": "JiniDeviceProfile",
+  "captured_at": "2026-05-30T14:00:00Z",
+  "os": "darwin",
+  "os_version": "15.5",
+  "arch": "arm64",
+  "accelerator_class": "apple-gpu",
+  "local_runtime_class": "local-ollama",
+  "device_class": "laptop-strong",
+  "local_profile_states": {
+    "local-fast": "ready",
+    "local-workhorse": "ready",
+    "local-deep": "degraded",
+    "local-multimodal": "ready"
+  }
+}`
+	if err := os.WriteFile(filepath.Join(stateDir, "device-profile.json"), []byte(deviceProfilePayload), 0o644); err != nil {
+		t.Fatalf("write device profile fixture: %v", err)
+	}
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"doctor", "--format", "json"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	var report struct {
+		ProviderID string `json:"provider_id"`
+		Settings   []struct {
+			Name     string `json:"name"`
+			Presence string `json:"presence"`
+		} `json:"settings"`
+	}
+	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil {
+		t.Fatalf("decode doctor json: %v\n%s", err, stdout.String())
+	}
+	if report.ProviderID != "local-slm" {
+		t.Fatalf("unexpected provider id: %#v", report)
+	}
+	settings := map[string]string{}
+	for _, item := range report.Settings {
+		settings[item.Name] = item.Presence
+	}
+	if settings["DEVICE_CLASS"] != "laptop-strong" {
+		t.Fatalf("expected cached device class, got %#v", settings)
+	}
+	if settings["DEVICE_OS"] != "darwin 15.5" {
+		t.Fatalf("expected cached device OS, got %#v", settings)
+	}
+	if settings["LOCAL_ACCELERATOR"] != "apple-gpu" {
+		t.Fatalf("expected cached accelerator, got %#v", settings)
+	}
+	if settings["LOCAL_RUNTIME_CLASS"] != "local-ollama" {
+		t.Fatalf("expected cached runtime class, got %#v", settings)
+	}
+	if settings["JINI_LOCAL_SLM_FAST_MODEL"] != "set (ready on this device)" {
+		t.Fatalf("expected cached local-fast state, got %#v", settings)
+	}
+	if settings["JINI_LOCAL_SLM_WORKHORSE_MODEL"] != "missing (ready on this device)" {
+		t.Fatalf("expected cached local-workhorse state, got %#v", settings)
+	}
+	if settings["JINI_LOCAL_SLM_DEEP_MODEL"] != "missing (degraded on this device)" {
+		t.Fatalf("expected cached local-deep state, got %#v", settings)
+	}
+	if strings.Contains(stdout.String(), "top-secret-local-key") {
+		t.Fatalf("provider doctor leaked local SLM API key:\n%s", stdout.String())
+	}
+}
+
 func TestProviderDoctorShowsSubtypeScopedMultimodalLearning(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)
