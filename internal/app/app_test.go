@@ -520,6 +520,29 @@ func TestProviderDoctorJSONSubcommandMatchesTopLevelDoctor(t *testing.T) {
 	}
 }
 
+func TestProviderDoctorTextSubcommandMatchesTopLevelDoctor(t *testing.T) {
+	t.Setenv("JINI_PROVIDER", "azure-openai")
+	t.Setenv("AZURE_OPENAI_ENDPOINT", "https://example.openai.azure.com")
+	t.Setenv("AZURE_OPENAI_API_KEY", "super-secret-key")
+	t.Setenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o-prod")
+
+	var topLevel bytes.Buffer
+	topExit := app.Run([]string{"doctor", "--format", "text"}, &topLevel, &topLevel)
+	if topExit != 0 {
+		t.Fatalf("expected top-level doctor text to succeed, got %d with output:\n%s", topExit, topLevel.String())
+	}
+
+	var subcommand bytes.Buffer
+	subExit := app.Run([]string{"provider", "doctor", "--format", "text"}, &subcommand, &subcommand)
+	if subExit != 0 {
+		t.Fatalf("expected provider doctor text to succeed, got %d with output:\n%s", subExit, subcommand.String())
+	}
+
+	if topLevel.String() != subcommand.String() {
+		t.Fatalf("expected provider doctor text to match top-level doctor text.\nTOP LEVEL:\n%s\nSUBCOMMAND:\n%s", topLevel.String(), subcommand.String())
+	}
+}
+
 func TestProviderDoctorJSONDoesNotEscapeProviderArrows(t *testing.T) {
 	t.Setenv("JINI_PROVIDER", "auto")
 	t.Setenv("JINI_MODEL", "sonnet-4.6")
