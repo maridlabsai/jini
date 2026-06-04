@@ -441,22 +441,26 @@ func TestHelpAdminAliasShowsAdminInventory(t *testing.T) {
 }
 
 func TestAdminHelpAliasShowsAdminInventory(t *testing.T) {
-	var stdout bytes.Buffer
-	exitCode := app.Run([]string{"admin", "help"}, &stdout, &stdout)
-	if exitCode != 0 {
-		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
-	}
+	for _, args := range [][]string{{"admin", "help"}, {"admin", "h"}} {
+		t.Run(strings.Join(args, " "), func(t *testing.T) {
+			var stdout bytes.Buffer
+			exitCode := app.Run(args, &stdout, &stdout)
+			if exitCode != 0 {
+				t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+			}
 
-	out := stdout.String()
-	for _, want := range []string{
-		"Admin and developer command inventory",
-		"jini provider doctor",
-		"jini observe status",
-		"jini open <artifact>",
-	} {
-		if !strings.Contains(out, want) {
-			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
-		}
+			out := stdout.String()
+			for _, want := range []string{
+				"Admin and developer command inventory",
+				"jini provider doctor",
+				"jini observe status",
+				"jini open <artifact>",
+			} {
+				if !strings.Contains(out, want) {
+					t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+				}
+			}
+		})
 	}
 }
 
