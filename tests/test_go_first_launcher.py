@@ -16,7 +16,11 @@ class GoFirstLauncherTests(unittest.TestCase):
 
     def test_go_command_handles_help_all_surface(self) -> None:
         self.assertTrue(go_launcher._should_use_go(["help", "--all"]))
+        self.assertTrue(go_launcher._should_use_go(["help", "all"]))
+        self.assertTrue(go_launcher._should_use_go(["help", "commands"]))
+        self.assertTrue(go_launcher._should_use_go(["help", "admin"]))
         self.assertFalse(go_launcher._should_use_go(["help", "--all", "extra"]))
+        self.assertFalse(go_launcher._should_use_go(["help", "admin", "extra"]))
 
     def test_go_command_handles_admin_help_aliases(self) -> None:
         self.assertTrue(go_launcher._should_use_go(["admin"]))
