@@ -87,7 +87,7 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 		}
 
 		switch normalizeCommandName(args[0]) {
-		case "help":
+		case "help", "h":
 			return runHelp(args[1:], stdout, stderr)
 		case "commands":
 			return runHelp([]string{"--all"}, stdout, stderr)

@@ -349,6 +349,27 @@ func TestTopLevelHelpFlagShowsLauncherHelp(t *testing.T) {
 	}
 }
 
+func TestTopLevelShortHelpFlagShowsLauncherHelp(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"-h"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Paste what you want finished.",
+		"If you need commands, type `help`.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+}
+
 func TestCommandsAliasShowsPublicCommandInventory(t *testing.T) {
 	var stdout bytes.Buffer
 	exitCode := app.Run([]string{"commands"}, &stdout, &stdout)
