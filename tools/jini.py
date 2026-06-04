@@ -60,6 +60,8 @@ def _should_use_go(argv: list[str]) -> bool:
         return len(argv) <= 2
     if first in {"init", "memory", "permissions"}:
         return len(argv) == 1
+    if first == "new":
+        return len(argv) == 1
     if first == "doctor":
         return len(argv) == 1
     if first == "provider":
