@@ -17,7 +17,7 @@ func shouldUseLegacySurface(args []string) bool {
 	}
 	first := normalizeCommandName(args[0])
 	switch first {
-	case "help":
+	case "help", "h":
 		if len(args) == 1 {
 			return false
 		}
