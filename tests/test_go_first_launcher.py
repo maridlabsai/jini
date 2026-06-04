@@ -61,6 +61,16 @@ class GoFirstLauncherTests(unittest.TestCase):
                 ["observe", "add", "--connector", "markdown", "/tmp/outside-notes.md"]
             )
         )
+        self.assertTrue(
+            go_launcher._should_use_go(
+                ["observe", "add", "/tmp/outside-notes.md", "--connector=markdown"]
+            )
+        )
+        self.assertFalse(go_launcher._should_use_go(["observe", "help"]))
+        self.assertFalse(go_launcher._should_use_go(["observe", "extra"]))
+        self.assertFalse(go_launcher._should_use_go(["observe", "add"]))
+        self.assertFalse(go_launcher._should_use_go(["observe", "add", "one", "two"]))
+        self.assertFalse(go_launcher._should_use_go(["observe", "add", "--connector"]))
 
     def test_go_command_handles_check_surface(self) -> None:
         self.assertTrue(go_launcher._should_use_go(["check"]))

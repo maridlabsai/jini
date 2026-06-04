@@ -26,9 +26,6 @@ NATIVE_SINGLE_TOKEN_COMMANDS = {
     "doctor",
 }
 
-NATIVE_MULTI_SHAPE_COMMANDS = {"observe"}
-
-
 def _normalize_command(value: str) -> str:
     return value.strip().lower()
 
@@ -48,6 +45,40 @@ def _matches_optional_format_shape(argv: list[str], *, command_words: int) -> bo
     if len(suffix) == 1 and suffix[0].startswith("--format=") and _normalize_command(suffix[0].split("=", 1)[1]) in {"json", "text"}:
         return True
     return False
+
+
+def _matches_observe_shape(argv: list[str]) -> bool:
+    if len(argv) == 1:
+        return True
+    if len(argv) == 2:
+        return _normalize_command(argv[1]) in {"status", "scan"}
+    if _normalize_command(argv[1]) != "add":
+        return False
+
+    suffix = argv[2:]
+    target_path = None
+    index = 0
+    while index < len(suffix):
+        part = suffix[index].strip()
+        if not part:
+            index += 1
+            continue
+        if part == "--connector":
+            if index + 1 >= len(suffix) or not suffix[index + 1].strip():
+                return False
+            index += 2
+            continue
+        if part.startswith("--connector="):
+            if not part.split("=", 1)[1].strip():
+                return False
+            index += 1
+            continue
+        if target_path is None:
+            target_path = part
+            index += 1
+            continue
+        return False
+    return target_path is not None
 
 
 def _should_use_go(argv: list[str]) -> bool:
@@ -71,8 +102,8 @@ def _should_use_go(argv: list[str]) -> bool:
         return len(argv) == 1 or (len(argv) == 2 and _normalize_command(argv[1]) == "--all")
     if first in NATIVE_SINGLE_TOKEN_COMMANDS:
         return len(argv) == 1
-    if first in NATIVE_MULTI_SHAPE_COMMANDS:
-        return True
+    if first == "observe":
+        return _matches_observe_shape(argv)
     if first == "admin":
         return len(argv) <= 2 and (len(argv) == 1 or _normalize_command(argv[1]) in {"help", "--help", "-h"})
     if first == "check":
