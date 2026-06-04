@@ -45,6 +45,8 @@ def _should_use_go(argv: list[str]) -> bool:
         if first == "doctor":
             return _matches_optional_format_shape(argv, command_words=1)
         if first == "provider":
+            if _matches_optional_format_shape(argv, command_words=1):
+                return True
             return len(argv) >= 2 and _normalize_command(argv[1]) == "doctor" and _matches_optional_format_shape(
                 argv, command_words=2
             )
@@ -57,7 +59,7 @@ def _should_use_go(argv: list[str]) -> bool:
     if first == "doctor":
         return len(argv) == 1
     if first == "provider":
-        return len(argv) == 2 and _normalize_command(argv[1]) == "doctor"
+        return len(argv) == 1 or (len(argv) == 2 and _normalize_command(argv[1]) == "doctor")
     if first in {"status", "continue", "open"}:
         return len(argv) == 1
     if first == "run":
