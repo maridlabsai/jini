@@ -125,6 +125,9 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 			renderNewWorkLauncher(stdout)
 			return 0
 		case "new":
+			if stdin != nil {
+				return runNewWorkIntake(stdin, stdout, stderr)
+			}
 			renderNewWorkLauncher(stdout)
 			return 0
 		case "observe":

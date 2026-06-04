@@ -1887,6 +1887,44 @@ func TestInteractiveLauncherMenuPhraseWithSentencePunctuationStartsWork(t *testi
 	}
 }
 
+func TestNewCommandWithInputMatchesRunNew(t *testing.T) {
+	input := "Turn meeting notes into something I can send.\n"
+
+	runCase := func(args []string) (string, map[string]any) {
+		t.Helper()
+		stateDir := t.TempDir()
+		t.Setenv("JINI_STATE_DIR", stateDir)
+
+		var stdout bytes.Buffer
+		exitCode := app.RunInteractive(args, strings.NewReader(input), &stdout, &stdout)
+		if exitCode != 0 {
+			t.Fatalf("expected exit code 0 for %v, got %d with output:\n%s", args, exitCode, stdout.String())
+		}
+		return stdout.String(), readCurrentWork(t, stateDir)
+	}
+
+	newOut, newCurrent := runCase([]string{"new"})
+	runNewOut, runNewCurrent := runCase([]string{"run", "new"})
+
+	for _, out := range []string{newOut, runNewOut} {
+		for _, want := range []string{
+			"Your first draft is ready.",
+			"Sendable Follow-up",
+		} {
+			if !strings.Contains(out, want) {
+				t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+			}
+		}
+	}
+
+	if newOut != runNewOut {
+		t.Fatalf("expected `new` with stdin to match `run new`.\nNEW:\n%s\nRUN NEW:\n%s", newOut, runNewOut)
+	}
+	if newCurrent["pack_id"] != "meeting-followup" || runNewCurrent["pack_id"] != "meeting-followup" {
+		t.Fatalf("expected both commands to create meeting-followup work, got new=%#v run_new=%#v", newCurrent, runNewCurrent)
+	}
+}
+
 func TestInteractiveLauncherRunsMeetingPostResultActions(t *testing.T) {
 	cases := []struct {
 		name            string
