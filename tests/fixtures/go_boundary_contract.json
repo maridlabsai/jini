@@ -65,5 +65,6 @@
   {"name": "route extra", "args": ["route", "extra"], "launcher_go": false, "legacy_fallback": true},
   {"name": "run", "args": ["run"], "launcher_go": true, "legacy_fallback": false},
   {"name": "run new", "args": ["run", "new"], "launcher_go": true, "legacy_fallback": false},
+  {"name": "run new flag", "args": ["run", "--new"], "launcher_go": true, "legacy_fallback": false},
   {"name": "run unsupported", "args": ["run", "extra"], "launcher_go": false, "legacy_fallback": true}
 ]

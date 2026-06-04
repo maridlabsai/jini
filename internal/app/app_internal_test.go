@@ -1385,6 +1385,49 @@ func TestProviderSurfacesDoNotRequireLegacyFallback(t *testing.T) {
 	}
 }
 
+func TestRunNewSurfacesDoNotRequireLegacyFallback(t *testing.T) {
+	workingDir := t.TempDir()
+	previousDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	if err := os.Chdir(workingDir); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer func() {
+		_ = os.Chdir(previousDir)
+	}()
+
+	t.Setenv("JINI_SOURCE_DIR", "")
+	t.Setenv("PATH", "")
+
+	for _, args := range [][]string{
+		{"run", "new"},
+		{"run", "--new"},
+	} {
+		t.Run(strings.Join(args, " "), func(t *testing.T) {
+			var stdout bytes.Buffer
+			var stderr bytes.Buffer
+			exitCode := Run(args, &stdout, &stderr)
+			if exitCode != 0 {
+				t.Fatalf("expected exit code 0, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+			}
+			for _, want := range []string{
+				"Jini",
+				"Paste what you want finished.",
+				"Nothing will be sent yet.",
+			} {
+				if !strings.Contains(stdout.String(), want) {
+					t.Fatalf("expected output to contain %q, got:\n%s", want, stdout.String())
+				}
+			}
+			if stderr.Len() != 0 {
+				t.Fatalf("expected empty stderr, got:\n%s", stderr.String())
+			}
+		})
+	}
+}
+
 func TestRunLauncherFallsBackToGoPromptWhenConfiguredLegacyPythonIsNotPython(t *testing.T) {
 	root := createRecognizedLegacySourceRoot(t, "print('legacy')\n")
 
