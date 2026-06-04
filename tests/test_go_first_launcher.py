@@ -14,6 +14,10 @@ class GoFirstLauncherTests(unittest.TestCase):
                 self.assertTrue(go_launcher._should_use_go([command]))
                 self.assertFalse(go_launcher._should_use_go([command, "extra"]))
 
+    def test_go_command_handles_help_all_surface(self) -> None:
+        self.assertTrue(go_launcher._should_use_go(["help", "--all"]))
+        self.assertFalse(go_launcher._should_use_go(["help", "--all", "extra"]))
+
     def test_go_command_handles_doctor_json_surface(self) -> None:
         self.assertTrue(go_launcher._should_use_go(["doctor", "--format", "json"]))
         self.assertTrue(go_launcher._should_use_go(["provider", "--format", "json"]))
