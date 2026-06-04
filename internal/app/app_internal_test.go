@@ -857,7 +857,12 @@ func TestRecognizedGoCommandFallsBackToLegacyForUnsupportedFlags(t *testing.T) {
 	for _, args := range [][]string{
 		{"status", "/tmp/work"},
 		{"check", "--help"},
+		{"init", "extra"},
+		{"memory", "extra"},
+		{"new", "extra"},
 		{"open", "--print-path"},
+		{"permissions", "extra"},
+		{"route", "extra"},
 		{"help", "admin", "extra"},
 		{"help", "--all", "extra"},
 		{"observe", "help"},

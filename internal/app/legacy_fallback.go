@@ -30,6 +30,8 @@ func shouldUseLegacySurface(args []string) bool {
 		return len(args) > 1
 	case "admin":
 		return !(len(args) == 1 || (len(args) == 2 && (normalizeCommandName(args[1]) == "help" || normalizeCommandName(args[1]) == "h")))
+	case "init", "memory", "new", "permissions", "route":
+		return len(args) > 1
 	case "check":
 		return len(args) > 1 && strings.HasPrefix(strings.TrimSpace(args[1]), "-")
 	case "doctor":
