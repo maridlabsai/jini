@@ -816,10 +816,10 @@ Only these CLI flows need to be rebound first:
 
 - `jini`
 - `jini status`
-- `jini resume`
+- `jini continue`
 - `jini open`
 
-`status` and `resume` should become the first public proof that the session
+`status` and `continue` should become the first public proof that the session
 kernel is real.
 
 ## Out Of Scope For Slice 1
@@ -877,7 +877,7 @@ Slice 1 is done only when these proofs pass:
 
 1. `jini` creates or continues a canonical session
 2. `jini status` reads from canonical session state
-3. `jini resume` reopens the same session without path reconstruction
+3. `jini continue` reopens the same session without path reconstruction
 4. `jini open` opens the ready artifact from canonical session state
 5. continuation evidence shows reuse before rebuild when prior work exists
 

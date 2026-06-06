@@ -133,21 +133,29 @@ That keeps the contract honest:
 - fake cloud execution is avoided
 - receipts remain replayable and reviewable
 
-## Commands
+## Native Go Surface
 
-The current surface is:
+The current native Go surface for this layer is the shared product surface:
 
 ```bash
-jini bootstrap-home /tmp/jini-home --owner-name "Example Owner"
-jini append-memory /tmp/jini-home --line "Prefer local-first verification"
-jini dream-memory /tmp/jini-home
-jini list-tools /tmp/jini-home
-jini list-routines /tmp/jini-home
-jini run-routine /tmp/jini-home daily-brief --mode local
-jini run-routine /tmp/jini-home golden-benchmark --mode local
-jini run-routine /tmp/jini-home framework-review --mode local
-jini run-routine /tmp/jini-home weekly-planning --mode remote
+jini
+jini status
+jini continue
+jini open
+jini doctor
 ```
+
+The old personal-OS verbs remain backlog concepts, not runnable public CLI:
+
+- bootstrap home
+- append memory
+- dream memory
+- list tools
+- list routines
+- run routine locally or remotely
+
+If those capabilities return, they should graduate as native Go commands only
+after the public command-surface and publish-readiness gates accept them.
 
 ## Why This Layer Exists
 

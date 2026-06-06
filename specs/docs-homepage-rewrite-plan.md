@@ -65,11 +65,11 @@ The homepage should be reorganized into:
 
 5. Commands
    - `jini`
-   - `jini setup`
+   - `jini commands`
    - `jini doctor`
    - `jini status`
+   - `jini continue`
    - `jini open`
-   - `jini metrics`
 
 6. What Jini Writes
    - deliverables

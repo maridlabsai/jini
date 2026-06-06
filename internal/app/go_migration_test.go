@@ -62,7 +62,11 @@ func TestOfficialGoOnlySurfacesDoNotAdvertiseUnsupportedCommands(t *testing.T) {
 		"docs/index.md",
 		"docs/install.md",
 		"docs/simple.md",
+		"specs/cli-replacement-score-plan.md",
+		"specs/cross-surface-session-system-and-dev-design.md",
+		"specs/docs-homepage-rewrite-plan.md",
 		"specs/install-packaging.md",
+		"specs/personal-os.md",
 	}
 	for _, pattern := range []string{
 		"distribution/targets/*/README.md",
@@ -150,6 +154,36 @@ func TestPublicDocsDoNotTeachPathfulStatus(t *testing.T) {
 			for _, pattern := range stalePatterns {
 				if strings.Contains(line, pattern) {
 					t.Errorf("%s:%d teaches retired pathful status form: %s", rel, lineNumber+1, pattern)
+				}
+			}
+		}
+	}
+}
+
+func TestPublicPlanningSpecsDoNotPromoteOperatorOnlyCommands(t *testing.T) {
+	root := repoRootForMigrationTest(t)
+	files := []string{
+		"README.md",
+		"docs/cli.md",
+		"docs/install.md",
+		"docs/simple.md",
+		"specs/cli-replacement-score-plan.md",
+		"specs/docs-homepage-rewrite-plan.md",
+	}
+	operatorOnlyCommands := []string{
+		"jini check",
+		"jini provider doctor",
+	}
+
+	for _, rel := range files {
+		data, err := os.ReadFile(filepath.Join(root, rel))
+		if err != nil {
+			t.Fatalf("read %s: %v", rel, err)
+		}
+		for lineNumber, line := range strings.Split(string(data), "\n") {
+			for _, command := range operatorOnlyCommands {
+				if strings.Contains(line, command) {
+					t.Errorf("%s:%d promotes operator-only command in public planning surface: %s", rel, lineNumber+1, command)
 				}
 			}
 		}

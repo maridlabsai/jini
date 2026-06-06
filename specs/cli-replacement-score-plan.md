@@ -50,21 +50,23 @@ behavioral.
 
 ## Replacement-critical evidence
 
-The current public materials teach a command surface that the installed CLI does
-not reliably honor.
+The public materials must keep teaching only the command surface that the
+installed native Go CLI actually honors.
 
-Examples from the repo:
+Current examples from the repo:
 
 - `README.md` teaches `jini commands`, `jini admin help`, and `jini doctor`.
 - `docs/cli.md` teaches `jini commands`, `jini admin help`, `jini doctor`,
-  `jini status`, and `jini metrics`.
-- The installed binary in local use accepted `jini check` and
-  `jini provider doctor`, but rejected:
-  - `jini commands`
-  - `jini admin help`
-  - `jini doctor`
-  - `jini status`
-  - `jini --help`
+  `jini status`, `jini continue`, and `jini open`.
+- `publish-readiness` and the Go migration tests now fail if official surfaces
+  advertise unsupported public commands.
+
+Historical mismatch, now treated as regression evidence:
+
+- public docs once taught commands the binary rejected
+- the binary once exposed internal commands that public docs did not teach
+- planning specs once preserved old command examples after the Go surface moved
+  on
 
 This is not a cosmetic mismatch.
 
@@ -111,15 +113,14 @@ Mandatory moves:
 
 - Ship one replacement-safe public command contract and freeze it:
   - `jini`
-  - `jini help`
-  - `jini check`
+  - `jini commands`
+  - `jini status`
+  - `jini continue`
   - `jini open`
-  - `jini provider doctor`
-- Either:
-  - add compatibility aliases for taught commands like `jini commands`,
-    `jini status`, `jini doctor`, and `jini --help`
-  - or remove those teachings from the public docs until the live binary
-    actually supports them
+  - `jini doctor`
+  - `jini admin help`
+- Keep operator-only commands out of the replacement-safe public contract unless
+  the command catalog intentionally promotes them.
 - Generate the public command catalog from the binary or from a single checked
   source of truth. Do not hand-maintain the docs and parser separately.
 - Add release smoke tests against the install artifact, not just the repo code.
