@@ -1,5 +1,18 @@
 # Lean Platform Doctrine
 
+Updated: 2026-06-05
+
+This document is a specialized doctrine for lean, cost-effective, and
+offline-capable platform behavior, not the top-precedence product and
+operating PRD.
+
+The canonical product and operating PRD lives in
+[number-one-platform-prd.md](./number-one-platform-prd.md).
+
+If this doctrine conflicts with the canonical PRD on tenets, priorities,
+requirements, roadmap order, or automation posture, the canonical PRD wins and
+this doctrine should be updated.
+
 Jini should be a lean, efficient, cost-saving platform that teams want to buy because it is easy to learn, easy to govern, and hard to replace.
 
 ## Mission

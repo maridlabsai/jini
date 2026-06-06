@@ -13,6 +13,16 @@ systems.
 
 This is a stable public engineering contract.
 
+This document is a specialized engineering framework, not the top-precedence
+product and operating PRD.
+
+The canonical product and operating PRD lives in
+[number-one-platform-prd.md](./number-one-platform-prd.md).
+
+If this framework conflicts with the canonical PRD on tenets, priorities,
+requirements, roadmap order, or operating posture, the canonical PRD wins and
+this framework should be reconciled.
+
 ## Framework Rule
 
 Every major workstream must build on the same base product contract:
