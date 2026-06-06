@@ -86,6 +86,9 @@ def _should_use_go(argv: list[str]) -> bool:
         return True
 
     first = _normalize_command(argv[0])
+    if first == "publish-readiness":
+        return len(argv) == 1 or _matches_optional_format_shape(argv, command_words=1)
+
     format_name = _optional_format(argv)
     if format_name is not None:
         if first == "doctor":

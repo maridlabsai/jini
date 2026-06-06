@@ -32,8 +32,13 @@ class GoFirstLauncherTests(unittest.TestCase):
         self.assertTrue(go_launcher._should_use_go(["provider", "--format=text"]))
         self.assertTrue(go_launcher._should_use_go(["provider", "doctor", "--format=text"]))
 
-    def test_publish_readiness_json_stays_on_legacy_surface(self) -> None:
-        self.assertFalse(go_launcher._should_use_go(["publish-readiness", "--format", "json"]))
+    def test_publish_readiness_crosses_go_boundary(self) -> None:
+        self.assertTrue(go_launcher._should_use_go(["publish-readiness"]))
+        self.assertTrue(go_launcher._should_use_go(["publish-readiness", "--format", "json"]))
+        self.assertTrue(go_launcher._should_use_go(["publish-readiness", "--format=json"]))
+        self.assertTrue(go_launcher._should_use_go(["publish-readiness", "--format", "text"]))
+        self.assertFalse(go_launcher._should_use_go(["publish-readiness", "extra"]))
+        self.assertFalse(go_launcher._should_use_go(["publish-readiness", "--format", "xml"]))
 
     def test_unsupported_doctor_json_shapes_stay_on_legacy_surface(self) -> None:
         self.assertFalse(go_launcher._should_use_go(["doctor", "extra", "--format", "json"]))
