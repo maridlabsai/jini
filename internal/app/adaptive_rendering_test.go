@@ -81,6 +81,9 @@ func TestRenderPolicyForMeetingFirstResultUsesCompactCLIWithoutChangingTruth(t *
 	if slices.Contains(request.AvailableActions, "Expand") {
 		t.Fatalf("expected placeholder action to be removed from first-result actions: %#v", request.AvailableActions)
 	}
+	if slices.Contains(request.AvailableActions, "Inspect route") {
+		t.Fatalf("expected compact safe auto mode not to force route inspection: %#v", request.AvailableActions)
+	}
 	if request.RouteVisibility != "compact" {
 		t.Fatalf("expected compact route visibility, got %q", request.RouteVisibility)
 	}
@@ -112,6 +115,9 @@ func TestRenderPolicyExpandsUnsafeAutoModeApprovalPolicy(t *testing.T) {
 	}
 	if request.RiskLevel != "medium" {
 		t.Fatalf("expected unsafe auto-mode approval policy to raise render risk, got %q", request.RiskLevel)
+	}
+	if !slices.Contains(request.AvailableActions, "Inspect route") {
+		t.Fatalf("expected expanded unsafe route to expose route inspection action, got %#v", request.AvailableActions)
 	}
 }
 

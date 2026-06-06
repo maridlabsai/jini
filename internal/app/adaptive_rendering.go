@@ -194,14 +194,15 @@ func selectRenderRequest(envelope semanticEnvelope, surface, userFamiliarity str
 	if surface == "cli" || surface == "mobile" {
 		density = "compact"
 	}
+	visibility := routeVisibility(envelope)
 	return renderRequest{
 		Surface:          surface,
 		Mode:             mode,
 		Density:          density,
 		UserFamiliarity:  userFamiliarity,
 		RiskLevel:        renderRiskLevel(envelope),
-		RouteVisibility:  routeVisibility(envelope),
-		AvailableActions: renderActionsForMode(mode),
+		RouteVisibility:  visibility,
+		AvailableActions: renderActionsForModeAndRoute(mode, visibility),
 	}
 }
 
@@ -413,4 +414,21 @@ func renderActionsForMode(mode string) []string {
 	default:
 		return []string{"Continue", "Missing", "Start"}
 	}
+}
+
+func renderActionsForModeAndRoute(mode, routeVisibility string) []string {
+	actions := renderActionsForMode(mode)
+	if routeVisibility != "expanded" {
+		return actions
+	}
+	return appendRenderAction(actions, "Inspect route")
+}
+
+func appendRenderAction(actions []string, action string) []string {
+	for _, existing := range actions {
+		if existing == action {
+			return actions
+		}
+	}
+	return append(actions, action)
 }
