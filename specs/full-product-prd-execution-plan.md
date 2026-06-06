@@ -1,8 +1,21 @@
 # Jini Full Product PRD Execution Plan
 
-Updated: 2026-05-15
+Updated: 2026-06-05
 
 ## Purpose
+
+This execution plan is subordinate to the canonical product and operating PRD
+in [number-one-platform-prd.md](./number-one-platform-prd.md).
+
+It should be interpreted as:
+
+- a staged execution sequence for the fuller rewrite shape
+- valid only where it remains consistent with the canonical PRD
+- subject to reprioritization if the canonical PRD changes the P0/P1/P2 order,
+  automation posture, or app/deployment roadmap
+
+If this plan and the canonical PRD disagree, the canonical PRD wins and this
+plan should be updated rather than followed silently.
 
 This plan converts [full-product-prd.md](./full-product-prd.md) into a staged
 rewrite sequence with concrete slice goals, scorecard intent, benchmark intent,

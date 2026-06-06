@@ -1,8 +1,24 @@
 # Jini Full Product PRD
 
-Updated: 2026-05-15
+Updated: 2026-06-05
 
 ## Purpose
+
+This document is a foundational product-shape PRD, but it is no longer the top
+precedence operating PRD.
+
+The canonical product and operating PRD now lives in
+[number-one-platform-prd.md](./number-one-platform-prd.md).
+
+This document should be read as:
+
+- the broader product-shape and market-positioning source
+- a supporting PRD for the canonical operating PRD
+- subordinate when a requirement, tenet, roadmap, or operating rule conflicts
+  with the canonical PRD
+
+If this document and the canonical PRD diverge, the canonical PRD wins until
+this document is explicitly reconciled.
 
 This PRD defines the target product shape for Jini after the current rewrite.
 

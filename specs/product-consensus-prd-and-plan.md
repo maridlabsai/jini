@@ -1,9 +1,18 @@
 # Product Consensus PRD And Plan
 
-Updated: 2026-05-14
+Updated: 2026-06-05
 
 This is the short-form consensus version of the fuller product document in
 [full-product-prd.md](./full-product-prd.md).
+
+The canonical product and operating PRD now lives in
+[number-one-platform-prd.md](./number-one-platform-prd.md).
+
+This document remains useful as a short-form critique and consensus snapshot,
+but it is not the top-precedence roadmap or operating charter.
+
+If this document conflicts with the canonical PRD on tenets, priorities,
+requirements, or roadmap, the canonical PRD wins.
 
 Deeper follow-on strategy artifacts:
 
