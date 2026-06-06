@@ -433,12 +433,13 @@ func TestCommandsAliasShowsPublicCommandInventory(t *testing.T) {
 		"jini open",
 		"jini doctor",
 		"jini admin help",
+		"native Go preview",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
 	}
-	for _, unwanted := range []string{"jini check", "jini provider doctor"} {
+	for _, unwanted := range []string{"jini check", "jini provider doctor", "source runtime", "Python", "fallback"} {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("did not expect output to contain %q, got:\n%s", unwanted, out)
 		}
@@ -501,9 +502,16 @@ func TestAdminHelpAliasShowsAdminInventory(t *testing.T) {
 				"jini provider doctor",
 				"jini observe status",
 				"jini open <artifact>",
+				"native Go preview",
+				"jini publish-readiness",
 			} {
 				if !strings.Contains(out, want) {
 					t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+				}
+			}
+			for _, unwanted := range []string{"source runtime", "Python", "fallback"} {
+				if strings.Contains(out, unwanted) {
+					t.Fatalf("did not expect output to contain %q, got:\n%s", unwanted, out)
 				}
 			}
 		})

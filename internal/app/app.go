@@ -2455,7 +2455,7 @@ func renderPublicCommandInventory(w io.Writer) {
 	fmt.Fprintln(w, "MORE")
 	fmt.Fprintln(w, "- jini admin help")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "This runtime preview keeps the public surface small and inspectable.")
+	fmt.Fprintln(w, "This native Go preview keeps the public surface small and inspectable.")
 }
 
 func renderAdminCommandInventory(w io.Writer) {
@@ -2467,7 +2467,7 @@ func renderAdminCommandInventory(w io.Writer) {
 	fmt.Fprintln(w, "- jini open <artifact>")
 	fmt.Fprintln(w, "- jini run")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "This runtime preview stays intentionally narrow. Broader release plumbing lives in the source runtime.")
+	fmt.Fprintln(w, "This native Go preview stays intentionally narrow. Broader release plumbing should graduate through `jini publish-readiness` before it becomes public.")
 }
 
 func renderNewWorkPrompt(w io.Writer) {
