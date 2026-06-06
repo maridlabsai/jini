@@ -8,6 +8,9 @@ and operating PRD.
 The canonical product and operating PRD lives in
 [number-one-platform-prd.md](./number-one-platform-prd.md).
 
+The current competitor-derived release pressure lives in
+[competitive-release-plan.md](./competitive-release-plan.md).
+
 If this development plan conflicts with the canonical PRD on priorities,
 requirements, roadmap order, automation posture, or app-shipping order, the
 canonical PRD wins and this plan should be updated before execution continues.
@@ -166,6 +169,11 @@ Deliverables:
 - competitor-watch review loop
 - score movement evidence
 - shadow-policy comparisons against archived traces
+- source-backed competitor release packet covering terminal agents, IDE agents,
+  cloud PR agents, local/offline hosts, routing gateways, app builders, and
+  general workflow agents
+- release-plan deltas that explicitly say what Jini will copy, integrate,
+  avoid, or defer
 
 Score impact:
 
@@ -190,6 +198,7 @@ Deliverables:
 - measured cross-surface recovery metrics
 - measured route-regret and resume-cost metrics
 - automated competitor-watch packet
+- expanded competitor watch categories from the competitive release plan
 - canonical commit, push, and release gate matrix with one checked-in runner
 
 Required score movement:

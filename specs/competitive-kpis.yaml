@@ -1,4 +1,4 @@
-updated_at: "2026-05-28"
+updated_at: "2026-06-06"
 target_score: 9.0
 core_benchmark_set:
   - Kiro
@@ -14,6 +14,33 @@ watchlist:
   - Cline
   - Aider
   - Matt Pocock Skills Installer
+  - GitHub Copilot coding agent
+  - Google Jules
+  - Google Gemini CLI
+  - Cursor
+  - JetBrains Junie
+  - Zed Agent Panel
+  - Continue
+  - OpenHands
+  - Roomote
+  - Devin
+  - Factory Droids
+  - Replit Agent
+  - Lovable
+  - Bolt.new
+  - Vercel v0
+  - Ollama
+  - LM Studio
+  - GPT4All
+  - Jan
+  - Open WebUI
+  - AnythingLLM
+  - LiteLLM
+  - OpenRouter
+  - Manus
+  - Genspark Super Agent
+  - Lindy
+  - Zapier Agents
 comparison_set:
   - Kiro
   - Hermes
@@ -27,10 +54,38 @@ comparison_set:
   - Cline
   - Aider
   - Matt Pocock Skills Installer
+  - GitHub Copilot coding agent
+  - Google Jules
+  - Google Gemini CLI
+  - Cursor
+  - JetBrains Junie
+  - Zed Agent Panel
+  - Continue
+  - OpenHands
+  - Roomote
+  - Devin
+  - Factory Droids
+  - Replit Agent
+  - Lovable
+  - Bolt.new
+  - Vercel v0
+  - Ollama
+  - LM Studio
+  - GPT4All
+  - Jan
+  - Open WebUI
+  - AnythingLLM
+  - LiteLLM
+  - OpenRouter
+  - Manus
+  - Genspark Super Agent
+  - Lindy
+  - Zapier Agents
 notes:
   - AI Hero Studio is tracked as a focused agent platform, not as a full protocol peer.
   - Matt Pocock's multi-target skills installer is treated as a packaging and distribution benchmark.
   - The core benchmark set must align with the rerunnable golden benchmark; the watchlist is tracked for strategy pressure but does not require scenario coverage.
+  - The expanded watchlist comes from specs/competitive-release-plan.md and is meant to pressure release planning, not inflate the rerunnable core benchmark.
   - No replacement-critical score may clear 9.0 while the public docs, built install artifact, and taught command surface disagree.
 dimensions:
   - id: workflow-rigor

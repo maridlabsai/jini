@@ -6,6 +6,9 @@ The current execution contract for the next major product and architecture
 initiative lives in
 [jini-next-initiative-plan.md](./jini-next-initiative-plan.md).
 
+The competitive release pressure and watchlist response lives in
+[competitive-release-plan.md](./competitive-release-plan.md).
+
 This document is the canonical product and operating PRD for Jini.
 
 If another plan, roadmap, or strategy note conflicts with this document, this
@@ -469,6 +472,17 @@ considered successful.
   contract
 - local-model or connector adoption should be judged by measured value, not by
   novelty
+
+#### P0.10 Competitive release pressure
+
+- competitor deltas must feed a source-backed weekly watch packet
+- direct replacement threats must be mapped to P0/P1/P2 release-plan changes
+- local/offline hosts and LLM gateways should be treated as adapter pressure,
+  not as reasons to rebuild commodity surfaces
+- prompt-to-app and general-agent competitors should inform first-result and
+  automation quality without changing Jini's core identity
+- each monthly release plan must say what changed in the field, what Jini will
+  copy, what Jini will not copy, and which benchmark or watchlist item changed
 
 ### P1: Scale and differentiation requirements
 

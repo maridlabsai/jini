@@ -1,8 +1,8 @@
 schema_version: "0.1.0"
 benchmark_id: jini-product-golden-benchmark
 label: Jini Golden Product Benchmark
-updated_at: "2026-05-28"
-last_verified_at: "2026-05-20"
+updated_at: "2026-06-06"
+last_verified_at: "2026-06-06"
 purpose: >
   Validate Jini against a rerunnable golden dataset and compare it against the
   major product, harness, coding-agent, and UX competitors using weighted
@@ -22,6 +22,33 @@ comparison_model:
     - Cline
     - Aider
     - Matt Pocock Skills Installer
+    - GitHub Copilot coding agent
+    - Google Jules
+    - Google Gemini CLI
+    - Cursor
+    - JetBrains Junie
+    - Zed Agent Panel
+    - Continue
+    - OpenHands
+    - Roomote
+    - Devin
+    - Factory Droids
+    - Replit Agent
+    - Lovable
+    - Bolt.new
+    - Vercel v0
+    - Ollama
+    - LM Studio
+    - GPT4All
+    - Jan
+    - Open WebUI
+    - AnythingLLM
+    - LiteLLM
+    - OpenRouter
+    - Manus
+    - Genspark Super Agent
+    - Lindy
+    - Zapier Agents
   rule: >
     The core benchmark set must align with the rerunnable competitor scenarios.
     Watchlist frameworks stay visible for product pressure and periodic review,

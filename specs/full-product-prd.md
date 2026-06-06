@@ -49,6 +49,9 @@ The stricter charter for cost optimization, UX quality, and cross-form-factor
 session continuity lives in
 [cross-surface-session-platform-prd.md](./cross-surface-session-platform-prd.md).
 
+Current competitor pressure and release-plan implications live in
+[competitive-release-plan.md](./competitive-release-plan.md).
+
 The stable engineering framework for major workstreams lives in
 [workstream-technical-framework.md](./workstream-technical-framework.md).
 
