@@ -129,6 +129,27 @@ func TestPublishReadinessSupportsTextAndInlineJSONFormat(t *testing.T) {
 	}
 }
 
+func TestPublishReadinessTextIncludesGuardrailCheckDetails(t *testing.T) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := Run([]string{"publish-readiness", "--format=text"}, &stdout, &stderr)
+	if exitCode != 0 {
+		t.Fatalf("expected publish-readiness text to pass, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"  APP-PLATFORM ok",
+		"    OK specs/app-platform-shipping-playbook.md#source-backed-inputs",
+		"  OFFLINE-REGRESSION ok",
+		"    OK specs/local-model-support-matrix.md#promotion-loop",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected publish-readiness text to contain %q, got:\n%s", want, out)
+		}
+	}
+}
+
 func TestPublishReadinessIncludesOfflineRegressionGuardrails(t *testing.T) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer

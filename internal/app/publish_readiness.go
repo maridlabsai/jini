@@ -387,6 +387,9 @@ func renderPublishReadinessText(stdout io.Writer, report publishReadinessReport)
 	fmt.Fprintln(stdout, "SECTIONS")
 	for _, section := range report.Sections {
 		fmt.Fprintf(stdout, "  %s %s\n", strings.ToUpper(section.ID), section.Status)
+		for _, check := range section.Checks {
+			fmt.Fprintf(stdout, "    %s %s\n", strings.ToUpper(check.Status), check.Path)
+		}
 	}
 }
 
