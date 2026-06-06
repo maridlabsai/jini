@@ -39,9 +39,10 @@ type publishReadinessSection struct {
 }
 
 type publishReadinessCheck struct {
-	Path   string `json:"path"`
-	Exists bool   `json:"exists"`
-	Status string `json:"status"`
+	Path             string   `json:"path"`
+	Exists           bool     `json:"exists"`
+	Status           string   `json:"status"`
+	MissingFragments []string `json:"missing_fragments,omitempty"`
 }
 
 type publishMetricValue struct {
@@ -334,29 +335,32 @@ func buildFragmentChecks(root string, required []publishFragmentRequirement) ([]
 		data, err := os.ReadFile(file)
 		exists := err == nil
 		checkStatus := "ok"
+		missingFragments := []string(nil)
 		if !exists {
 			checkStatus = "missing"
 			status = "needs-attention"
-		} else if missingRequiredFragment(string(data), requirement.fragments) {
+		} else if missingFragments = missingRequiredFragments(string(data), requirement.fragments); len(missingFragments) > 0 {
 			checkStatus = "incomplete"
 			status = "needs-attention"
 		}
 		checks = append(checks, publishReadinessCheck{
-			Path:   requirement.checkPath,
-			Exists: exists,
-			Status: checkStatus,
+			Path:             requirement.checkPath,
+			Exists:           exists,
+			Status:           checkStatus,
+			MissingFragments: missingFragments,
 		})
 	}
 	return checks, status
 }
 
-func missingRequiredFragment(text string, fragments []string) bool {
+func missingRequiredFragments(text string, fragments []string) []string {
+	missing := []string(nil)
 	for _, fragment := range fragments {
 		if !strings.Contains(text, fragment) {
-			return true
+			missing = append(missing, fragment)
 		}
 	}
-	return false
+	return missing
 }
 
 func buildPublishRuntimeSection(root string) publishReadinessSection {
@@ -389,6 +393,9 @@ func renderPublishReadinessText(stdout io.Writer, report publishReadinessReport)
 		fmt.Fprintf(stdout, "  %s %s\n", strings.ToUpper(section.ID), section.Status)
 		for _, check := range section.Checks {
 			fmt.Fprintf(stdout, "    %s %s\n", strings.ToUpper(check.Status), check.Path)
+			for _, fragment := range check.MissingFragments {
+				fmt.Fprintf(stdout, "      MISSING %s\n", fragment)
+			}
 		}
 	}
 }

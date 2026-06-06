@@ -51,10 +51,81 @@ func TestOfflineRegressionGuardrailsFailWhenRequiredSpecContentIsMissing(t *test
 	}
 	for _, check := range section.Checks {
 		if check.Path == "specs/local-model-support-matrix.md#promotion-loop" && check.Status == "incomplete" {
+			for _, want := range []string{"## Promotion Loop", "### 3. Canary", "### 5. Promote", "successor versions"} {
+				if !stringSliceContains(check.MissingFragments, want) {
+					t.Fatalf("expected missing fragments to include %q, got %#v", want, check.MissingFragments)
+				}
+			}
 			return
 		}
 	}
 	t.Fatalf("expected promotion loop check to be incomplete, got %#v", section.Checks)
+}
+
+func TestPublishReadinessTextRendersMissingFragments(t *testing.T) {
+	var stdout bytes.Buffer
+	renderPublishReadinessText(&stdout, publishReadinessReport{
+		Status: "needs-attention",
+		Runtime: publishReadinessRuntime{
+			Language:       "go",
+			LegacyFallback: false,
+		},
+		Sections: []publishReadinessSection{{
+			ID:     "app-platform",
+			Status: "needs-attention",
+			Checks: []publishReadinessCheck{{
+				Path:             "specs/app-platform-shipping-playbook.md#source-backed-inputs",
+				Exists:           true,
+				Status:           "incomplete",
+				MissingFragments: []string{"OpenTelemetry"},
+			}},
+		}},
+	})
+
+	out := stdout.String()
+	for _, want := range []string{
+		"    INCOMPLETE specs/app-platform-shipping-playbook.md#source-backed-inputs",
+		"      MISSING OpenTelemetry",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected text output to contain %q, got:\n%s", want, out)
+		}
+	}
+}
+
+func TestPublishReadinessJSONRendersMissingFragments(t *testing.T) {
+	encoded, err := json.Marshal(publishReadinessSection{
+		ID:     "app-platform",
+		Status: "needs-attention",
+		Checks: []publishReadinessCheck{{
+			Path:             "specs/app-platform-shipping-playbook.md#source-backed-inputs",
+			Exists:           true,
+			Status:           "incomplete",
+			MissingFragments: []string{"OpenTelemetry"},
+		}},
+	})
+	if err != nil {
+		t.Fatalf("marshal readiness section: %v", err)
+	}
+
+	out := string(encoded)
+	for _, want := range []string{
+		`"missing_fragments":["OpenTelemetry"]`,
+		`"status":"incomplete"`,
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected JSON to contain %q, got:\n%s", want, out)
+		}
+	}
+}
+
+func stringSliceContains(values []string, want string) bool {
+	for _, value := range values {
+		if value == want {
+			return true
+		}
+	}
+	return false
 }
 
 func writeTestFile(t *testing.T, path, content string) {
