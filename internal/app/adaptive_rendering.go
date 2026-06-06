@@ -33,13 +33,14 @@ type semanticEnvelope struct {
 }
 
 type semanticRouteSummary struct {
-	Label             string `json:"label"`
-	Reason            string `json:"reason,omitempty"`
-	Policy            string `json:"policy,omitempty"`
-	ContinuityReason  string `json:"continuity_reason,omitempty"`
-	ModelLabel        string `json:"model_label,omitempty"`
-	EffortLevel       string `json:"effort_level,omitempty"`
-	VerificationLevel string `json:"verification_level,omitempty"`
+	Label             string          `json:"label"`
+	Reason            string          `json:"reason,omitempty"`
+	Policy            string          `json:"policy,omitempty"`
+	AutoMode          *autoModePolicy `json:"auto_mode,omitempty"`
+	ContinuityReason  string          `json:"continuity_reason,omitempty"`
+	ModelLabel        string          `json:"model_label,omitempty"`
+	EffortLevel       string          `json:"effort_level,omitempty"`
+	VerificationLevel string          `json:"verification_level,omitempty"`
 }
 
 type semanticArtifact struct {
@@ -163,6 +164,7 @@ func projectSemanticEnvelope(summary *workSummary, inputs []inputItem, state sav
 			Label:             routeLabel,
 			Reason:            summary.RouteReason,
 			Policy:            summary.RoutePolicy,
+			AutoMode:          autoModePolicyPointer(summary.AutoMode),
 			ContinuityReason:  summary.ContinuityReason,
 			ModelLabel:        summary.ModelLabel,
 			EffortLevel:       summary.EffortLevel,

@@ -38,6 +38,7 @@ type workSummary struct {
 	VerificationLevel  string
 	VerificationReason string
 	RoutePolicy        string
+	AutoMode           autoModePolicy
 	RouteReason        string
 	ContinuityReason   string
 	State              string
@@ -2187,6 +2188,7 @@ func loadWorkSummary(dir string, current *currentWork) (*workSummary, error) {
 		VerificationLevel:  strings.TrimSpace(route.VerificationLevel),
 		VerificationReason: strings.TrimSpace(route.VerificationReason),
 		RoutePolicy:        strings.TrimSpace(route.RoutePolicy),
+		AutoMode:           autoModePolicyValue(route.AutoMode),
 		RouteReason:        strings.TrimSpace(route.Reason),
 		ContinuityReason:   strings.TrimSpace(route.ContinuityReason),
 		State:              state,
@@ -2523,6 +2525,7 @@ func renderRouteDecisionCard(w io.Writer, request providerGenerationRequest, dec
 		fmt.Fprintln(w, "How chosen")
 		fmt.Fprintln(w, decision.RoutePolicy)
 	}
+	renderAutoModePolicy(w, decision.AutoMode)
 	if strings.TrimSpace(decision.ModelLabel) != "" {
 		fmt.Fprintln(w)
 		fmt.Fprintln(w, "Model")
@@ -2569,6 +2572,26 @@ func renderRouteDecisionCard(w io.Writer, request providerGenerationRequest, dec
 	fmt.Fprintln(w, "Want a different route?")
 	fmt.Fprintln(w, "Type `Claude`, `Bedrock`, `Azure`, `Local`, `Preview`, or `Auto`.")
 	fmt.Fprintln(w)
+}
+
+func renderAutoModePolicy(w io.Writer, policy autoModePolicy) {
+	if !autoModePolicyEnabled(policy) {
+		return
+	}
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Auto mode")
+	if strings.TrimSpace(policy.FrameworkSwitching) != "" {
+		fmt.Fprintf(w, "Frameworks: %s\n", policy.FrameworkSwitching)
+	}
+	if strings.TrimSpace(policy.ModelSwitching) != "" {
+		fmt.Fprintf(w, "Models: %s\n", policy.ModelSwitching)
+	}
+	if strings.TrimSpace(policy.SpeedSwitching) != "" {
+		fmt.Fprintf(w, "Speed: %s\n", policy.SpeedSwitching)
+	}
+	if strings.TrimSpace(policy.UserApprovalMode) != "" {
+		fmt.Fprintf(w, "Approvals: %s\n", policy.UserApprovalMode)
+	}
 }
 
 func maybeHandleProviderSetupIntent(raw string, scanner *bufio.Scanner, stdout, stderr io.Writer) (bool, int) {
@@ -3608,6 +3631,7 @@ func renderCurrentWorkLauncher(w io.Writer, summary *workSummary, interactive bo
 		fmt.Fprintln(w, "How chosen")
 		fmt.Fprintln(w, summary.Thread.RoutePolicy)
 	}
+	renderAutoModePolicy(w, summary.Thread.AutoMode)
 	if strings.TrimSpace(summary.Thread.EffortLevel) != "" {
 		fmt.Fprintln(w)
 		fmt.Fprintln(w, "Effort level")
@@ -3955,6 +3979,7 @@ func renderCheck(w io.Writer, summary *workSummary) {
 		fmt.Fprintln(w, "How chosen")
 		fmt.Fprintln(w, summary.Thread.RoutePolicy)
 	}
+	renderAutoModePolicy(w, summary.Thread.AutoMode)
 	if strings.TrimSpace(summary.Thread.EffortLevel) != "" {
 		fmt.Fprintln(w)
 		fmt.Fprintln(w, "Effort level")

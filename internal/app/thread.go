@@ -79,6 +79,7 @@ type workThread struct {
 	ModelReason        string
 	ModelFeedback      string
 	RoutePolicy        string
+	AutoMode           autoModePolicy
 	RouteReason        string
 	ContinuityReason   string
 	MultimodalLearning []string
@@ -326,6 +327,7 @@ func buildWorkThread(summary *workSummary, inputs []inputItem, state savedThread
 		ModelReason:        summary.ModelReason,
 		ModelFeedback:      summary.ModelFeedback,
 		RoutePolicy:        summary.RoutePolicy,
+		AutoMode:           summary.AutoMode,
 		RouteReason:        summary.RouteReason,
 		ContinuityReason:   summary.ContinuityReason,
 		MultimodalLearning: freshLocalMultimodalLearningViewLines(classifyRouteFeatures(request)),

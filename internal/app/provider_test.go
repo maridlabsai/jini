@@ -2455,6 +2455,11 @@ func TestCheckShowsSavedDecisionExplanation(t *testing.T) {
 		"Why this verification",
 		"How chosen",
 		"Automatic",
+		"Auto mode",
+		"Frameworks: auto",
+		"Models: auto",
+		"Speed: auto",
+		"Approvals: approval-gated",
 		"Why this route",
 		"planning work",
 	} {

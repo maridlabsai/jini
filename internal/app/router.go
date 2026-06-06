@@ -904,6 +904,13 @@ func autoModePolicyPointer(policy autoModePolicy) *autoModePolicy {
 	return &policy
 }
 
+func autoModePolicyValue(policy *autoModePolicy) autoModePolicy {
+	if policy == nil {
+		return autoModePolicy{}
+	}
+	return *policy
+}
+
 func withToolSetting(provider providerConfig, toolMode, toolLabel string, auto bool) providerConfig {
 	line := ""
 	switch {
