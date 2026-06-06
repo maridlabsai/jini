@@ -17,6 +17,10 @@ func TestSecurityScannersAreWiredIntoCIAndRequiredGates(t *testing.T) {
 		"golang/govulncheck-action@v1",
 		"google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.3.8",
 		"google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.3.8",
+		"trufflesecurity/trufflehog@v3.95.5",
+		`version: "3.95.5"`,
+		"extra_args: --results=verified,unknown",
+		"fetch-depth: 0",
 		"security-events: write",
 		"go-version-file: go.mod",
 	} {
@@ -44,6 +48,8 @@ func TestSecurityScannersAreWiredIntoCIAndRequiredGates(t *testing.T) {
 		"github/codeql-action/init@v4",
 		"golang/govulncheck-action@v1",
 		"google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.3.8",
+		"trufflesecurity/trufflehog@v3.95.5",
+		`version: "3.95.5"`,
 	} {
 		if !strings.Contains(securityGate, want) {
 			t.Fatalf("security configuration gate must check %q", want)
@@ -61,6 +67,7 @@ func TestSecurityScannersAreWiredIntoCIAndRequiredGates(t *testing.T) {
 		"CodeQL",
 		"govulncheck",
 		"OSV-Scanner",
+		"TruffleHog",
 		"Dependabot",
 	} {
 		if !strings.Contains(gateMatrix, want) {

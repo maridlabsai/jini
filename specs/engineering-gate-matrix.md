@@ -41,8 +41,8 @@ Required outcome:
 - Go runtime regressions are caught immediately
 - the migration boundary blocks tracked Python files and Python gate invocations
 - whitespace and patch-format drift is blocked before commit
-- scanner wiring for CodeQL, govulncheck, OSV-Scanner, and Dependabot cannot
-  be removed without failing the local gate
+- scanner wiring for CodeQL, govulncheck, OSV-Scanner, TruffleHog, and
+  Dependabot cannot be removed without failing the local gate
 
 ### Push gate
 

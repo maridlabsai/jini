@@ -9,7 +9,7 @@ usage() {
 Usage: bash tools/security_configuration_gate.sh
 
 Verifies that the repository keeps free security scanners wired into CI:
-CodeQL SAST, govulncheck, OSV-Scanner, and Dependabot.
+CodeQL SAST, govulncheck, OSV-Scanner, TruffleHog, and Dependabot.
 EOF
 }
 
@@ -55,6 +55,10 @@ main() {
   require_fragment "${workflow}" "golang/govulncheck-action@v1"
   require_fragment "${workflow}" "google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.3.8"
   require_fragment "${workflow}" "google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.3.8"
+  require_fragment "${workflow}" "trufflesecurity/trufflehog@v3.95.5"
+  require_fragment "${workflow}" 'version: "3.95.5"'
+  require_fragment "${workflow}" "extra_args: --results=verified,unknown"
+  require_fragment "${workflow}" "fetch-depth: 0"
   require_fragment "${workflow}" "security-events: write"
   require_fragment "${workflow}" "go-version-file: go.mod"
 
