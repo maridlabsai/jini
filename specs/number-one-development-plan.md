@@ -214,6 +214,8 @@ Deliverables:
 
 - learned environment patterns
 - learned workflow templates
+- P0 local model support matrix by form factor and profile role
+- successor-model watch and canary promotion loop for the local SLM pool
 - readiness and quality automation
 - repeated-task compression suggestions
 
