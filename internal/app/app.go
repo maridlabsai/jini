@@ -62,6 +62,8 @@ type catalogItem struct {
 	Aliases []string
 }
 
+var warmLocalRuntimeCapabilities = maybeWarmLocalRuntimeCapabilitiesAsync
+
 func Run(args []string, stdout, stderr io.Writer) int {
 	return RunInteractive(args, nil, stdout, stderr)
 }
@@ -160,9 +162,6 @@ func safelyRunInteractive(stderr io.Writer, fn func() int) (exitCode int) {
 }
 
 func runLauncher(stdin io.Reader, stdout, stderr io.Writer) int {
-	if stdin != nil {
-		_ = maybeWarmLocalRuntimeCapabilitiesAsync()
-	}
 	current, err := loadCurrentWork()
 	if err != nil || current == nil {
 		active, activeErr := listActiveWorkSummaries(nil)
@@ -236,6 +235,7 @@ func runLauncher(stdin io.Reader, stdout, stderr io.Writer) int {
 	if stdin == nil {
 		return 0
 	}
+	_ = warmLocalRuntimeCapabilities()
 
 	session := bufio.NewScanner(stdin)
 	action, ok := readOptionalInputLine(session, stdout)
@@ -908,7 +908,7 @@ func runNewWorkIntake(stdin io.Reader, stdout, stderr io.Writer) int {
 }
 
 func runNewWorkIntakeWithScanner(session *bufio.Scanner, stdout, stderr io.Writer) int {
-	_ = maybeWarmLocalRuntimeCapabilitiesAsync()
+	_ = warmLocalRuntimeCapabilities()
 	renderNewWorkPrompt(stdout)
 
 	for {

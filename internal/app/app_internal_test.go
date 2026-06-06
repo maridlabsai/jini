@@ -1037,6 +1037,54 @@ func TestRunLauncherFallsBackToGoIntakeWhenLegacyPythonIsUnavailable(t *testing.
 	}
 }
 
+func TestRunLauncherZeroArgIntakeWarmsLocalRuntimeOnce(t *testing.T) {
+	t.Setenv("JINI_STATE_DIR", t.TempDir())
+
+	originalWarm := warmLocalRuntimeCapabilities
+	warmCalls := 0
+	warmLocalRuntimeCapabilities = func() bool {
+		warmCalls++
+		return false
+	}
+	defer func() {
+		warmLocalRuntimeCapabilities = originalWarm
+	}()
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := runLauncher(strings.NewReader("draft a launch checklist\n"), &stdout, &stderr)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+	if warmCalls != 1 {
+		t.Fatalf("expected zero-arg intake path to warm local runtime once, got %d calls", warmCalls)
+	}
+}
+
+func TestRunNewWorkIntakeWarmsLocalRuntimeOnce(t *testing.T) {
+	t.Setenv("JINI_STATE_DIR", t.TempDir())
+
+	originalWarm := warmLocalRuntimeCapabilities
+	warmCalls := 0
+	warmLocalRuntimeCapabilities = func() bool {
+		warmCalls++
+		return false
+	}
+	defer func() {
+		warmLocalRuntimeCapabilities = originalWarm
+	}()
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := runNewWorkIntake(strings.NewReader("draft a launch checklist\n"), &stdout, &stderr)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+	if warmCalls != 1 {
+		t.Fatalf("expected new-work intake path to warm local runtime once, got %d calls", warmCalls)
+	}
+}
+
 func TestRunLauncherUsesConfiguredLegacyPythonWhenPathIsMissing(t *testing.T) {
 	root := createRecognizedLegacySourceRoot(t, "print('legacy-front-door')\n")
 
