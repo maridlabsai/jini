@@ -6,6 +6,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 GO_BIN="${GO_BIN:-/Users/sharad.sharma/Developer/.local-go/bin/go}"
 GO_CACHE_DIR="${JINI_GOCACHE:-/private/tmp/jini-go-cache}"
 GO_MOD_CACHE_DIR="${JINI_GOMODCACHE:-/private/tmp/jini-go-mod}"
+SECURITY_CONFIGURATION_GATE="${ROOT_DIR}/tools/security_configuration_gate.sh"
 
 usage() {
   cat <<'EOF'
@@ -30,11 +31,16 @@ run_go_test() {
   )
 }
 
+run_security_configuration_gate() {
+  bash "${SECURITY_CONFIGURATION_GATE}"
+}
+
 run_commit_gate() {
   (
     cd "${ROOT_DIR}"
     git diff --check
   )
+  run_security_configuration_gate
   run_go_test "./..."
 }
 
