@@ -477,12 +477,16 @@ considered successful.
 
 - competitor deltas must feed a source-backed weekly watch packet
 - direct replacement threats must be mapped to P0/P1/P2 release-plan changes
+- competitor research must also reject, downgrade, or delete requirements that
+  weaken Jini's product identity, free/local usefulness, continuity, trust, or
+  cost discipline
 - local/offline hosts and LLM gateways should be treated as adapter pressure,
   not as reasons to rebuild commodity surfaces
 - prompt-to-app and general-agent competitors should inform first-result and
   automation quality without changing Jini's core identity
 - each monthly release plan must say what changed in the field, what Jini will
-  copy, what Jini will not copy, and which benchmark or watchlist item changed
+  copy, integrate, watch, reject, delete, and which benchmark or watchlist item
+  changed
 
 ### P1: Scale and differentiation requirements
 
@@ -665,6 +669,9 @@ If a core company loop remains permanently manual, that is product debt.
 Jini should not:
 
 - become a feature clone of every fast-moving agent shell
+- keep PRD requirements merely because a competitor has the feature
+- promote commodity IDE, browser, local-model-host, or gateway capabilities into
+  core product requirements when an adapter preserves the same Jini contract
 - rely on users writing large instruction files to get value
 - add surface-specific dialects for CLI, desktop, and mobile
 - ship many demo flows before the flagship flows are dominant

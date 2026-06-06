@@ -37,6 +37,8 @@ func TestCompetitiveReleasePlanIsWiredIntoReleasePlanning(t *testing.T) {
 		"Cross-surface session proof",
 		"Local model host adapters",
 		"Gateway adapter boundary",
+		"Requirement Rejection Filter",
+		"adopt, integrate, watch, reject, or delete",
 	} {
 		if !strings.Contains(plan, want) {
 			t.Fatalf("competitive release plan must include %q", want)
@@ -47,6 +49,8 @@ func TestCompetitiveReleasePlanIsWiredIntoReleasePlanning(t *testing.T) {
 	for _, want := range []string{
 		"competitive-release-plan.md",
 		"P0.10 Competitive release pressure",
+		"reject, downgrade, or delete requirements",
+		"copy, integrate, watch, reject, delete",
 	} {
 		if !strings.Contains(canonicalPRD, want) {
 			t.Fatalf("canonical PRD must include %q", want)

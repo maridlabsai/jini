@@ -288,6 +288,52 @@ Jini response:
 - Jini must show which instructions and memories were used before high-impact
   actions.
 
+## Requirement Rejection Filter
+
+Competitor research must also remove or block bad requirements.
+
+A competitor capability is not a valid Jini requirement unless it improves at
+least one replacement-critical claim without weakening another:
+
+- time to first useful result
+- cost per successful task
+- cross-surface resume
+- async delegation
+- local/offline continuity
+- GitHub-native handoff
+- flagship outcome quality
+- visible trust
+- free local/BYO usefulness
+
+Reject or downgrade requirements that mainly create:
+
+- feature-count parity without a better user outcome
+- a new IDE, browser, local model host, or generic gateway surface that should
+  be an adapter instead
+- app-specific memory, routing, approval, or artifact semantics
+- paid lock-in for local/BYO use, basic continuity, manual route switching, or
+  structural token savings
+- global context growth when scoped routing, skills, or domain files would work
+- autonomy without receipts, approvals, rollback, source trust, and failure
+  visibility
+- prompt-to-app breadth before flagship quality and continuation proof
+- user-facing surface churn that can be solved through policy, learning, or
+  adapter changes
+
+Each monthly release plan must mark competitor-derived requirements as:
+
+- adopt: build because it strengthens a replacement-critical claim
+- integrate: connect to an existing commodity surface behind Jini's contract
+- watch: monitor without changing the current roadmap
+- reject: explicitly block because it weakens the PRD
+- delete: remove an existing Jini requirement that competitor evidence proves
+  is copycat bloat or product debt
+
+The required classification set is adopt, integrate, watch, reject, or delete.
+
+If a requirement cannot survive this filter, keeping it in the PRD is itself a
+competitive risk.
+
 ## Release Plan Changes
 
 ### P0: Next Release Train
@@ -300,6 +346,8 @@ Add these items to the active release plan:
    - Each packet records changed competitor capability, source URL, Jini
      impact, required release-plan change, and whether the benchmark/watchlist
      changed.
+   - Each packet classifies every proposed requirement as adopt, integrate,
+     watch, reject, or delete.
 
 2. Async work receipt.
    - Every delegated or resumed work item gets a machine-readable receipt:

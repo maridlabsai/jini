@@ -173,7 +173,7 @@ Deliverables:
   cloud PR agents, local/offline hosts, routing gateways, app builders, and
   general workflow agents
 - release-plan deltas that explicitly say what Jini will copy, integrate,
-  avoid, or defer
+  watch, reject, delete, avoid, or defer
 
 Score impact:
 
