@@ -15,6 +15,7 @@ policy, the canonical PRD wins and this strategy should be updated.
 Read alongside:
 
 - [client-surfaces-and-free-tier.md](./client-surfaces-and-free-tier.md)
+- [app-platform-shipping-playbook.md](./app-platform-shipping-playbook.md)
 - [cross-surface-session-platform-prd.md](./cross-surface-session-platform-prd.md)
 - [cross-surface-session-system-and-dev-design.md](./cross-surface-session-system-and-dev-design.md)
 - [device-capability-routing.md](./device-capability-routing.md)

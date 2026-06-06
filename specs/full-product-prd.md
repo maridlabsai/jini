@@ -41,6 +41,10 @@ The public surface and free-tier requirements across CLI, desktop, and mobile
 live in
 [client-surfaces-and-free-tier.md](./client-surfaces-and-free-tier.md).
 
+The source-backed app shipping, security, framework, update, performance, and
+diagnostics playbook lives in
+[app-platform-shipping-playbook.md](./app-platform-shipping-playbook.md).
+
 The stricter charter for cost optimization, UX quality, and cross-form-factor
 session continuity lives in
 [cross-surface-session-platform-prd.md](./cross-surface-session-platform-prd.md).

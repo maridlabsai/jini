@@ -162,6 +162,14 @@ func TestPublishReadinessJSONIsNativeGoAndReportsMigrationComplete(t *testing.T)
 			Language       string `json:"language"`
 			LegacyFallback bool   `json:"legacy_fallback"`
 		} `json:"runtime"`
+		Sections []struct {
+			ID     string `json:"id"`
+			Checks []struct {
+				Path   string `json:"path"`
+				Exists bool   `json:"exists"`
+				Status string `json:"status"`
+			} `json:"checks"`
+		} `json:"sections"`
 	}
 	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil {
 		t.Fatalf("decode publish readiness json: %v\n%s", err, stdout.String())
@@ -171,6 +179,23 @@ func TestPublishReadinessJSONIsNativeGoAndReportsMigrationComplete(t *testing.T)
 	}
 	if report.Runtime.Language != "go" || report.Runtime.LegacyFallback {
 		t.Fatalf("expected native Go runtime with no legacy fallback, got: %#v", report.Runtime)
+	}
+	foundAppShippingGate := false
+	for _, section := range report.Sections {
+		if section.ID != "docs" {
+			continue
+		}
+		for _, check := range section.Checks {
+			if check.Path == "specs/app-platform-shipping-playbook.md" {
+				foundAppShippingGate = true
+				if !check.Exists || check.Status != "ok" {
+					t.Fatalf("expected app platform shipping playbook gate to pass, got: %#v", check)
+				}
+			}
+		}
+	}
+	if !foundAppShippingGate {
+		t.Fatalf("publish readiness docs section did not include app platform shipping playbook gate: %#v", report.Sections)
 	}
 }
 
