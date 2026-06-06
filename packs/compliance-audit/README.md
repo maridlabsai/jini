@@ -45,15 +45,12 @@ semantics.
 6. `Verify`
    - bind `Evidence` and `Approval` to the active audit revision before closure
 
-Compile a compliance audit plan from the benchmark context with:
+Use the compliance audit workflow with the native Go front door:
 
 ```bash
-jini compile-pack compliance-audit \
-  --work-unit-id my-compliance-audit \
-  --title "Quarterly Controls Audit" \
-  --purpose "Review controls, evidence, and signoff readiness for a regulated surface" \
-  --owner compliance-lead \
-  --approver risk-officer \
-  --output /tmp/my-compliance-audit
-jini status-pack /tmp/my-compliance-audit
+jini
 ```
+
+Paste the audit scope, control surface, evidence set, owner, and approver as
+source context. The native pack compiler is tracked as future Go work; until
+that command is ported, this pack is a reusable workflow reference.

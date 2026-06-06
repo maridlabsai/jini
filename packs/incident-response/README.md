@@ -44,15 +44,12 @@ It broadens Jini into operations work without adding new kernel semantics.
 6. `Verify`
    - bind `Evidence` to the active response revision before closure
 
-Compile an incident response plan from the benchmark context with:
+Use the incident response workflow with the native Go front door:
 
 ```bash
-jini compile-pack incident-response \
-  --work-unit-id my-incident-response \
-  --title "Checkout Latency Incident" \
-  --purpose "Stabilize the checkout path with explicit rollback and verification" \
-  --owner incident-commander \
-  --approver service-owner \
-  --output /tmp/my-incident-response
-jini status-pack /tmp/my-incident-response
+jini
 ```
+
+Paste the incident summary, current mitigation, rollback options, owner, and
+approver as source context. The native pack compiler is tracked as future Go
+work; until that command is ported, this pack is a reusable workflow reference.

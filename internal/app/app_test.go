@@ -14,6 +14,26 @@ import (
 	"github.com/maridlabsai/jini/internal/app"
 )
 
+func TestDirectTaskArgumentsStartNativeIntake(t *testing.T) {
+	t.Setenv("JINI_STATE_DIR", t.TempDir())
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"fix", "failing", "tests"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	out := stdout.String()
+	for _, want := range []string{
+		"Your first draft is ready.",
+		"Fix Failing Tests",
+		"Working Draft",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+}
+
 func TestStatusRendersPlainLanguageCurrentWorkScreen(t *testing.T) {
 	stateDir := t.TempDir()
 	packDir := seedResearchPRDWork(t)

@@ -10,20 +10,17 @@ to keep coherent as work moves from research into handoff.
 Run:
 
 ```bash
-jini status-pack packs/research-prd/examples/research-prd-v1
+jini open packs/research-prd/examples/research-prd-v1/views/tasks.md
 ```
 
 The important lines are:
 
 ```text
-HEALTH ready-to-verify
-STATE  awaiting_verification
-NEXT   Verify
-MISSING-LATER
-  - Approval
-TASKS
-  done:       3/3
-  unresolved: 0/3
+State: awaiting_verification
+Health: ready-to-verify
+Next: Verify
+Done: 3
+Unresolved: 0
 ```
 
 This is the moment that matters.
@@ -34,8 +31,7 @@ The work still does not advance.
 
 Why?
 
-Because task completion is not the same thing as verified, approved,
-publish-ready work.
+Because task completion is not the same thing as verified, publish-ready work.
 
 That is not a UX flourish.
 

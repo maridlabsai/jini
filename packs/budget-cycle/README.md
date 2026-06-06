@@ -4,18 +4,17 @@
 
 It exists to prove that the kernel, control packs, compact memory, and verification loop can work outside software delivery.
 
-Compile it with:
+Use it with the native Go front door:
 
 ```bash
-jini compile-pack budget-cycle \
-  --work-unit-id monthly-budget-v1 \
-  --title "Monthly Budget" \
-  --purpose "Build a monthly budget with explicit savings, obligations, and fallback cuts" \
-  --owner finance-owner \
-  --output /tmp/monthly-budget
+jini
 ```
 
-The compiled pack materializes:
+Paste the monthly budget constraints, obligations, savings goal, and fallback
+cuts as source context. The native pack compiler is tracked as future Go work;
+until that command is ported, this pack is a reusable workflow reference.
+
+The pack is designed to materialize:
 
 - canonical planning artifacts under `artifacts/`
 - a rendered `views/budget.md`

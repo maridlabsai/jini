@@ -19,15 +19,13 @@ publish bundles.
 - commercial decision workflows can stay evidence-bound and approval-ready
 - portable markdown handoff works for non-software evaluation work too
 
-## Compile
+## Use
 
 ```bash
-jini compile-pack vendor-selection \
-  --work-unit-id my-vendor-selection \
-  --title "Vendor Evaluation" \
-  --purpose "Compare shortlisted vendors and prepare an approval-ready recommendation" \
-  --owner procurement-lead \
-  --approver finance-approver \
-  --output /tmp/my-vendor-selection
-jini status-pack /tmp/my-vendor-selection
+jini
 ```
+
+Paste the shortlisted vendors, scoring criteria, approval owner, budget
+constraints, and decision deadline as source context. The native pack compiler
+is tracked as future Go work; until that command is ported, this pack is a
+reusable workflow reference.

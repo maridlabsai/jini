@@ -45,14 +45,12 @@ just for niche workflows. Most teams run this problem every week.
 6. `Verify`
    - bind `Evidence` to the active follow-up revision before execution
 
-Compile a meeting follow-up workflow from the benchmark context with:
+Use the meeting follow-up workflow with the native Go front door:
 
 ```bash
-jini compile-pack meeting-followup \
-  --work-unit-id my-meeting-followup \
-  --title "Weekly Product Review Follow-up" \
-  --purpose "Turn one meeting into decisions, owners, and explicit next steps" \
-  --owner meeting-owner \
-  --output /tmp/my-meeting-followup
-jini status-pack /tmp/my-meeting-followup
+jini
 ```
+
+Paste the meeting notes, decisions, owners, and follow-up constraints as source
+context. The native pack compiler is tracked as future Go work; until that
+command is ported, this pack is a reusable workflow reference.

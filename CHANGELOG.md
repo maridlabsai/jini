@@ -17,18 +17,18 @@ What is included:
 Fastest proof:
 
 ```bash
-jini status-pack packs/research-prd/examples/research-prd-v1
+jini publish-readiness --format json
 ```
 
 Fastest install:
 
 ```bash
-pipx install --editable git+https://github.com/maridlabsai/jini.git
-jini get-started --target codex
+bash install.sh
+jini commands
 ```
 
 Distribution note:
 
-- `v0.1.0` officially supports the editable source-backed install path above
-- conventional wheel-style distribution is intentionally deferred until the
-  packaged runtime boundary is separated cleanly from writable operator state
+- `v0.1.0` officially supports the native Go install path above
+- advanced pack compiler and adapter commands are tracked as native Go backlog
+  items instead of Python fallback surfaces

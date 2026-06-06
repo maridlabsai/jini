@@ -83,6 +83,14 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 			fmt.Fprintf(stderr, "Unknown command %q.\n", args[0])
 			return 1
 		}
+		if canonicalTopLevelCommand(args[0]) == "" {
+			if shouldRunDirectTaskArgs(args) {
+				return runNewWorkIntake(strings.NewReader(strings.Join(args, " ")+"\n"), stdout, stderr)
+			}
+			fmt.Fprintf(stderr, "Unknown command %q.\n", args[0])
+			fmt.Fprintln(stderr, "Run `jini commands` to see the native Go command surface.")
+			return 1
+		}
 		if err := validateNativeArgs(args); err != nil {
 			fmt.Fprintln(stderr, err.Error())
 			fmt.Fprintln(stderr, "Run `jini commands` to see the native Go command surface.")
@@ -154,6 +162,61 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 			return 1
 		}
 	})
+}
+
+func shouldRunDirectTaskArgs(args []string) bool {
+	if len(args) == 0 {
+		return false
+	}
+	first := strings.TrimSpace(args[0])
+	if first == "" || strings.HasPrefix(first, "-") || strings.Contains(first, "-") {
+		return false
+	}
+	if isRetiredCommandName(first) {
+		return false
+	}
+	return true
+}
+
+func isRetiredCommandName(value string) bool {
+	switch exactCommandToken(value) {
+	case "bind-atlassian",
+		"bootstrap-home",
+		"capture-approval",
+		"capture-output",
+		"capture-publication",
+		"catalog-bundles",
+		"compile-pack",
+		"context",
+		"expand",
+		"export-issues",
+		"export-tasks",
+		"export-wiki",
+		"get-started",
+		"harnesses",
+		"list-routines",
+		"metrics",
+		"plan-install",
+		"publish-issues",
+		"publish-wiki",
+		"recommend-execution",
+		"resolve-adapter",
+		"resume",
+		"review-framework",
+		"run-pack",
+		"show",
+		"show-adapters",
+		"show-atlassian",
+		"show-kpis",
+		"stage-framework-experiment",
+		"status-pack",
+		"sync-tasks",
+		"try-example",
+		"validate-pack":
+		return true
+	default:
+		return false
+	}
 }
 
 func validateNativeArgs(args []string) error {

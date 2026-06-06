@@ -8,4 +8,4 @@ The intended pattern is:
 - bind Codex-specific instructions or pointers separately
 - keep the shim lightweight and reviewable
 
-This repo exposes the shim through `plan-install`, `doctor-install`, and `activate-runtime-target`.
+This repo documents the target shim as metadata. Use `jini doctor --format json` and `jini publish-readiness --format json` for native Go health checks today.

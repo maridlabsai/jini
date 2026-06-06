@@ -45,14 +45,12 @@ planning without changing the kernel.
 6. `Verify`
    - bind `Evidence` to the active itinerary revision before execution
 
-Compile a travel plan from the benchmark context with:
+Use the travel plan workflow with the native Go front door:
 
 ```bash
-jini compile-pack travel-plan \
-  --work-unit-id my-travel-plan \
-  --title "Spring Travel Plan" \
-  --purpose "Plan a constrained trip with explicit itinerary and contingencies" \
-  --owner traveler \
-  --output /tmp/my-travel-plan
-jini status-pack /tmp/my-travel-plan
+jini
 ```
+
+Paste the destination, dates, budget, pace, constraints, and contingency needs
+as source context. The native pack compiler is tracked as future Go work; until
+that command is ported, this pack is a reusable workflow reference.

@@ -36,7 +36,7 @@ quick_links:
   <p>In a real terminal, bare <code>jini</code> should not print a launcher card and exit. It should stay open and accept the first task line immediately.</p>
   <p>That same calm shell shape should appear when Jini resumes remembered work too, so zero-arg <code>jini</code> still feels like one shell instead of one prompt for fresh repo work and another prompt for active work.</p>
   <p>For parity with Claude Code, Codex, and GitHub CLI expectations, the shell should drop the version banner, repo receipt, active-work receipt, and startup coaching line. It should skip the full outcome report before the prompt and open directly at <code>jini&gt;</code>.</p>
-  <p>After the first answer it should keep the <code>jini&gt;</code> prompt open, let you type follow-up turns, and keep the controls in the background instead of teaching them before the task starts. If you need them, <code>commands</code>, <code>doctor</code>, <code>admin help</code>, and <code>exit</code> should still work inside the same live session, but they should answer with concise in-shell summaries instead of relaunching the full catalog or operator cards. Habitual prefixed input like <code>jini commands</code> or <code>jini status /tmp/work</code> typed inside the shell should still recover cleanly instead of turning into fake tasks.</p>
+  <p>After the first answer it should keep the <code>jini&gt;</code> prompt open, let you type follow-up turns, and keep the controls in the background instead of teaching them before the task starts. If you need them, <code>commands</code>, <code>doctor</code>, <code>admin help</code>, and <code>exit</code> should still work inside the same live session, but they should answer with concise in-shell summaries instead of relaunching the full catalog or operator cards. Habitual prefixed input like <code>jini commands</code> or <code>jini status</code> typed inside the shell should still recover cleanly instead of turning into fake tasks.</p>
   <p>Once the session is already in flow, Jini should only print one short steering line when it is genuinely pointing you toward a concrete action. Otherwise it should acknowledge the task and return to the prompt.</p>
 
 <pre><code class="language-bash">$ jini
@@ -62,7 +62,7 @@ DOCTOR   Local preview [ok]</code></pre>
 <pre><code class="language-bash">$ jini help me edit pear fellow script.txt
 ERROR `jini help` shows the CLI overview; it does not take a request like "me edit pear fellow script.txt".
 Start with `jini` to resume active work or see the start options.
-If you already have work to adopt, use `jini status /path/to/work` once.</code></pre>
+If you already have current work, use `jini status` once.</code></pre>
 
   <p>That corrective output is the expected terminal shape for a help request tail. It should reject the request and redirect people to the start surface instead of dumping the overview.</p>
   <p>Direct task intake should still work on the normal front door. Inside a repo, <code>jini fix failing tests</code> and <code>jini review this repo</code> should use the same calm shell language instead of an argparse usage wall or a separate intake report.</p>
@@ -75,7 +75,7 @@ If you already have work to adopt, use `jini status /path/to/work` once.</code><
     <li><code>jini provider help me edit pear fellow script.txt</code> starts with <code>ERROR `jini provider help` shows the admin command inventory; it does not take a request like "me edit pear fellow script.txt".</code></li>
     <li><code>jini provider --help me edit pear fellow script.txt</code> starts with <code>ERROR `jini provider --help` shows the admin command inventory; it does not take a request like "me edit pear fellow script.txt".</code></li>
   </ul>
-  <p>Only the first line changes. The redirect lines stay the same: start with <code>jini</code> to resume active work or see the start options, then use <code>jini status /path/to/work</code> once if you already have work to adopt.</p>
+  <p>Only the first line changes. The redirect lines stay the same: start with <code>jini</code> to resume active work or see the start options, then use <code>jini status</code> once if you already have current work.</p>
 </div>
 
 <div class="section-card">

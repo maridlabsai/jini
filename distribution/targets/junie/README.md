@@ -8,4 +8,4 @@ The intended pattern is:
 - expose Junie-specific bindings through a minimal shim
 - review automation-sensitive surfaces before activation
 
-This repo exposes the shim through `plan-install`, `doctor-install`, and `activate-runtime-target`.
+This repo documents the target shim as metadata. Use `jini doctor --format json` and `jini publish-readiness --format json` for native Go health checks today.

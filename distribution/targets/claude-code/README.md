@@ -8,4 +8,4 @@ The intended pattern is:
 - isolate Claude Code-specific bindings in a thin shim
 - review shim behavior before activation
 
-This repo exposes the shim through `plan-install`, `doctor-install`, and `activate-runtime-target`.
+This repo documents the target shim as metadata. Use `jini doctor --format json` and `jini publish-readiness --format json` for native Go health checks today.

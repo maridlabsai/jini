@@ -93,28 +93,19 @@ targets:
     risk_notice: Codex shims can affect local agent behavior.
     activation_steps:
       - Review the Codex shim README before activation.
-      - Run `jini doctor-install --bundle jini-core --target codex` after installation.
+      - Run `jini doctor --format json` after installation.
     doctor_expectations:
       readme_markers:
         - bind Codex-specific instructions or pointers separately
       smoke_commands:
-        - id: catalog-bundles
-          args: ["catalog-bundles", "--target", "{target_id}", "--format", "json"]
+        - id: doctor
+          args: ["doctor", "--format", "json"]
           json_expectations:
-            default_kit_id: starter-kit
-        - id: get-started
-          args: ["get-started", "--target", "{target_id}", "--format", "json"]
+            result_type: JiniProviderDoctor
+        - id: publish-readiness
+          args: ["publish-readiness", "--format", "json"]
           json_expectations:
-            target: "{target_id}"
-        - id: plan-install
-          args: ["plan-install", "--target", "{target_id}", "--format", "json"]
-          json_expectations:
-            selected_targets.0.id: "{target_id}"
-            recommended_next_steps.1.id: verify
-        - id: resolve-adapter
-          args: ["resolve-adapter", "--capability", "runtime-activate", "--preferred", "{target_id}", "--format", "json"]
-          json_expectations:
-            selected.id: "{target_id}"
+            result_type: JiniPublishReadiness
   - id: claude-code
     label: Claude Code
     destination_root: ~/.claude/jini
@@ -123,28 +114,19 @@ targets:
     risk_notice: Claude Code shims can affect local agent behavior.
     activation_steps:
       - Review the Claude Code shim README before activation.
-      - Run `jini doctor-install --bundle jini-core --target claude-code` after installation.
+      - Run `jini doctor --format json` after installation.
     doctor_expectations:
       readme_markers:
         - isolate Claude Code-specific bindings in a thin shim
       smoke_commands:
-        - id: catalog-bundles
-          args: ["catalog-bundles", "--target", "{target_id}", "--format", "json"]
+        - id: doctor
+          args: ["doctor", "--format", "json"]
           json_expectations:
-            default_kit_id: starter-kit
-        - id: get-started
-          args: ["get-started", "--target", "{target_id}", "--format", "json"]
+            result_type: JiniProviderDoctor
+        - id: publish-readiness
+          args: ["publish-readiness", "--format", "json"]
           json_expectations:
-            target: "{target_id}"
-        - id: plan-install
-          args: ["plan-install", "--target", "{target_id}", "--format", "json"]
-          json_expectations:
-            selected_targets.0.id: "{target_id}"
-            recommended_next_steps.1.id: verify
-        - id: resolve-adapter
-          args: ["resolve-adapter", "--capability", "runtime-activate", "--preferred", "{target_id}", "--format", "json"]
-          json_expectations:
-            selected.id: "{target_id}"
+            result_type: JiniPublishReadiness
   - id: github-copilot
     label: GitHub Copilot
     destination_root: ~/.copilot/jini
@@ -153,28 +135,19 @@ targets:
     risk_notice: GitHub Copilot integration may require manual review of workspace instructions.
     activation_steps:
       - Review the GitHub Copilot shim README before activation.
-      - Run `jini doctor-install --bundle jini-core --target github-copilot` after installation.
+      - Run `jini doctor --format json` after installation.
     doctor_expectations:
       readme_markers:
         - bind Copilot-specific instructions separately
       smoke_commands:
-        - id: catalog-bundles
-          args: ["catalog-bundles", "--target", "{target_id}", "--format", "json"]
+        - id: doctor
+          args: ["doctor", "--format", "json"]
           json_expectations:
-            default_kit_id: starter-kit
-        - id: get-started
-          args: ["get-started", "--target", "{target_id}", "--format", "json"]
+            result_type: JiniProviderDoctor
+        - id: publish-readiness
+          args: ["publish-readiness", "--format", "json"]
           json_expectations:
-            target: "{target_id}"
-        - id: plan-install
-          args: ["plan-install", "--target", "{target_id}", "--format", "json"]
-          json_expectations:
-            selected_targets.0.id: "{target_id}"
-            recommended_next_steps.1.id: verify
-        - id: resolve-adapter
-          args: ["resolve-adapter", "--capability", "runtime-activate", "--preferred", "{target_id}", "--format", "json"]
-          json_expectations:
-            selected.id: "{target_id}"
+            result_type: JiniPublishReadiness
   - id: junie
     label: Junie
     destination_root: ~/.junie/jini
@@ -183,28 +156,19 @@ targets:
     risk_notice: Junie shims should be reviewed before enabling autonomous execution.
     activation_steps:
       - Review the Junie shim README before activation.
-      - Run `jini doctor-install --bundle jini-core --target junie` after installation.
+      - Run `jini doctor --format json` after installation.
     doctor_expectations:
       readme_markers:
         - expose Junie-specific bindings through a minimal shim
       smoke_commands:
-        - id: catalog-bundles
-          args: ["catalog-bundles", "--target", "{target_id}", "--format", "json"]
+        - id: doctor
+          args: ["doctor", "--format", "json"]
           json_expectations:
-            default_kit_id: starter-kit
-        - id: get-started
-          args: ["get-started", "--target", "{target_id}", "--format", "json"]
+            result_type: JiniProviderDoctor
+        - id: publish-readiness
+          args: ["publish-readiness", "--format", "json"]
           json_expectations:
-            target: "{target_id}"
-        - id: plan-install
-          args: ["plan-install", "--target", "{target_id}", "--format", "json"]
-          json_expectations:
-            selected_targets.0.id: "{target_id}"
-            recommended_next_steps.1.id: verify
-        - id: resolve-adapter
-          args: ["resolve-adapter", "--capability", "runtime-activate", "--preferred", "{target_id}", "--format", "json"]
-          json_expectations:
-            selected.id: "{target_id}"
+            result_type: JiniPublishReadiness
   - id: kiro-cli
     label: Kiro CLI
     destination_root: ~/.kiro/jini
@@ -213,28 +177,19 @@ targets:
     risk_notice: Kiro CLI shims can affect local workflow defaults and permissions.
     activation_steps:
       - Review the Kiro CLI shim README before activation.
-      - Run `jini doctor-install --bundle jini-core --target kiro-cli` after installation.
+      - Run `jini doctor --format json` after installation.
     doctor_expectations:
       readme_markers:
         - bind Kiro CLI-specific behavior through a thin shim
       smoke_commands:
-        - id: catalog-bundles
-          args: ["catalog-bundles", "--target", "{target_id}", "--format", "json"]
+        - id: doctor
+          args: ["doctor", "--format", "json"]
           json_expectations:
-            default_kit_id: starter-kit
-        - id: get-started
-          args: ["get-started", "--target", "{target_id}", "--format", "json"]
+            result_type: JiniProviderDoctor
+        - id: publish-readiness
+          args: ["publish-readiness", "--format", "json"]
           json_expectations:
-            target: "{target_id}"
-        - id: plan-install
-          args: ["plan-install", "--target", "{target_id}", "--format", "json"]
-          json_expectations:
-            selected_targets.0.id: "{target_id}"
-            recommended_next_steps.1.id: verify
-        - id: resolve-adapter
-          args: ["resolve-adapter", "--capability", "runtime-activate", "--preferred", "{target_id}", "--format", "json"]
-          json_expectations:
-            selected.id: "{target_id}"
+            result_type: JiniPublishReadiness
   - id: augment
     label: Augment
     destination_root: ~/.augment/jini
@@ -243,28 +198,19 @@ targets:
     risk_notice: Augment shims should be reviewed before activation.
     activation_steps:
       - Review the Augment shim README before activation.
-      - Run `jini doctor-install --bundle jini-core --target augment` after installation.
+      - Run `jini doctor --format json` after installation.
     doctor_expectations:
       readme_markers:
         - use a minimal shim for Augment-specific activation
       smoke_commands:
-        - id: catalog-bundles
-          args: ["catalog-bundles", "--target", "{target_id}", "--format", "json"]
+        - id: doctor
+          args: ["doctor", "--format", "json"]
           json_expectations:
-            default_kit_id: starter-kit
-        - id: get-started
-          args: ["get-started", "--target", "{target_id}", "--format", "json"]
+            result_type: JiniProviderDoctor
+        - id: publish-readiness
+          args: ["publish-readiness", "--format", "json"]
           json_expectations:
-            target: "{target_id}"
-        - id: plan-install
-          args: ["plan-install", "--target", "{target_id}", "--format", "json"]
-          json_expectations:
-            selected_targets.0.id: "{target_id}"
-            recommended_next_steps.1.id: verify
-        - id: resolve-adapter
-          args: ["resolve-adapter", "--capability", "runtime-activate", "--preferred", "{target_id}", "--format", "json"]
-          json_expectations:
-            selected.id: "{target_id}"
+            result_type: JiniPublishReadiness
 bundles:
   - id: jini-core
     label: Jini Core
@@ -274,8 +220,8 @@ bundles:
     permission_risk: medium
     review_before_use: true
     activation_steps:
-      - Run `jini show-kpis` to confirm the local core surface is usable.
-      - Run `jini doctor-install --bundle jini-core --target <target>` before first activation.
+      - Run `jini commands` to confirm the local core surface is usable.
+      - Run `jini doctor --format json` before first activation.
     migration_notes:
       - Re-run `update-bundles` whenever the local repo revision changes materially.
     compatible_targets:
@@ -316,7 +262,7 @@ bundles:
     depends_on:
       - jini-core
     activation_steps:
-      - Run `jini status-pack <pack>` after compiling or copying a pack instance.
+      - Review `packs/research-prd/README.md` and the checked-in example artifacts before using this pack.
     compatible_targets:
       - codex
       - claude-code
@@ -337,7 +283,7 @@ bundles:
     depends_on:
       - jini-core
     activation_steps:
-      - Run `jini compile-pack meeting-followup ...` to generate a local follow-up workflow instance.
+      - Review `packs/meeting-followup/README.md` and use `jini` with the meeting notes as source context.
     compatible_targets:
       - codex
       - claude-code
@@ -358,7 +304,7 @@ bundles:
     depends_on:
       - jini-core
     activation_steps:
-      - Run `jini show-kpis` to inspect the current competitive gaps.
+      - Review `specs/competitive-kpis.yaml` to inspect the current competitive gaps.
     compatible_targets:
       - codex
       - claude-code
@@ -381,7 +327,7 @@ bundles:
     depends_on:
       - jini-core
     activation_steps:
-      - Run `jini compile-pack travel-plan ...` to generate a local travel workflow instance.
+      - Review `packs/travel-plan/README.md` and use `jini` with the trip requirements as source context.
     compatible_targets:
       - codex
       - claude-code
@@ -402,7 +348,7 @@ bundles:
     depends_on:
       - jini-core
     activation_steps:
-      - Run `jini compile-pack budget-cycle ...` to generate a local budget workflow instance.
+      - Review `packs/budget-cycle/README.md` and use `jini` with the budget constraints as source context.
     compatible_targets:
       - codex
       - claude-code
@@ -423,8 +369,8 @@ bundles:
     depends_on:
       - jini-core
     activation_steps:
-      - Run `jini compile-pack incident-response ...` to generate a local response workflow instance.
-      - Run `jini publish-issues <pack> --adapter github --apply-local` when a portable issue ledger is the fastest handoff path.
+      - Review `packs/incident-response/README.md` and use `jini` with the incident summary as source context.
+      - Keep issue-ledger publishing as a native Go backlog item until the adapter command is ported.
     compatible_targets:
       - codex
       - claude-code
@@ -445,8 +391,8 @@ bundles:
     depends_on:
       - jini-core
     activation_steps:
-      - Run `jini compile-pack compliance-audit ...` to generate a local audit workflow instance.
-      - Run `jini publish-wiki <pack> --adapter markdown --apply-local` when a portable audit packet is the fastest review path.
+      - Review `packs/compliance-audit/README.md` and use `jini` with the audit scope as source context.
+      - Keep wiki publishing as a native Go backlog item until the adapter command is ported.
     compatible_targets:
       - codex
       - claude-code
@@ -474,8 +420,8 @@ bundles:
     depends_on:
       - jini-core
     activation_steps:
-      - Run `jini compile-pack vendor-selection ...` to generate a local vendor-evaluation workflow instance.
-      - Run `jini publish-wiki <pack> --adapter markdown --apply-local` when a portable selection packet is the fastest review path.
+      - Review `packs/vendor-selection/README.md` and use `jini` with the vendor decision context.
+      - Keep wiki publishing as a native Go backlog item until the adapter command is ported.
     migration_notes: []
     universal_paths:
       - packs/vendor-selection
@@ -490,8 +436,8 @@ bundles:
     depends_on:
       - jini-core
     activation_steps:
-      - Run `jini bootstrap-home <home>` to create the personal surface.
-      - Run `jini list-routines <home>` to inspect local and remote routines.
+      - Review `specs/personal-os.md` for the personal surface model.
+      - Use `jini memory` and `jini status` for the native Go continuity checks available today.
     compatible_targets:
       - codex
       - claude-code
@@ -514,8 +460,8 @@ bundles:
       - jini-core
       - competitive-playbook
     activation_steps:
-      - Run `jini review-framework --format json --limit 5`.
-      - Run `jini stage-framework-experiment --dimension <dimension>` before changing scorecard-driven priorities.
+      - Review `specs/learning-system.md` and `specs/competitive-kpis.yaml` before changing scorecard-driven priorities.
+      - Keep framework experiment staging as a native Go backlog item until the command is ported.
     universal_paths:
       - WHITEPAPER.md
       - specs/learning-system.md
@@ -532,8 +478,8 @@ bundles:
     depends_on:
       - jini-core
     activation_steps:
-      - Run `jini show-adapters` to inspect portable edges.
-      - Run `jini plan-install --bundle jini-core --target <target>` before runtime activation.
+      - Review `distribution/adapter-registry.yaml` to inspect portable edges.
+      - Run `jini publish-readiness --format json` before runtime activation.
     compatible_targets:
       - codex
       - claude-code

@@ -19,18 +19,23 @@ func TestSafelyRunInteractiveRecoversPanics(t *testing.T) {
 	}
 }
 
-func TestUnknownCommandDoesNotUseFallback(t *testing.T) {
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-	exitCode := Run([]string{"legacy-only-command"}, &stdout, &stderr)
-	if exitCode != 1 {
-		t.Fatalf("expected exit code 1, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
-	}
-	if strings.Contains(strings.ToLower(stderr.String()), "fallback") {
-		t.Fatalf("unexpected fallback reference in stderr:\n%s", stderr.String())
-	}
-	if !strings.Contains(stderr.String(), "Unknown command") {
-		t.Fatalf("expected unknown command message, got:\n%s", stderr.String())
+func TestUnknownCommandsDoNotUseFallback(t *testing.T) {
+	for _, args := range [][]string{
+		{"compile-pack"},
+		{"harnesses"},
+	} {
+		var stdout bytes.Buffer
+		var stderr bytes.Buffer
+		exitCode := Run(args, &stdout, &stderr)
+		if exitCode != 1 {
+			t.Fatalf("expected exit code 1 for %v, got %d\nstdout:\n%s\nstderr:\n%s", args, exitCode, stdout.String(), stderr.String())
+		}
+		if strings.Contains(strings.ToLower(stderr.String()), "fallback") {
+			t.Fatalf("unexpected fallback reference in stderr for %v:\n%s", args, stderr.String())
+		}
+		if !strings.Contains(stderr.String(), "Unknown command") {
+			t.Fatalf("expected unknown command message for %v, got:\n%s", args, stderr.String())
+		}
 	}
 }
 
