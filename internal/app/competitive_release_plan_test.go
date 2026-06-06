@@ -32,6 +32,7 @@ func TestCompetitiveReleasePlanIsWiredIntoReleasePlanning(t *testing.T) {
 		"LM Studio",
 		"LiteLLM",
 		"OpenRouter",
+		"Base44",
 		"Competitive watch packet",
 		"Async work receipt",
 		"Cross-surface session proof",
@@ -66,11 +67,25 @@ func TestCompetitiveReleasePlanIsWiredIntoReleasePlanning(t *testing.T) {
 	for _, want := range []string{
 		"GitHub Copilot coding agent",
 		"Google Jules",
+		"Base44",
 		"Ollama",
 		"LiteLLM",
 	} {
 		if !strings.Contains(benchmark, want) {
 			t.Fatalf("golden benchmark watchlist must include %q", want)
+		}
+	}
+
+	kpis := readCompetitivePlanFile(t, root, "specs/competitive-kpis.yaml")
+	for _, want := range []string{
+		"GitHub Copilot coding agent",
+		"Google Jules",
+		"Base44",
+		"Ollama",
+		"LiteLLM",
+	} {
+		if !strings.Contains(kpis, want) {
+			t.Fatalf("competitive KPI watchlist/comparison set must include %q", want)
 		}
 	}
 }

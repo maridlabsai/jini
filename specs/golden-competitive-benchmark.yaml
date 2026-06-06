@@ -37,6 +37,7 @@ comparison_model:
     - Lovable
     - Bolt.new
     - Vercel v0
+    - Base44
     - Ollama
     - LM Studio
     - GPT4All
