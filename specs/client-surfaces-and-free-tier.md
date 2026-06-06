@@ -13,6 +13,9 @@ This document defines the public product requirements for Jini across:
 It also defines the public free-tier rule and the public boundary between
 free-core product access and commercial hosted value.
 
+The platform-by-platform offline strategy lives in
+[platform-offline-strategy.md](./platform-offline-strategy.md).
+
 This is a public product contract, not a pricing memo.
 
 This document is a specialized public-surface contract, not the top-precedence

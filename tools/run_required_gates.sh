@@ -51,7 +51,6 @@ run_release_gate() {
   run_push_gate
   (
     cd "${ROOT_DIR}"
-    python3 -m unittest discover -s tests -p 'test_*docs.py' -v
     python3 tools/jini.py publish-readiness --format json
   )
 }

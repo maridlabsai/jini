@@ -22,6 +22,9 @@ This document defines:
 - which of those should be adopted in the commercial tier
 - how Jini should watch for successor versions and promote them safely
 
+The platform-by-platform offline guarantees, sync semantics, and route policy
+live in [platform-offline-strategy.md](./platform-offline-strategy.md).
+
 The product goal is not to chase model brands.
 
 The product goal is to keep one stable Jini route contract while the underlying

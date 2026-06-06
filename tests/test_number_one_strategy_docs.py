@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 RESEARCH_PATH = ROOT / "specs" / "number-one-product-research.md"
 PRD_PATH = ROOT / "specs" / "number-one-platform-prd.md"
 PLAN_PATH = ROOT / "specs" / "number-one-development-plan.md"
+PLATFORM_OFFLINE_STRATEGY_PATH = ROOT / "specs" / "platform-offline-strategy.md"
 
 
 def read(path: Path) -> str:
@@ -21,6 +22,7 @@ class NumberOneStrategyDocsTests(unittest.TestCase):
         self.assertTrue(RESEARCH_PATH.exists())
         self.assertTrue(PRD_PATH.exists())
         self.assertTrue(PLAN_PATH.exists())
+        self.assertTrue(PLATFORM_OFFLINE_STRATEGY_PATH.exists())
 
     def test_research_uses_current_official_sources(self) -> None:
         text = read(RESEARCH_PATH)
@@ -134,6 +136,31 @@ class NumberOneStrategyDocsTests(unittest.TestCase):
             "[jini-next-initiative-plan.md](./jini-next-initiative-plan.md)",
             text,
         )
+
+    def test_platform_offline_strategy_defines_form_factor_contracts(self) -> None:
+        text = read(PLATFORM_OFFLINE_STRATEGY_PATH)
+        required_markers = [
+            "# Platform Offline Strategy",
+            "## Cross-Platform Guarantees",
+            "## macOS Strategy",
+            "## Windows Strategy",
+            "## Android Strategy",
+            "## iOS Strategy",
+            "### Offline Guarantees",
+            "### Local Model Expectations",
+            "### Sync Semantics",
+            "### Route Policy",
+            "## Sync Semantics",
+            "## Route Policy",
+            "## Shipping Prerequisites",
+            "## Future Update Policy",
+            "mobile is positioned as continuation and review",
+            "desktop is positioned as the main offline authoring and artifact host",
+            "future model updates flow through the registry, canary, promote, and",
+        ]
+        for marker in required_markers:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, text)
 
 
 if __name__ == "__main__":

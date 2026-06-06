@@ -449,6 +449,8 @@ considered successful.
 #### P0.7 App-surface shipping contract
 
 - desktop and mobile are bound to the same work object as CLI
+- platform-by-platform offline strategy exists for macOS, Windows, Android,
+  and iOS
 - macOS and Windows desktop shipping is part of the committed product roadmap
 - mobile continuation, review, and approval are part of the committed roadmap
 
