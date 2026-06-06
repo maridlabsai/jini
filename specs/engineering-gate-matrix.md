@@ -82,7 +82,11 @@ The checked-in runner for these tiers is:
 - `bash tools/run_required_gates.sh push`
 - `bash tools/run_required_gates.sh release`
 
-Convenience aliases should also exist in the repo's `Makefile`.
+Convenience aliases must also exist in the repo's `Makefile`:
+
+- `make gates-commit`
+- `make gates-push`
+- `make gates-release`
 
 ## Operating Rules
 
