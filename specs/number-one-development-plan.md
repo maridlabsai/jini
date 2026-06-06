@@ -190,6 +190,7 @@ Deliverables:
 - measured cross-surface recovery metrics
 - measured route-regret and resume-cost metrics
 - automated competitor-watch packet
+- canonical commit, push, and release gate matrix with one checked-in runner
 
 Required score movement:
 

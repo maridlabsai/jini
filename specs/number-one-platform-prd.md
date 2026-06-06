@@ -433,6 +433,8 @@ considered successful.
 #### P0.5 Development system automation
 
 - repo-aware environment learning
+- one canonical gate matrix for commit, push, and release
+- one checked-in runner for required gate tiers
 - quality gates before handoff
 - missing-proof and missing-review detection
 - docs/help/runtime parity repair
