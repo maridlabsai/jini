@@ -735,6 +735,38 @@ scenarios:
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
         contains: "offline-regression"
+      - id: publish-readiness-app-platform-section-present
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "app-platform"
+      - id: publish-readiness-app-platform-stack-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/app-platform-shipping-playbook.md#default-stack-decision"
+      - id: publish-readiness-app-platform-security-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/app-platform-shipping-playbook.md#security-baseline"
+      - id: publish-readiness-app-platform-performance-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/app-platform-shipping-playbook.md#performance-and-optimization-baseline"
+      - id: publish-readiness-app-platform-observability-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/app-platform-shipping-playbook.md#logging-diagnostics-and-observability"
+      - id: publish-readiness-app-platform-update-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/app-platform-shipping-playbook.md#update-and-release-policy"
+      - id: publish-readiness-app-platform-release-gates-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/app-platform-shipping-playbook.md#app-shipping-gates"
+      - id: publish-readiness-app-platform-sources-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/app-platform-shipping-playbook.md#source-backed-inputs"
       - id: publish-readiness-local-model-registry-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"

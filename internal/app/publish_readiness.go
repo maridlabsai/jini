@@ -49,6 +49,12 @@ type publishMetricValue struct {
 	Status string `json:"status"`
 }
 
+type publishFragmentRequirement struct {
+	checkPath string
+	filePath  string
+	fragments []string
+}
+
 func runPublishReadiness(args []string, stdout, stderr io.Writer) int {
 	format, ok := parseOptionalFormatArgs(args)
 	if !ok {
@@ -82,6 +88,7 @@ func runPublishReadiness(args []string, stdout, stderr io.Writer) int {
 func buildPublishReadinessReport(root string) publishReadinessReport {
 	sections := []publishReadinessSection{
 		buildPublishDocsSection(root),
+		buildPublishAppPlatformSection(root),
 		buildPublishOfflineRegressionSection(root),
 		buildPublishRuntimeSection(root),
 	}
@@ -154,6 +161,107 @@ func buildPublishDocsSection(root string) publishReadinessSection {
 	}
 }
 
+func buildPublishAppPlatformSection(root string) publishReadinessSection {
+	if root == "" {
+		return publishReadinessSection{
+			ID:     "app-platform",
+			Label:  "App platform shipping guardrails",
+			Status: "ok",
+			Checks: []publishReadinessCheck{{
+				Path:   "source checkout",
+				Exists: false,
+				Status: "not-required-for-installed-binary",
+			}},
+		}
+	}
+
+	required := []publishFragmentRequirement{
+		{
+			checkPath: "specs/app-platform-shipping-playbook.md#default-stack-decision",
+			filePath:  "specs/app-platform-shipping-playbook.md",
+			fragments: []string{
+				"## Default Stack Decision",
+				"Next.js App Router",
+				"Tauri 2",
+				"Expo React Native",
+			},
+		},
+		{
+			checkPath: "specs/app-platform-shipping-playbook.md#security-baseline",
+			filePath:  "specs/app-platform-shipping-playbook.md",
+			fragments: []string{
+				"## Security Baseline",
+				"OWASP MASVS",
+				"sign, notarize, staple",
+				"Play Integrity",
+				"strict Content Security Policy",
+			},
+		},
+		{
+			checkPath: "specs/app-platform-shipping-playbook.md#performance-and-optimization-baseline",
+			filePath:  "specs/app-platform-shipping-playbook.md",
+			fragments: []string{
+				"## Performance And Optimization Baseline",
+				"Core Web Vitals",
+				"Baseline Profiles",
+				"model load time",
+			},
+		},
+		{
+			checkPath: "specs/app-platform-shipping-playbook.md#logging-diagnostics-and-observability",
+			filePath:  "specs/app-platform-shipping-playbook.md",
+			fragments: []string{
+				"## Logging, Diagnostics, And Observability",
+				"`session_id`",
+				"`route_id`",
+				"`privacy_redaction_state`",
+				"OpenTelemetry",
+			},
+		},
+		{
+			checkPath: "specs/app-platform-shipping-playbook.md#update-and-release-policy",
+			filePath:  "specs/app-platform-shipping-playbook.md",
+			fragments: []string{
+				"## Update And Release Policy",
+				"Signed updates are mandatory",
+				"rollback target",
+				"schema version",
+			},
+		},
+		{
+			checkPath: "specs/app-platform-shipping-playbook.md#app-shipping-gates",
+			filePath:  "specs/app-platform-shipping-playbook.md",
+			fragments: []string{
+				"## App Shipping Gates",
+				"security and privacy gate",
+				"observability and diagnostics gate",
+				"support bundle gate",
+			},
+		},
+		{
+			checkPath: "specs/app-platform-shipping-playbook.md#source-backed-inputs",
+			filePath:  "specs/app-platform-shipping-playbook.md",
+			fragments: []string{
+				"## Source-Backed Inputs",
+				"developer.apple.com",
+				"developer.android.com",
+				"learn.microsoft.com",
+				"mas.owasp.org/MASVS",
+				"v2.tauri.app/security",
+				"opentelemetry.io",
+			},
+		},
+	}
+
+	checks, status := buildFragmentChecks(root, required)
+	return publishReadinessSection{
+		ID:     "app-platform",
+		Label:  "App platform shipping guardrails",
+		Status: status,
+		Checks: checks,
+	}
+}
+
 func buildPublishOfflineRegressionSection(root string) publishReadinessSection {
 	if root == "" {
 		return publishReadinessSection{
@@ -168,11 +276,7 @@ func buildPublishOfflineRegressionSection(root string) publishReadinessSection {
 		}
 	}
 
-	required := []struct {
-		checkPath string
-		filePath  string
-		fragments []string
-	}{
+	required := []publishFragmentRequirement{
 		{
 			checkPath: "specs/local-model-support-matrix.md#registry-contract",
 			filePath:  "specs/local-model-support-matrix.md",
@@ -213,6 +317,16 @@ func buildPublishOfflineRegressionSection(root string) publishReadinessSection {
 		},
 	}
 
+	checks, status := buildFragmentChecks(root, required)
+	return publishReadinessSection{
+		ID:     "offline-regression",
+		Label:  "Offline model regression guardrails",
+		Status: status,
+		Checks: checks,
+	}
+}
+
+func buildFragmentChecks(root string, required []publishFragmentRequirement) ([]publishReadinessCheck, string) {
 	checks := make([]publishReadinessCheck, 0, len(required))
 	status := "ok"
 	for _, requirement := range required {
@@ -233,13 +347,7 @@ func buildPublishOfflineRegressionSection(root string) publishReadinessSection {
 			Status: checkStatus,
 		})
 	}
-
-	return publishReadinessSection{
-		ID:     "offline-regression",
-		Label:  "Offline model regression guardrails",
-		Status: status,
-		Checks: checks,
-	}
+	return checks, status
 }
 
 func missingRequiredFragment(text string, fragments []string) bool {

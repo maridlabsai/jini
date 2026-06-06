@@ -171,6 +171,51 @@ func TestPublishReadinessIncludesOfflineRegressionGuardrails(t *testing.T) {
 	}
 }
 
+func TestPublishReadinessIncludesAppPlatformShippingGuardrails(t *testing.T) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := Run([]string{"publish-readiness", "--format=json"}, &stdout, &stderr)
+	if exitCode != 0 {
+		t.Fatalf("expected publish-readiness to pass, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+
+	var report publishReadinessReport
+	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil {
+		t.Fatalf("decode publish-readiness JSON: %v\n%s", err, stdout.String())
+	}
+	required := map[string]bool{
+		"specs/app-platform-shipping-playbook.md#default-stack-decision":                false,
+		"specs/app-platform-shipping-playbook.md#security-baseline":                     false,
+		"specs/app-platform-shipping-playbook.md#performance-and-optimization-baseline": false,
+		"specs/app-platform-shipping-playbook.md#logging-diagnostics-and-observability": false,
+		"specs/app-platform-shipping-playbook.md#update-and-release-policy":             false,
+		"specs/app-platform-shipping-playbook.md#app-shipping-gates":                    false,
+		"specs/app-platform-shipping-playbook.md#source-backed-inputs":                  false,
+	}
+	for _, section := range report.Sections {
+		if section.ID != "app-platform" {
+			continue
+		}
+		if section.Status != "ok" {
+			t.Fatalf("expected app-platform section to be ok, got %#v", section)
+		}
+		for _, check := range section.Checks {
+			if _, ok := required[check.Path]; !ok {
+				continue
+			}
+			if !check.Exists || check.Status != "ok" {
+				t.Fatalf("expected app-platform check to be ok, got %#v", check)
+			}
+			required[check.Path] = true
+		}
+	}
+	for path, found := range required {
+		if !found {
+			t.Fatalf("missing app-platform check: %s\nreport: %#v", path, report.Sections)
+		}
+	}
+}
+
 func TestGoldenBenchmarkCoversOfflineRegressionReadinessChecks(t *testing.T) {
 	root := discoverSourceRoot()
 	if root == "" {
@@ -191,6 +236,30 @@ func TestGoldenBenchmarkCoversOfflineRegressionReadinessChecks(t *testing.T) {
 		}
 		if !strings.Contains(string(benchmark), `contains: "`+check.Path+`"`) {
 			t.Fatalf("golden benchmark does not cover offline-regression readiness check %q", check.Path)
+		}
+	}
+}
+
+func TestGoldenBenchmarkCoversAppPlatformReadinessChecks(t *testing.T) {
+	root := discoverSourceRoot()
+	if root == "" {
+		t.Fatal("expected source root for golden benchmark coverage test")
+	}
+	benchmark, err := os.ReadFile(filepath.Join(root, "specs", "golden-competitive-benchmark.yaml"))
+	if err != nil {
+		t.Fatalf("read golden benchmark: %v", err)
+	}
+
+	section := buildPublishAppPlatformSection(root)
+	if section.Status != "ok" {
+		t.Fatalf("expected app-platform section to be ok, got %#v", section)
+	}
+	for _, check := range section.Checks {
+		if check.Path == "source checkout" {
+			continue
+		}
+		if !strings.Contains(string(benchmark), `contains: "`+check.Path+`"`) {
+			t.Fatalf("golden benchmark does not cover app-platform readiness check %q", check.Path)
 		}
 	}
 }
