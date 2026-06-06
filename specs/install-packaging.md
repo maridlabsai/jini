@@ -88,19 +88,19 @@ They only define where and how Jini binds into a local environment.
 The CLI command is:
 
 ```bash
-python3 tools/jini.py get-started --target codex
-python3 tools/jini.py plan-install --kit starter-kit --target codex
-python3 tools/jini.py install-bundles --kit starter-kit --target codex --prefix /tmp/jini-stage
-python3 tools/jini.py doctor-install --kit starter-kit --target codex --prefix /tmp/jini-stage
-python3 tools/jini.py catalog-bundles
-python3 tools/jini.py catalog-bundles --target codex --format json
-python3 tools/jini.py plan-install --kit operations-response-kit --target codex
-python3 tools/jini.py plan-install --kit regulated-readiness-kit --target codex
-python3 tools/jini.py plan-install --kit vendor-decision-kit --target codex
-python3 tools/jini.py update-bundles --kit starter-kit --target codex --prefix /tmp/jini-stage
-python3 tools/jini.py uninstall-bundles --kit starter-kit --target codex --prefix /tmp/jini-stage
-python3 tools/jini.py plan-install --bundle jini-core --target codex --target kiro-cli
-python3 tools/jini.py plan-install --format json
+jini get-started --target codex
+jini plan-install --kit starter-kit --target codex
+jini install-bundles --kit starter-kit --target codex --prefix /tmp/jini-stage
+jini doctor-install --kit starter-kit --target codex --prefix /tmp/jini-stage
+jini catalog-bundles
+jini catalog-bundles --target codex --format json
+jini plan-install --kit operations-response-kit --target codex
+jini plan-install --kit regulated-readiness-kit --target codex
+jini plan-install --kit vendor-decision-kit --target codex
+jini update-bundles --kit starter-kit --target codex --prefix /tmp/jini-stage
+jini uninstall-bundles --kit starter-kit --target codex --prefix /tmp/jini-stage
+jini plan-install --bundle jini-core --target codex --target kiro-cli
+jini plan-install --format json
 ```
 
 The planner should show:

@@ -48,12 +48,12 @@ semantics.
 Compile a compliance audit plan from the benchmark context with:
 
 ```bash
-python3 tools/jini.py compile-pack compliance-audit \
+jini compile-pack compliance-audit \
   --work-unit-id my-compliance-audit \
   --title "Quarterly Controls Audit" \
   --purpose "Review controls, evidence, and signoff readiness for a regulated surface" \
   --owner compliance-lead \
   --approver risk-officer \
   --output /tmp/my-compliance-audit
-python3 tools/jini.py status-pack /tmp/my-compliance-audit
+jini status-pack /tmp/my-compliance-audit
 ```

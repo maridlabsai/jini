@@ -100,5 +100,5 @@ Must prove:
 The independent validator command should be:
 
 ```bash
-python3 tools/jini.py validate-adapter-benchmark-gate --format json
+jini validate-adapter-benchmark-gate --format json
 ```

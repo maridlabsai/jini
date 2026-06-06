@@ -61,7 +61,7 @@ Must prove:
 The independent validator command should be:
 
 ```bash
-python3 tools/jini.py validate-device-runtime-gate --format json
+jini validate-device-runtime-gate --format json
 ```
 
 The gate fails if any category above fails.

@@ -7,7 +7,7 @@ It exists to prove that the kernel, control packs, compact memory, and verificat
 Compile it with:
 
 ```bash
-python3 tools/jini.py compile-pack budget-cycle \
+jini compile-pack budget-cycle \
   --work-unit-id monthly-budget-v1 \
   --title "Monthly Budget" \
   --purpose "Build a monthly budget with explicit savings, obligations, and fallback cuts" \

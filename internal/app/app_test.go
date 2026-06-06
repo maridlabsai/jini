@@ -128,6 +128,32 @@ func TestProviderDoctorJSONDetectsAzureOpenAIWithoutLeakingSecrets(t *testing.T)
 	}
 }
 
+func TestPublishReadinessJSONIsNativeGoAndReportsMigrationComplete(t *testing.T) {
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"publish-readiness", "--format", "json"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	var report struct {
+		ResultType string `json:"result_type"`
+		Status     string `json:"status"`
+		Runtime    struct {
+			Language       string `json:"language"`
+			LegacyFallback bool   `json:"legacy_fallback"`
+		} `json:"runtime"`
+	}
+	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil {
+		t.Fatalf("decode publish readiness json: %v\n%s", err, stdout.String())
+	}
+	if report.ResultType != "JiniPublishReadiness" || report.Status != "ok" {
+		t.Fatalf("unexpected publish readiness header: %#v", report)
+	}
+	if report.Runtime.Language != "go" || report.Runtime.LegacyFallback {
+		t.Fatalf("expected native Go runtime with no legacy fallback, got: %#v", report.Runtime)
+	}
+}
+
 func TestProviderDoctorDetectsBedrockWithoutLeakingCredentials(t *testing.T) {
 	t.Setenv("JINI_PROVIDER", "bedrock")
 	t.Setenv("AWS_REGION", "us-east-1")

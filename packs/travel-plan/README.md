@@ -48,11 +48,11 @@ planning without changing the kernel.
 Compile a travel plan from the benchmark context with:
 
 ```bash
-python3 tools/jini.py compile-pack travel-plan \
+jini compile-pack travel-plan \
   --work-unit-id my-travel-plan \
   --title "Spring Travel Plan" \
   --purpose "Plan a constrained trip with explicit itinerary and contingencies" \
   --owner traveler \
   --output /tmp/my-travel-plan
-python3 tools/jini.py status-pack /tmp/my-travel-plan
+jini status-pack /tmp/my-travel-plan
 ```

@@ -32,17 +32,13 @@ This is the minimum required gate for every local commit.
 
 Required commands:
 
-1. `python3 tools/language_gate.py`
-2. `python3 -m unittest tests.test_go_first_launcher -v`
-3. `GOCACHE=/private/tmp/jini-go-cache GOMODCACHE=/private/tmp/jini-go-mod /Users/sharad.sharma/Developer/.local-go/bin/go test ./internal/app`
-4. `git diff --check`
+1. `go test ./...`
+2. `git diff --check`
 
 Required outcome:
 
-- changed user-facing files are scanned for blocked language without relying on
-  a machine-local helper path
-- launcher boundary regressions are caught immediately
-- Go runtime regressions in the main app package are caught immediately
+- Go runtime regressions are caught immediately
+- the migration boundary blocks tracked Python files and Python gate invocations
 - whitespace and patch-format drift is blocked before commit
 
 ### Push gate
@@ -53,13 +49,10 @@ integration.
 Required commands:
 
 1. all commit-gate commands
-2. `python3 -m unittest discover -s tests -p 'test_*docs.py' -v`
 
 Required outcome:
 
-- the public docs and documentation-contract suites are green
-- the branch clears both the implementation boundary gate and the public-doc
-  contract gate before push
+- the branch clears the same Go-only implementation boundary before push
 
 ### Release gate
 
@@ -69,7 +62,7 @@ or public shipping claims.
 Required commands:
 
 1. all push-gate commands
-2. `python3 tools/jini.py publish-readiness --format json`
+2. `jini publish-readiness --format json`
 
 Required outcome:
 
@@ -115,9 +108,6 @@ These suites are important, but they are not yet part of the canonical required
 gate tiers until they are baseline-green and explicitly promoted in this
 matrix:
 
-- `python3 -m unittest tests.test_jini_cli -v`
-- `python3 -m unittest tests.test_install_sh -v`
-- `python3 -m unittest discover -s tests -v`
 - `GOCACHE=/private/tmp/jini-go-cache GOMODCACHE=/private/tmp/jini-go-mod /Users/sharad.sharma/Developer/.local-go/bin/go test ./...`
 
 They should be treated as promotion candidates, not quietly implied required

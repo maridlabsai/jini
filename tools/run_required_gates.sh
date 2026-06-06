@@ -33,26 +33,22 @@ run_go_test() {
 run_commit_gate() {
   (
     cd "${ROOT_DIR}"
-    python3 tools/language_gate.py
-    python3 -m unittest tests.test_go_first_launcher -v
     git diff --check
   )
-  run_go_test "./internal/app"
+  run_go_test "./..."
 }
 
 run_push_gate() {
   run_commit_gate
-  (
-    cd "${ROOT_DIR}"
-    python3 -m unittest discover -s tests -p 'test_*docs.py' -v
-  )
 }
 
 run_release_gate() {
   run_push_gate
   (
     cd "${ROOT_DIR}"
-    python3 tools/jini.py publish-readiness --format json
+    GOCACHE="${GO_CACHE_DIR}" \
+    GOMODCACHE="${GO_MOD_CACHE_DIR}" \
+      "${GO_BIN}" run ./cmd/jini publish-readiness --format json
   )
 }
 

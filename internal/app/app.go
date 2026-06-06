@@ -3,7 +3,6 @@ package app
 import (
 	"bufio"
 	"context"
-	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -84,8 +83,10 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 			fmt.Fprintf(stderr, "Unknown command %q.\n", args[0])
 			return 1
 		}
-		if shouldUseLegacySurface(args) {
-			return runLegacyPython(args, stdin, stdout, stderr)
+		if err := validateNativeArgs(args); err != nil {
+			fmt.Fprintln(stderr, err.Error())
+			fmt.Fprintln(stderr, "Run `jini commands` to see the native Go command surface.")
+			return 1
 		}
 
 		switch canonicalTopLevelCommand(args[0]) {
@@ -145,10 +146,82 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 				return 0
 			}
 			return runLauncher(stdin, stdout, stderr)
+		case "publish-readiness":
+			return runPublishReadiness(args[1:], stdout, stderr)
 		default:
-			return runLegacyPython(args, stdin, stdout, stderr)
+			fmt.Fprintf(stderr, "Unknown command %q.\n", args[0])
+			fmt.Fprintln(stderr, "Run `jini commands` to see the native Go command surface.")
+			return 1
 		}
 	})
+}
+
+func validateNativeArgs(args []string) error {
+	if len(args) == 0 {
+		return nil
+	}
+	first := canonicalTopLevelCommand(args[0])
+	switch first {
+	case "help":
+		if len(args) == 1 {
+			return nil
+		}
+		if len(args) == 2 && canonicalHelpTopic(args[1]) != "" {
+			return nil
+		}
+	case "commands", "init", "memory", "new", "permissions", "route", "status", "continue":
+		if len(args) == 1 {
+			return nil
+		}
+	case "admin":
+		if len(args) == 1 || (len(args) == 2 && isAdminHelpAlias(args[1])) {
+			return nil
+		}
+	case "check":
+		if len(args) == 1 || (len(args) == 2 && !strings.HasPrefix(strings.TrimSpace(args[1]), "-")) {
+			return nil
+		}
+	case "doctor":
+		if _, ok := parseOptionalFormatArgs(args[1:]); ok {
+			return nil
+		}
+	case "provider":
+		providerArgs := args[1:]
+		if len(providerArgs) > 0 && exactCommandToken(providerArgs[0]) == "doctor" {
+			providerArgs = providerArgs[1:]
+		}
+		if _, ok := parseOptionalFormatArgs(providerArgs); ok {
+			return nil
+		}
+	case "observe":
+		if len(args) == 1 {
+			return nil
+		}
+		second := exactCommandToken(args[1])
+		if (second == "status" || second == "scan") && len(args) == 2 {
+			return nil
+		}
+		if second == "add" {
+			if _, _, err := parseObserveAddArgs(args[2:]); err == nil {
+				return nil
+			}
+		}
+	case "open":
+		if len(args) <= 1 || (len(args) == 2 && !strings.HasPrefix(strings.TrimSpace(args[1]), "-")) {
+			return nil
+		}
+	case "run":
+		if len(args) == 1 || (len(args) == 2 && (exactCommandToken(args[1]) == "new" || strings.TrimSpace(args[1]) == "--new")) {
+			return nil
+		}
+	case "publish-readiness":
+		if _, ok := parseOptionalFormatArgs(args[1:]); ok {
+			return nil
+		}
+	default:
+		return nil
+	}
+	return fmt.Errorf("Unsupported arguments for %q.", args[0])
 }
 
 func safelyRunInteractive(stderr io.Writer, fn func() int) (exitCode int) {
@@ -167,48 +240,6 @@ func runLauncher(stdin io.Reader, stdout, stderr io.Writer) int {
 		active, activeErr := listActiveWorkSummaries(nil)
 		if activeErr == nil && len(active) > 0 {
 			return runActiveWorkLauncher(active, stdin, stdout, stderr)
-		}
-		if shouldUseLegacyFrontDoor() {
-			sourceRoot, scriptPath, ok := resolveLegacyPythonEntrypoint()
-			if !ok {
-				if stdin != nil {
-					return runNewWorkIntake(stdin, stdout, stderr)
-				}
-				renderNewWorkPrompt(stdout)
-				return 0
-			}
-			scriptFingerprint, ok := fingerprintLegacyScript(scriptPath)
-			if !ok {
-				if stdin != nil {
-					return runNewWorkIntake(stdin, stdout, stderr)
-				}
-				renderNewWorkPrompt(stdout)
-				return 0
-			}
-			pythonCommand, pythonErr := resolveLegacyPythonExecutable()
-			if pythonErr != nil {
-				if stdin != nil {
-					return runNewWorkIntake(stdin, stdout, stderr)
-				}
-				renderNewWorkPrompt(stdout)
-				return 0
-			}
-			if !legacyScriptMatchesFingerprint(scriptPath, scriptFingerprint) {
-				if stdin != nil {
-					return runNewWorkIntake(stdin, stdout, stderr)
-				}
-				renderNewWorkPrompt(stdout)
-				return 0
-			}
-			return runLegacyPythonWithExecutable(
-				sourceRoot,
-				pythonCommand,
-				"jini",
-				[]string{scriptPath},
-				stdin,
-				stdout,
-				stderr,
-			)
 		}
 		if stdin != nil {
 			return runNewWorkIntake(stdin, stdout, stderr)
@@ -244,28 +275,6 @@ func runLauncher(stdin io.Reader, stdout, stderr io.Writer) int {
 	}
 	fmt.Fprintln(stdout)
 	return handleCurrentWorkAction(action, summary, session, stdout, stderr)
-}
-
-func shouldUseLegacyFrontDoor() bool {
-	switch strings.ToLower(strings.TrimSpace(os.Getenv("JINI_USE_LEGACY_FRONT_DOOR"))) {
-	case "1", "true", "yes", "on":
-		return true
-	default:
-		return false
-	}
-}
-
-func fingerprintLegacyScript(path string) ([32]byte, bool) {
-	contents, err := os.ReadFile(path)
-	if err != nil {
-		return [32]byte{}, false
-	}
-	return sha256.Sum256(contents), true
-}
-
-func legacyScriptMatchesFingerprint(path string, fingerprint [32]byte) bool {
-	currentFingerprint, ok := fingerprintLegacyScript(path)
-	return ok && currentFingerprint == fingerprint
 }
 
 func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
@@ -4084,7 +4093,7 @@ func canonicalTopLevelCommand(value string) string {
 	switch exactCommandToken(value) {
 	case "help", "--help", "-h":
 		return "help"
-	case "commands", "admin", "check", "status", "continue", "doctor", "provider", "route", "memory", "permissions", "init", "new", "observe", "open", "run":
+	case "commands", "admin", "check", "status", "continue", "doctor", "provider", "route", "memory", "permissions", "init", "new", "observe", "open", "run", "publish-readiness":
 		return exactCommandToken(value)
 	default:
 		return ""

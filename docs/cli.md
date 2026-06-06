@@ -19,7 +19,7 @@ quick_links:
 
 <p class="page-lead">Jini should feel small. Most people should learn one command, not a command tree.</p>
 
-<p>You do not need to know Python to use Jini.</p>
+<p>Jini runs as a native command-line app; the normal user experience is one small <code>jini</code> front door.</p>
 
 <div class="section-card">
   <span class="section-kicker">Front door</span>

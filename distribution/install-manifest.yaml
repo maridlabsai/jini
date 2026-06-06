@@ -93,7 +93,7 @@ targets:
     risk_notice: Codex shims can affect local agent behavior.
     activation_steps:
       - Review the Codex shim README before activation.
-      - Run `python3 tools/jini.py doctor-install --bundle jini-core --target codex` after installation.
+      - Run `jini doctor-install --bundle jini-core --target codex` after installation.
     doctor_expectations:
       readme_markers:
         - bind Codex-specific instructions or pointers separately
@@ -123,7 +123,7 @@ targets:
     risk_notice: Claude Code shims can affect local agent behavior.
     activation_steps:
       - Review the Claude Code shim README before activation.
-      - Run `python3 tools/jini.py doctor-install --bundle jini-core --target claude-code` after installation.
+      - Run `jini doctor-install --bundle jini-core --target claude-code` after installation.
     doctor_expectations:
       readme_markers:
         - isolate Claude Code-specific bindings in a thin shim
@@ -153,7 +153,7 @@ targets:
     risk_notice: GitHub Copilot integration may require manual review of workspace instructions.
     activation_steps:
       - Review the GitHub Copilot shim README before activation.
-      - Run `python3 tools/jini.py doctor-install --bundle jini-core --target github-copilot` after installation.
+      - Run `jini doctor-install --bundle jini-core --target github-copilot` after installation.
     doctor_expectations:
       readme_markers:
         - bind Copilot-specific instructions separately
@@ -183,7 +183,7 @@ targets:
     risk_notice: Junie shims should be reviewed before enabling autonomous execution.
     activation_steps:
       - Review the Junie shim README before activation.
-      - Run `python3 tools/jini.py doctor-install --bundle jini-core --target junie` after installation.
+      - Run `jini doctor-install --bundle jini-core --target junie` after installation.
     doctor_expectations:
       readme_markers:
         - expose Junie-specific bindings through a minimal shim
@@ -213,7 +213,7 @@ targets:
     risk_notice: Kiro CLI shims can affect local workflow defaults and permissions.
     activation_steps:
       - Review the Kiro CLI shim README before activation.
-      - Run `python3 tools/jini.py doctor-install --bundle jini-core --target kiro-cli` after installation.
+      - Run `jini doctor-install --bundle jini-core --target kiro-cli` after installation.
     doctor_expectations:
       readme_markers:
         - bind Kiro CLI-specific behavior through a thin shim
@@ -243,7 +243,7 @@ targets:
     risk_notice: Augment shims should be reviewed before activation.
     activation_steps:
       - Review the Augment shim README before activation.
-      - Run `python3 tools/jini.py doctor-install --bundle jini-core --target augment` after installation.
+      - Run `jini doctor-install --bundle jini-core --target augment` after installation.
     doctor_expectations:
       readme_markers:
         - use a minimal shim for Augment-specific activation
@@ -274,8 +274,8 @@ bundles:
     permission_risk: medium
     review_before_use: true
     activation_steps:
-      - Run `python3 tools/jini.py show-kpis` to confirm the local core surface is usable.
-      - Run `python3 tools/jini.py doctor-install --bundle jini-core --target <target>` before first activation.
+      - Run `jini show-kpis` to confirm the local core surface is usable.
+      - Run `jini doctor-install --bundle jini-core --target <target>` before first activation.
     migration_notes:
       - Re-run `update-bundles` whenever the local repo revision changes materially.
     compatible_targets:
@@ -286,8 +286,7 @@ bundles:
       - kiro-cli
       - augment
     universal_paths:
-      - tools/jini.py
-      - tools/jini_validate.py
+      - cmd/jini
       - schemas
       - specs/protocol-core.md
       - specs/work-state-machine.md
@@ -317,7 +316,7 @@ bundles:
     depends_on:
       - jini-core
     activation_steps:
-      - Run `python3 tools/jini.py status-pack <pack>` after compiling or copying a pack instance.
+      - Run `jini status-pack <pack>` after compiling or copying a pack instance.
     compatible_targets:
       - codex
       - claude-code
@@ -338,7 +337,7 @@ bundles:
     depends_on:
       - jini-core
     activation_steps:
-      - Run `python3 tools/jini.py compile-pack meeting-followup ...` to generate a local follow-up workflow instance.
+      - Run `jini compile-pack meeting-followup ...` to generate a local follow-up workflow instance.
     compatible_targets:
       - codex
       - claude-code
@@ -359,7 +358,7 @@ bundles:
     depends_on:
       - jini-core
     activation_steps:
-      - Run `python3 tools/jini.py show-kpis` to inspect the current competitive gaps.
+      - Run `jini show-kpis` to inspect the current competitive gaps.
     compatible_targets:
       - codex
       - claude-code
@@ -382,7 +381,7 @@ bundles:
     depends_on:
       - jini-core
     activation_steps:
-      - Run `python3 tools/jini.py compile-pack travel-plan ...` to generate a local travel workflow instance.
+      - Run `jini compile-pack travel-plan ...` to generate a local travel workflow instance.
     compatible_targets:
       - codex
       - claude-code
@@ -403,7 +402,7 @@ bundles:
     depends_on:
       - jini-core
     activation_steps:
-      - Run `python3 tools/jini.py compile-pack budget-cycle ...` to generate a local budget workflow instance.
+      - Run `jini compile-pack budget-cycle ...` to generate a local budget workflow instance.
     compatible_targets:
       - codex
       - claude-code
@@ -424,8 +423,8 @@ bundles:
     depends_on:
       - jini-core
     activation_steps:
-      - Run `python3 tools/jini.py compile-pack incident-response ...` to generate a local response workflow instance.
-      - Run `python3 tools/jini.py publish-issues <pack> --adapter github --apply-local` when a portable issue ledger is the fastest handoff path.
+      - Run `jini compile-pack incident-response ...` to generate a local response workflow instance.
+      - Run `jini publish-issues <pack> --adapter github --apply-local` when a portable issue ledger is the fastest handoff path.
     compatible_targets:
       - codex
       - claude-code
@@ -446,8 +445,8 @@ bundles:
     depends_on:
       - jini-core
     activation_steps:
-      - Run `python3 tools/jini.py compile-pack compliance-audit ...` to generate a local audit workflow instance.
-      - Run `python3 tools/jini.py publish-wiki <pack> --adapter markdown --apply-local` when a portable audit packet is the fastest review path.
+      - Run `jini compile-pack compliance-audit ...` to generate a local audit workflow instance.
+      - Run `jini publish-wiki <pack> --adapter markdown --apply-local` when a portable audit packet is the fastest review path.
     compatible_targets:
       - codex
       - claude-code
@@ -475,8 +474,8 @@ bundles:
     depends_on:
       - jini-core
     activation_steps:
-      - Run `python3 tools/jini.py compile-pack vendor-selection ...` to generate a local vendor-evaluation workflow instance.
-      - Run `python3 tools/jini.py publish-wiki <pack> --adapter markdown --apply-local` when a portable selection packet is the fastest review path.
+      - Run `jini compile-pack vendor-selection ...` to generate a local vendor-evaluation workflow instance.
+      - Run `jini publish-wiki <pack> --adapter markdown --apply-local` when a portable selection packet is the fastest review path.
     migration_notes: []
     universal_paths:
       - packs/vendor-selection
@@ -491,8 +490,8 @@ bundles:
     depends_on:
       - jini-core
     activation_steps:
-      - Run `python3 tools/jini.py bootstrap-home <home>` to create the personal surface.
-      - Run `python3 tools/jini.py list-routines <home>` to inspect local and remote routines.
+      - Run `jini bootstrap-home <home>` to create the personal surface.
+      - Run `jini list-routines <home>` to inspect local and remote routines.
     compatible_targets:
       - codex
       - claude-code
@@ -515,8 +514,8 @@ bundles:
       - jini-core
       - competitive-playbook
     activation_steps:
-      - Run `python3 tools/jini.py review-framework --format json --limit 5`.
-      - Run `python3 tools/jini.py stage-framework-experiment --dimension <dimension>` before changing scorecard-driven priorities.
+      - Run `jini review-framework --format json --limit 5`.
+      - Run `jini stage-framework-experiment --dimension <dimension>` before changing scorecard-driven priorities.
     universal_paths:
       - WHITEPAPER.md
       - specs/learning-system.md
@@ -533,8 +532,8 @@ bundles:
     depends_on:
       - jini-core
     activation_steps:
-      - Run `python3 tools/jini.py show-adapters` to inspect portable edges.
-      - Run `python3 tools/jini.py plan-install --bundle jini-core --target <target>` before runtime activation.
+      - Run `jini show-adapters` to inspect portable edges.
+      - Run `jini plan-install --bundle jini-core --target <target>` before runtime activation.
     compatible_targets:
       - codex
       - claude-code

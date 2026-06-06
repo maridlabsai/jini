@@ -17,7 +17,7 @@ What is included:
 Fastest proof:
 
 ```bash
-python3 tools/jini.py status-pack packs/research-prd/examples/research-prd-v1
+jini status-pack packs/research-prd/examples/research-prd-v1
 ```
 
 Fastest install:

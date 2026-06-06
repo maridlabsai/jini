@@ -48,11 +48,11 @@ just for niche workflows. Most teams run this problem every week.
 Compile a meeting follow-up workflow from the benchmark context with:
 
 ```bash
-python3 tools/jini.py compile-pack meeting-followup \
+jini compile-pack meeting-followup \
   --work-unit-id my-meeting-followup \
   --title "Weekly Product Review Follow-up" \
   --purpose "Turn one meeting into decisions, owners, and explicit next steps" \
   --owner meeting-owner \
   --output /tmp/my-meeting-followup
-python3 tools/jini.py status-pack /tmp/my-meeting-followup
+jini status-pack /tmp/my-meeting-followup
 ```

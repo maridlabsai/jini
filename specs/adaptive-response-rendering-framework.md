@@ -85,15 +85,6 @@ work threads and artifacts, not graph terminology.
 
 Reference: https://github.com/langchain-ai/langgraph
 
-### Pydantic AI
-
-Pydantic AI is useful because it treats agent IO, tools, and validation as typed
-contracts. Jini should use the same principle: validate semantic envelopes and
-artifact envelopes before rendering. It should not treat free text as the only
-source of truth.
-
-Reference: https://ai.pydantic.dev/
-
 ### OpenHands
 
 OpenHands shows the value of an agent workspace that can run commands, inspect

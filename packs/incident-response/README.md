@@ -47,12 +47,12 @@ It broadens Jini into operations work without adding new kernel semantics.
 Compile an incident response plan from the benchmark context with:
 
 ```bash
-python3 tools/jini.py compile-pack incident-response \
+jini compile-pack incident-response \
   --work-unit-id my-incident-response \
   --title "Checkout Latency Incident" \
   --purpose "Stabilize the checkout path with explicit rollback and verification" \
   --owner incident-commander \
   --approver service-owner \
   --output /tmp/my-incident-response
-python3 tools/jini.py status-pack /tmp/my-incident-response
+jini status-pack /tmp/my-incident-response
 ```

@@ -22,12 +22,12 @@ publish bundles.
 ## Compile
 
 ```bash
-python3 tools/jini.py compile-pack vendor-selection \
+jini compile-pack vendor-selection \
   --work-unit-id my-vendor-selection \
   --title "Vendor Evaluation" \
   --purpose "Compare shortlisted vendors and prepare an approval-ready recommendation" \
   --owner procurement-lead \
   --approver finance-approver \
   --output /tmp/my-vendor-selection
-python3 tools/jini.py status-pack /tmp/my-vendor-selection
+jini status-pack /tmp/my-vendor-selection
 ```

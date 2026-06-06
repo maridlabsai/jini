@@ -138,15 +138,15 @@ That keeps the contract honest:
 The current surface is:
 
 ```bash
-python3 tools/jini.py bootstrap-home /tmp/jini-home --owner-name "Example Owner"
-python3 tools/jini.py append-memory /tmp/jini-home --line "Prefer local-first verification"
-python3 tools/jini.py dream-memory /tmp/jini-home
-python3 tools/jini.py list-tools /tmp/jini-home
-python3 tools/jini.py list-routines /tmp/jini-home
-python3 tools/jini.py run-routine /tmp/jini-home daily-brief --mode local
-python3 tools/jini.py run-routine /tmp/jini-home golden-benchmark --mode local
-python3 tools/jini.py run-routine /tmp/jini-home framework-review --mode local
-python3 tools/jini.py run-routine /tmp/jini-home weekly-planning --mode remote
+jini bootstrap-home /tmp/jini-home --owner-name "Example Owner"
+jini append-memory /tmp/jini-home --line "Prefer local-first verification"
+jini dream-memory /tmp/jini-home
+jini list-tools /tmp/jini-home
+jini list-routines /tmp/jini-home
+jini run-routine /tmp/jini-home daily-brief --mode local
+jini run-routine /tmp/jini-home golden-benchmark --mode local
+jini run-routine /tmp/jini-home framework-review --mode local
+jini run-routine /tmp/jini-home weekly-planning --mode remote
 ```
 
 ## Why This Layer Exists

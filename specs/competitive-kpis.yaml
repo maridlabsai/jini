@@ -56,8 +56,8 @@ dimensions:
       - Lifecycle and export regressions are blocked by one-command tests.
       - Protocol flow is understandable without reading internal YAML first.
     implemented_assets:
-      - tests/test_jini_cli.py
-      - tools/jini_validate.py
+      - internal/app/app_test.go
+      - cmd/jini
       - README.md
 
   - id: delivery-maturity
@@ -87,8 +87,8 @@ dimensions:
       - CLI guidance points to concrete files or commands instead of generic next states.
       - Time to first useful output is materially closer to Kiro and Aider.
     implemented_assets:
-      - tools/jini_validate.py
-      - tests/test_jini_cli.py
+      - cmd/jini
+      - internal/app/app_test.go
       - packs/budget-cycle
       - specs/personal-os.md
       - README.md
@@ -126,8 +126,8 @@ dimensions:
       - distribution/install-manifest.yaml
       - specs/install-packaging.md
       - specs/golden-competitive-benchmark.yaml
-      - tools/jini_validate.py
-      - tests/test_jini_cli.py
+      - cmd/jini
+      - internal/app/app_test.go
 
   - id: memory-reliability
     label: Memory reliability
@@ -152,8 +152,8 @@ dimensions:
       - Retrieval surfaces are precise enough to affect execution and verification automatically.
       - Memory lookups are grounded in canonical state instead of free-form chat history.
     implemented_assets:
-      - tools/jini_validate.py
-      - tests/test_jini_cli.py
+      - cmd/jini
+      - internal/app/app_test.go
       - specs/learning-system.md
       - specs/personal-os.md
       - README.md
@@ -181,8 +181,8 @@ dimensions:
       - Runtime provenance and rollback survive adapter boundaries.
     implemented_assets:
       - distribution/adapter-registry.yaml
-      - tools/jini_validate.py
-      - tests/test_jini_cli.py
+      - cmd/jini
+      - internal/app/app_test.go
       - distribution/install-manifest.yaml
       - README.md
       - specs/golden-competitive-benchmark.yaml
@@ -211,8 +211,8 @@ dimensions:
       - Normal resumptions avoid full-context reloads.
       - Cost reductions come from architecture rather than weaker guardrails.
     implemented_assets:
-      - tools/jini_validate.py
-      - tests/test_jini_cli.py
+      - cmd/jini
+      - internal/app/app_test.go
       - README.md
       - specs/golden-competitive-benchmark.yaml
 
@@ -239,8 +239,8 @@ dimensions:
       - New capability ships mostly in advanced surfaces, not in kernel growth.
       - The advanced set is broad enough to feel universal while the kernel remains small.
     implemented_assets:
-      - tools/jini_validate.py
-      - tests/test_jini_cli.py
+      - cmd/jini
+      - internal/app/app_test.go
       - packs/travel-plan
       - packs/budget-cycle
       - packs/incident-response
@@ -274,8 +274,8 @@ dimensions:
       - Learning improves routing and framework evolution without mutating canonical semantics.
     implemented_assets:
       - specs/learning-system.md
-      - tools/jini_validate.py
-      - tests/test_jini_cli.py
+      - cmd/jini
+      - internal/app/app_test.go
       - distribution/adapter-registry.yaml
       - specs/learning-system.md
       - README.md

@@ -82,14 +82,14 @@ too complicated.
 
 ## Architect Verdict
 
-Python is not the best long-term core language for Jini if execution
-efficiency is the primary goal.
+Go is now the core language for Jini because execution efficiency, local
+reliability, and cross-platform packaging are primary product requirements.
 
 Decision:
 
-- keep Python as the compatibility shell and transition layer for now
-- move the execution kernel to Go
-- keep product semantics stable while replacing the runtime core underneath
+- keep the public CLI and execution kernel native Go
+- keep product semantics stable while expanding native command parity
+- treat missing advanced commands as explicit Go backlog, not fallback work
 
 Why Go:
 
@@ -97,7 +97,7 @@ Why Go:
 - easier static distribution
 - lower memory overhead
 - stronger concurrency for orchestration and probes
-- simpler cross-platform delivery than a Python-heavy runtime
+- simpler cross-platform delivery than an interpreted runtime
 - lower friction for offline device-class execution
 
 Why not a full Rust rewrite first:
@@ -240,14 +240,14 @@ Owns:
 - rate-limit and throttle avoidance
 - runtime health scoring
 
-### Layer 3: Python Compatibility Shell
+### Layer 3: Native Command Surface
 
-Owns during transition:
+Owns after cutover:
 
 - CLI surface preservation
-- compatibility aliases and migration shims
-- existing docs/test harness integration
-- gradual delegation to the Go core
+- compatibility aliases that are implemented in Go
+- docs and test harness integration
+- fail-fast handling for commands not yet ported natively
 
 ### Layer 4: Surface Adapters
 
@@ -422,7 +422,7 @@ Commercial:
 
 - implement Go session kernel
 - implement Go projection/resume/status engine
-- preserve current CLI semantics through Python shim
+- preserve current CLI semantics through native Go handlers and golden tests
 
 ### Phase 3: Offline-First Excellence
 

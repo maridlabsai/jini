@@ -116,7 +116,7 @@ These are good simplifications. They improve UX without weakening the system.
 - Replace file stems with human-readable output names.
 - Replace path-driven normal flow with remembered current work, as long as the current work is always visible and controllable.
 - Collapse multi-step beginner flows into one launcher flow if the underlying semantics still execute.
-- Move the public runtime from Python to a compiled binary while preserving work contracts.
+- Keep the public runtime as the native compiled binary while preserving work contracts.
 - Prefer deterministic local reads over expensive orchestration for `check` and `open`.
 - Show approvals, evidence gaps, and uncertainty in friendlier language instead of removing them.
 - Move capability growth into packs, adapters, and views instead of growing the kernel.
@@ -273,7 +273,7 @@ The rewrite should happen in this order:
 Do not skip ahead by:
 
 - rewriting work formats early
-- deleting Python before parity exists
+- deleting native parity checks before the replacement command exists
 - widening the public feature set before the fast read path is solid
 
 ## Exception Rule

@@ -597,64 +597,63 @@ They must not store:
 
 ## Module Design
 
-### Proposed Python Package Layout
+### Proposed Go Package Layout
 
 ```text
-tools/
-  jini.py
-  session_core.py
-  session_store.py
-  session_projection.py
-  session_events.py
-  session_sync.py
-  route_engine.py
-  route_evidence.py
-  surface_contract.py
+cmd/jini/
+  main.go
+internal/app/
+  app.go
+  thread.go
+  router.go
+  external_observation.go
+  provider.go
+  publish_readiness.go
 ```
 
 ### Module Responsibilities
 
-#### `session_core.py`
+#### `thread.go`
 
 - canonical session types
 - invariants
 - transition helpers
 
-#### `session_store.py`
+#### `app.go`
 
 - load/save session envelope
 - artifact path helpers
 - index maintenance
 
-#### `session_projection.py`
+#### `thread.go`
 
 - derive ready/missing/next
 - derive trust summary
 - derive cross-surface view state
 
-#### `session_events.py`
+#### `external_observation.go`
 
 - append/read events
 - event validation
 - replay helpers
 
-#### `session_sync.py`
+#### `thread.go`
 
 - sync metadata
 - merge logic
 - conflict modeling
 
-#### `route_engine.py`
+#### `router.go`
 
 - cheapest suitable route logic
 - continuation reuse scorer
 
-#### `route_evidence.py`
+#### `provider.go`
 
 - serialize route decisions
 - build user-facing evidence summaries
 
-#### `surface_contract.py`
+#### `app.go`
 
 - shared shape that CLI, desktop, and mobile adapters must satisfy
 
@@ -779,10 +778,10 @@ cheaper than restart.
 
 Only these new modules should be introduced first:
 
-- `tools/session_core.py`
-- `tools/session_store.py`
-- `tools/session_projection.py`
-- `tools/session_events.py`
+- `internal/app/thread.go`
+- `internal/app/app.go`
+- `internal/app/router.go`
+- `internal/app/external_observation.go`
 
 The first slice should reuse the current routing surface and artifact rendering
 where possible instead of rebuilding everything at once.

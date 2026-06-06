@@ -464,9 +464,10 @@ Why:
 - strong local filesystem and process model
 - easy static distribution
 - simpler than Rust for this product stage
-- better final posture than keeping Python public
+- better final posture than keeping an interpreted public runtime
 
-Python should remain a migration oracle, not the final public runtime.
+The runtime cutover is complete: public CLI behavior must be native Go, and
+future parity work must be implemented as Go tests and Go command handlers.
 
 ## Rewrite Principles
 
@@ -484,7 +485,7 @@ Python should remain a migration oracle, not the final public runtime.
 
 - create golden fixtures for work directories, manifests, receipts, and exports
 - create golden snapshots for public CLI outputs
-- add dual-runtime diff tests against Python for selected scenarios
+- add native Go golden-output tests for selected scenarios
 
 ### Wave 1: Port the Fast Read Path
 
@@ -498,7 +499,8 @@ Python should remain a migration oracle, not the final public runtime.
 
 - package and ship a real binary CLI
 - keep only the public command surface in the shell
-- allow Python fallback for unported advanced commands
+- remove fallback for unported advanced commands; unsupported commands fail fast
+  until they are ported natively
 
 ### Wave 3: Port the Run Loop
 
@@ -524,8 +526,8 @@ These must remain operationally strong, but out of the beginner path.
 
 ### Wave 6: Cutover
 
-- Python becomes compatibility oracle only
-- remove Python from the public runtime story
+- remove the compatibility runtime from the public runtime story
+- keep future parity checks native Go-only
 
 ## Keep / Hide / Delete
 
@@ -549,7 +551,7 @@ These must remain operationally strong, but out of the beginner path.
 
 ### Delete
 
-- Python-first public install story
+- interpreted-runtime public install story
 - editable install as the primary product path
 - giant monolithic public argparse surface
 - duplicate public verbs as first-class product concepts

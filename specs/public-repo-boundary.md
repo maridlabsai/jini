@@ -60,8 +60,8 @@ The distinction is:
 
 This boundary is enforced by:
 
-- `python3 tools/jini.py validate-public-boundary --format json`
-- `python3 tools/jini.py publish-readiness --format json`
+- `jini validate-public-boundary --format json`
+- `jini publish-readiness --format json`
 
 Any new internal business or review material should be written in the private
 commercial repo first, not migrated out later.
