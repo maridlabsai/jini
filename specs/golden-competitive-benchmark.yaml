@@ -739,10 +739,18 @@ scenarios:
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
         contains: "specs/local-model-support-matrix.md#registry-contract"
+      - id: publish-readiness-local-model-promotion-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/local-model-support-matrix.md#promotion-loop"
       - id: publish-readiness-offline-update-policy-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
         contains: "specs/platform-offline-strategy.md#future-update-policy"
+      - id: publish-readiness-adapter-regression-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/adapter-benchmark-gate.md#routing-use"
       - id: publish-readiness-pack-count
         command: ["publish-readiness", "--format", "json"]
         path: "pack_count"

@@ -170,3 +170,27 @@ func TestPublishReadinessIncludesOfflineRegressionGuardrails(t *testing.T) {
 		}
 	}
 }
+
+func TestGoldenBenchmarkCoversOfflineRegressionReadinessChecks(t *testing.T) {
+	root := discoverSourceRoot()
+	if root == "" {
+		t.Fatal("expected source root for golden benchmark coverage test")
+	}
+	benchmark, err := os.ReadFile(filepath.Join(root, "specs", "golden-competitive-benchmark.yaml"))
+	if err != nil {
+		t.Fatalf("read golden benchmark: %v", err)
+	}
+
+	section := buildPublishOfflineRegressionSection(root)
+	if section.Status != "ok" {
+		t.Fatalf("expected offline-regression section to be ok, got %#v", section)
+	}
+	for _, check := range section.Checks {
+		if check.Path == "source checkout" {
+			continue
+		}
+		if !strings.Contains(string(benchmark), `contains: "`+check.Path+`"`) {
+			t.Fatalf("golden benchmark does not cover offline-regression readiness check %q", check.Path)
+		}
+	}
+}
