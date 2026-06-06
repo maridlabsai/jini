@@ -306,24 +306,29 @@ description: Free orchestration for AI work across providers today. Pay only whe
     </tr>
     <tr>
       <th scope="row">Forecast provider limits before they hit</th>
-      <td>Not included</td>
-      <td>Planned</td>
+      <td>Basic route health visibility</td>
+      <td>Throttle Radar and preemptive warning</td>
     </tr>
     <tr>
       <th scope="row">Avoid throttles with automatic fallback</th>
-      <td>Not included</td>
-      <td>Planned</td>
+      <td>Manual route switch and manual resume</td>
+      <td>Route Autopilot across configured tools, CLIs, providers, and local models</td>
     </tr>
     <tr>
       <th scope="row">Resume automatically after interruptions</th>
       <td>Manual today</td>
-      <td>Planned</td>
+      <td>Auto Resume with managed session recovery</td>
+    </tr>
+    <tr>
+      <th scope="row">Prove savings over time</th>
+      <td>Inspectable route evidence</td>
+      <td>Token Savings Ledger tied to renewal proof</td>
     </tr>
   </tbody>
 </table>
 </div>
 
-<p class="editorial-note economics-note">Free Jini should already be enough to start, finish, and resume serious work. The paid layer should only exist to save money or keep work moving when providers become the bottleneck.</p>
+<p class="editorial-note economics-note">Free Jini should already be enough to start, finish, self-monitor throttles, switch routes manually, and resume serious work. The paid layer should only exist when Jini can run the optimization loop automatically and prove savings, preserved headroom, or recovered sessions.</p>
 <p class="editorial-note closing-source-note">The homepage status block is fed from <code>docs/_data/public_surfaces.json</code>, a sanitized snapshot built from the commercial release packets.</p>
 </div>
 

@@ -43,6 +43,8 @@ quick_links:
   <p>Use the free shell when you want one stable place to run and resume work. Expect desktop and mobile apps to be free downloads when each surface is actually live. Start with the planned 30-day free trial of the commercial optimizer and pay only if Jini can prove that it saved money or prevented stalled work.</p>
 </div>
 
+<p><strong>Manual proof stays free. Autopilot is paid.</strong> Free Jini should let users see route health, inspect token-saving structure, switch configured routes manually, and resume saved work. The paid optimizer should predict limits, choose among configured tools, CLIs, providers, and local models, recover from throttles, and keep the same session moving across devices without manual babysitting.</p>
+
 <p>Upgrade when provider limits, throttles, or expensive routes are a real operating problem and you want Jini to keep work moving automatically instead of forcing manual babysitting. The paywall prompt should appear before downgrade, not after the account is already squeezed into constrained free mode.</p>
 </div>
 
@@ -82,23 +84,23 @@ quick_links:
     </tr>
     <tr>
       <th scope="row">Predict provider limits before they block work</th>
-      <td>Not included</td>
-      <td>Included after the planned 30-day free trial when checkout is live</td>
+      <td>Basic route health visibility</td>
+      <td>Throttle Radar after the planned 30-day free trial when checkout is live</td>
     </tr>
     <tr>
       <th scope="row">Avoid throttles automatically</th>
-      <td>Not included</td>
-      <td>Included after the planned 30-day free trial when checkout is live</td>
+      <td>Manual route switch and manual resume</td>
+      <td>Route Autopilot after the planned 30-day free trial when checkout is live</td>
     </tr>
     <tr>
       <th scope="row">Fall back and resume automatically</th>
       <td>Not included</td>
-      <td>Included after the planned 30-day free trial when checkout is live</td>
+      <td>Auto Resume after the planned 30-day free trial when checkout is live</td>
     </tr>
     <tr>
       <th scope="row">Measured savings and continuity proof</th>
       <td>Basic route evidence</td>
-      <td>Included after the planned 30-day free trial when checkout is live</td>
+      <td>Token Savings Ledger after the planned 30-day free trial when checkout is live</td>
     </tr>
   </tbody>
 </table>
@@ -123,6 +125,12 @@ quick_links:
 <p>If the paid layer is worth keeping, it should show evidence that the free shell alone could not provide:</p>
 
 <ul>
+  <li>Token Savings Ledger</li>
+  <li>Throttle Radar</li>
+  <li>Route Autopilot</li>
+  <li>Auto Resume</li>
+  <li>Cross-Platform Session Graph</li>
+  <li>Managed Skill OS</li>
   <li>month-to-date token savings</li>
   <li>provider headroom preserved</li>
   <li>throttles avoided</li>

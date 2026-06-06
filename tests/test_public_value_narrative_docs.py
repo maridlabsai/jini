@@ -29,6 +29,10 @@ class PublicValueNarrativeDocsTests(unittest.TestCase):
             "Add the paid optimizer only when the proof can be measured.",
             "planned 30-day free trial",
             "The free shell should already be enough to finish serious work.",
+            "Basic route health visibility",
+            "Route Autopilot across configured tools, CLIs, providers, and local models",
+            "Token Savings Ledger tied to renewal proof",
+            "self-monitor throttles, switch routes manually, and resume serious work",
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
@@ -42,6 +46,15 @@ class PublicValueNarrativeDocsTests(unittest.TestCase):
             "paywall prompt should appear before downgrade",
             "## Free shell vs paid optimizer",
             "when the proof can be shown before payment, not explained after payment",
+            "Manual proof stays free. Autopilot is paid.",
+            "switch configured routes manually",
+            "choose among configured tools, CLIs, providers, and local models",
+            "Token Savings Ledger",
+            "Throttle Radar",
+            "Route Autopilot",
+            "Auto Resume",
+            "Cross-Platform Session Graph",
+            "Managed Skill OS",
             "Do not charge for the shell.",
             "Do not charge for app downloads.",
             "Charge only for the cost-saver and continuity layer that proves its value at runtime.",

@@ -140,6 +140,35 @@ That means:
 The free tier must not be a fake evaluation shell that becomes useless without
 hosted spend.
 
+## Adoption And Monetization Boundary
+
+Jini's adoption wedge is a useful manual shell, not a weak trial.
+
+The free product should prove the value:
+
+- free is manual proof and control
+- paid is autonomous optimization and managed continuity
+- free users can see basic throttle and route health visibility
+- free users can switch among configured tools, CLIs, providers, and local
+  models manually
+- free users can resume from saved state manually without transcript replay
+- free users can inspect route evidence and structural token savings
+
+The commercial product should operate the control plane:
+
+- paid predicts provider limits before they interrupt work
+- paid changes route, tool, model, or local profile before the user has to
+  intervene
+- paid recovers from throttles, failed routes, and interrupted sessions
+  automatically
+- paid carries session continuity across CLI, desktop, and mobile with managed
+  sync and reconciliation
+- paid learns routing, compression, and workflow policies from use while
+  preserving user control and export
+
+Commercial value is not a feature count. It must be measurable through savings,
+headroom, recovery, and continuity proof.
+
 ## Open Version Value Proposition
 
 The open version should be valuable even if a user never pays Jini.
@@ -152,6 +181,7 @@ The open version should give users:
 - artifact-first continuation
 - compact resume and status views
 - checkpoints, projections, and visible route proof
+- basic throttle and route health visibility
 - offline-first continuation when the device can keep working locally
 - explicit offline mode and reconciliation-debt visibility
 - reuse of locally attached context imported from Claude Code, Codex, or
@@ -208,6 +238,12 @@ The product should never depend on a weak free tier to force conversion.
 
 The commercial layer may monetize:
 
+- Token Savings Ledger
+- Throttle Radar
+- Route Autopilot
+- Auto Resume
+- Cross-Platform Session Graph
+- Managed Skill OS
 - provider-specific optimization
 - learned routing and compression policy
 - subscription-limit forecasting
