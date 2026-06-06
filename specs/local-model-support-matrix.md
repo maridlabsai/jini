@@ -27,6 +27,16 @@ The product goal is not to chase model brands.
 The product goal is to keep one stable Jini route contract while the underlying
 local model pool improves.
 
+This document is a specialized local-routing and platform-support matrix, not
+the top-precedence product and operating PRD.
+
+The canonical product and operating PRD lives in
+[number-one-platform-prd.md](./number-one-platform-prd.md).
+
+If this document conflicts with the canonical PRD on priorities, form-factor
+commitments, automation posture, or route policy, the canonical PRD wins and
+this matrix should be updated.
+
 ## Product Rule
 
 Jini should bind product behavior to stable local profile roles, not to one

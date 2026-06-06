@@ -1,6 +1,6 @@
 # Client Surfaces And Free Tier
 
-Updated: 2026-05-19
+Updated: 2026-06-05
 
 ## Purpose
 
@@ -14,6 +14,16 @@ It also defines the public free-tier rule and the public boundary between
 free-core product access and commercial hosted value.
 
 This is a public product contract, not a pricing memo.
+
+This document is a specialized public-surface contract, not the top-precedence
+product and operating PRD.
+
+The canonical product and operating PRD lives in
+[number-one-platform-prd.md](./number-one-platform-prd.md).
+
+If this document conflicts with the canonical PRD on tenets, priorities,
+requirements, roadmap order, or operating posture, the canonical PRD wins and
+this document should be reconciled.
 
 ## Product Rule
 

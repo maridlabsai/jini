@@ -1,6 +1,16 @@
 # Number One Development Plan
 
-Updated: 2026-05-27
+Updated: 2026-06-05
+
+This document is a supporting development plan, not the top-precedence product
+and operating PRD.
+
+The canonical product and operating PRD lives in
+[number-one-platform-prd.md](./number-one-platform-prd.md).
+
+If this development plan conflicts with the canonical PRD on priorities,
+requirements, roadmap order, automation posture, or app-shipping order, the
+canonical PRD wins and this plan should be updated before execution continues.
 
 ## Goal
 
