@@ -373,6 +373,9 @@ func semanticTrustState(summary *workSummary) string {
 }
 
 func renderRiskLevel(envelope semanticEnvelope) string {
+	if unsafeAutoModeApprovalPolicy(envelope.RouteSummary.AutoMode) {
+		return "medium"
+	}
 	if envelope.ConfirmationRequired || len(envelope.Missing) > 0 {
 		return "medium"
 	}
@@ -380,11 +383,21 @@ func renderRiskLevel(envelope semanticEnvelope) string {
 }
 
 func routeVisibility(envelope semanticEnvelope) string {
+	if unsafeAutoModeApprovalPolicy(envelope.RouteSummary.AutoMode) {
+		return "expanded"
+	}
 	label := strings.ToLower(envelope.RouteSummary.Label + " " + envelope.RouteSummary.Reason)
 	if strings.Contains(label, "fallback") || strings.Contains(label, "degraded") {
 		return "expanded"
 	}
 	return "compact"
+}
+
+func unsafeAutoModeApprovalPolicy(policy *autoModePolicy) bool {
+	if policy == nil || !autoModePolicyEnabled(*policy) {
+		return false
+	}
+	return !strings.EqualFold(strings.TrimSpace(policy.UserApprovalMode), "approval-gated")
 }
 
 func renderActionsForMode(mode string) []string {

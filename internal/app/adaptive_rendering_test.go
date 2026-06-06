@@ -54,6 +54,12 @@ func TestProjectSemanticEnvelopeForMeetingFollowupKeepsProfileTruth(t *testing.T
 
 func TestRenderPolicyForMeetingFirstResultUsesCompactCLIWithoutChangingTruth(t *testing.T) {
 	summary := meetingSemanticTestSummary(t.TempDir())
+	summary.AutoMode = autoModePolicy{
+		FrameworkSwitching: "auto",
+		ModelSwitching:     "auto",
+		SpeedSwitching:     "auto",
+		UserApprovalMode:   "approval-gated",
+	}
 	envelope := threadProjector{}.Project(summary, nil, synthesizeThreadState(summary))
 
 	request := renderPolicy{}.Select(envelope, "cli", "new")
@@ -78,8 +84,34 @@ func TestRenderPolicyForMeetingFirstResultUsesCompactCLIWithoutChangingTruth(t *
 	if request.RouteVisibility != "compact" {
 		t.Fatalf("expected compact route visibility, got %q", request.RouteVisibility)
 	}
+	if envelope.RouteSummary.AutoMode == nil {
+		t.Fatalf("expected safe auto-mode policy to stay available in route summary")
+	}
 	if envelope.Artifacts[0].Title != "Sendable Follow-up" {
 		t.Fatalf("render policy changed artifact truth: %#v", envelope.Artifacts)
+	}
+}
+
+func TestRenderPolicyExpandsUnsafeAutoModeApprovalPolicy(t *testing.T) {
+	summary := meetingSemanticTestSummary(t.TempDir())
+	summary.AutoMode = autoModePolicy{
+		FrameworkSwitching: "auto",
+		ModelSwitching:     "auto",
+		SpeedSwitching:     "auto",
+		UserApprovalMode:   "ungated",
+	}
+
+	envelope := threadProjector{}.Project(summary, nil, synthesizeThreadState(summary))
+	request := renderPolicy{}.Select(envelope, "mobile", "returning")
+
+	if envelope.RouteSummary.AutoMode == nil {
+		t.Fatalf("expected semantic route summary to preserve auto-mode policy")
+	}
+	if request.RouteVisibility != "expanded" {
+		t.Fatalf("expected unsafe auto-mode approval policy to expand route visibility, got %q", request.RouteVisibility)
+	}
+	if request.RiskLevel != "medium" {
+		t.Fatalf("expected unsafe auto-mode approval policy to raise render risk, got %q", request.RiskLevel)
 	}
 }
 
