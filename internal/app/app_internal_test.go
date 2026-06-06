@@ -214,6 +214,8 @@ func TestPublishReadinessTextIncludesGuardrailCheckDetails(t *testing.T) {
 		"    OK specs/app-platform-shipping-playbook.md#source-backed-inputs",
 		"  OFFLINE-REGRESSION ok",
 		"    OK specs/local-model-support-matrix.md#promotion-loop",
+		"  COMPETITIVE-PRESSURE ok",
+		"    OK specs/competitive-release-plan.md#requirement-rejection-filter",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected publish-readiness text to contain %q, got:\n%s", want, out)
@@ -308,6 +310,47 @@ func TestPublishReadinessIncludesAppPlatformShippingGuardrails(t *testing.T) {
 	}
 }
 
+func TestPublishReadinessIncludesCompetitivePressureGuardrails(t *testing.T) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := Run([]string{"publish-readiness", "--format=json"}, &stdout, &stderr)
+	if exitCode != 0 {
+		t.Fatalf("expected publish-readiness to pass, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+
+	var report publishReadinessReport
+	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil {
+		t.Fatalf("decode publish-readiness JSON: %v\n%s", err, stdout.String())
+	}
+	required := map[string]bool{
+		"specs/competitive-release-plan.md#competitive-universe":         false,
+		"specs/competitive-release-plan.md#requirement-rejection-filter": false,
+		"specs/number-one-platform-prd.md#competitive-release-pressure":  false,
+	}
+	for _, section := range report.Sections {
+		if section.ID != "competitive-pressure" {
+			continue
+		}
+		if section.Status != "ok" {
+			t.Fatalf("expected competitive-pressure section to be ok, got %#v", section)
+		}
+		for _, check := range section.Checks {
+			if _, ok := required[check.Path]; !ok {
+				continue
+			}
+			if !check.Exists || check.Status != "ok" {
+				t.Fatalf("expected competitive-pressure check to be ok, got %#v", check)
+			}
+			required[check.Path] = true
+		}
+	}
+	for path, found := range required {
+		if !found {
+			t.Fatalf("missing competitive-pressure check: %s\nreport: %#v", path, report.Sections)
+		}
+	}
+}
+
 func TestGoldenBenchmarkCoversOfflineRegressionReadinessChecks(t *testing.T) {
 	root := discoverSourceRoot()
 	if root == "" {
@@ -328,6 +371,30 @@ func TestGoldenBenchmarkCoversOfflineRegressionReadinessChecks(t *testing.T) {
 		}
 		if !strings.Contains(string(benchmark), `contains: "`+check.Path+`"`) {
 			t.Fatalf("golden benchmark does not cover offline-regression readiness check %q", check.Path)
+		}
+	}
+}
+
+func TestGoldenBenchmarkCoversCompetitivePressureReadinessChecks(t *testing.T) {
+	root := discoverSourceRoot()
+	if root == "" {
+		t.Fatal("expected source root for golden benchmark coverage test")
+	}
+	benchmark, err := os.ReadFile(filepath.Join(root, "specs", "golden-competitive-benchmark.yaml"))
+	if err != nil {
+		t.Fatalf("read golden benchmark: %v", err)
+	}
+
+	section := buildPublishCompetitivePressureSection(root)
+	if section.Status != "ok" {
+		t.Fatalf("expected competitive-pressure section to be ok, got %#v", section)
+	}
+	for _, check := range section.Checks {
+		if check.Path == "source checkout" {
+			continue
+		}
+		if !strings.Contains(string(benchmark), `contains: "`+check.Path+`"`) {
+			t.Fatalf("golden benchmark does not cover competitive-pressure readiness check %q", check.Path)
 		}
 	}
 }

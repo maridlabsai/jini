@@ -766,6 +766,10 @@ scenarios:
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
         contains: "app-platform"
+      - id: publish-readiness-competitive-pressure-section-present
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "competitive-pressure"
       - id: publish-readiness-app-platform-stack-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
@@ -810,6 +814,18 @@ scenarios:
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
         contains: "specs/adapter-benchmark-gate.md#routing-use"
+      - id: publish-readiness-competitive-universe-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/competitive-release-plan.md#competitive-universe"
+      - id: publish-readiness-requirement-rejection-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/competitive-release-plan.md#requirement-rejection-filter"
+      - id: publish-readiness-canonical-competitive-pressure-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/number-one-platform-prd.md#competitive-release-pressure"
       - id: publish-readiness-pack-count
         command: ["publish-readiness", "--format", "json"]
         path: "pack_count"

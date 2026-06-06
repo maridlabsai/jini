@@ -91,6 +91,7 @@ func buildPublishReadinessReport(root string) publishReadinessReport {
 		buildPublishDocsSection(root),
 		buildPublishAppPlatformSection(root),
 		buildPublishOfflineRegressionSection(root),
+		buildPublishCompetitivePressureSection(root),
 		buildPublishRuntimeSection(root),
 	}
 	status := "ok"
@@ -322,6 +323,60 @@ func buildPublishOfflineRegressionSection(root string) publishReadinessSection {
 	return publishReadinessSection{
 		ID:     "offline-regression",
 		Label:  "Offline model regression guardrails",
+		Status: status,
+		Checks: checks,
+	}
+}
+
+func buildPublishCompetitivePressureSection(root string) publishReadinessSection {
+	if root == "" {
+		return publishReadinessSection{
+			ID:     "competitive-pressure",
+			Label:  "Competitive release pressure guardrails",
+			Status: "ok",
+			Checks: []publishReadinessCheck{{
+				Path:   "source checkout",
+				Exists: false,
+				Status: "not-required-for-installed-binary",
+			}},
+		}
+	}
+
+	required := []publishFragmentRequirement{
+		{
+			checkPath: "specs/competitive-release-plan.md#competitive-universe",
+			filePath:  "specs/competitive-release-plan.md",
+			fragments: []string{
+				"## Competitive Universe",
+				"Direct Replacement Threats",
+				"Local And Offline Front Doors",
+				"Routing And Gateway Infrastructure",
+			},
+		},
+		{
+			checkPath: "specs/competitive-release-plan.md#requirement-rejection-filter",
+			filePath:  "specs/competitive-release-plan.md",
+			fragments: []string{
+				"## Requirement Rejection Filter",
+				"adopt, integrate, watch, reject, or delete",
+				"delete: remove an existing Jini requirement",
+			},
+		},
+		{
+			checkPath: "specs/number-one-platform-prd.md#competitive-release-pressure",
+			filePath:  "specs/number-one-platform-prd.md",
+			fragments: []string{
+				"#### P0.10 Competitive release pressure",
+				"reject, downgrade, or delete requirements",
+				"copy, integrate, watch, reject, delete",
+			},
+		},
+	}
+
+	checks, status := buildFragmentChecks(root, required)
+	return publishReadinessSection{
+		ID:     "competitive-pressure",
+		Label:  "Competitive release pressure guardrails",
 		Status: status,
 		Checks: checks,
 	}
