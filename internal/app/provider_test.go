@@ -2353,6 +2353,22 @@ func TestBootstrapStarterWorkPersistsChosenRouteForCurrentWork(t *testing.T) {
 	if summary.VerificationLevel != "Single pass" {
 		t.Fatalf("expected saved verification level in summary, got %#v", summary)
 	}
+
+	routeSaved, err := os.ReadFile(filepath.Join(summary.Dir, "route.json"))
+	if err != nil {
+		t.Fatalf("expected saved route file: %v", err)
+	}
+	for _, want := range []string{
+		`"auto_mode": {`,
+		`"framework_switching": "auto"`,
+		`"model_switching": "auto"`,
+		`"speed_switching": "auto"`,
+		`"user_approval_mode": "approval-gated"`,
+	} {
+		if !strings.Contains(string(routeSaved), want) {
+			t.Fatalf("expected route auto mode receipt to contain %q, got:\n%s", want, string(routeSaved))
+		}
+	}
 }
 
 func TestInteractiveLauncherShowsDecisionCardBeforeFirstDraft(t *testing.T) {

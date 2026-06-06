@@ -858,6 +858,7 @@ func TestProviderDoctorShowsAutoToolDecision(t *testing.T) {
 		"AUTO_ROUTE: Auto mode chose Claude Code because this looks like general work, the request does not ask for deep review, so Jini favored the cheapest suitable route. It was the first ready route in this environment.",
 		"JINI_EFFORT: auto -> dynamic per request",
 		"AUTO_EFFORT: Jini judges effort separately for each request instead of pinning one level globally.",
+		"AUTO_MODE: frameworks=auto; models=auto; speed=auto; approvals=approval-gated",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)

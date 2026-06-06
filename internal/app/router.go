@@ -43,6 +43,7 @@ type routeDecision struct {
 	ToolLabel           string
 	RoutePolicy         string
 	FeedbackKey         string
+	AutoMode            autoModePolicy
 	ModelLabel          string
 	ModelReason         string
 	Provider            providerConfig
@@ -53,6 +54,13 @@ type routeDecision struct {
 	EffortReason        string
 	VerificationLevel   string
 	VerificationReason  string
+}
+
+type autoModePolicy struct {
+	FrameworkSwitching string `json:"framework_switching,omitempty"`
+	ModelSwitching     string `json:"model_switching,omitempty"`
+	SpeedSwitching     string `json:"speed_switching,omitempty"`
+	UserApprovalMode   string `json:"user_approval_mode,omitempty"`
 }
 
 func routeTargetForMode(mode string) (routeTarget, bool) {
@@ -127,11 +135,13 @@ func enrichRouteDecisionForRequest(request providerGenerationRequest, decision r
 	decision.EffortLevel, decision.EffortReason = classifyRequestEffort(request)
 	decision.VerificationLevel, decision.VerificationReason = classifyVerificationDecision(request, decision)
 	decision.RoutePolicy = routePolicyForDecision(decision)
+	decision.AutoMode = autoModePolicyForDecision(decision)
 	decision.FeedbackKey = routeFeedbackKeyForDecision(decision)
 	decision.Provider = withRoutePolicy(decision.Provider, decision.RoutePolicy)
 	decision.Provider = withRouteReason(decision.Provider, decision.Reason)
 	decision.Provider = withModelDecision(decision.Provider, decision.ModelLabel, decision.ModelReason)
 	decision.Provider = withEffortSetting(decision.Provider, decision.EffortLevel, decision.EffortReason)
+	decision.Provider = withAutoModeSetting(decision.Provider, decision.AutoMode)
 	return decision
 }
 
@@ -868,6 +878,32 @@ func routePolicyForDecision(decision routeDecision) string {
 	return "Locked by you"
 }
 
+func autoModePolicyForDecision(decision routeDecision) autoModePolicy {
+	if !decision.Active || !decision.ChosenAutomatically {
+		return autoModePolicy{}
+	}
+	return autoModePolicy{
+		FrameworkSwitching: "auto",
+		ModelSwitching:     "auto",
+		SpeedSwitching:     "auto",
+		UserApprovalMode:   "approval-gated",
+	}
+}
+
+func autoModePolicyEnabled(policy autoModePolicy) bool {
+	return strings.TrimSpace(policy.FrameworkSwitching) != "" ||
+		strings.TrimSpace(policy.ModelSwitching) != "" ||
+		strings.TrimSpace(policy.SpeedSwitching) != "" ||
+		strings.TrimSpace(policy.UserApprovalMode) != ""
+}
+
+func autoModePolicyPointer(policy autoModePolicy) *autoModePolicy {
+	if !autoModePolicyEnabled(policy) {
+		return nil
+	}
+	return &policy
+}
+
 func withToolSetting(provider providerConfig, toolMode, toolLabel string, auto bool) providerConfig {
 	line := ""
 	switch {
@@ -885,6 +921,20 @@ func withToolSetting(provider providerConfig, toolMode, toolLabel string, auto b
 		}
 	}
 	provider.Settings = append([]string{line}, provider.Settings...)
+	return provider
+}
+
+func withAutoModeSetting(provider providerConfig, policy autoModePolicy) providerConfig {
+	if !autoModePolicyEnabled(policy) {
+		return provider
+	}
+	line := "AUTO_MODE: frameworks=" + policy.FrameworkSwitching + "; models=" + policy.ModelSwitching + "; speed=" + policy.SpeedSwitching + "; approvals=" + policy.UserApprovalMode
+	for _, existing := range provider.Settings {
+		if strings.HasPrefix(existing, "AUTO_MODE:") {
+			return provider
+		}
+	}
+	provider.Settings = append(provider.Settings, line)
 	return provider
 }
 
@@ -1074,35 +1124,36 @@ func modelReasonForToolMode(toolMode string) string {
 }
 
 type savedWorkRoute struct {
-	SchemaVersion                string `json:"schema_version"`
-	ContextType                  string `json:"context_type"`
-	ToolMode                     string `json:"tool_mode"`
-	ToolLabel                    string `json:"tool_label"`
-	RoutePolicy                  string `json:"route_policy"`
-	FeedbackKey                  string `json:"feedback_key,omitempty"`
-	ModelLabel                   string `json:"model_label"`
-	ModelReason                  string `json:"model_reason"`
-	ProviderLabel                string `json:"provider_label"`
-	ChosenAutomatically          bool   `json:"chosen_automatically"`
-	Reason                       string `json:"reason"`
-	ContinuityReason             string `json:"continuity_reason,omitempty"`
-	EffortLevel                  string `json:"effort_level"`
-	EffortReason                 string `json:"effort_reason"`
-	VerificationLevel            string `json:"verification_level,omitempty"`
-	VerificationReason           string `json:"verification_reason,omitempty"`
-	ModelFeedback                string `json:"model_feedback,omitempty"`
-	ArtifactFeedbackPath         string `json:"artifact_feedback_path,omitempty"`
-	ArtifactFeedbackReason       string `json:"artifact_feedback_reason,omitempty"`
-	ArtifactEditClass            string `json:"artifact_edit_class,omitempty"`
-	ArtifactEditScope            string `json:"artifact_edit_scope,omitempty"`
-	ArtifactSemanticClass        string `json:"artifact_semantic_class,omitempty"`
-	ArtifactOutcomeSignal        string `json:"artifact_outcome_signal,omitempty"`
-	ArtifactOutcomeReason        string `json:"artifact_outcome_reason,omitempty"`
-	PassiveArtifactOutcomeSignal string `json:"passive_artifact_outcome_signal,omitempty"`
-	PassiveArtifactOutcomeReason string `json:"passive_artifact_outcome_reason,omitempty"`
-	PreviousToolMode             string `json:"previous_tool_mode,omitempty"`
-	RouteSwitchCount             int    `json:"route_switch_count,omitempty"`
-	LastRouteSwitchReason        string `json:"last_route_switch_reason,omitempty"`
+	SchemaVersion                string          `json:"schema_version"`
+	ContextType                  string          `json:"context_type"`
+	ToolMode                     string          `json:"tool_mode"`
+	ToolLabel                    string          `json:"tool_label"`
+	RoutePolicy                  string          `json:"route_policy"`
+	AutoMode                     *autoModePolicy `json:"auto_mode,omitempty"`
+	FeedbackKey                  string          `json:"feedback_key,omitempty"`
+	ModelLabel                   string          `json:"model_label"`
+	ModelReason                  string          `json:"model_reason"`
+	ProviderLabel                string          `json:"provider_label"`
+	ChosenAutomatically          bool            `json:"chosen_automatically"`
+	Reason                       string          `json:"reason"`
+	ContinuityReason             string          `json:"continuity_reason,omitempty"`
+	EffortLevel                  string          `json:"effort_level"`
+	EffortReason                 string          `json:"effort_reason"`
+	VerificationLevel            string          `json:"verification_level,omitempty"`
+	VerificationReason           string          `json:"verification_reason,omitempty"`
+	ModelFeedback                string          `json:"model_feedback,omitempty"`
+	ArtifactFeedbackPath         string          `json:"artifact_feedback_path,omitempty"`
+	ArtifactFeedbackReason       string          `json:"artifact_feedback_reason,omitempty"`
+	ArtifactEditClass            string          `json:"artifact_edit_class,omitempty"`
+	ArtifactEditScope            string          `json:"artifact_edit_scope,omitempty"`
+	ArtifactSemanticClass        string          `json:"artifact_semantic_class,omitempty"`
+	ArtifactOutcomeSignal        string          `json:"artifact_outcome_signal,omitempty"`
+	ArtifactOutcomeReason        string          `json:"artifact_outcome_reason,omitempty"`
+	PassiveArtifactOutcomeSignal string          `json:"passive_artifact_outcome_signal,omitempty"`
+	PassiveArtifactOutcomeReason string          `json:"passive_artifact_outcome_reason,omitempty"`
+	PreviousToolMode             string          `json:"previous_tool_mode,omitempty"`
+	RouteSwitchCount             int             `json:"route_switch_count,omitempty"`
+	LastRouteSwitchReason        string          `json:"last_route_switch_reason,omitempty"`
 }
 
 type artifactFeedbackBaseline struct {
@@ -1149,6 +1200,7 @@ func saveWorkRoute(workDir string, request providerGenerationRequest, decision r
 		ToolMode:                     decision.ToolMode,
 		ToolLabel:                    decision.ToolLabel,
 		RoutePolicy:                  decision.RoutePolicy,
+		AutoMode:                     autoModePolicyPointer(decision.AutoMode),
 		FeedbackKey:                  firstNonEmpty(strings.TrimSpace(decision.FeedbackKey), routeFeedbackKeyForDecision(decision)),
 		ModelLabel:                   decision.ModelLabel,
 		ModelReason:                  decision.ModelReason,
