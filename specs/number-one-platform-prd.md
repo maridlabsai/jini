@@ -1,6 +1,6 @@
 # Number One Platform PRD
 
-Updated: 2026-05-27
+Updated: 2026-06-05
 
 The current execution contract for the next major product and architecture
 initiative lives in
@@ -119,6 +119,23 @@ The product should compound from environment learning, workflow learning,
 artifact reuse, and policy improvement so repeated work becomes cheaper over
 time.
 
+### 5a. Route context, do not dump it
+
+Jini should prefer a small routing layer over one giant monolithic instruction
+file.
+
+The system should load:
+
+- a small root context map
+- the relevant domain files
+- the relevant skills
+- the relevant metrics or evidence
+
+It should not load unrelated rules just because they exist.
+
+The context architecture must reduce token use and improve task relevance over
+time.
+
 ### 6. Apps are specialized views, not separate products
 
 CLI, desktop, and mobile should differ in strengths, not in identity, memory,
@@ -133,6 +150,14 @@ manual cleanup burden.
 
 Support, release, follow-up, roadmap intake, and model refresh should become
 first-class Jini loops, not side chores around the product.
+
+### 9. Disagreement beats fake certainty
+
+For high-impact decisions, Jini should prefer structured critic or debate loops
+over single-draft confidence theater.
+
+The product should support disagreement-driven improvement where that raises
+quality more than it raises noise.
 
 ## Core Product Thesis
 
@@ -180,6 +205,27 @@ Jini must learn stable features of the user's working environment:
 
 This learning must reduce future user input and improve automation decisions.
 
+### 2a. Context Architecture
+
+Jini must implement a summary-first context routing architecture.
+
+Minimum required layers:
+
+- root routing context
+- domain-specific knowledge files
+- workflow or skill files
+- evidence and metrics files
+- confirmed rules and hypotheses by domain
+
+The product must avoid growing one global context file until it becomes a token
+tax.
+
+The system should be able to explain:
+
+- which context files were loaded
+- why they were loaded
+- which likely-relevant files were intentionally skipped
+
 ### 3. Workflow Learning
 
 Jini must detect repeated patterns such as:
@@ -194,6 +240,14 @@ Jini must detect repeated patterns such as:
 Repeated flows should become reusable, inspectable automations with clear
 rollback and override rules.
 
+Jini must also support the operator pattern:
+
+1. do the task manually a few times
+2. identify the repeated structure
+3. extract the SOP and examples
+4. convert that pattern into an inspectable reusable automation
+5. learn from the outcomes of the automation over time
+
 ### 4. Self-Correction Engine
 
 Jini must correct itself when outcome quality or product contract drifts.
@@ -207,6 +261,8 @@ Required self-correction loops:
 - benchmark regression detection
 - cross-surface continuity failure detection
 - repeated workflow failure-pattern detection
+- confirmed-rule and hypothesis repair by domain
+- context-bloat detection and routing-table repair
 
 ### 5. Upstream Quality Automation
 
@@ -220,6 +276,26 @@ Examples:
 - stale assumptions before continuation
 - invalid environment before task execution
 - low-confidence route selection before expensive escalation
+- missing critic pass before high-stakes decisions
+
+### 5a. Decision Critic System
+
+Jini must support structured critic loops for decisions that are:
+
+- high-cost
+- high-risk
+- irreversible
+- strategy-shaping
+
+These loops should support:
+
+- adversarial review
+- disagreement between perspectives
+- moderator or synthesis step
+- explicit settlement criteria
+
+The product should not simulate committee theater for low-stakes work, but it
+should not pretend one draft is enough for important decisions.
 
 ### 6. CLI Contract
 
@@ -290,6 +366,34 @@ Jini must preserve trust by making decisions inspectable:
 - what action was taken
 - how to undo or override it
 
+### 11. Build, Buy, and Integrate Discipline
+
+Jini must decide deliberately when to:
+
+- build native capability
+- integrate an existing platform capability
+- wrap a platform-native local model or connector
+
+The default should not be "build everything ourselves."
+
+If a platform-native capability materially improves local privacy, latency,
+distribution, or user trust, Jini should prefer integrating it behind the same
+session and artifact contract.
+
+### 12. Economic Value Measurement
+
+Jini must judge improvements by economic and operator value, not just by model
+intelligence.
+
+Required evaluation dimensions include:
+
+- time saved
+- interruptions avoided
+- rework reduced
+- token or provider cost reduced
+- quality misses prevented
+- follow-through completed
+
 ## Prioritized Requirements
 
 ### P0: Company-Critical Requirements
@@ -309,39 +413,58 @@ considered successful.
 - repeated workflows become reusable automations
 - automations have explicit approval, rollback, and proof
 - human babysitting is not the default for known loops
+- manual SOPs and repeated examples must be convertible into automations
+- critic loops must exist for high-impact decisions and company-critical work
 
-#### P0.3 Local-first cost discipline
+#### P0.3 Context routing discipline
+
+- one giant instruction file is not the default operating shape
+- root routing context exists
+- domain rules, hypotheses, metrics, and procedures are separable
+- the system loads only relevant context for the task
+- context-bloat regression is visible and repairable
+
+#### P0.4 Local-first cost discipline
 
 - local SLM pool exists as a real frontline route
 - form-factor-aware local model support matrix exists
 - escalation to paid routes is explicit and justified
 
-#### P0.4 Development system automation
+#### P0.5 Development system automation
 
 - repo-aware environment learning
 - quality gates before handoff
 - missing-proof and missing-review detection
 - docs/help/runtime parity repair
 
-#### P0.5 Deployment and shipping system
+#### P0.6 Deployment and shipping system
 
 - idempotent release and rollback semantics
 - signed or attestable build and delivery pipeline where applicable
 - release receipts and deployment continuity
 - model/runtime update canaries before promotion
 
-#### P0.6 App-surface shipping contract
+#### P0.7 App-surface shipping contract
 
 - desktop and mobile are bound to the same work object as CLI
 - macOS and Windows desktop shipping is part of the committed product roadmap
 - mobile continuation, review, and approval are part of the committed roadmap
 
-#### P0.7 Ask-handling system
+#### P0.8 Ask-handling system
 
 - inbound asks must become triageable work objects
 - support, product asks, bug reports, and follow-up requests must feed one
   prioritized operating loop
 - recurring asks must train workflow compression and automation candidates
+
+#### P0.9 Build, buy, and platform leverage
+
+- platform-native capabilities should be adopted when they improve privacy,
+  latency, trust, or distribution
+- integrations must still resolve into one Jini session, route, and artifact
+  contract
+- local-model or connector adoption should be judged by measured value, not by
+  novelty
 
 ### P1: Scale and differentiation requirements
 
@@ -369,9 +492,10 @@ Roadmap:
 
 1. canonical session and artifact graph
 2. repo and environment learning
-3. repeated-task compression and reusable automations
-4. upstream quality automation before execution or handoff
-5. self-correction loops for docs, runtime, and benchmark drift
+3. root routing context and domain-context architecture
+4. repeated-task compression and reusable automations
+5. upstream quality automation before execution or handoff
+6. self-correction loops for docs, runtime, benchmark drift, and context bloat
 
 Exit condition:
 
@@ -442,7 +566,8 @@ Roadmap:
 2. classify asks by urgency, domain, and repeatability
 3. attach asks to canonical work objects and artifacts
 4. detect repeated asks and generate automation or workflow candidates
-5. keep visible backlog, proof, and follow-through state
+5. route asks through the correct domain knowledge and SOP surfaces
+6. keep visible backlog, proof, and follow-through state
 
 Exit condition:
 
@@ -462,7 +587,8 @@ Roadmap:
 2. run canary evaluations for successor local and managed routes
 3. promote only score-positive route changes
 4. keep user-facing product contracts stable while internal policies improve
-5. use monthly release trains for surface changes and faster policy cadence for
+5. update confirmed rules and hypotheses by domain as evidence accumulates
+6. use monthly release trains for surface changes and faster policy cadence for
    measured route improvements
 
 Exit condition:
@@ -498,6 +624,8 @@ Minimum required loops:
 - product intake and prioritization
 - bug and ask triage
 - roadmap maintenance
+- context routing maintenance
+- rule and hypothesis maintenance by domain
 - release preparation
 - release verification
 - model and runtime update review
