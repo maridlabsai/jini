@@ -3667,6 +3667,7 @@ def build_publish_readiness() -> dict[str, Any]:
         ROOT / "specs" / "learning-system.md",
         ROOT / "specs" / "install-packaging.md",
         ROOT / "specs" / "client-surfaces-and-free-tier.md",
+        ROOT / "specs" / "platform-offline-strategy.md",
         ROOT / "specs" / "adaptive-response-rendering-framework.md",
         ROOT / "specs" / "adaptive-response-rendering-framework-review.md",
         ROOT / "specs" / "adaptive-response-rendering-framework-gate.md",

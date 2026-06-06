@@ -8107,6 +8107,14 @@ class JiniCliConformanceTests(unittest.TestCase):
         self.assertGreaterEqual(report["pack_count"], 6)
         self.assertGreaterEqual(report["kit_count"], 6)
         self.assertTrue(any(section["id"] == "install" and section["status"] == "ok" for section in report["sections"]))
+        docs = next(section for section in report["sections"] if section["id"] == "docs")
+        self.assertEqual("ok", docs["status"])
+        self.assertTrue(
+            any(
+                item.get("path") == "specs/platform-offline-strategy.md" and item.get("exists")
+                for item in docs["checks"]
+            )
+        )
         novice = next(section for section in report["sections"] if section["id"] == "novice")
         self.assertEqual("ok", novice["status"])
         self.assertTrue(any(item.get("id") == "beginner-command-count" and item["command_count"] <= 4 for item in novice["checks"]))
