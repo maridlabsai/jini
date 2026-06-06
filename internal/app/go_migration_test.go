@@ -56,8 +56,13 @@ func TestOfficialGoOnlySurfacesDoNotAdvertiseUnsupportedCommands(t *testing.T) {
 	files := []string{
 		"CHANGELOG.md",
 		"PROOF_OF_DIFFERENCE.md",
+		"README.md",
 		"distribution/install-manifest.yaml",
 		"docs/cli.md",
+		"docs/index.md",
+		"docs/install.md",
+		"docs/simple.md",
+		"specs/install-packaging.md",
 	}
 	for _, pattern := range []string{
 		"distribution/targets/*/README.md",
@@ -118,6 +123,56 @@ func TestOfficialGoOnlySurfacesDoNotAdvertiseUnsupportedCommands(t *testing.T) {
 					}
 				}
 			}
+		}
+	}
+}
+
+func TestPublicDocsDoNotTeachPathfulStatus(t *testing.T) {
+	root := repoRootForMigrationTest(t)
+	files := []string{
+		"README.md",
+		"docs/cli.md",
+		"docs/index.md",
+		"docs/install.md",
+		"docs/simple.md",
+	}
+	stalePatterns := []string{
+		"jini status /",
+		"status /path/to/work",
+	}
+
+	for _, rel := range files {
+		data, err := os.ReadFile(filepath.Join(root, rel))
+		if err != nil {
+			t.Fatalf("read %s: %v", rel, err)
+		}
+		for lineNumber, line := range strings.Split(string(data), "\n") {
+			for _, pattern := range stalePatterns {
+				if strings.Contains(line, pattern) {
+					t.Errorf("%s:%d teaches retired pathful status form: %s", rel, lineNumber+1, pattern)
+				}
+			}
+		}
+	}
+}
+
+func TestInstallDocsMatchGoInstallerContract(t *testing.T) {
+	root := repoRootForMigrationTest(t)
+	data, err := os.ReadFile(filepath.Join(root, "docs/install.md"))
+	if err != nil {
+		t.Fatalf("read docs/install.md: %v", err)
+	}
+	text := string(data)
+	staleFragments := []string{
+		"source runtime",
+		"source fallback",
+		"support receipt",
+		"send version=, source_reason=, release_validation=, next_step=",
+		"release validation failed: unsupported-public-command-surface",
+	}
+	for _, fragment := range staleFragments {
+		if strings.Contains(text, fragment) {
+			t.Errorf("docs/install.md documents stale installer output: %s", fragment)
 		}
 	}
 }

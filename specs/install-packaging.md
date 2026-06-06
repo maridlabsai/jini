@@ -9,7 +9,7 @@ The first packaging surface in this repo is intentionally conservative:
 - a machine-readable install manifest
 - curated install kits
 - a discoverable bundle catalog
-- a dry-run planner
+- a native install-planning backlog
 - explicit target shims
 - a receipt-oriented summary
 - doctor output that reflects receipt and activation state
@@ -83,27 +83,22 @@ The target model should remain thin.
 Targets do not redefine bundle semantics.
 They only define where and how Jini binds into a local environment.
 
-## 5. Dry-Run Planner
+## 5. Native Install Backlog
 
-The CLI command is:
+The current native Go install trust path is:
 
 ```bash
-jini get-started --target codex
-jini plan-install --kit starter-kit --target codex
-jini install-bundles --kit starter-kit --target codex --prefix /tmp/jini-stage
-jini doctor-install --kit starter-kit --target codex --prefix /tmp/jini-stage
-jini catalog-bundles
-jini catalog-bundles --target codex --format json
-jini plan-install --kit operations-response-kit --target codex
-jini plan-install --kit regulated-readiness-kit --target codex
-jini plan-install --kit vendor-decision-kit --target codex
-jini update-bundles --kit starter-kit --target codex --prefix /tmp/jini-stage
-jini uninstall-bundles --kit starter-kit --target codex --prefix /tmp/jini-stage
-jini plan-install --bundle jini-core --target codex --target kiro-cli
-jini plan-install --format json
+jini publish-readiness --format json
+jini doctor --format json
+jini commands
 ```
 
-The planner should show:
+The retired planner vocabulary should not be advertised as runnable public CLI.
+If these capabilities return, they should ship as native Go commands only after
+they pass the same publish-readiness and command-surface gates as the rest of
+the product.
+
+The future native planner should show:
 
 - source and revision
 - the manifest default kit when no explicit bundle or kit is selected
@@ -116,9 +111,9 @@ The planner should show:
 - permission and review notices
 - an install receipt id
 - a manifest digest for auditability
-- the next install and doctor commands that complete the trust path
+- the next native install and doctor steps that complete the trust path
 
-The planner does not write files.
+The planner should not write files.
 
 If no explicit `--bundle` or `--kit` is provided, Jini should prefer the
 manifest default kit instead of expanding to every known bundle. Broad installs
@@ -132,25 +127,24 @@ workflows are installable through the same curated path.
 It also exposes a `vendor-decision-kit` so commercial evaluation and approval
 workflows are installable through the same curated path.
 
-Install trust should not stop at path materialization. `doctor-install` should
-report target-specific health semantics, including receipt presence, shim
+Install trust should not stop at path materialization. The native doctor path
+should report target-specific health semantics, including receipt presence, shim
 documentation quality, manifest freshness, link-mode behavior, activation-target
 consistency, runtime activation readiness when a target has already been
-activated, and lightweight behavioral probes like `plan-install` and
-`resolve-adapter` so target bindings are validated as working surfaces rather
-than only as files on disk.
+activated, and lightweight behavioral probes so target bindings are validated as
+working surfaces rather than only as files on disk.
 
 ## 5.1 Install Lifecycle
 
-The current lifecycle is:
+The backlog lifecycle is:
 
-- `get-started`: show the curated trust path first and demote raw bundle detail
-- `catalog-bundles`: discover curated kits first and use JSON mode for deeper bundle inspection
-- `plan-install`: preview source, targets, paths, shims, risk, and receipt id
-- `install-bundles`: materialize universal payloads and target shims
-- `update-bundles`: refresh installed bundle content from source truth
-- `doctor-install`: verify installed paths, locate matching receipts, and surface activation hints
-- `uninstall-bundles`: remove installed bundle roots and emit an uninstall receipt
+- guided start: show the curated trust path first and demote raw bundle detail
+- bundle catalog: discover curated kits first and use JSON mode for deeper bundle inspection
+- install plan: preview source, targets, paths, shims, risk, and receipt id
+- install apply: materialize universal payloads and target shims
+- update apply: refresh installed bundle content from source truth
+- install doctor: verify installed paths, locate matching receipts, and surface activation hints
+- uninstall apply: remove installed bundle roots and emit an uninstall receipt
 
 For tests and local staging, use `--prefix` so install paths are remapped into a
 safe writable root.

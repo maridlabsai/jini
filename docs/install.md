@@ -25,7 +25,7 @@ quick_links:
   <p>The CLI is the live installable surface today. Desktop and mobile are the next release surfaces, stay free to download when live, and are not publicly downloadable yet. Desktop and Android should distribute directly first where policy allows, while iOS remains App Store constrained. Commercial pricing is planned to start with a 30-day free trial and become $1/month once checkout and entitlement activation are live.</p>
 
   <!-- | {{ surface.name }} | {{ surface.current_state }} | {{ surface.next_step }} | -->
-  <p>In short: <code>release binary</code> means no support receipt and no <code>next_step=</code>, while source-path follow-up output includes both.</p>
+  <p>In short: both the release-binary path and Go source-build path print the installed command plus an <code>install-receipt.txt</code> path. Source-build reasons live in <code>source_reason=</code> and release checks live in <code>release_validation=</code>.</p>
 
   <table>
     <thead>
@@ -62,24 +62,22 @@ quick_links:
     <span>User-space install</span>
   </div>
 
-  <p>The installer first tries to install a matching release binary. If needed, it falls back to a source-backed runtime, verifies that the command launches, and prints one PATH fix only when your shell still cannot see <code>jini</code>.</p>
+  <p>The installer first tries to install a matching release binary. If needed, it falls back to a Go source build, verifies that the command launches, and prints one PATH fix only when your shell still cannot see <code>jini</code>.</p>
 
-  <p>After install, Jini also prints one short provenance line for support and troubleshooting, such as <code>- install source: release binary</code>, <code>- install source: source runtime (explicit source)</code>, <code>- install source: source runtime (release-unavailable)</code>, or <code>- install source: source fallback (release validation failed: unsupported-public-command-surface)</code>.</p>
+  <p>After install, Jini also prints one short provenance line for support and troubleshooting, such as <code>- install source: release binary</code>, <code>- install source: Go source build (explicit-source-dir)</code>, <code>- install source: Go source build (local-repo-source)</code>, or <code>- install source: Go source build (release-unavailable)</code>.</p>
 
-  <p>The same install writes <code>install-receipt.txt</code> with the machine-readable fields <code>source_reason=</code> and <code>release_validation=</code>. When the install needs follow-up, the receipt also records <code>next_step=</code>.</p>
-  <p>In short: <code>release binary</code> means no support receipt and no <code>next_step=</code>, while source-path follow-up output includes both.</p>
-  <p>On source-path installs that need follow-up, the terminal now prints this exact support handoff line: <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code>.</p>
+  <p>The same install always writes <code>install-receipt.txt</code> with machine-readable fields including <code>install_mode=</code>, <code>install_detail=</code>, <code>source_reason=</code>, and <code>release_validation=</code>.</p>
 
-  <p>When support asks for install details on a source-path install, send the support receipt path plus only these receipt keys. Treat <code>next_step=</code> as the actionable follow-up field for this source install.</p>
+  <p>When support asks for install details, send the printed receipt path plus these receipt keys.</p>
   <ul>
-    <li><code>install-receipt.txt</code> path from the printed <code>- support receipt: ...</code> line</li>
+    <li><code>install-receipt.txt</code> path from the printed <code>- receipt: ...</code> line</li>
     <li><code>version=</code></li>
+    <li><code>install_mode=</code></li>
+    <li><code>install_detail=</code></li>
     <li><code>source_reason=</code></li>
     <li><code>release_validation=</code></li>
-    <li><code>next_step=</code></li>
   </ul>
-  <p>If the install output shows only <code>- install source: release binary</code> followed by <code>jini</code>, support can ignore this checklist.</p>
-  <p>If <code>next_step=</code> is missing on a source-path install, that source path likely completed without extra follow-up. The healthy <code>release binary</code> path does not use this source-path handoff at all.</p>
+  <p>If the install output shows <code>- install source: release binary</code>, the release asset was accepted. If it shows a Go source build, the receipt explains why source won.</p>
 
   <table>
     <thead>
@@ -92,41 +90,42 @@ quick_links:
     <tbody>
       <tr>
         <th scope="row"><code>- install source: release binary</code></th>
-        <td>Matching published release asset was available, passed Jini's public command check, and was accepted without any source fallback.</td>
-        <td>No action needed unless you expected a source install for local development. The absence of <code>- support receipt: ...</code> and <code>- next step: ...</code> is expected on this path, and a missing <code>next_step=</code> field is only meaningful on source-path installs.</td>
+        <td>Matching published release asset was available, passed Jini's public command check, and was accepted without requiring a Go source build.</td>
+        <td>No action needed unless you expected a source install for local development. The printed receipt still records the release validation result.</td>
       </tr>
       <tr>
-        <th scope="row"><code>- install source: source runtime (explicit source)</code></th>
+        <th scope="row"><code>- install source: Go source build (explicit-source-dir)</code></th>
         <td>You pointed the installer at a local checkout on purpose.</td>
-        <td>Keep using that checkout and rerun from the repo when you want the local source tree to stay in control. If support needs the install details, send <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code>. Treat <code>next_step=</code> as the actionable follow-up field for this source install.</td>
+        <td>Keep using that checkout and rerun from the repo when you want the local source tree to stay in control. If support needs the install details, send the printed <code>- receipt: ...</code> path.</td>
       </tr>
       <tr>
-        <th scope="row"><code>- install source: source runtime (release-unavailable)</code></th>
+        <th scope="row"><code>- install source: Go source build (release-unavailable)</code></th>
         <td>No matching release asset was available for this machine or release channel.</td>
-        <td>If this machine should have had a published release, file a release issue and include the receipt. If support needs the install details, send <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code>. Treat <code>next_step=</code> as the actionable follow-up field for this source install.</td>
+        <td>If this machine should have had a published release, file a release issue and include the receipt. The receipt should show <code>release_validation=release-unavailable-or-invalid</code>.</td>
       </tr>
       <tr>
-        <th scope="row"><code>- install source: source fallback (release validation failed: unsupported-public-command-surface)</code></th>
-        <td>Downloaded release binary did not support the current public command surface.</td>
-        <td>Keep the source install, attach install-receipt.txt, and flag the stale release artifact. If support needs the install details, send <code>- support receipt: /path/to/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)</code>. Treat <code>next_step=</code> as the actionable follow-up field for this source install.</td>
+        <th scope="row"><code>- install source: Go source build (local-repo-source)</code></th>
+        <td>You ran the installer from a local Jini checkout.</td>
+        <td>No release lookup is needed. The receipt should show <code>source_reason=local-repo-source</code>.</td>
       </tr>
     </tbody>
   </table>
 
   <p>Example release-binary success output:</p>
-<pre><code class="language-text">- install source: release binary
-jini
+<pre><code class="language-text">Installed Jini
+- install source: release binary
+- command: /Users/you/.local/bin/jini
+- receipt: /Users/you/.local/share/jini/install-receipt.txt
 </code></pre>
-  <p>The healthy release-binary path stops there.</p>
-  <p>The absence of <code>- support receipt: ...</code> and <code>- next step: ...</code> is expected on this path, and a missing <code>next_step=</code> field is only meaningful on source-path installs.</p>
-  <p>Unlike the source-path follow-up output below, <code>next_step=</code> appears only on source-path installs that need follow-up.</p>
+  <p>The healthy release-binary path should show <code>release_validation=passed</code> in the receipt.</p>
 
-  <p>Example source-path follow-up output:</p>
-<pre><code class="language-text">- install source: source runtime (release-unavailable)
-- support receipt: /Users/you/.local/bin/install-receipt.txt (send version=, source_reason=, release_validation=, next_step=)
-- next step: If this machine should have had a published release, file a release issue and include the receipt.
+  <p>Example Go source-build output:</p>
+<pre><code class="language-text">Installed Jini
+- install source: Go source build (release-unavailable)
+- command: /Users/you/.local/bin/jini
+- receipt: /Users/you/.local/share/jini/install-receipt.txt
 </code></pre>
-  <p>Treat <code>next_step=</code> as the actionable follow-up field for this source install.</p>
+  <p>The receipt explains the source path with <code>source_reason=</code> and <code>release_validation=</code>.</p>
 
 <pre><code class="language-bash">jini</code></pre>
 
@@ -142,7 +141,7 @@ jini
       <h3>Run <code>jini</code></h3>
       <p>Do not start with provider jargon unless Jini tells you setup is missing. Inside a repo, Jini should immediately steer toward task-first asks like <code>jini review this repo</code> or <code>jini fix failing tests</code>.</p>
       <p>That repo-aware start surface should stay light: skip the generic empty-state sentence, show one calm repo-context line, let the direct task suggestions stand on their own, use a soft cue like <code>Useful here:</code> above one or two useful commands Jini found in the repo, and keep at most one quiet adoption hint for existing Jini work.</p>
-      <p>Internal diagnostics like <code>repo-map</code> and setup surfaces like <code>doctor</code> should stay off the first screen. A Claude Code, Codex, or GitHub CLI user should see task suggestions first, then at most a small <code>Already have Jini work?</code> note with <code>status /path/to/work</code> when an existing Jini work path actually needs adoption.</p>
+      <p>Internal diagnostics like <code>repo-map</code> and setup surfaces like <code>doctor</code> should stay off the first screen. A Claude Code, Codex, or GitHub CLI user should see task suggestions first, then at most a small <code>Already have current work?</code> note with <code>jini status</code> when existing Jini work actually needs attention.</p>
       <p>The three starter suggestions should stay brief and action-first: <code>Review the repo and suggest the next move.</code>, <code>Fix the failing tests in this repo.</code>, and <code>Review the current branch and call out risks.</code></p>
       <p>In a real terminal, bare <code>jini</code> should stay open and let you type the first task directly at the <code>jini&gt;</code> prompt.</p>
       <p>When there is no repo context and no existing Jini work, the fallback should stay concise there too: interactive <code>jini</code> should still open the live shell there too. If the user gives a task, Jini can answer with <code>Run this from the repo or folder that needs work.</code>, but it should stay open instead of exiting. Non-interactive fallback output should stay concise and avoid diagnostics or adoption guidance on first contact.</p>
@@ -151,7 +150,7 @@ jini
       <pre><code class="language-bash">$ jini
 jini&gt; fix failing tests
 </code></pre>
-      <p>That prompt should remain open for follow-up turns. The task should stay primary, and the controls should stay in the background until you need them. If you do, <code>commands</code>, <code>doctor</code>, <code>admin help</code>, and <code>exit</code> should still work as in-session escape hatches instead of forcing a relaunch, but they should answer with concise in-shell summaries instead of dumping the full catalog or operator cards. Prefixed habits like <code>jini commands</code> or <code>jini status /tmp/work</code> typed inside the shell should recover cleanly too.</p>
+      <p>That prompt should remain open for follow-up turns. The task should stay primary, and the controls should stay in the background until you need them. If you do, <code>commands</code>, <code>doctor</code>, <code>admin help</code>, and <code>exit</code> should still work as in-session escape hatches instead of forcing a relaunch, but they should answer with concise in-shell summaries instead of dumping the full catalog or operator cards. Prefixed habits like <code>jini commands</code> or <code>jini status</code> typed inside the shell should recover cleanly too.</p>
       <p>Once the session is already in flow, Jini should only print one short steering line when it is actually pointing you to a concrete action. Otherwise it should acknowledge the task and go straight back to the prompt.</p>
     </div>
     <div class="step-card">
@@ -179,19 +178,19 @@ jini&gt; fix failing tests
     <li><code>jini provider help me edit pear fellow script.txt</code> should start with <code>ERROR `jini provider help` shows the admin command inventory; it does not take a request like "me edit pear fellow script.txt".</code></li>
     <li><code>jini provider --help me edit pear fellow script.txt</code> should start with <code>ERROR `jini provider --help` shows the admin command inventory; it does not take a request like "me edit pear fellow script.txt".</code></li>
   </ul>
-  <p>Only the first line changes. The redirect stays the same: start with <code>jini</code> to resume active work or see the start options, then use <code>jini status /path/to/work</code> once if you already have work to adopt.</p>
+  <p>Only the first line changes. The redirect stays the same: start with <code>jini</code> to resume active work or see the start options, then use <code>jini status</code> once if you already have current work.</p>
 
 <pre><code class="language-bash">$ jini --help me edit pear fellow script.txt
 ERROR `jini --help` shows the CLI overview; it does not take a request like "me edit pear fellow script.txt".
 Start with `jini` to resume active work or see the start options.
-If you already have work to adopt, use `jini status /path/to/work` once.</code></pre>
+If you already have current work, use `jini status` once.</code></pre>
 
   <p>Use that <code>--help</code> example when someone pastes work after the overview flag on first run. It should reject the request and send them back to the normal start path.</p>
 
 <pre><code class="language-bash">$ jini provider help me edit pear fellow script.txt
 ERROR `jini provider help` shows the admin command inventory; it does not take a request like "me edit pear fellow script.txt".
 Start with `jini` to resume active work or see the start options.
-If you already have work to adopt, use `jini status /path/to/work` once.</code></pre>
+If you already have current work, use `jini status` once.</code></pre>
 
   <p>Use that provider-help example when someone drifts into the admin/provider tree during first run. It should reject the request and send them back to the normal start path.</p>
   <p>The contrast is simple: <code>--help</code> stays on the CLI-overview path, while <code>provider help</code> crosses into the admin-inventory path, even though both redirects send the user back to <code>jini</code>.</p>
