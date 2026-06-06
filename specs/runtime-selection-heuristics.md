@@ -2,6 +2,16 @@
 
 Updated: 2026-05-15
 
+This document is a specialized runtime-selection framework, not the
+top-precedence product and operating PRD.
+
+The canonical product and operating PRD lives in
+[number-one-platform-prd.md](./number-one-platform-prd.md).
+
+If this framework conflicts with the canonical PRD on tenets, priorities,
+requirements, roadmap order, or automation posture, the canonical PRD wins and
+this framework should be updated.
+
 See also:
 
 - [research-informed-heuristics.md](./research-informed-heuristics.md)

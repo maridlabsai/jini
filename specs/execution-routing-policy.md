@@ -1,5 +1,15 @@
 # Jini Execution Policy
 
+This document is a specialized execution-routing policy, not the
+top-precedence product and operating PRD.
+
+The canonical product and operating PRD lives in
+[number-one-platform-prd.md](./number-one-platform-prd.md).
+
+If this policy conflicts with the canonical PRD on tenets, priorities,
+requirements, roadmap order, or automation posture, the canonical PRD wins and
+this policy should be updated.
+
 ## 1. Purpose
 
 This document defines how Jini SHOULD choose the cheapest adequate execution
