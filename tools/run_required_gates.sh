@@ -39,6 +39,7 @@ run_commit_gate() {
   (
     cd "${ROOT_DIR}"
     git diff --check
+    git diff --cached --check
   )
   run_security_configuration_gate
   run_go_test "./..."

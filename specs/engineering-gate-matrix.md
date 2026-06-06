@@ -34,13 +34,14 @@ Required commands:
 
 1. `go test ./...`
 2. `git diff --check`
-3. `bash tools/security_configuration_gate.sh`
+3. `git diff --cached --check`
+4. `bash tools/security_configuration_gate.sh`
 
 Required outcome:
 
 - Go runtime regressions are caught immediately
 - the migration boundary blocks tracked Python files and Python gate invocations
-- whitespace and patch-format drift is blocked before commit
+- staged and unstaged whitespace and patch-format drift are blocked before commit
 - scanner wiring for CodeQL, govulncheck, OSV-Scanner, TruffleHog, and
   Dependabot cannot be removed without failing the local gate
 
