@@ -32,12 +32,15 @@ This is the minimum required gate for every local commit.
 
 Required commands:
 
-1. `python3 -m unittest tests.test_go_first_launcher -v`
-2. `GOCACHE=/private/tmp/jini-go-cache GOMODCACHE=/private/tmp/jini-go-mod /Users/sharad.sharma/Developer/.local-go/bin/go test ./internal/app`
-3. `git diff --check`
+1. `python3 tools/language_gate.py`
+2. `python3 -m unittest tests.test_go_first_launcher -v`
+3. `GOCACHE=/private/tmp/jini-go-cache GOMODCACHE=/private/tmp/jini-go-mod /Users/sharad.sharma/Developer/.local-go/bin/go test ./internal/app`
+4. `git diff --check`
 
 Required outcome:
 
+- changed user-facing files are scanned for blocked language without relying on
+  a machine-local helper path
 - launcher boundary regressions are caught immediately
 - Go runtime regressions in the main app package are caught immediately
 - whitespace and patch-format drift is blocked before commit

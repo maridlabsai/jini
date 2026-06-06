@@ -9,6 +9,7 @@ MAKEFILE_PATH = ROOT / "Makefile"
 CONTRIBUTING_PATH = ROOT / "CONTRIBUTING.md"
 PREVIEW_TOOL_PATH = ROOT / "tools" / "preview_docs.sh"
 DOCS_GEMFILE_PATH = ROOT / "docs" / "Gemfile"
+GATE_MATRIX_PATH = ROOT / "specs" / "engineering-gate-matrix.md"
 
 
 def read(path: Path) -> str:
@@ -44,6 +45,19 @@ class DeveloperExperienceDocsTests(unittest.TestCase):
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)
+
+    def test_gate_matrix_promotes_repo_local_language_gate(self) -> None:
+        matrix_text = read(GATE_MATRIX_PATH)
+        runner_text = read(ROOT / "tools" / "run_required_gates.sh")
+        for marker in (
+            "python3 tools/language_gate.py",
+            "changed user-facing files are scanned for blocked language",
+            "without relying on",
+            "a machine-local helper path",
+        ):
+            with self.subTest(marker=marker):
+                self.assertIn(marker, matrix_text)
+        self.assertIn("python3 tools/language_gate.py", runner_text)
 
     def test_repo_ships_reproducible_docs_preview_tooling(self) -> None:
         self.assertTrue(PREVIEW_TOOL_PATH.exists(), "docs preview helper should exist")

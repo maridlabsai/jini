@@ -33,6 +33,7 @@ run_go_test() {
 run_commit_gate() {
   (
     cd "${ROOT_DIR}"
+    python3 tools/language_gate.py
     python3 -m unittest tests.test_go_first_launcher -v
     git diff --check
   )
