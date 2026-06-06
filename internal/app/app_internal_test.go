@@ -2,6 +2,9 @@ package app
 
 import (
 	"bytes"
+	"encoding/json"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -16,6 +19,48 @@ func TestSafelyRunInteractiveRecoversPanics(t *testing.T) {
 	}
 	if !strings.Contains(stderr.String(), "Jini hit an unexpected internal error and stopped safely.") {
 		t.Fatalf("expected safe panic message, got:\n%s", stderr.String())
+	}
+}
+
+func TestOfflineRegressionGuardrailsFailWhenRequiredSpecContentIsMissing(t *testing.T) {
+	root := t.TempDir()
+	specDir := filepath.Join(root, "specs")
+	if err := os.MkdirAll(specDir, 0o755); err != nil {
+		t.Fatalf("create specs dir: %v", err)
+	}
+	writeTestFile(t, filepath.Join(specDir, "local-model-support-matrix.md"), strings.Join([]string{
+		"## Registry Contract",
+		"`profile_role`",
+		"`status`",
+	}, "\n"))
+	writeTestFile(t, filepath.Join(specDir, "platform-offline-strategy.md"), strings.Join([]string{
+		"## Future Update Policy",
+		"Future model updates should:",
+		"preserve route evidence shape",
+		"preserve session and artifact identity",
+	}, "\n"))
+	writeTestFile(t, filepath.Join(specDir, "adapter-benchmark-gate.md"), strings.Join([]string{
+		"### 4. Routing Use",
+		"repeated regression across recent samples",
+		"strong recovery after degradation",
+	}, "\n"))
+
+	section := buildPublishOfflineRegressionSection(root)
+	if section.Status != "needs-attention" {
+		t.Fatalf("expected missing promotion loop to require attention, got %#v", section)
+	}
+	for _, check := range section.Checks {
+		if check.Path == "specs/local-model-support-matrix.md#promotion-loop" && check.Status == "incomplete" {
+			return
+		}
+	}
+	t.Fatalf("expected promotion loop check to be incomplete, got %#v", section.Checks)
+}
+
+func writeTestFile(t *testing.T, path, content string) {
+	t.Helper()
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		t.Fatalf("write %s: %v", path, err)
 	}
 }
 
@@ -80,6 +125,48 @@ func TestPublishReadinessSupportsTextAndInlineJSONFormat(t *testing.T) {
 		}
 		if !strings.Contains(stdout.String(), tc.want) {
 			t.Fatalf("expected %v output to contain %q, got:\n%s", tc.args, tc.want, stdout.String())
+		}
+	}
+}
+
+func TestPublishReadinessIncludesOfflineRegressionGuardrails(t *testing.T) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := Run([]string{"publish-readiness", "--format=json"}, &stdout, &stderr)
+	if exitCode != 0 {
+		t.Fatalf("expected publish-readiness to pass, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+
+	var report publishReadinessReport
+	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil {
+		t.Fatalf("decode publish-readiness JSON: %v\n%s", err, stdout.String())
+	}
+	required := map[string]bool{
+		"specs/local-model-support-matrix.md#registry-contract":   false,
+		"specs/local-model-support-matrix.md#promotion-loop":      false,
+		"specs/platform-offline-strategy.md#future-update-policy": false,
+		"specs/adapter-benchmark-gate.md#routing-use":             false,
+	}
+	for _, section := range report.Sections {
+		if section.ID != "offline-regression" {
+			continue
+		}
+		if section.Status != "ok" {
+			t.Fatalf("expected offline-regression section to be ok, got %#v", section)
+		}
+		for _, check := range section.Checks {
+			if _, ok := required[check.Path]; !ok {
+				continue
+			}
+			if !check.Exists || check.Status != "ok" {
+				t.Fatalf("expected offline-regression check to be ok, got %#v", check)
+			}
+			required[check.Path] = true
+		}
+	}
+	for path, found := range required {
+		if !found {
+			t.Fatalf("missing offline-regression check: %s\nreport: %#v", path, report.Sections)
 		}
 	}
 }

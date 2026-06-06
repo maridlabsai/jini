@@ -731,6 +731,18 @@ scenarios:
         command: ["publish-readiness", "--format", "json"]
         path: "runtime.legacy_fallback"
         equals: false
+      - id: publish-readiness-offline-regression-section-present
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "offline-regression"
+      - id: publish-readiness-local-model-registry-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/local-model-support-matrix.md#registry-contract"
+      - id: publish-readiness-offline-update-policy-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/platform-offline-strategy.md#future-update-policy"
       - id: publish-readiness-pack-count
         command: ["publish-readiness", "--format", "json"]
         path: "pack_count"

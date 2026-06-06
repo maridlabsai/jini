@@ -82,6 +82,7 @@ func runPublishReadiness(args []string, stdout, stderr io.Writer) int {
 func buildPublishReadinessReport(root string) publishReadinessReport {
 	sections := []publishReadinessSection{
 		buildPublishDocsSection(root),
+		buildPublishOfflineRegressionSection(root),
 		buildPublishRuntimeSection(root),
 	}
 	status := "ok"
@@ -150,6 +151,103 @@ func buildPublishDocsSection(root string) publishReadinessSection {
 		Status: status,
 		Checks: checks,
 	}
+}
+
+func buildPublishOfflineRegressionSection(root string) publishReadinessSection {
+	if root == "" {
+		return publishReadinessSection{
+			ID:     "offline-regression",
+			Label:  "Offline model regression guardrails",
+			Status: "ok",
+			Checks: []publishReadinessCheck{{
+				Path:   "source checkout",
+				Exists: false,
+				Status: "not-required-for-installed-binary",
+			}},
+		}
+	}
+
+	required := []struct {
+		checkPath string
+		filePath  string
+		fragments []string
+	}{
+		{
+			checkPath: "specs/local-model-support-matrix.md#registry-contract",
+			filePath:  "specs/local-model-support-matrix.md",
+			fragments: []string{
+				"## Registry Contract",
+				"`profile_role`",
+				"`status`",
+			},
+		},
+		{
+			checkPath: "specs/local-model-support-matrix.md#promotion-loop",
+			filePath:  "specs/local-model-support-matrix.md",
+			fragments: []string{
+				"## Promotion Loop",
+				"### 3. Canary",
+				"### 5. Promote",
+				"successor versions",
+			},
+		},
+		{
+			checkPath: "specs/platform-offline-strategy.md#future-update-policy",
+			filePath:  "specs/platform-offline-strategy.md",
+			fragments: []string{
+				"## Future Update Policy",
+				"Future model updates should:",
+				"preserve route evidence shape",
+				"preserve session and artifact identity",
+			},
+		},
+		{
+			checkPath: "specs/adapter-benchmark-gate.md#routing-use",
+			filePath:  "specs/adapter-benchmark-gate.md",
+			fragments: []string{
+				"### 4. Routing Use",
+				"repeated regression across recent samples",
+				"strong recovery after degradation",
+			},
+		},
+	}
+
+	checks := make([]publishReadinessCheck, 0, len(required))
+	status := "ok"
+	for _, requirement := range required {
+		file := filepath.Join(root, requirement.filePath)
+		data, err := os.ReadFile(file)
+		exists := err == nil
+		checkStatus := "ok"
+		if !exists {
+			checkStatus = "missing"
+			status = "needs-attention"
+		} else if missingRequiredFragment(string(data), requirement.fragments) {
+			checkStatus = "incomplete"
+			status = "needs-attention"
+		}
+		checks = append(checks, publishReadinessCheck{
+			Path:   requirement.checkPath,
+			Exists: exists,
+			Status: checkStatus,
+		})
+	}
+
+	return publishReadinessSection{
+		ID:     "offline-regression",
+		Label:  "Offline model regression guardrails",
+		Status: status,
+		Checks: checks,
+	}
+}
+
+func missingRequiredFragment(text string, fragments []string) bool {
+	for _, fragment := range fragments {
+		if !strings.Contains(text, fragment) {
+			return true
+		}
+	}
+	return false
 }
 
 func buildPublishRuntimeSection(root string) publishReadinessSection {
