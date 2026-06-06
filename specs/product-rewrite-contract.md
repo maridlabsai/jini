@@ -1,6 +1,6 @@
 # Jini Product Rewrite Contract
 
-Updated: 2026-05-13
+Updated: 2026-06-05
 
 ## Purpose
 
@@ -8,11 +8,21 @@ This document freezes the product contract for the next Jini rewrite phase.
 It exists to stop architectural drift, command-surface sprawl, and example
 design that proves internal structure more than user value.
 
+This document is a rewrite guardrail, not the top-precedence product and
+operating PRD.
+
+The canonical product and operating PRD lives in
+[number-one-platform-prd.md](./number-one-platform-prd.md).
+
+If this rewrite contract and the canonical PRD disagree on product tenets,
+priorities, requirements, or roadmap order, the canonical PRD wins.
+
 The merge-time guardrails for this contract live in:
 
 - [rewrite-guardrails.md](./rewrite-guardrails.md)
 - [rewrite-score-baseline.yaml](./rewrite-score-baseline.yaml)
 - [product-review-roles.md](./product-review-roles.md)
+- [number-one-platform-prd.md](./number-one-platform-prd.md)
 - [product-consensus-prd-and-plan.md](./product-consensus-prd-and-plan.md)
 - [full-product-prd.md](./full-product-prd.md)
 - [full-product-prd-execution-plan.md](./full-product-prd-execution-plan.md)

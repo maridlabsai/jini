@@ -23,6 +23,13 @@ This is not a feature wishlist. It is the execution contract for:
 - extensibility
 - scorecards, SLOs, and SLAs
 
+This initiative plan is subordinate to the canonical product and operating PRD
+in [number-one-platform-prd.md](./number-one-platform-prd.md).
+
+If this initiative plan and the canonical PRD disagree on priorities,
+requirements, app-shipping order, automation posture, or operating rules, the
+canonical PRD wins and this plan should be updated before execution continues.
+
 Read this with:
 
 - [number-one-platform-prd.md](./number-one-platform-prd.md)
