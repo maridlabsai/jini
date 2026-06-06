@@ -36,6 +36,11 @@ methodology:
     dataset so repeated runs measure Jini drift instead of moving the
     goalposts. This means the benchmark is useful for regression detection, but
     it must not be treated as a live external market ranking.
+  command_rule: >
+    `command` entries are runnable checks against the current native Go CLI.
+    Pre-migration or not-yet-ported checks must use `backlog_command` until the
+    command graduates through the public command-surface and publish-readiness
+    gates.
   comparison_rule: >
     Claude Code is the terminal immediacy baseline. Kiro is the productized
     workflow and delivery baseline. Hermes is the memory, breadth, and autonomy
@@ -155,7 +160,7 @@ scenarios:
       ai-hero: 8.4
     setup:
       - id: install-starter-kit
-        command:
+        backlog_command:
           [
             "install-bundles",
             "--kit",
@@ -167,28 +172,28 @@ scenarios:
           ]
     checks:
       - id: beginner-trust-preview
-        command: ["get-started", "--target", "codex", "--format", "json"]
+        backlog_command: ["get-started", "--target", "codex", "--format", "json"]
         path: "beginner_path.trust_path.0.id"
         equals: "preview"
       - id: beginner-notes-demote-bundle-overload
-        command: ["get-started", "--target", "codex", "--format", "json"]
+        backlog_command: ["get-started", "--target", "codex", "--format", "json"]
         path: "beginner_path.notes.0"
         contains: "Bundle-level detail"
       - id: catalog-beginner-kit
-        command: ["catalog-bundles", "--format", "json"]
+        backlog_command: ["catalog-bundles", "--format", "json"]
         path: "recommended_paths.beginner.kit_id"
         equals: "starter-kit"
       - id: plan-install-next-step-verify
-        command: ["plan-install", "--target", "codex", "--format", "json"]
+        backlog_command: ["plan-install", "--target", "codex", "--format", "json"]
         path: "recommended_next_steps.1.id"
         equals: "verify"
       - id: doctor-install-runs-plan-probe
-        command:
+        backlog_command:
           ["doctor-install", "--kit", "starter-kit", "--target", "codex", "--prefix", "{scenario_root}/prefix", "--format", "json"]
         path: "checks.0.health_checks"
         contains: "smoke-plan-install"
       - id: doctor-install-runs-resolve-adapter-probe
-        command:
+        backlog_command:
           ["doctor-install", "--kit", "starter-kit", "--target", "codex", "--prefix", "{scenario_root}/prefix", "--format", "json"]
         path: "checks.0.health_checks"
         contains: "smoke-resolve-adapter"
@@ -212,7 +217,7 @@ scenarios:
       ai-hero: 7.7
     setup:
       - id: compile-research-pack
-        command:
+        backlog_command:
           [
             "compile-pack",
             "research-prd",
@@ -231,11 +236,11 @@ scenarios:
           ]
     checks:
       - id: recommend-export-is-cheap
-        command: ["recommend-execution", "{scenario_root}/research-pack", "--intent", "export", "--format", "json"]
+        backlog_command: ["recommend-execution", "{scenario_root}/research-pack", "--intent", "export", "--format", "json"]
         path: "execution_class"
         equals: "cheap"
       - id: resume-stays-bounded
-        command:
+        backlog_command:
           [
             "resume",
             "{scenario_root}/research-pack",
@@ -249,7 +254,7 @@ scenarios:
         path: "token_budget.estimated_chars"
         maximum: 900
       - id: resume-efficiency-posture-is-cheap
-        command:
+        backlog_command:
           [
             "resume",
             "{scenario_root}/research-pack",
@@ -263,7 +268,7 @@ scenarios:
         path: "efficiency_posture.execution_class"
         equals: "cheap"
       - id: resume-efficiency-rationale-is-visible
-        command:
+        backlog_command:
           [
             "resume",
             "{scenario_root}/research-pack",
@@ -277,7 +282,7 @@ scenarios:
         path: "efficiency_posture.rationale"
         contains: "Intent `export` defaults to `cheap` execution"
       - id: resume-runtime-readout-route-visible
-        command:
+        backlog_command:
           [
             "resume",
             "{scenario_root}/research-pack",
@@ -291,7 +296,7 @@ scenarios:
         path: "runtime_readout.route"
         contains: "codex"
       - id: resume-runtime-readout-effort-visible
-        command:
+        backlog_command:
           [
             "resume",
             "{scenario_root}/research-pack",
@@ -305,23 +310,23 @@ scenarios:
         path: "runtime_readout.effort"
         equals: "cheap"
       - id: status-shows-working-with-input-item
-        command: ["status", "{scenario_root}/research-pack", "--format", "json"]
+        backlog_command: ["status", "{scenario_root}/research-pack", "--format", "json"]
         path: "working_with.input_items.0.input_id"
         equals: "initial-request"
       - id: status-turn-record-links-input-item
-        command: ["status", "{scenario_root}/research-pack", "--format", "json"]
+        backlog_command: ["status", "{scenario_root}/research-pack", "--format", "json"]
         path: "turn_record.user_input_ids"
         contains: "initial-request"
       - id: status-input-extraction-summary-visible
-        command: ["status", "{scenario_root}/research-pack", "--format", "json"]
+        backlog_command: ["status", "{scenario_root}/research-pack", "--format", "json"]
         path: "working_with.input_items.0.extraction_summary"
         contains: "Captured text request"
       - id: status-shows-grouped-artifact-shelf
-        command: ["status", "{scenario_root}/research-pack", "--format", "json"]
+        backlog_command: ["status", "{scenario_root}/research-pack", "--format", "json"]
         path: "artifact_shelf.ready_now.label"
         equals: "Ready now"
       - id: status-artifact-card-is-openable
-        command: ["status", "{scenario_root}/research-pack", "--format", "json"]
+        backlog_command: ["status", "{scenario_root}/research-pack", "--format", "json"]
         path: "artifact_shelf.ready_now.cards.0.open_action.command"
         contains: "jini open"
 
@@ -344,19 +349,19 @@ scenarios:
       ai-hero: 5.8
     checks:
       - id: adapter-conformance-clean
-        command: ["adapter-conformance", "--format", "json"]
+        backlog_command: ["adapter-conformance", "--format", "json"]
         path: "status"
         equals: "ok"
       - id: runtime-activate-capability
-        command: ["adapter-matrix", "--format", "json"]
+        backlog_command: ["adapter-matrix", "--format", "json"]
         path: "capabilities.runtime-activate"
         contains: "codex"
       - id: issue-bridge-capability
-        command: ["adapter-matrix", "--format", "json"]
+        backlog_command: ["adapter-matrix", "--format", "json"]
         path: "capabilities.issues-execute-bridge"
         contains: "jira"
       - id: wiki-local-apply-capability
-        command: ["adapter-matrix", "--format", "json"]
+        backlog_command: ["adapter-matrix", "--format", "json"]
         path: "capabilities.wiki-apply-local"
         contains: "markdown"
 
@@ -381,7 +386,7 @@ scenarios:
       ai-hero: 7.1
     setup:
       - id: compile-research-pack
-        command:
+        backlog_command:
           [
             "compile-pack",
             "research-prd",
@@ -399,10 +404,10 @@ scenarios:
             "{scenario_root}/research-pack",
           ]
       - id: bootstrap-home
-        command: ["bootstrap-home", "{scenario_root}/home", "--owner-name", "Golden User"]
+        backlog_command: ["bootstrap-home", "{scenario_root}/home", "--owner-name", "Golden User"]
     checks:
       - id: guided-loop-activates-runtime
-        command:
+        backlog_command:
           [
             "run",
             "{scenario_root}/research-pack",
@@ -431,7 +436,7 @@ scenarios:
         path: "flow_steps"
         contains: "activate-runtime-target"
       - id: guided-loop-applies-local-publish
-        command:
+        backlog_command:
           [
             "run",
             "{scenario_root}/research-pack",
@@ -460,7 +465,7 @@ scenarios:
         path: "flow_steps"
         contains: "apply-publish-plan"
       - id: guided-loop-selects-codex-runtime
-        command:
+        backlog_command:
           [
             "run",
             "{scenario_root}/research-pack",
@@ -489,7 +494,7 @@ scenarios:
         path: "runtime_activation.runtime_target"
         equals: "codex"
       - id: guided-loop-produces-local-receipts
-        command:
+        backlog_command:
           [
             "run",
             "{scenario_root}/research-pack",
@@ -518,7 +523,7 @@ scenarios:
         path: "local_publish_receipts"
         contains: "applied-local"
       - id: guided-loop-reuses-handoff-context
-        command:
+        backlog_command:
           [
             "run",
             "{scenario_root}/research-pack",
@@ -547,7 +552,7 @@ scenarios:
         path: "token_strategy.reused_context_surfaces"
         contains: "runtime-handoff"
       - id: artifact-context-capsule-is-readable
-        command:
+        backlog_command:
           [
             "context",
             "tasks",
@@ -559,7 +564,7 @@ scenarios:
         path: "result_type"
         equals: "JiniContextCapsule"
       - id: artifact-context-capsule-surfaces-sources
-        command:
+        backlog_command:
           [
             "context",
             "tasks",
@@ -571,7 +576,7 @@ scenarios:
         path: "source_references"
         contains: "12 semi-structured customer interviews"
       - id: interactive-open-shelf-is-actionable
-        command:
+        backlog_command:
           [
             "open",
             "--from",
@@ -582,7 +587,7 @@ scenarios:
         path: "result_type"
         equals: "JiniOpenShelf"
       - id: interactive-open-shelf-supports-number-selection
-        command:
+        backlog_command:
           [
             "open",
             "2",
@@ -595,7 +600,7 @@ scenarios:
         path: "artifact.id"
         equals: "tasks"
       - id: fuller-next-pass-opens-next-ready-surface
-        command:
+        backlog_command:
           [
             "expand",
             "prd",
@@ -608,7 +613,7 @@ scenarios:
         path: "artifact.id"
         equals: "tasks"
       - id: fuller-next-pass-falls-back-to-export-surface
-        command:
+        backlog_command:
           [
             "expand",
             "tasks",
@@ -621,7 +626,7 @@ scenarios:
         path: "artifact.id"
         equals: "github"
       - id: artifact-rewrite-creates-version
-        command:
+        backlog_command:
           [
             "rewrite",
             "checklist",
@@ -634,7 +639,7 @@ scenarios:
         path: "result_type"
         equals: "JiniArtifactRewrite"
       - id: artifact-versions-list-rewrite
-        command:
+        backlog_command:
           [
             "versions",
             "tasks",
@@ -646,7 +651,7 @@ scenarios:
         path: "versions"
         contains: "rewrite:checklist"
       - id: artifact-undo-restores-version
-        command:
+        backlog_command:
           [
             "undo",
             "tasks",
@@ -678,25 +683,25 @@ scenarios:
       ai-hero: 8.9
     checks:
       - id: friction-reduction-section-present
-        command: ["publish-readiness", "--format", "json"]
+        backlog_command: ["publish-readiness", "--format", "json"]
         path: "sections"
         contains: "friction-reduction"
       - id: beginner-path-is-single-command
-        command: ["get-started", "--target", "codex", "--format", "json"]
+        backlog_command: ["get-started", "--target", "codex", "--format", "json"]
         path: "beginner_path.commands"
         equals: ["jini"]
       - id: beginner-path-hides-bundle-detail
-        command: ["get-started", "--target", "codex", "--format", "json"]
+        backlog_command: ["get-started", "--target", "codex", "--format", "json"]
         path: "beginner_path.notes.0"
         contains: "Bundle-level detail is intentionally hidden"
       - id: framework-review-prefers-subtractive-adoption-pressure
-        command: ["review-framework", "--format", "json", "--limit", "3"]
+        backlog_command: ["review-framework", "--format", "json", "--limit", "3"]
         path: "adoption_constraints"
         contains: "removed, demoted, or consolidated"
 
   - id: product-consensus-gates
-    label: Product consensus replacement gates
-    purpose: Publish-readiness must prove the replacement-critical launcher shape is bounded, useful-first, continuable, and parity-safe.
+    label: Current publish-readiness gates
+    purpose: Publish-readiness must prove the current native Go runtime and public documentation contract while richer consensus gates remain backlog checks.
     weight: 1.9
     tracks:
       - architecture-strength
@@ -714,34 +719,34 @@ scenarios:
       agentfield: 7.9
       ai-hero: 6.9
     checks:
-      - id: product-review-role-docs-gate
+      - id: publish-readiness-status-ok
         command: ["publish-readiness", "--format", "json"]
-        path: "consensus_gates.passed_gate_ids"
-        contains: "product-review-role-docs"
-      - id: cross-critic-convergence-gate
+        path: "status"
+        equals: "ok"
+      - id: publish-readiness-language-go
         command: ["publish-readiness", "--format", "json"]
-        path: "consensus_gates.passed_gate_ids"
-        contains: "cross-critic-convergence"
-      - id: two-flagship-replacement-flows-gate
+        path: "runtime.language"
+        equals: "go"
+      - id: publish-readiness-legacy-fallback-disabled
         command: ["publish-readiness", "--format", "json"]
-        path: "consensus_gates.passed_gate_ids"
-        contains: "two-flagship-replacement-flows"
-      - id: useful-result-first-gate
+        path: "runtime.legacy_fallback"
+        equals: false
+      - id: publish-readiness-pack-count
         command: ["publish-readiness", "--format", "json"]
-        path: "consensus_gates.passed_gate_ids"
-        contains: "useful-result-first"
-      - id: i-am-not-sure-fallback-gate
+        path: "pack_count"
+        minimum: 7
+      - id: publish-readiness-bundle-count
         command: ["publish-readiness", "--format", "json"]
-        path: "consensus_gates.passed_gate_ids"
-        contains: "i-am-not-sure-fallback"
-      - id: real-continuation-actions-gate
+        path: "bundle_count"
+        minimum: 12
+      - id: publish-readiness-kit-count
         command: ["publish-readiness", "--format", "json"]
-        path: "consensus_gates.passed_gate_ids"
-        contains: "real-continuation-actions"
-      - id: parity-or-shared-generation-gate
+        path: "kit_count"
+        minimum: 6
+      - id: publish-readiness-target-count
         command: ["publish-readiness", "--format", "json"]
-        path: "consensus_gates.passed_gate_ids"
-        contains: "parity-or-shared-generation"
+        path: "target_count"
+        minimum: 6
 
   - id: operational-breadth
     label: Operational advanced-set breadth
@@ -762,26 +767,26 @@ scenarios:
       ai-hero: 7.2
     setup:
       - id: bootstrap-home
-        command: ["bootstrap-home", "{scenario_root}/home", "--owner-name", "Golden User"]
+        backlog_command: ["bootstrap-home", "{scenario_root}/home", "--owner-name", "Golden User"]
     checks:
       - id: pack-catalog-count
-        command: ["catalog-packs", "--format", "json"]
+        backlog_command: ["catalog-packs", "--format", "json"]
         path: "pack_count"
         minimum: 7
       - id: vendor-pack-present
-        command: ["catalog-packs", "--format", "json"]
+        backlog_command: ["catalog-packs", "--format", "json"]
         path: "packs"
         contains: "vendor-selection"
       - id: publish-readiness-routine-present
-        command: ["list-routines", "{scenario_root}/home", "--format", "json"]
+        backlog_command: ["list-routines", "{scenario_root}/home", "--format", "json"]
         path: "routines"
         contains: "publish-readiness"
       - id: golden-benchmark-routine-executes
-        command: ["run-routine", "{scenario_root}/home", "golden-benchmark", "--mode", "local", "--format", "json"]
+        backlog_command: ["run-routine", "{scenario_root}/home", "golden-benchmark", "--mode", "local", "--format", "json"]
         path: "status"
         equals: "executed"
       - id: framework-review-routine-executes
-        command: ["run-routine", "{scenario_root}/home", "framework-review", "--mode", "local", "--format", "json"]
+        backlog_command: ["run-routine", "{scenario_root}/home", "framework-review", "--mode", "local", "--format", "json"]
         path: "status"
         equals: "executed"
 
@@ -804,10 +809,10 @@ scenarios:
       ai-hero: 7.4
     checks:
       - id: framework-review-prefers-subtractive-experiment
-        command: ["review-framework", "--format", "json", "--limit", "3"]
+        backlog_command: ["review-framework", "--format", "json", "--limit", "3"]
         path: "best_next_experiment.change_type"
         equals: "subtractive"
       - id: framework-experiment-is-stageable
-        command: ["stage-framework-experiment", "--dimension", "packaging-install", "--format", "json"]
+        backlog_command: ["stage-framework-experiment", "--dimension", "packaging-install", "--format", "json"]
         path: "status"
         equals: "proposed"

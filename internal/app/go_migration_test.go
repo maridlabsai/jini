@@ -190,6 +190,30 @@ func TestPublicPlanningSpecsDoNotPromoteOperatorOnlyCommands(t *testing.T) {
 	}
 }
 
+func TestGoldenBenchmarkRunnableCommandsUseNativeGoSurface(t *testing.T) {
+	root := repoRootForMigrationTest(t)
+	rel := "specs/golden-competitive-benchmark.yaml"
+	data, err := os.ReadFile(filepath.Join(root, rel))
+	if err != nil {
+		t.Fatalf("read %s: %v", rel, err)
+	}
+	text := string(data)
+	commandPattern := regexp.MustCompile(`(?ms)^\s+command:\s*(?:\[\s*|\n\s*\[\s*)\n?\s*"([^"]+)"`)
+	allowedJSONCommands := map[string]bool{
+		"doctor":            true,
+		"provider":          true,
+		"publish-readiness": true,
+	}
+	for _, match := range commandPattern.FindAllStringSubmatchIndex(text, -1) {
+		command := text[match[2]:match[3]]
+		if allowedJSONCommands[command] {
+			continue
+		}
+		lineNumber := strings.Count(text[:match[0]], "\n") + 1
+		t.Errorf("%s:%d has runnable benchmark command outside native JSON-capable Go surface: %s", rel, lineNumber, command)
+	}
+}
+
 func TestInstallDocsMatchGoInstallerContract(t *testing.T) {
 	root := repoRootForMigrationTest(t)
 	data, err := os.ReadFile(filepath.Join(root, "docs/install.md"))
