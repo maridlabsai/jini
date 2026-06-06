@@ -1,11 +1,21 @@
 # Jini Conversation And Artifact UX
 
-Updated: 2026-05-15
+Updated: 2026-06-05
 
 ## Purpose
 
 This document defines how Jini should handle conversation, attachments, and
 artifacts in the user-facing product.
+
+This document is a specialized UX and interaction framework, not the
+top-precedence product and operating PRD.
+
+The canonical product and operating PRD lives in
+[number-one-platform-prd.md](./number-one-platform-prd.md).
+
+If this document conflicts with the canonical PRD on tenets, priorities,
+requirements, roadmap order, or operating posture, the canonical PRD wins and
+this document should be reconciled.
 
 The goal is to stop Jini from behaving like a loose chat transcript.
 

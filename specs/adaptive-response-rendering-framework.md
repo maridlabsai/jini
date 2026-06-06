@@ -1,12 +1,22 @@
 # Adaptive Response Rendering Framework
 
-Updated: 2026-05-19
+Updated: 2026-06-05
 
 ## Purpose
 
 This document defines how Jini should move beyond rigid CLI response templates
 while preserving product clarity, testability, artifact continuity, and route
 transparency.
+
+This document is a specialized rendering framework, not the top-precedence
+product and operating PRD.
+
+The canonical product and operating PRD lives in
+[number-one-platform-prd.md](./number-one-platform-prd.md).
+
+If this framework conflicts with the canonical PRD on tenets, priorities,
+requirements, roadmap order, or operating posture, the canonical PRD wins and
+this framework should be reconciled.
 
 The goal is simple:
 
@@ -17,6 +27,7 @@ The goal is simple:
 
 This framework extends:
 
+- [number-one-platform-prd.md](./number-one-platform-prd.md)
 - [product-rewrite-contract.md](./product-rewrite-contract.md)
 - [conversation-and-artifact-ux.md](./conversation-and-artifact-ux.md)
 - [artifact-schemas.md](./artifact-schemas.md)

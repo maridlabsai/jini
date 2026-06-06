@@ -1,10 +1,20 @@
 # Travel Curated Experience Framework
 
-Updated: 2026-05-19
+Updated: 2026-06-05
 
 ## Purpose
 
 This document defines the public product framework for Jini travel work.
+
+This document is a specialized domain framework, not the top-precedence
+product and operating PRD.
+
+The canonical product and operating PRD lives in
+[number-one-platform-prd.md](./number-one-platform-prd.md).
+
+If this framework conflicts with the canonical PRD on tenets, priorities,
+requirements, roadmap order, or operating posture, the canonical PRD wins and
+this framework should be reconciled.
 
 Its job is to make trip planning feel curated, resumable, and trustworthy
 without turning the public product into a booking engine before the
