@@ -3030,7 +3030,14 @@ func TestCurrentWorkInteractiveTacticalCommandsDoNotStartNewWork(t *testing.T) {
 		{
 			name: "route",
 			line: "route\n",
-			want: []string{"Route and cost", "Least-expense capable route"},
+			want: []string{
+				"Route and cost",
+				"Token posture: compact context first",
+				"Continuity: offline and online work stitch into the same session.",
+				"Route inputs: device",
+				"CLI throttle levels affect switching",
+				"Least-expense capable route",
+			},
 		},
 		{
 			name: "permissions",
@@ -3105,7 +3112,7 @@ func TestInteractiveTacticalSurfacesStayCompact(t *testing.T) {
 		{name: "status", arg: "status", maxNonEmpty: 3},
 		{name: "memory", arg: "memory", maxNonEmpty: 3},
 		{name: "permissions", arg: "permissions", maxNonEmpty: 3},
-		{name: "route", arg: "route", maxNonEmpty: 3},
+		{name: "route", arg: "route", maxNonEmpty: 6},
 		{name: "help", arg: "help", maxNonEmpty: 16},
 	}
 
