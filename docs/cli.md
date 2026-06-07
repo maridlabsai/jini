@@ -155,10 +155,10 @@ If you already have current work, use `jini status` once.</code></pre>
 <pre><code class="language-bash">jini doctor
 jini</code></pre>
 
-  <p>Most people should still start by pasting the work they want finished. Use doctor when setup help is needed, when you need one strict route, or when you are debugging access.</p>
+  <p>Most people should still start by describing the task or pasting the rough notes they already have. Use doctor when setup help is needed, when you need one strict route, or when you are debugging access.</p>
 
   <div class="pill-list">
-    <span>Auto</span>
+    <span>auto</span>
     <span>Claude</span>
     <span>Bedrock</span>
     <span>Azure</span>
@@ -195,7 +195,7 @@ jini</code></pre>
 <div class="section-card section-card-cta">
   <span class="section-kicker">Next step</span>
   <h2>The public rule</h2>
-  <p>The normal path is still small: install once, run <code>jini</code>, paste the work you want finished. When you need a public command list, use <code>jini commands</code>. Use <code>status</code>, <code>continue</code>, <code>open</code>, and <code>doctor</code> when Jini points you there; the rest of the CLI should stay out of the way.</p>
+  <p>The normal path is still small: install once, run <code>jini</code>, then describe the task or paste the rough notes you already have. When you need a public command list, use <code>jini commands</code>. Use <code>status</code>, <code>continue</code>, <code>open</code>, and <code>doctor</code> when Jini points you there; the rest of the CLI should stay out of the way.</p>
   <div class="page-intro-links">
     <a href="{{ '/install.html' | relative_url }}">Install</a>
     <a href="{{ '/simple.html' | relative_url }}">Quickstart</a>

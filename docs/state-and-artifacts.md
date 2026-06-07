@@ -127,7 +127,7 @@ Effort level
 High
 
 Why this route
-Auto mode prefers the best planning tool when the request asks for deep or high-rigor work.
+auto mode prefers the best planning tool when the request asks for deep or high-rigor work.
 
 Just finished
 - Sendable follow-up drafted
@@ -170,11 +170,11 @@ Other active work
 - Pricing vendor review
 - Paris trip</code></pre>
 
-  <p>The important part is not only the provider name. The user should also be able to tell whether Jini chose that route automatically or because they forced it, and how much effort Jini judged the request to need before the first draft begins.</p>
+  <p>The important part is not only the provider name. The user should also be able to tell whether Jini chose that route automatically or because they forced it, how much effort Jini judged the request to need, and why the route was worth its token, battery, throttle, or continuity cost.</p>
 </div>
 
 <div class="section-card">
-  <h2>What “Open” Should Feel Like</h2>
+  <h2>What <code>jini open</code> Should Feel Like</h2>
 
   <p>It should open deliverables, not storage concepts. The product surface should make the useful thing obvious before the user has to care where it lives on disk.</p>
 

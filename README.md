@@ -78,7 +78,7 @@ Inside the shell you can work naturally:
 
 The first screen should keep one obvious move in front of you:
 
-- `Paste notes or type what you want finished.`
+- `Describe the task. Jini will route it, act when safe, or ask one short question.`
 
 If you are not sure how to start, type:
 
@@ -104,7 +104,8 @@ If multiple projects are already in flight, Jini should show `Active work`
 first, let you pick one, and keep sibling work visible under `Other active work`
 while one project stays in focus.
 
-Before Jini starts new work, it should also show a short decision card:
+When route choice matters, Jini should keep route evidence inspectable without
+making users learn routing before value:
 
 - `Tool`
 - `Provider`
@@ -116,14 +117,16 @@ Before Jini starts new work, it should also show a short decision card:
 - for multimodal work, Jini now says when it is learning separately from screenshot, scanned PDF, or audio/transcript evidence
 - when that learning exists, Jini also shows a compact `Multimodal learning` block in the shell so you can inspect those separate buckets without leaving the work
 
-That card should appear before the first draft so the user can see what Jini is
-about to do instead of guessing after the fact.
+That evidence should support the work instead of becoming the first-run
+experience. The default flow should produce a useful result first, then make
+route, model, effort, and continuity easy to inspect through `jini route`,
+`jini status`, or the saved work state.
 
 For multi-step work, Jini now plans quietly before drafting. The user sees the
 result through better structure and clearer `Doing now` / `Next` state, not
 through an exposed planner transcript. When route confidence is weak or the
 work is higher-stakes, Jini may also run one focused refine pass before showing
-the first artifact instead of always returning the very first draft unchanged.
+the first artifact instead of always returning the very first generated result unchanged.
 For `extra high` work, Jini can also run a selective consistency check with a
 second independent draft and keep the better result.
 For coding work, Jini now also tries to preserve a suitable current route when
@@ -136,8 +139,8 @@ Most people should ignore the routing knobs and start with:
 
 1. install Jini
 2. run `jini`
-3. paste the work you want finished
-4. if Jini says setup is missing, type `Use Auto`
+3. describe the task or paste the notes, files, screenshot, transcript, or rough ask
+4. if Jini says setup is missing, type `auto`
 
 Jini now has three setup knobs behind that simple path:
 
@@ -146,7 +149,7 @@ Jini now has three setup knobs behind that simple path:
 - model: `JINI_MODEL`
 
 If you leave them unset, Jini stays in the simplest path. Inside the shell,
-`Use Auto` means: Jini picks the cheapest suitable route by default, and
+`auto` means: Jini picks the cheapest suitable route by default, and
 switches to a stronger route only when the request clearly asks for deeper work.
 
 Supported tool choices today:
@@ -298,7 +301,7 @@ outcome explicitly. For downstream work outside Jini, you can opt in with
 `jini observe add <external-file>`, and Jini will scan that external copy on
 normal work loads to learn from reuse or substantive replacement there too.
 
-### Full Auto
+### Full auto
 
 ```bash
 JINI_TOOL=auto
@@ -327,10 +330,10 @@ In auto mode, Jini also looks at the work itself:
 
 Current provider support in the Go binary:
 
-- Claude direct can generate the first useful draft through the Messages API.
-- Azure OpenAI can generate the first useful draft through deployment chat completions.
-- Amazon Bedrock can generate the first useful draft through the Converse API.
-- OpenAI-compatible local SLM servers can generate the first useful draft through chat completions.
+- Claude direct can generate the first useful result through the Messages API.
+- Azure OpenAI can generate the first useful result through deployment chat completions.
+- Amazon Bedrock can generate the first useful result through the Converse API.
+- OpenAI-compatible local SLM servers can generate the first useful result through chat completions.
 - Local preview remains deterministic and offline.
 - Setup and cloud errors stay visible without printing secrets.
 
@@ -358,7 +361,7 @@ Effort level
 Medium
 
 Why this route
-Auto mode prefers the cheapest suitable tool for this kind of work.
+auto mode prefers the cheapest suitable tool for this kind of work.
 
 Continuity
 Kept the current coding route to preserve context continuity because the quality gap was not material.
@@ -371,7 +374,7 @@ Doing now
 Separating what is ready from what still blocks build
 
 Up next
-Open Missing Pieces Before Build
+Next: `jini open` for the readiness check, or `jini continue` to resolve missing pieces.
 
 Now
 Checking assumptions and approval gaps
@@ -395,7 +398,7 @@ If you skip this
 - Jini will keep approval and first-slice gaps visible instead of treating the plan as build-ready.
 
 Next
-Open Build-readiness check
+`jini open` shows the build-readiness check. `jini status` shows the full state.
 
 Ready now
 - Build-Readiness Check

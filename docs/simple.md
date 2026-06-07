@@ -19,9 +19,9 @@ quick_links:
 
 <p class="page-lead">Jini is for the awkward middle of work: after the meeting, before the handoff, before the recommendation, and before calling something done. It should reduce stress, not add process.</p>
 
-<p class="page-lead"><code>jini</code> is the front door. Use <code>Open</code> when you need the current artifact, and use <code>Plan</code> when the work needs structure before drafting.</p>
+<p class="page-lead"><code>jini</code> is the front door. Describe the task, then use <code>jini open</code>, <code>jini continue</code>, or <code>jini status</code> when Jini points you there.</p>
 
-`jini` is the front door. `Open` shows the current artifact. `Plan` slows down and structures the work before drafting.
+`jini` is the front door. `jini open` shows the current artifact. `jini continue` keeps the work moving. `jini status` shows the full state.
 
 <div class="section-card">
   <span class="section-kicker">Start here</span>
@@ -39,7 +39,7 @@ quick_links:
     </div>
     <div class="step-card">
       <span class="step-number">3</span>
-      <h3>Paste the work</h3>
+      <h3>Describe the task</h3>
       <p>Give Jini the messy notes, rough ask, screenshot, or draft you already have.</p>
     </div>
   </div>
@@ -47,7 +47,7 @@ quick_links:
 <pre><code class="language-bash">curl -fsSL https://raw.githubusercontent.com/maridlabsai/jini/main/install.sh | bash
 jini</code></pre>
 
-  <p>If setup is missing, Jini should say so in the shell. Then type <code>Auto</code>. If your company needs one strict route, use the matching setup path on the <a href="{{ '/install.html' | relative_url }}">Install</a> page instead.</p>
+  <p>If setup is missing, Jini should say so in the shell. Then type <code>auto</code>. If your company needs one strict route, use the matching setup path on the <a href="{{ '/install.html' | relative_url }}">Install</a> page instead.</p>
 
   <p><code>jini</code> is the front door. If you want the small public command list before you start, run <code>jini commands</code>. If you maintain routes, bundles, or release plumbing, the deeper inventory lives under <code>jini admin help</code>. The public support list should stay short: <code>status</code>, <code>continue</code>, <code>open</code>, and <code>doctor</code>.</p>
 </div>
@@ -81,14 +81,14 @@ jini</code></pre>
   <div class="pill-list">
     <span>Paste messy notes</span>
     <span>Ask for the outcome you want</span>
-    <span>Auto only if setup is missing</span>
-    <span>Open</span>
-    <span>Missing</span>
-    <span>Plan</span>
-    <span>Switch</span>
+    <span>auto only if setup is missing</span>
+    <span>jini open</span>
+    <span>jini continue</span>
+    <span>jini status</span>
+    <span>route only when it matters</span>
   </div>
 
-  <p>Before Jini starts a new piece of work, it should show a short decision card with the route, model, effort level, and reason. When you choose <code>Plan</code>, it should slow down and structure the work into goal, requirements, design, steps, and run.</p>
+  <p>Jini should keep route, model, effort level, and reason inspectable without making them the first thing a new user has to learn. When work needs structure, a plain ask like <code>plan this change</code> should trigger that path.</p>
 </div>
 
 <div class="section-card">

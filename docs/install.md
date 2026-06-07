@@ -17,7 +17,7 @@ quick_links:
     href: /cli.html
 ---
 
-<p class="page-lead">The normal path should be simple: install once, run <code>jini</code>, paste the work you want finished.</p>
+<p class="page-lead">The normal path should be simple: install once, run <code>jini</code>, then describe the task or paste the rough notes you already have.</p>
 
 <div class="section-card section-card-soft surface-story">
   <span class="section-kicker">Current availability</span>
@@ -155,14 +155,14 @@ jini&gt; fix failing tests
     </div>
     <div class="step-card">
       <span class="step-number">2</span>
-      <h3>Paste the work</h3>
+      <h3>Describe the task</h3>
       <p>Start from the notes, draft, screenshot, transcript, or rough ask you already have.</p>
       <p>After the first answer, keep typing plain follow-up asks like <code>fix failing tests</code>, <code>what is blocked?</code>, or <code>open the latest artifact</code> instead of learning Jini-specific action words.</p>
     </div>
     <div class="step-card">
       <span class="step-number">3</span>
-      <h3>Auto if needed</h3>
-      <p>If setup is missing, type <code>Auto</code> and let Jini help you connect the best available route.</p>
+      <h3>Use auto if needed</h3>
+      <p>If setup is missing, type <code>auto</code> and let Jini help you connect the best available route.</p>
     </div>
   </div>
 
@@ -202,7 +202,7 @@ If you already have current work, use `jini status` once.</code></pre>
 
   <div class="checklist-grid">
     <div class="checklist-card">
-      <h3>Auto</h3>
+      <h3>auto</h3>
       <p>Best for most people. Jini chooses the cheapest suitable route by default and escalates only when the request clearly needs deeper work.</p>
     </div>
     <div class="checklist-card">
@@ -266,7 +266,7 @@ jini
     </div>
 
     <div class="scenario-card">
-      <h3>Auto route</h3>
+      <h3>auto route</h3>
 <pre><code class="language-bash">
 export JINI_TOOL=auto
 export JINI_PROVIDER=auto
@@ -325,7 +325,7 @@ jini
 <div class="section-card section-card-cta">
   <span class="section-kicker">Next step</span>
   <h2>Most people should stop here</h2>
-  <p>Install Jini, run <code>jini</code>, and paste the work you want finished. Only drop to the strict route blocks when policy or debugging requires it.</p>
+  <p>Install Jini, run <code>jini</code>, and describe the task or paste the rough notes you already have. Only drop to the strict route blocks when policy or debugging requires it.</p>
   <div class="page-intro-links">
     <a href="{{ '/simple.html' | relative_url }}">Quickstart</a>
     <a href="{{ '/cli.html' | relative_url }}">Command Catalog</a>

@@ -334,7 +334,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
 
 <div class="section-card section-card-cta">
   <h2>Start with the one command that matters</h2>
-  <p>Install Jini, run <code>jini</code>, and paste the work you want finished. Learn the rest only when the work actually needs it.</p>
+  <p>Install Jini, run <code>jini</code>, and describe the task or paste the rough notes you already have. Learn the rest only when the work actually needs it.</p>
   <div class="cta-row">
     <a class="cta-button" href="{{ '/install.html' | relative_url }}">Install</a>
     <a class="cta-button cta-button-secondary" href="{{ '/simple.html' | relative_url }}">Quickstart</a>

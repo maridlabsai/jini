@@ -189,7 +189,7 @@ quick_links:
 <div class="section-card section-card-cta">
   <span class="section-kicker">Next step</span>
   <h2>Start from a familiar mess</h2>
-  <p>Use the examples as a quick calibration point, then start with <code>jini</code> and paste the work you already have.</p>
+  <p>Use the examples as a quick calibration point, then start with <code>jini</code> and describe the task or paste the rough notes you already have.</p>
   <div class="quote-strip">
     <strong>The output should come before the summary.</strong>
     <p>What is missing should stay visible and the next move should be obvious. If Jini only gives you a cleaner explanation of the work, it is not good enough.</p>
