@@ -27,11 +27,13 @@ Jini should be a complete, visible work loop.
 The approved user experience is:
 
 1. user gives messy context
-2. Jini returns a useful object first
+2. Jini routes to the configured downstream CLI when that is the right path, or acts locally when safe
 3. Jini shows what is missing, uncertain, and safe
-4. user can keep going, inspect gaps, plan next work, inspect trust, or start new work
+4. user can keep going with familiar commands, inspect gaps, plan next work, inspect trust, or start new work
 
 Jini is not approved as only a launcher into a work system.
+Jini is also not approved to create a new conversation grammar when common
+agent CLI behavior is enough.
 
 ## Critique Resolution Rule
 
@@ -72,16 +74,17 @@ Required flow:
 
 ```text
 Jini
-Paste what you want finished.
+Describe the task. Jini will route it, act when safe, or ask one short question.
 
-Good inputs:
+Examples:
+- Add a line to the matching .txt file in this folder
 - Turn meeting notes into something I can send
 - Check whether a plan is ready to hand off
 - Plan a 7 day Paris trip for two adults in October
 - Compare these vendors and recommend one
 
-Nothing will be sent yet.
-If you want help shaping a messy ask, type `I'm not sure`.
+Jini will not send, book, commit, or run destructive changes without a visible step.
+Type `help` for examples and commands.
 ```
 
 If the user types a clear job or pastes source directly, Jini should start from
@@ -90,15 +93,15 @@ that input without making the user choose a command.
 If the user types `I am not sure`:
 
 ```text
-Paste what you have. A rough version is fine.
-I will turn it into a useful draft or ask one short follow-up if something important is missing.
-Nothing will be sent yet.
+Describe the task. Rough notes are fine.
+Jini will route it, act when safe, or ask one short question.
+Nothing will be sent, booked, committed, or changed without a visible step.
 ```
 
 If the input does not clearly fit a flagship flow, Jini still returns a useful
 first object:
 
-- `Working Draft`
+- `Task Snapshot`
 
 It must show:
 
@@ -115,16 +118,17 @@ The first visible result must be:
 The summary appears after the result or when the user asks what is still
 missing.
 
-## Post-Result Actions
+## Post-Result Commands
 
-After the first result, show only real actions:
+After the first result, use familiar commands instead of a custom action
+taxonomy:
 
-- `Continue`
-- `Missing`
-- `Plan`
-- `Start`
+- `jini continue`
+- `jini open`
+- `jini status`
+- `jini start`
 
-Do not show actions that are not implemented.
+Do not show commands or actions that are not implemented.
 
 ## Competitive Requirements
 

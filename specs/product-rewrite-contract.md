@@ -251,24 +251,25 @@ quality and parity gates.
 2. If no current work exists, Jini asks:
    - `Jini`
 3. Jini supports natural paste-first intake:
-   - `Paste what you want finished.`
+   - `Describe the task. Jini will route it, act when safe, or ask one short question.`
 4. Jini shows example inputs without requiring command selection:
+   - Add a line to the matching .txt file in this folder
    - Turn meeting notes into something I can send
    - Check whether a plan is ready to hand off
    - Plan a 7 day Paris trip for two adults in October
    - Compare these vendors and recommend one
 5. If the user chooses `I am not sure`, Jini says:
-   - `Paste what you have. A rough version is fine.`
-   - `I will turn it into a useful draft or ask one short follow-up if something important is missing.`
-   - `Nothing will be sent yet.`
+   - `Describe the task. Rough notes are fine.`
+   - `Jini will route it, act when safe, or ask one short question.`
+   - `Nothing will be sent, booked, committed, or changed without a visible step.`
    If the input does not clearly match a flagship flow, Jini still returns a
-   useful first object called `Working Draft` with:
+   useful first object called `Task Snapshot` with:
    - what the user appears to be trying to finish
    - what can be used now
    - what Jini needs next
    - what is safe because nothing has been sent
 6. If the user chooses a job, Jini asks one plain source question:
-   - `Paste what you have. A rough version is fine.`
+   - `Describe the task. Rough notes are fine.`
 7. Inline helper text may show one example for the selected job.
 8. Jini asks only blocking questions after that.
 9. Jini silently defaults to a quick useful draft.

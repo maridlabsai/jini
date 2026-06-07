@@ -2393,10 +2393,11 @@ func TestInteractiveLauncherShowsDecisionCardBeforeFirstDraft(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Your first draft is ready.",
+		"Result ready.",
 		"Itinerary",
 		"Provider Paris",
-		"Context",
+		"Saved:",
+		"Next: `jini continue`, `jini open`, or `jini status`.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)

@@ -123,6 +123,36 @@ Simplicity does not mean hiding truth or removing expert control. It means:
 - plain language before framework language
 - advanced controls only when they protect trust, cost, recovery, or safety
 - no new surface unless it makes the user's path shorter
+- no new ramp-up curve for users who already know agent CLIs
+
+Jini should feel familiar to users of modern agent CLIs:
+
+- short prompts
+- direct execution when safe
+- visible file changes and artifact paths
+- familiar commands such as `status`, `continue`, and `open`
+- no custom action taxonomy when a normal CLI command or downstream CLI
+  interaction is enough
+
+Jini should act as a thin router and pipe to configured downstream CLIs when
+the user has already chosen that framework. It should normalize request
+capture, route choice, approvals, state, and output shape, but it should not
+force users to learn a separate Jini conversation grammar.
+
+The exception is offline/local execution. When Jini owns the local model route,
+device policy, or offline fallback, it must act as a full-fledged Jini
+framework, not a thin shell. Offline mode should be comparable in product depth
+to serious agent CLIs such as Codex or Claude Code:
+
+- its own coherent UX shell
+- local model routing and device-aware runtime policy
+- work state, memory, and artifact lifecycle
+- approvals, safety boundaries, and reversible operations
+- skills and workflow framework where tier policy allows it
+- diagnostics, recovery, and explainable route decisions
+
+That depth must not create a new ramp-up curve. Even in offline mode, the
+interaction should stay consistent with common agent CLI behavior.
 
 ### 4. Agentic automation with visible trust
 

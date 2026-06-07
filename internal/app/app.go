@@ -1130,7 +1130,7 @@ func runNewWorkIntakeWithScanner(session *bufio.Scanner, stdout, stderr io.Write
 		if isGreetingOnly(firstRaw) {
 			fmt.Fprintln(stdout)
 			fmt.Fprintln(stdout, "Hi.")
-			fmt.Fprintln(stdout, "Tell me what you want finished, or paste notes when you're ready.")
+			fmt.Fprintln(stdout, "Describe the task when you're ready.")
 			fmt.Fprintln(stdout)
 			continue
 		}
@@ -1260,7 +1260,7 @@ func resolveStarterChoice(raw string) (starterChoice, error) {
 	choice := normalizeName(raw)
 	switch choice {
 	case "3", "i am not sure", "i'm not sure", "i’m not sure", "im not sure", "i m not sure", "not sure", "unsure", "help me finish this":
-		return starterChoice{PackID: "auto", ChoiceLabel: "I am not sure", DefaultName: "Working Draft", State: "decided"}, nil
+		return starterChoice{PackID: "auto", ChoiceLabel: "I am not sure", DefaultName: "Task Snapshot", State: "decided"}, nil
 	case "plan this first", "plan first":
 		return starterChoice{PackID: "auto", ChoiceLabel: "Plan", DefaultName: "Plan", State: "modeled"}, nil
 	}
@@ -1358,7 +1358,7 @@ func maybeHandleNewWorkUtilityIntent(raw string, stdout io.Writer) (bool, int) {
 	case "clear":
 		fmt.Fprintln(stdout)
 		fmt.Fprintln(stdout, "Nothing to clear yet.")
-		fmt.Fprintln(stdout, "Paste what you want finished when you're ready.")
+		fmt.Fprintln(stdout, "Describe the task when you're ready.")
 		return true, 0
 	default:
 		return false, 0
@@ -1368,12 +1368,12 @@ func maybeHandleNewWorkUtilityIntent(raw string, stdout io.Writer) (bool, int) {
 func sourcePromptForChoice(choice starterChoice) string {
 	if choice.PackID == "auto" {
 		return strings.Join([]string{
-			"Paste what you want finished. Rough notes are fine.",
-			"I will turn it into a useful draft or ask one short follow-up if something important is missing.",
-			"Nothing will be sent yet.",
+			"Describe the task. Rough notes are fine.",
+			"Jini will route it, act when safe, or ask one short question.",
+			"Nothing will be sent, booked, committed, or changed without a visible step.",
 		}, "\n")
 	}
-	return "Paste what you want finished. Rough notes are fine."
+	return "Describe the task. Rough notes are fine."
 }
 
 func classifyStarterChoice(source string) starterChoice {
@@ -1413,7 +1413,7 @@ func classifyWorkEnvelope(explicitChoice starterChoice, source string) workEnvel
 		packID := detectStarterPackFromSource(source)
 		resolved, ok := starterChoiceForPack(packID)
 		if !ok {
-			resolved = starterChoice{PackID: "general-work", ChoiceLabel: "Working Draft", DefaultName: "Working Draft", State: "decided"}
+			resolved = starterChoice{PackID: "general-work", ChoiceLabel: "Task Snapshot", DefaultName: "Task Snapshot", State: "decided"}
 		}
 		choice = resolved
 	}
@@ -2559,18 +2559,18 @@ func resolveOpenItem(summary *workSummary, name string) (*catalogItem, error) {
 func renderNewWorkLauncher(w io.Writer) {
 	fmt.Fprintln(w, "Jini")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Paste what you want finished.")
+	fmt.Fprintln(w, "Describe the task. Jini will route it, act when safe, or ask one short question.")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Examples:")
+	fmt.Fprintln(w, "- Add a line to the matching .txt file in this folder")
 	fmt.Fprintln(w, "- Turn meeting notes into something I can send")
 	fmt.Fprintln(w, "- Check whether a plan is ready to hand off")
 	fmt.Fprintln(w, "- Plan a 7 day Paris trip for two adults in October")
 	fmt.Fprintln(w, "- Compare these vendors and recommend one")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Nothing will be sent yet.")
+	fmt.Fprintln(w, "Jini will not send, book, commit, or run destructive changes without a visible step.")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "If you want help shaping a messy ask, type `I'm not sure`.")
-	fmt.Fprintln(w, "If you need commands, type `help`.")
+	fmt.Fprintln(w, "Type `help` for examples and commands.")
 }
 
 func renderPublicCommandInventory(w io.Writer) {
@@ -2613,19 +2613,18 @@ func renderAdminCommandInventory(w io.Writer) {
 
 func renderNewWorkPrompt(w io.Writer) {
 	fmt.Fprintln(w, "Jini")
-	fmt.Fprintln(w, "Paste what you want finished.")
-	fmt.Fprintln(w, "Type `help` if you want examples or commands.")
+	fmt.Fprintln(w, "Describe the task.")
+	fmt.Fprintln(w, "Type `help` for examples and commands.")
 }
 
 func renderNoCurrentWorkStatus(w io.Writer) {
 	fmt.Fprintln(w, "No current work yet.")
-	fmt.Fprintln(w, "Paste what you want finished.")
-	fmt.Fprintln(w, "Type `help` if you want examples or commands.")
+	fmt.Fprintln(w, "Describe the task, or run `jini commands`.")
 }
 
 func renderNoInitRequired(w io.Writer) {
 	fmt.Fprintln(w, "No init step is required before first value.")
-	fmt.Fprintln(w, "Paste notes, files, or a request and Jini will create the work record when there is real work to preserve.")
+	fmt.Fprintln(w, "Describe a task and Jini will route it, act when safe, or save the work state.")
 }
 
 func renderNoCurrentMemoryStatus(w io.Writer) {
@@ -2991,12 +2990,12 @@ func runProviderSetupWizard(mode string, scanner *bufio.Scanner, stdout, stderr 
 
 func renderFirstRunResult(w io.Writer, summary *workSummary) {
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Your first draft is ready.")
+	fmt.Fprintln(w, "Result ready.")
 	fmt.Fprintln(w)
 
 	item := firstResultItem(summary)
 	if item == nil {
-		fmt.Fprintln(w, "Working draft")
+		fmt.Fprintln(w, "Work item")
 		fmt.Fprintln(w)
 		fmt.Fprintln(w, "No result file is ready yet. Jini still created the work record so the source context is not lost.")
 		renderPostResultActions(w, summary, nil)
@@ -3173,7 +3172,6 @@ func renderOtherActiveWorkList(w io.Writer, active []*workSummary, currentTitle 
 }
 
 func renderPostResultActions(w io.Writer, summary *workSummary, item *catalogItem) {
-	renderPrimaryActionMenu(w, summary, "Actions", "Open")
 	renderPostResultContext(w, summary, item)
 }
 
@@ -3264,12 +3262,9 @@ func renderPostResultContext(w io.Writer, summary *workSummary, item *catalogIte
 		}
 	}
 	alsoReady := postResultAlsoReady(summary.Thread.ReadyNow, item)
+	fmt.Fprintln(w)
 	if len(alsoReady) > 0 {
-		fmt.Fprintln(w)
-		fmt.Fprintln(w, "Also ready")
-		for _, value := range alsoReady {
-			fmt.Fprintf(w, "- %s\n", value)
-		}
+		fmt.Fprintf(w, "Also ready: %s\n", strings.Join(alsoReady, ", "))
 	}
 	if len(summary.Thread.MultimodalLearning) > 0 {
 		fmt.Fprintln(w)
@@ -3278,8 +3273,10 @@ func renderPostResultContext(w io.Writer, summary *workSummary, item *catalogIte
 			fmt.Fprintf(w, "- %s\n", value)
 		}
 	}
-	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Saved. Type `status` for full status.")
+	if item != nil && strings.TrimSpace(item.Path) != "" {
+		fmt.Fprintf(w, "Saved: %s\n", item.Path)
+	}
+	fmt.Fprintln(w, "Next: `jini continue`, `jini open`, or `jini status`.")
 }
 
 func richerUsefulItem(summary *workSummary) *catalogItem {

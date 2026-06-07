@@ -57,6 +57,7 @@ func TestDirectTaskArgumentsStartNativeIntake(t *testing.T) {
 				"Paste what you want finished.",
 				"Your first draft is ready.",
 				"Working Draft",
+				"Task Snapshot",
 				"Actions",
 				">",
 			} {
@@ -558,8 +559,9 @@ func TestLauncherHelpHidesProviderStateWhenUsingLocalPreview(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Paste what you want finished.",
-		"If you want help shaping a messy ask, type `I'm not sure`.",
+		"Describe the task.",
+		"Describe the task. Jini will route it, act when safe, or ask one short question.",
+		"Add a line to the matching .txt file in this folder",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -1408,7 +1410,7 @@ func TestStatusHandlesStaleCurrentWorkWithoutLeakingPath(t *testing.T) {
 	for _, want := range []string{
 		"Remembered work is no longer available.",
 		"No current work yet.",
-		"Paste what you want finished.",
+		"Describe the task, or run `jini commands`.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -1438,8 +1440,8 @@ func TestLauncherRecoversFromStaleCurrentWork(t *testing.T) {
 	for _, want := range []string{
 		"Remembered work is no longer available.",
 		"Jini",
-		"Paste what you want finished.",
-		"Type `help` if you want examples or commands.",
+		"Describe the task.",
+		"Type `help` for examples and commands.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -1761,8 +1763,8 @@ func TestLauncherStartsAsCompactShellWithoutCurrentWork(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Jini",
-		"Paste what you want finished.",
-		"Type `help` if you want examples or commands.",
+		"Describe the task.",
+		"Type `help` for examples and commands.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -1775,7 +1777,7 @@ func TestLauncherStartsAsCompactShellWithoutCurrentWork(t *testing.T) {
 		"choose a common job below",
 		"1. Turn meeting notes",
 		"2. Check whether",
-		"If you want help shaping a messy ask, type `I'm not sure`.",
+		"Describe the task. Rough notes are fine.",
 	} {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("expected shell-first launcher not to expose menu %q, got:\n%s", unwanted, out)
@@ -1796,12 +1798,12 @@ func TestLauncherHelpShowsStartChoicesWithoutCurrentWork(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Jini",
-		"Paste what you want finished.",
+		"Describe the task.",
 		"Turn meeting notes into something I can send",
 		"Check whether a plan is ready to hand off",
 		"Plan a 7 day Paris trip for two adults in October",
 		"Compare these vendors and recommend one",
-		"If you want help shaping a messy ask, type `I'm not sure`.",
+		"Describe the task. Jini will route it, act when safe, or ask one short question.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -1837,14 +1839,12 @@ func TestInteractiveLauncherCreatesMeetingWork(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Jini",
-		"Paste what you want finished.",
+		"Describe the task.",
+		"Result ready.",
 		"Sendable Follow-up",
 		"## Send this",
-		"Continue",
-		"Open",
-		"Missing",
-		"Expand",
-		"Plan",
+		"Saved:",
+		"Next: `jini continue`, `jini open`, or `jini status`.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -1919,14 +1919,12 @@ func TestInteractiveLauncherCreatesSpecReadinessWork(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Jini",
-		"Paste what you want finished.",
+		"Describe the task.",
+		"Result ready.",
 		"Build-Readiness Check",
 		"## What looks ready now",
-		"Continue",
-		"Open",
-		"Missing",
-		"Expand",
-		"Plan",
+		"Saved:",
+		"Next: `jini continue`, `jini open`, or `jini status`.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -1989,16 +1987,18 @@ func TestInteractiveLauncherHandlesUnsureInputWithUsefulPass(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Jini",
-		"Paste what you want finished.",
-		"Paste what you want finished. Rough notes are fine.",
-		"I will turn it into a useful draft or ask one short follow-up if something important is missing.",
-		"Nothing will be sent yet.",
-		"Working Draft",
-		"What this looks like",
-		"Useful starting point",
-		"Best next inputs",
-		"Safe right now",
+		"Describe the task.",
+		"Describe the task. Rough notes are fine.",
+		"Jini will route it, act when safe, or ask one short question.",
+		"Nothing will be sent, booked, committed, or changed without a visible step.",
+		"Result ready.",
+		"Task Snapshot",
+		"Request",
+		"Current read",
+		"Next options",
+		"Safety",
 		"Nothing has been sent",
+		"Next: `jini continue`, `jini open`, or `jini status`.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -2007,7 +2007,7 @@ func TestInteractiveLauncherHandlesUnsureInputWithUsefulPass(t *testing.T) {
 	if strings.Contains(out, "Short version or full version") {
 		t.Fatalf("expected no first-run output-size prompt, got:\n%s", out)
 	}
-	if strings.Contains(out, "Goal") && strings.Index(out, "Working Draft") > strings.Index(out, "Goal") {
+	if strings.Contains(out, "Goal") && strings.Index(out, "Task Snapshot") > strings.Index(out, "Goal") {
 		t.Fatalf("expected first useful result before work summary, got:\n%s", out)
 	}
 	assertNoFirstRunStatusDump(t, out)
@@ -2031,8 +2031,8 @@ func TestInteractiveLauncherHelpMeFinishThisAsksForRoughContext(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Paste what you want finished. Rough notes are fine.",
-		"I will turn it into a useful draft or ask one short follow-up if something important is missing.",
+		"Describe the task. Rough notes are fine.",
+		"Jini will route it, act when safe, or ask one short question.",
 		"Sendable Follow-up",
 		"## Send this",
 	} {
@@ -2068,10 +2068,10 @@ func TestInteractiveLauncherGreetingDoesNotCreateWork(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Paste what you want finished.",
-		"Type `help` if you want examples or commands.",
+		"Describe the task.",
+		"Type `help` for examples and commands.",
 		"Hi.",
-		"Tell me what you want finished, or paste notes when you're ready.",
+		"Describe the task when you're ready.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -2204,7 +2204,7 @@ func TestInteractiveLauncherHelpWithPunctuationDoesNotCreateWork(t *testing.T) {
 			for _, want := range []string{
 				"Jini",
 				"Examples:",
-				"If you need commands, type `help`.",
+				"Type `help` for examples and commands.",
 			} {
 				if !strings.Contains(out, want) {
 					t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -2234,8 +2234,10 @@ func TestInteractiveLauncherMenuPhraseWithSentencePunctuationStartsWork(t *testi
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Your first draft is ready.",
+		"Result ready.",
 		"Sendable Follow-up",
+		"Saved:",
+		"Next: `jini continue`, `jini open`, or `jini status`.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -2268,8 +2270,10 @@ func TestNewCommandWithInputMatchesRunNew(t *testing.T) {
 
 	for _, out := range []string{newOut, runNewOut} {
 		for _, want := range []string{
-			"Your first draft is ready.",
+			"Result ready.",
 			"Sendable Follow-up",
+			"Saved:",
+			"Next: `jini continue`, `jini open`, or `jini status`.",
 		} {
 			if !strings.Contains(out, want) {
 				t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -2277,7 +2281,7 @@ func TestNewCommandWithInputMatchesRunNew(t *testing.T) {
 		}
 	}
 
-	if newOut != runNewOut {
+	if normalizeSavedPathsForTest(newOut) != normalizeSavedPathsForTest(runNewOut) {
 		t.Fatalf("expected `new` with stdin to match `run new`.\nNEW:\n%s\nRUN NEW:\n%s", newOut, runNewOut)
 	}
 	if newCurrent["pack_id"] != "meeting-followup" || runNewCurrent["pack_id"] != "meeting-followup" {
@@ -2316,8 +2320,7 @@ func TestInteractiveLauncherRunsMeetingPostResultActions(t *testing.T) {
 			out := runInteractiveForTest(t, t.TempDir(), source+"\n"+tc.action+"\n")
 			for _, want := range []string{
 				"## Send this",
-				"Continue",
-				"Missing",
+				"Next: `jini continue`, `jini open`, or `jini status`.",
 			} {
 				if !strings.Contains(out, want) {
 					t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -2366,8 +2369,7 @@ func TestInteractiveLauncherRunsSpecPostResultActions(t *testing.T) {
 			out := runInteractiveForTest(t, t.TempDir(), source+"\n"+tc.action+"\n")
 			for _, want := range []string{
 				"## What looks ready now",
-				"Continue",
-				"Missing",
+				"Next: `jini continue`, `jini open`, or `jini status`.",
 			} {
 				if !strings.Contains(out, want) {
 					t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -3078,7 +3080,7 @@ func TestPostResultStatusCommandShowsFullState(t *testing.T) {
 	out := runInteractiveForTest(t, t.TempDir(), source+"\nstatus\n")
 
 	for _, want := range []string{
-		"Your first draft is ready.",
+		"Result ready.",
 		"Goal",
 		"Weekly Product Review Need Owners",
 		"Ready now",
@@ -3685,7 +3687,7 @@ func TestCurrentWorkFreeformInputConfirmsBeforeStartingNewWork(t *testing.T) {
 		"New work",
 		"Current:",
 		"Start",
-		"Your first draft is ready.",
+		"Result ready.",
 		"7 Day Paris Trip",
 		"Itinerary",
 		"Budget Sketch",
@@ -4108,6 +4110,16 @@ func nonEmptyLineCount(out string) int {
 		}
 	}
 	return count
+}
+
+func normalizeSavedPathsForTest(out string) string {
+	lines := strings.Split(out, "\n")
+	for index, line := range lines {
+		if strings.HasPrefix(line, "Saved: ") {
+			lines[index] = "Saved: <path>"
+		}
+	}
+	return strings.Join(lines, "\n")
 }
 
 func BenchmarkInteractiveNoWorkHelp(b *testing.B) {

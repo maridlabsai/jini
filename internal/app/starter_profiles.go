@@ -316,7 +316,7 @@ var starterPackProfiles = map[string]starterPackProfile{
 	"general-work": {
 		PackID:             "general-work",
 		ChoiceLabel:        "Something else",
-		DefaultName:        "Working Draft",
+		DefaultName:        "Task Snapshot",
 		State:              "decided",
 		WorkClass:          "general",
 		RequestCohort:      "general-pass",
@@ -324,13 +324,13 @@ var starterPackProfiles = map[string]starterPackProfile{
 		MenuAliases:        []string{"6", "something else", "something"},
 		DetectSignals:      nil,
 		PrimaryViewPath:    "first-useful-pass.md",
-		PrimaryViewLabel:   "Working Draft",
+		PrimaryViewLabel:   "Task Snapshot",
 		WorkingWith:        "The files and notes in this work",
 		NextStep:           "Review what is ready",
 		PrioritizedViewIDs: []string{"repo-review", "first-useful-pass", "next-actions"},
 		SynthesizedViews: []starterCatalogSpec{
 			{ID: "repo-review", FileStem: "repo-review", Label: "Repo Review", Aliases: []string{"repo review", "review", "repository review"}},
-			{ID: "first-useful-pass", FileStem: "first-useful-pass", Label: "Working Draft", Aliases: []string{"working draft", "first pass", "useful pass", "summary", "draft"}},
+			{ID: "first-useful-pass", FileStem: "first-useful-pass", Label: "Task Snapshot", Aliases: []string{"task snapshot", "working draft", "first pass", "useful pass", "summary", "draft"}},
 		},
 		TasksView: &starterTasksViewProfile{
 			ID:      "next-actions",
@@ -609,7 +609,7 @@ func maxInt(a, b int) int {
 
 func starterPrimaryView(packID string) (string, string) {
 	profile := starterProfile(packID)
-	return firstNonEmpty(profile.PrimaryViewPath, "first-useful-pass.md"), firstNonEmpty(profile.PrimaryViewLabel, "Working Draft")
+	return firstNonEmpty(profile.PrimaryViewPath, "first-useful-pass.md"), firstNonEmpty(profile.PrimaryViewLabel, "Task Snapshot")
 }
 
 func starterWorkingWith(packID string) string {

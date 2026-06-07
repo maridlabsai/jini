@@ -284,11 +284,11 @@ Required first-run shape:
 What do you need help finishing?
 
 Jini shell
-Paste notes or type what you want finished.
+Describe the task. Jini will route it, act when safe, or ask one short question.
 
 If you need setup help, type `Auto`.
 
-Nothing will be sent yet.
+Nothing will be sent, booked, committed, or changed without a visible step.
 ```
 
 If the user is unsure, Jini should still accept rough input and produce a first

@@ -233,38 +233,38 @@ func buildFirstUsefulPassArtifactPlan(title, source string) starterArtifactPlan 
 		Docs: []starterArtifactDoc{
 			{
 				Path:  "first-useful-pass.md",
-				Title: fmt.Sprintf("Working Draft: %s", title),
+				Title: fmt.Sprintf("Task Snapshot: %s", title),
 				Sections: []starterArtifactSection{
-					{Heading: "What this looks like", Bullets: []string{source}},
+					{Heading: "Request", Bullets: []string{source}},
 					{
-						Heading: "Useful starting point",
+						Heading: "Current read",
 						Bullets: []string{
-							"This is enough to begin shaping a real output without guessing hidden details.",
-							"The next pass can turn this into a follow-up, plan check, memo, checklist, or another concrete artifact.",
+							"Jini saved the task because it did not match a safe direct action yet.",
+							"The next step should either route to a configured CLI, use a local model, or ask for one missing detail.",
 						},
 					},
 					{
-						Heading: "Best next inputs",
+						Heading: "Next options",
 						Bullets: []string{
-							"The audience or recipient.",
-							"The outcome you want after someone reads or uses this.",
-							"Any deadline, owner, blocker, or decision that should not be guessed.",
+							"Type `Continue` to refine the task.",
+							"Type `Open` to inspect saved artifacts.",
+							"Type `Start` to switch to a different task.",
 						},
 					},
 					{
-						Heading: "Safe right now",
+						Heading: "Safety",
 						Bullets: []string{
 							"Nothing has been sent, changed, booked, or committed.",
-							"You can review this pass before sharing or turning it into a fuller artifact.",
+							"Jini should prefer a visible route or explicit confirmation before side effects.",
 						},
 					},
 				},
 			},
 			{
 				Path:  "tasks.md",
-				Title: "What I Need Next",
+				Title: "Next Actions",
 				Sections: []starterArtifactSection{
-					{Bullets: []string{"Name the audience or recipient.", "Confirm the desired outcome.", "Add any deadline, owner, blocker, or decision."}},
+					{Bullets: []string{"Resolve the best route for this task.", "Use a configured downstream CLI when available.", "Use local/offline execution only when the task can be handled safely."}},
 				},
 			},
 		},

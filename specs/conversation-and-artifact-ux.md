@@ -19,13 +19,31 @@ this document should be reconciled.
 
 The goal is to stop Jini from behaving like a loose chat transcript.
 
-Jini should behave like a visible work thread:
+Jini should behave like a familiar agent CLI with a visible work thread:
 
 - the goal stays visible
 - the current state stays visible
 - the inputs stay visible
 - the produced artifacts stay visible
 - the next step stays visible
+
+Jini must not create a new ramp-up curve. Users who already know Codex,
+Claude Code, Aider, Continue, or similar CLIs should not have to learn a new
+conversation grammar before they see value. Normal use should preserve familiar
+agent CLI expectations:
+
+- concise prompts
+- direct action when safe
+- pass-through to configured downstream CLIs when that is the selected route
+- normalized Jini state and artifacts around the downstream run
+- local/offline execution as a first-class Jini runtime where Jini owns the
+  model route
+- explicit confirmation before risky side effects
+
+Offline mode is allowed to expose the full Jini framework: local routing,
+artifact lifecycle, memory, skills where allowed by tier, approvals, diagnostics,
+and recovery. The constraint is not "less product"; the constraint is familiar
+CLI behavior with no unnecessary Jini-specific learning curve.
 
 This spec is informed directly by the Codex collaboration pattern used in this
 rewrite:
@@ -361,24 +379,22 @@ Rules:
 ## 3. First Result Screen
 
 ```text
-Your first draft is ready.
+Result ready.
 
 Trip Plan
 
 [artifact preview]
 
-Actions
-- Continue
-- Missing
-- Plan
-- Start
+Also ready: Budget Sketch, Travel Logistics
+Saved: views/itinerary.md
+Next: `jini continue`, `jini open`, or `jini status`.
 ```
 
 Rules:
 
 - useful result appears before summary
 - no output-size question before value
-- follow-on actions must all be real
+- follow-on commands must be familiar and real
 
 ## 4. Current Thread Screen
 
