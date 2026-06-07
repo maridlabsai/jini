@@ -121,8 +121,7 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 		case "provider":
 			return runProvider(args[1:], stdout, stderr)
 		case "route":
-			renderRouteCostStatus(stdout)
-			return 0
+			return runRoute(args[1:], stdout, stderr)
 		case "memory":
 			current, err := loadCurrentWork()
 			if err == nil && current != nil {
@@ -240,10 +239,12 @@ func validateNativeArgs(args []string) error {
 		if len(args) == 2 && canonicalHelpTopic(args[1]) != "" {
 			return nil
 		}
-	case "commands", "init", "memory", "new", "permissions", "route", "status", "continue":
+	case "commands", "init", "memory", "new", "permissions", "status", "continue":
 		if len(args) == 1 {
 			return nil
 		}
+	case "route":
+		return nil
 	case "admin":
 		if len(args) == 1 || (len(args) == 2 && isAdminHelpAlias(args[1])) {
 			return nil
@@ -718,6 +719,115 @@ func runProvider(args []string, stdout, stderr io.Writer) int {
 		return 0
 	}
 	return 1
+}
+
+func runRoute(args []string, stdout, stderr io.Writer) int {
+	if len(args) == 0 {
+		renderRouteCostStatus(stdout)
+		return 0
+	}
+	switch exactCommandToken(args[0]) {
+	case "list", "help", "--help", "-h":
+		renderRouteList(stdout)
+		return 0
+	case "status":
+		renderRouteCostStatus(stdout)
+		return 0
+	case "auto":
+		return saveAutoRoute(stdout, stderr)
+	case "set", "use", "lock":
+		if len(args) != 2 {
+			fmt.Fprintln(stderr, "Choose a route to set.")
+			fmt.Fprintln(stderr, "Run `jini route list` to see available routes.")
+			return 1
+		}
+		return saveExplicitRoute(args[1], stdout, stderr)
+	default:
+		fmt.Fprintf(stderr, "Unknown route command %q.\n", args[0])
+		fmt.Fprintln(stderr, "Run `jini route list` to see available routes.")
+		return 1
+	}
+}
+
+func saveAutoRoute(stdout, stderr io.Writer) int {
+	if err := saveRouterSettings("auto"); err != nil {
+		fmt.Fprintf(stderr, "Could not save auto route: %v\n", err)
+		return 1
+	}
+	fmt.Fprintln(stdout, "Auto route restored.")
+	fmt.Fprintln(stdout, "Current: auto")
+	fmt.Fprintln(stdout, "Jini will choose the least-expense capable route per request.")
+	return 0
+}
+
+func saveExplicitRoute(raw string, stdout, stderr io.Writer) int {
+	mode := normalizeToolMode(raw)
+	if mode == "auto" {
+		return saveAutoRoute(stdout, stderr)
+	}
+	if !knownRouteMode(mode) {
+		fmt.Fprintf(stderr, "Unknown route %q.\n", strings.TrimSpace(raw))
+		fmt.Fprintln(stderr, "Run `jini route list` to see available routes.")
+		return 1
+	}
+	decision := detectRouteForToolMode(mode, false)
+	if !decision.Active {
+		fmt.Fprintf(stderr, "Unknown route %q.\n", strings.TrimSpace(raw))
+		fmt.Fprintln(stderr, "Run `jini route list` to see available routes.")
+		return 1
+	}
+	if err := saveRouterSettings(mode); err != nil {
+		fmt.Fprintf(stderr, "Could not save route: %v\n", err)
+		return 1
+	}
+	fmt.Fprintln(stdout, "Route saved.")
+	fmt.Fprintf(stdout, "Current: %s\n", firstNonEmpty(decision.ToolLabel, titleCase(mode)))
+	fmt.Fprintf(stdout, "Mode: %s\n", mode)
+	if strings.TrimSpace(decision.Provider.Status) != "" && decision.Provider.Status != "ok" {
+		fmt.Fprintf(stdout, "Setup: %s. Run `jini doctor` to inspect missing setup.\n", decision.Provider.Status)
+	}
+	fmt.Fprintln(stdout, "Use `jini route auto` to restore automatic routing.")
+	return 0
+}
+
+func knownRouteMode(mode string) bool {
+	if mode == "auto" {
+		return true
+	}
+	_, ok := adapterDescriptorForMode(mode)
+	return ok
+}
+
+func renderRouteList(w io.Writer) {
+	current := configuredToolMode()
+	if current == "" {
+		current = "auto"
+	}
+	fmt.Fprintln(w, "Routes")
+	fmt.Fprintf(w, "Current: %s\n", current)
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Available")
+	fmt.Fprintln(w, "- auto: choose the least-expense capable route per request")
+	for _, target := range defaultSavedRouteTargets() {
+		if !target.Enabled {
+			continue
+		}
+		descriptor, ok := adapterDescriptorForMode(target.ID)
+		cost := ""
+		locality := ""
+		if ok {
+			cost = descriptor.CostTier
+			locality = descriptor.Locality
+		}
+		details := strings.Trim(strings.Join([]string{locality, cost}, ", "), ", ")
+		if details != "" {
+			details = " (" + details + ")"
+		}
+		fmt.Fprintf(w, "- %s: %s%s\n", target.ID, target.Label, details)
+	}
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Use `jini route set codex` to lock a route.")
+	fmt.Fprintln(w, "Use `jini route auto` to restore automatic routing.")
 }
 
 func parseOptionalFormatArgs(args []string) (string, bool) {
@@ -2639,10 +2749,10 @@ func renderPublicCommandInventory(w io.Writer) {
 	fmt.Fprintln(w, "TRY FIRST IN A REPO: `jini review this repo`, `jini fix failing tests`, or `jini review this branch`.")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "SUPPORT THE CURRENT WORK")
-	fmt.Fprintln(w, "- jini commands")
 	fmt.Fprintln(w, "- jini status")
 	fmt.Fprintln(w, "- jini continue")
 	fmt.Fprintln(w, "- jini open")
+	fmt.Fprintln(w, "- jini route")
 	fmt.Fprintln(w, "- jini doctor")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "MORE")

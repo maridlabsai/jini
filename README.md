@@ -95,6 +95,7 @@ The public support surface outside the front door should stay short:
 - `jini status`
 - `jini continue`
 - `jini open`
+- `jini route`
 - `jini doctor`
 
 Everything else should stay behind `jini help --admin` unless Jini explicitly
@@ -121,6 +122,17 @@ That evidence should support the work instead of becoming the first-run
 experience. The default flow should produce a useful result first, then make
 route, model, effort, and continuity easy to inspect through `jini route`,
 `jini status`, or the saved work state.
+
+When you need to steer the route directly, keep it explicit and reversible:
+
+```bash
+jini route list
+jini route set codex
+jini route auto
+```
+
+That gives developers a clear escape hatch for framework switching without
+making every task start with routing setup.
 
 For multi-step work, Jini now plans quietly before drafting. The user sees the
 result through better structure and clearer `Doing now` / `Next` state, not

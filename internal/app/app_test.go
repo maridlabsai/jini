@@ -738,6 +738,7 @@ func TestCommandsAliasShowsPublicCommandInventory(t *testing.T) {
 		"jini status",
 		"jini continue",
 		"jini open",
+		"jini route",
 		"jini doctor",
 		"jini admin help",
 		"native Go preview",
@@ -1146,6 +1147,143 @@ func TestInteractiveSetupCanSaveClaudeCodeRouteInsideJini(t *testing.T) {
 	}
 	if !strings.Contains(string(routerSaved), `"tool_mode": "claude-code"`) {
 		t.Fatalf("expected saved Claude Code route, got:\n%s", string(routerSaved))
+	}
+}
+
+func TestRouteCommandListsAvailableRoutes(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"route", "list"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected route list to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Routes",
+		"Current: auto",
+		"Available",
+		"auto",
+		"claude-code",
+		"codex",
+		"local-preview",
+		"Use `jini route set codex` to lock a route.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected route list to contain %q, got:\n%s", want, out)
+		}
+	}
+}
+
+func TestRouteCommandCanSetRouteWithoutSetupWizard(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"route", "set", "codex"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected route set to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Route saved.",
+		"Current: Azure code route",
+		"Mode: codex",
+		"Use `jini route auto` to restore automatic routing.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected route set output to contain %q, got:\n%s", want, out)
+		}
+	}
+
+	routerSaved, err := os.ReadFile(filepath.Join(stateDir, "router.json"))
+	if err != nil {
+		t.Fatalf("expected router settings file: %v", err)
+	}
+	if !strings.Contains(string(routerSaved), `"tool_mode": "codex"`) {
+		t.Fatalf("expected saved Codex route, got:\n%s", string(routerSaved))
+	}
+}
+
+func TestRouteCommandCanRestoreAutoMode(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	if exitCode := app.Run([]string{"route", "set", "codex"}, io.Discard, io.Discard); exitCode != 0 {
+		t.Fatalf("expected route set to succeed, got %d", exitCode)
+	}
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"route", "auto"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected route auto to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Auto route restored.",
+		"Current: auto",
+		"Jini will choose the least-expense capable route per request.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected route auto output to contain %q, got:\n%s", want, out)
+		}
+	}
+
+	routerSaved, err := os.ReadFile(filepath.Join(stateDir, "router.json"))
+	if err != nil {
+		t.Fatalf("expected router settings file: %v", err)
+	}
+	if !strings.Contains(string(routerSaved), `"tool_mode": "auto"`) {
+		t.Fatalf("expected saved auto route, got:\n%s", string(routerSaved))
+	}
+}
+
+func TestRouteCommandRejectsUnknownRoute(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"route", "set", "banana"}, &stdout, &stdout)
+	if exitCode != 1 {
+		t.Fatalf("expected unknown route to fail, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Unknown route \"banana\".",
+		"Run `jini route list` to see available routes.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected unknown route output to contain %q, got:\n%s", want, out)
+		}
+	}
+}
+
+func TestRouteCommandRejectsUnknownSubcommandWithRouteGuidance(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"route", "banana"}, &stdout, &stdout)
+	if exitCode != 1 {
+		t.Fatalf("expected unknown route subcommand to fail, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Unknown route command \"banana\".",
+		"Run `jini route list` to see available routes.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected unknown route command output to contain %q, got:\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, "Run `jini commands`") {
+		t.Fatalf("expected route parser to avoid generic command guidance, got:\n%s", out)
 	}
 }
 

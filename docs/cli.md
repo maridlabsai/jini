@@ -6,7 +6,7 @@ context_line: "The command story should stay simple: one front door for most peo
 highlights:
   - "Start with `jini`"
   - "`jini commands`"
-  - Four support commands only
+  - Five support commands only
   - Admin help for operators
 quick_links:
   - label: Install
@@ -139,6 +139,10 @@ If you already have current work, use `jini status` once.</code></pre>
     <div class="checklist-card">
       <h3><code>jini open</code></h3>
       <p>Opens the richer artifact view when the shell preview is not enough.</p>
+    </div>
+    <div class="checklist-card">
+      <h3><code>jini route</code></h3>
+      <p>Shows route cost and continuity. Use <code>jini route list</code>, <code>jini route set codex</code>, or <code>jini route auto</code> when you need explicit framework switching.</p>
     </div>
     <div class="checklist-card">
       <h3><code>jini doctor</code></h3>

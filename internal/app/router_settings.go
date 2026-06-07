@@ -86,10 +86,13 @@ func configuredToolMode() string {
 	if raw == "" {
 		raw = loadSavedRouterSettings().ToolMode
 	}
-	if raw == "" {
-		return ""
-	}
+	return normalizeToolMode(raw)
+}
+
+func normalizeToolMode(raw string) string {
 	switch normalizeName(raw) {
+	case "":
+		return ""
 	case "auto", "choose automatically":
 		return "auto"
 	case "claude", "claude code", "claudecode", "anthropic":

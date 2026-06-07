@@ -159,7 +159,6 @@ func TestUnsupportedNativeArgumentsFailFast(t *testing.T) {
 	cases := [][]string{
 		{"help", "admin", "extra"},
 		{"status", "extra"},
-		{"route", "extra"},
 		{"observe", "status", "extra"},
 		{"open", "--print-path"},
 		{"publish-readiness", "extra"},
