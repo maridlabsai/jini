@@ -12,15 +12,15 @@ func TestP1SimplicityPriorityCoversCommandsSkillsAndAgents(t *testing.T) {
 
 	canonicalPRD := readProductSimplicityFile(t, root, "specs/number-one-platform-prd.md")
 	for _, want := range []string{
-		"### 6a. Simplification Priority",
-		"P1 work must simplify the visible path across commands, user experience,",
-		"skills, and agent interactions before it adds new surface area.",
-		"- `jini` remains the default intake for normal users",
-		"- the free tier must not ship the agent and skills OS productivity suite",
-		"developer agents, tester agents, and the skills-based OS productivity suite",
-		"belong to the commercial tier",
-		"any commercial agent interaction must return normal Jini results instead of",
-		"- simplification of commands, user experience, skills, and agent interactions",
+		"Bare `jini` is a task prompt, not a dashboard.",
+		"Never require users to learn Jini-specific command vocabulary before value.",
+		"no visible `Switch` startup control",
+		"no `Start/Keep` interruption model",
+		"Free excludes:",
+		"developer-agent fleets",
+		"tester-agent fleets",
+		"commercial skills-based OS productivity suite",
+		"Commercial UX still follows the same rule: simple task in, useful result out.",
 	} {
 		if !strings.Contains(canonicalPRD, want) {
 			t.Fatalf("canonical PRD must preserve P1 simplification requirement %q", want)

@@ -1756,15 +1756,19 @@ func TestLauncherStartsAsCompactShellWhenCurrentWorkExists(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Jini",
-		"Current work",
-		"Weekly Product Review",
-		"Paste a new request, or type `help` to inspect current work.",
+		"Describe the task.",
+		"Type `help` for examples and commands.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
 	}
 	for _, unwanted := range []string{
+		"Current work",
+		"Weekly Product Review",
+		"Resume",
+		"Other active work",
+		"Switch",
 		"Goal",
 		"Working with",
 		"Just finished",
@@ -1806,7 +1810,7 @@ func TestCurrentWorkHelpShowsCurrentWorkRecap(t *testing.T) {
 		"Metric and legal-review decision",
 		"Actions",
 		"Continue",
-		"Paste a new request to switch tasks.",
+		"Paste a new request to start a different task.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -2736,15 +2740,19 @@ func TestCurrentWorkInteractiveLauncherIsCompactByDefault(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Jini",
-		"Current work",
-		"Weekly Product Review",
-		"Paste a new request, or type `help` to inspect current work.",
+		"Describe the task.",
+		"Type `help` for examples and commands.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
 	}
 	for _, unwanted := range []string{
+		"Current work",
+		"Weekly Product Review",
+		"Resume",
+		"Other active work",
+		"Switch",
 		"Goal",
 		"Working with",
 		"AI route",
@@ -2765,7 +2773,7 @@ func TestCurrentWorkInteractiveLauncherIsCompactByDefault(t *testing.T) {
 	}
 }
 
-func TestCurrentWorkPromptShowsResumeHintAfterFocusChanges(t *testing.T) {
+func TestCurrentWorkPromptHidesResumeHintAfterFocusChanges(t *testing.T) {
 	stateDir := t.TempDir()
 	packDir := seedMeetingWork(t)
 	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
@@ -2783,12 +2791,12 @@ func TestCurrentWorkPromptShowsResumeHintAfterFocusChanges(t *testing.T) {
 	}
 
 	out := stdout.String()
-	for _, want := range []string{
+	for _, unwanted := range []string{
 		"Resume",
 		"Owners and Due Points",
 	} {
-		if !strings.Contains(out, want) {
-			t.Fatalf("expected prompt to contain %q after focus change, got:\n%s", want, out)
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected prompt to hide %q after focus change, got:\n%s", unwanted, out)
 		}
 	}
 }
@@ -3252,7 +3260,7 @@ func TestCurrentWorkInteractiveTacticalCommandsDoNotStartNewWork(t *testing.T) {
 		{
 			name: "clear",
 			line: "clear\n",
-			want: []string{"Nothing was deleted.", "Use `switch` to change focus, or paste a new request."},
+			want: []string{"Nothing was deleted.", "Paste a new request when ready."},
 		},
 	}
 
@@ -3782,18 +3790,26 @@ func TestLauncherShowsOtherActiveWorkWhenMultipleProjectsExist(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Jini",
-		"Current work",
-		"Weekly Product Review",
-		"Other active work",
-		"7-Day Paris Trip",
+		"Describe the task.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
 	}
+	for _, unwanted := range []string{
+		"Current work",
+		"Weekly Product Review",
+		"Other active work",
+		"7-Day Paris Trip",
+		"Switch",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected default launcher to hide saved work %q, got:\n%s", unwanted, out)
+		}
+	}
 }
 
-func TestLauncherGroupsDuplicateOtherActiveWorkTitles(t *testing.T) {
+func TestCurrentWorkHelpGroupsDuplicateOtherActiveWorkTitles(t *testing.T) {
 	stateDir := t.TempDir()
 	travelDir := copyWorkDir(t, filepath.Join(stateDir, "work", "travel-plan-paris"), seedTravelWork(t))
 	copyWorkDir(t, filepath.Join(stateDir, "work", "meeting-followup-weekly-review"), seedMeetingWork(t))
@@ -3807,7 +3823,7 @@ current_state: decided
 
 	t.Setenv("JINI_STATE_DIR", stateDir)
 	var stdout bytes.Buffer
-	exitCode := app.Run(nil, &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("help\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -3821,7 +3837,7 @@ current_state: decided
 	}
 }
 
-func TestLauncherDisambiguatesOtherActiveWorkMatchingCurrentTitle(t *testing.T) {
+func TestCurrentWorkHelpDisambiguatesOtherActiveWorkMatchingCurrentTitle(t *testing.T) {
 	stateDir := t.TempDir()
 	currentDir := copyWorkDir(t, filepath.Join(stateDir, "work", "meeting-followup-weekly-review"), seedMeetingWork(t))
 	copyWorkDir(t, filepath.Join(stateDir, "work", "meeting-followup-weekly-review-2"), seedMeetingWork(t))
@@ -3829,23 +3845,26 @@ func TestLauncherDisambiguatesOtherActiveWorkMatchingCurrentTitle(t *testing.T) 
 
 	t.Setenv("JINI_STATE_DIR", stateDir)
 	var stdout bytes.Buffer
-	exitCode := app.Run(nil, &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("help\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Current work\n- Weekly Product Review",
+		"Goal\nWeekly Product Review",
 		"Other active work\n- Weekly Product Review (another saved)",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
 	}
+	if strings.Contains(out, "Switch") {
+		t.Fatalf("expected help to avoid visible Switch vocabulary, got:\n%s", out)
+	}
 }
 
-func TestInteractiveLauncherCanSwitchBetweenActiveProjects(t *testing.T) {
+func TestInteractiveLauncherCanResumeNamedActiveProject(t *testing.T) {
 	stateDir := t.TempDir()
 	travelDir := copyWorkDir(t, filepath.Join(stateDir, "work", "travel-plan-paris"), seedTravelWork(t))
 	meetingDir := copyWorkDir(t, filepath.Join(stateDir, "work", "meeting-followup-weekly-review"), seedMeetingWork(t))
@@ -3853,22 +3872,29 @@ func TestInteractiveLauncherCanSwitchBetweenActiveProjects(t *testing.T) {
 
 	t.Setenv("JINI_STATE_DIR", stateDir)
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("switch\n1\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("7-Day Paris Trip\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Switch",
-		"1. 7-Day Paris Trip",
-		"Switched to",
+		"Resumed",
 		"7-Day Paris Trip",
 		"Ready now",
 		"Itinerary",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+	for _, unwanted := range []string{
+		"Switch",
+		"Type a number",
+		"Other active work",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected direct saved-work resume to avoid %q, got:\n%s", unwanted, out)
 		}
 	}
 
@@ -4142,7 +4168,7 @@ func TestPostResultCanShowWhatJiniUsed(t *testing.T) {
 	}
 }
 
-func TestResumeHintUsesContextLabelAfterOpeningContextSurface(t *testing.T) {
+func TestPromptHidesContextResumeHintAfterOpeningContextSurface(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
@@ -4155,11 +4181,16 @@ func TestResumeHintUsesContextLabelAfterOpeningContextSurface(t *testing.T) {
 	if exitCode != 0 {
 		t.Fatalf("expected prompt after context focus to succeed, got %d with output:\n%s", exitCode, stdout.String())
 	}
-	if !strings.Contains(stdout.String(), "Context") {
-		t.Fatalf("expected prompt resume hint to use Context label, got:\n%s", stdout.String())
-	}
-	if strings.Contains(stdout.String(), "What Jini used") {
-		t.Fatalf("expected prompt not to use older context label, got:\n%s", stdout.String())
+	out := stdout.String()
+	for _, unwanted := range []string{
+		"Context",
+		"What Jini used",
+		"Resume",
+		"Current work",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected task-first prompt not to show resume hint %q, got:\n%s", unwanted, out)
+		}
 	}
 }
 

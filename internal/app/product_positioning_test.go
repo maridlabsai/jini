@@ -24,7 +24,9 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"skills-based OS productivity suite",
 		"Commercial tier is where Jini becomes an agent and skills based OS productivity",
 		"No new Jini conversation style.",
+		"saved work is resumed through `status`, `continue`, `open`, or natural title matching",
 		"no `Start/Keep` interruption model",
+		"no visible `Switch` startup control",
 		"Offline is a route state, not a separate product.",
 		"Until the CLI wedge is noticeably strong, defer broad expansion.",
 		"Protected product and PRD surfaces must not change casually.",
@@ -40,7 +42,9 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"[product-settling-decisions.md](./product-settling-decisions.md)",
 		"Jini should be built as a CLI-first AI work router and durable session layer",
 		"The near-term GTM product is not the broad OS.",
-		"direct task intake, file edits, route switching,",
+		"Bare `jini` is a task prompt, not a dashboard.",
+		"Token frugality is P0.",
+		"Commercial value must be materially higher than the free CLI.",
 	} {
 		if !strings.Contains(canonicalPRD, want) {
 			t.Fatalf("canonical PRD must point to settled product positioning %q", want)
@@ -56,6 +60,38 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 	} {
 		if !strings.Contains(readme, want) {
 			t.Fatalf("README must teach settled product positioning %q", want)
+		}
+	}
+}
+
+func TestCanonicalPRDStaysReducedToCurrentGTMWedge(t *testing.T) {
+	root := repoRootForMigrationTest(t)
+
+	canonicalPRD := readProductPositioningFile(t, root, "specs/number-one-platform-prd.md")
+	if lines := strings.Count(canonicalPRD, "\n") + 1; lines > 180 {
+		t.Fatalf("canonical PRD must stay reduced; got %d lines", lines)
+	}
+	for _, want := range []string{
+		"Bare `jini` is a task prompt, not a dashboard.",
+		"no visible `Switch` startup control",
+		"no `Start/Keep` interruption model",
+		"no Working Draft for obvious file edits",
+		"task-first startup even with saved work",
+		"CLI UX regression gate in commit gates",
+	} {
+		if !strings.Contains(canonicalPRD, want) {
+			t.Fatalf("canonical PRD must preserve current GTM requirement %q", want)
+		}
+	}
+	for _, stale := range []string{
+		"agentic automation in all aspects of running this company is non negotiable",
+		"Active work` first",
+		"Other active work`",
+		"Type `Switch`",
+		"Start/Keep way of thinking",
+	} {
+		if strings.Contains(canonicalPRD, stale) {
+			t.Fatalf("canonical PRD must not preserve stale requirement %q", stale)
 		}
 	}
 }

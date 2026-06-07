@@ -27,7 +27,7 @@ quick_links:
 
 <pre><code class="language-bash">jini</code></pre>
 
-  <p>That should be the normal entry. Jini should either continue the thing you were already working on, show <code>Active work</code> when several projects are in flight, or offer a repo-aware task-first start surface if nothing is active yet.</p>
+  <p>That should be the normal entry. Jini should always start task-first; saved work should stay behind explicit inspection commands or natural title matching.</p>
   <p>When there is no repo context and no existing Jini work, the fallback should stay just as calm: interactive <code>jini</code> should still open the live shell. If the user gives a task there, Jini can answer briefly with <code>Run this from the repo or folder that needs work.</code>, but it should stay open instead of exiting. Non-interactive fallback output should stay just as calm and avoid banners, start cards, mini catalogs, diagnostics, or adoption guidance.</p>
   <p>That repo-aware start surface should stay light: skip the generic empty-state sentence, show one calm repo-context line, let the direct task suggestions stand on their own, use a soft cue like <code>Useful here:</code> above one or two useful commands Jini found in the repo, and keep at most one quiet adoption hint for existing Jini work.</p>
   <p>Internal diagnostics like <code>repo-map</code> and setup surfaces like <code>doctor</code> should stay off the first screen. A Claude Code, Codex, or GitHub CLI user should see task suggestions first, then at most a small <code>Already have current work?</code> note with <code>jini status</code> when existing Jini work actually needs attention.</p>
@@ -86,11 +86,11 @@ If you already have current work, use `jini status` once.</code></pre>
     <span>open the latest artifact</span>
     <span>what is blocked?</span>
     <span>plan this change</span>
-    <span>switch to the other repo</span>
+    <span>resume the other repo review</span>
     <span>start from these notes</span>
   </div>
 
-  <p>Daily use should feel like one calm conversation. You should not have to memorize product words like <code>Missing</code> or <code>Switch</code> before Jini becomes useful.</p>
+  <p>Daily use should feel like one calm conversation. You should not have to memorize product words like <code>Missing</code> or saved-work controls before Jini becomes useful.</p>
   <p>If the work is fuzzy, plain asks like <code>plan this change</code> should still trigger the structured path without forcing you to translate into Jini-specific vocabulary first.</p>
 </div>
 

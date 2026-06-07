@@ -56,7 +56,7 @@ quick_links:
 
   <p>That should be enough after install. From there, the user should be able to open ready work, see what is missing, or plan first without learning file paths or internal command names.</p>
 
-  <p>If more than one project is active, Jini should show <code>Active work</code> first, let the user pick one, and keep the rest visible as sibling work instead of hiding them behind the filesystem.</p>
+  <p>If more than one project is active, bare <code>jini</code> should still open on the same task prompt. Saved work belongs behind explicit inspection commands or natural title matching, not in the front-door prompt.</p>
 </div>
 
 <div class="section-card">
@@ -66,8 +66,8 @@ quick_links:
     <div class="workflow-card">
       <span class="workflow-meta">Work</span>
       <h3>What am I working on?</h3>
-      <p>Keep the goal, the current inputs, and any other active work visible so the user never loses the thread.</p>
-      <code>Goal · Working with · Other active work</code>
+      <p>Keep the goal and current inputs easy to inspect when asked, while keeping the startup prompt focused on the next task.</p>
+      <code>Goal · Working with · Saved work</code>
     </div>
     <div class="workflow-card">
       <span class="workflow-meta">Route</span>
@@ -164,11 +164,7 @@ Not sure about
 - Whether every action item has a clear owner
 
 Safe to do
-Nothing has been sent yet. You can review before sharing.
-
-Other active work
-- Pricing vendor review
-- Paris trip</code></pre>
+Nothing has been sent yet. You can review before sharing.</code></pre>
 
   <p>The important part is not only the provider name. The user should also be able to tell whether Jini chose that route automatically or because they forced it, how much effort Jini judged the request to need, and why the route was worth its token, battery, throttle, or continuity cost.</p>
 </div>
@@ -215,7 +211,7 @@ Other active work
       <ul class="compact-list">
         <li><code>Goal</code>: the thing the user is trying to finish right now</li>
         <li><code>Working with</code>: the visible inputs for the thread, including text, files, images, audio, or links</li>
-        <li><code>Other active work</code>: sibling projects the user can switch to without losing context</li>
+        <li><code>Saved work</code>: sibling projects available through explicit inspection or natural title matching</li>
       </ul>
     </div>
     <div class="checklist-card">

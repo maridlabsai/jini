@@ -12,23 +12,17 @@ func TestResourcePolicyPrioritiesAreGated(t *testing.T) {
 
 	canonicalPRD := readResourcePolicyFile(t, root, "specs/number-one-platform-prd.md")
 	for _, want := range []string{
-		"### 2a. Token frugality is P0",
-		"Being frugal with tokens is a P0 product goal",
-		"Every route, memory, skill, agent, and adapter decision must prefer the smallest",
-		"Token savings must come from architecture and routing discipline",
-		"#### P0.4 Token frugality and local-first cost discipline",
-		"- token frugality is a P0 product goal",
-		"- compact continuation must reuse saved state instead of replaying full",
-		"- throttle avoidance, including preemptive route switching",
-		"- powered-mode full power execution",
-		"- low-battery and thermal-aware execution",
-		"Jini must seamlessly toggle between offline and online mode",
-		"offline and online mode toggles must stitch into the same session",
-		"cross-navigation between CLI, desktop, mobile, and offline views must preserve",
-		"configured CLI throttling levels before selecting a",
-		"- `token-efficiency >= 9.5`",
-		"- `throttle-avoided-interruption-rate >= 85%`",
-		"- `battery-aware-route-regret <= 5%`",
+		"Token frugality is P0.",
+		"Default to the cheapest safe route that can complete the task.",
+		"Use local/offline routes when they meet the task quality bar.",
+		"Escalate to stronger online routes when correctness, codebase scope, or",
+		"Preserve enough session state to continue work without replaying stale chat.",
+		"Avoiding throttling is P1.",
+		"Power awareness is P1.",
+		"throttle-aware route switching",
+		"powered-mode and low-battery routing",
+		"offline local-model quality regression harness",
+		"cross-surface session handoff",
 	} {
 		if !strings.Contains(canonicalPRD, want) {
 			t.Fatalf("canonical PRD must preserve resource policy requirement %q", want)

@@ -95,10 +95,13 @@ No new Jini conversation style.
 Jini should align with familiar agent CLI behavior:
 
 - freeform requests execute or answer directly when safe
+- bare `jini` starts as a plain task prompt, even when saved work exists
 - state inspection is explicit through commands
 - route control is explicit through `jini route`
 - current work is passive context, not a modal gate
+- saved work is resumed through `status`, `continue`, `open`, or natural title matching
 - no `Start/Keep` interruption model
+- no visible `Switch` startup control
 - no full status dump for simple questions
 - no product-shaped ceremony before first useful output
 
@@ -125,7 +128,7 @@ P0:
 - install works without source-build assumptions
 - direct file edits work in the current directory
 - route list, set, auto, and status are obvious
-- current work continuation is compact and familiar
+- current work continuation is compact, familiar, and hidden until requested
 - token-frugal context reuse is measurable
 - regression gates protect the above
 

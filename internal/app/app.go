@@ -388,11 +388,11 @@ func runLauncher(stdin io.Reader, stdout, stderr io.Writer) int {
 	current, err := loadCurrentWork()
 	if err != nil || current == nil {
 		active, activeErr := listActiveWorkSummaries(nil)
-		if activeErr == nil && len(active) > 0 {
-			return runActiveWorkLauncher(active, stdin, stdout, stderr)
+		if activeErr != nil {
+			active = nil
 		}
 		if stdin != nil {
-			return runNewWorkIntake(stdin, stdout, stderr)
+			return runNoCurrentLauncher(active, stdin, stdout, stderr)
 		}
 		renderNewWorkPrompt(stdout)
 		return 0
@@ -425,6 +425,63 @@ func runLauncher(stdin io.Reader, stdout, stderr io.Writer) int {
 	}
 	fmt.Fprintln(stdout)
 	return handleCurrentWorkAction(action, summary, session, stdout, stderr)
+}
+
+func runNoCurrentLauncher(active []*workSummary, stdin io.Reader, stdout, stderr io.Writer) int {
+	_ = warmLocalRuntimeCapabilities()
+	renderNewWorkPrompt(stdout)
+	session := bufio.NewScanner(stdin)
+
+	for {
+		action, ok := readInputLine(session, stdout)
+		if !ok {
+			return 0
+		}
+		if isSlashCommandInput(action) {
+			fmt.Fprintf(stderr, "Unknown command %q.\n", strings.TrimSpace(action))
+			return 1
+		}
+		if isHelpInput(action) {
+			fmt.Fprintln(stdout)
+			renderNewWorkLauncher(stdout)
+			fmt.Fprintln(stdout)
+			continue
+		}
+		if isGreetingOnly(action) {
+			fmt.Fprintln(stdout)
+			fmt.Fprintln(stdout, "Hi.")
+			fmt.Fprintln(stdout, "Describe the task when you're ready.")
+			fmt.Fprintln(stdout)
+			continue
+		}
+		if handled, exitCode := maybeHandleNewWorkUtilityIntent(action, stdout); handled {
+			if exitCode != 0 {
+				return exitCode
+			}
+			fmt.Fprintln(stdout)
+			continue
+		}
+		if isAcknowledgementOnly(action) || isBareContinuationIntent(action) {
+			fmt.Fprintln(stdout)
+			renderNewWorkNoop(stdout)
+			fmt.Fprintln(stdout)
+			continue
+		}
+		if selection, err := resolveActiveWorkSelection(action, active); err == nil {
+			return switchToWorkSelection(selection, stdout, stderr)
+		}
+		if handled, exitCode := maybeHandleProviderSetupIntent(action, session, stdout, stderr); handled {
+			if exitCode != 0 {
+				fmt.Fprintln(stdout)
+				renderNewWorkLauncher(stdout)
+				continue
+			}
+			fmt.Fprintln(stdout)
+			renderNewWorkLauncher(stdout)
+			continue
+		}
+		return startNewWorkFromRawInput(action, session, stdout, stderr)
+	}
 }
 
 func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
@@ -581,7 +638,7 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		renderNoInitRequired(stdout)
 	case "clear":
 		fmt.Fprintln(stdout, "Nothing was deleted.")
-		fmt.Fprintln(stdout, "Use `switch` to change focus, or paste a new request.")
+		fmt.Fprintln(stdout, "Paste a new request when ready.")
 	case "plan":
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "plan"})
 	case "start":
@@ -591,6 +648,9 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		}
 		return runNewWorkIntakeWithScanner(scanner, stdout, stderr)
 	default:
+		if selection, err := resolveActiveWorkSelection(action, otherActiveWorkSummaries(summary)); err == nil {
+			return switchToWorkSelection(selection, stdout, stderr)
+		}
 		if isAcknowledgementOnly(action) {
 			renderCurrentWorkNoop(stdout)
 			return 0
@@ -3251,7 +3311,7 @@ func renderPrimaryActionMenu(w io.Writer, summary *workSummary, heading, readyAc
 		fmt.Fprintln(w, "- Undo")
 	}
 	fmt.Fprintln(w, "- Plan")
-	fmt.Fprintln(w, "Paste a new request to switch tasks.")
+	fmt.Fprintln(w, "Paste a new request to start a different task.")
 }
 
 func renderCompactCurrentWorkChoices(w io.Writer, canSwitch bool) {
@@ -3262,9 +3322,9 @@ func renderCompactCurrentWorkChoices(w io.Writer, canSwitch bool) {
 	fmt.Fprintln(w, "- Missing")
 	fmt.Fprintln(w, "- Plan")
 	if canSwitch {
-		fmt.Fprintln(w, "- Switch")
+		fmt.Fprintln(w, "- Resume saved work")
 	}
-	fmt.Fprintln(w, "Paste a new request to switch tasks.")
+	fmt.Fprintln(w, "Paste a new request to start a different task.")
 }
 
 func renderWorkSwitchChoices(w io.Writer, includeStartNew bool) {
@@ -3272,7 +3332,7 @@ func renderWorkSwitchChoices(w io.Writer, includeStartNew bool) {
 		fmt.Fprintln(w, "Type a number to open one, or paste a new request.")
 		return
 	}
-	fmt.Fprintln(w, "Type a number or title to switch.")
+	fmt.Fprintln(w, "Type a number or saved title.")
 }
 
 func renderSelectableWorkList(w io.Writer, heading string, active []*workSummary, includeStartNew bool) {
@@ -3343,7 +3403,7 @@ func renderOtherActiveWorkList(w io.Writer, active []*workSummary, currentTitle 
 		fmt.Fprintf(w, "- %s\n", label)
 	}
 	if includeHint {
-		fmt.Fprintln(w, "Type `Switch` to change focus.")
+		fmt.Fprintln(w, "Type a saved title to resume it.")
 	}
 }
 
@@ -4051,24 +4111,7 @@ func renderCurrentWorkLauncher(w io.Writer, summary *workSummary, interactive bo
 }
 
 func renderCurrentWorkPrompt(w io.Writer, summary *workSummary) {
-	fmt.Fprintln(w, "Jini")
-	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Current work")
-	if summary == nil || strings.TrimSpace(summary.Thread.Goal) == "" {
-		fmt.Fprintln(w, "- None")
-	} else {
-		fmt.Fprintf(w, "- %s\n", summary.Thread.Goal)
-	}
-	if summary != nil {
-		if strings.TrimSpace(summary.Thread.ResumeTarget) != "" {
-			fmt.Fprintln(w)
-			fmt.Fprintln(w, "Resume")
-			fmt.Fprintf(w, "- %s\n", summary.Thread.ResumeTarget)
-		}
-		renderOtherActiveWorkList(w, otherActiveWorkSummaries(summary), summary.Title, true)
-	}
-	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Paste a new request, or type `help` to inspect current work.")
+	renderNewWorkPrompt(w)
 }
 
 func renderCurrentWorkHelp(w io.Writer, summary *workSummary) {
@@ -4098,7 +4141,7 @@ func renderCurrentWorkHelp(w io.Writer, summary *workSummary) {
 			fmt.Fprintf(w, "- %s\n", item)
 		}
 	}
-	renderOtherActiveWorkList(w, otherActiveWorkSummaries(summary), summary.Title, true)
+	renderOtherActiveWorkList(w, otherActiveWorkSummaries(summary), summary.Title, false)
 	if strings.TrimSpace(summary.Thread.ResumeTarget) != "" {
 		fmt.Fprintln(w)
 		fmt.Fprintln(w, "Resume")
@@ -4114,17 +4157,28 @@ func renderCurrentWorkHelp(w io.Writer, summary *workSummary) {
 }
 
 func runActiveWorkLauncher(active []*workSummary, stdin io.Reader, stdout, stderr io.Writer) int {
-	renderActiveWorkLauncher(stdout, active)
 	if stdin == nil {
+		renderActiveWorkLauncher(stdout, active)
 		return 0
 	}
-	session := bufio.NewScanner(stdin)
-	action, ok := readOptionalInputLine(session, stdout)
+	return runActiveWorkPicker(active, bufio.NewScanner(stdin), stdout, stderr)
+}
+
+func runActiveWorkPicker(active []*workSummary, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
+	if len(active) == 0 {
+		fmt.Fprintln(stdout, "No active work is saved yet.")
+		return 0
+	}
+	renderActiveWorkLauncher(stdout, active)
+	if scanner == nil {
+		return 0
+	}
+	action, ok := readOptionalInputLine(scanner, stdout)
 	if !ok || strings.TrimSpace(action) == "" {
 		return 0
 	}
 	fmt.Fprintln(stdout)
-	return handleActiveWorkSelection(action, active, session, stdout, stderr)
+	return handleActiveWorkSelection(action, active, scanner, stdout, stderr)
 }
 
 func renderActiveWorkLauncher(w io.Writer, active []*workSummary) {
@@ -4154,7 +4208,7 @@ func runSwitchWorkPicker(current *workSummary, scanner *bufio.Scanner, stdout, s
 		fmt.Fprintln(stdout, "No other active work right now.")
 		return 0
 	}
-	renderSelectableWorkList(stdout, "Switch", other, false)
+	renderSelectableWorkList(stdout, "Saved work", other, false)
 	if scanner == nil {
 		return 0
 	}
@@ -4176,7 +4230,7 @@ func switchToWorkSelection(selection *workSummary, stdout, stderr io.Writer) int
 		fmt.Fprintf(stderr, "Could not switch work: %v\n", err)
 		return 1
 	}
-	fmt.Fprintln(stdout, "Switched to")
+	fmt.Fprintln(stdout, "Resumed")
 	fmt.Fprintln(stdout, selection.Title)
 	fmt.Fprintln(stdout)
 	renderCheck(stdout, selection)

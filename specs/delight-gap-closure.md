@@ -70,35 +70,29 @@ through speed, trust, clarity, quality, or cost posture.
 
 #### Jini gap
 
-When current work exists, pasting a fresh request can silently change focus.
-That is fast, but it is not trustworthy.
+When current work exists, pasting a fresh request must still feel like a normal
+agent CLI. The old Start/Keep proposal was rejected because it created a new
+Jini-specific interaction model.
 
 #### UX design
 
-If the user enters what looks like a genuine new task while current work is
-active, Jini should pause and show a compact interrupt card:
-
-- current work title
-- incoming request preview
-- `Start`
-- `Keep`
-- `Switch`
-
-The old work stays saved unless the user explicitly switches.
+If the user enters a clear task, Jini should execute or route it directly.
+Current work stays saved as passive context. If the user wants saved work, they
+can ask for status/continue/open, or type the saved work title.
 
 #### Technical design
 
-- intercept fallback freeform input in current-work mode before a new work unit
-  is created
-- preserve the raw request so `Start` can continue without retyping
-- route `Switch` through the existing active-work picker
-- keep the interrupt card generic and independent of pack-specific behavior
+- keep bare startup as the same compact task prompt with or without current work
+- resolve saved-work titles before creating a new work unit
+- keep legacy saved-work picker compatibility hidden behind explicit command use
+- reject Start/Keep/Switch as visible front-door vocabulary
 
 #### Pass criteria
 
-- current work is never switched silently
-- a pasted new request can become new work without retyping
-- the interrupt flow remains one short decision, not a wizard
+- current work does not produce a startup dashboard
+- a pasted new request becomes new work without retyping
+- saved-work resume works by natural title matching
+- no visible Start/Keep/Switch flow appears in normal CLI use
 
 ### 2. Interactive Artifact Shelf
 
