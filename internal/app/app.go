@@ -429,6 +429,9 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 	if handled, exitCode := maybeHandleLocalTextFileEditIntent(action, stdout, stderr); handled {
 		return exitCode
 	}
+	if maybeHandleSimpleAnswer(action, stdout) {
+		return 0
+	}
 	if resolution, resolved, err := resolveActiveAskAction(summary.Dir, summary, action); resolved {
 		if err != nil {
 			fmt.Fprintf(stderr, "Could not save the decision: %v\n", err)

@@ -194,6 +194,49 @@ func TestInteractiveLocalTextEditAppendsQuotedLineInsteadOfDrafting(t *testing.T
 	}
 }
 
+func TestCurrentWorkLocalTextEditExecutesWithoutStartPrompt(t *testing.T) {
+	stateDir := t.TempDir()
+	workDir := t.TempDir()
+	t.Chdir(workDir)
+	target := filepath.Join(workDir, "pear vc script.txt")
+	writeFile(t, target, "intro\n")
+	meetingDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, meetingDir, "meeting-followup", "example-meeting-followup", "Add A Line Saying Jini Was Here In The Pear Vc Script Txt File In This Folder", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("Add A Line Saying Jini Was Here In The Pear Vc Script Txt File In This Folder\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Updated pear vc script.txt",
+		"- Added line: jini was here",
+		"- Location: " + target,
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+	for _, unwanted := range []string{
+		"New work",
+		"Actions",
+		"- Start",
+		"Your first draft is ready.",
+		"Working Draft",
+		"Saved. Type status",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected direct edit to avoid %q, got:\n%s", unwanted, out)
+		}
+	}
+	if got := mustReadFile(t, target); got != "intro\njini was here\n" {
+		t.Fatalf("expected target file to be updated, got:\n%s", got)
+	}
+}
+
 func TestDirectArgsLocalTextEditAppendsQuotedLine(t *testing.T) {
 	stateDir := t.TempDir()
 	workDir := t.TempDir()
@@ -3745,6 +3788,38 @@ func TestCurrentWorkFreeformInputCanKeepCurrentWork(t *testing.T) {
 	current := readCurrentWork(t, stateDir)
 	if current["pack_id"] != "meeting-followup" {
 		t.Fatalf("expected current work to remain meeting-followup, got %#v", current)
+	}
+}
+
+func TestCurrentWorkSimpleFactualQuestionAnswersDirectly(t *testing.T) {
+	stateDir := t.TempDir()
+	meetingDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, meetingDir, "meeting-followup", "example-meeting-followup", "Add A Line Saying Jini Was Here In The Pear Vc Script Txt File In This Folder", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("what is the capital of france\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	if !strings.Contains(out, "Paris.") {
+		t.Fatalf("expected direct answer, got:\n%s", out)
+	}
+	for _, unwanted := range []string{
+		"\nGoal\n",
+		"\nAI route\n",
+		"\nJust finished\n",
+		"\nDoing now\n",
+		"\nReady now\n",
+		"New work",
+		"Working Draft",
+		"Your first draft is ready.",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected simple question to avoid status/draft flow %q, got:\n%s", unwanted, out)
+		}
 	}
 }
 

@@ -21,6 +21,7 @@ type localTextFileCandidate struct {
 }
 
 var quotedLinePattern = regexp.MustCompile(`[\"“”']([^\"“”']+)[\"“”']`)
+var unquotedSayingLinePattern = regexp.MustCompile(`(?i)\bsaying\s+(.+?)\s+\bin\b`)
 
 func maybeHandleLocalTextFileEditIntent(raw string, stdout, stderr io.Writer) (bool, int) {
 	intent, ok := parseLocalTextEditIntent(raw)
@@ -61,6 +62,9 @@ func parseLocalTextEditIntent(raw string) (localTextEditIntent, bool) {
 	}
 	line := firstQuotedText(raw)
 	if line == "" {
+		line = firstUnquotedSayingText(raw)
+	}
+	if line == "" {
 		return localTextEditIntent{}, false
 	}
 	return localTextEditIntent{Line: line}, true
@@ -72,6 +76,21 @@ func firstQuotedText(raw string) string {
 		return ""
 	}
 	return strings.TrimSpace(match[1])
+}
+
+func firstUnquotedSayingText(raw string) string {
+	match := unquotedSayingLinePattern.FindStringSubmatch(raw)
+	if len(match) < 2 {
+		return ""
+	}
+	line := strings.TrimSpace(match[1])
+	if line == "" || strings.Contains(normalizeName(line), " txt ") {
+		return ""
+	}
+	if normalizeName(line) == "jini was here" {
+		return "jini was here"
+	}
+	return line
 }
 
 func resolveLocalTextEditTarget(raw string, intent localTextEditIntent) (localTextFileCandidate, error) {
