@@ -1,7 +1,10 @@
 # Jini
 
-**In plain words:** Jini helps you finish work without losing track of what
-matters.
+**In plain words:** Jini is a CLI-first AI work router and durable session
+layer.
+
+It helps people who use multiple AI CLIs, models, and local runtimes finish work
+without losing route control, context, or cost discipline.
 
 It keeps five things clear:
 
@@ -12,16 +15,18 @@ It keeps five things clear:
 - what to do next
 
 Most AI tools are good at getting work started. Jini is for the part where
-people lose time:
+developers and operators lose time:
 
-- after a meeting
-- before sending a plan forward
-- before choosing one option
-- before calling something finished
+- switching among configured CLIs and model routes
+- avoiding throttling and quota dead ends
+- continuing without replaying transcripts
+- editing the right local files from the current folder
+- knowing what route, artifact, and next action are current
 
-For travel work specifically, the public product direction is now "curated
-trip planning first, execution later". The framework for that lives in
-[specs/travel-curated-experience-framework.md](specs/travel-curated-experience-framework.md).
+Meeting, plan-readiness, travel, and vendor-comparison flows are proof
+scenarios. They are not the product identity. The hard positioning and tiering
+decisions live in
+[specs/product-settling-decisions.md](specs/product-settling-decisions.md).
 
 ## The Public Shape
 

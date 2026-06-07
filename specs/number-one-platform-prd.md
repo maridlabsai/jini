@@ -9,6 +9,9 @@ initiative lives in
 The competitive release pressure and watchlist response lives in
 [competitive-release-plan.md](./competitive-release-plan.md).
 
+The hard product positioning and tiering decisions live in
+[product-settling-decisions.md](./product-settling-decisions.md).
+
 This document is the canonical product and operating PRD for Jini.
 
 If another plan, roadmap, or strategy note conflicts with this document, this
@@ -16,8 +19,13 @@ document wins unless a newer explicit PRD decision supersedes it.
 
 ## Product Decision
 
-Jini should be built as a self-learning and self-correcting work operating
-system.
+Jini should be built as a CLI-first AI work router and durable session layer
+that can grow into a self-learning and self-correcting work operating system.
+
+The near-term GTM product is not the broad OS. The near-term GTM product is the
+high-quality CLI wedge: direct task intake, file edits, route switching,
+token-frugal continuation, and durable work state across configured tools and
+models.
 
 It should win through:
 
