@@ -98,6 +98,31 @@ func TestEngineeringGateMatrixDoesNotListRequiredGatesAsPromotionCandidates(t *t
 	}
 }
 
+func TestPushGateRunsShipCheckEvidence(t *testing.T) {
+	root := repoRootForMigrationTest(t)
+
+	requiredGates := readRepoFile(t, root, "tools/run_required_gates.sh")
+	for _, want := range []string{
+		"run_ship_check_gate",
+		"check ship --format json",
+	} {
+		if !strings.Contains(requiredGates, want) {
+			t.Fatalf("push gate must run ship-check evidence %q", want)
+		}
+	}
+
+	gateMatrix := readRepoFile(t, root, "specs/engineering-gate-matrix.md")
+	for _, want := range []string{
+		"`jini check ship --format json`",
+		"push gate records local shipping evidence",
+		"dirty worktrees are blocked before push",
+	} {
+		if !strings.Contains(gateMatrix, want) {
+			t.Fatalf("engineering gate matrix must document ship-check evidence %q", want)
+		}
+	}
+}
+
 func TestCLIUXRegressionGatePinsIncidentScenarios(t *testing.T) {
 	root := repoRootForMigrationTest(t)
 

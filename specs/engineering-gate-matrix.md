@@ -63,11 +63,15 @@ integration.
 Required commands:
 
 1. all commit-gate commands
+2. `jini check ship --format json`
 
 Required outcome:
 
 - the branch clears the same Go-only implementation boundary before push
 - free security scanning remains configured before the branch reaches CI
+- push gate records local shipping evidence, including git repository state and
+  required validation evidence
+- dirty worktrees are blocked before push
 
 ### Release gate
 

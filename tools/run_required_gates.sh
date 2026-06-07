@@ -54,6 +54,15 @@ run_scorecard_gate() {
   )
 }
 
+run_ship_check_gate() {
+  (
+    cd "${ROOT_DIR}"
+    GOCACHE="${GO_CACHE_DIR}" \
+    GOMODCACHE="${GO_MOD_CACHE_DIR}" \
+      "${GO_BIN}" run ./cmd/jini check ship --format json
+  )
+}
+
 run_commit_gate() {
   (
     cd "${ROOT_DIR}"
@@ -69,6 +78,7 @@ run_commit_gate() {
 
 run_push_gate() {
   run_commit_gate
+  run_ship_check_gate
 }
 
 run_release_gate() {
