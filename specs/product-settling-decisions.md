@@ -141,3 +141,20 @@ P2:
 - desktop and mobile apps
 - broad demo verticals
 - commercial skills and agent UI surfaces
+
+## PRD Drift Control
+
+Protected product and PRD surfaces must not change casually.
+
+Any change to canonical PRD, public positioning, tiering, offline/platform
+strategy, skills/delegation boundaries, competitive release pressure, or proof
+scenario positioning must update this document in the same change.
+
+The required commit gate enforces this through:
+
+```bash
+bash tools/product_prd_drift_gate.sh
+```
+
+This makes product drift explicit. If a change does not justify updating the
+settled decision record, it should not modify the protected product surface.

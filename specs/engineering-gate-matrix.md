@@ -36,7 +36,8 @@ Required commands:
 2. `git diff --check`
 3. `git diff --cached --check`
 4. `bash tools/security_configuration_gate.sh`
-5. `jini scorecard-gate --format json`
+5. `bash tools/product_prd_drift_gate.sh`
+6. `jini scorecard-gate --format json`
 
 Required outcome:
 
@@ -45,6 +46,8 @@ Required outcome:
 - staged and unstaged whitespace and patch-format drift are blocked before commit
 - scanner wiring for CodeQL, govulncheck, OSV-Scanner, TruffleHog, and
   Dependabot cannot be removed without failing the local gate
+- protected PRD and product-positioning surfaces cannot drift unless
+  `specs/product-settling-decisions.md` is updated in the same change
 - competitive scorecard drift is blocked before commit, including required
   coverage for async/background agents, cross-surface continuity, visible
   progress and outputs, permissioned execution, skills/hooks/context routing,

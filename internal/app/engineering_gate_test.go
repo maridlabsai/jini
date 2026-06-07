@@ -12,6 +12,8 @@ func TestRequiredCommitGateChecksStagedAndUnstagedWhitespace(t *testing.T) {
 	for _, want := range []string{
 		"git diff --check",
 		"git diff --cached --check",
+		"run_product_prd_drift_gate",
+		"tools/product_prd_drift_gate.sh",
 		"run_scorecard_gate",
 		"scorecard-gate --format json",
 	} {
@@ -24,8 +26,10 @@ func TestRequiredCommitGateChecksStagedAndUnstagedWhitespace(t *testing.T) {
 	for _, want := range []string{
 		"`git diff --check`",
 		"`git diff --cached --check`",
+		"`bash tools/product_prd_drift_gate.sh`",
 		"`jini scorecard-gate --format json`",
 		"staged and unstaged whitespace",
+		"protected PRD and product-positioning surfaces cannot drift",
 		"competitive scorecard drift is blocked before commit",
 	} {
 		if !strings.Contains(gateMatrix, want) {
@@ -80,6 +84,7 @@ func TestEngineeringGateMatrixDoesNotListRequiredGatesAsPromotionCandidates(t *t
 		"git diff --check",
 		"git diff --cached --check",
 		"security_configuration_gate.sh",
+		"product_prd_drift_gate.sh",
 		"scorecard-gate",
 	} {
 		if strings.Contains(promotionCandidates, alreadyRequired) {
@@ -110,6 +115,31 @@ func TestEngineeringGateMatrixDocumentsMakefileAliases(t *testing.T) {
 	} {
 		if !strings.Contains(gateMatrix, want) {
 			t.Fatalf("engineering gate matrix must document Makefile alias %q", want)
+		}
+	}
+}
+
+func TestProductPRDDriftGateProtectsCanonicalSurfaces(t *testing.T) {
+	root := repoRootForMigrationTest(t)
+
+	gate := readRepoFile(t, root, "tools/product_prd_drift_gate.sh")
+	for _, want := range []string{
+		"SETTLING_DOC=\"specs/product-settling-decisions.md\"",
+		"git diff --name-only",
+		"git diff --cached --name-only",
+		"git ls-files --others --exclude-standard",
+		"README.md",
+		"specs/number-one-platform-prd.md",
+		"specs/product-settling-decisions.md",
+		"specs/client-surfaces-and-free-tier.md",
+		"specs/platform-offline-strategy.md",
+		"specs/skills-and-delegation-slice.md",
+		"specs/competitive-release-plan.md",
+		"specs/travel-curated-experience-framework.md",
+		"Product PRD drift gate failed.",
+	} {
+		if !strings.Contains(gate, want) {
+			t.Fatalf("product PRD drift gate must contain %q", want)
 		}
 	}
 }

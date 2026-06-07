@@ -27,6 +27,8 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"no `Start/Keep` interruption model",
 		"Offline is a route state, not a separate product.",
 		"Until the CLI wedge is noticeably strong, defer broad expansion.",
+		"Protected product and PRD surfaces must not change casually.",
+		"bash tools/product_prd_drift_gate.sh",
 	} {
 		if !strings.Contains(settling, want) {
 			t.Fatalf("product settling decisions must preserve %q", want)
