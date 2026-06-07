@@ -21,7 +21,7 @@ type localTextFileCandidate struct {
 }
 
 var quotedLinePattern = regexp.MustCompile(`[\"“”']([^\"“”']+)[\"“”']`)
-var unquotedSayingLinePattern = regexp.MustCompile(`(?i)\bsaying\s+(.+?)\s+\bin\b`)
+var sayingPrefixPattern = regexp.MustCompile(`(?i)\bsaying\s+`)
 
 func maybeHandleLocalTextFileEditIntent(raw string, stdout, stderr io.Writer) (bool, int) {
 	intent, ok := parseLocalTextEditIntent(raw)
@@ -79,11 +79,12 @@ func firstQuotedText(raw string) string {
 }
 
 func firstUnquotedSayingText(raw string) string {
-	match := unquotedSayingLinePattern.FindStringSubmatch(raw)
+	match := sayingPrefixPattern.FindStringIndex(raw)
 	if len(match) < 2 {
 		return ""
 	}
-	line := strings.TrimSpace(match[1])
+	rest := strings.TrimSpace(raw[match[1]:])
+	line := bestUnquotedSayingLine(rest)
 	if line == "" || strings.Contains(normalizeName(line), " txt ") {
 		return ""
 	}
@@ -91,6 +92,73 @@ func firstUnquotedSayingText(raw string) string {
 		return "jini was here"
 	}
 	return line
+}
+
+func bestUnquotedSayingLine(rest string) string {
+	lower := strings.ToLower(rest)
+	delimiters := []int{}
+	searchFrom := 0
+	for {
+		index := strings.Index(lower[searchFrom:], " in ")
+		if index < 0 {
+			break
+		}
+		delimiters = append(delimiters, searchFrom+index)
+		searchFrom += index + len(" in ")
+	}
+	if len(delimiters) == 0 {
+		return ""
+	}
+	names := localTextFileNamesForParsing()
+	bestLine := ""
+	bestScore := -1
+	bestIndex := -1
+	for _, delimiter := range delimiters {
+		line := strings.TrimSpace(rest[:delimiter])
+		targetText := strings.TrimSpace(rest[delimiter+len(" in "):])
+		if line == "" || targetText == "" {
+			continue
+		}
+		score := localTextTargetScore(targetText, names)
+		if score > bestScore || (score == bestScore && delimiter > bestIndex) {
+			bestLine = line
+			bestScore = score
+			bestIndex = delimiter
+		}
+	}
+	if bestLine == "" {
+		return strings.TrimSpace(rest[:delimiters[len(delimiters)-1]])
+	}
+	return bestLine
+}
+
+func localTextFileNamesForParsing() []string {
+	entries, err := os.ReadDir(".")
+	if err != nil {
+		return nil
+	}
+	names := []string{}
+	for _, entry := range entries {
+		if !entry.IsDir() && strings.ToLower(filepath.Ext(entry.Name())) == ".txt" {
+			names = append(names, entry.Name())
+		}
+	}
+	return names
+}
+
+func localTextTargetScore(targetText string, names []string) int {
+	if len(names) == 0 {
+		return 0
+	}
+	tokens := localTextEditRequestTokens(targetText, "")
+	best := 0
+	for _, name := range names {
+		score := localTextFileMatchScore(name, tokens)
+		if score > best {
+			best = score
+		}
+	}
+	return best
 }
 
 func resolveLocalTextEditTarget(raw string, intent localTextEditIntent) (localTextFileCandidate, error) {
@@ -133,7 +201,10 @@ func resolveLocalTextEditTarget(raw string, intent localTextEditIntent) (localTe
 }
 
 func localTextEditRequestTokens(raw, line string) map[string]bool {
-	withoutLine := strings.ReplaceAll(raw, line, " ")
+	withoutLine := raw
+	if line != "" {
+		withoutLine = strings.ReplaceAll(raw, line, " ")
+	}
 	stopWords := map[string]bool{
 		"a": true, "add": true, "an": true, "and": true, "append": true, "file": true,
 		"folder": true, "here": true, "in": true, "insert": true, "line": true,

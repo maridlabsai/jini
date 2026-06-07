@@ -237,6 +237,29 @@ func TestCurrentWorkLocalTextEditExecutesWithoutStartPrompt(t *testing.T) {
 	}
 }
 
+func TestCurrentWorkLocalTextEditPreservesUnquotedLineContainingIn(t *testing.T) {
+	stateDir := t.TempDir()
+	workDir := t.TempDir()
+	t.Chdir(workDir)
+	target := filepath.Join(workDir, "notes.txt")
+	writeFile(t, target, "intro\n")
+	meetingDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, meetingDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("add a line saying check in at 9 in notes.txt\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	if got := mustReadFile(t, target); got != "intro\ncheck in at 9\n" {
+		t.Fatalf("expected unquoted line with in to be preserved, got:\n%s", got)
+	}
+	if strings.Contains(stdout.String(), "Working Draft") {
+		t.Fatalf("expected direct edit to avoid draft flow, got:\n%s", stdout.String())
+	}
+}
+
 func TestDirectArgsLocalTextEditAppendsQuotedLine(t *testing.T) {
 	stateDir := t.TempDir()
 	workDir := t.TempDir()
@@ -3820,6 +3843,25 @@ func TestCurrentWorkSimpleFactualQuestionAnswersDirectly(t *testing.T) {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("expected simple question to avoid status/draft flow %q, got:\n%s", unwanted, out)
 		}
+	}
+}
+
+func TestCurrentWorkCapitalQuestionAnswersFromSmallLookup(t *testing.T) {
+	stateDir := t.TempDir()
+	meetingDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, meetingDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("what is the capital of japan\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "Tokyo.") {
+		t.Fatalf("expected direct capital answer, got:\n%s", stdout.String())
+	}
+	if strings.Contains(stdout.String(), "New work") || strings.Contains(stdout.String(), "Working Draft") {
+		t.Fatalf("expected direct answer to avoid work flow, got:\n%s", stdout.String())
 	}
 }
 
