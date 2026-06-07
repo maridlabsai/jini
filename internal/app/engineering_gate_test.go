@@ -14,6 +14,8 @@ func TestRequiredCommitGateChecksStagedAndUnstagedWhitespace(t *testing.T) {
 		"git diff --cached --check",
 		"run_product_prd_drift_gate",
 		"tools/product_prd_drift_gate.sh",
+		"run_cli_ux_regression_gate",
+		"tools/cli_ux_regression_gate.sh",
 		"run_scorecard_gate",
 		"scorecard-gate --format json",
 	} {
@@ -27,9 +29,11 @@ func TestRequiredCommitGateChecksStagedAndUnstagedWhitespace(t *testing.T) {
 		"`git diff --check`",
 		"`git diff --cached --check`",
 		"`bash tools/product_prd_drift_gate.sh`",
+		"`bash tools/cli_ux_regression_gate.sh`",
 		"`jini scorecard-gate --format json`",
 		"staged and unstaged whitespace",
 		"protected PRD and product-positioning surfaces cannot drift",
+		"direct CLI edit and simple-question flows cannot regress into draft/status frames",
 		"competitive scorecard drift is blocked before commit",
 	} {
 		if !strings.Contains(gateMatrix, want) {
@@ -85,10 +89,30 @@ func TestEngineeringGateMatrixDoesNotListRequiredGatesAsPromotionCandidates(t *t
 		"git diff --cached --check",
 		"security_configuration_gate.sh",
 		"product_prd_drift_gate.sh",
+		"cli_ux_regression_gate.sh",
 		"scorecard-gate",
 	} {
 		if strings.Contains(promotionCandidates, alreadyRequired) {
 			t.Fatalf("promotion candidates must not relist required gate %q:\n%s", alreadyRequired, promotionCandidates)
+		}
+	}
+}
+
+func TestCLIUXRegressionGatePinsIncidentScenarios(t *testing.T) {
+	root := repoRootForMigrationTest(t)
+
+	gate := readRepoFile(t, root, "tools/cli_ux_regression_gate.sh")
+	for _, want := range []string{
+		"TestInteractiveLocalTextEditAppendsQuotedLineInsteadOfDrafting",
+		"TestCurrentWorkLocalTextEditExecutesWithoutStartPrompt",
+		"TestCurrentWorkSimpleFactualQuestionAnswersDirectly",
+		"TestCurrentWorkUnknownStandaloneQuestionStaysCompact",
+		"TestPublicDocsUseCurrentFirstRunFlow",
+		"TestP1SimplicityPriorityCoversCommandsSkillsAndAgents",
+		"direct CLI edit and simple-question UX regression gate",
+	} {
+		if !strings.Contains(gate, want) {
+			t.Fatalf("CLI UX regression gate must pin %q", want)
 		}
 	}
 }

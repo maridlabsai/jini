@@ -8,6 +8,7 @@ GO_CACHE_DIR="${JINI_GOCACHE:-/private/tmp/jini-go-cache}"
 GO_MOD_CACHE_DIR="${JINI_GOMODCACHE:-/private/tmp/jini-go-mod}"
 SECURITY_CONFIGURATION_GATE="${ROOT_DIR}/tools/security_configuration_gate.sh"
 PRODUCT_PRD_DRIFT_GATE="${ROOT_DIR}/tools/product_prd_drift_gate.sh"
+CLI_UX_REGRESSION_GATE="${ROOT_DIR}/tools/cli_ux_regression_gate.sh"
 
 usage() {
   cat <<'EOF'
@@ -40,6 +41,10 @@ run_product_prd_drift_gate() {
   bash "${PRODUCT_PRD_DRIFT_GATE}"
 }
 
+run_cli_ux_regression_gate() {
+  bash "${CLI_UX_REGRESSION_GATE}"
+}
+
 run_scorecard_gate() {
   (
     cd "${ROOT_DIR}"
@@ -57,6 +62,7 @@ run_commit_gate() {
   )
   run_security_configuration_gate
   run_product_prd_drift_gate
+  run_cli_ux_regression_gate
   run_scorecard_gate
   run_go_test "./..."
 }

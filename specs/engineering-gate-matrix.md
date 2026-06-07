@@ -37,7 +37,8 @@ Required commands:
 3. `git diff --cached --check`
 4. `bash tools/security_configuration_gate.sh`
 5. `bash tools/product_prd_drift_gate.sh`
-6. `jini scorecard-gate --format json`
+6. `bash tools/cli_ux_regression_gate.sh`
+7. `jini scorecard-gate --format json`
 
 Required outcome:
 
@@ -48,6 +49,7 @@ Required outcome:
   Dependabot cannot be removed without failing the local gate
 - protected PRD and product-positioning surfaces cannot drift unless
   `specs/product-settling-decisions.md` is updated in the same change
+- direct CLI edit and simple-question flows cannot regress into draft/status frames, `Start/Keep` choices, or verbose current-work summaries
 - competitive scorecard drift is blocked before commit, including required
   coverage for async/background agents, cross-surface continuity, visible
   progress and outputs, permissioned execution, skills/hooks/context routing,
