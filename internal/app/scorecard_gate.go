@@ -36,6 +36,8 @@ var defaultScorecardGatePolicy = scorecardGatePolicy{
 		"permissioned-sandbox-execution",
 		"skills-hooks-and-context-routing",
 		"local-open-model-optionality",
+		"token-frugality-p0",
+		"throttle-and-power-aware-routing",
 		"commit-gated-scorecard-drift",
 	},
 	MinimumCoreCompetitors:      7,

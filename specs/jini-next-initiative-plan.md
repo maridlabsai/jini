@@ -114,10 +114,14 @@ Jini should become:
 - the shell you start in for durable work
 - the system that absorbs token exhaustion, throttling, slow churn, and weak
   connectivity
+- the product that treats token frugality as P0 and avoids replaying or loading
+  context unless it is necessary for the outcome
 - the product that stays productive in the wilderness when the device is
   capable
 - the adaptive execution layer that can switch platforms, models, and profiles
   without making the user re-decide the stack
+- the execution layer that can go full power when plugged in and thermally safe,
+  then become battery-conscious under low battery or thermal pressure
 
 ## Persona Outcomes
 
@@ -367,8 +371,9 @@ The initiative succeeds only if the measured scorecard improves.
 - CLI cold start score: `>= 9.4`
 - runtime memory footprint score: `>= 9.2`
 - adapter portability score: `>= 9.1`
-- token efficiency score: `>= 9.3`
+- token efficiency score: `>= 9.5`
 - route-switch trust score: `>= 9.2`
+- power and battery-aware route score: `>= 9.0`
 
 ## SLO And SLA Framework
 
@@ -382,6 +387,7 @@ The initiative succeeds only if the measured scorecard improves.
 - cross-surface resume success rate: `>= 99%`
 - reconciliation debt visibility rate: `100%`
 - route explanation presence when routing changes: `100%`
+- battery-aware route-regret rate: `<= 5%`
 
 ### Managed Reliability SLOs
 

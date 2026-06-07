@@ -102,6 +102,18 @@ scorecard_gates:
       gate: >
         Local and open-model routes must stay visible in auto-mode decisions
         while preserving privacy and offline-readiness evidence.
+    - id: token-frugality-p0
+      competitors: [claude-code, codex, aider, continue, cline]
+      gate: >
+        Token frugality is P0: each implementation cut must preserve compact
+        context routing, transcript-replay avoidance, and visible justification
+        for premium or high-context routes.
+    - id: throttle-and-power-aware-routing
+      competitors: [codex, continue, cline, ollama, lm-studio, open-webui]
+      gate: >
+        Throttling avoidance, powered-mode full power execution, and
+        low-battery or thermal-aware route selection are P1 route-policy
+        requirements and must not regress when adapters or local models change.
     - id: commit-gated-scorecard-drift
       competitors: [claude-code, codex, github-copilot-coding-agent, google-jules, cursor, windsurf]
       gate: >

@@ -106,6 +106,27 @@ provider changes without becoming a second-class copy.
 Jini should stay frugal by default, with commercially usable local SLMs as the
 front line whenever they are good enough.
 
+### 2a. Token frugality is P0
+
+Being frugal with tokens is a P0 product goal, not a tuning preference.
+
+Every route, memory, skill, agent, and adapter decision must prefer the smallest
+context and output budget that can still meet the user's quality and safety bar.
+
+That means:
+
+- route context by task instead of loading broad memory by default
+- reuse compact artifacts, repo maps, summaries, and session state before
+  replaying transcripts
+- cap narration and diagnostic output unless the user asks or trust requires it
+- choose local, cached, deterministic, or structured paths before premium model
+  calls when they are adequate
+- surface why expensive context or deeper reasoning was used when it materially
+  changes cost
+
+Token savings must come from architecture and routing discipline, not from
+silently weakening quality, review, or safety.
+
 ### 3. Outcome before narration
 
 Jini should produce a useful artifact or decision surface before it produces a
@@ -489,8 +510,15 @@ considered successful.
 - the system loads only relevant context for the task
 - context-bloat regression is visible and repairable
 
-#### P0.4 Local-first cost discipline
+#### P0.4 Token frugality and local-first cost discipline
 
+- token frugality is a P0 product goal
+- context routing must minimize loaded context by default
+- compact continuation must reuse saved state instead of replaying full
+  transcripts
+- every premium or high-context route must have a visible justification when it
+  materially affects cost
+- token savings must never hide quality, review, or safety risk
 - local SLM pool exists as a real frontline route
 - form-factor-aware local model support matrix exists
 - escalation to paid routes is explicit and justified
@@ -569,6 +597,13 @@ considered successful.
 ### P1: Scale and differentiation requirements
 
 - simplification of commands, user experience, skills, and agent interactions
+- throttle avoidance, including preemptive route switching when provider limits
+  or quota pressure would interrupt work
+- powered-mode full power execution when the device is plugged in, cool enough,
+  and the user or policy allows deeper local work
+- low-battery and thermal-aware execution that prefers smaller models, shorter
+  contexts, deferred deep work, or cloud/BYO routes when local work would drain
+  the device
 - stronger GitHub-native engineering continuity
 - broader multimodal local workflows
 - richer artifact editing surfaces on desktop
@@ -768,6 +803,9 @@ Primary metrics:
 - upstream defect catch rate
 - clarification-turn reduction
 - route regret rate
+- token spend per successful task
+- throttle-avoided interruption rate
+- battery-aware route regret rate
 
 ## Score Exit Criteria
 
@@ -776,7 +814,9 @@ The product does not declare a win until:
 - `delivery-maturity >= 9.0`
 - `memory-reliability >= 9.0`
 - `adapter-portability >= 9.0`
-- `token-efficiency >= 9.0`
+- `token-efficiency >= 9.5`
+- `throttle-avoided-interruption-rate >= 85%`
+- `battery-aware-route-regret <= 5%`
 - overall score margin over the strongest competitor is at least `0.8`
 - flagship flows beat direct competitor workflows in benchmark evidence
 

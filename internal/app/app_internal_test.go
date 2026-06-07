@@ -305,6 +305,8 @@ func TestScorecardGatePassesAndExposesCompetitorPressure(t *testing.T) {
 		"permissioned-sandbox-execution":   false,
 		"skills-hooks-and-context-routing": false,
 		"local-open-model-optionality":     false,
+		"token-frugality-p0":               false,
+		"throttle-and-power-aware-routing": false,
 		"commit-gated-scorecard-drift":     false,
 	}
 	for _, vector := range report.PressureVectors {
@@ -400,6 +402,8 @@ func TestScorecardGateTextShowsCommitGatePressure(t *testing.T) {
 		"COMPETITORS",
 		"  OK github-copilot-coding-agent",
 		"PRESSURE VECTORS",
+		"  OK token-frugality-p0",
+		"  OK throttle-and-power-aware-routing",
 		"  OK commit-gated-scorecard-drift",
 	} {
 		if !strings.Contains(out, want) {

@@ -148,6 +148,9 @@ The free product should prove the value:
 
 - free is manual proof and control
 - paid is autonomous optimization and managed continuity
+- free must be structurally token-frugal by default
+- free must show enough token-saving and context-reuse evidence to prove Jini
+  is not wasting user quota
 - free users can see basic throttle and route health visibility
 - free users can switch among configured tools, CLIs, providers, and local
   models manually
@@ -161,6 +164,10 @@ The commercial product should operate the control plane:
   intervene
 - paid recovers from throttles, failed routes, and interrupted sessions
   automatically
+- paid can run full power mode when powered, thermally safe, and policy allows
+  deeper local execution
+- paid can enforce battery-conscious mode when battery or thermal pressure
+  makes local deep work the wrong route
 - paid carries session continuity across CLI, desktop, and mobile with managed
   sync and reconciliation
 - paid learns routing, compression, and workflow policies from use while

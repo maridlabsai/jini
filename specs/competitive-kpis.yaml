@@ -248,20 +248,21 @@ dimensions:
     label: Token efficiency
     execution_order: 6
     current_score: 9.4
-    target_score: 9.0
+    target_score: 9.5
     strongest_competitor:
       name: Aider
       score: 9.0
       advantage: Context discipline, caching, and chat minimization are already tuned for daily low-cost execution.
     weakness: Jini now reuses recommendation, compact context, checklist, repo map, handoff, and visible efficiency posture inside recovery surfaces, but token budgeting is still not enforced uniformly across every adapter path.
-    conversion_strategy: Save tokens on transport, orchestration, bounded memory, progressive disclosure, ranked compact repo maps, compact local-apply loops, and reloads while keeping reasoning depth where state or profile demands it.
-    kpi: The cheapest adequate path is the default path, and expensive reasoning is visibly justified.
+    conversion_strategy: Treat token frugality as P0: save tokens on transport, orchestration, bounded memory, progressive disclosure, ranked compact repo maps, compact local-apply loops, and reloads while keeping reasoning depth where state or profile demands it.
+    kpi: The smallest adequate context and route are the default path, transcript replay is avoided, and expensive reasoning is visibly justified.
     next_build_steps:
       - Surface route, effort, and cost rationale in the public-safe help and status paths so users can see why the cheap path won or lost.
       - Prefer deterministic exports and cached local artifacts before external model or connector calls.
       - Feed compact-context compression ratios, repo-map size, and execute-flow reuse metrics into routing policy and future learning evaluation instead of only recording them.
       - Expand compact context generation so more intents use low-token reloads by default.
       - Push the same budgeting discipline into recommendation, publish, activation, guided execution, and resume surfaces beyond `compact-context`.
+      - Add route-policy evidence for throttle avoidance, powered-mode full power execution, and low-battery or thermal-aware local model selection.
     exit_criteria:
       - Cheap-path preference is visible in the default shell without reading deep docs.
       - Operators can see why a deeper class was chosen instead of assuming hidden cost.

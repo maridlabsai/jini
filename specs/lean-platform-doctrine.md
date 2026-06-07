@@ -33,6 +33,7 @@ That mission should be judged literally:
 
 Jini optimizes for the full cost of getting useful work done:
 
+- token spend
 - model cost
 - operator time
 - retries
@@ -41,6 +42,8 @@ Jini optimizes for the full cost of getting useful work done:
 - avoidable clarification turns
 
 Success is not a cheap request. Success is a cheap successful outcome.
+Token frugality is P0 because token waste compounds across every task,
+provider, device, and continuation surface.
 
 ### 2. One Stable Surface
 
@@ -77,6 +80,17 @@ Jini should be able to switch platform when throttling, quota pressure,
 availability drift, or interruption risk makes the current route worse for the
 user. Jini should also be able to adjust the model or local profile based on
 task shape and complexity instead of pinning one model across all work.
+
+Avoiding throttling is P1. Free users should get visible route and throttle
+health plus manual switching. Commercial users should get managed throttle
+prediction, preemptive route changes, and automatic continuation when a route
+becomes constrained.
+
+Execution policy must also respect device power state. In powered mode, Jini
+can use full local capability when policy allows it and thermals are safe. In
+low-battery or thermal-pressure mode, Jini should prefer smaller models,
+shorter contexts, deferred deep work, or cloud/BYO routes when those preserve
+the user's outcome with less local drain.
 
 ### 4. Visible Efficiency
 

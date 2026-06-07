@@ -55,6 +55,8 @@ func TestScorecardGateIsDocumentedAsCommitGate(t *testing.T) {
 		"async-background-agents",
 		"cross-surface-session-continuity",
 		"local-open-model-optionality",
+		"token-frugality-p0",
+		"throttle-and-power-aware-routing",
 		"commit-gated-scorecard-drift",
 	} {
 		if !strings.Contains(goldenBenchmark, want) {
