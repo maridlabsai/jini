@@ -52,3 +52,30 @@ jobs:
           ./install.sh --source-dir "${PWD}" --bin-dir "${tmp}/bin" --install-dir "${tmp}/install" --force
           "${tmp}/bin/jini" publish-readiness --format json >/dev/null
           test -f "${tmp}/install/install-receipt.txt"
+
+      - name: Smoke piped release installer from checkout
+        shell: bash
+        run: |
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "${tmp}"' EXIT
+          case "$(uname -s)" in
+            Darwin) os_name="darwin" ;;
+            Linux) os_name="linux" ;;
+            *) echo "unsupported smoke OS" >&2; exit 1 ;;
+          esac
+          case "$(uname -m)" in
+            x86_64|amd64) arch_name="amd64" ;;
+            arm64|aarch64) arch_name="arm64" ;;
+            *) echo "unsupported smoke arch" >&2; exit 1 ;;
+          esac
+          mkdir -p "${tmp}/release" "${tmp}/package"
+          go build -o "${tmp}/package/jini" ./cmd/jini
+          tar -czf "${tmp}/release/jini-${os_name}-${arch_name}.tar.gz" -C "${tmp}/package" jini
+          cat install.sh | \
+            JINI_RELEASE_BASE_URL="file://${tmp}/release" \
+            JINI_GO_BIN="${tmp}/missing-go" \
+            JINI_BIN_DIR="${tmp}/bin" \
+            JINI_INSTALL_DIR="${tmp}/install" \
+            bash
+          "${tmp}/bin/jini" publish-readiness --format json >/dev/null
+          grep -q '^install_mode=release-binary$' "${tmp}/install/install-receipt.txt"

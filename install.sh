@@ -105,14 +105,20 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-script_dir="$(pwd)"
+script_dir=""
 script_source="${BASH_SOURCE[0]-}"
-if [[ -n "${script_source}" && "${script_source}" != "bash" ]]; then
-  script_dir="$(
-    cd "$(dirname "${script_source}")" >/dev/null 2>&1
-    pwd
-  )"
-fi
+case "${script_source}" in
+  ""|"bash"|/dev/fd/*|/proc/self/fd/*)
+    ;;
+  *)
+    if [[ -f "${script_source}" ]]; then
+      script_dir="$(
+        cd "$(dirname "${script_source}")" >/dev/null 2>&1
+        pwd
+      )"
+    fi
+    ;;
+esac
 
 detect_local_source() {
   local candidate="$1"
@@ -247,7 +253,7 @@ ensure_dir_ready "${GOCACHE}" "Go build cache"
 ensure_dir_ready "${BIN_DIR}" "Bin"
 ensure_dir_ready "${INSTALL_DIR}" "Install"
 
-if [[ -z "${SOURCE_DIR}" ]] && detect_local_source "${script_dir}"; then
+if [[ -z "${SOURCE_DIR}" && -n "${script_dir}" ]] && detect_local_source "${script_dir}"; then
   SOURCE_DIR="${script_dir}"
   SOURCE_REASON="${SOURCE_REASON:-local-repo-source}"
 fi
