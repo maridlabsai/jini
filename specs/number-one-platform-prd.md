@@ -101,6 +101,16 @@ The product must remove those costs.
 The same work must survive across CLI, desktop, mobile, offline mode, and
 provider changes without becoming a second-class copy.
 
+Jini must seamlessly toggle between offline and online mode without forking the
+work. Offline events, online CLI events, local model events, managed-route
+events, approvals, artifacts, and route evidence must stitch into the same
+session timeline.
+
+Cross-navigation is part of the same promise. A user should be able to move
+from CLI to desktop to mobile review, or from offline local work back to online
+CLI execution, and see the same current artifact, next action, route state,
+throttle state, device capability state, and sync debt.
+
 ### 2. Cheapest suitable route first
 
 Jini should stay frugal by default, with commercially usable local SLMs as the
@@ -493,6 +503,14 @@ considered successful.
 - one artifact graph
 - one route and trust story across surfaces
 - offline continuation that remains legible and recoverable
+- offline and online mode toggles must stitch into the same session instead of
+  creating detached transcripts or duplicate work
+- cross-navigation between CLI, desktop, mobile, and offline views must preserve
+  current artifact, next action, route evidence, throttle state, device
+  capability state, battery posture, and sync debt
+- route policy must account for device capabilities, battery or thermal state,
+  online capability, and configured CLI throttling levels before selecting a
+  local, BYO, downstream CLI, or managed route
 
 #### P0.2 Agentic automation backbone
 

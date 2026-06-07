@@ -32,6 +32,7 @@ var defaultScorecardGatePolicy = scorecardGatePolicy{
 	RequiredPressureVectors: []string{
 		"async-background-agents",
 		"cross-surface-session-continuity",
+		"offline-online-session-stitching",
 		"transparent-progress-and-outputs",
 		"permissioned-sandbox-execution",
 		"skills-hooks-and-context-routing",

@@ -22,6 +22,10 @@ func TestResourcePolicyPrioritiesAreGated(t *testing.T) {
 		"- throttle avoidance, including preemptive route switching",
 		"- powered-mode full power execution",
 		"- low-battery and thermal-aware execution",
+		"Jini must seamlessly toggle between offline and online mode",
+		"offline and online mode toggles must stitch into the same session",
+		"cross-navigation between CLI, desktop, mobile, and offline views must preserve",
+		"configured CLI throttling levels before selecting a",
 		"- `token-efficiency >= 9.5`",
 		"- `throttle-avoided-interruption-rate >= 85%`",
 		"- `battery-aware-route-regret <= 5%`",
@@ -39,6 +43,8 @@ func TestResourcePolicyPrioritiesAreGated(t *testing.T) {
 		"increases token load, transcript replay, or verbose output without measurable",
 		"removes or weakens powered-mode full power execution",
 		"removes or weakens low-battery or thermal-aware execution",
+		"splits offline and online execution into separate transcripts",
+		"- `offline-online-session-stitching`",
 	} {
 		if !strings.Contains(leanGate, want) {
 			t.Fatalf("lean platform gate must preserve resource policy gate %q", want)
@@ -59,6 +65,8 @@ func TestResourcePolicyPrioritiesAreGated(t *testing.T) {
 
 	benchmark := readResourcePolicyFile(t, root, "specs/golden-competitive-benchmark.yaml")
 	for _, want := range []string{
+		"id: offline-online-session-stitching",
+		"Offline work, online CLI work, local model execution, mobile review,",
 		"id: token-frugality-p0",
 		"Token frugality is P0",
 		"id: throttle-and-power-aware-routing",
@@ -67,6 +75,33 @@ func TestResourcePolicyPrioritiesAreGated(t *testing.T) {
 	} {
 		if !strings.Contains(benchmark, want) {
 			t.Fatalf("golden benchmark must preserve resource pressure vector %q", want)
+		}
+	}
+
+	offlineStrategy := readResourcePolicyFile(t, root, "specs/platform-offline-strategy.md")
+	for _, want := range []string{
+		"### Guarantee 4a: Offline And Online Toggle Seamlessly",
+		"local model work performed offline",
+		"downstream CLI work resumed online",
+		"managed-route recovery after throttling or provider limits",
+		"configured CLI throttle state",
+		"online CLI throttle level and quota pressure",
+	} {
+		if !strings.Contains(offlineStrategy, want) {
+			t.Fatalf("offline strategy must preserve seamless toggle requirement %q", want)
+		}
+	}
+
+	crossSurfacePRD := readResourcePolicyFile(t, root, "specs/cross-surface-session-platform-prd.md")
+	for _, want := range []string{
+		"Offline and online are route states, not separate work modes.",
+		"cross-navigate between offline and online routes without restarting",
+		"configured CLI throttle state",
+		"device capability state",
+		"battery or thermal posture",
+	} {
+		if !strings.Contains(crossSurfacePRD, want) {
+			t.Fatalf("cross-surface PRD must preserve seamless navigation requirement %q", want)
 		}
 	}
 }

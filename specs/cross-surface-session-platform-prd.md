@@ -97,6 +97,12 @@ Resume should not mean "start a similar task again." Resume should mean
 "continue the same session with the same context, state, artifacts, and route
 evidence."
 
+Offline and online are route states, not separate work modes. A session may
+start offline on desktop, continue online through a configured CLI, move to
+mobile review, and return to local execution without losing artifact identity,
+route evidence, approval state, throttle state, device capability state,
+battery posture, or sync debt.
+
 ## Category Boundary
 
 Jini is for work with an awkward middle:
@@ -125,6 +131,8 @@ The user should be able to:
 4. come back on another supported surface
 5. see exactly what is ready, what is missing, and what to do next
 6. continue without rebuilding context
+7. cross-navigate between offline and online routes without restarting or
+   re-explaining the work
 
 ## Canonical Session Model
 
@@ -146,6 +154,11 @@ Minimum session fields:
 - approval/sending boundary
 - last updated time
 - last active surface
+- offline or online mode
+- sync debt
+- device capability state
+- battery or thermal posture
+- configured CLI throttle state
 
 ### Session States
 

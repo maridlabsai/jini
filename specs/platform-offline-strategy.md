@@ -118,6 +118,23 @@ After sync, the user must still be able to inspect:
 - what was generated offline
 - what was reconciled later
 
+### Guarantee 4a: Offline And Online Toggle Seamlessly
+
+Jini must treat offline and online as route states inside one session, not as
+separate products.
+
+The same session timeline must stitch together:
+
+- local model work performed offline
+- queued approvals or annotations captured on mobile
+- downstream CLI work resumed online
+- managed-route recovery after throttling or provider limits
+- sync and reconciliation events after connectivity returns
+
+Cross-navigation must preserve the same current artifact, next action, route
+evidence, device capability state, battery or thermal posture, online
+capability state, configured CLI throttle state, and offline debt.
+
 ### Guarantee 5: Mobile Is Not Desktop Parity
 
 Mobile should be excellent at continuation, review, approval, defer, capture,
@@ -521,6 +538,8 @@ The route decision should consider:
 - battery and thermal envelope where relevant
 - offline state
 - provider availability
+- online CLI throttle level and quota pressure
+- downstream CLI route availability
 - prior route regret
 
 ### Local-First Rule

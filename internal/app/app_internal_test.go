@@ -301,6 +301,7 @@ func TestScorecardGatePassesAndExposesCompetitorPressure(t *testing.T) {
 	requiredVectors := map[string]bool{
 		"async-background-agents":          false,
 		"cross-surface-session-continuity": false,
+		"offline-online-session-stitching": false,
 		"transparent-progress-and-outputs": false,
 		"permissioned-sandbox-execution":   false,
 		"skills-hooks-and-context-routing": false,
@@ -402,6 +403,7 @@ func TestScorecardGateTextShowsCommitGatePressure(t *testing.T) {
 		"COMPETITORS",
 		"  OK github-copilot-coding-agent",
 		"PRESSURE VECTORS",
+		"  OK offline-online-session-stitching",
 		"  OK token-frugality-p0",
 		"  OK throttle-and-power-aware-routing",
 		"  OK commit-gated-scorecard-drift",

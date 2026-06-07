@@ -54,6 +54,7 @@ func TestScorecardGateIsDocumentedAsCommitGate(t *testing.T) {
 		"required_pressure_vectors:",
 		"async-background-agents",
 		"cross-surface-session-continuity",
+		"offline-online-session-stitching",
 		"local-open-model-optionality",
 		"token-frugality-p0",
 		"throttle-and-power-aware-routing",

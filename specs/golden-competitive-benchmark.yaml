@@ -82,6 +82,12 @@ scorecard_gates:
       gate: >
         Work state, outputs, and next actions must remain portable across CLI,
         desktop, mobile, and browser planning surfaces.
+    - id: offline-online-session-stitching
+      competitors: [codex, chatgpt, continue, cline, ollama, lm-studio]
+      gate: >
+        Offline work, online CLI work, local model execution, mobile review,
+        sync reconciliation, route evidence, throttle state, device capability
+        state, and battery posture must stitch into one session timeline.
     - id: transparent-progress-and-outputs
       competitors: [codex, ai-hero, cursor, windsurf, replit-agent]
       gate: >

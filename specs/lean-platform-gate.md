@@ -62,10 +62,13 @@ Reject any change that:
 - removes or weakens low-battery or thermal-aware execution so local routes
   keep burning device resources when a smaller, deferred, or remote route would
   preserve the outcome
+- splits offline and online execution into separate transcripts, task ids, or
+  route histories instead of stitching them into one session timeline
 
 ## Required Regression Inputs
 
 - `token-frugality-p0`
+- `offline-online-session-stitching`
 - `lowest-total-cost-to-useful-outcome`
 - `one-stable-surface`
 - `cheap-by-default`
