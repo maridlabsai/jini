@@ -426,6 +426,9 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		fmt.Fprintf(stderr, "Unknown command %q.\n", strings.TrimSpace(action))
 		return 1
 	}
+	if handled, exitCode := maybeHandleLocalTextFileEditIntent(action, stdout, stderr); handled {
+		return exitCode
+	}
 	if resolution, resolved, err := resolveActiveAskAction(summary.Dir, summary, action); resolved {
 		if err != nil {
 			fmt.Fprintf(stderr, "Could not save the decision: %v\n", err)
@@ -1070,6 +1073,9 @@ func runDirectTaskArgsIntake(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "I need one line of source context to start this work.")
 		return 1
 	}
+	if handled, exitCode := maybeHandleLocalTextFileEditIntent(source, stdout, stderr); handled {
+		return exitCode
+	}
 	envelope := classifyWorkEnvelope(starterChoice{}, source)
 	inputItems, normalizedSource := inputItemsForSource(source)
 	if strings.TrimSpace(normalizedSource) != "" {
@@ -1178,6 +1184,9 @@ func startNewWorkFromRawInput(firstRaw string, session *bufio.Scanner, stdout, s
 	if strings.TrimSpace(source) == "" {
 		fmt.Fprintln(stderr, "I need one line of source context to start this work.")
 		return 1
+	}
+	if handled, exitCode := maybeHandleLocalTextFileEditIntent(source, stdout, stderr); handled {
+		return exitCode
 	}
 	envelope := classifyWorkEnvelope(choice, source)
 	inputItems, normalizedSource := inputItemsForSource(source)

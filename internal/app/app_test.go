@@ -141,6 +141,105 @@ func TestDirectRepoReviewPrintsAndSavesModelFreeSnapshot(t *testing.T) {
 	}
 }
 
+func TestInteractiveLocalTextEditAppendsQuotedLineInsteadOfDrafting(t *testing.T) {
+	stateDir := t.TempDir()
+	workDir := t.TempDir()
+	t.Chdir(workDir)
+	target := filepath.Join(workDir, "pear fellow script.txt")
+	writeFile(t, target, "intro\n")
+	if err := os.Chmod(target, 0o600); err != nil {
+		t.Fatalf("chmod target: %v", err)
+	}
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("add a line saying \"jini was here\" in the pear fellow script .txt file in this folder\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Updated pear fellow script.txt",
+		"- Added line: jini was here",
+		"- Location: " + target,
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+	for _, unwanted := range []string{
+		"Your first draft is ready.",
+		"Working Draft",
+		"Name the audience or recipient",
+		"Saved. Type status",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected local edit to avoid draft flow %q, got:\n%s", unwanted, out)
+		}
+	}
+	if got := mustReadFile(t, target); got != "intro\njini was here\n" {
+		t.Fatalf("expected target file to be updated, got:\n%s", got)
+	}
+	info, err := os.Stat(target)
+	if err != nil {
+		t.Fatalf("stat target: %v", err)
+	}
+	if got := info.Mode().Perm(); got != 0o600 {
+		t.Fatalf("expected target mode to be preserved, got %v", got)
+	}
+	if _, err := os.Stat(filepath.Join(stateDir, "current-work.json")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("expected local file edit not to create current work, stat error: %v", err)
+	}
+}
+
+func TestDirectArgsLocalTextEditAppendsQuotedLine(t *testing.T) {
+	stateDir := t.TempDir()
+	workDir := t.TempDir()
+	t.Chdir(workDir)
+	target := filepath.Join(workDir, "pear fellow script.txt")
+	writeFile(t, target, "intro")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"add", "a", "line", "saying", "\"jini was here\"", "in", "the", "pear", "fellow", "script", ".txt", "file", "in", "this", "folder"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "Updated pear fellow script.txt") {
+		t.Fatalf("expected direct args edit confirmation, got:\n%s", stdout.String())
+	}
+	if got := mustReadFile(t, target); got != "intro\njini was here\n" {
+		t.Fatalf("expected target file to be updated with newline preservation, got:\n%s", got)
+	}
+}
+
+func TestLocalTextEditDoesNotGuessAmongAmbiguousTextFiles(t *testing.T) {
+	stateDir := t.TempDir()
+	workDir := t.TempDir()
+	t.Chdir(workDir)
+	first := filepath.Join(workDir, "pear first.txt")
+	second := filepath.Join(workDir, "pear second.txt")
+	writeFile(t, first, "first\n")
+	writeFile(t, second, "second\n")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("add a line saying \"jini was here\" in the pear .txt file in this folder\n"), &stdout, &stdout)
+	if exitCode == 0 {
+		t.Fatalf("expected ambiguous local edit to fail safely, got output:\n%s", stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "I found multiple .txt files. Please include the exact filename.") {
+		t.Fatalf("expected ambiguity message, got:\n%s", stdout.String())
+	}
+	if got := mustReadFile(t, first); got != "first\n" {
+		t.Fatalf("expected first file to remain unchanged, got:\n%s", got)
+	}
+	if got := mustReadFile(t, second); got != "second\n" {
+		t.Fatalf("expected second file to remain unchanged, got:\n%s", got)
+	}
+}
+
 func TestStatusRendersPlainLanguageCurrentWorkScreen(t *testing.T) {
 	stateDir := t.TempDir()
 	packDir := seedResearchPRDWork(t)
