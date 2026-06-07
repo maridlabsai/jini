@@ -62,22 +62,18 @@ main() {
     esac
   fi
 
-  local changed=()
-  while IFS= read -r path; do
-    [[ -n "${path}" ]] || continue
-    changed+=("${path}")
-  done < <(changed_files)
-
   local protected=()
   local settling_changed=0
-  for path in "${changed[@]}"; do
+  local path
+  while IFS= read -r path; do
+    [[ -n "${path}" ]] || continue
     if [[ "${path}" == "${SETTLING_DOC}" ]]; then
       settling_changed=1
     fi
     if is_protected_product_surface "${path}"; then
       protected+=("${path}")
     fi
-  done
+  done < <(changed_files)
 
   if [[ ${#protected[@]} -eq 0 ]]; then
     return 0

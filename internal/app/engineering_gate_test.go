@@ -167,3 +167,20 @@ func TestProductPRDDriftGateProtectsCanonicalSurfaces(t *testing.T) {
 		}
 	}
 }
+
+func TestProductPRDDriftGateAvoidsEmptyArrayExpansion(t *testing.T) {
+	root := repoRootForMigrationTest(t)
+
+	gate := readRepoFile(t, root, "tools/product_prd_drift_gate.sh")
+	if strings.Contains(gate, "changed=()") || strings.Contains(gate, `"${changed[@]}"`) {
+		t.Fatal("product PRD drift gate must stream changed files so a clean worktree does not fail under set -u")
+	}
+	for _, want := range []string{
+		"while IFS= read -r path; do",
+		"done < <(changed_files)",
+	} {
+		if !strings.Contains(gate, want) {
+			t.Fatalf("product PRD drift gate must keep streaming changed-file loop %q", want)
+		}
+	}
+}
