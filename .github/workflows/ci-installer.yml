@@ -79,3 +79,4 @@ jobs:
             bash
           "${tmp}/bin/jini" publish-readiness --format json >/dev/null
           grep -q '^install_mode=release-binary$' "${tmp}/install/install-receipt.txt"
+          grep -q "^version=$(tr -d '[:space:]' < VERSION)$" "${tmp}/install/install-receipt.txt"

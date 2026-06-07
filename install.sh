@@ -7,6 +7,7 @@ DEFAULT_INSTALL_DIR="${DEFAULT_PREFIX}/share/jini"
 DEFAULT_REPO_URL="https://github.com/maridlabsai/jini.git"
 DEFAULT_REPO_REF="main"
 DEFAULT_RELEASE_BASE_URL="https://github.com/maridlabsai/jini/releases/latest/download"
+DEFAULT_INSTALL_VERSION="0.1.0"
 
 BIN_DIR="${JINI_BIN_DIR:-}"
 INSTALL_DIR="${JINI_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
@@ -308,7 +309,7 @@ else
 fi
 chmod 0755 "${COMMAND_PATH}" 2>/dev/null || true
 
-VERSION="dev"
+VERSION="${DEFAULT_INSTALL_VERSION}"
 if [[ -n "${SOURCE_DIR}" && -f "${SOURCE_DIR}/VERSION" ]]; then
   VERSION="$(tr -d '[:space:]' <"${SOURCE_DIR}/VERSION")"
 fi
