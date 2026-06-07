@@ -250,6 +250,11 @@ func validateNativeArgs(args []string) error {
 			return nil
 		}
 	case "check":
+		if len(args) > 1 && exactCommandToken(args[1]) == "ship" {
+			if _, ok := parseOptionalFormatArgs(args[2:]); ok {
+				return nil
+			}
+		}
 		if len(args) == 1 || (len(args) == 2 && !strings.HasPrefix(strings.TrimSpace(args[1]), "-")) {
 			return nil
 		}
@@ -2222,6 +2227,9 @@ func inferHealthFromState(state string) string {
 }
 
 func runCheck(args []string, stdout, stderr io.Writer) int {
+	if len(args) > 0 && exactCommandToken(args[0]) == "ship" {
+		return runShipCheck(args[1:], stdout, stderr)
+	}
 	summary, err := resolveSummary(args)
 	if err != nil {
 		fmt.Fprintf(stderr, "%v\n", err)
@@ -2765,6 +2773,7 @@ func renderAdminCommandInventory(w io.Writer) {
 	fmt.Fprintln(w, "Admin and developer command inventory")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "- jini provider doctor")
+	fmt.Fprintln(w, "- jini check ship")
 	fmt.Fprintln(w, "- jini observe status")
 	fmt.Fprintln(w, "- jini observe add <path>")
 	fmt.Fprintln(w, "- jini open <artifact>")

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -255,6 +256,97 @@ func TestPublishReadinessSupportsTextAndInlineJSONFormat(t *testing.T) {
 		if !strings.Contains(stdout.String(), tc.want) {
 			t.Fatalf("expected %v output to contain %q, got:\n%s", tc.args, tc.want, stdout.String())
 		}
+	}
+}
+
+func TestShipCheckReportsRepoValidationEvidenceAsJSON(t *testing.T) {
+	repoDir := t.TempDir()
+	runGitCommandForInternalTest(t, repoDir, "init")
+	runGitCommandForInternalTest(t, repoDir, "config", "user.email", "test@example.com")
+	runGitCommandForInternalTest(t, repoDir, "config", "user.name", "Test User")
+	writeTestFile(t, filepath.Join(repoDir, "README.md"), "# Ship Check\n")
+	runGitCommandForInternalTest(t, repoDir, "add", ".")
+	runGitCommandForInternalTest(t, repoDir, "commit", "-m", "initial")
+	writeTestFile(t, filepath.Join(repoDir, "main.go"), "package main\n")
+
+	t.Chdir(repoDir)
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := Run([]string{"check", "ship", "--format=json"}, &stdout, &stderr)
+	if exitCode != 1 {
+		t.Fatalf("expected dirty repo ship check to block, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+
+	var report shipCheckReport
+	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil {
+		t.Fatalf("decode ship check JSON: %v\n%s", err, stdout.String())
+	}
+	if report.ResultType != "JiniShipCheck" {
+		t.Fatalf("expected JiniShipCheck result type, got %#v", report)
+	}
+	if report.Status != "blocked" {
+		t.Fatalf("expected dirty repo to be blocked, got %#v", report)
+	}
+	if !report.InGitRepo || report.Branch == "" {
+		t.Fatalf("expected git repo and branch evidence, got %#v", report)
+	}
+	if report.DirtyFiles != 1 || !stringSliceContains(report.Blockers, "working tree has uncommitted changes") {
+		t.Fatalf("expected dirty file blocker, got %#v", report)
+	}
+	for _, want := range []string{
+		"bash tools/run_required_gates.sh push",
+		"git worktree add",
+		"write validation report before push",
+	} {
+		if !stringSliceContains(report.RequiredEvidence, want) {
+			t.Fatalf("expected ship check evidence %q, got %#v", want, report.RequiredEvidence)
+		}
+	}
+}
+
+func TestShipCheckTextKeepsSafePushInstructionsCompact(t *testing.T) {
+	repoDir := t.TempDir()
+	runGitCommandForInternalTest(t, repoDir, "init")
+	runGitCommandForInternalTest(t, repoDir, "config", "user.email", "test@example.com")
+	runGitCommandForInternalTest(t, repoDir, "config", "user.name", "Test User")
+	writeTestFile(t, filepath.Join(repoDir, "README.md"), "# Ship Check\n")
+	runGitCommandForInternalTest(t, repoDir, "add", ".")
+	runGitCommandForInternalTest(t, repoDir, "commit", "-m", "initial")
+
+	t.Chdir(repoDir)
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := Run([]string{"check", "ship"}, &stdout, &stderr)
+	if exitCode != 0 {
+		t.Fatalf("expected clean repo ship check to pass, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+	out := stdout.String()
+	for _, want := range []string{
+		"Ship check ok",
+		"Branch:",
+		"Run before push: bash tools/run_required_gates.sh push",
+		"Safe lane: create an isolated worktree, run gates, then push only after evidence is clean.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected compact ship check text %q, got:\n%s", want, out)
+		}
+	}
+	for _, unwanted := range []string{"Working Draft", "Start/Keep", "Actions"} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected ship check to avoid %q, got:\n%s", unwanted, out)
+		}
+	}
+}
+
+func runGitCommandForInternalTest(t *testing.T, dir string, args ...string) {
+	t.Helper()
+	cmd := exec.Command("git", args...)
+	cmd.Dir = dir
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("git %s failed: %v\n%s", strings.Join(args, " "), err, string(out))
 	}
 }
 

@@ -860,6 +860,7 @@ func TestAdminHelpAliasShowsAdminInventory(t *testing.T) {
 				"Admin and developer command inventory",
 				"jini provider doctor",
 				"jini observe status",
+				"jini check ship",
 				"jini open <artifact>",
 				"native Go preview",
 				"jini publish-readiness",
