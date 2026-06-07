@@ -319,6 +319,74 @@ func TestScorecardGatePassesAndExposesCompetitorPressure(t *testing.T) {
 	}
 }
 
+func TestScorecardGateBuilderSupportsCustomPolicy(t *testing.T) {
+	root := t.TempDir()
+	scorecardPath := "custom-scorecard.yaml"
+	writeTestFile(t, filepath.Join(root, scorecardPath), strings.Join([]string{
+		"scorecard_gates:",
+		"  minimum_core_competitors: 1",
+		"  minimum_watchlist_competitors: 1",
+		"  minimum_scenarios: 1",
+		"  required_core_competitors:",
+		"    - id: custom-competitor",
+		"  required_pressure_vectors:",
+		"    - id: custom-vector",
+		"core_benchmark_set:",
+		"  - id: custom-competitor",
+		"watchlist:",
+		"  - id: custom-watch",
+		"scenarios:",
+		"  - id: custom-scenario",
+		"    checks:",
+		"      - id: custom-vector",
+	}, "\n"))
+
+	report := newScorecardGateBuilder(root, scorecardGatePolicy{
+		BenchmarkPath:               scorecardPath,
+		RequiredCompetitors:         []string{"custom-competitor"},
+		RequiredPressureVectors:     []string{"custom-vector"},
+		MinimumCoreCompetitors:      2,
+		MinimumWatchlistCompetitors: 2,
+		MinimumScenarios:            2,
+	}).Build()
+
+	if report.Status != "ok" {
+		t.Fatalf("expected custom scorecard policy to pass, got %#v", report)
+	}
+	if report.ScorecardPath != scorecardPath {
+		t.Fatalf("expected scorecard path %q, got %q", scorecardPath, report.ScorecardPath)
+	}
+	for _, check := range report.Checks {
+		if check.Minimum != 1 {
+			t.Fatalf("expected YAML minimum to override fallback for %s, got %#v", check.ID, check)
+		}
+	}
+	if len(report.RequiredCompetitors) != 1 || !report.RequiredCompetitors[0].Present {
+		t.Fatalf("expected custom competitor to be present, got %#v", report.RequiredCompetitors)
+	}
+	if len(report.PressureVectors) != 1 || !report.PressureVectors[0].Present {
+		t.Fatalf("expected custom pressure vector to be present, got %#v", report.PressureVectors)
+	}
+}
+
+func TestScorecardGateBuilderReportsMissingSource(t *testing.T) {
+	report := newScorecardGateBuilder(t.TempDir(), scorecardGatePolicy{
+		BenchmarkPath:               "missing-scorecard.yaml",
+		RequiredCompetitors:         []string{"custom-competitor"},
+		RequiredPressureVectors:     []string{"custom-vector"},
+		MinimumCoreCompetitors:      1,
+		MinimumWatchlistCompetitors: 1,
+		MinimumScenarios:            1,
+	}).Build()
+
+	if report.Status != "needs-attention" {
+		t.Fatalf("expected missing scorecard to need attention, got %#v", report)
+	}
+	if len(report.Checks) != 1 || report.Checks[0].ID != "source-scorecard-readable" || report.Checks[0].Status != "missing" {
+		t.Fatalf("expected missing source check, got %#v", report.Checks)
+	}
+}
+
 func TestScorecardGateTextShowsCommitGatePressure(t *testing.T) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer

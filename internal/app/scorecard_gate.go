@@ -14,28 +14,42 @@ import (
 
 const scorecardBenchmarkPath = "specs/golden-competitive-benchmark.yaml"
 
-var scorecardRequiredCompetitors = []string{
-	"claude-code",
-	"codex",
-	"github-copilot-coding-agent",
-	"google-jules",
-	"cursor",
-	"windsurf",
-	"cline",
-	"aider",
-	"continue",
-	"devin",
-	"replit-agent",
+var defaultScorecardGatePolicy = scorecardGatePolicy{
+	BenchmarkPath: scorecardBenchmarkPath,
+	RequiredCompetitors: []string{
+		"claude-code",
+		"codex",
+		"github-copilot-coding-agent",
+		"google-jules",
+		"cursor",
+		"windsurf",
+		"cline",
+		"aider",
+		"continue",
+		"devin",
+		"replit-agent",
+	},
+	RequiredPressureVectors: []string{
+		"async-background-agents",
+		"cross-surface-session-continuity",
+		"transparent-progress-and-outputs",
+		"permissioned-sandbox-execution",
+		"skills-hooks-and-context-routing",
+		"local-open-model-optionality",
+		"commit-gated-scorecard-drift",
+	},
+	MinimumCoreCompetitors:      7,
+	MinimumWatchlistCompetitors: 30,
+	MinimumScenarios:            8,
 }
 
-var scorecardRequiredPressureVectors = []string{
-	"async-background-agents",
-	"cross-surface-session-continuity",
-	"transparent-progress-and-outputs",
-	"permissioned-sandbox-execution",
-	"skills-hooks-and-context-routing",
-	"local-open-model-optionality",
-	"commit-gated-scorecard-drift",
+type scorecardGatePolicy struct {
+	BenchmarkPath               string
+	RequiredCompetitors         []string
+	RequiredPressureVectors     []string
+	MinimumCoreCompetitors      int
+	MinimumWatchlistCompetitors int
+	MinimumScenarios            int
 }
 
 type scorecardGateReport struct {
@@ -63,6 +77,11 @@ type scorecardThresholdCheck struct {
 	Actual  int    `json:"actual"`
 	Minimum int    `json:"minimum"`
 	Status  string `json:"status"`
+}
+
+type scorecardGateBuilder struct {
+	root   string
+	policy scorecardGatePolicy
 }
 
 func runScorecardGate(args []string, stdout, stderr io.Writer) int {
@@ -96,16 +115,27 @@ func runScorecardGate(args []string, stdout, stderr io.Writer) int {
 }
 
 func buildScorecardGateReport(root string) scorecardGateReport {
+	return newScorecardGateBuilder(root, defaultScorecardGatePolicy).Build()
+}
+
+func newScorecardGateBuilder(root string, policy scorecardGatePolicy) scorecardGateBuilder {
+	return scorecardGateBuilder{
+		root:   root,
+		policy: policy,
+	}
+}
+
+func (builder scorecardGateBuilder) Build() scorecardGateReport {
 	report := scorecardGateReport{
 		SchemaVersion: "0.1.0",
 		ResultType:    "JiniScorecardGate",
 		GeneratedAt:   time.Now().UTC().Format(time.RFC3339),
 		Status:        "ok",
-		ScorecardPath: scorecardBenchmarkPath,
+		ScorecardPath: builder.policy.BenchmarkPath,
 	}
 
-	data, err := os.ReadFile(filepath.Join(root, scorecardBenchmarkPath))
-	if root == "" || err != nil {
+	text, ok := builder.readBenchmark()
+	if !ok {
 		report.Status = "needs-attention"
 		report.Checks = append(report.Checks, scorecardThresholdCheck{
 			ID:     "source-scorecard-readable",
@@ -114,41 +144,57 @@ func buildScorecardGateReport(root string) scorecardGateReport {
 		return report
 	}
 
-	text := string(data)
 	scorecardGateSection := yamlSection(text, "scorecard_gates")
 	normalizedBenchmark := normalizedYAMLIDs(text)
 	normalizedScorecardGate := normalizedYAMLIDs(scorecardGateSection)
 
-	report.CoreCompetitorCount = countYAMLListItems(yamlSection(text, "core_benchmark_set"))
-	report.WatchlistCompetitorCount = countYAMLListItems(yamlSection(text, "watchlist"))
-	report.ScenarioCount = countYAMLListItems(yamlSection(text, "scenarios"))
-	report.Checks = []scorecardThresholdCheck{
-		buildScorecardThresholdCheck("minimum-core-competitors", report.CoreCompetitorCount, readScorecardMinimum(scorecardGateSection, "minimum_core_competitors", 7)),
-		buildScorecardThresholdCheck("minimum-watchlist-competitors", report.WatchlistCompetitorCount, readScorecardMinimum(scorecardGateSection, "minimum_watchlist_competitors", 30)),
-		buildScorecardThresholdCheck("minimum-scenarios", report.ScenarioCount, readScorecardMinimum(scorecardGateSection, "minimum_scenarios", 8)),
-	}
-
-	for _, id := range scorecardRequiredCompetitors {
-		present := normalizedBenchmark[id] && normalizedScorecardGate[id]
-		report.RequiredCompetitors = append(report.RequiredCompetitors, scorecardPresenceCheck{
-			ID:      id,
-			Present: present,
-			Status:  scorecardPresenceStatus(present),
-		})
-	}
-	for _, id := range scorecardRequiredPressureVectors {
-		present := normalizedScorecardGate[id]
-		report.PressureVectors = append(report.PressureVectors, scorecardPresenceCheck{
-			ID:      id,
-			Present: present,
-			Status:  scorecardPresenceStatus(present),
-		})
-	}
+	builder.addThresholdChecks(&report, text, scorecardGateSection)
+	report.RequiredCompetitors = builder.presenceChecks(builder.policy.RequiredCompetitors, func(id string) bool {
+		return normalizedBenchmark[id] && normalizedScorecardGate[id]
+	})
+	report.PressureVectors = builder.presenceChecks(builder.policy.RequiredPressureVectors, func(id string) bool {
+		return normalizedScorecardGate[id]
+	})
 
 	if !scorecardChecksPass(report) {
 		report.Status = "needs-attention"
 	}
 	return report
+}
+
+func (builder scorecardGateBuilder) readBenchmark() (string, bool) {
+	if builder.root == "" {
+		return "", false
+	}
+	data, err := os.ReadFile(filepath.Join(builder.root, builder.policy.BenchmarkPath))
+	if err != nil {
+		return "", false
+	}
+	return string(data), true
+}
+
+func (builder scorecardGateBuilder) addThresholdChecks(report *scorecardGateReport, text, scorecardGateSection string) {
+	report.CoreCompetitorCount = countYAMLListItems(yamlSection(text, "core_benchmark_set"))
+	report.WatchlistCompetitorCount = countYAMLListItems(yamlSection(text, "watchlist"))
+	report.ScenarioCount = countYAMLListItems(yamlSection(text, "scenarios"))
+	report.Checks = []scorecardThresholdCheck{
+		buildScorecardThresholdCheck("minimum-core-competitors", report.CoreCompetitorCount, readScorecardMinimum(scorecardGateSection, "minimum_core_competitors", builder.policy.MinimumCoreCompetitors)),
+		buildScorecardThresholdCheck("minimum-watchlist-competitors", report.WatchlistCompetitorCount, readScorecardMinimum(scorecardGateSection, "minimum_watchlist_competitors", builder.policy.MinimumWatchlistCompetitors)),
+		buildScorecardThresholdCheck("minimum-scenarios", report.ScenarioCount, readScorecardMinimum(scorecardGateSection, "minimum_scenarios", builder.policy.MinimumScenarios)),
+	}
+}
+
+func (builder scorecardGateBuilder) presenceChecks(ids []string, present func(string) bool) []scorecardPresenceCheck {
+	checks := make([]scorecardPresenceCheck, 0, len(ids))
+	for _, id := range ids {
+		isPresent := present(id)
+		checks = append(checks, scorecardPresenceCheck{
+			ID:      id,
+			Present: isPresent,
+			Status:  scorecardPresenceStatus(isPresent),
+		})
+	}
+	return checks
 }
 
 func buildScorecardThresholdCheck(id string, actual, minimum int) scorecardThresholdCheck {
