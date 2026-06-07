@@ -1667,7 +1667,7 @@ func TestCurrentWorkHelpShowsCurrentWorkRecap(t *testing.T) {
 		"Metric and legal-review decision",
 		"Actions",
 		"Continue",
-		"Start",
+		"Paste a new request to switch tasks.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -3113,7 +3113,7 @@ func TestCurrentWorkInteractiveTacticalCommandsDoNotStartNewWork(t *testing.T) {
 		{
 			name: "clear",
 			line: "clear\n",
-			want: []string{"Nothing was deleted.", "Type `Start` to switch focus without removing this work."},
+			want: []string{"Nothing was deleted.", "Use `switch` to change focus, or paste a new request."},
 		},
 	}
 
@@ -3208,7 +3208,7 @@ func TestCurrentWorkTacticalSurfacesStayCompact(t *testing.T) {
 	}{
 		{name: "fuller", input: "Make it fuller\n", maxLines: 14},
 		{name: "ready shelf", input: "open\n", maxLines: 16},
-		{name: "interrupt prompt", input: "plan me a 7 day paris trip\n", maxLines: 14},
+		{name: "direct travel clarification", input: "plan me a 7 day paris trip\n", maxLines: 15},
 	}
 
 	for _, tc := range cases {
@@ -3742,7 +3742,7 @@ func TestInteractiveLauncherCanSwitchBetweenActiveProjects(t *testing.T) {
 	}
 }
 
-func TestCurrentWorkFreeformInputConfirmsBeforeStartingNewWork(t *testing.T) {
+func TestCurrentWorkFreeformInputStartsNewWorkDirectly(t *testing.T) {
 	stateDir := t.TempDir()
 	meetingDir := seedMeetingWork(t)
 	writeCurrentWork(t, stateDir, meetingDir, "meeting-followup", "example-meeting-followup", "Meeting Notes With Owners And Due Dates For Weekly Product Review", "decided", "ready-to-make")
@@ -3750,16 +3750,13 @@ func TestCurrentWorkFreeformInputConfirmsBeforeStartingNewWork(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("plan me a 7 day paris trip\nstart\ncouple, around $2500, early October, mixed pace, central hotel area\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("plan me a 7 day paris trip\ncouple, around $2500, early October, mixed pace, central hotel area\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
 
 	out := stdout.String()
 	for _, want := range []string{
-		"New work",
-		"Current:",
-		"Start",
 		"Result ready.",
 		"7 Day Paris Trip",
 		"Itinerary",
@@ -3767,6 +3764,17 @@ func TestCurrentWorkFreeformInputConfirmsBeforeStartingNewWork(t *testing.T) {
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+	for _, unwanted := range []string{
+		"New work",
+		"Current:",
+		"\n- Start\n",
+		"\n- Keep\n",
+		"Choose `Start`",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected direct freeform flow to avoid %q, got:\n%s", unwanted, out)
 		}
 	}
 	if strings.Contains(out, "Weekly Product Review Follow-up") && !strings.Contains(out, "7 Day Paris Trip") {
@@ -3780,7 +3788,7 @@ func TestCurrentWorkFreeformInputConfirmsBeforeStartingNewWork(t *testing.T) {
 	}
 }
 
-func TestCurrentWorkFreeformInputCanKeepCurrentWork(t *testing.T) {
+func TestCurrentWorkFreeformInputDoesNotTreatKeepAsModalChoice(t *testing.T) {
 	stateDir := t.TempDir()
 	meetingDir := seedMeetingWork(t)
 	writeCurrentWork(t, stateDir, meetingDir, "meeting-followup", "example-meeting-followup", "Meeting Notes With Owners And Due Dates For Weekly Product Review", "decided", "ready-to-make")
@@ -3794,23 +3802,23 @@ func TestCurrentWorkFreeformInputCanKeepCurrentWork(t *testing.T) {
 	}
 
 	out := stdout.String()
-	for _, want := range []string{
+	if !strings.Contains(out, "Result ready.") || !strings.Contains(out, "7 Day Paris Trip") {
+		t.Fatalf("expected freeform request to start new work directly, got:\n%s", out)
+	}
+	for _, unwanted := range []string{
 		"New work",
 		"Keeping current work.",
+		"\n- Start\n",
+		"\n- Keep\n",
+		"Choose `Start`",
 	} {
-		if !strings.Contains(out, want) {
-			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected no modal keep path %q, got:\n%s", unwanted, out)
 		}
 	}
-	if strings.Contains(out, "7 Day Paris Trip") {
-		t.Fatalf("expected keep path not to start new work, got:\n%s", out)
-	}
-	if strings.Contains(out, "Switch") {
-		t.Fatalf("expected interrupt prompt to hide switch when no other work exists, got:\n%s", out)
-	}
 	current := readCurrentWork(t, stateDir)
-	if current["pack_id"] != "meeting-followup" {
-		t.Fatalf("expected current work to remain meeting-followup, got %#v", current)
+	if current["pack_id"] != "travel-plan" {
+		t.Fatalf("expected current work to become travel-plan, got %#v", current)
 	}
 }
 
@@ -3865,56 +3873,90 @@ func TestCurrentWorkCapitalQuestionAnswersFromSmallLookup(t *testing.T) {
 	}
 }
 
-func TestCurrentWorkInterruptPromptErrorMatchesAvailableChoices(t *testing.T) {
+func TestCurrentWorkUnknownStandaloneQuestionStaysCompact(t *testing.T) {
 	stateDir := t.TempDir()
 	meetingDir := seedMeetingWork(t)
-	writeCurrentWork(t, stateDir, meetingDir, "meeting-followup", "example-meeting-followup", "Meeting Notes With Owners And Due Dates For Weekly Product Review", "decided", "ready-to-make")
-
-	t.Setenv("JINI_STATE_DIR", stateDir)
-
-	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("plan me a 7 day paris trip\nmaybe later\n"), &stdout, &stdout)
-	if exitCode != 1 {
-		t.Fatalf("expected invalid interruption choice to return exit code 1, got %d with output:\n%s", exitCode, stdout.String())
-	}
-
-	out := stdout.String()
-	if !strings.Contains(out, "Choose `Start` or `Keep`.") {
-		t.Fatalf("expected guidance to match shown choices, got:\n%s", out)
-	}
-	if strings.Contains(out, "Switch project") || strings.Contains(out, "Switch") {
-		t.Fatalf("expected invalid-choice guidance not to mention hidden switch-project option, got:\n%s", out)
-	}
-}
-
-func TestCurrentWorkFreeformInputCanSwitchProjectFromInterruptPrompt(t *testing.T) {
-	stateDir := t.TempDir()
-	travelDir := copyWorkDir(t, filepath.Join(stateDir, "work", "travel-plan-paris"), seedTravelWork(t))
-	meetingDir := copyWorkDir(t, filepath.Join(stateDir, "work", "meeting-followup-weekly-review"), seedMeetingWork(t))
 	writeCurrentWork(t, stateDir, meetingDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
 
 	t.Setenv("JINI_STATE_DIR", stateDir)
-
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("plan me a 7 day paris trip\nswitch\n1\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("who is the president of atlantis\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
 
 	out := stdout.String()
-	for _, want := range []string{
+	if !strings.Contains(out, "I don't know locally.") {
+		t.Fatalf("expected compact direct-answer fallback, got:\n%s", out)
+	}
+	for _, unwanted := range []string{
+		"\nGoal\n",
+		"\nAI route\n",
+		"\nJust finished\n",
 		"New work",
-		"Switch",
-		"Switched to",
-		"7-Day Paris Trip",
+		"Working Draft",
+		"Your first draft is ready.",
+		"- Start",
+		"- Keep",
 	} {
-		if !strings.Contains(out, want) {
-			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected unknown question to avoid work flow %q, got:\n%s", unwanted, out)
 		}
 	}
-	current := readCurrentWork(t, stateDir)
-	if current["pack_id"] != "travel-plan" || current["pack_dir"] != travelDir {
-		t.Fatalf("expected current work to switch to travel plan, got %#v", current)
+}
+
+func TestCurrentWorkQuestionStillCanShowWorkState(t *testing.T) {
+	stateDir := t.TempDir()
+	meetingDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, meetingDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("what is blocked?\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "Blocked") || !strings.Contains(stdout.String(), "- Metric and legal-review decision") {
+		t.Fatalf("expected compact current-work blocked answer, got:\n%s", stdout.String())
+	}
+	for _, unwanted := range []string{
+		"New work",
+		"\n- Start\n",
+		"\n- Keep\n",
+		"I don't know locally.",
+	} {
+		if strings.Contains(stdout.String(), unwanted) {
+			t.Fatalf("expected current-work question not to use %q, got:\n%s", unwanted, stdout.String())
+		}
+	}
+}
+
+func TestCurrentWorkQuestionClassifierDoesNotHijackStandaloneNextQuestion(t *testing.T) {
+	stateDir := t.TempDir()
+	meetingDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, meetingDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("what is the next version of gemma\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	if !strings.Contains(out, "I don't know locally.") {
+		t.Fatalf("expected standalone fallback, got:\n%s", out)
+	}
+	for _, unwanted := range []string{
+		"\nNext\n",
+		"ready-to-make",
+		"New work",
+		"\n- Start\n",
+		"\n- Keep\n",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected standalone next question not to use current-work state %q, got:\n%s", unwanted, out)
+		}
 	}
 }
 
@@ -4304,7 +4346,7 @@ func BenchmarkInteractiveCurrentWorkFuller(b *testing.B) {
 	}
 }
 
-func BenchmarkInteractiveCurrentWorkInterruptionPrompt(b *testing.B) {
+func BenchmarkInteractiveCurrentWorkDirectFreeform(b *testing.B) {
 	stateDir := b.TempDir()
 	packDir := seedMeetingWork(b)
 	writeCurrentWork(b, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")

@@ -432,6 +432,9 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 	if maybeHandleSimpleAnswer(action, stdout) {
 		return 0
 	}
+	if maybeHandleCurrentWorkQuestion(action, summary, stdout) {
+		return 0
+	}
 	if resolution, resolved, err := resolveActiveAskAction(summary.Dir, summary, action); resolved {
 		if err != nil {
 			fmt.Fprintf(stderr, "Could not save the decision: %v\n", err)
@@ -461,7 +464,7 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "context"})
 	case "missing":
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "missing"})
-	case "expand":
+	case "expand", "make it fuller", "make this fuller", "make it longer", "expand it", "expand this":
 		if !renderNextContinuation(stdout, summary) {
 			renderCheck(stdout, summary)
 			return 0
@@ -572,7 +575,7 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		renderNoInitRequired(stdout)
 	case "clear":
 		fmt.Fprintln(stdout, "Nothing was deleted.")
-		fmt.Fprintln(stdout, "Type `Start` to switch focus without removing this work.")
+		fmt.Fprintln(stdout, "Use `switch` to change focus, or paste a new request.")
 	case "plan":
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "plan"})
 	case "start":
@@ -594,11 +597,58 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 			return 0
 		}
 		if scanner != nil && strings.TrimSpace(action) != "" {
-			return confirmCurrentWorkInterruptionAndContinue(summary, action, scanner, stdout, stderr)
+			return startNewWorkFromRawInput(action, scanner, stdout, stderr)
 		}
 		renderCheck(stdout, summary)
 	}
 	return 0
+}
+
+func maybeHandleCurrentWorkQuestion(action string, summary *workSummary, stdout io.Writer) bool {
+	normalized := normalizeName(action)
+	kind := currentWorkQuestionKind(normalized)
+	switch kind {
+	case "blocked":
+		fmt.Fprintln(stdout, "Blocked")
+		if summary == nil || len(summary.Thread.Blocked) == 0 {
+			fmt.Fprintln(stdout, "- Nothing right now")
+			return true
+		}
+		for _, item := range summary.Thread.Blocked {
+			fmt.Fprintf(stdout, "- %s\n", item)
+		}
+		return true
+	case "missing":
+		fmt.Fprintln(stdout, "Need")
+		if summary == nil || strings.TrimSpace(summary.Thread.Need) == "" {
+			fmt.Fprintln(stdout, "Nothing right now")
+			return true
+		}
+		fmt.Fprintln(stdout, summary.Thread.Need)
+		return true
+	case "next":
+		fmt.Fprintln(stdout, "Next")
+		if summary == nil || strings.TrimSpace(summary.Thread.Next) == "" {
+			fmt.Fprintln(stdout, "Nothing right now")
+			return true
+		}
+		fmt.Fprintln(stdout, summary.Thread.Next)
+		return true
+	}
+	return false
+}
+
+func currentWorkQuestionKind(normalized string) string {
+	switch normalized {
+	case "blocked", "blockers", "what is blocked", "whats blocked", "what are blockers", "what is blocking this", "whats blocking this", "what is blocking this work", "whats blocking this work":
+		return "blocked"
+	case "what is missing", "whats missing", "what do you need", "what is needed", "whats needed":
+		return "missing"
+	case "next", "what next", "whats next", "what is next", "what are next steps", "next steps":
+		return "next"
+	default:
+		return ""
+	}
 }
 
 type starterChoice struct {
@@ -3082,7 +3132,7 @@ func renderPrimaryActionMenu(w io.Writer, summary *workSummary, heading, readyAc
 		fmt.Fprintln(w, "- Undo")
 	}
 	fmt.Fprintln(w, "- Plan")
-	fmt.Fprintln(w, "- Start")
+	fmt.Fprintln(w, "Paste a new request to switch tasks.")
 }
 
 func renderCompactCurrentWorkChoices(w io.Writer, canSwitch bool) {
@@ -3095,12 +3145,12 @@ func renderCompactCurrentWorkChoices(w io.Writer, canSwitch bool) {
 	if canSwitch {
 		fmt.Fprintln(w, "- Switch")
 	}
-	fmt.Fprintln(w, "- Start")
+	fmt.Fprintln(w, "Paste a new request to switch tasks.")
 }
 
 func renderWorkSwitchChoices(w io.Writer, includeStartNew bool) {
 	if includeStartNew {
-		fmt.Fprintln(w, "Type a number to open one, or type `Start`.")
+		fmt.Fprintln(w, "Type a number to open one, or paste a new request.")
 		return
 	}
 	fmt.Fprintln(w, "Type a number or title to switch.")
@@ -3190,64 +3240,6 @@ func renderNewWorkNoop(w io.Writer) {
 func renderCurrentWorkNoop(w io.Writer) {
 	fmt.Fprintln(w, "Nothing changed.")
 	fmt.Fprintln(w, "Use `Continue`, `Open`, or paste a new request.")
-}
-
-func canSwitchFromCurrentWork(summary *workSummary) bool {
-	return len(otherActiveWorkSummaries(summary)) > 0
-}
-
-func renderInterruptionChoices(w io.Writer, canSwitch bool) {
-	fmt.Fprintln(w, "Actions")
-	fmt.Fprintln(w)
-	fmt.Fprintln(w, "- Start")
-	fmt.Fprintln(w, "- Keep")
-	if canSwitch {
-		fmt.Fprintln(w, "- Switch")
-	}
-}
-
-func confirmCurrentWorkInterruptionAndContinue(summary *workSummary, candidate string, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
-	if scanner == nil {
-		return startNewWorkFromRawInput(candidate, scanner, stdout, stderr)
-	}
-	canSwitch := canSwitchFromCurrentWork(summary)
-	renderCurrentWorkInterruptionPrompt(stdout, summary, candidate, canSwitch)
-	choice, ok := readOptionalInputLine(scanner, stdout)
-	if !ok || strings.TrimSpace(choice) == "" {
-		return 0
-	}
-	fmt.Fprintln(stdout)
-	switch normalizeName(choice) {
-	case "start":
-		return startNewWorkFromRawInput(candidate, scanner, stdout, stderr)
-	case "keep":
-		fmt.Fprintln(stdout, "Keeping current work.")
-		fmt.Fprintln(stdout, "Use `Continue`, `Open`, or paste a new request when you mean to switch.")
-		return 0
-	case "switch":
-		return runSwitchWorkPicker(summary, scanner, stdout, stderr)
-	default:
-		if canSwitch {
-			fmt.Fprintln(stderr, "Choose `Start`, `Keep`, or `Switch`.")
-		} else {
-			fmt.Fprintln(stderr, "Choose `Start` or `Keep`.")
-		}
-		return 1
-	}
-}
-
-func renderCurrentWorkInterruptionPrompt(w io.Writer, summary *workSummary, candidate string, canSwitch bool) {
-	fmt.Fprintln(w, "New work")
-	if summary != nil && strings.TrimSpace(summary.Title) != "" {
-		fmt.Fprintf(w, "Current: %s.\n", summary.Title)
-	}
-	if strings.TrimSpace(candidate) != "" {
-		fmt.Fprintln(w)
-		fmt.Fprintln(w, "New request")
-		fmt.Fprintf(w, "- %s\n", compactPreview(candidate, 140))
-	}
-	fmt.Fprintln(w)
-	renderInterruptionChoices(w, canSwitch)
 }
 
 func renderCurrentWorkMemoryStatus(w io.Writer, summary *workSummary) {
@@ -3576,7 +3568,7 @@ func handlePostResultAction(action string, summary *workSummary, scanner *bufio.
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "context"})
 	case "missing":
 		renderThreadSurface(stdout, summary, &threadFocus{Kind: "missing"})
-	case "expand":
+	case "expand", "make it fuller", "make this fuller", "make it longer", "expand it", "expand this":
 		if !renderNextContinuation(stdout, summary) {
 			renderCheck(stdout, summary)
 			return 0

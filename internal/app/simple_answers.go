@@ -11,6 +11,10 @@ func maybeHandleSimpleAnswer(raw string, stdout io.Writer) bool {
 		fmt.Fprintln(stdout, answer)
 		return true
 	}
+	if looksLikeStandaloneQuestion(raw) {
+		fmt.Fprintln(stdout, "I don't know locally.")
+		return true
+	}
 	return false
 }
 
@@ -40,4 +44,38 @@ func simpleCapitalAnswer(raw string) (string, bool) {
 	}
 	answer, ok := capitals[country]
 	return answer, ok
+}
+
+func looksLikeStandaloneQuestion(raw string) bool {
+	normalized := normalizeName(raw)
+	if normalized == "" || looksLikeCurrentWorkQuestion(normalized) {
+		return false
+	}
+	for _, prefix := range []string{
+		"what is ",
+		"who is ",
+		"when is ",
+		"where is ",
+		"why is ",
+		"how many ",
+		"how much ",
+		"define ",
+	} {
+		if strings.HasPrefix(normalized, prefix) {
+			return true
+		}
+	}
+	return strings.HasSuffix(strings.TrimSpace(raw), "?")
+}
+
+func looksLikeCurrentWorkQuestion(normalized string) bool {
+	if currentWorkQuestionKind(normalized) != "" {
+		return true
+	}
+	switch normalized {
+	case "status", "open", "ready", "artifacts", "artifact", "current work":
+		return true
+	default:
+		return false
+	}
 }
