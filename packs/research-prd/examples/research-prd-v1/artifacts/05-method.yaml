@@ -1,0 +1,32 @@
+artifact_id: method-research-prd-v1
+artifact_type: Method
+schema_version: 0.1.0
+work_unit_id: research-prd-v1
+branch_id: main
+revision: 1
+status: reviewed
+author_actor_id: research-lead
+approver_actor_ids:
+- eng-manager
+created_at: 2026-05-10T20:19:17Z
+updated_at: 2026-05-10T20:19:17Z
+supersedes: ''
+references:
+- sources-research-prd-v1
+change_class: semantic
+design: Mixed-method product discovery synthesis
+data_inputs:
+- Interview notes
+- Support ticket themes
+- Usage metrics
+- Competitive comparisons
+steps:
+- Normalize source notes into a shared problem vocabulary
+- Triangulate repeated pain points across source types
+- Translate validated findings into product and delivery implications
+- Render PRD and build handoff from the canonical artifacts
+validity_risks:
+- Interview sample may over-represent current power users
+- Analytics alone cannot explain user motivation
+reproducibility_notes:
+- Each PRD section references the canonical artifacts used to derive it

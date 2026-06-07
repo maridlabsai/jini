@@ -1,0 +1,30 @@
+artifact_id: sources-research-prd-v1
+artifact_type: Sources
+schema_version: 0.1.0
+work_unit_id: research-prd-v1
+branch_id: main
+revision: 1
+status: reviewed
+author_actor_id: research-lead
+approver_actor_ids:
+- eng-manager
+created_at: 2026-05-10T20:19:17Z
+updated_at: 2026-05-10T20:19:17Z
+supersedes: ''
+references:
+- packs/research-prd/context/benchmark-context.md
+change_class: semantic
+source_entries:
+- 12 semi-structured customer interviews
+- Quarterly support ticket review
+- Usage analytics export
+- Competitive notes across 4 adjacent products
+credibility_notes:
+- Interview sample spans admins, operators, and exec sponsors
+- Support data is recent but biased toward active accounts
+- Competitive notes are directional, not exhaustive
+coverage_gaps:
+- Limited data from customers who churned early
+- No in-person shadowing for this iteration
+refresh_expectations:
+- Revisit source set before major pricing or packaging changes

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="{{ site.lang | default: 'en-US' }}">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% if page.title %}{{ page.title | escape }} | {% endif %}{{ site.title | escape }}</title>
+    <meta name="description" content="{{ page.description | default: site.description | escape }}">
+    <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
+    {% include head-custom.html %}
+  </head>
+  <body class="site-shell-body">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <div class="container-lg px-3 my-5 markdown-body">
+      <header class="site-shell-header">
+        <a class="site-brand site-brand-link" href="{{ '/' | relative_url }}" aria-label="Jini home">
+          <img class="site-brand-mark" src="{{ '/assets/brand/jini-mark-512.png' | relative_url }}" alt="" aria-hidden="true">
+          <div class="site-brand-copy">
+            <p class="site-brand-eyebrow">Free shell now. Paid only if it earns it.</p>
+            <p class="site-brand-tagline">Less rework. Faster handoffs. Clear next steps.</p>
+          </div>
+        </a>
+
+        <div class="site-nav-stack">
+          <p class="site-nav-label">Browse the product</p>
+          <div class="site-signal-row" aria-label="Product posture">
+            <span class="site-signal-pill">Free shell</span>
+            <span class="site-signal-pill">Trial when live</span>
+            <span class="site-signal-pill">$1 after proof</span>
+          </div>
+          <nav class="site-nav" aria-label="Primary">
+            <a class="{% if page.url == '/' %}is-active{% endif %}" href="{{ '/' | relative_url }}">Home</a>
+            <a class="{% if page.url == '/simple.html' %}is-active{% endif %}" href="{{ '/simple.html' | relative_url }}">Quickstart</a>
+            <a class="{% if page.url == '/state-and-artifacts.html' %}is-active{% endif %}" href="{{ '/state-and-artifacts.html' | relative_url }}">Outputs</a>
+            <a class="{% if page.url == '/examples.html' %}is-active{% endif %}" href="{{ '/examples.html' | relative_url }}">Examples</a>
+          <a class="{% if page.url == '/proof.html' %}is-active{% endif %}" href="{{ '/proof.html' | relative_url }}">Proof</a>
+            <a class="{% if page.url == '/contact.html' %}is-active{% endif %}" href="{{ '/contact.html' | relative_url }}">Contact</a>
+            <a class="site-nav-cta {% if page.url == '/install.html' %}is-active{% endif %}" href="{{ '/install.html' | relative_url }}">Install</a>
+          </nav>
+        </div>
+      </header>
+
+      <main id="main-content">
+        {% unless page.url == '/' %}
+        <section class="page-intro-card">
+          <div class="page-intro-main">
+            <p class="site-section-label">{{ page.eyebrow | default: "Jini" | escape }}</p>
+            <h1 class="site-page-title">{{ page.title | escape }}</h1>
+            {% if page.description %}
+            <p class="site-page-description">{{ page.description | escape }}</p>
+            {% endif %}
+            {% if page.context_line %}
+            <p class="page-intro-context">{{ page.context_line | escape }}</p>
+            {% endif %}
+          </div>
+
+          <div class="page-intro-aside">
+            {% if page.highlights %}
+            <div class="page-intro-highlights" aria-label="Page highlights">
+              {% for item in page.highlights %}
+              <span>{{ item | escape }}</span>
+              {% endfor %}
+            </div>
+            {% endif %}
+            <div class="page-intro-links">
+              {% if page.quick_links %}
+                {% for link in page.quick_links %}
+              <a href="{{ link.href | relative_url }}">{{ link.label | escape }}</a>
+                {% endfor %}
+              {% else %}
+              <a href="{{ '/install.html' | relative_url }}">Install</a>
+              <a href="{{ '/proof.html' | relative_url }}">Proof</a>
+              <a href="{{ '/cli.html' | relative_url }}">Command Catalog</a>
+              {% endif %}
+            </div>
+          </div>
+        </section>
+        {% endunless %}
+
+        {{ content }}
+      </main>
+
+      <footer class="site-footer">
+        <div>
+          <p class="site-footer-eyebrow">Start free. Add proof later.</p>
+          <p class="site-footer-tagline">Less rework. Faster handoffs. Clear next steps.</p>
+          <p class="site-footer-summary">Start in the free shell. Add the optimizer only after the planned 30-day trial and only when the proof says it paid for itself.</p>
+        </div>
+        <div class="site-footer-links">
+          <a href="{{ '/examples.html' | relative_url }}">Examples</a>
+          <a href="{{ '/install.html' | relative_url }}">Install</a>
+          <a href="{{ '/proof.html' | relative_url }}">Proof</a>
+          <a href="{{ '/cli.html' | relative_url }}">Command Catalog</a>
+          <a href="https://github.com/maridlabsai/jini">GitHub</a>
+          <a href="https://github.com/maridlabsai/jini/releases/tag/v0.1.0">v0.1.0</a>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" role="img" aria-labelledby="title desc">
+  <title id="title">Jini proof carousel slide 2</title>
+  <desc id="desc">Slide showing that done is not the same as verified.</desc>
+  <defs>
+    <style>
+      .bg { fill: #101314; }
+      .card { fill: #f7f2e8; }
+      .ink { fill: #141414; font-family: Helvetica, Arial, sans-serif; }
+      .light { fill: #f7f2e8; font-family: Helvetica, Arial, sans-serif; }
+      .muted { fill: #c9c2b8; font-family: Helvetica, Arial, sans-serif; }
+      .accent { fill: #ff8a5b; }
+      .ok { fill: #2d8f6f; }
+      .kicker { font-size: 30px; font-weight: 700; letter-spacing: 2px; }
+      .headline { font-size: 96px; font-weight: 800; }
+      .body { font-size: 36px; font-weight: 600; }
+      .small { font-size: 28px; font-weight: 600; }
+      .footer { font-size: 24px; font-weight: 700; letter-spacing: 1.5px; }
+    </style>
+  </defs>
+  <rect class="bg" width="1080" height="1350" rx="32"/>
+  <text class="muted kicker" x="84" y="130">THE SCENE</text>
+  <text class="light headline" x="84" y="290">
+    <tspan x="84" dy="0">done</tspan>
+    <tspan class="accent" dx="18">is not</tspan>
+    <tspan x="84" dy="110">verified</tspan>
+  </text>
+  <rect class="card" x="84" y="456" width="912" height="568" rx="28"/>
+  <text class="ink body" x="138" y="562">Most AI workflows stop here:</text>
+  <circle class="ok" cx="170" cy="660" r="14"/>
+  <text class="ink body" x="206" y="672">tasks are green</text>
+  <circle class="ok" cx="170" cy="748" r="14"/>
+  <text class="ink body" x="206" y="760">files were generated</text>
+  <circle class="ok" cx="170" cy="836" r="14"/>
+  <text class="ink body" x="206" y="848">handoff looks complete</text>
+  <text class="accent body" x="138" y="956">
+    <tspan x="138" dy="0">Jini keeps going:</tspan>
+  </text>
+  <text class="ink body" x="138" y="1016">
+    <tspan x="138" dy="0">Is the work actually verified?</tspan>
+    <tspan x="138" dy="50">Is approval still missing?</tspan>
+    <tspan x="138" dy="50">Can the work legally advance?</tspan>
+  </text>
+  <text class="muted small" x="84" y="1154">
+    <tspan x="84" dy="0">That sounds boring until you realize how much work gets lost</tspan>
+    <tspan x="84" dy="40">between “looks done” and “is actually ready.”</tspan>
+  </text>
+  <text class="muted footer" x="84" y="1294">Jini / Proof Carousel / 02</text>
+</svg>

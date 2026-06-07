@@ -1,0 +1,23 @@
+pack_id: research-prd
+pack_version: 0.1.0
+compiled_flow:
+- Scope
+- Probe
+- Model
+- Decide
+- Make
+- Verify
+target_profile: Delivery
+extensions:
+- Business:product-discovery
+- Modality:software
+- Environment:docs-local
+- Risk:user-facing
+control_packs:
+- Proof
+- Guard
+- Authority
+- Cost
+work_unit_id: research-prd-v1
+compiled_at: 2026-05-10T20:19:17Z
+compiled_from_context: packs/research-prd/context/benchmark-context.md

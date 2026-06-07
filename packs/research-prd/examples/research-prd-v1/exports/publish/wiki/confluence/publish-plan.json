@@ -1,0 +1,58 @@
+{
+  "schema_version": "0.1.0",
+  "publish_type": "JiniWikiPublishPlan",
+  "generated_at": "2026-05-11T02:15:15Z",
+  "adapter": "confluence",
+  "execution_mode": "markdown-fallback",
+  "target": {
+    "space_key": "",
+    "configured": false
+  },
+  "work_unit": {
+    "work_unit_id": "research-prd-v1",
+    "title": "Jini Research To PRD",
+    "purpose": "Turn validated research into a PRD and build-ready handoff",
+    "state": "decided",
+    "profile_id": "Delivery"
+  },
+  "source_bundle": "packs/research-prd/examples/research-prd-v1/exports/wiki/confluence/pages.json",
+  "fallback_bundle": "packs/research-prd/examples/research-prd-v1/exports/wiki/markdown/pages.json",
+  "rate_limit_policy": {
+    "adapter": "confluence",
+    "dispatch_mode": "serialized",
+    "max_parallel": 1,
+    "retry_strategy": "exponential-backoff",
+    "initial_delay_seconds": 2,
+    "max_delay_seconds": 60,
+    "max_attempts": 5,
+    "on_quota_uncertainty": "fallback-to-file-exports",
+    "on_rate_limit": "stop-and-preserve-remaining-items"
+  },
+  "items": [
+    {
+      "sequence": 1,
+      "slug": "overview",
+      "title": "Jini Research To PRD",
+      "idempotency_key": "016b73cadb5d1079",
+      "payload_path": "packs/research-prd/examples/research-prd-v1/exports/publish/wiki/confluence/payloads/01-overview.json"
+    },
+    {
+      "sequence": 2,
+      "slug": "prd",
+      "title": "Jini Research To PRD PRD",
+      "idempotency_key": "f8b5139a225c7c7d",
+      "payload_path": "packs/research-prd/examples/research-prd-v1/exports/publish/wiki/confluence/payloads/02-prd.json"
+    },
+    {
+      "sequence": 3,
+      "slug": "tasks",
+      "title": "Jini Research To PRD Tasks",
+      "idempotency_key": "74f6f5b9d6a455ea",
+      "payload_path": "packs/research-prd/examples/research-prd-v1/exports/publish/wiki/confluence/payloads/03-tasks.json"
+    }
+  ],
+  "notes": [
+    "When Confluence is not configured, markdown export is the canonical fallback output.",
+    "Live Confluence publish is not implemented in the local CLI; this plan stages serialized payloads only."
+  ]
+}

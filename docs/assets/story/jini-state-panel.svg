@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Jini active work state panel illustration</title>
+  <desc id="desc">An illustrated state panel showing ready items, missing items, and the next safe action in one current-work view.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f7fbff"/>
+      <stop offset="100%" stop-color="#eef4ff"/>
+    </linearGradient>
+    <linearGradient id="accentA" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1d4ed8"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </linearGradient>
+    <linearGradient id="accentB" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0f766e"/>
+      <stop offset="100%" stop-color="#34d399"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#0f172a" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="760" rx="36" fill="url(#bg)"/>
+  <g filter="url(#shadow)" font-family="Arial, Helvetica, sans-serif">
+    <rect x="74" y="74" width="1052" height="612" rx="32" fill="#ffffff"/>
+    <rect x="74" y="74" width="1052" height="54" rx="32" fill="#f8fbff"/>
+    <circle cx="122" cy="101" r="8" fill="#f87171"/>
+    <circle cx="150" cy="101" r="8" fill="#fbbf24"/>
+    <circle cx="178" cy="101" r="8" fill="#34d399"/>
+
+    <text x="116" y="178" font-size="18" font-weight="700" letter-spacing="1.4" fill="#1d4ed8">ACTIVE WORK</text>
+    <text x="116" y="230" font-size="44" font-weight="700" fill="#0f172a">Keep ready, missing, and next visible</text>
+    <text x="116" y="270" font-size="23" fill="#475569">One state view should show what is safe, what is blocked, and what the user should do next.</text>
+
+    <rect x="116" y="320" width="296" height="208" rx="24" fill="#f8fbff" stroke="#dbeafe"/>
+    <text x="144" y="360" font-size="18" font-weight="700" fill="#0f172a">Ready now</text>
+    <rect x="144" y="382" width="170" height="14" rx="7" fill="url(#accentB)"/>
+    <text x="144" y="426" font-size="18" fill="#475569">artifact draft assembled</text>
+    <text x="144" y="460" font-size="18" fill="#475569">evidence packet attached</text>
+    <text x="144" y="494" font-size="18" fill="#475569">handoff-safe summary visible</text>
+
+    <rect x="452" y="320" width="296" height="208" rx="24" fill="#fffaf8" stroke="#fed7aa"/>
+    <text x="480" y="360" font-size="18" font-weight="700" fill="#0f172a">Missing</text>
+    <rect x="480" y="382" width="156" height="14" rx="7" fill="#f59e0b"/>
+    <text x="480" y="426" font-size="18" fill="#475569">one approval still absent</text>
+    <text x="480" y="460" font-size="18" fill="#475569">cost route still needs confirmation</text>
+    <text x="480" y="494" font-size="18" fill="#475569">open question still blocking send</text>
+
+    <rect x="788" y="320" width="292" height="208" rx="24" fill="#f6fffb" stroke="#bbf7d0"/>
+    <text x="816" y="360" font-size="18" font-weight="700" fill="#0f172a">Next safe action</text>
+    <rect x="816" y="382" width="166" height="14" rx="7" fill="url(#accentA)"/>
+    <text x="816" y="426" font-size="18" fill="#475569">ask for missing approval</text>
+    <text x="816" y="460" font-size="18" fill="#475569">refresh route check</text>
+    <text x="816" y="494" font-size="18" fill="#475569">then send the artifact</text>
+
+    <rect x="116" y="566" width="964" height="28" rx="14" fill="url(#accentA)" opacity="0.9"/>
+  </g>
+</svg>

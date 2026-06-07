@@ -1,0 +1,8 @@
+{
+  "idempotency_key": "74f6f5b9d6a455ea",
+  "space_key": "",
+  "title": "Jini Research To PRD Tasks",
+  "slug": "tasks",
+  "role": "tasks",
+  "body_markdown": "# Tasks: Jini Research To PRD\n\n- WorkUnit: `research-prd-v1`\n- State: `decided`\n- Profile: `Delivery`\n- Health: `ready-to-make`\n- Next: `Make`\n\n## Summary\n- Total tasks: `3`\n- Done: `0`\n- Unresolved: `3`\n\n## Task Board\n1. [ ] Validate source coverage and finalize research synthesis\nOwner: `research-lead`\nStatus: `pending`\nDeliverable: Reviewed research artifacts\n\n2. [ ] Review and approve the rendered PRD\nOwner: `product-lead`\nStatus: `pending`\nDeliverable: Approved PRD view\n\n3. [ ] Confirm build-ready requirements and task ownership\nOwner: `engineering-lead`\nStatus: `pending`\nDeliverable: Accepted build handoff\n\n## Milestones\n- Research synthesis complete\n- PRD reviewed\n- Build handoff accepted\n\n## Acceptance Gates\n- Sources and findings are explicit\n- PRD sections trace to canonical artifacts\n- Tasks trace to validated requirements\n\n## Evidence\n- Target: `spec-research-prd-v1` revision `1`\n- Claim: The workflow problem is repeated across multiple source types\n- Claim: A PRD bridge is the highest-value next surface\n- Claim: The proposed requirements map back to validated findings\n"
+}

@@ -1,0 +1,90 @@
+{
+  "schema_version": "0.1.0",
+  "export_type": "JiniJiraIssues",
+  "generated_at": "2026-05-11T04:36:28Z",
+  "pack_id": "research-prd",
+  "work_unit": {
+    "work_unit_id": "research-prd-v1",
+    "title": "Jini Research To PRD",
+    "purpose": "Turn validated research into a PRD and build-ready handoff",
+    "state": "awaiting_verification",
+    "profile_id": "Delivery",
+    "health": "ready-to-verify",
+    "next_operation": "Verify",
+    "owner_actor_id": "product-lead",
+    "approver_actor_ids": [
+      "eng-manager"
+    ],
+    "stakeholder_actor_ids": [
+      "product-lead",
+      "research-lead",
+      "design-lead"
+    ]
+  },
+  "source": {
+    "pack_path": "packs/research-prd/examples/research-prd-v1",
+    "tasks_artifact_path": "packs/research-prd/examples/research-prd-v1/artifacts/09-tasks.yaml",
+    "tasks_artifact_id": "tasks-research-prd-v1",
+    "tasks_revision": 4
+  },
+  "summary": {
+    "total_tasks": 3,
+    "done_tasks": 3,
+    "unresolved_tasks": 0,
+    "blocked_by": [],
+    "transition_blockers": []
+  },
+  "issues": [
+    {
+      "task_id": "research-prd-v1-task-1",
+      "summary": "Validate source coverage and finalize research synthesis",
+      "description_markdown": "# Validate source coverage and finalize research synthesis\n\n## Jini Context\n- WorkUnit: `research-prd-v1`\n- Pack: `research-prd`\n- Purpose: Turn validated research into a PRD and build-ready handoff\n- Profile: `Delivery`\n- State: `awaiting_verification`\n- Health: `ready-to-verify`\n\n## Jira Mapping\n- Issue Type Hint: `Task`\n- Assignee Hint: `research-lead`\n- Status Hint: `done`\n\n## Deliverable\nReviewed research artifacts\n\n## Milestones\n- Research synthesis complete\n- PRD reviewed\n- Build handoff accepted\n\n## Acceptance Gates\n- Sources and findings are explicit\n- PRD sections trace to canonical artifacts\n- Tasks trace to validated requirements\n\n## Evidence Context\n- Target: `spec-research-prd-v1` revision `1`\n- Claim: The workflow problem is repeated across multiple source types\n- Claim: A PRD bridge is the highest-value next surface\n- Claim: The proposed requirements map back to validated findings\n\n## Current Output\n- Note: Validated source coverage and finalized the research synthesis across the canonical source and literature artifacts.\n- Ref: artifacts/03-sources.yaml\n- Ref: artifacts/04-literature.yaml\n- Ref: views/prd.md\n",
+      "labels": [
+        "jini",
+        "pack-research-prd",
+        "profile-delivery",
+        "state-awaiting-verification",
+        "task-status-done"
+      ],
+      "issue_type_hint": "Task",
+      "assignee_hint": "research-lead",
+      "status_hint": "done",
+      "deliverable": "Reviewed research artifacts",
+      "source_task_index": 1
+    },
+    {
+      "task_id": "research-prd-v1-task-2",
+      "summary": "Review and approve the rendered PRD",
+      "description_markdown": "# Review and approve the rendered PRD\n\n## Jini Context\n- WorkUnit: `research-prd-v1`\n- Pack: `research-prd`\n- Purpose: Turn validated research into a PRD and build-ready handoff\n- Profile: `Delivery`\n- State: `awaiting_verification`\n- Health: `ready-to-verify`\n\n## Jira Mapping\n- Issue Type Hint: `Task`\n- Assignee Hint: `product-lead`\n- Status Hint: `done`\n\n## Deliverable\nApproved PRD view\n\n## Milestones\n- Research synthesis complete\n- PRD reviewed\n- Build handoff accepted\n\n## Acceptance Gates\n- Sources and findings are explicit\n- PRD sections trace to canonical artifacts\n- Tasks trace to validated requirements\n\n## Evidence Context\n- Target: `spec-research-prd-v1` revision `1`\n- Claim: The workflow problem is repeated across multiple source types\n- Claim: A PRD bridge is the highest-value next surface\n- Claim: The proposed requirements map back to validated findings\n\n## Current Output\n- Note: Rendered and reviewed the PRD view from canonical research artifacts for downstream handoff.\n- Ref: views/prd.md\n- Ref: exports/wiki/markdown/prd.md\n- Ref: exports/wiki/confluence/prd.md\n",
+      "labels": [
+        "jini",
+        "pack-research-prd",
+        "profile-delivery",
+        "state-awaiting-verification",
+        "task-status-done"
+      ],
+      "issue_type_hint": "Task",
+      "assignee_hint": "product-lead",
+      "status_hint": "done",
+      "deliverable": "Approved PRD view",
+      "source_task_index": 2
+    },
+    {
+      "task_id": "research-prd-v1-task-3",
+      "summary": "Confirm build-ready requirements and task ownership",
+      "description_markdown": "# Confirm build-ready requirements and task ownership\n\n## Jini Context\n- WorkUnit: `research-prd-v1`\n- Pack: `research-prd`\n- Purpose: Turn validated research into a PRD and build-ready handoff\n- Profile: `Delivery`\n- State: `awaiting_verification`\n- Health: `ready-to-verify`\n\n## Jira Mapping\n- Issue Type Hint: `Task`\n- Assignee Hint: `engineering-lead`\n- Status Hint: `done`\n\n## Deliverable\nAccepted build handoff\n\n## Milestones\n- Research synthesis complete\n- PRD reviewed\n- Build handoff accepted\n\n## Acceptance Gates\n- Sources and findings are explicit\n- PRD sections trace to canonical artifacts\n- Tasks trace to validated requirements\n\n## Evidence Context\n- Target: `spec-research-prd-v1` revision `1`\n- Claim: The workflow problem is repeated across multiple source types\n- Claim: A PRD bridge is the highest-value next surface\n- Claim: The proposed requirements map back to validated findings\n\n## Current Output\n- Note: Confirmed the build-ready handoff across the spec, plan, task board, and issue export surfaces.\n- Ref: artifacts/06-spec.yaml\n- Ref: artifacts/08-plan.yaml\n- Ref: artifacts/09-tasks.yaml\n- Ref: exports/issues/jira/issues.json\n",
+      "labels": [
+        "jini",
+        "pack-research-prd",
+        "profile-delivery",
+        "state-awaiting-verification",
+        "task-status-done"
+      ],
+      "issue_type_hint": "Task",
+      "assignee_hint": "engineering-lead",
+      "status_hint": "done",
+      "deliverable": "Accepted build handoff",
+      "source_task_index": 3
+    }
+  ]
+}

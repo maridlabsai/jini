@@ -1,0 +1,10 @@
+schema_version: "0.1.0"
+baseline_type: "rewrite-score-floor"
+updated_at: "2026-05-28"
+last_verified_overall_score: 9.25
+minimum_next_overall_score: 9.24
+minimum_margin_over_strongest_competitor: 0.80
+notes:
+  - "Every meaningful rewrite slice should push the overall benchmark score upward, not just preserve per-dimension ties."
+  - "After a refactor raises the overall score, update this baseline so the next refactor has to beat the new floor."
+  - "The competitor field now includes AgentField as a stronger harness-orchestration baseline, so the lead gate requires a clear win over the expanded field instead of a legacy two-competitor margin."

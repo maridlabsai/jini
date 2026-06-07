@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and workflow discussion
+    url: https://github.com/maridlabsai/jini/discussions
+    about: Use GitHub Discussions for questions, pack ideas, workflow design discussion, and adoption feedback.
+  - name: Commercial onboarding and implementation help
+    url: https://maridlabsai.github.io/jini/contact.html
+    about: Use commercial contact for setup help, workshops, custom workflow mapping, and enterprise support.

@@ -1,0 +1,33 @@
+{
+  "schema_version": "0.1.0",
+  "export_type": "JiniMarkdownDocs",
+  "generated_at": "2026-05-11T04:36:28Z",
+  "pack_id": "research-prd",
+  "work_unit": {
+    "work_unit_id": "research-prd-v1",
+    "title": "Jini Research To PRD",
+    "purpose": "Turn validated research into a PRD and build-ready handoff",
+    "state": "awaiting_verification",
+    "profile_id": "Delivery"
+  },
+  "pages": [
+    {
+      "title": "Jini Research To PRD",
+      "slug": "overview",
+      "body_markdown": "# Jini Research To PRD\n\n## Jini WorkUnit\n- WorkUnit: `research-prd-v1`\n- Pack: `research-prd`\n- Profile: `Delivery`\n- State: `awaiting_verification`\n- Health: `ready-to-verify`\n- Next: `Verify`\n\n## Purpose\nTurn validated research into a PRD and build-ready handoff\n\n## Scope Summary\nTurn validated research into a product-ready brief, a rendered PRD, and a build-ready spec/plan/task handoff.\n\n## Success Criteria\n- Source set is explicit and reviewable\n- Synthesized findings justify the product direction\n- The PRD view is derived from canonical artifacts\n- Spec, plan, and tasks align to validated findings\n\n## Milestones\n- Research synthesis complete\n- PRD reviewed\n- Build handoff accepted\n\n## Acceptance Gates\n- Sources and findings are explicit\n- PRD sections trace to canonical artifacts\n- Tasks trace to validated requirements\n\n## Evidence Snapshot\n- Target: `spec-research-prd-v1` revision `1`\n- Claim: The workflow problem is repeated across multiple source types\n- Claim: A PRD bridge is the highest-value next surface\n- Claim: The proposed requirements map back to validated findings\n",
+      "role": "overview"
+    },
+    {
+      "title": "Jini Research To PRD PRD",
+      "slug": "prd",
+      "body_markdown": "# PRD: Jini Research To PRD\n\n## Problem\nTurn validated research into a PRD and build-ready handoff\n\n## Scope Summary\nTurn validated research into a product-ready brief, a rendered PRD, and a build-ready spec/plan/task handoff.\n\n## Stakeholders\n- product-lead\n- research-lead\n- design-lead\n\n## Success Criteria\n- Source set is explicit and reviewable\n- Synthesized findings justify the product direction\n- The PRD view is derived from canonical artifacts\n- Spec, plan, and tasks align to validated findings\n\n## Evidence Highlights\n- Teams lose momentum when research, PRD, and engineering planning live in separate systems\n- Buyers want traceability from claims to supporting evidence before committing engineering time\n- A compact, opinionated default flow is preferred over a large menu of optional process steps\n- The highest-value bridge is research synthesis into a build-ready PRD and spec handoff\n\n## Research Method\nMixed-method product discovery synthesis\n\n## Requirements\n- Research findings must compile into a canonical Brief and PRD view\n- The PRD view must hand off cleanly into Spec, Plan, and Tasks\n- Every major requirement must trace to a named research finding or source cluster\n- The workflow must stay minimal enough for repeated weekly use\n\n## Acceptance Criteria\n- Source set is explicit and reviewable\n- Synthesized findings justify the product direction\n- The PRD view is derived from canonical artifacts\n- Spec, plan, and tasks align to validated findings\n\n## Delivery Slices\n- Stabilize research artifacts and source traceability\n- Render and review the PRD view\n- Translate PRD into build-ready spec and tasks\n",
+      "role": "prd"
+    },
+    {
+      "title": "Jini Research To PRD Tasks",
+      "slug": "tasks",
+      "body_markdown": "# Tasks: Jini Research To PRD\n\n- WorkUnit: `research-prd-v1`\n- State: `awaiting_verification`\n- Profile: `Delivery`\n- Health: `ready-to-verify`\n- Next: `Verify`\n\n## Summary\n- Total tasks: `3`\n- Done: `3`\n- Unresolved: `0`\n\n## Task Board\n1. [x] Validate source coverage and finalize research synthesis\nOwner: `research-lead`\nStatus: `done`\nDeliverable: Reviewed research artifacts\nOutput: Validated source coverage and finalized the research synthesis across the canonical source and literature artifacts.\nRefs: artifacts/03-sources.yaml, artifacts/04-literature.yaml, views/prd.md\n\n2. [x] Review and approve the rendered PRD\nOwner: `product-lead`\nStatus: `done`\nDeliverable: Approved PRD view\nOutput: Rendered and reviewed the PRD view from canonical research artifacts for downstream handoff.\nRefs: views/prd.md, exports/wiki/markdown/prd.md, exports/wiki/confluence/prd.md\n\n3. [x] Confirm build-ready requirements and task ownership\nOwner: `engineering-lead`\nStatus: `done`\nDeliverable: Accepted build handoff\nOutput: Confirmed the build-ready handoff across the spec, plan, task board, and issue export surfaces.\nRefs: artifacts/06-spec.yaml, artifacts/08-plan.yaml, artifacts/09-tasks.yaml, exports/issues/jira/issues.json\n\n## Milestones\n- Research synthesis complete\n- PRD reviewed\n- Build handoff accepted\n\n## Acceptance Gates\n- Sources and findings are explicit\n- PRD sections trace to canonical artifacts\n- Tasks trace to validated requirements\n\n## Evidence\n- Target: `spec-research-prd-v1` revision `1`\n- Claim: The workflow problem is repeated across multiple source types\n- Claim: A PRD bridge is the highest-value next surface\n- Claim: The proposed requirements map back to validated findings\n",
+      "role": "tasks"
+    }
+  ]
+}

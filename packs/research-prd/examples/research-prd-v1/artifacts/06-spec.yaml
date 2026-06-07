@@ -1,0 +1,45 @@
+artifact_id: spec-research-prd-v1
+artifact_type: Spec
+schema_version: 0.1.0
+work_unit_id: research-prd-v1
+branch_id: main
+revision: 1
+status: approved
+author_actor_id: product-architect
+approver_actor_ids:
+- eng-manager
+created_at: 2026-05-10T20:19:17Z
+updated_at: 2026-05-10T20:19:17Z
+supersedes: ''
+references:
+- brief-research-prd-v1
+- literature-research-prd-v1
+- method-research-prd-v1
+change_class: semantic
+requirements:
+- Research findings must compile into a canonical Brief and PRD view
+- The PRD view must hand off cleanly into Spec, Plan, and Tasks
+- Every major requirement must trace to a named research finding or source cluster
+- The workflow must stay minimal enough for repeated weekly use
+interfaces:
+- Research context document
+- Canonical artifact graph
+- Rendered PRD markdown view
+- Task handoff surface
+journeys:
+- Research lead compiles findings into canonical artifacts
+- Product lead reviews the rendered PRD and requirements
+- Engineering lead accepts the build-ready handoff
+invariants:
+- No PRD requirement exists without research support
+- No task exists without a linked requirement or decision
+- Derived views never become the source of truth
+dependencies:
+- Research source set
+- Canonical artifact schemas
+- PRD rendering view
+acceptance_criteria:
+- Source set is explicit and reviewable
+- Synthesized findings justify the product direction
+- The PRD view is derived from canonical artifacts
+- Spec, plan, and tasks align to validated findings

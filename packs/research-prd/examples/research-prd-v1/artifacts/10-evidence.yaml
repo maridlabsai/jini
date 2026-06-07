@@ -1,0 +1,34 @@
+artifact_id: evidence-research-prd-v1
+artifact_type: Evidence
+schema_version: 0.1.0
+work_unit_id: research-prd-v1
+branch_id: main
+revision: 1
+status: reviewed
+author_actor_id: research-ops
+approver_actor_ids:
+- eng-manager
+created_at: 2026-05-10T20:19:17Z
+updated_at: 2026-05-10T20:19:17Z
+supersedes: ''
+references:
+- sources-research-prd-v1
+- literature-research-prd-v1
+- method-research-prd-v1
+- spec-research-prd-v1
+change_class: semantic
+target_artifact_id: spec-research-prd-v1
+target_revision: 1
+claims_validated:
+- The workflow problem is repeated across multiple source types
+- A PRD bridge is the highest-value next surface
+- The proposed requirements map back to validated findings
+test_results:
+- Source set completeness reviewed against the defined research question
+review_results:
+- Product review confirms the PRD view matches the intended audience and scope
+operational_results:
+- No operational side effects; workflow remains documentation- and planning-only at
+  this stage
+residual_risks:
+- Further buyer validation may change packaging or pricing emphasis

@@ -1,0 +1,78 @@
+{
+  "product": "Jini public surface availability",
+  "source_contract": "sanitized-commercial-release-packets",
+  "surfaces": [
+    {
+      "id": "cli",
+      "name": "CLI",
+      "badge": "Available now",
+      "current_state": "Installable now on macOS and Linux",
+      "next_step": "This remains the primary shipped surface until desktop and mobile move out of preview",
+      "activation": "None",
+      "distribution_policy": "direct-shell-install",
+      "release_readiness_status": "live",
+      "artifact_name": "jini",
+      "packet_reference": null
+    },
+    {
+      "id": "mac",
+      "name": "macOS app shell",
+      "badge": "Preview only",
+      "current_state": "Preview only. Not publicly downloadable yet. Planned as a direct website download after signed packaging, auth, sync, and checkout are live.",
+      "next_step": "Free direct download once the signed wrapper and notarization lane is real",
+      "activation": "When checkout is live, start with the planned 30-day free trial, then buy on the website and sign in",
+      "distribution_policy": "direct-first-when-allowed",
+      "release_readiness_status": "blocked",
+      "artifact_name": "jini-mac.dmg",
+      "packet_reference": "mac.json"
+    },
+    {
+      "id": "windows",
+      "name": "Windows app shell",
+      "badge": "Preview only",
+      "current_state": "Preview only. Not publicly downloadable yet. Planned as a direct website download after signed packaging, auth, sync, and checkout are live.",
+      "next_step": "Free direct download once the signed installer lane is real",
+      "activation": "When checkout is live, start with the planned 30-day free trial, then buy on the website and sign in",
+      "distribution_policy": "direct-first-when-allowed",
+      "release_readiness_status": "blocked",
+      "artifact_name": "jini-windows.msi",
+      "packet_reference": "windows.json"
+    },
+    {
+      "id": "ios",
+      "name": "iOS companion app",
+      "badge": "Preview only",
+      "current_state": "Preview only. Not listed in the App Store yet. Planned as a free companion app after auth, sync, and store delivery are live.",
+      "next_step": "Free app once the signed submission and store-delivery lanes are real",
+      "activation": "When live, sign in with an existing paid account",
+      "distribution_policy": "store-required-by-platform",
+      "release_readiness_status": "blocked",
+      "artifact_name": "jini-ios.ipa",
+      "packet_reference": "ios.json"
+    },
+    {
+      "id": "android",
+      "name": "Android companion app",
+      "badge": "Preview only",
+      "current_state": "Preview only. Not publicly downloadable yet. Planned to distribute directly first when platform policy allows, with the Play Store kept as a secondary path if reach or trust benefits justify it.",
+      "next_step": "Free direct download first where policy allows, with Play Store secondary",
+      "activation": "When live, sign in with an existing paid account",
+      "distribution_policy": "direct-first-when-allowed",
+      "release_readiness_status": "blocked",
+      "artifact_name": "jini-android.apk",
+      "packet_reference": "android.json"
+    },
+    {
+      "id": "commercial-license",
+      "name": "Commercial License",
+      "badge": "Planned",
+      "current_state": "Planned. Not live yet",
+      "next_step": "Planned 30-day free trial first, then $1/month website checkout plus account entitlement once checkout is live",
+      "activation": "When checkout is live, start with the planned 30-day free trial, then activate website entitlement",
+      "distribution_policy": "website-checkout",
+      "release_readiness_status": "planned",
+      "artifact_name": "web-checkout",
+      "packet_reference": null
+    }
+  ]
+}

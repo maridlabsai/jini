@@ -1,0 +1,32 @@
+artifact_id: decision-research-prd-v1
+artifact_type: Decision
+schema_version: 0.1.0
+work_unit_id: research-prd-v1
+branch_id: main
+revision: 1
+status: approved
+author_actor_id: product-lead
+approver_actor_ids:
+- eng-manager
+created_at: 2026-05-10T20:19:17Z
+updated_at: 2026-05-10T20:19:17Z
+supersedes: ''
+references:
+- spec-research-prd-v1
+- literature-research-prd-v1
+change_class: semantic
+decision_id: research-prd-v1-prd-001
+decision_statement: Use the research-backed PRD bridge as the flagship Jini loop
+  and keep the workflow compact.
+options_considered:
+- Generate PRDs directly from ad hoc prompts
+- Use a research-backed canonical artifact chain that renders a PRD view
+selected_option: Use a research-backed canonical artifact chain that renders a PRD
+  view
+rationale: This gives product teams traceability and gives engineering teams a cleaner
+  handoff.
+tradeoffs:
+- Slightly more structure up front
+- Much stronger continuity and correctness downstream
+decision_owner: product-lead
+effective_scope: Research-to-PRD-to-build handoff workflow

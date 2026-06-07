@@ -1,0 +1,24 @@
+work_unit_id: research-prd-v1
+title: Jini Research To PRD
+purpose: Turn validated research into a PRD and build-ready handoff
+current_state: awaiting_verification
+profile_id: Delivery
+active_extensions:
+- Business:product-discovery
+- Modality:software
+- Environment:docs-local
+- Risk:user-facing
+branch_id: main
+parent_work_unit_id: ''
+owner_actor_id: product-lead
+approver_actor_ids:
+- eng-manager
+operator_actor_id: ''
+rollback_authority_actor_id: ''
+service_owner_actor_id: ''
+stakeholder_actor_ids:
+- product-lead
+- research-lead
+- design-lead
+created_at: 2026-05-10T20:19:17Z
+updated_at: 2026-05-11T04:36:18Z

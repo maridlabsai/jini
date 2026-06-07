@@ -1,0 +1,109 @@
+{
+  "schema_version": "0.1.0",
+  "export_type": "JiniTaskSync",
+  "generated_at": "2026-05-11T04:36:28Z",
+  "pack_id": "research-prd",
+  "work_unit": {
+    "work_unit_id": "research-prd-v1",
+    "title": "Jini Research To PRD",
+    "purpose": "Turn validated research into a PRD and build-ready handoff",
+    "state": "awaiting_verification",
+    "profile_id": "Delivery",
+    "health": "ready-to-verify",
+    "next_operation": "Verify",
+    "owner_actor_id": "product-lead",
+    "approver_actor_ids": [
+      "eng-manager"
+    ],
+    "stakeholder_actor_ids": [
+      "product-lead",
+      "research-lead",
+      "design-lead"
+    ]
+  },
+  "source": {
+    "pack_path": "packs/research-prd/examples/research-prd-v1",
+    "tasks_artifact_path": "packs/research-prd/examples/research-prd-v1/artifacts/09-tasks.yaml",
+    "tasks_artifact_id": "tasks-research-prd-v1",
+    "tasks_revision": 4
+  },
+  "summary": {
+    "total_tasks": 3,
+    "done_tasks": 3,
+    "unresolved_tasks": 0,
+    "blocked_by": [],
+    "transition_blockers": []
+  },
+  "milestones": [
+    "Research synthesis complete",
+    "PRD reviewed",
+    "Build handoff accepted"
+  ],
+  "acceptance_gates": [
+    "Sources and findings are explicit",
+    "PRD sections trace to canonical artifacts",
+    "Tasks trace to validated requirements"
+  ],
+  "tasks": [
+    {
+      "task_id": "research-prd-v1-task-1",
+      "index": 1,
+      "title": "Validate source coverage and finalize research synthesis",
+      "owner": "research-lead",
+      "status": "done",
+      "done": true,
+      "deliverable": "Reviewed research artifacts",
+      "output_note": "Validated source coverage and finalized the research synthesis across the canonical source and literature artifacts.",
+      "output_refs": [
+        "artifacts/03-sources.yaml",
+        "artifacts/04-literature.yaml",
+        "views/prd.md"
+      ]
+    },
+    {
+      "task_id": "research-prd-v1-task-2",
+      "index": 2,
+      "title": "Review and approve the rendered PRD",
+      "owner": "product-lead",
+      "status": "done",
+      "done": true,
+      "deliverable": "Approved PRD view",
+      "output_note": "Rendered and reviewed the PRD view from canonical research artifacts for downstream handoff.",
+      "output_refs": [
+        "views/prd.md",
+        "exports/wiki/markdown/prd.md",
+        "exports/wiki/confluence/prd.md"
+      ]
+    },
+    {
+      "task_id": "research-prd-v1-task-3",
+      "index": 3,
+      "title": "Confirm build-ready requirements and task ownership",
+      "owner": "engineering-lead",
+      "status": "done",
+      "done": true,
+      "deliverable": "Accepted build handoff",
+      "output_note": "Confirmed the build-ready handoff across the spec, plan, task board, and issue export surfaces.",
+      "output_refs": [
+        "artifacts/06-spec.yaml",
+        "artifacts/08-plan.yaml",
+        "artifacts/09-tasks.yaml",
+        "exports/issues/jira/issues.json"
+      ]
+    }
+  ],
+  "evidence": {
+    "artifact_id": "evidence-research-prd-v1",
+    "revision": 1,
+    "target_artifact_id": "spec-research-prd-v1",
+    "target_revision": 1,
+    "claims_validated": [
+      "The workflow problem is repeated across multiple source types",
+      "A PRD bridge is the highest-value next surface",
+      "The proposed requirements map back to validated findings"
+    ],
+    "residual_risks": [
+      "Further buyer validation may change packaging or pricing emphasis"
+    ]
+  }
+}

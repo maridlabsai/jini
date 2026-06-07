@@ -1,0 +1,54 @@
+name: Installer And Go CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  installer-and-go:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Show tool versions
+        shell: bash
+        run: |
+          go version
+          git --version
+
+      - name: Lint installer shell syntax
+        shell: bash
+        run: bash -n install.sh
+
+      - name: Run Go test suite
+        shell: bash
+        run: go test ./...
+
+      - name: Run CLI latency benchmark smoke
+        shell: bash
+        run: go test ./internal/app -run '^$' -bench 'BenchmarkInteractive(NoWorkHelp|CurrentWorkReadyShelf)$' -benchmem -benchtime=50x
+
+      - name: Smoke local Go source installer
+        shell: bash
+        run: |
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "${tmp}"' EXIT
+          ./install.sh --source-dir "${PWD}" --bin-dir "${tmp}/bin" --install-dir "${tmp}/install" --force
+          "${tmp}/bin/jini" publish-readiness --format json >/dev/null
+          test -f "${tmp}/install/install-receipt.txt"

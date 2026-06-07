@@ -1,0 +1,33 @@
+pack_id: meeting-followup
+version: 0.1.0
+summary: Compile a meeting into a canonical follow-up workflow with decisions, tasks, evidence, and approval-ready handoff.
+target_profile: Delivery
+extensions:
+  - Business:team-operations
+  - Modality:meeting
+  - Environment:docs-local
+  - Risk:collaboration
+control_packs:
+  - Proof
+  - Guard
+  - Cost
+emits:
+  - Brief
+  - Assumptions
+  - Spec
+  - Decision
+  - Plan
+  - Tasks
+  - Evidence
+  - Approval
+success_checks:
+  - Decisions, owners, and follow-up dates are explicit
+  - The meeting summary is derived from canonical artifacts rather than scattered notes
+  - Approval or escalation requirements remain visible before execution
+compiled_flow:
+  - Scope
+  - Probe
+  - Model
+  - Decide
+  - Make
+  - Verify

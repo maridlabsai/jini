@@ -1,0 +1,1043 @@
+schema_version: "0.1.0"
+benchmark_id: jini-product-golden-benchmark
+label: Jini Golden Product Benchmark
+updated_at: "2026-06-06"
+last_verified_at: "2026-06-06"
+purpose: >
+  Validate Jini against a rerunnable golden dataset and compare it against the
+  major product, harness, coding-agent, and UX competitors using weighted
+  user-journey scenarios.
+comparison_model:
+  core_benchmark_set:
+    - Claude Code
+    - Codex
+    - ChatGPT
+    - Kiro
+    - Hermes
+    - AgentField
+    - AI Hero
+  watchlist:
+    - Spec Kit
+    - Windsurf
+    - Cline
+    - Aider
+    - Matt Pocock Skills Installer
+    - GitHub Copilot coding agent
+    - Google Jules
+    - Google Gemini CLI
+    - Cursor
+    - JetBrains Junie
+    - Zed Agent Panel
+    - Continue
+    - OpenHands
+    - Roomote
+    - Devin
+    - Factory Droids
+    - Replit Agent
+    - Lovable
+    - Bolt.new
+    - Vercel v0
+    - Base44
+    - Ollama
+    - LM Studio
+    - GPT4All
+    - Jan
+    - Open WebUI
+    - AnythingLLM
+    - LiteLLM
+    - OpenRouter
+    - Manus
+    - Genspark Super Agent
+    - Lindy
+    - Zapier Agents
+  rule: >
+    The core benchmark set must align with the rerunnable competitor scenarios.
+    Watchlist frameworks stay visible for product pressure and periodic review,
+    but they do not require scenario coverage inside the golden benchmark.
+scorecard_gates:
+  commit_gate_command: ["scorecard-gate", "--format", "json"]
+  minimum_core_competitors: 7
+  minimum_watchlist_competitors: 30
+  minimum_scenarios: 8
+  required_watchlist_competitors:
+    - claude-code
+    - codex
+    - github-copilot-coding-agent
+    - google-jules
+    - cursor
+    - windsurf
+    - cline
+    - aider
+    - continue
+    - devin
+    - replit-agent
+  required_pressure_vectors:
+    - id: async-background-agents
+      competitors: [codex, github-copilot-coding-agent, google-jules, cursor, windsurf, devin]
+      gate: >
+        Each implementation cut must either improve asynchronous/background
+        work visibility or leave a clear reason why it is not the next cut.
+    - id: cross-surface-session-continuity
+      competitors: [codex, chatgpt, cursor, github-copilot-coding-agent]
+      gate: >
+        Work state, outputs, and next actions must remain portable across CLI,
+        desktop, mobile, and browser planning surfaces.
+    - id: transparent-progress-and-outputs
+      competitors: [codex, ai-hero, cursor, windsurf, replit-agent]
+      gate: >
+        Long-running work must show progress, produced artifacts, and review or
+        steer points instead of hiding behind transcript-only status.
+    - id: permissioned-sandbox-execution
+      competitors: [codex, claude-code, github-copilot-coding-agent, devin]
+      gate: >
+        Tool execution must preserve visible permissions, recovery paths, and
+        evidence before broader automation is promoted.
+    - id: skills-hooks-and-context-routing
+      competitors: [kiro, hermes, continue, cline, aider]
+      gate: >
+        Skills, hooks, steering, and routing must reduce repeated user work
+        without expanding the beginner command surface.
+    - id: local-open-model-optionality
+      competitors: [aider, continue, cline, ollama, lm-studio, open-webui, litellm]
+      gate: >
+        Local and open-model routes must stay visible in auto-mode decisions
+        while preserving privacy and offline-readiness evidence.
+    - id: commit-gated-scorecard-drift
+      competitors: [claude-code, codex, github-copilot-coding-agent, google-jules, cursor, windsurf]
+      gate: >
+        Scorecard coverage must run in the commit gate so competitor pressure
+        cannot become stale planning prose.
+methodology:
+  benchmark_scope: internal-drift-benchmark-not-live-market-ranking
+  baseline_type: fixed-competitor-baselines-grounded-in-official-docs
+  scoring_rule: >
+    Each scenario starts from the current KPI-backed Jini score for its listed
+    dimensions, then multiplies that base by a validation factor derived from
+    real CLI check pass rate. Competitor scores stay fixed inside the golden
+    dataset so repeated runs measure Jini drift instead of moving the
+    goalposts. This means the benchmark is useful for regression detection, but
+    it must not be treated as a live external market ranking.
+  command_rule: >
+    `command` entries are runnable checks against the current native Go CLI.
+    Pre-migration or not-yet-ported checks must use `backlog_command` until the
+    command graduates through the public command-surface and publish-readiness
+    gates.
+  comparison_rule: >
+    Claude Code is the terminal immediacy baseline. Kiro is the productized
+    workflow and delivery baseline. Hermes is the memory, breadth, and autonomy
+    baseline. AgentField is the production harness-orchestration baseline. AI
+    Hero is the low-friction learning, tool-transparency, and human-in-the-loop
+    UX baseline. The benchmark favors rerunnable product behaviors over
+    README-only claims.
+  track_rule: >
+    The benchmark reports two explicit score tracks. `architecture-strength`
+    captures protocol rigor, governance, install, portability, and breadth.
+    `adoption-truth` captures first-minute clarity, cheap-default posture,
+    guided-loop smoothness, and friction-reduction proxies. Jini should be
+    allowed to lead on architecture while still trailing on adoption if the
+    product has not yet earned parity there.
+  bias_controls:
+    - Competitor scores are fixed reference baselines, so the benchmark can flatter Jini if the market has moved since the last benchmark refresh.
+    - Adoption-heavy scenarios intentionally use tougher competitor baselines than architecture scenarios.
+    - Overall score is less important than track-level honesty; use `adoption-truth` as the harsher read.
+    - Prefer checks that penalize product theory leakage, extra control decisions, and weak cheap-default behavior.
+  interpretation_warning: >
+    A green benchmark does not prove Jini is currently better than Claude,
+    Codex, ChatGPT, or other competitors in real usage. It proves only that
+    Jini is internally consistent and strong against this fixed golden dataset.
+competitors:
+  - id: claude-code
+    label: Claude Code
+    rationale: Strongest benchmark for terminal-native immediacy and direct developer action.
+    source_urls:
+      - https://docs.claude.com/en/docs/claude-code/overview
+      - https://claude.com/product/claude-code
+    validated_strengths:
+      - Starts from natural-language intent in the terminal
+      - Directly edits files, runs commands, and creates commits
+      - Composable Unix-style CLI surface
+  - id: codex
+    label: Codex
+    rationale: Strongest benchmark for cross-surface coding continuity and approval-aware remote execution.
+    source_urls:
+      - https://platform.openai.com/docs/codex
+      - https://openai.com/index/work-with-codex-from-anywhere/
+    validated_strengths:
+      - Natural task intake across local and remote coding surfaces
+      - Continuation, approvals, and review loops across devices
+      - Strong coding-task portability and active-work continuity
+  - id: chatgpt
+    label: ChatGPT
+    rationale: Strongest benchmark for conversational first-run clarity, projects, and editable artifact surfaces.
+    source_urls:
+      - https://help.openai.com/en/articles/10169521-using-projects-in-chatgpt
+      - https://help.openai.com/en/articles/9930697-what-is-the-canvas-feature-in-chatgpt-and-how-do-i-use-it
+    validated_strengths:
+      - Conversational first turn with low setup pressure
+      - Persistent project context and files
+      - Rich edit surfaces for revision-heavy work
+  - id: kiro
+    label: Kiro
+    rationale: Strongest benchmark for workflow productization and default delivery loop quality.
+    source_urls:
+      - https://kiro.dev/docs/specs/
+      - https://kiro.dev/docs/steering/
+      - https://kiro.dev/docs/cli/hooks/
+    validated_strengths:
+      - Structured spec-first workflow and task execution
+      - Persistent workspace steering
+      - Lifecycle hooks for operator automation
+  - id: hermes
+    label: Hermes
+    rationale: Strongest benchmark for memory, autonomy, and breadth-as-product feel.
+    source_urls:
+      - https://hermes-agent.nousresearch.com/docs/user-guide/features/overview/
+      - https://hermes-agent.nousresearch.com/docs/user-guide/features/memory/
+      - https://hermes-agent.nousresearch.com/docs/guides/work-with-skills/
+    validated_strengths:
+      - Persistent bounded memory across sessions
+      - Bundled skills with progressive disclosure
+      - Breadth and automation as a daily product surface
+  - id: agentfield
+    label: AgentField
+    rationale: Strongest benchmark for treating coding-agent harnesses as production infrastructure.
+    source_urls:
+      - https://github.com/Agent-Field/agentfield
+      - https://agentfield.ai/blog/what-is-harness-orchestration
+      - https://agentfield.ai/examples
+    validated_strengths:
+      - Coding agents exposed as callable backend primitives
+      - Harness orchestration for Claude Code, Codex, and Gemini CLI
+      - Production concepts including identity, observability, rollout, and scale
+  - id: ai-hero
+    label: AI Hero
+    rationale: Strongest benchmark for transparent tool-call teaching and low-friction human-in-the-loop UX.
+    source_urls:
+      - https://www.aihero.dev/workshops/day-1-build-a-naive-agent
+      - https://www.aihero.dev/workshops/human-in-the-loop-skill-building-xlo4o
+      - https://aihero.studio/documentation
+    validated_strengths:
+      - Teaches visible tool calls, arguments, results, and sources
+      - Human approval before sensitive real-world action
+      - Simple agent creation and voice-first daily task capture
+scenarios:
+  - id: install-trust
+    label: Beginner install trust path
+    purpose: A new user should see one obvious trust path before bundle-level detail.
+    weight: 1.7
+    tracks:
+      - adoption-truth
+      - architecture-strength
+    dimensions:
+      - packaging-install
+      - delivery-maturity
+    competitor_scores:
+      claude-code: 8.8
+      codex: 8.6
+      chatgpt: 8.2
+      kiro: 8.9
+      hermes: 7.2
+      agentfield: 7.0
+      ai-hero: 8.4
+    setup:
+      - id: install-starter-kit
+        backlog_command:
+          [
+            "install-bundles",
+            "--kit",
+            "starter-kit",
+            "--target",
+            "codex",
+            "--prefix",
+            "{scenario_root}/prefix",
+          ]
+    checks:
+      - id: beginner-trust-preview
+        backlog_command: ["get-started", "--target", "codex", "--format", "json"]
+        path: "beginner_path.trust_path.0.id"
+        equals: "preview"
+      - id: beginner-notes-demote-bundle-overload
+        backlog_command: ["get-started", "--target", "codex", "--format", "json"]
+        path: "beginner_path.notes.0"
+        contains: "Bundle-level detail"
+      - id: catalog-beginner-kit
+        backlog_command: ["catalog-bundles", "--format", "json"]
+        path: "recommended_paths.beginner.kit_id"
+        equals: "starter-kit"
+      - id: plan-install-next-step-verify
+        backlog_command: ["plan-install", "--target", "codex", "--format", "json"]
+        path: "recommended_next_steps.1.id"
+        equals: "verify"
+      - id: doctor-install-runs-plan-probe
+        backlog_command:
+          ["doctor-install", "--kit", "starter-kit", "--target", "codex", "--prefix", "{scenario_root}/prefix", "--format", "json"]
+        path: "checks.0.health_checks"
+        contains: "smoke-plan-install"
+      - id: doctor-install-runs-resolve-adapter-probe
+        backlog_command:
+          ["doctor-install", "--kit", "starter-kit", "--target", "codex", "--prefix", "{scenario_root}/prefix", "--format", "json"]
+        path: "checks.0.health_checks"
+        contains: "smoke-resolve-adapter"
+
+  - id: cheap-default-loop
+    label: Cheap default resume loop
+    purpose: Low-cost execution should be the obvious path when the intent allows it.
+    weight: 1.6
+    tracks:
+      - adoption-truth
+    dimensions:
+      - token-efficiency
+      - delivery-maturity
+    competitor_scores:
+      claude-code: 8.7
+      codex: 8.8
+      chatgpt: 7.6
+      kiro: 8.3
+      hermes: 7.1
+      agentfield: 7.5
+      ai-hero: 7.7
+    setup:
+      - id: compile-research-pack
+        backlog_command:
+          [
+            "compile-pack",
+            "research-prd",
+            "--work-unit-id",
+            "golden-research",
+            "--title",
+            "Golden Research",
+            "--purpose",
+            "Golden benchmark research pack",
+            "--owner",
+            "benchmark-owner",
+            "--approver",
+            "benchmark-approver",
+            "--output",
+            "{scenario_root}/research-pack",
+          ]
+    checks:
+      - id: recommend-export-is-cheap
+        backlog_command: ["recommend-execution", "{scenario_root}/research-pack", "--intent", "export", "--format", "json"]
+        path: "execution_class"
+        equals: "cheap"
+      - id: resume-stays-bounded
+        backlog_command:
+          [
+            "resume",
+            "{scenario_root}/research-pack",
+            "--intent",
+            "export",
+            "--max-chars",
+            "900",
+            "--format",
+            "json",
+          ]
+        path: "token_budget.estimated_chars"
+        maximum: 900
+      - id: resume-efficiency-posture-is-cheap
+        backlog_command:
+          [
+            "resume",
+            "{scenario_root}/research-pack",
+            "--intent",
+            "export",
+            "--max-chars",
+            "900",
+            "--format",
+            "json",
+          ]
+        path: "efficiency_posture.execution_class"
+        equals: "cheap"
+      - id: resume-efficiency-rationale-is-visible
+        backlog_command:
+          [
+            "resume",
+            "{scenario_root}/research-pack",
+            "--intent",
+            "export",
+            "--max-chars",
+            "900",
+            "--format",
+            "json",
+          ]
+        path: "efficiency_posture.rationale"
+        contains: "Intent `export` defaults to `cheap` execution"
+      - id: resume-runtime-readout-route-visible
+        backlog_command:
+          [
+            "resume",
+            "{scenario_root}/research-pack",
+            "--intent",
+            "export",
+            "--max-chars",
+            "900",
+            "--format",
+            "json",
+          ]
+        path: "runtime_readout.route"
+        contains: "codex"
+      - id: resume-runtime-readout-effort-visible
+        backlog_command:
+          [
+            "resume",
+            "{scenario_root}/research-pack",
+            "--intent",
+            "export",
+            "--max-chars",
+            "900",
+            "--format",
+            "json",
+          ]
+        path: "runtime_readout.effort"
+        equals: "cheap"
+      - id: status-shows-working-with-input-item
+        backlog_command: ["status", "{scenario_root}/research-pack", "--format", "json"]
+        path: "working_with.input_items.0.input_id"
+        equals: "initial-request"
+      - id: status-turn-record-links-input-item
+        backlog_command: ["status", "{scenario_root}/research-pack", "--format", "json"]
+        path: "turn_record.user_input_ids"
+        contains: "initial-request"
+      - id: status-input-extraction-summary-visible
+        backlog_command: ["status", "{scenario_root}/research-pack", "--format", "json"]
+        path: "working_with.input_items.0.extraction_summary"
+        contains: "Captured text request"
+      - id: status-shows-grouped-artifact-shelf
+        backlog_command: ["status", "{scenario_root}/research-pack", "--format", "json"]
+        path: "artifact_shelf.ready_now.label"
+        equals: "Ready now"
+      - id: status-artifact-card-is-openable
+        backlog_command: ["status", "{scenario_root}/research-pack", "--format", "json"]
+        path: "artifact_shelf.ready_now.cards.0.open_action.command"
+        contains: "jini open"
+
+  - id: portable-edges
+    label: Portable execution edges
+    purpose: Runtime, issue, and wiki edges should be visible through one canonical contract.
+    weight: 1.7
+    tracks:
+      - architecture-strength
+    dimensions:
+      - adapter-portability
+      - delivery-maturity
+    competitor_scores:
+      claude-code: 6.5
+      codex: 7.8
+      chatgpt: 5.9
+      kiro: 6.8
+      hermes: 7.4
+      agentfield: 8.6
+      ai-hero: 5.8
+    checks:
+      - id: adapter-conformance-clean
+        backlog_command: ["adapter-conformance", "--format", "json"]
+        path: "status"
+        equals: "ok"
+      - id: runtime-activate-capability
+        backlog_command: ["adapter-matrix", "--format", "json"]
+        path: "capabilities.runtime-activate"
+        contains: "codex"
+      - id: issue-bridge-capability
+        backlog_command: ["adapter-matrix", "--format", "json"]
+        path: "capabilities.issues-execute-bridge"
+        contains: "jira"
+      - id: wiki-local-apply-capability
+        backlog_command: ["adapter-matrix", "--format", "json"]
+        path: "capabilities.wiki-apply-local"
+        contains: "markdown"
+
+  - id: guided-product-loop
+    label: Guided publish loop
+    purpose: The default guided loop should collapse activation, execution, and local publish into one operator path.
+    weight: 1.8
+    tracks:
+      - adoption-truth
+      - architecture-strength
+    dimensions:
+      - delivery-maturity
+      - token-efficiency
+      - adapter-portability
+    competitor_scores:
+      claude-code: 8.8
+      codex: 8.9
+      chatgpt: 7.2
+      kiro: 8.6
+      hermes: 7.6
+      agentfield: 8.7
+      ai-hero: 7.1
+    setup:
+      - id: compile-research-pack
+        backlog_command:
+          [
+            "compile-pack",
+            "research-prd",
+            "--work-unit-id",
+            "golden-guided-loop",
+            "--title",
+            "Golden Guided Loop",
+            "--purpose",
+            "Golden benchmark guided publish loop",
+            "--owner",
+            "benchmark-owner",
+            "--approver",
+            "benchmark-approver",
+            "--output",
+            "{scenario_root}/research-pack",
+          ]
+      - id: bootstrap-home
+        backlog_command: ["bootstrap-home", "{scenario_root}/home", "--owner-name", "Golden User"]
+    checks:
+      - id: guided-loop-activates-runtime
+        backlog_command:
+          [
+            "run",
+            "{scenario_root}/research-pack",
+            "--mode",
+            "supervised",
+            "--intent",
+            "publish",
+            "--home",
+            "{scenario_root}/home",
+            "--runtime-target",
+            "codex",
+            "--activate-runtime",
+            "--prefix",
+            "{scenario_root}/prefix",
+            "--consent",
+            "write",
+            "--consent",
+            "publish",
+            "--issue-adapter",
+            "github",
+            "--wiki-adapter",
+            "markdown",
+            "--format",
+            "json",
+          ]
+        path: "flow_steps"
+        contains: "activate-runtime-target"
+      - id: guided-loop-applies-local-publish
+        backlog_command:
+          [
+            "run",
+            "{scenario_root}/research-pack",
+            "--mode",
+            "supervised",
+            "--intent",
+            "publish",
+            "--home",
+            "{scenario_root}/home",
+            "--runtime-target",
+            "codex",
+            "--activate-runtime",
+            "--prefix",
+            "{scenario_root}/prefix",
+            "--consent",
+            "write",
+            "--consent",
+            "publish",
+            "--issue-adapter",
+            "github",
+            "--wiki-adapter",
+            "markdown",
+            "--format",
+            "json",
+          ]
+        path: "flow_steps"
+        contains: "apply-publish-plan"
+      - id: guided-loop-selects-codex-runtime
+        backlog_command:
+          [
+            "run",
+            "{scenario_root}/research-pack",
+            "--mode",
+            "supervised",
+            "--intent",
+            "publish",
+            "--home",
+            "{scenario_root}/home",
+            "--runtime-target",
+            "codex",
+            "--activate-runtime",
+            "--prefix",
+            "{scenario_root}/prefix",
+            "--consent",
+            "write",
+            "--consent",
+            "publish",
+            "--issue-adapter",
+            "github",
+            "--wiki-adapter",
+            "markdown",
+            "--format",
+            "json",
+          ]
+        path: "runtime_activation.runtime_target"
+        equals: "codex"
+      - id: guided-loop-produces-local-receipts
+        backlog_command:
+          [
+            "run",
+            "{scenario_root}/research-pack",
+            "--mode",
+            "supervised",
+            "--intent",
+            "publish",
+            "--home",
+            "{scenario_root}/home",
+            "--runtime-target",
+            "codex",
+            "--activate-runtime",
+            "--prefix",
+            "{scenario_root}/prefix",
+            "--consent",
+            "write",
+            "--consent",
+            "publish",
+            "--issue-adapter",
+            "github",
+            "--wiki-adapter",
+            "markdown",
+            "--format",
+            "json",
+          ]
+        path: "local_publish_receipts"
+        contains: "applied-local"
+      - id: guided-loop-reuses-handoff-context
+        backlog_command:
+          [
+            "run",
+            "{scenario_root}/research-pack",
+            "--mode",
+            "supervised",
+            "--intent",
+            "publish",
+            "--home",
+            "{scenario_root}/home",
+            "--runtime-target",
+            "codex",
+            "--activate-runtime",
+            "--prefix",
+            "{scenario_root}/prefix",
+            "--consent",
+            "write",
+            "--consent",
+            "publish",
+            "--issue-adapter",
+            "github",
+            "--wiki-adapter",
+            "markdown",
+            "--format",
+            "json",
+          ]
+        path: "token_strategy.reused_context_surfaces"
+        contains: "runtime-handoff"
+      - id: artifact-context-capsule-is-readable
+        backlog_command:
+          [
+            "context",
+            "tasks",
+            "--from",
+            "{scenario_root}/research-pack",
+            "--format",
+            "json",
+          ]
+        path: "result_type"
+        equals: "JiniContextCapsule"
+      - id: artifact-context-capsule-surfaces-sources
+        backlog_command:
+          [
+            "context",
+            "tasks",
+            "--from",
+            "{scenario_root}/research-pack",
+            "--format",
+            "json",
+          ]
+        path: "source_references"
+        contains: "12 semi-structured customer interviews"
+      - id: interactive-open-shelf-is-actionable
+        backlog_command:
+          [
+            "open",
+            "--from",
+            "{scenario_root}/research-pack",
+            "--format",
+            "json",
+          ]
+        path: "result_type"
+        equals: "JiniOpenShelf"
+      - id: interactive-open-shelf-supports-number-selection
+        backlog_command:
+          [
+            "open",
+            "2",
+            "--from",
+            "{scenario_root}/research-pack",
+            "--print-path",
+            "--format",
+            "json",
+          ]
+        path: "artifact.id"
+        equals: "tasks"
+      - id: fuller-next-pass-opens-next-ready-surface
+        backlog_command:
+          [
+            "expand",
+            "prd",
+            "--from",
+            "{scenario_root}/research-pack",
+            "--print-path",
+            "--format",
+            "json",
+          ]
+        path: "artifact.id"
+        equals: "tasks"
+      - id: fuller-next-pass-falls-back-to-export-surface
+        backlog_command:
+          [
+            "expand",
+            "tasks",
+            "--from",
+            "{scenario_root}/research-pack",
+            "--print-path",
+            "--format",
+            "json",
+          ]
+        path: "artifact.id"
+        equals: "github"
+      - id: artifact-rewrite-creates-version
+        backlog_command:
+          [
+            "rewrite",
+            "checklist",
+            "tasks",
+            "--from",
+            "{scenario_root}/research-pack",
+            "--format",
+            "json",
+          ]
+        path: "result_type"
+        equals: "JiniArtifactRewrite"
+      - id: artifact-versions-list-rewrite
+        backlog_command:
+          [
+            "versions",
+            "tasks",
+            "--from",
+            "{scenario_root}/research-pack",
+            "--format",
+            "json",
+          ]
+        path: "versions"
+        contains: "rewrite:checklist"
+      - id: artifact-undo-restores-version
+        backlog_command:
+          [
+            "undo",
+            "tasks",
+            "--from",
+            "{scenario_root}/research-pack",
+            "--format",
+            "json",
+          ]
+        path: "result_type"
+        equals: "JiniArtifactUndo"
+
+  - id: first-minute-adoption
+    label: First-minute adoption truth
+    purpose: The benchmark should punish Jini when first-run clarity and low-friction adoption still lag stronger everyday products.
+    weight: 1.9
+    tracks:
+      - adoption-truth
+    dimensions:
+      - delivery-maturity
+      - token-efficiency
+      - core-simplicity
+    competitor_scores:
+      claude-code: 9.3
+      codex: 9.2
+      chatgpt: 9.1
+      kiro: 8.8
+      hermes: 8.3
+      agentfield: 7.4
+      ai-hero: 8.9
+    checks:
+      - id: friction-reduction-section-present
+        backlog_command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "friction-reduction"
+      - id: beginner-path-is-single-command
+        backlog_command: ["get-started", "--target", "codex", "--format", "json"]
+        path: "beginner_path.commands"
+        equals: ["jini"]
+      - id: beginner-path-hides-bundle-detail
+        backlog_command: ["get-started", "--target", "codex", "--format", "json"]
+        path: "beginner_path.notes.0"
+        contains: "Bundle-level detail is intentionally hidden"
+      - id: framework-review-prefers-subtractive-adoption-pressure
+        backlog_command: ["review-framework", "--format", "json", "--limit", "3"]
+        path: "adoption_constraints"
+        contains: "removed, demoted, or consolidated"
+
+  - id: product-consensus-gates
+    label: Current publish-readiness gates
+    purpose: Publish-readiness must prove the current native Go runtime and public documentation contract while richer consensus gates remain backlog checks.
+    weight: 1.9
+    tracks:
+      - architecture-strength
+    dimensions:
+      - workflow-rigor
+      - delivery-maturity
+      - governance
+      - core-simplicity
+    competitor_scores:
+      claude-code: 8.1
+      codex: 8.0
+      chatgpt: 7.6
+      kiro: 7.1
+      hermes: 7.1
+      agentfield: 7.9
+      ai-hero: 6.9
+    checks:
+      - id: publish-readiness-status-ok
+        command: ["publish-readiness", "--format", "json"]
+        path: "status"
+        equals: "ok"
+      - id: publish-readiness-language-go
+        command: ["publish-readiness", "--format", "json"]
+        path: "runtime.language"
+        equals: "go"
+      - id: publish-readiness-legacy-fallback-disabled
+        command: ["publish-readiness", "--format", "json"]
+        path: "runtime.legacy_fallback"
+        equals: false
+      - id: publish-readiness-offline-regression-section-present
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "offline-regression"
+      - id: publish-readiness-honest-audit-section-present
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "honest-audit"
+      - id: publish-readiness-app-platform-section-present
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "app-platform"
+      - id: publish-readiness-competitive-pressure-section-present
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "competitive-pressure"
+      - id: publish-readiness-productivity-learning-section-present
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "productivity-learning"
+      - id: publish-readiness-app-platform-stack-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/app-platform-shipping-playbook.md#default-stack-decision"
+      - id: publish-readiness-app-platform-security-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/app-platform-shipping-playbook.md#security-baseline"
+      - id: publish-readiness-app-platform-performance-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/app-platform-shipping-playbook.md#performance-and-optimization-baseline"
+      - id: publish-readiness-app-platform-observability-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/app-platform-shipping-playbook.md#logging-diagnostics-and-observability"
+      - id: publish-readiness-app-platform-update-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/app-platform-shipping-playbook.md#update-and-release-policy"
+      - id: publish-readiness-app-platform-release-gates-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/app-platform-shipping-playbook.md#app-shipping-gates"
+      - id: publish-readiness-app-platform-sources-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/app-platform-shipping-playbook.md#source-backed-inputs"
+      - id: publish-readiness-local-model-registry-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/local-model-support-matrix.md#registry-contract"
+      - id: publish-readiness-local-model-promotion-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/local-model-support-matrix.md#promotion-loop"
+      - id: publish-readiness-offline-update-policy-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/platform-offline-strategy.md#future-update-policy"
+      - id: publish-readiness-adapter-regression-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/adapter-benchmark-gate.md#routing-use"
+      - id: publish-readiness-honest-audit-reality-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/honest-system-audit.md#current-implementation-reality"
+      - id: publish-readiness-honest-audit-feedback-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/honest-system-audit.md#core-feedback-accommodations"
+      - id: publish-readiness-honest-audit-evidence-contract-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/honest-system-audit.md#machine-readable-evidence-contract"
+      - id: publish-readiness-skills-boundary-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/skills-and-delegation-slice.md#tier-boundary"
+      - id: publish-readiness-lean-skills-boundary-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/lean-platform-gate.md#command-surface-discipline"
+      - id: publish-readiness-honest-audit-go-cli-claim-visible
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "Native Go CLI"
+      - id: publish-readiness-honest-audit-simplicity-claim-visible
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "Simplicity as UX tenet"
+      - id: publish-readiness-honest-audit-repo-review-claim-visible
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "Repo review snapshot"
+      - id: publish-readiness-honest-audit-competitor-claim-visible
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "P0 competitor watching"
+      - id: publish-readiness-honest-audit-productivity-claim-visible
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "P0 compounding user productivity learning"
+      - id: publish-readiness-honest-audit-offline-claim-visible
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "Offline and local model story"
+      - id: publish-readiness-honest-audit-skills-claim-visible
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "Skills and delegation"
+      - id: publish-readiness-honest-audit-app-surfaces-claim-visible
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "App surfaces"
+      - id: publish-readiness-honest-audit-publish-readiness-claim-visible
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "Publish readiness"
+      - id: publish-readiness-competitive-universe-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/competitive-release-plan.md#competitive-universe"
+      - id: publish-readiness-requirement-rejection-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/competitive-release-plan.md#requirement-rejection-filter"
+      - id: publish-readiness-p0-feature-selection-loop-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/competitive-release-plan.md#p0-feature-selection-loop"
+      - id: publish-readiness-canonical-competitive-pressure-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/number-one-platform-prd.md#competitive-release-pressure"
+      - id: publish-readiness-compounding-user-productivity-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/number-one-platform-prd.md#compounding-user-productivity-learning"
+      - id: publish-readiness-user-context-productivity-guardrail
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "specs/learning-system.md#user-context-productivity-learning"
+      - id: publish-readiness-pack-count
+        command: ["publish-readiness", "--format", "json"]
+        path: "pack_count"
+        minimum: 7
+      - id: publish-readiness-bundle-count
+        command: ["publish-readiness", "--format", "json"]
+        path: "bundle_count"
+        minimum: 12
+      - id: publish-readiness-kit-count
+        command: ["publish-readiness", "--format", "json"]
+        path: "kit_count"
+        minimum: 6
+      - id: publish-readiness-target-count
+        command: ["publish-readiness", "--format", "json"]
+        path: "target_count"
+        minimum: 6
+
+  - id: operational-breadth
+    label: Operational advanced-set breadth
+    purpose: Breadth should be operational through packs and routines, not just claimed in docs.
+    weight: 1.5
+    tracks:
+      - architecture-strength
+    dimensions:
+      - advanced-set-breadth
+      - flexibility
+    competitor_scores:
+      claude-code: 7.8
+      codex: 8.1
+      chatgpt: 7.0
+      kiro: 7.2
+      hermes: 8.9
+      agentfield: 8.8
+      ai-hero: 7.2
+    setup:
+      - id: bootstrap-home
+        backlog_command: ["bootstrap-home", "{scenario_root}/home", "--owner-name", "Golden User"]
+    checks:
+      - id: pack-catalog-count
+        backlog_command: ["catalog-packs", "--format", "json"]
+        path: "pack_count"
+        minimum: 7
+      - id: vendor-pack-present
+        backlog_command: ["catalog-packs", "--format", "json"]
+        path: "packs"
+        contains: "vendor-selection"
+      - id: publish-readiness-routine-present
+        backlog_command: ["list-routines", "{scenario_root}/home", "--format", "json"]
+        path: "routines"
+        contains: "publish-readiness"
+      - id: golden-benchmark-routine-executes
+        backlog_command: ["run-routine", "{scenario_root}/home", "golden-benchmark", "--mode", "local", "--format", "json"]
+        path: "status"
+        equals: "executed"
+      - id: framework-review-routine-executes
+        backlog_command: ["run-routine", "{scenario_root}/home", "framework-review", "--mode", "local", "--format", "json"]
+        path: "status"
+        equals: "executed"
+
+  - id: governed-learning
+    label: Governed framework learning loop
+    purpose: Framework evolution should be staged, measured, and replay-safe.
+    weight: 1.3
+    tracks:
+      - architecture-strength
+    dimensions:
+      - learning-maturity
+      - workflow-rigor
+    competitor_scores:
+      claude-code: 6.9
+      codex: 7.6
+      chatgpt: 6.8
+      kiro: 7.1
+      hermes: 7.8
+      agentfield: 7.7
+      ai-hero: 7.4
+    checks:
+      - id: framework-review-prefers-subtractive-experiment
+        backlog_command: ["review-framework", "--format", "json", "--limit", "3"]
+        path: "best_next_experiment.change_type"
+        equals: "subtractive"
+      - id: framework-experiment-is-stageable
+        backlog_command: ["stage-framework-experiment", "--dimension", "packaging-install", "--format", "json"]
+        path: "status"
+        equals: "proposed"

@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Jini readiness panel illustration</title>
+  <desc id="desc">An illustrated readiness panel showing what is safe, what is missing, and what still blocks a real handoff.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f8fbff"/>
+      <stop offset="100%" stop-color="#eef6ff"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0f766e"/>
+      <stop offset="100%" stop-color="#34d399"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#0f172a" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="760" rx="36" fill="url(#bg)"/>
+  <g filter="url(#shadow)" font-family="Arial, Helvetica, sans-serif">
+    <rect x="74" y="74" width="1052" height="612" rx="32" fill="#ffffff"/>
+    <rect x="116" y="128" width="430" height="470" rx="28" fill="url(#panel)"/>
+    <rect x="584" y="128" width="494" height="470" rx="28" fill="#f8fbff" stroke="#dbeafe"/>
+
+    <text x="148" y="184" font-size="18" font-weight="700" letter-spacing="1.4" fill="#86efac">BEFORE THE HANDOFF</text>
+    <text x="148" y="236" font-size="40" font-weight="700" fill="#f8fafc">Build-readiness check</text>
+    <text x="148" y="276" font-size="22" fill="#cbd5e1">show what is safe, what is missing, and what still blocks the handoff</text>
+
+    <rect x="148" y="322" width="366" height="210" rx="24" fill="#020617" opacity="0.72"/>
+    <text x="176" y="370" font-size="19" fill="#e2e8f0">ready sections clearly called out</text>
+    <text x="176" y="408" font-size="19" fill="#e2e8f0">missing evidence stays visible</text>
+    <text x="176" y="446" font-size="19" fill="#e2e8f0">handoff blocked until the gaps close</text>
+    <text x="176" y="484" font-size="19" fill="#e2e8f0">next safe action named directly</text>
+
+    <text x="618" y="184" font-size="18" font-weight="700" letter-spacing="1.4" fill="#0f766e">WHAT THE CHECK SHOULD EXPLAIN</text>
+    <text x="618" y="236" font-size="38" font-weight="700" fill="#0f172a">Ready, missing, and blocked in one view</text>
+    <text x="618" y="274" font-size="22" fill="#475569">A handoff should not rely on memory. The missing pieces and the next action should stay attached to the readiness check.</text>
+
+    <rect x="618" y="320" width="426" height="98" rx="22" fill="#ffffff" stroke="#dbeafe"/>
+    <text x="646" y="360" font-size="18" font-weight="700" fill="#0f172a">What is safe now</text>
+    <text x="646" y="392" font-size="18" fill="#475569">approved parts, stable evidence, and a clearer handoff brief</text>
+
+    <rect x="618" y="444" width="426" height="98" rx="22" fill="#ffffff" stroke="#dbeafe"/>
+    <text x="646" y="484" font-size="18" font-weight="700" fill="#0f172a">What still blocks it</text>
+    <text x="646" y="516" font-size="18" fill="#475569">missing evidence, unresolved questions, and the next step before build starts</text>
+
+    <rect x="618" y="568" width="426" height="16" rx="8" fill="url(#accent)"/>
+  </g>
+</svg>

@@ -1,0 +1,38 @@
+pack_id: research-prd
+version: 0.1.0
+summary: Compile research findings into a canonical brief, rendered PRD view, and build-ready handoff.
+target_profile: Delivery
+extensions:
+  - Business:product-discovery
+  - Modality:software
+  - Environment:docs-local
+  - Risk:user-facing
+control_packs:
+  - Proof
+  - Guard
+  - Authority
+  - Cost
+emits:
+  - Brief
+  - Assumptions
+  - Sources
+  - Literature
+  - Method
+  - Spec
+  - Decision
+  - Plan
+  - Tasks
+  - Evidence
+  - Approval
+success_checks:
+  - Source set is explicit and reviewable
+  - Synthesized findings justify the product direction
+  - The PRD view is derived from canonical artifacts
+  - Spec, plan, and tasks align to validated findings
+compiled_flow:
+  - Scope
+  - Probe
+  - Model
+  - Decide
+  - Make
+  - Verify

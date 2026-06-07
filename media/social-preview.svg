@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+  <title id="title">Jini social preview</title>
+  <desc id="desc">A social preview card showing Jini's core proof scene: tasks done, but work still awaiting verification and approval.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f6f1e7; }
+      .ink { fill: #151515; font-family: Helvetica, Arial, sans-serif; }
+      .muted { fill: #675f55; font-family: Helvetica, Arial, sans-serif; }
+      .accent { fill: #d84f2a; }
+      .rule { fill: #1d6c74; }
+      .terminal { fill: #141719; }
+      .terminalText { fill: #f3efe6; font-family: Menlo, Monaco, Consolas, monospace; font-size: 24px; font-weight: 700; }
+      .kicker { font-size: 20px; font-weight: 700; letter-spacing: 2px; }
+      .headline { font-size: 58px; font-weight: 800; }
+      .subhead { font-size: 26px; font-weight: 600; }
+      .small { font-size: 20px; font-weight: 600; }
+      .footer { font-size: 18px; font-weight: 700; letter-spacing: 1.5px; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1280" height="640" rx="28"/>
+
+  <rect class="accent" x="72" y="66" width="132" height="10" rx="5"/>
+  <text class="muted kicker" x="72" y="112">THE FRAMEWORK FOR WEEK TWO OF WORK</text>
+
+  <text class="ink headline" x="72" y="188">
+    <tspan x="72" dy="0">Tasks can be done.</tspan>
+    <tspan x="72" dy="70">Work can still be</tspan>
+    <tspan x="72" dy="70">not ready.</tspan>
+  </text>
+
+  <rect class="rule" x="72" y="362" width="484" height="4" rx="2"/>
+
+  <text class="accent subhead" x="72" y="420">
+    <tspan x="72" dy="0">Jini keeps AI work blocked until it is</tspan>
+    <tspan x="72" dy="38">verified, approved, and actually safe to advance.</tspan>
+  </text>
+
+  <text class="muted small" x="72" y="536">
+    <tspan x="72" dy="0">Durable state. Explicit authority.</tspan>
+    <tspan x="72" dy="30">Typed artifacts. Operational memory.</tspan>
+  </text>
+
+  <rect class="terminal" x="664" y="84" width="544" height="472" rx="26"/>
+  <text class="terminalText" x="706" y="162">HEALTH ready-to-verify</text>
+  <text class="terminalText" x="706" y="208">STATE  awaiting_verification</text>
+  <text class="terminalText" x="706" y="254">NEXT   Verify</text>
+  <text class="terminalText" x="706" y="300">MISSING-LATER</text>
+  <text class="terminalText" x="748" y="346">- Approval</text>
+  <text class="terminalText" x="706" y="402">TASKS</text>
+  <text class="terminalText" x="748" y="448">done:       3/3</text>
+  <text class="terminalText" x="748" y="494">unresolved: 0/3</text>
+
+  <text class="muted footer" x="72" y="600">Jini / Proof Card</text>
+  <text class="muted footer" x="1094" y="600" text-anchor="end">github.com/maridlabsai/jini</text>
+</svg>

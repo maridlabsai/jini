@@ -1,0 +1,35 @@
+artifact_id: brief-research-prd-v1
+artifact_type: Brief
+schema_version: 0.1.0
+work_unit_id: research-prd-v1
+branch_id: main
+revision: 1
+status: approved
+author_actor_id: product-lead
+approver_actor_ids:
+- eng-manager
+created_at: 2026-05-10T20:19:17Z
+updated_at: 2026-05-10T20:19:17Z
+supersedes: ''
+references:
+- packs/research-prd/context/benchmark-context.md
+change_class: semantic
+objective: Turn validated research into a PRD and build-ready handoff
+stakeholders:
+- product-lead
+- research-lead
+- design-lead
+constraints:
+- Research must stay traceable to named sources
+- The PRD view must be derived from canonical artifacts
+- Spec and tasks must only claim what research actually supports
+success_criteria:
+- Source set is explicit and reviewable
+- Synthesized findings justify the product direction
+- The PRD view is derived from canonical artifacts
+- Spec, plan, and tasks align to validated findings
+non_goals:
+- Building production code in this pack
+- Deciding beyond the validated research surface
+scope_summary: Turn validated research into a product-ready brief, a rendered PRD,
+  and a build-ready spec/plan/task handoff.

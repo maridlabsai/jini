@@ -1,0 +1,30 @@
+---
+permalink: /404.html
+layout: default
+title: Page Not Found
+description: Redirecting known Markdown source URLs to the published Jini pages.
+---
+<script>
+  (function () {
+    var path = window.location.pathname || "";
+    if (!path.endsWith(".md")) return;
+    var redirected = path
+      .replace(/\/index\.md$/, "/")
+      .replace(/\.md$/, ".html");
+    if (redirected !== path) {
+      window.location.replace(redirected + window.location.search + window.location.hash);
+    }
+  })();
+</script>
+
+<div class="section-card">
+  <h2>That page moved</h2>
+  <p>Jini’s published docs live at rendered HTML paths, not the raw Markdown source paths.</p>
+  <p>If you were trying to open a docs page directly, use one of these instead:</p>
+  <div class="on-this-page">
+    <a href="{{ '/simple.html' | relative_url }}">Quickstart</a>
+    <a href="{{ '/install.html' | relative_url }}">Install</a>
+    <a href="{{ '/cli.html' | relative_url }}">Command Catalog</a>
+    <a href="{{ '/state-and-artifacts.html' | relative_url }}">Outputs</a>
+  </div>
+</div>

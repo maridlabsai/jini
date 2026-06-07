@@ -1,0 +1,33 @@
+pack_id: travel-plan
+version: 0.1.0
+summary: Compile a travel-planning workflow into a canonical itinerary, plan, tasks, and verification surface.
+target_profile: Explore
+extensions:
+  - Business:personal-planning
+  - Modality:travel
+  - Environment:docs-local
+  - Risk:consumer
+control_packs:
+  - Proof
+  - Guard
+  - Cost
+emits:
+  - Brief
+  - Assumptions
+  - Spec
+  - Decision
+  - Plan
+  - Tasks
+  - Evidence
+  - Approval
+success_checks:
+  - Destination, dates, and budget are explicit
+  - The itinerary is derived from canonical artifacts
+  - Logistics and contingencies are visible before execution
+compiled_flow:
+  - Scope
+  - Probe
+  - Model
+  - Decide
+  - Make
+  - Verify

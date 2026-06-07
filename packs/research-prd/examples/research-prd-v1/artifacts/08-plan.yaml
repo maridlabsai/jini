@@ -1,0 +1,33 @@
+artifact_id: plan-research-prd-v1
+artifact_type: Plan
+schema_version: 0.1.0
+work_unit_id: research-prd-v1
+branch_id: main
+revision: 1
+status: approved
+author_actor_id: product-lead
+approver_actor_ids:
+- eng-manager
+created_at: 2026-05-10T20:19:17Z
+updated_at: 2026-05-10T20:19:17Z
+supersedes: ''
+references:
+- decision-research-prd-v1
+change_class: semantic
+slices:
+- Stabilize research artifacts and source traceability
+- Render and review the PRD view
+- Translate PRD into build-ready spec and tasks
+dependencies:
+- Source and method artifacts must be ready before PRD rendering
+- PRD review must complete before task handoff
+milestones:
+- Research synthesis complete
+- PRD reviewed
+- Build handoff accepted
+rollback_intent: If PRD review exposes unsupported claims, return to research synthesis
+  and regenerate the view.
+acceptance_gates:
+- Sources and findings are explicit
+- PRD sections trace to canonical artifacts
+- Tasks trace to validated requirements

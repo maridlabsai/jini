@@ -1,0 +1,10 @@
+title: Jini
+description: Less rework. Faster handoffs. Clear next steps.
+url: https://maridlabsai.github.io
+baseurl: /jini
+defaults:
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: default
