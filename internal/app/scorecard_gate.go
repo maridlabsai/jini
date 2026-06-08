@@ -12,10 +12,15 @@ import (
 	"unicode"
 )
 
-const scorecardBenchmarkPath = "specs/golden-competitive-benchmark.yaml"
+const (
+	scorecardBenchmarkPath       = "specs/golden-competitive-benchmark.yaml"
+	prdImplementationTracePath   = "specs/prd-implementation-trace.md"
+	prdImplementationRequirement = "P0"
+)
 
 var defaultScorecardGatePolicy = scorecardGatePolicy{
 	BenchmarkPath: scorecardBenchmarkPath,
+	PRDTracePath:  prdImplementationTracePath,
 	RequiredCompetitors: []string{
 		"claude-code",
 		"codex",
@@ -77,6 +82,7 @@ var defaultScorecardGatePolicy = scorecardGatePolicy{
 
 type scorecardGatePolicy struct {
 	BenchmarkPath               string
+	PRDTracePath                string
 	RequiredCompetitors         []string
 	RequiredPressureVectors     []string
 	RequiredOutcomeGates        []string
@@ -86,18 +92,19 @@ type scorecardGatePolicy struct {
 }
 
 type scorecardGateReport struct {
-	SchemaVersion            string                    `json:"schema_version"`
-	ResultType               string                    `json:"result_type"`
-	GeneratedAt              string                    `json:"generated_at"`
-	Status                   string                    `json:"status"`
-	ScorecardPath            string                    `json:"scorecard_path"`
-	CoreCompetitorCount      int                       `json:"core_competitor_count"`
-	WatchlistCompetitorCount int                       `json:"watchlist_competitor_count"`
-	ScenarioCount            int                       `json:"scenario_count"`
-	RequiredCompetitors      []scorecardPresenceCheck  `json:"required_competitors"`
-	PressureVectors          []scorecardPresenceCheck  `json:"pressure_vectors"`
-	OutcomeGates             []scorecardPresenceCheck  `json:"outcome_gates"`
-	Checks                   []scorecardThresholdCheck `json:"checks"`
+	SchemaVersion            string                            `json:"schema_version"`
+	ResultType               string                            `json:"result_type"`
+	GeneratedAt              string                            `json:"generated_at"`
+	Status                   string                            `json:"status"`
+	ScorecardPath            string                            `json:"scorecard_path"`
+	CoreCompetitorCount      int                               `json:"core_competitor_count"`
+	WatchlistCompetitorCount int                               `json:"watchlist_competitor_count"`
+	ScenarioCount            int                               `json:"scenario_count"`
+	RequiredCompetitors      []scorecardPresenceCheck          `json:"required_competitors"`
+	PressureVectors          []scorecardPresenceCheck          `json:"pressure_vectors"`
+	OutcomeGates             []scorecardPresenceCheck          `json:"outcome_gates"`
+	Checks                   []scorecardThresholdCheck         `json:"checks"`
+	PRDImplementation        scorecardPRDImplementationSummary `json:"prd_implementation,omitempty"`
 }
 
 type scorecardPresenceCheck struct {
@@ -117,6 +124,17 @@ type scorecardThresholdCheck struct {
 type scorecardPresenceResult struct {
 	Present bool
 	Reasons []string
+}
+
+type scorecardPRDImplementationSummary struct {
+	SourcePath                   string   `json:"source_path,omitempty"`
+	RequirementLevel             string   `json:"requirement_level,omitempty"`
+	TotalRequirements            int      `json:"total_requirements"`
+	ImplementedRequirements      int      `json:"implemented_requirements"`
+	CompletionPercent            int      `json:"completion_percent"`
+	Status                       string   `json:"status,omitempty"`
+	MissingImplementationDetails []string `json:"missing_implementation_details,omitempty"`
+	ResidualHardeningCount       int      `json:"residual_hardening_count,omitempty"`
 }
 
 type scorecardGateBuilder struct {
@@ -172,6 +190,9 @@ func (builder scorecardGateBuilder) Build() scorecardGateReport {
 		GeneratedAt:   time.Now().UTC().Format(time.RFC3339),
 		Status:        "ok",
 		ScorecardPath: builder.policy.BenchmarkPath,
+	}
+	if strings.TrimSpace(builder.policy.PRDTracePath) != "" {
+		report.PRDImplementation = builder.buildPRDImplementationSummary()
 	}
 
 	text, ok := builder.readBenchmark()
@@ -234,6 +255,143 @@ func (builder scorecardGateBuilder) readBenchmark() (string, bool) {
 	return string(data), true
 }
 
+func (builder scorecardGateBuilder) buildPRDImplementationSummary() scorecardPRDImplementationSummary {
+	sourcePath := strings.TrimSpace(builder.policy.PRDTracePath)
+	summary := scorecardPRDImplementationSummary{
+		SourcePath:       sourcePath,
+		RequirementLevel: prdImplementationRequirement,
+		Status:           "ok",
+	}
+	if builder.root == "" {
+		summary.Status = "missing"
+		summary.MissingImplementationDetails = []string{"source root is unavailable"}
+		return summary
+	}
+	data, err := os.ReadFile(filepath.Join(builder.root, sourcePath))
+	if err != nil {
+		summary.Status = "missing"
+		summary.MissingImplementationDetails = []string{"PRD implementation trace is unreadable: " + sourcePath}
+		return summary
+	}
+	text := string(data)
+	summary.ResidualHardeningCount = countResidualHardeningItems(text)
+	for _, row := range prdImplementationRows(text) {
+		summary.TotalRequirements++
+		var missing []string
+		if strings.TrimSpace(row.Requirement) == "" {
+			missing = append(missing, "requirement")
+		}
+		if strings.TrimSpace(row.RuntimeSurface) == "" {
+			missing = append(missing, "runtime surface")
+		}
+		if strings.TrimSpace(row.Proof) == "" {
+			missing = append(missing, "proof")
+		}
+		if len(missing) > 0 {
+			label := firstNonEmpty(row.Requirement, fmt.Sprintf("row %d", summary.TotalRequirements))
+			summary.MissingImplementationDetails = append(
+				summary.MissingImplementationDetails,
+				fmt.Sprintf("%s missing %s", label, strings.Join(missing, ", ")),
+			)
+			continue
+		}
+		summary.ImplementedRequirements++
+	}
+	if summary.TotalRequirements == 0 {
+		summary.Status = "missing"
+		summary.MissingImplementationDetails = append(summary.MissingImplementationDetails, "no P0 requirement rows found")
+		return summary
+	}
+	summary.CompletionPercent = int(float64(summary.ImplementedRequirements*100)/float64(summary.TotalRequirements) + 0.5)
+	if summary.ImplementedRequirements != summary.TotalRequirements {
+		summary.Status = "needs-attention"
+	}
+	return summary
+}
+
+type prdImplementationRow struct {
+	Requirement    string
+	RuntimeSurface string
+	Proof          string
+}
+
+func prdImplementationRows(text string) []prdImplementationRow {
+	var rows []prdImplementationRow
+	for _, line := range strings.Split(text, "\n") {
+		cells := markdownTableCells(line)
+		if len(cells) < 3 {
+			continue
+		}
+		if isPRDImplementationHeaderOrSeparator(cells) {
+			continue
+		}
+		rows = append(rows, prdImplementationRow{
+			Requirement:    cells[0],
+			RuntimeSurface: cells[1],
+			Proof:          cells[2],
+		})
+	}
+	return rows
+}
+
+func markdownTableCells(line string) []string {
+	trimmed := strings.TrimSpace(line)
+	if !strings.HasPrefix(trimmed, "|") || !strings.HasSuffix(trimmed, "|") {
+		return nil
+	}
+	trimmed = strings.TrimPrefix(strings.TrimSuffix(trimmed, "|"), "|")
+	parts := strings.Split(trimmed, "|")
+	cells := make([]string, 0, len(parts))
+	for _, part := range parts {
+		cells = append(cells, strings.TrimSpace(part))
+	}
+	return cells
+}
+
+func isPRDImplementationHeaderOrSeparator(cells []string) bool {
+	if len(cells) < 3 {
+		return true
+	}
+	first := normalizeScorecardID(cells[0])
+	if first == "p0-requirement" {
+		return true
+	}
+	for _, cell := range cells[:3] {
+		trimmed := strings.TrimSpace(cell)
+		if trimmed == "" {
+			return false
+		}
+		for _, char := range trimmed {
+			if char != '-' && char != ':' {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func countResidualHardeningItems(text string) int {
+	inResidualSection := false
+	count := 0
+	for _, line := range strings.Split(text, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if strings.EqualFold(trimmed, "Residual hardening:") {
+			inResidualSection = true
+			continue
+		}
+		if !inResidualSection {
+			continue
+		}
+		if strings.HasPrefix(trimmed, "#") || strings.HasPrefix(trimmed, "|") {
+			break
+		}
+		if strings.HasPrefix(trimmed, "- ") {
+			count++
+		}
+	}
+	return count
+}
+
 func (builder scorecardGateBuilder) addThresholdChecks(report *scorecardGateReport, text, scorecardGateSection string) {
 	report.CoreCompetitorCount = countYAMLListItems(yamlSection(text, "core_benchmark_set"))
 	report.WatchlistCompetitorCount = countYAMLListItems(yamlSection(text, "watchlist"))
@@ -286,6 +444,9 @@ func buildScorecardThresholdCheck(id string, actual, minimum int) scorecardThres
 }
 
 func scorecardChecksPass(report scorecardGateReport) bool {
+	if report.PRDImplementation.SourcePath != "" && report.PRDImplementation.Status != "ok" {
+		return false
+	}
 	for _, check := range report.Checks {
 		if check.Status != "ok" {
 			return false
@@ -322,6 +483,7 @@ func renderScorecardGateText(stdout io.Writer, report scorecardGateReport) {
 	fmt.Fprintf(stdout, "  CORE_COMPETITORS %d\n", report.CoreCompetitorCount)
 	fmt.Fprintf(stdout, "  WATCHLIST_COMPETITORS %d\n", report.WatchlistCompetitorCount)
 	fmt.Fprintf(stdout, "  SCENARIOS %d\n", report.ScenarioCount)
+	renderPRDImplementationSummary(stdout, report.PRDImplementation)
 	fmt.Fprintln(stdout, "COMPETITORS")
 	for _, competitor := range report.RequiredCompetitors {
 		fmt.Fprintf(stdout, "  %s %s\n", strings.ToUpper(competitor.Status), competitor.ID)
@@ -346,6 +508,27 @@ func renderScorecardGateText(stdout io.Writer, report scorecardGateReport) {
 func renderScorecardPresenceReasons(stdout io.Writer, check scorecardPresenceCheck) {
 	for _, reason := range check.Reasons {
 		fmt.Fprintf(stdout, "    REASON %s\n", reason)
+	}
+}
+
+func renderPRDImplementationSummary(stdout io.Writer, summary scorecardPRDImplementationSummary) {
+	if strings.TrimSpace(summary.SourcePath) == "" {
+		return
+	}
+	fmt.Fprintln(stdout, "PRD IMPLEMENTATION")
+	fmt.Fprintf(
+		stdout,
+		"  %s %d/%d %s requirements implemented (%d%%)\n",
+		strings.ToUpper(firstNonEmpty(summary.Status, "unknown")),
+		summary.ImplementedRequirements,
+		summary.TotalRequirements,
+		firstNonEmpty(summary.RequirementLevel, "requirements"),
+		summary.CompletionPercent,
+	)
+	fmt.Fprintf(stdout, "  SOURCE %s\n", summary.SourcePath)
+	fmt.Fprintf(stdout, "  RESIDUAL_HARDENING %d\n", summary.ResidualHardeningCount)
+	for _, missing := range summary.MissingImplementationDetails {
+		fmt.Fprintf(stdout, "    MISSING %s\n", missing)
 	}
 }
 

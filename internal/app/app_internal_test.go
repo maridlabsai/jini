@@ -365,6 +365,18 @@ func TestScorecardGatePassesAndExposesCompetitorPressure(t *testing.T) {
 	if report.Status != "ok" {
 		t.Fatalf("expected scorecard status ok, got %#v", report)
 	}
+	if report.PRDImplementation.SourcePath != "specs/prd-implementation-trace.md" {
+		t.Fatalf("expected PRD implementation trace source, got %#v", report.PRDImplementation)
+	}
+	if report.PRDImplementation.TotalRequirements != 12 || report.PRDImplementation.ImplementedRequirements != 12 || report.PRDImplementation.CompletionPercent != 100 {
+		t.Fatalf("expected P0 PRD implementation completion to be 12/12 = 100%%, got %#v", report.PRDImplementation)
+	}
+	if report.PRDImplementation.Status != "ok" {
+		t.Fatalf("expected PRD implementation status ok, got %#v", report.PRDImplementation)
+	}
+	if report.PRDImplementation.ResidualHardeningCount != 2 {
+		t.Fatalf("expected residual hardening count to stay visible, got %#v", report.PRDImplementation)
+	}
 	requiredCompetitors := map[string]bool{
 		"claude-code":                 false,
 		"codex":                       false,
@@ -508,6 +520,78 @@ func TestScorecardGateBuilderSupportsCustomPolicy(t *testing.T) {
 	}
 	if len(report.OutcomeGates) != 1 || !report.OutcomeGates[0].Present {
 		t.Fatalf("expected custom outcome gate to be present, got %#v", report.OutcomeGates)
+	}
+}
+
+func TestScorecardGateBuilderReportsIncompletePRDTraceCompletion(t *testing.T) {
+	root := t.TempDir()
+	specDir := filepath.Join(root, "specs")
+	if err := os.MkdirAll(specDir, 0o755); err != nil {
+		t.Fatalf("create specs dir: %v", err)
+	}
+	writeTestFile(t, filepath.Join(specDir, "custom-scorecard.md"), "# Custom Scorecard\n")
+	scorecardPath := "custom-scorecard.yaml"
+	writeTestFile(t, filepath.Join(root, scorecardPath), strings.Join([]string{
+		"scorecard_gates:",
+		"  minimum_core_competitors: 1",
+		"  minimum_watchlist_competitors: 1",
+		"  minimum_scenarios: 1",
+		"  required_core_competitors:",
+		"    - id: custom-competitor",
+		"  required_pressure_vectors:",
+		"    - id: custom-vector",
+		"  required_outcome_gates:",
+		"    - id: custom-outcome",
+		"      proof_references:",
+		"        - id: custom-proof",
+		"          kind: named-proof",
+		"          ref: specs/custom-scorecard.md#custom-outcome",
+		"core_benchmark_set:",
+		"  - id: custom-competitor",
+		"watchlist:",
+		"  - id: custom-watch",
+		"scenarios:",
+		"  - id: custom-scenario",
+		"    checks:",
+		"      - id: custom-vector",
+	}, "\n"))
+	prdTracePath := "specs/custom-prd-trace.md"
+	writeTestFile(t, filepath.Join(root, prdTracePath), strings.Join([]string{
+		"# PRD Implementation Trace",
+		"",
+		"| P0 requirement | Runtime surface | Proof |",
+		"| --- | --- | --- |",
+		"| Implemented requirement | runtime surface | proof gate |",
+		"| Missing proof requirement | runtime surface | |",
+		"",
+		"Residual hardening:",
+		"",
+		"- Real-world dogfood still required.",
+	}, "\n"))
+
+	report := newScorecardGateBuilder(root, scorecardGatePolicy{
+		BenchmarkPath:               scorecardPath,
+		PRDTracePath:                prdTracePath,
+		RequiredCompetitors:         []string{"custom-competitor"},
+		RequiredPressureVectors:     []string{"custom-vector"},
+		RequiredOutcomeGates:        []string{"custom-outcome"},
+		MinimumCoreCompetitors:      1,
+		MinimumWatchlistCompetitors: 1,
+		MinimumScenarios:            1,
+	}).Build()
+
+	if report.Status != "needs-attention" {
+		t.Fatalf("expected incomplete PRD trace to need attention, got %#v", report)
+	}
+	summary := report.PRDImplementation
+	if summary.TotalRequirements != 2 || summary.ImplementedRequirements != 1 || summary.CompletionPercent != 50 {
+		t.Fatalf("expected PRD completion to be 1/2 = 50%%, got %#v", summary)
+	}
+	if summary.Status != "needs-attention" || summary.ResidualHardeningCount != 1 {
+		t.Fatalf("expected incomplete PRD status and residual count, got %#v", summary)
+	}
+	if len(summary.MissingImplementationDetails) != 1 || !strings.Contains(summary.MissingImplementationDetails[0], "Missing proof requirement missing proof") {
+		t.Fatalf("expected missing proof detail, got %#v", summary.MissingImplementationDetails)
 	}
 }
 
@@ -876,6 +960,10 @@ func TestScorecardGateTextShowsCommitGatePressure(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"STATUS ok",
+		"PRD IMPLEMENTATION",
+		"  OK 12/12 P0 requirements implemented (100%)",
+		"  SOURCE specs/prd-implementation-trace.md",
+		"  RESIDUAL_HARDENING 2",
 		"COMPETITORS",
 		"  OK github-copilot-coding-agent",
 		"PRESSURE VECTORS",
