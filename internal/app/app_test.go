@@ -2590,46 +2590,51 @@ func TestInteractiveLauncherSocialAckDoesNotCreateWork(t *testing.T) {
 	}
 }
 
-func TestInteractiveLauncherRejectsSlashCommands(t *testing.T) {
+func TestInteractiveLauncherSupportsSlashCommandAliasesWithoutCreatingWork(t *testing.T) {
 	cases := []struct {
 		name string
 		line string
 		want []string
 	}{
 		{
+			name: "help",
+			line: "/help\n",
+			want: []string{"Examples:", "Describe the task. Jini will route it"},
+		},
+		{
 			name: "status",
 			line: "/status\n",
-			want: []string{"Unknown command \"/status\"."},
+			want: []string{"No current work yet."},
 		},
 		{
 			name: "doctor",
 			line: "/doctor\n",
-			want: []string{"Unknown command \"/doctor\"."},
+			want: []string{"Provider", "Status"},
 		},
 		{
 			name: "init",
 			line: "/init\n",
-			want: []string{"Unknown command \"/init\"."},
+			want: []string{"No init step is required before first value."},
 		},
 		{
 			name: "memory",
 			line: "/memory\n",
-			want: []string{"Unknown command \"/memory\"."},
+			want: []string{"Memory", "No current work is saved yet."},
 		},
 		{
 			name: "permissions",
 			line: "/permissions\n",
-			want: []string{"Unknown command \"/permissions\"."},
+			want: []string{"Permissions", "Nothing has been sent, published, booked, or changed."},
 		},
 		{
 			name: "clear",
 			line: "/clear\n",
-			want: []string{"Unknown command \"/clear\"."},
+			want: []string{"Nothing to clear yet.", "Describe the task when you're ready."},
 		},
 		{
 			name: "route",
 			line: "/route\n",
-			want: []string{"Unknown command \"/route\"."},
+			want: []string{"Route and cost", "Token posture: compact context first"},
 		},
 	}
 
@@ -2640,8 +2645,8 @@ func TestInteractiveLauncherRejectsSlashCommands(t *testing.T) {
 
 			var stdout bytes.Buffer
 			exitCode := app.RunInteractive(nil, strings.NewReader(tc.line), &stdout, &stdout)
-			if exitCode != 1 {
-				t.Fatalf("expected exit code 1, got %d with output:\n%s", exitCode, stdout.String())
+			if exitCode != 0 {
+				t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 			}
 
 			out := stdout.String()
@@ -2656,9 +2661,30 @@ func TestInteractiveLauncherRejectsSlashCommands(t *testing.T) {
 				}
 			}
 			if _, err := os.Stat(filepath.Join(stateDir, "current-work.json")); !errors.Is(err, os.ErrNotExist) {
-				t.Fatalf("expected no current work file after rejected slash command, got err=%v", err)
+				t.Fatalf("expected no current work file after slash command, got err=%v", err)
 			}
 		})
+	}
+}
+
+func TestInteractiveLauncherRejectsUnknownSlashCommand(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("/banana\n"), &stdout, &stdout)
+	if exitCode != 1 {
+		t.Fatalf("expected exit code 1, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	out := stdout.String()
+	if !strings.Contains(out, "Unknown command \"/banana\".") {
+		t.Fatalf("expected unknown slash command rejection, got:\n%s", out)
+	}
+	if strings.Contains(out, "Working Draft") {
+		t.Fatalf("expected unknown slash command not to create work, got:\n%s", out)
+	}
+	if _, err := os.Stat(filepath.Join(stateDir, "current-work.json")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("expected no current work file after unknown slash command, got err=%v", err)
 	}
 }
 
@@ -3501,8 +3527,18 @@ func TestCurrentWorkInteractiveTacticalCommandsDoNotStartNewWork(t *testing.T) {
 			want: []string{"Goal", "Weekly Product Review", "Ready now", "Sendable Follow-up"},
 		},
 		{
+			name: "slash status",
+			line: "/status\n",
+			want: []string{"Goal", "Weekly Product Review", "Ready now", "Sendable Follow-up"},
+		},
+		{
 			name: "memory",
 			line: "memory\n",
+			want: []string{"Memory", "Current work is saved: Weekly Product Review."},
+		},
+		{
+			name: "slash memory",
+			line: "/memory\n",
 			want: []string{"Memory", "Current work is saved: Weekly Product Review."},
 		},
 		{
@@ -3518,13 +3554,35 @@ func TestCurrentWorkInteractiveTacticalCommandsDoNotStartNewWork(t *testing.T) {
 			},
 		},
 		{
+			name: "slash route",
+			line: "/route\n",
+			want: []string{
+				"Route and cost",
+				"Token posture: compact context first",
+				"Continuity: offline and online work stitch into the same session.",
+				"Route inputs: device",
+				"CLI throttle levels affect switching",
+				"Least-expense capable route",
+			},
+		},
+		{
 			name: "permissions",
 			line: "permissions\n",
 			want: []string{"Permissions", "Nothing has been sent, published, booked, or changed."},
 		},
 		{
+			name: "slash permissions",
+			line: "/permissions\n",
+			want: []string{"Permissions", "Nothing has been sent, published, booked, or changed."},
+		},
+		{
 			name: "clear",
 			line: "clear\n",
+			want: []string{"Nothing was deleted.", "Paste a new request when ready."},
+		},
+		{
+			name: "slash clear",
+			line: "/clear\n",
 			want: []string{"Nothing was deleted.", "Paste a new request when ready."},
 		},
 	}
@@ -3560,24 +3618,52 @@ func TestCurrentWorkInteractiveTacticalCommandsDoNotStartNewWork(t *testing.T) {
 	}
 }
 
-func TestPostResultStatusCommandShowsFullState(t *testing.T) {
-	source := "Weekly product review. Need owners, due dates, and open questions."
-	out := runInteractiveForTest(t, t.TempDir(), source+"\nstatus\n")
+func TestCurrentWorkInteractiveRejectsUnknownSlashCommand(t *testing.T) {
+	stateDir := t.TempDir()
+	packDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
 
-	for _, want := range []string{
-		"Result ready.",
-		"Goal",
-		"Weekly Product Review Need Owners",
-		"Ready now",
-		"Sendable Follow-up",
-		"Safe to do",
-	} {
-		if !strings.Contains(out, want) {
-			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
-		}
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("/banana\n"), &stdout, &stdout)
+	if exitCode != 1 {
+		t.Fatalf("expected exit code 1, got %d with output:\n%s", exitCode, stdout.String())
 	}
-	if strings.Contains(out, "Working Draft: Status") {
-		t.Fatalf("expected status not to start literal work, got:\n%s", out)
+	if !strings.Contains(stdout.String(), "Unknown command \"/banana\".") {
+		t.Fatalf("expected unknown slash command rejection, got:\n%s", stdout.String())
+	}
+	if strings.Contains(stdout.String(), "Working Draft") {
+		t.Fatalf("expected unknown slash command not to start literal work, got:\n%s", stdout.String())
+	}
+	current := readCurrentWork(t, stateDir)
+	if current["title"] != "Weekly Product Review" {
+		t.Fatalf("expected current work to remain unchanged, got %#v", current)
+	}
+}
+
+func TestPostResultStatusCommandShowsFullState(t *testing.T) {
+	for _, command := range []string{"status", "/status"} {
+		t.Run(command, func(t *testing.T) {
+			source := "Weekly product review. Need owners, due dates, and open questions."
+			out := runInteractiveForTest(t, t.TempDir(), source+"\n"+command+"\n")
+
+			for _, want := range []string{
+				"Result ready.",
+				"Goal",
+				"Weekly Product Review Need Owners",
+				"Ready now",
+				"Sendable Follow-up",
+				"Safe to do",
+			} {
+				if !strings.Contains(out, want) {
+					t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+				}
+			}
+			if strings.Contains(out, "Working Draft: Status") {
+				t.Fatalf("expected status not to start literal work, got:\n%s", out)
+			}
+		})
 	}
 }
 

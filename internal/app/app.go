@@ -438,10 +438,6 @@ func runNoCurrentLauncher(active []*workSummary, stdin io.Reader, stdout, stderr
 		if !ok {
 			return 0
 		}
-		if isSlashCommandInput(action) {
-			fmt.Fprintf(stderr, "Unknown command %q.\n", strings.TrimSpace(action))
-			return 1
-		}
 		if isHelpInput(action) {
 			fmt.Fprintln(stdout)
 			renderNewWorkLauncher(stdout)
@@ -481,15 +477,15 @@ func runNoCurrentLauncher(active []*workSummary, stdin io.Reader, stdout, stderr
 			renderNewWorkLauncher(stdout)
 			continue
 		}
+		if isSlashCommandInput(action) {
+			fmt.Fprintf(stderr, "Unknown command %q.\n", strings.TrimSpace(action))
+			return 1
+		}
 		return startNewWorkFromRawInput(action, session, stdout, stderr)
 	}
 }
 
 func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
-	if isSlashCommandInput(action) {
-		fmt.Fprintf(stderr, "Unknown command %q.\n", strings.TrimSpace(action))
-		return 1
-	}
 	if handled, exitCode := maybeHandleLocalTextFileEditIntent(action, stdout, stderr); handled {
 		return exitCode
 	}
@@ -507,7 +503,7 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		fmt.Fprintf(stdout, "Recorded decision: %s.\n", resolution)
 		return 0
 	}
-	switch normalizeCommandName(action) {
+	switch interactiveCommandName(action) {
 	case "help":
 		renderCurrentWorkHelp(stdout, summary)
 	case "status":
@@ -649,6 +645,10 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		}
 		return runNewWorkIntakeWithScanner(scanner, stdout, stderr)
 	default:
+		if isSlashCommandInput(action) {
+			fmt.Fprintf(stderr, "Unknown command %q.\n", strings.TrimSpace(action))
+			return 1
+		}
 		if selection, err := resolveActiveWorkSelection(action, otherActiveWorkSummaries(summary)); err == nil {
 			return switchToWorkSelection(selection, stdout, stderr)
 		}
@@ -1380,10 +1380,6 @@ func runNewWorkIntakeWithScanner(session *bufio.Scanner, stdout, stderr io.Write
 		if !ok {
 			return 0
 		}
-		if isSlashCommandInput(firstRaw) {
-			fmt.Fprintf(stderr, "Unknown command %q.\n", strings.TrimSpace(firstRaw))
-			return 1
-		}
 		if isHelpInput(firstRaw) {
 			fmt.Fprintln(stdout)
 			renderNewWorkLauncher(stdout)
@@ -1419,6 +1415,10 @@ func runNewWorkIntakeWithScanner(session *bufio.Scanner, stdout, stderr io.Write
 			fmt.Fprintln(stdout)
 			renderNewWorkLauncher(stdout)
 			continue
+		}
+		if isSlashCommandInput(firstRaw) {
+			fmt.Fprintf(stderr, "Unknown command %q.\n", strings.TrimSpace(firstRaw))
+			return 1
 		}
 		return startNewWorkFromRawInput(firstRaw, session, stdout, stderr)
 	}
@@ -1590,7 +1590,7 @@ func isBareContinuationIntent(raw string) bool {
 }
 
 func isHelpInput(raw string) bool {
-	switch normalizeName(raw) {
+	switch interactiveCommandName(raw) {
 	case "help", "what can you do", "?":
 		return true
 	default:
@@ -1599,7 +1599,7 @@ func isHelpInput(raw string) bool {
 }
 
 func maybeHandleNewWorkUtilityIntent(raw string, stdout io.Writer) (bool, int) {
-	switch normalizeCommandName(raw) {
+	switch interactiveCommandName(raw) {
 	case "status":
 		fmt.Fprintln(stdout)
 		renderNoCurrentWorkStatus(stdout)
@@ -3853,10 +3853,6 @@ func postResultAlsoReady(items []catalogItem, primary *catalogItem) []string {
 }
 
 func handlePostResultAction(action string, summary *workSummary, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
-	if isSlashCommandInput(action) {
-		fmt.Fprintf(stderr, "Unknown command %q.\n", strings.TrimSpace(action))
-		return 1
-	}
 	if resolution, resolved, err := resolveActiveAskAction(summary.Dir, summary, action); resolved {
 		if err != nil {
 			fmt.Fprintf(stderr, "Could not save the decision: %v\n", err)
@@ -3865,7 +3861,7 @@ func handlePostResultAction(action string, summary *workSummary, scanner *bufio.
 		fmt.Fprintf(stdout, "Recorded decision: %s.\n", resolution)
 		return 0
 	}
-	switch normalizeCommandName(action) {
+	switch interactiveCommandName(action) {
 	case "resume":
 		if !renderFocusedContinuation(stdout, summary) {
 			renderCheck(stdout, summary)
@@ -3923,6 +3919,10 @@ func handlePostResultAction(action string, summary *workSummary, scanner *bufio.
 	case "start":
 		renderNewWorkLauncher(stdout)
 	default:
+		if isSlashCommandInput(action) {
+			fmt.Fprintf(stderr, "Unknown command %q.\n", strings.TrimSpace(action))
+			return 1
+		}
 		if isAcknowledgementOnly(action) {
 			renderCurrentWorkNoop(stdout)
 			return 0
@@ -4325,7 +4325,7 @@ func renderActiveWorkLauncher(w io.Writer, active []*workSummary) {
 func handleActiveWorkSelection(action string, active []*workSummary, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
 	selection, err := resolveActiveWorkSelection(action, active)
 	if err != nil {
-		switch normalizeCommandName(action) {
+		switch interactiveCommandName(action) {
 		case "start":
 			if scanner == nil {
 				renderNewWorkLauncher(stdout)
@@ -4722,6 +4722,14 @@ func normalizeCommandName(value string) string {
 		return ""
 	}
 	return normalizeName(value)
+}
+
+func interactiveCommandName(value string) string {
+	trimmed := strings.TrimSpace(value)
+	if isSlashCommandInput(trimmed) {
+		trimmed = strings.TrimPrefix(trimmed, "/")
+	}
+	return normalizeCommandName(trimmed)
 }
 
 func isSlashCommandInput(value string) bool {
