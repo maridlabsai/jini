@@ -1,6 +1,6 @@
 # Product Settling Decisions
 
-Updated: 2026-06-07
+Updated: 2026-06-08
 
 This document records the hard product decisions that reduce ambiguity for GTM,
 engineering, docs, and tiering.
@@ -45,6 +45,43 @@ The CLI must make these jobs obvious:
 - avoid throttling and local-device waste when routing can prevent it
 
 Anything that does not improve that wedge is not P0 for GTM.
+
+## Core Development Charter
+
+Claude Code and Codex first-minute parity is the highest-precedence
+development bar for Jini.
+
+If this charter conflicts with vertical templates, broad app surfaces, demo
+flows, agent-role UX, or roadmap expansion, this charter wins until a newer
+explicit product decision changes it.
+
+Non-negotiable invariants:
+
+- Questions answer compactly and do not create work.
+- Bare entities ask for intent and do not create work.
+- Explicit task intent edits, runs, routes, or fails closed with the exact
+  ambiguity to resolve.
+- File and code requests produce real side effects, receipts, or fail-closed
+  ambiguity; they never become generic drafts.
+- Current work is passive context, not the default frame for unrelated input.
+- Route decisions stay inspectable, but routine answers avoid route ceremony.
+- Side-effecting work reports files changed, commands or tests run, blockers,
+  approvals, and rollback or recovery path when relevant.
+- No hard-coded entity-to-template routing.
+
+Implementation plan:
+
+- P0.1: keep a golden CLI transcript suite for simple questions, bare
+  entities, direct file edits, current-work interruption, route inspection, and
+  explicit vertical opt-in.
+- P0.2: run that suite in `bash tools/cli_ux_regression_gate.sh` on every
+  commit gate.
+- P0.3: require the scorecard to include an intent-first routing outcome gate
+  with executable proof references.
+- P0.4: block releases that reintroduce status dumps, `Start/Keep`, `Switch`,
+  generic drafts for file edits, or template routing from questions.
+- P0.5: accept new product surfaces only when they preserve this first-minute
+  contract or are hidden behind explicit progressive disclosure.
 
 ## Free Tier Decision
 
@@ -129,6 +166,7 @@ P0:
 - direct file edits work in the current directory
 - route list, set, auto, and status are obvious
 - current work continuation is compact, familiar, and hidden until requested
+- intent-first Claude/Codex parity is protected by golden transcript gates
 - token-frugal context reuse is measurable
 - regression gates protect the above
 
@@ -187,6 +225,8 @@ also gate:
 
 - direct current-directory file edits without draft/workflow detours
 - compact answers for simple factual questions
+- intent-first routing for general questions, bare entities, and explicit task
+  requests
 - async work receipts with route, model/profile, context, commands, tests,
   blockers, approvals, and rollback evidence
 - offline/local route proof or exact setup failure

@@ -17,6 +17,11 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"the product identity.",
 		"The first product people should notice is the CLI.",
 		"Anything that does not improve that wedge is not P0 for GTM.",
+		"Claude Code and Codex first-minute parity is the highest-precedence",
+		"Questions answer compactly and do not create work.",
+		"Bare entities ask for intent and do not create work.",
+		"No hard-coded entity-to-template routing.",
+		"P0.3: require the scorecard to include an intent-first routing outcome gate",
 		"The free tier should prove Jini's routing and session value without giving away",
 		"the commercial OS.",
 		"Free tier does not include:",
@@ -44,6 +49,7 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"[product-settling-decisions.md](./product-settling-decisions.md)",
 		"Jini should be built as a CLI-first AI work router and durable session layer",
 		"The near-term GTM product is not the broad OS.",
+		"Core charter: intent-first Claude/Codex parity outranks feature expansion.",
 		"Bare `jini` is a task prompt, not a dashboard.",
 		"[launcher-intake-design.md](./launcher-intake-design.md)",
 		"[number-one-development-plan.md](./number-one-development-plan.md)",
@@ -97,7 +103,9 @@ func TestFocusedDeliveryChainGatesPRDDesignAndImplementation(t *testing.T) {
 	for _, want := range []string{
 		"This is the active implementation plan. It is intentionally narrow.",
 		"Make the CLI good enough for users to prefer trying Jini again.",
-		"First-Minute CLI Quality",
+		"The core charter is intent-first Claude/Codex parity.",
+		"Intent-First CLI Parity",
+		"bare entities create `Task Snapshot`, itinerary, or other artifacts",
 		"Paused work can restart only through `product-settling-decisions.md`.",
 		"If that trace cannot be written in one short paragraph, the cut is too broad.",
 	} {
@@ -131,6 +139,7 @@ func TestCanonicalPRDStaysReducedToCurrentGTMWedge(t *testing.T) {
 		"no Working Draft for obvious file edits",
 		"task-first startup even with saved work",
 		"CLI UX regression gate in commit gates",
+		"intent/parity golden transcript gate in commit gates",
 	} {
 		if !strings.Contains(canonicalPRD, want) {
 			t.Fatalf("canonical PRD must preserve current GTM requirement %q", want)

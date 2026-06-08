@@ -49,10 +49,12 @@ var defaultScorecardGatePolicy = scorecardGatePolicy{
 		"token-frugality-p0",
 		"throttle-and-power-aware-routing",
 		"commit-gated-scorecard-drift",
+		"intent-first-cli-parity",
 	},
 	RequiredOutcomeGates: []string{
 		"direct-cwd-file-edit-fixture",
 		"simple-question-compact-answer",
+		"intent-first-routing-fixture",
 		"async-work-receipt-fixture",
 		"offline-route-proof-fixture",
 		"adversarial-code-review-fixture",

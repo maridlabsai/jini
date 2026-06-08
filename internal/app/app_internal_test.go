@@ -409,6 +409,7 @@ func TestScorecardGatePassesAndExposesCompetitorPressure(t *testing.T) {
 		"token-frugality-p0":               false,
 		"throttle-and-power-aware-routing": false,
 		"commit-gated-scorecard-drift":     false,
+		"intent-first-cli-parity":          false,
 	}
 	for _, vector := range report.PressureVectors {
 		if _, ok := requiredVectors[vector.ID]; ok {
@@ -424,6 +425,7 @@ func TestScorecardGatePassesAndExposesCompetitorPressure(t *testing.T) {
 	requiredOutcomeGates := map[string]bool{
 		"direct-cwd-file-edit-fixture":        false,
 		"simple-question-compact-answer":      false,
+		"intent-first-routing-fixture":        false,
 		"async-work-receipt-fixture":          false,
 		"offline-route-proof-fixture":         false,
 		"adversarial-code-review-fixture":     false,
@@ -881,9 +883,11 @@ func TestScorecardGateTextShowsCommitGatePressure(t *testing.T) {
 		"  OK token-frugality-p0",
 		"  OK throttle-and-power-aware-routing",
 		"  OK commit-gated-scorecard-drift",
+		"  OK intent-first-cli-parity",
 		"OUTCOME GATES",
 		"  OK direct-cwd-file-edit-fixture",
 		"  OK simple-question-compact-answer",
+		"  OK intent-first-routing-fixture",
 		"  OK async-work-receipt-fixture",
 	} {
 		if !strings.Contains(out, want) {

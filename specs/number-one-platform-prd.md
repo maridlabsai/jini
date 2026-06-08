@@ -1,6 +1,6 @@
 # Number One Platform PRD
 
-Updated: 2026-06-07
+Updated: 2026-06-08
 
 This is the canonical near-term PRD. It reduces older broad platform thinking to
 the work that matters for GTM. If this document conflicts with exploratory
@@ -22,8 +22,9 @@ models.
 
 The near-term GTM product is not the broad OS. The wedge is a high-quality CLI
 that reduces token waste, avoids avoidable throttling, preserves useful session
-state, and lets users move between configured tools without learning a new
-conversation style.
+state, and lets users move between configured tools without learning a new conversation style.
+
+Core charter: intent-first Claude/Codex parity outranks feature expansion.
 
 ## P0 Jobs
 
@@ -145,6 +146,7 @@ P0 now:
 - route list, route set, route auto, route status
 - self-sufficient install from release assets
 - CLI UX regression gate in commit gates
+- intent/parity golden transcript gate in commit gates
 - product PRD drift gate in commit gates
 
 P1 next:
@@ -174,5 +176,4 @@ gates green:
 - `jini check ship --format json` before push/release
 
 The gates exist to prevent old behavior from returning: verbose startup,
-Start/Keep modals, hidden Python-era assumptions, stale docs, and broad PRD
-drift that slows GTM.
+Start/Keep modals, hidden Python-era assumptions, stale docs, and broad PRD drift that slows GTM.

@@ -37,6 +37,7 @@ func TestRequiredCommitGateChecksStagedAndUnstagedWhitespace(t *testing.T) {
 		"staged and unstaged whitespace",
 		"protected PRD and product-positioning surfaces cannot drift",
 		"direct CLI edit and simple-question flows cannot regress into draft/status frames",
+		"intent/parity golden transcript gate blocks questions, bare entities, and",
 		"competitive scorecard drift is blocked before commit",
 	} {
 		if !strings.Contains(gateMatrix, want) {
@@ -71,8 +72,10 @@ func TestScorecardGateIsDocumentedAsCommitGate(t *testing.T) {
 		"token-frugality-p0",
 		"throttle-and-power-aware-routing",
 		"commit-gated-scorecard-drift",
+		"intent-first-cli-parity",
 		"direct-cwd-file-edit-fixture",
 		"simple-question-compact-answer",
+		"intent-first-routing-fixture",
 		"async-work-receipt-fixture",
 		"offline-route-proof-fixture",
 		"adversarial-code-review-fixture",
@@ -110,6 +113,11 @@ func TestRequiredOutcomeGatesDeclareProofReferences(t *testing.T) {
 			"id: cli-ux-regression-simple-question",
 			"kind: executable",
 			`ref: "go test ./internal/app -run 'TestCurrentWorkSimpleFactualQuestionAnswersDirectly|TestDirectArgsSimpleFactualQuestionAnswersDirectly|TestInteractiveSimpleFactualQuestionAnswersDirectlyWithoutCurrentWork'"`,
+		},
+		"intent-first-routing-fixture": {
+			"id: cli-ux-regression-intent-routing",
+			"kind: executable",
+			`ref: "go test ./internal/app -run 'TestInteractiveMalformedCapitalQuestionCorrectsWithoutTravelFlow|TestInteractiveBareEntityAsksForIntentWithoutCreatingWork|TestInteractiveExplicitTripChoiceCanUseBareDestination|TestCurrentWorkMalformedCapitalQuestionCorrectsDirectly'"`,
 		},
 		"async-work-receipt-fixture": {
 			"id: competitive-release-plan-async-work-receipt",
@@ -192,6 +200,7 @@ func TestRequiredOutcomeGateProofReferencesResolve(t *testing.T) {
 	for _, id := range []string{
 		"direct-cwd-file-edit-fixture",
 		"simple-question-compact-answer",
+		"intent-first-routing-fixture",
 		"async-work-receipt-fixture",
 		"offline-route-proof-fixture",
 		"adversarial-code-review-fixture",
@@ -419,6 +428,10 @@ func TestCLIUXRegressionGatePinsIncidentScenarios(t *testing.T) {
 		"TestCurrentWorkCapitalQuestionAcceptsNaturalPhrasing",
 		"TestDirectArgsSimpleFactualQuestionAnswersDirectly",
 		"TestInteractiveSimpleFactualQuestionAnswersDirectlyWithoutCurrentWork",
+		"TestInteractiveMalformedCapitalQuestionCorrectsWithoutTravelFlow",
+		"TestInteractiveBareEntityAsksForIntentWithoutCreatingWork",
+		"TestInteractiveExplicitTripChoiceCanUseBareDestination",
+		"TestCurrentWorkMalformedCapitalQuestionCorrectsDirectly",
 		"TestCurrentWorkUnknownStandaloneQuestionStaysCompact",
 		"TestInteractiveLauncherHandlesUnsureInputWithUsefulPass",
 		"TestLauncherStartsAsCompactShellWhenCurrentWorkExists",
@@ -427,7 +440,7 @@ func TestCLIUXRegressionGatePinsIncidentScenarios(t *testing.T) {
 		"TestInteractiveLauncherCanResumeNamedActiveProject",
 		"TestPublicDocsUseCurrentFirstRunFlow",
 		"TestP1SimplicityPriorityCoversCommandsSkillsAndAgents",
-		"direct CLI edit and simple-question UX regression gate",
+		"direct CLI edit, simple-question, and intent-first UX regression gate",
 	} {
 		if !strings.Contains(gate, want) {
 			t.Fatalf("CLI UX regression gate must pin %q", want)

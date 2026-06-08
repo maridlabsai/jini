@@ -29,24 +29,39 @@ This means:
 - saved work helps continuation without becoming a startup dashboard
 - tests and gates catch regressions before commit
 
+The core charter is intent-first Claude/Codex parity. If a cut makes Jini feel
+less like a familiar coding CLI, or turns questions and file tasks into generic
+artifacts, that cut stops until the regression is removed.
+
 ## Active Cuts
 
-### Cut 1: First-Minute CLI Quality
+### Cut 1: Intent-First CLI Parity
 
 Status: active.
 
 Deliver:
 
 - keep bare startup compact with and without saved work
-- keep file-edit and simple-question flows direct
+- keep file-edit, simple-question, malformed-question, and bare-entity flows
+  direct or fail-closed
+- keep explicit vertical choices working without auto-routing bare entities
 - remove stale public examples that teach old interaction models
 - expand CLI UX regression tests before changing behavior
 
 Exit evidence:
 
 - `bash tools/cli_ux_regression_gate.sh`
+- `jini scorecard-gate --format json`
 - `go test ./...`
 - public `curl | bash` install smoke for release builds
+
+Release blockers:
+
+- simple questions create work, route into templates, or dump saved-work status
+- bare entities create `Task Snapshot`, itinerary, or other artifacts
+- file/code tasks produce drafts instead of side effects, receipts, or exact
+  ambiguity
+- startup reintroduces `Start/Keep`, `Switch`, or saved-work dashboards
 
 ### Cut 2: Route And Token-Frugality Proof
 

@@ -1,8 +1,8 @@
 schema_version: "0.1.0"
 benchmark_id: jini-product-golden-benchmark
 label: Jini Golden Product Benchmark
-updated_at: "2026-06-06"
-last_verified_at: "2026-06-06"
+updated_at: "2026-06-08"
+last_verified_at: "2026-06-08"
 purpose: >
   Validate Jini against a rerunnable golden dataset and compare it against the
   major product, harness, coding-agent, and UX competitors using weighted
@@ -143,6 +143,12 @@ scorecard_gates:
       gate: >
         Scorecard coverage must run in the commit gate so competitor pressure
         cannot become stale planning prose.
+    - id: intent-first-cli-parity
+      competitors: [claude-code, codex, aider, cline, opencode]
+      gate: >
+        Questions, bare entities, and explicit task intents must behave like a
+        familiar coding CLI before templates, vertical packs, or saved-work
+        context are allowed to shape the response.
   required_outcome_gates:
     - id: direct-cwd-file-edit-fixture
       competitors: [claude-code, codex, aider, cline, opencode]
@@ -166,6 +172,16 @@ scorecard_gates:
       gate: >
         A simple factual question must return a compact answer without dumping
         stale current-work status or unrelated artifacts.
+    - id: intent-first-routing-fixture
+      competitors: [claude-code, codex, aider, cline, opencode]
+      proof_references:
+        - id: cli-ux-regression-intent-routing
+          kind: executable
+          ref: "go test ./internal/app -run 'TestInteractiveMalformedCapitalQuestionCorrectsWithoutTravelFlow|TestInteractiveBareEntityAsksForIntentWithoutCreatingWork|TestInteractiveExplicitTripChoiceCanUseBareDestination|TestCurrentWorkMalformedCapitalQuestionCorrectsDirectly'"
+      gate: >
+        Jini must not hard-code entities into templates. Questions answer,
+        bare entities ask for intent without creating artifacts, and explicit
+        vertical choices still work when the user opts in.
     - id: async-work-receipt-fixture
       competitors: [codex, github-copilot-coding-agent, google-jules, devin, replit-agent]
       proof_references:

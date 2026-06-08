@@ -1,6 +1,6 @@
 # Engineering Gate Matrix
 
-Updated: 2026-06-06
+Updated: 2026-06-08
 
 This document is a specialized engineering quality-gate contract, not the
 top-precedence product and operating PRD.
@@ -50,6 +50,9 @@ Required outcome:
 - protected PRD and product-positioning surfaces cannot drift unless
   `specs/product-settling-decisions.md` is updated in the same change
 - direct CLI edit and simple-question flows cannot regress into draft/status frames, `Start/Keep` choices, or verbose current-work summaries
+- the intent/parity golden transcript gate blocks questions, bare entities, and
+  explicit task intents from regressing away from Claude/Codex first-minute
+  expectations
 - competitive scorecard drift is blocked before commit, including required
   coverage for async/background agents, cross-surface continuity, visible
   progress and outputs, permissioned execution, skills/hooks/context routing,
