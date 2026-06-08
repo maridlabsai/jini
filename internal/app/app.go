@@ -884,7 +884,8 @@ func renderRouteList(w io.Writer) {
 			cost = descriptor.CostTier
 			locality = descriptor.Locality
 		}
-		details := strings.Trim(strings.Join([]string{locality, cost}, ", "), ", ")
+		readiness := routeTargetReadinessLabel(target)
+		details := strings.Trim(strings.Join([]string{locality, cost, readiness}, ", "), ", ")
 		if details != "" {
 			details = " (" + details + ")"
 		}
@@ -893,6 +894,19 @@ func renderRouteList(w io.Writer) {
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Use `jini route set codex` to lock a route.")
 	fmt.Fprintln(w, "Use `jini route auto` to restore automatic routing.")
+}
+
+func routeTargetReadinessLabel(target savedRouteTarget) string {
+	mode := strings.TrimSpace(target.ProviderMode)
+	if mode == "" {
+		if descriptor, ok := adapterDescriptorForMode(target.ID); ok {
+			mode = descriptor.ProviderMode
+		}
+	}
+	if mode == "" {
+		return "unknown"
+	}
+	return routeReadinessLabel(detectProviderForMode(mode))
 }
 
 func parseOptionalFormatArgs(args []string) (string, bool) {

@@ -1176,8 +1176,8 @@ func TestRouteCommandListsAvailableRoutes(t *testing.T) {
 		"Available",
 		"auto",
 		"claude-code",
-		"codex",
-		"local-preview",
+		"- codex: Azure code route (remote, standard, needs setup)",
+		"- local-preview: Local preview (local, free, ok)",
 		"Use `jini route set codex` to lock a route.",
 	} {
 		if !strings.Contains(out, want) {
