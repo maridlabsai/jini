@@ -216,6 +216,26 @@ bash tools/product_prd_drift_gate.sh
 This makes product drift explicit. If a change does not justify updating the
 settled decision record, it should not modify the protected product surface.
 
+## PRD Sharpness Decision
+
+The canonical near-term PRD must stay smaller than the older platform plans and
+must not carry broad aspirational scope as active requirements.
+
+Requirements belong in `specs/number-one-platform-prd.md` only when they are:
+
+- active P0/P1 work for the CLI wedge
+- a release-blocking UX, routing, tiering, or gate constraint
+- a guardrail that prevents known product drift
+
+Older requirements must be removed or demoted when they:
+
+- imply desktop, mobile, broad agent OS, company automation, or demo verticals
+  are active GTM scope
+- duplicate tier boundaries already settled in this document
+- preserve stale numbering or headings after a higher-precedence charter exists
+- make competitor research or user learning sound like automatic feature scope
+  instead of gated input to the decision record
+
 ## Competitive Scorecard Decision
 
 Competitive scorecards are release gates only when they protect user outcomes.

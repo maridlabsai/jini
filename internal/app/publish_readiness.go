@@ -561,13 +561,13 @@ func buildPublishCompetitivePressureSection(root string) publishReadinessSection
 			},
 		},
 		{
-			checkPath: "specs/number-one-platform-prd.md#competitive-release-pressure",
+			checkPath: "specs/number-one-platform-prd.md#market-and-learning-guards",
 			filePath:  "specs/number-one-platform-prd.md",
 			fragments: []string{
-				"#### P0.10 Competitive release pressure",
-				"watch packets must decide the next feature candidates",
-				"reject, downgrade, or delete requirements",
-				"copy, integrate, watch, reject, delete",
+				"## Market And Learning Guards",
+				"Competitor watch packets can nominate next feature candidates",
+				"No competitor finding becomes active scope unless the decision record changes.",
+				"copy, integrate, watch, reject, or",
 			},
 		},
 	}
@@ -597,12 +597,13 @@ func buildPublishProductivityLearningSection(root string) publishReadinessSectio
 
 	required := []publishFragmentRequirement{
 		{
-			checkPath: "specs/number-one-platform-prd.md#compounding-user-productivity-learning",
+			checkPath: "specs/number-one-platform-prd.md#market-and-learning-guards",
 			filePath:  "specs/number-one-platform-prd.md",
 			fragments: []string{
-				"#### P0.11 Compounding user productivity learning",
-				"learn user context, usage, habits, and repeated patterns",
-				"repeated prompts, better defaults, better route choices",
+				"## Market And Learning Guards",
+				"learn stable user context, usage, habits, and repeated patterns",
+				"fewer repeated prompts, better defaults, and better route choices",
+				"keep learning inspectable and controllable",
 			},
 		},
 		{

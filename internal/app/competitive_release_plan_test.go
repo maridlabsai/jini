@@ -64,12 +64,13 @@ func TestCompetitiveReleasePlanIsWiredIntoReleasePlanning(t *testing.T) {
 	canonicalPRD := readCompetitivePlanFile(t, root, "specs/number-one-platform-prd.md")
 	for _, want := range []string{
 		"competitive-release-plan.md",
-		"P0.10 Competitive release pressure",
-		"P0.11 Compounding user productivity learning",
-		"watch packets must decide the next feature candidates",
-		"learn user context, usage, habits, and repeated patterns",
-		"reject, downgrade, or delete requirements",
-		"copy, integrate, watch, reject, delete",
+		"## Market And Learning Guards",
+		"Competitor watching is a P0 feature-selection loop",
+		"Competitor watch packets can nominate next feature candidates",
+		"learn stable user context, usage, habits, and repeated patterns",
+		"No competitor finding becomes active scope unless the decision record changes.",
+		"copy, integrate, watch, reject, or",
+		"delete",
 	} {
 		if !strings.Contains(canonicalPRD, want) {
 			t.Fatalf("canonical PRD must include %q", want)

@@ -20,7 +20,8 @@ func TestP1SimplicityPriorityCoversCommandsSkillsAndAgents(t *testing.T) {
 		"developer-agent fleets",
 		"tester-agent fleets",
 		"commercial skills-based OS productivity suite",
-		"Commercial UX still follows the same rule: simple task in, useful result out.",
+		"Commercial UX",
+		"must still follow the same rule: simple task in, useful result out.",
 	} {
 		if !strings.Contains(canonicalPRD, want) {
 			t.Fatalf("canonical PRD must preserve P1 simplification requirement %q", want)

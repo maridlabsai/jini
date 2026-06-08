@@ -918,7 +918,9 @@ func TestPublishReadinessTextIncludesGuardrailCheckDetails(t *testing.T) {
 		"    OK specs/local-model-support-matrix.md#promotion-loop",
 		"  COMPETITIVE-PRESSURE ok",
 		"    OK specs/competitive-release-plan.md#requirement-rejection-filter",
+		"    OK specs/number-one-platform-prd.md#market-and-learning-guards",
 		"  PRODUCTIVITY-LEARNING ok",
+		"    OK specs/number-one-platform-prd.md#market-and-learning-guards",
 		"    OK specs/learning-system.md#user-context-productivity-learning",
 	} {
 		if !strings.Contains(out, want) {
@@ -1130,7 +1132,7 @@ func TestPublishReadinessIncludesCompetitivePressureGuardrails(t *testing.T) {
 		"specs/competitive-release-plan.md#competitive-universe":         false,
 		"specs/competitive-release-plan.md#requirement-rejection-filter": false,
 		"specs/competitive-release-plan.md#p0-feature-selection-loop":    false,
-		"specs/number-one-platform-prd.md#competitive-release-pressure":  false,
+		"specs/number-one-platform-prd.md#market-and-learning-guards":    false,
 	}
 	for _, section := range report.Sections {
 		if section.ID != "competitive-pressure" {
@@ -1169,8 +1171,8 @@ func TestPublishReadinessIncludesProductivityLearningGuardrails(t *testing.T) {
 		t.Fatalf("decode publish-readiness JSON: %v\n%s", err, stdout.String())
 	}
 	required := map[string]bool{
-		"specs/number-one-platform-prd.md#compounding-user-productivity-learning": false,
-		"specs/learning-system.md#user-context-productivity-learning":             false,
+		"specs/number-one-platform-prd.md#market-and-learning-guards": false,
+		"specs/learning-system.md#user-context-productivity-learning": false,
 	}
 	for _, section := range report.Sections {
 		if section.ID != "productivity-learning" {

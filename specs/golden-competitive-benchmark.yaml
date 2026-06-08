@@ -1108,14 +1108,14 @@ scenarios:
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
         contains: "specs/competitive-release-plan.md#p0-feature-selection-loop"
-      - id: publish-readiness-canonical-competitive-pressure-guardrail
+      - id: publish-readiness-canonical-market-learning-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
-        contains: "specs/number-one-platform-prd.md#competitive-release-pressure"
+        contains: "specs/number-one-platform-prd.md#market-and-learning-guards"
       - id: publish-readiness-compounding-user-productivity-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
-        contains: "specs/number-one-platform-prd.md#compounding-user-productivity-learning"
+        contains: "specs/number-one-platform-prd.md#market-and-learning-guards"
       - id: publish-readiness-user-context-productivity-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"

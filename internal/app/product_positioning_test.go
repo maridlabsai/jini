@@ -37,6 +37,8 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"No drift without explicit agreement.",
 		"Older broad PRDs, research notes, and platform plans are background only.",
 		"Protected product and PRD surfaces must not change casually.",
+		"The canonical near-term PRD must stay smaller than the older platform plans",
+		"make competitor research or user learning sound like automatic feature scope",
 		"bash tools/product_prd_drift_gate.sh",
 	} {
 		if !strings.Contains(settling, want) {
@@ -47,14 +49,15 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 	canonicalPRD := readProductPositioningFile(t, root, "specs/number-one-platform-prd.md")
 	for _, want := range []string{
 		"[product-settling-decisions.md](./product-settling-decisions.md)",
-		"Jini should be built as a CLI-first AI work router and durable session layer",
-		"The near-term GTM product is not the broad OS.",
+		"Jini is a CLI-first AI work router and durable session layer",
+		"The near-term product is not the broad OS.",
 		"Core charter: intent-first Claude/Codex parity outranks feature expansion.",
 		"Bare `jini` is a task prompt, not a dashboard.",
 		"[launcher-intake-design.md](./launcher-intake-design.md)",
 		"[number-one-development-plan.md](./number-one-development-plan.md)",
 		"Token frugality is P0.",
-		"Commercial value must be materially higher than the free CLI.",
+		"## Tier Boundary",
+		"Commercial value must be materially higher than the free CLI: managed",
 	} {
 		if !strings.Contains(canonicalPRD, want) {
 			t.Fatalf("canonical PRD must point to settled product positioning %q", want)
@@ -129,17 +132,20 @@ func TestCanonicalPRDStaysReducedToCurrentGTMWedge(t *testing.T) {
 	root := repoRootForMigrationTest(t)
 
 	canonicalPRD := readProductPositioningFile(t, root, "specs/number-one-platform-prd.md")
-	if lines := strings.Count(canonicalPRD, "\n") + 1; lines > 180 {
+	if lines := strings.Count(canonicalPRD, "\n") + 1; lines > 170 {
 		t.Fatalf("canonical PRD must stay reduced; got %d lines", lines)
 	}
 	for _, want := range []string{
+		"## P0 Outcome Requirements",
 		"Bare `jini` is a task prompt, not a dashboard.",
 		"no visible `Switch` startup control",
 		"no `Start/Keep` interruption model",
 		"no Working Draft for obvious file edits",
+		"no hard-coded entity-to-template routing",
+		"## Market And Learning Guards",
+		"No competitor finding becomes active scope unless the decision record changes.",
 		"task-first startup even with saved work",
-		"CLI UX regression gate in commit gates",
-		"intent/parity golden transcript gate in commit gates",
+		"CLI UX, PRD drift, and scorecard gates in commit gates",
 	} {
 		if !strings.Contains(canonicalPRD, want) {
 			t.Fatalf("canonical PRD must preserve current GTM requirement %q", want)
@@ -151,6 +157,10 @@ func TestCanonicalPRDStaysReducedToCurrentGTMWedge(t *testing.T) {
 		"Other active work`",
 		"Type `Switch`",
 		"Start/Keep way of thinking",
+		"#### P0.10 Competitive release pressure",
+		"#### P0.11 Compounding user productivity learning",
+		"Commercial includes:",
+		"Free includes:",
 	} {
 		if strings.Contains(canonicalPRD, stale) {
 			t.Fatalf("canonical PRD must not preserve stale requirement %q", stale)
