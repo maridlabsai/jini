@@ -135,6 +135,7 @@ func TestCLIUXRegressionGatePinsIncidentScenarios(t *testing.T) {
 		"TestDirectArgsSimpleFactualQuestionAnswersDirectly",
 		"TestInteractiveSimpleFactualQuestionAnswersDirectlyWithoutCurrentWork",
 		"TestCurrentWorkUnknownStandaloneQuestionStaysCompact",
+		"TestInteractiveLauncherHandlesUnsureInputWithUsefulPass",
 		"TestLauncherStartsAsCompactShellWhenCurrentWorkExists",
 		"TestCurrentWorkInteractiveLauncherIsCompactByDefault",
 		"TestLauncherShowsOtherActiveWorkWhenMultipleProjectsExist",

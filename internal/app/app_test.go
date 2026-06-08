@@ -2243,11 +2243,15 @@ func TestInteractiveLauncherHandlesUnsureInputWithUsefulPass(t *testing.T) {
 		"Next options",
 		"Safety",
 		"Nothing has been sent",
+		"Describe a new task when you want to move on.",
 		"Next: `jini continue`, `jini open`, or `jini status`.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
+	}
+	if strings.Contains(out, "Type `Start`") {
+		t.Fatalf("expected fallback result to avoid Start/Keep workflow language, got:\n%s", out)
 	}
 	if strings.Contains(out, "Short version or full version") {
 		t.Fatalf("expected no first-run output-size prompt, got:\n%s", out)

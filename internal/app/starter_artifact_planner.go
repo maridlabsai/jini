@@ -246,9 +246,9 @@ func buildFirstUsefulPassArtifactPlan(title, source string) starterArtifactPlan 
 					{
 						Heading: "Next options",
 						Bullets: []string{
-							"Type `Continue` to refine the task.",
+							"Type `Continue` to refine this task.",
 							"Type `Open` to inspect saved artifacts.",
-							"Type `Start` to switch to a different task.",
+							"Describe a new task when you want to move on.",
 						},
 					},
 					{
