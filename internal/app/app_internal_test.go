@@ -911,7 +911,7 @@ func TestPublishReadinessTextIncludesGuardrailCheckDetails(t *testing.T) {
 		"    OK specs/skills-and-delegation-slice.md#tier-boundary",
 		"    OK specs/lean-platform-gate.md#command-surface-discipline",
 		"    CLAIM P0 competitor watching STATUS guarded RUNTIME false",
-		"    CLAIM Configured CLI handoff STATUS partial RUNTIME false",
+		"    CLAIM Configured CLI handoff STATUS implemented RUNTIME true",
 		"    CLAIM Native Go CLI STATUS implemented RUNTIME true",
 		"  APP-PLATFORM ok",
 		"    OK specs/app-platform-shipping-playbook.md#source-backed-inputs",
@@ -965,10 +965,10 @@ func TestPublishReadinessHonestAuditClaimsExposeImplementationTruth(t *testing.T
 	}
 
 	cliHandoff := claims["Configured CLI handoff"]
-	if cliHandoff.Status != "partial" || cliHandoff.RuntimeImplemented {
-		t.Fatalf("expected configured CLI handoff to be partial and not runtime implemented, got %#v", cliHandoff)
+	if cliHandoff.Status != "implemented" || !cliHandoff.RuntimeImplemented {
+		t.Fatalf("expected configured CLI handoff to be implemented with runtime evidence, got %#v", cliHandoff)
 	}
-	if !strings.Contains(cliHandoff.Gap, "fail closed instead of acting as provider aliases") {
+	if !strings.Contains(cliHandoff.Evidence, "Wave 0 handoff contract") || !strings.Contains(cliHandoff.Gap, "real-world dogfood") {
 		t.Fatalf("expected configured CLI handoff gap to stay explicit, got %#v", cliHandoff)
 	}
 

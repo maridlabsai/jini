@@ -107,6 +107,20 @@ func generateWithConfiguredProvider(ctx context.Context, request providerGenerat
 
 func generateWithConfiguredProviderDecision(ctx context.Context, request providerGenerationRequest, decision routeDecision) (string, bool, routeDecision, error) {
 	provider := providerForDecision(request, decision)
+	if cliHandoffMode(decision.ToolMode) {
+		if provider.Status != "ok" {
+			return "", true, decision, cliHandoffSetupError(provider)
+		}
+		prompt := strings.TrimSpace(request.Source)
+		if prompt == "" {
+			prompt = providerUserPrompt(request)
+		}
+		text, err := runCLIHandoff(ctx, decision.ToolMode, prompt)
+		if err != nil {
+			return "", true, decision, err
+		}
+		return text, true, decision, nil
+	}
 	if provider.ID == "local-preview" {
 		return "", false, decision, nil
 	}
@@ -499,6 +513,9 @@ func detectAutoProvider() providerConfig {
 }
 
 func detectProviderForMode(mode string) providerConfig {
+	if cliHandoffMode(mode) {
+		return detectCLIHandoffProvider(mode)
+	}
 	switch mode {
 	case "anthropic":
 		return detectAnthropicProvider()
@@ -584,6 +601,9 @@ func providerSettingLine(mode string) string {
 }
 
 func buildProviderDoctorReport() providerDoctorReport {
+	if route := detectRoute(); route.Active && cliHandoffMode(route.ToolMode) {
+		return buildCLIHandoffDoctorReport(route.ToolMode)
+	}
 	providerID := configuredProviderMode()
 	if providerID == "auto" {
 		if forced := forcedAutoProviderMode(); forced != "" {
@@ -601,6 +621,9 @@ func buildProviderDoctorReport() providerDoctorReport {
 }
 
 func buildProviderDoctorReportForMode(mode string) providerDoctorReport {
+	if cliHandoffMode(mode) {
+		return buildCLIHandoffDoctorReport(mode)
+	}
 	switch mode {
 	case "local-slm":
 		return buildLocalSLMProviderDoctorReport()

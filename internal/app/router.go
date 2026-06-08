@@ -131,10 +131,14 @@ func enrichRouteDecisionForRequest(request providerGenerationRequest, decision r
 	if !decision.Active {
 		return decision
 	}
-	if reservedCLIHandoffMode(decision.ToolMode) {
-		decision.RoutePolicy = "CLI handoff required"
-		decision.ModelLabel = reservedCLIHandoffLabel(decision.ToolMode)
-		decision.ModelReason = "Jini cannot claim this CLI route until it can hand off to the installed CLI."
+	if cliHandoffMode(decision.ToolMode) {
+		decision.RoutePolicy = routePolicyForDecision(decision)
+		decision.ModelLabel = cliHandoffLabel(decision.ToolMode)
+		if decision.Provider.Status == "ok" {
+			decision.ModelReason = "Jini hands this request to the installed CLI subprocess and records the route receipt."
+		} else {
+			decision.ModelReason = "Jini cannot claim this CLI route until it can hand off to the installed CLI."
+		}
 		decision.Provider = withRoutePolicy(decision.Provider, decision.RoutePolicy)
 		decision.Provider = withRouteReason(decision.Provider, decision.Reason)
 		decision.Provider = withModelDecision(decision.Provider, decision.ModelLabel, decision.ModelReason)
@@ -818,23 +822,30 @@ func classifyRouteDepth(request providerGenerationRequest) string {
 }
 
 func detectRouteForToolMode(mode string, auto bool) routeDecision {
-	if reservedCLIHandoffMode(mode) {
-		label := reservedCLIHandoffLabel(mode)
-		provider := providerConfig{
-			ID:      mode,
-			Label:   label,
-			Status:  "needs setup",
-			Missing: reservedCLIHandoffMissing(mode),
+	if cliHandoffMode(mode) {
+		label := cliHandoffLabel(mode)
+		provider := detectCLIHandoffProvider(mode)
+		routePolicy := "CLI handoff"
+		reason := "Jini will hand this request to the installed " + label + " subprocess."
+		modelReason := "Jini hands this request to the installed CLI subprocess and records the route receipt."
+		if provider.Status != "ok" {
+			routePolicy = "CLI handoff required"
+			reason = "Jini will not treat " + label + " as a provider API route."
+			modelReason = "Jini cannot claim this CLI route until it can hand off to the installed CLI."
 		}
+		provider = withRoutePolicy(provider, routePolicy)
+		provider = withRouteReason(provider, reason)
+		provider = withModelDecision(provider, label, modelReason)
 		return routeDecision{
 			Active:              true,
 			ToolMode:            mode,
 			ToolLabel:           label,
-			RoutePolicy:         "CLI handoff required",
+			RoutePolicy:         routePolicy,
+			FeedbackKey:         routeFeedbackKeyForCurrentMode(mode),
 			ModelLabel:          label,
-			ModelReason:         "Jini cannot claim this CLI route until it can hand off to the installed CLI.",
+			ModelReason:         modelReason,
 			ChosenAutomatically: auto,
-			Reason:              "Jini will not treat " + label + " as a provider API route.",
+			Reason:              reason,
 			Provider:            provider,
 		}
 	}
@@ -849,7 +860,7 @@ func detectRouteForToolMode(mode string, auto bool) routeDecision {
 				ID:      mode,
 				Label:   titleCase(mode),
 				Status:  "needs setup",
-				Missing: []string{"Supported JINI_TOOL value: auto, claude-api, bedrock-sonnet, chatgpt, azure-code, azure-openai, local-fast, local-workhorse, local-deep, local-multimodal, or local-preview. Reserved CLI handoff values: claude-code, codex."},
+				Missing: []string{"Supported JINI_TOOL value: auto, codex, claude-code, gemini-cli, aider, opencode, claude-api, bedrock-sonnet, chatgpt, azure-code, azure-openai, local-fast, local-workhorse, local-deep, local-multimodal, or local-preview."},
 			},
 		}
 	}
@@ -897,6 +908,12 @@ func routeReasonForToolMode(mode, label string, auto bool) string {
 func routePolicyForDecision(decision routeDecision) string {
 	if !decision.Active {
 		return ""
+	}
+	if cliHandoffMode(decision.ToolMode) {
+		if decision.Provider.Status == "ok" {
+			return "CLI handoff"
+		}
+		return "CLI handoff required"
 	}
 	if decision.ChosenAutomatically {
 		if decision.Provider.ID == "local-preview" {

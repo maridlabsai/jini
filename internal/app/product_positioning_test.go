@@ -83,10 +83,11 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"Jini is a CLI-first AI work router and durable session",
 		"switching among configured provider, model, and local routes",
 		"Real downstream CLI handoff for names like `codex` and `claude-code` is a P0",
-		"Planned adapter support waves:",
+		"Adapter support waves:",
 		"Wave 1: Codex, Claude Code, Gemini CLI, Aider, and OpenCode",
 		"Wave 2: Ollama, LM Studio, OpenRouter, and LiteLLM-compatible gateways",
-		"These are viral-adoption targets, not shipped claims.",
+		"Wave 0 and Wave 1 are runtime-supported when the downstream CLI is installed",
+		"Wave 2 and Wave 3 are planned targets, not shipped claims.",
 		"Meeting, plan-readiness, travel, and vendor-comparison flows are proof",
 		"[specs/product-settling-decisions.md](specs/product-settling-decisions.md)",
 	} {
@@ -184,6 +185,31 @@ func TestCanonicalPRDStaysReducedToCurrentGTMWedge(t *testing.T) {
 	} {
 		if strings.Contains(canonicalPRD, stale) {
 			t.Fatalf("canonical PRD must not preserve stale requirement %q", stale)
+		}
+	}
+}
+
+func TestPRDImplementationTraceCoversP0Requirements(t *testing.T) {
+	root := repoRootForMigrationTest(t)
+
+	trace := readProductPositioningFile(t, root, "specs/prd-implementation-trace.md")
+	for _, want := range []string{
+		"maps the canonical P0 requirements",
+		"Start from a natural task in the current directory",
+		"Edit local files directly when clear and safe",
+		"Fail closed with exact ambiguity",
+		"Answer simple questions compactly",
+		"Ask intent for bare entities without artifacts",
+		"Route between familiar CLIs, providers, gateways, and local/offline models",
+		"Treat configured CLI routes as installed-CLI handoffs",
+		"`cli_handoff.go`, `generateWithConfiguredProviderDecision`",
+		"fake downstream CLI handoff smoke test",
+		"Keep route, token, and runtime diagnostics inspectable",
+		"Block regressions before commit and push",
+		"macOS CLI handoff runs a Gatekeeper trust check before execution",
+	} {
+		if !strings.Contains(trace, want) {
+			t.Fatalf("PRD implementation trace must preserve %q", want)
 		}
 	}
 }

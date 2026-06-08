@@ -28,6 +28,11 @@ func routerSettingsPath() string {
 
 func defaultSavedRouteTargets() []savedRouteTarget {
 	return []savedRouteTarget{
+		{ID: "codex", Label: "Codex CLI handoff", ProviderMode: "cli-handoff", ModelHint: "installed CLI", Enabled: true},
+		{ID: "claude-code", Label: "Claude Code CLI handoff", ProviderMode: "cli-handoff", ModelHint: "installed CLI", Enabled: true},
+		{ID: "gemini-cli", Label: "Gemini CLI handoff", ProviderMode: "cli-handoff", ModelHint: "installed CLI", Enabled: true},
+		{ID: "aider", Label: "Aider CLI handoff", ProviderMode: "cli-handoff", ModelHint: "installed CLI", Enabled: true},
+		{ID: "opencode", Label: "OpenCode CLI handoff", ProviderMode: "cli-handoff", ModelHint: "installed CLI", Enabled: true},
 		{ID: "claude-api", Label: "Claude API route", ProviderMode: "anthropic", ModelHint: "sonnet", Enabled: true},
 		{ID: "bedrock-sonnet", Label: "Bedrock Sonnet", ProviderMode: "bedrock", ModelHint: "sonnet-4.6", Enabled: true},
 		{ID: "chatgpt", Label: "Azure writing route", ProviderMode: "azure-openai", ModelHint: "auto", Enabled: true},
@@ -99,6 +104,12 @@ func normalizeToolMode(raw string) string {
 		return "claude-api"
 	case "claude code", "claudecode":
 		return "claude-code"
+	case "gemini", "gemini cli", "geminicli":
+		return "gemini-cli"
+	case "aider":
+		return "aider"
+	case "opencode", "open code", "open-code":
+		return "opencode"
 	case "bedrock", "bedrock sonnet", "bedrocksonnet", "amazon bedrock":
 		return "bedrock-sonnet"
 	case "azure", "azure openai", "azure open ai", "azureopenai":

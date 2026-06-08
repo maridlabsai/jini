@@ -830,13 +830,6 @@ func saveExplicitRoute(raw string, stdout, stderr io.Writer) int {
 	if mode == "auto" {
 		return saveAutoRoute(stdout, stderr)
 	}
-	if reservedCLIHandoffMode(mode) {
-		fmt.Fprintf(stderr, "%s is not available in this build.\n", reservedCLIHandoffLabel(mode))
-		for _, missing := range reservedCLIHandoffMissing(mode) {
-			fmt.Fprintf(stderr, "- %s\n", missing)
-		}
-		return 1
-	}
 	if !knownRouteMode(mode) {
 		fmt.Fprintf(stderr, "Unknown route %q.\n", strings.TrimSpace(raw))
 		fmt.Fprintln(stderr, "Run `jini route list` to see available routes.")
@@ -848,6 +841,13 @@ func saveExplicitRoute(raw string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "Run `jini route list` to see available routes.")
 		return 1
 	}
+	if cliHandoffMode(mode) && decision.Provider.Status != "ok" {
+		fmt.Fprintf(stderr, "%s CLI handoff is not ready.\n", decision.ToolLabel)
+		for _, missing := range decision.Provider.Missing {
+			fmt.Fprintf(stderr, "- %s\n", missing)
+		}
+		return 1
+	}
 	if err := saveRouterSettings(mode); err != nil {
 		fmt.Fprintf(stderr, "Could not save route: %v\n", err)
 		return 1
@@ -855,6 +855,9 @@ func saveExplicitRoute(raw string, stdout, stderr io.Writer) int {
 	fmt.Fprintln(stdout, "Route saved.")
 	fmt.Fprintf(stdout, "Current: %s\n", firstNonEmpty(decision.ToolLabel, titleCase(mode)))
 	fmt.Fprintf(stdout, "Mode: %s\n", mode)
+	if cliHandoffMode(mode) {
+		fmt.Fprintf(stdout, "CLI handoff: %s\n", firstNonEmpty(decision.Provider.Label, decision.ToolLabel))
+	}
 	if strings.TrimSpace(decision.Provider.Status) != "" && decision.Provider.Status != "ok" {
 		fmt.Fprintf(stdout, "Setup: %s. Run `jini doctor` to inspect missing setup.\n", decision.Provider.Status)
 	}
@@ -899,12 +902,15 @@ func renderRouteList(w io.Writer) {
 		fmt.Fprintf(w, "- %s: %s%s\n", target.ID, target.Label, details)
 	}
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Use `jini route set azure-code` to lock the Azure code provider route.")
-	fmt.Fprintln(w, "Reserved CLI handoffs: codex, claude-code (P0, not provider aliases).")
+	fmt.Fprintln(w, "Use `jini route set codex` or `jini route set azure-code` to lock a configured route.")
+	fmt.Fprintln(w, "CLI handoffs invoke installed CLIs or fail closed; they are not provider aliases.")
 	fmt.Fprintln(w, "Use `jini route auto` to restore automatic routing.")
 }
 
 func routeTargetReadinessLabel(target savedRouteTarget) string {
+	if cliHandoffMode(target.ID) {
+		return routeReadinessLabel(detectCLIHandoffProvider(target.ID))
+	}
 	mode := strings.TrimSpace(target.ProviderMode)
 	if mode == "" {
 		if descriptor, ok := adapterDescriptorForMode(target.ID); ok {
@@ -3034,13 +3040,20 @@ func maybeHandleProviderSetupIntent(raw string, scanner *bufio.Scanner, stdout, 
 
 func runProviderSetupWizard(mode string, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
 	fmt.Fprintln(stdout)
-	switch mode {
-	case "claude-code", "codex":
-		fmt.Fprintln(stderr, reservedCLIHandoffLabel(mode)+" is not available in this build.")
-		for _, missing := range reservedCLIHandoffMissing(mode) {
+	if cliHandoffMode(mode) {
+		provider := detectCLIHandoffProvider(mode)
+		if provider.Status == "ok" {
+			fmt.Fprintf(stdout, "%s is ready.\n", provider.Label)
+			fmt.Fprintf(stdout, "Run `jini route set %s` to use it.\n", mode)
+			return 0
+		}
+		fmt.Fprintln(stderr, provider.Label+" CLI handoff is not ready.")
+		for _, missing := range provider.Missing {
 			fmt.Fprintf(stderr, "- %s\n", missing)
 		}
 		return 1
+	}
+	switch mode {
 	case "claude-api":
 		fmt.Fprintln(stdout, "Claude")
 		fmt.Fprintln(stdout, "Paste your Anthropic API key. Jini will route this repo through Claude for code work.")

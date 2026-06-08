@@ -268,11 +268,11 @@ func buildPublishHonestAuditClaims() []publishEvidenceClaim {
 		},
 		{
 			Claim:              "Configured CLI handoff",
-			Status:             "partial",
-			Evidence:           "jini route list/set/auto/status, adapter registry, route tests",
-			Gap:                "codex and claude-code now fail closed instead of acting as provider aliases, but real installed-CLI subprocess handoff is not implemented yet",
-			NextCut:            "Build real downstream CLI handoff with setup detection, cwd/session transfer, approvals, and output receipts",
-			RuntimeImplemented: false,
+			Status:             "implemented",
+			Evidence:           "Wave 0 handoff contract, Wave 1 route registry, doctor detection, fake downstream CLI smoke tests, fail-closed missing/trust checks, route receipts",
+			Gap:                "Each downstream CLI still needs real-world dogfood for command templates, approvals, and output shape.",
+			NextCut:            "Harden Wave 1 command templates against real installed CLIs without broadening the first-minute UX.",
+			RuntimeImplemented: true,
 		},
 		{
 			Claim:              "Simplicity as UX tenet",

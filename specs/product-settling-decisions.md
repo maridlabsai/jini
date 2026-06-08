@@ -103,6 +103,10 @@ Adapter support ships in waves:
 An adapter moves from planned to supported only after smoke tests cover
 available, missing, and failed handoff states.
 
+Wave 0 and Wave 1 are runtime-supported in the free CLI when the downstream
+tool is installed and trusted by the OS. Missing or rejected CLIs must fail
+closed and must not fall back to provider API aliases.
+
 Implementation plan:
 
 - P0.1: keep a golden CLI transcript suite for simple questions, bare

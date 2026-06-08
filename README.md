@@ -212,12 +212,15 @@ Supported tool choices today:
 - `local-multimodal`
 - `local-preview`
 
-Reserved CLI handoff names:
+CLI handoff routes:
 
 - `codex`
 - `claude-code`
+- `gemini-cli`
+- `aider`
+- `opencode`
 
-Planned adapter support waves:
+Adapter support waves:
 
 - Wave 0: shared handoff contract, route receipts, `doctor` detection, and
   fail-closed setup guidance
@@ -226,9 +229,10 @@ Planned adapter support waves:
 - Wave 3: Continue, Cline/Roo, Cursor, Windsurf, and GitHub Copilot coding
   agent
 
-These are viral-adoption targets, not shipped claims. Each adapter must
-preserve the familiar tool workflow, fail closed when missing, and emit route
-receipts before it is listed as supported.
+Wave 0 and Wave 1 are runtime-supported when the downstream CLI is installed
+and trusted by the OS. Missing or rejected CLIs fail closed with setup guidance
+instead of silently falling back to a provider API alias.
+Wave 2 and Wave 3 are planned targets, not shipped claims.
 
 Supported provider choices:
 

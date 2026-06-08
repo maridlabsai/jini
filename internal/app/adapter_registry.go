@@ -15,6 +15,46 @@ type adapterDescriptor struct {
 
 func adapterRegistry() map[string]adapterDescriptor {
 	return map[string]adapterDescriptor{
+		"codex": {
+			ID:           "codex",
+			Label:        "Codex CLI handoff",
+			ProviderMode: "cli-handoff",
+			CostTier:     "external",
+			Locality:     "cli",
+			Modalities:   []string{"text", "code"},
+		},
+		"claude-code": {
+			ID:           "claude-code",
+			Label:        "Claude Code CLI handoff",
+			ProviderMode: "cli-handoff",
+			CostTier:     "external",
+			Locality:     "cli",
+			Modalities:   []string{"text", "code"},
+		},
+		"gemini-cli": {
+			ID:           "gemini-cli",
+			Label:        "Gemini CLI handoff",
+			ProviderMode: "cli-handoff",
+			CostTier:     "external",
+			Locality:     "cli",
+			Modalities:   []string{"text", "code"},
+		},
+		"aider": {
+			ID:           "aider",
+			Label:        "Aider CLI handoff",
+			ProviderMode: "cli-handoff",
+			CostTier:     "external",
+			Locality:     "cli",
+			Modalities:   []string{"text", "code"},
+		},
+		"opencode": {
+			ID:           "opencode",
+			Label:        "OpenCode CLI handoff",
+			ProviderMode: "cli-handoff",
+			CostTier:     "external",
+			Locality:     "cli",
+			Modalities:   []string{"text", "code"},
+		},
 		"claude-api": {
 			ID:                "claude-api",
 			Label:             "Claude API route",

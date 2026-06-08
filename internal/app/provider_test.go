@@ -71,6 +71,74 @@ func TestGenerateWithConfiguredProviderCallsAzureOpenAI(t *testing.T) {
 	}
 }
 
+func TestGenerateWithConfiguredProviderHandsOffToConfiguredCLI(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_TOOL", "claude-code")
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	binDir := t.TempDir()
+	captureDir := t.TempDir()
+	argsPath := filepath.Join(captureDir, "args.txt")
+	stdinPath := filepath.Join(captureDir, "stdin.txt")
+	t.Setenv("JINI_TEST_CLI_ARGS_PATH", argsPath)
+	t.Setenv("JINI_TEST_CLI_STDIN_PATH", stdinPath)
+	writeProviderFakeExecutable(t, binDir, "claude", strings.Join([]string{
+		"printf '%s\\n' \"$@\" > \"$JINI_TEST_CLI_ARGS_PATH\"",
+		"cat > \"$JINI_TEST_CLI_STDIN_PATH\"",
+		"printf 'fake claude handled request\\n'",
+	}, "\n"))
+	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
+
+	result, used, actualDecision, err := generateWithConfiguredProviderDecision(context.Background(), providerGenerationRequest{
+		Choice: starterChoice{PackID: "general-work"},
+		Title:  "Fix failing tests",
+		Source: "fix failing tests",
+	}, detectRouteForToolMode("claude-code", false))
+	if err != nil {
+		t.Fatalf("generate with CLI handoff: %v", err)
+	}
+	if !used {
+		t.Fatalf("expected CLI handoff to be used")
+	}
+	if strings.TrimSpace(result) != "fake claude handled request" {
+		t.Fatalf("expected fake CLI output, got:\n%s", result)
+	}
+	if actualDecision.ToolMode != "claude-code" || actualDecision.RoutePolicy != "CLI handoff" {
+		t.Fatalf("expected actual CLI handoff decision, got %#v", actualDecision)
+	}
+	args := mustReadFile(t, argsPath)
+	if !strings.Contains(args, "--print") || !strings.Contains(args, "fix failing tests") {
+		t.Fatalf("expected Claude CLI handoff args to include --print and source prompt, got:\n%s", args)
+	}
+	stdin := mustReadFile(t, stdinPath)
+	if strings.TrimSpace(stdin) != "" {
+		t.Fatalf("expected prompt to be passed as args, not stdin, got:\n%s", stdin)
+	}
+}
+
+func TestGenerateWithConfiguredProviderFailsClosedForMissingCLI(t *testing.T) {
+	t.Setenv("JINI_TOOL", "aider")
+	t.Setenv("PATH", t.TempDir())
+
+	_, used, _, err := generateWithConfiguredProviderDecision(context.Background(), providerGenerationRequest{
+		Choice: starterChoice{PackID: "general-work"},
+		Title:  "Fix failing tests",
+		Source: "fix failing tests",
+	}, detectRouteForToolMode("aider", false))
+	if err == nil {
+		t.Fatalf("expected missing CLI handoff to fail closed")
+	}
+	if !used {
+		t.Fatalf("expected missing CLI handoff route to be selected and fail closed")
+	}
+	if !strings.Contains(err.Error(), "CLI handoff needs setup") {
+		t.Fatalf("expected CLI handoff setup error, got %v", err)
+	}
+	if strings.Contains(err.Error(), "Provider needs setup") {
+		t.Fatalf("missing CLI handoff must not be reported as provider setup: %v", err)
+	}
+}
+
 func TestGenerateWithConfiguredProviderCallsAnthropicMessages(t *testing.T) {
 	t.Setenv("JINI_PROVIDER", "claude")
 	t.Setenv("ANTHROPIC_API_KEY", "super-secret-key")
@@ -3292,6 +3360,25 @@ func mustReadAll(t *testing.T, reader io.Reader) string {
 	data, err := io.ReadAll(reader)
 	if err != nil {
 		t.Fatalf("read body: %v", err)
+	}
+	return string(data)
+}
+
+func writeProviderFakeExecutable(t *testing.T, dir, name, body string) string {
+	t.Helper()
+	path := filepath.Join(dir, name)
+	content := "#!/bin/sh\nset -eu\n" + body + "\n"
+	if err := os.WriteFile(path, []byte(content), 0o755); err != nil {
+		t.Fatalf("write fake executable %s: %v", name, err)
+	}
+	return path
+}
+
+func mustReadFile(t *testing.T, path string) string {
+	t.Helper()
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read %s: %v", path, err)
 	}
 	return string(data)
 }

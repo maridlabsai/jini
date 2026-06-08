@@ -1175,11 +1175,14 @@ func TestRouteCommandListsAvailableRoutes(t *testing.T) {
 		"Current: auto",
 		"Available",
 		"auto",
+		"- codex: Codex CLI handoff",
+		"- claude-code: Claude Code CLI handoff",
+		"- gemini-cli: Gemini CLI handoff",
 		"claude-api",
 		"- azure-code: Azure code route (remote, standard, needs setup)",
 		"- local-preview: Local preview (local, free, ok)",
-		"Use `jini route set azure-code` to lock the Azure code provider route.",
-		"Reserved CLI handoffs: codex, claude-code (P0, not provider aliases).",
+		"Use `jini route set codex` or `jini route set azure-code` to lock a configured route.",
+		"CLI handoffs invoke installed CLIs or fail closed; they are not provider aliases.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected route list to contain %q, got:\n%s", want, out)
@@ -1246,11 +1249,47 @@ func TestRouteCommandCanSetRouteWithoutSetupWizard(t *testing.T) {
 	}
 }
 
-func TestRouteCommandFailsClosedForReservedCLIHandoffNames(t *testing.T) {
+func TestRouteCommandCanSetWaveOneCLIWhenExecutableIsPresent(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	binDir := t.TempDir()
+	writeFakeExecutable(t, binDir, "codex", "printf 'fake codex\\n'\n")
+	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 
-	for _, mode := range []string{"codex", "claude-code"} {
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"route", "set", "codex"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected codex route set to succeed with fake CLI, got %d:\n%s", exitCode, stdout.String())
+	}
+	out := stdout.String()
+	for _, want := range []string{
+		"Route saved.",
+		"Current: Codex CLI handoff",
+		"Mode: codex",
+		"CLI handoff: Codex CLI handoff",
+		"Use `jini route auto` to restore automatic routing.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected codex route set output to contain %q, got:\n%s", want, out)
+		}
+	}
+
+	routerSaved, err := os.ReadFile(filepath.Join(stateDir, "router.json"))
+	if err != nil {
+		t.Fatalf("expected router settings file: %v", err)
+	}
+	if !strings.Contains(string(routerSaved), `"tool_mode": "codex"`) {
+		t.Fatalf("expected saved Codex route, got:\n%s", string(routerSaved))
+	}
+}
+
+func TestRouteCommandFailsClosedForMissingWaveOneCLI(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("PATH", t.TempDir())
+
+	for _, mode := range []string{"gemini-cli", "aider", "opencode"} {
 		var stdout bytes.Buffer
 		exitCode := app.Run([]string{"route", "set", mode}, &stdout, &stdout)
 		if exitCode == 0 {
@@ -1258,10 +1297,10 @@ func TestRouteCommandFailsClosedForReservedCLIHandoffNames(t *testing.T) {
 		}
 		out := stdout.String()
 		for _, want := range []string{
-			"is not available in this build.",
-			"reserved for installed-CLI subprocess handoff",
+			"CLI handoff is not ready.",
+			"requires an installed CLI executable",
 			"will not use a provider API alias",
-			"jini route set azure-code",
+			"jini doctor",
 		} {
 			if !strings.Contains(out, want) {
 				t.Fatalf("expected %s reserved route output to contain %q, got:\n%s", mode, want, out)
@@ -1272,6 +1311,7 @@ func TestRouteCommandFailsClosedForReservedCLIHandoffNames(t *testing.T) {
 
 func TestProviderDoctorFailsClosedForReservedCLIHandoffToolMode(t *testing.T) {
 	t.Setenv("JINI_TOOL", "codex")
+	t.Setenv("PATH", t.TempDir())
 
 	var stdout bytes.Buffer
 	exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
@@ -1282,6 +1322,7 @@ func TestProviderDoctorFailsClosedForReservedCLIHandoffToolMode(t *testing.T) {
 	for _, want := range []string{
 		"Codex CLI handoff",
 		"ROUTE_POLICY: CLI handoff required",
+		"CLI_HANDOFF_CONTRACT: cwd, prompt, stdout, stderr, exit status, route receipt",
 		"AUTO_MODEL: Jini cannot claim this CLI route until it can hand off to the installed CLI.",
 		"will not use a provider API alias",
 	} {
@@ -1292,6 +1333,16 @@ func TestProviderDoctorFailsClosedForReservedCLIHandoffToolMode(t *testing.T) {
 	if strings.Contains(out, "ROUTE_POLICY: Locked by you") {
 		t.Fatalf("expected reserved CLI doctor to avoid generic locked-route policy, got:\n%s", out)
 	}
+}
+
+func writeFakeExecutable(t *testing.T, dir, name, body string) string {
+	t.Helper()
+	path := filepath.Join(dir, name)
+	content := "#!/bin/sh\nset -eu\n" + body
+	if err := os.WriteFile(path, []byte(content), 0o755); err != nil {
+		t.Fatalf("write fake executable %s: %v", name, err)
+	}
+	return path
 }
 
 func TestRouteCommandCanRestoreAutoMode(t *testing.T) {
