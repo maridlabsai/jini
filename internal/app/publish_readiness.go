@@ -199,6 +199,7 @@ func buildPublishHonestAuditSection(root string) publishReadinessSection {
 			fragments: []string{
 				"## Current Implementation Reality",
 				"Guarded is not implemented.",
+				"Configured CLI handoff",
 				"P0 competitor watching",
 				"P0 compounding user productivity learning",
 			},
@@ -264,6 +265,14 @@ func buildPublishHonestAuditClaims() []publishEvidenceClaim {
 			Gap:                "CLI still needs first-minute dogfood across more personas",
 			NextCut:            "Keep reducing command and launcher friction",
 			RuntimeImplemented: true,
+		},
+		{
+			Claim:              "Configured CLI handoff",
+			Status:             "partial",
+			Evidence:           "jini route list/set/auto/status, adapter registry, route tests",
+			Gap:                "codex and claude-code now fail closed instead of acting as provider aliases, but real installed-CLI subprocess handoff is not implemented yet",
+			NextCut:            "Build real downstream CLI handoff with setup detection, cwd/session transfer, approvals, and output receipts",
+			RuntimeImplemented: false,
 		},
 		{
 			Claim:              "Simplicity as UX tenet",

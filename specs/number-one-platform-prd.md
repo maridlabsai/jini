@@ -33,6 +33,8 @@ Core charter: intent-first Claude/Codex parity outranks feature expansion.
 - Answer simple questions compactly without creating work.
 - Ask intent for bare entities without creating artifacts.
 - Route between configured CLIs, providers, and local/offline models.
+- Treat configured CLI routes as real installed-CLI handoffs, not provider API
+  aliases.
 - Keep route, token, and local runtime diagnostics inspectable through `jini route`.
 - Reuse durable session context without replaying large transcripts.
 - Keep saved work hidden until `status`, `continue`, `open`, `help`, or natural
@@ -72,10 +74,13 @@ Routing requirements:
 - Use local/offline routes when they meet the task quality bar.
 - Escalate to stronger online routes when correctness, codebase scope, or tool
   access requires it.
+- Label provider API routes separately from CLI handoff routes. A route named
+  `codex` or `claude-code` must invoke that CLI or fail closed with setup
+  guidance.
 - Preserve enough session state to continue work without replaying stale chat.
 
-Avoiding throttling is P1. Jini should detect configured CLI or provider
-pressure, choose viable alternatives when available, and resume work cleanly.
+Avoiding throttling is P1. Detect configured CLI/provider pressure, choose
+viable alternatives, and resume work cleanly.
 
 Power awareness is P1. In powered mode, Jini can choose higher-throughput local
 or online routes. In low-battery mode, Jini should avoid wasteful local model
@@ -125,17 +130,16 @@ must still follow the same rule: simple task in, useful result out.
 ## Roadmap
 
 P0 now:
-
 - intent-first CLI parity
 - task-first startup even with saved work
 - direct file edit reliability
 - simple question direct-answer behavior
 - route list, route set, route auto, route status
+- real downstream CLI handoff for configured CLI routes
 - self-sufficient install from release assets
 - CLI UX, PRD drift, and scorecard gates in commit gates
 
 P1 next:
-
 - throttle-aware route switching
 - powered-mode and low-battery routing
 - offline local-model quality regression harness

@@ -27,6 +27,7 @@ Guarded is not implemented.
 | Area | Honest status | Evidence | Gap | Next cut |
 | --- | --- | --- | --- | --- |
 | Native Go CLI | implemented | Go runtime, Go tests, no tracked Python source, required gates | CLI still needs first-minute dogfood across more personas | Keep reducing command and launcher friction |
+| Configured CLI handoff | partial | `jini route list/set/auto/status`, adapter registry, route tests | `codex` and `claude-code` now fail closed instead of acting as provider aliases, but real installed-CLI subprocess handoff is not implemented yet | Build real downstream CLI handoff with setup detection, cwd/session transfer, approvals, and output receipts |
 | Simplicity as UX tenet | guarded | Canonical PRD, lean gate, product simplicity test | The runtime still exposes too much internal vocabulary in some flows | Prefer natural `jini` intake and progressive disclosure |
 | Repo review snapshot | implemented | Direct repo-review test and porcelain parser coverage | It is a model-free first pass, not a full code-review agent | Add richer changed-file focus and security/test prompts |
 | P0 competitor watching | guarded | PRD, competitive release plan, readiness guard, benchmark coverage | No watch packet generator, scheduler, or feature-selection ingestion loop exists yet | Build a watch-packet artifact and release-plan ingestion path |

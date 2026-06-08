@@ -15,9 +15,9 @@ type adapterDescriptor struct {
 
 func adapterRegistry() map[string]adapterDescriptor {
 	return map[string]adapterDescriptor{
-		"claude-code": {
-			ID:                "claude-code",
-			Label:             "Claude Code",
+		"claude-api": {
+			ID:                "claude-api",
+			Label:             "Claude API route",
 			ProviderMode:      "anthropic",
 			CostTier:          "premium",
 			Locality:          "remote",
@@ -45,8 +45,8 @@ func adapterRegistry() map[string]adapterDescriptor {
 			SupportsEffort:    true,
 			SupportsAutoRoute: true,
 		},
-		"codex": {
-			ID:                "codex",
+		"azure-code": {
+			ID:                "azure-code",
 			Label:             "Azure code route",
 			ProviderMode:      "azure-openai",
 			CostTier:          "standard",

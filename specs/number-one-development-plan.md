@@ -26,6 +26,7 @@ This means:
 - local file edits work
 - simple questions answer directly
 - route inspection and route switching are clear
+- configured CLI routes actually hand off to configured CLIs
 - saved work helps continuation without becoming a startup dashboard
 - tests and gates catch regressions before commit
 
@@ -63,21 +64,30 @@ Release blockers:
   ambiguity
 - startup reintroduces `Start/Keep`, `Switch`, or saved-work dashboards
 
-### Cut 2: Route And Token-Frugality Proof
+### Cut 2: Configured CLI Handoff And Token-Frugality Proof
 
 Status: next.
 
 Deliver:
 
-- make `jini route` explain current route, cost posture, and provider readiness
-- show when local/offline, configured CLI, or stronger online route is chosen
+- keep `jini route` distinguishing CLI handoff, provider API, and local/offline routes
+- invoke installed Codex, Claude Code, or other configured CLI routes when selected
+- preserve fail-closed guidance when a named CLI route is unavailable
+- keep provider API routes separately labeled instead of using CLI names
 - record route choice compactly so continuation does not replay stale context
 
 Exit evidence:
 
-- route tests cover auto, manual, local preview, local SLM, Codex, and Claude
+- route tests cover CLI handoff success, missing CLI setup, reserved-route
+  fail-closed behavior, provider API routes, auto, manual, local preview,
+  local SLM, Codex, and Claude
 - docs show route inspection without teaching a new workflow first
 - scorecard pressure vector `token-frugality-p0` remains green
+
+Release blocker:
+
+- `codex`, `claude-code`, or another CLI route is implemented as a provider API
+  alias or lacks visible handoff/fail-closed setup guidance
 
 ### Cut 3: Saved Work Continuity Without Dashboard
 

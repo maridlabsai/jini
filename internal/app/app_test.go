@@ -1105,7 +1105,7 @@ func TestInteractiveSetupCanSaveClaudeProfileInsideJini(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Claude",
-		"Setup saved. Working with Claude Code via Claude API / Claude Sonnet 4.",
+		"Setup saved. Working with Claude API route via Claude API / Claude Sonnet 4.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -1130,7 +1130,7 @@ func TestInteractiveSetupCanSaveClaudeProfileInsideJini(t *testing.T) {
 	}
 }
 
-func TestInteractiveSetupCanSaveClaudeCodeRouteInsideJini(t *testing.T) {
+func TestInteractiveSetupCanSaveClaudeAPIRouteInsideJini(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
@@ -1143,7 +1143,7 @@ func TestInteractiveSetupCanSaveClaudeCodeRouteInsideJini(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Claude",
-		"Setup saved. Working with Claude Code via Claude API / Claude Sonnet 4.",
+		"Setup saved. Working with Claude API route via Claude API / Claude Sonnet 4.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -1154,8 +1154,8 @@ func TestInteractiveSetupCanSaveClaudeCodeRouteInsideJini(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected router settings file: %v", err)
 	}
-	if !strings.Contains(string(routerSaved), `"tool_mode": "claude-code"`) {
-		t.Fatalf("expected saved Claude Code route, got:\n%s", string(routerSaved))
+	if !strings.Contains(string(routerSaved), `"tool_mode": "claude-api"`) {
+		t.Fatalf("expected saved Claude API route, got:\n%s", string(routerSaved))
 	}
 }
 
@@ -1175,10 +1175,11 @@ func TestRouteCommandListsAvailableRoutes(t *testing.T) {
 		"Current: auto",
 		"Available",
 		"auto",
-		"claude-code",
-		"- codex: Azure code route (remote, standard, needs setup)",
+		"claude-api",
+		"- azure-code: Azure code route (remote, standard, needs setup)",
 		"- local-preview: Local preview (local, free, ok)",
-		"Use `jini route set codex` to lock a route.",
+		"Use `jini route set azure-code` to lock the Azure code provider route.",
+		"Reserved CLI handoffs: codex, claude-code (P0, not provider aliases).",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected route list to contain %q, got:\n%s", want, out)
@@ -1219,7 +1220,7 @@ func TestRouteCommandCanSetRouteWithoutSetupWizard(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.Run([]string{"route", "set", "codex"}, &stdout, &stdout)
+	exitCode := app.Run([]string{"route", "set", "azure-code"}, &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected route set to succeed, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -1228,7 +1229,7 @@ func TestRouteCommandCanSetRouteWithoutSetupWizard(t *testing.T) {
 	for _, want := range []string{
 		"Route saved.",
 		"Current: Azure code route",
-		"Mode: codex",
+		"Mode: azure-code",
 		"Use `jini route auto` to restore automatic routing.",
 	} {
 		if !strings.Contains(out, want) {
@@ -1240,8 +1241,56 @@ func TestRouteCommandCanSetRouteWithoutSetupWizard(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected router settings file: %v", err)
 	}
-	if !strings.Contains(string(routerSaved), `"tool_mode": "codex"`) {
-		t.Fatalf("expected saved Codex route, got:\n%s", string(routerSaved))
+	if !strings.Contains(string(routerSaved), `"tool_mode": "azure-code"`) {
+		t.Fatalf("expected saved Azure code route, got:\n%s", string(routerSaved))
+	}
+}
+
+func TestRouteCommandFailsClosedForReservedCLIHandoffNames(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	for _, mode := range []string{"codex", "claude-code"} {
+		var stdout bytes.Buffer
+		exitCode := app.Run([]string{"route", "set", mode}, &stdout, &stdout)
+		if exitCode == 0 {
+			t.Fatalf("expected %s route set to fail closed, got output:\n%s", mode, stdout.String())
+		}
+		out := stdout.String()
+		for _, want := range []string{
+			"is not available in this build.",
+			"reserved for installed-CLI subprocess handoff",
+			"will not use a provider API alias",
+			"jini route set azure-code",
+		} {
+			if !strings.Contains(out, want) {
+				t.Fatalf("expected %s reserved route output to contain %q, got:\n%s", mode, want, out)
+			}
+		}
+	}
+}
+
+func TestProviderDoctorFailsClosedForReservedCLIHandoffToolMode(t *testing.T) {
+	t.Setenv("JINI_TOOL", "codex")
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"doctor"}, &stdout, &stdout)
+	if exitCode == 0 {
+		t.Fatalf("expected reserved CLI handoff doctor to fail closed, got output:\n%s", stdout.String())
+	}
+	out := stdout.String()
+	for _, want := range []string{
+		"Codex CLI handoff",
+		"ROUTE_POLICY: CLI handoff required",
+		"AUTO_MODEL: Jini cannot claim this CLI route until it can hand off to the installed CLI.",
+		"will not use a provider API alias",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected reserved CLI doctor output to contain %q, got:\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, "ROUTE_POLICY: Locked by you") {
+		t.Fatalf("expected reserved CLI doctor to avoid generic locked-route policy, got:\n%s", out)
 	}
 }
 
@@ -1249,7 +1298,7 @@ func TestRouteCommandCanRestoreAutoMode(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
-	if exitCode := app.Run([]string{"route", "set", "codex"}, io.Discard, io.Discard); exitCode != 0 {
+	if exitCode := app.Run([]string{"route", "set", "azure-code"}, io.Discard, io.Discard); exitCode != 0 {
 		t.Fatalf("expected route set to succeed, got %d", exitCode)
 	}
 
@@ -1374,11 +1423,11 @@ func TestProviderDoctorShowsAutoToolDecision(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Claude API / Claude Sonnet 4",
-		"JINI_TOOL: auto -> Claude Code",
+		"JINI_TOOL: auto -> Claude API route",
 		"ROUTE_POLICY: Automatic",
 		"JINI_MODEL_DECISION: Claude Sonnet 4",
-		"AUTO_MODEL: Jini uses Claude Sonnet 4 by default on the Claude Code route.",
-		"AUTO_ROUTE: Auto mode chose Claude Code because this looks like general work, the request does not ask for deep review, so Jini favored the cheapest suitable route. It was the first ready route in this environment.",
+		"AUTO_MODEL: Jini uses Claude Sonnet 4 by default on the Claude API route.",
+		"AUTO_ROUTE: Auto mode chose Claude API route because this looks like general work, the request does not ask for deep review, so Jini favored the cheapest suitable route. It was the first ready route in this environment.",
 		"JINI_EFFORT: auto -> dynamic per request",
 		"AUTO_EFFORT: Jini judges effort separately for each request instead of pinning one level globally.",
 		"AUTO_MODE: frameworks=auto; models=auto; speed=auto; approvals=approval-gated",
@@ -1875,7 +1924,7 @@ func TestHelpHidesCurrentWorkContinuityReason(t *testing.T) {
 	writeCurrentWorkRoute(t, packDir, map[string]any{
 		"schema_version":       "0.1.0",
 		"context_type":         "JiniWorkRoute",
-		"tool_mode":            "codex",
+		"tool_mode":            "azure-code",
 		"tool_label":           "Azure code route",
 		"route_policy":         "Automatic",
 		"model_label":          "gpt-4.1",
@@ -1913,7 +1962,7 @@ func TestHelpShowsPlainLanguageFeedbackShelfWhenModelContextExists(t *testing.T)
 	writeCurrentWorkRoute(t, packDir, map[string]any{
 		"schema_version":       "0.1.0",
 		"context_type":         "JiniWorkRoute",
-		"tool_mode":            "codex",
+		"tool_mode":            "chatgpt",
 		"tool_label":           "Azure writing route",
 		"route_policy":         "Automatic",
 		"model_label":          "gpt-4o-prod",

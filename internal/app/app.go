@@ -830,6 +830,13 @@ func saveExplicitRoute(raw string, stdout, stderr io.Writer) int {
 	if mode == "auto" {
 		return saveAutoRoute(stdout, stderr)
 	}
+	if reservedCLIHandoffMode(mode) {
+		fmt.Fprintf(stderr, "%s is not available in this build.\n", reservedCLIHandoffLabel(mode))
+		for _, missing := range reservedCLIHandoffMissing(mode) {
+			fmt.Fprintf(stderr, "- %s\n", missing)
+		}
+		return 1
+	}
 	if !knownRouteMode(mode) {
 		fmt.Fprintf(stderr, "Unknown route %q.\n", strings.TrimSpace(raw))
 		fmt.Fprintln(stderr, "Run `jini route list` to see available routes.")
@@ -892,7 +899,8 @@ func renderRouteList(w io.Writer) {
 		fmt.Fprintf(w, "- %s: %s%s\n", target.ID, target.Label, details)
 	}
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Use `jini route set codex` to lock a route.")
+	fmt.Fprintln(w, "Use `jini route set azure-code` to lock the Azure code provider route.")
+	fmt.Fprintln(w, "Reserved CLI handoffs: codex, claude-code (P0, not provider aliases).")
 	fmt.Fprintln(w, "Use `jini route auto` to restore automatic routing.")
 }
 
@@ -3004,7 +3012,7 @@ func renderAutoModePolicy(w io.Writer, policy autoModePolicy) {
 func maybeHandleProviderSetupIntent(raw string, scanner *bufio.Scanner, stdout, stderr io.Writer) (bool, int) {
 	switch normalizeCommandName(raw) {
 	case "claude":
-		return true, runProviderSetupWizard("claude-code", scanner, stdout, stderr)
+		return true, runProviderSetupWizard("claude-api", scanner, stdout, stderr)
 	case "bedrock":
 		return true, runProviderSetupWizard("bedrock-sonnet", scanner, stdout, stderr)
 	case "chatgpt":
@@ -3027,20 +3035,26 @@ func maybeHandleProviderSetupIntent(raw string, scanner *bufio.Scanner, stdout, 
 func runProviderSetupWizard(mode string, scanner *bufio.Scanner, stdout, stderr io.Writer) int {
 	fmt.Fprintln(stdout)
 	switch mode {
-	case "claude-code":
+	case "claude-code", "codex":
+		fmt.Fprintln(stderr, reservedCLIHandoffLabel(mode)+" is not available in this build.")
+		for _, missing := range reservedCLIHandoffMissing(mode) {
+			fmt.Fprintf(stderr, "- %s\n", missing)
+		}
+		return 1
+	case "claude-api":
 		fmt.Fprintln(stdout, "Claude")
 		fmt.Fprintln(stdout, "Paste your Anthropic API key. Jini will route this repo through Claude for code work.")
 		key, ok := readPromptLine(scanner, stdout, "Anthropic API key")
 		if !ok || strings.TrimSpace(key) == "" {
-			fmt.Fprintln(stderr, "Claude Code setup needs an API key.")
+			fmt.Fprintln(stderr, "Claude API setup needs an API key.")
 			return 1
 		}
 		model, ok := readPromptLine(scanner, stdout, "Model (press Enter for sonnet)")
 		if !ok {
 			return 1
 		}
-		if err := saveRouterSettings("claude-code"); err != nil {
-			fmt.Fprintf(stderr, "Could not save Claude Code route: %v\n", err)
+		if err := saveRouterSettings("claude-api"); err != nil {
+			fmt.Fprintf(stderr, "Could not save Claude API route: %v\n", err)
 			return 1
 		}
 		if err := saveProviderSettings(map[string]string{
@@ -3075,10 +3089,10 @@ func runProviderSetupWizard(mode string, scanner *bufio.Scanner, stdout, stderr 
 			fmt.Fprintf(stderr, "Could not save Bedrock setup: %v\n", err)
 			return 1
 		}
-	case "chatgpt", "codex", "azure-openai":
+	case "chatgpt", "azure-code", "azure-openai":
 		targetLabel := map[string]string{
 			"chatgpt":      "Azure",
-			"codex":        "Azure",
+			"azure-code":   "Azure",
 			"azure-openai": "Azure",
 		}[mode]
 		fmt.Fprintln(stdout, targetLabel)

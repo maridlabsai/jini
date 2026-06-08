@@ -38,7 +38,8 @@ The CLI must make these jobs obvious:
 
 - start from a natural task
 - edit local files when the request clearly asks for it
-- route to the right configured CLI, provider, or local model
+- route to the right configured CLI, provider API, or local model without
+  disguising one as another
 - inspect and switch routes with `jini route`
 - preserve a durable work thread across continuation
 - keep token cost low by reusing saved state instead of replaying transcripts
@@ -65,9 +66,28 @@ Non-negotiable invariants:
   ambiguity; they never become generic drafts.
 - Current work is passive context, not the default frame for unrelated input.
 - Route decisions stay inspectable, but routine answers avoid route ceremony.
+- Configured CLI route names require real installed-CLI handoff or fail-closed
+  setup guidance; provider API routing is a separate route type.
 - Side-effecting work reports files changed, commands or tests run, blockers,
   approvals, and rollback or recovery path when relevant.
 - No hard-coded entity-to-template routing.
+
+## CLI Handoff Decision
+
+Aryan's core expectation is that Jini behaves like a familiar terminal agent.
+
+That means:
+
+- local/offline mode must act like a full Jini agent CLI
+- configured CLI routes must invoke the installed downstream CLI or fail closed
+  with exact setup guidance
+- provider API routes may exist, but they must not be marketed as Codex,
+  Claude Code, or another CLI unless that CLI is actually invoked
+- route output must make the difference between CLI handoff, provider API, and
+  local/offline execution visible without adding startup ceremony
+
+This is P0. A provider-backed adapter can be an internal fallback or prototype,
+but it does not satisfy the configured-CLI route requirement.
 
 Implementation plan:
 

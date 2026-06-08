@@ -75,8 +75,8 @@ description: Free orchestration for AI work across providers today. Pay only whe
         <code>&gt; add a line saying "hello from Jini" in notes.txt</code>
       </div>
       <div class="compat-pill-row" aria-label="Supported routes">
-        <span class="compat-pill">Works with Claude Code</span>
-        <span class="compat-pill">Works with Codex</span>
+        <span class="compat-pill">Provider routes today</span>
+        <span class="compat-pill">CLI handoff is P0</span>
         <span class="compat-pill">Works with Bedrock</span>
         <span class="compat-pill">Works with Azure OpenAI</span>
         <span class="compat-pill">Works with Local models</span>

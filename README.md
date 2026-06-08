@@ -17,7 +17,7 @@ It keeps five things clear:
 Most AI tools are good at getting work started. Jini is for the part where
 developers and operators lose time:
 
-- switching among configured CLIs and model routes
+- switching among configured provider, model, and local routes
 - avoiding throttling and quota dead ends
 - continuing without replaying transcripts
 - editing the right local files from the current folder
@@ -159,12 +159,14 @@ When you need to steer the route directly, keep it explicit and reversible:
 
 ```bash
 jini route list
-jini route set codex
+jini route set azure-code
 jini route auto
 ```
 
 That gives developers a clear escape hatch for framework switching without
-making every task start with routing setup.
+making every task start with routing setup. `codex` and `claude-code` are
+reserved for real installed-CLI handoff and fail closed until that handoff
+ships.
 
 For multi-step work, Jini now plans quietly before drafting. The user sees the
 result through better structure and clearer `Doing now` / `Next` state, not
@@ -199,16 +201,21 @@ switches to a stronger route only when the request clearly asks for deeper work.
 Supported tool choices today:
 
 - `auto`
-- `claude-code`
+- `claude-api`
 - `bedrock-sonnet`
 - `azure-openai`
 - `chatgpt`
-- `codex`
+- `azure-code`
 - `local-fast`
 - `local-workhorse`
 - `local-deep`
 - `local-multimodal`
 - `local-preview`
+
+Reserved CLI handoff names:
+
+- `codex`
+- `claude-code`
 
 Supported provider choices:
 
@@ -355,9 +362,9 @@ jini doctor
 ```
 
 If you ask for `JINI_MODEL=sonnet-4.6` with `JINI_TOOL=auto`, Jini prefers a
-Bedrock Sonnet route. If only Claude direct is ready, Jini can choose Claude
-Code. If only Azure is ready, Jini can choose an Azure-backed route. If nothing
-cloud-backed is configured, it falls back to local preview.
+Bedrock Sonnet route. If only Claude direct is ready, Jini can choose the
+Claude provider route. If only Azure is ready, Jini can choose an Azure-backed
+route. If nothing cloud-backed is configured, it falls back to local preview.
 
 In auto mode, Jini also looks at the work itself:
 
@@ -369,8 +376,12 @@ In auto mode, Jini also looks at the work itself:
 - Jini also judges an effort level for each request: `low`, `medium`, `high`, or `extra high`
 - trips, follow-ups, and decision-writing usually stay on cheaper Azure-backed writing routes
 - code-heavy requests usually stay on cheaper Azure-backed code routes
-- if the request explicitly asks for deep, rigorous, comprehensive, or high-rigor work, Jini switches to a best-tool-first route such as `Claude Code` or `Bedrock Sonnet`
+- if the request explicitly asks for deep, rigorous, comprehensive, or high-rigor work, Jini switches to the strongest ready route such as `Bedrock Sonnet` or another configured provider/model route
 - the chosen route is saved with the work so later screens keep showing the same `Working with` label
+
+Real downstream CLI handoff for names like `codex` and `claude-code` is a P0
+implementation requirement. Until that ships, public route claims must stay
+limited to provider, model, and local routes that Jini actually invokes.
 
 Current provider support in the Go binary:
 

@@ -45,8 +45,8 @@
 
     <rect x="782" y="320" width="298" height="158" rx="24" fill="#fafaff" stroke="#e0e7ff"/>
     <text x="810" y="360" font-size="18" font-weight="700" fill="#0f172a">Provider state</text>
-    <text x="810" y="404" font-size="18" fill="#475569">Claude Code</text>
-    <text x="988" y="404" font-size="18" font-weight="700" fill="#15803d">ready</text>
+    <text x="810" y="404" font-size="18" fill="#475569">CLI handoff</text>
+    <text x="966" y="404" font-size="18" font-weight="700" fill="#a16207">P0</text>
     <text x="810" y="438" font-size="18" fill="#475569">Azure OpenAI</text>
     <text x="978" y="438" font-size="18" font-weight="700" fill="#1d4ed8">available</text>
     <text x="810" y="472" font-size="18" fill="#475569">Local models</text>

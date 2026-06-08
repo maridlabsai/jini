@@ -101,11 +101,11 @@ func detectAutoRouteForRequest(request providerGenerationRequest) routeDecision 
 	candidates := candidateModes(scored)
 	switch configuredProviderMode() {
 	case "anthropic":
-		candidates = []string{"claude-code"}
+		candidates = []string{"claude-api"}
 	case "bedrock":
 		candidates = []string{"bedrock-sonnet"}
 	case "azure-openai":
-		candidates = []string{"chatgpt", "codex", "azure-openai"}
+		candidates = []string{"chatgpt", "azure-code", "azure-openai"}
 	case "local-slm":
 		candidates = localSLMCandidateModes()
 	case "local-preview":
@@ -131,6 +131,15 @@ func enrichRouteDecisionForRequest(request providerGenerationRequest, decision r
 	if !decision.Active {
 		return decision
 	}
+	if reservedCLIHandoffMode(decision.ToolMode) {
+		decision.RoutePolicy = "CLI handoff required"
+		decision.ModelLabel = reservedCLIHandoffLabel(decision.ToolMode)
+		decision.ModelReason = "Jini cannot claim this CLI route until it can hand off to the installed CLI."
+		decision.Provider = withRoutePolicy(decision.Provider, decision.RoutePolicy)
+		decision.Provider = withRouteReason(decision.Provider, decision.Reason)
+		decision.Provider = withModelDecision(decision.Provider, decision.ModelLabel, decision.ModelReason)
+		return decision
+	}
 	decision.ModelLabel, decision.ModelReason = classifyModelChoice(request, decision.ToolMode)
 	decision.EffortLevel, decision.EffortReason = classifyRequestEffort(request)
 	decision.VerificationLevel, decision.VerificationReason = classifyVerificationDecision(request, decision)
@@ -148,10 +157,10 @@ func enrichRouteDecisionForRequest(request providerGenerationRequest, decision r
 func routeCandidatesForRequest(request providerGenerationRequest) []routeCandidateScore {
 	features := classifyRouteFeatures(request)
 	scores := []routeCandidateScore{
-		{Mode: "claude-code", Score: scoreRouteMode("claude-code", features)},
+		{Mode: "claude-api", Score: scoreRouteMode("claude-api", features)},
 		{Mode: "bedrock-sonnet", Score: scoreRouteMode("bedrock-sonnet", features)},
 		{Mode: "chatgpt", Score: scoreRouteMode("chatgpt", features)},
-		{Mode: "codex", Score: scoreRouteMode("codex", features)},
+		{Mode: "azure-code", Score: scoreRouteMode("azure-code", features)},
 		{Mode: "azure-openai", Score: scoreRouteMode("azure-openai", features)},
 		{Mode: "local-preview", Score: scoreRouteMode("local-preview", features)},
 	}
@@ -223,13 +232,13 @@ func classifyRouteFeatures(request providerGenerationRequest) routeFeatures {
 func scoreRouteMode(mode string, features routeFeatures) int {
 	score := 0
 	switch mode {
-	case "claude-code":
+	case "claude-api":
 		score = 62
 	case "bedrock-sonnet":
 		score = 60
 	case "chatgpt":
 		score = 58
-	case "codex":
+	case "azure-code":
 		score = 58
 	case "azure-openai":
 		score = 52
@@ -254,9 +263,9 @@ func scoreRouteMode(mode string, features routeFeatures) int {
 			score += 10
 		case "bedrock-sonnet":
 			score += 13
-		case "claude-code":
+		case "claude-api":
 			score += 8
-		case "codex":
+		case "azure-code":
 			score -= 8
 		case "local-workhorse":
 			score += 28
@@ -267,9 +276,9 @@ func scoreRouteMode(mode string, features routeFeatures) int {
 		}
 	case "code":
 		switch mode {
-		case "codex":
+		case "azure-code":
 			score += 24
-		case "claude-code":
+		case "claude-api":
 			score += 18
 		case "azure-openai":
 			score += 9
@@ -286,9 +295,9 @@ func scoreRouteMode(mode string, features routeFeatures) int {
 		}
 	default:
 		switch mode {
-		case "chatgpt", "claude-code":
+		case "chatgpt", "claude-api":
 			score += 10
-		case "codex", "bedrock-sonnet", "azure-openai":
+		case "azure-code", "bedrock-sonnet", "azure-openai":
 			score += 7
 		case "local-fast":
 			score += 18
@@ -309,11 +318,11 @@ func scoreRouteMode(mode string, features routeFeatures) int {
 
 	if features.DepthClass == "deep" {
 		switch mode {
-		case "claude-code":
+		case "claude-api":
 			score += 24
 		case "bedrock-sonnet":
 			score += 23
-		case "codex":
+		case "azure-code":
 			score += 9
 		case "chatgpt":
 			score += 7
@@ -326,7 +335,7 @@ func scoreRouteMode(mode string, features routeFeatures) int {
 		}
 	} else if features.PrefersCheapest {
 		switch mode {
-		case "chatgpt", "codex":
+		case "chatgpt", "azure-code":
 			score += 10
 		case "azure-openai":
 			score += 8
@@ -336,7 +345,7 @@ func scoreRouteMode(mode string, features routeFeatures) int {
 			score += 18
 		case "local-deep":
 			score += 4
-		case "claude-code":
+		case "claude-api":
 			score += 5
 		case "bedrock-sonnet":
 			score += 3
@@ -373,7 +382,7 @@ func scoreRouteMode(mode string, features routeFeatures) int {
 			score += 18
 		case "azure-openai", "bedrock-sonnet":
 			score += 8
-		case "claude-code", "chatgpt":
+		case "claude-api", "chatgpt":
 			score += 4
 		case "local-workhorse":
 			score += 2
@@ -438,13 +447,13 @@ func codingQuotaHeadroomBias(mode string, features routeFeatures) int {
 		return 12
 	case "local-deep":
 		return 8
-	case "codex":
+	case "azure-code":
 		return 8
 	case "azure-openai":
 		return 6
 	case "chatgpt":
 		return 4
-	case "claude-code":
+	case "claude-api":
 		return 2
 	case "bedrock-sonnet":
 		return 1
@@ -809,6 +818,26 @@ func classifyRouteDepth(request providerGenerationRequest) string {
 }
 
 func detectRouteForToolMode(mode string, auto bool) routeDecision {
+	if reservedCLIHandoffMode(mode) {
+		label := reservedCLIHandoffLabel(mode)
+		provider := providerConfig{
+			ID:      mode,
+			Label:   label,
+			Status:  "needs setup",
+			Missing: reservedCLIHandoffMissing(mode),
+		}
+		return routeDecision{
+			Active:              true,
+			ToolMode:            mode,
+			ToolLabel:           label,
+			RoutePolicy:         "CLI handoff required",
+			ModelLabel:          label,
+			ModelReason:         "Jini cannot claim this CLI route until it can hand off to the installed CLI.",
+			ChosenAutomatically: auto,
+			Reason:              "Jini will not treat " + label + " as a provider API route.",
+			Provider:            provider,
+		}
+	}
 	target, ok := routeTargetForMode(mode)
 	if !ok {
 		return routeDecision{
@@ -820,7 +849,7 @@ func detectRouteForToolMode(mode string, auto bool) routeDecision {
 				ID:      mode,
 				Label:   titleCase(mode),
 				Status:  "needs setup",
-				Missing: []string{"Supported JINI_TOOL value: auto, claude-code, bedrock-sonnet, chatgpt, codex, azure-openai, local-fast, local-workhorse, local-deep, local-multimodal, or local-preview"},
+				Missing: []string{"Supported JINI_TOOL value: auto, claude-api, bedrock-sonnet, chatgpt, azure-code, azure-openai, local-fast, local-workhorse, local-deep, local-multimodal, or local-preview. Reserved CLI handoff values: claude-code, codex."},
 			},
 		}
 	}
@@ -1059,9 +1088,9 @@ func classifyModelChoice(request providerGenerationRequest, toolMode string) (st
 		return "Claude Sonnet 4.6", "Jini used the Bedrock Sonnet 4.6 path because the request or config asked for a Bedrock-only model."
 	case toolMode == "bedrock-sonnet":
 		return "Claude Sonnet 4.6", "Jini uses Claude Sonnet 4.6 by default on the Bedrock Sonnet route."
-	case toolMode == "claude-code":
-		return "Claude Sonnet 4", "Jini uses Claude Sonnet 4 by default on the Claude Code route."
-	case toolMode == "chatgpt" || toolMode == "codex" || toolMode == "azure-openai":
+	case toolMode == "claude-api":
+		return "Claude Sonnet 4", "Jini uses Claude Sonnet 4 by default on the Claude API route."
+	case toolMode == "chatgpt" || toolMode == "azure-code" || toolMode == "azure-openai":
 		deployment := strings.TrimSpace(configValue("AZURE_OPENAI_DEPLOYMENT"))
 		if deployment == "" {
 			return "Azure deployment", "Jini uses the Azure deployment configured for this repo."
@@ -1090,9 +1119,9 @@ func modelLabelForToolMode(toolMode string) string {
 	switch toolMode {
 	case "bedrock-sonnet":
 		return "Claude Sonnet 4.6"
-	case "claude-code":
+	case "claude-api":
 		return "Claude Sonnet 4"
-	case "chatgpt", "codex", "azure-openai":
+	case "chatgpt", "azure-code", "azure-openai":
 		if deployment := strings.TrimSpace(configValue("AZURE_OPENAI_DEPLOYMENT")); deployment != "" {
 			return deployment
 		}
@@ -1111,9 +1140,9 @@ func modelReasonForToolMode(toolMode string) string {
 	switch toolMode {
 	case "bedrock-sonnet":
 		return "Jini uses Claude Sonnet 4.6 by default on the Bedrock Sonnet route."
-	case "claude-code":
-		return "Jini uses Claude Sonnet 4 by default on the Claude Code route."
-	case "chatgpt", "codex", "azure-openai":
+	case "claude-api":
+		return "Jini uses Claude Sonnet 4 by default on the Claude API route."
+	case "chatgpt", "azure-code", "azure-openai":
 		return "Jini uses the Azure deployment configured for this repo. The deployment decides the actual Azure model."
 	case "local-fast":
 		return "Jini uses the Local SLM fast profile for lightweight first passes."

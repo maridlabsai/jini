@@ -28,10 +28,10 @@ func routerSettingsPath() string {
 
 func defaultSavedRouteTargets() []savedRouteTarget {
 	return []savedRouteTarget{
-		{ID: "claude-code", Label: "Claude Code", ProviderMode: "anthropic", ModelHint: "sonnet", Enabled: true},
+		{ID: "claude-api", Label: "Claude API route", ProviderMode: "anthropic", ModelHint: "sonnet", Enabled: true},
 		{ID: "bedrock-sonnet", Label: "Bedrock Sonnet", ProviderMode: "bedrock", ModelHint: "sonnet-4.6", Enabled: true},
 		{ID: "chatgpt", Label: "Azure writing route", ProviderMode: "azure-openai", ModelHint: "auto", Enabled: true},
-		{ID: "codex", Label: "Azure code route", ProviderMode: "azure-openai", ModelHint: "auto", Enabled: true},
+		{ID: "azure-code", Label: "Azure code route", ProviderMode: "azure-openai", ModelHint: "auto", Enabled: true},
 		{ID: "local-fast", Label: "Local SLM fast", ProviderMode: "local-slm", ModelHint: "fast", Enabled: true},
 		{ID: "local-workhorse", Label: "Local SLM workhorse", ProviderMode: "local-slm", ModelHint: "workhorse", Enabled: true},
 		{ID: "local-deep", Label: "Local SLM deep", ProviderMode: "local-slm", ModelHint: "deep", Enabled: true},
@@ -95,7 +95,9 @@ func normalizeToolMode(raw string) string {
 		return ""
 	case "auto", "choose automatically":
 		return "auto"
-	case "claude", "claude code", "claudecode", "anthropic":
+	case "claude", "claude api", "claude direct", "anthropic":
+		return "claude-api"
+	case "claude code", "claudecode":
 		return "claude-code"
 	case "bedrock", "bedrock sonnet", "bedrocksonnet", "amazon bedrock":
 		return "bedrock-sonnet"
@@ -104,7 +106,7 @@ func normalizeToolMode(raw string) string {
 	case "azure writing route", "azure writing", "writing route":
 		return "chatgpt"
 	case "azure code route", "azure code", "code route":
-		return "codex"
+		return "azure-code"
 	case "chatgpt", "chat gpt":
 		return "chatgpt"
 	case "codex":

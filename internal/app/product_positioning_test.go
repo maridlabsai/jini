@@ -20,6 +20,10 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"Claude Code and Codex first-minute parity is the highest-precedence",
 		"Questions answer compactly and do not create work.",
 		"Bare entities ask for intent and do not create work.",
+		"Configured CLI route names require real installed-CLI handoff",
+		"provider API routing is a separate route type.",
+		"## CLI Handoff Decision",
+		"provider API routes may exist, but they must not be marketed as Codex,",
 		"No hard-coded entity-to-template routing.",
 		"P0.3: require the scorecard to include an intent-first routing outcome gate",
 		"The free tier should prove Jini's routing and session value without giving away",
@@ -52,6 +56,8 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"Jini is a CLI-first AI work router and durable session layer",
 		"The near-term product is not the broad OS.",
 		"Core charter: intent-first Claude/Codex parity outranks feature expansion.",
+		"Treat configured CLI routes as real installed-CLI handoffs",
+		"provider API routes separately from CLI handoff routes.",
 		"Bare `jini` is a task prompt, not a dashboard.",
 		"[launcher-intake-design.md](./launcher-intake-design.md)",
 		"[number-one-development-plan.md](./number-one-development-plan.md)",
@@ -67,7 +73,8 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 	readme := readProductPositioningFile(t, root, "README.md")
 	for _, want := range []string{
 		"Jini is a CLI-first AI work router and durable session",
-		"switching among configured CLIs and model routes",
+		"switching among configured provider, model, and local routes",
+		"Real downstream CLI handoff for names like `codex` and `claude-code` is a P0",
 		"Meeting, plan-readiness, travel, and vendor-comparison flows are proof",
 		"[specs/product-settling-decisions.md](specs/product-settling-decisions.md)",
 	} {
@@ -145,6 +152,7 @@ func TestCanonicalPRDStaysReducedToCurrentGTMWedge(t *testing.T) {
 		"## Market And Learning Guards",
 		"No competitor finding becomes active scope unless the decision record changes.",
 		"task-first startup even with saved work",
+		"real downstream CLI handoff for configured CLI routes",
 		"CLI UX, PRD drift, and scorecard gates in commit gates",
 	} {
 		if !strings.Contains(canonicalPRD, want) {

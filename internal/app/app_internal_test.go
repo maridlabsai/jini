@@ -911,6 +911,7 @@ func TestPublishReadinessTextIncludesGuardrailCheckDetails(t *testing.T) {
 		"    OK specs/skills-and-delegation-slice.md#tier-boundary",
 		"    OK specs/lean-platform-gate.md#command-surface-discipline",
 		"    CLAIM P0 competitor watching STATUS guarded RUNTIME false",
+		"    CLAIM Configured CLI handoff STATUS partial RUNTIME false",
 		"    CLAIM Native Go CLI STATUS implemented RUNTIME true",
 		"  APP-PLATFORM ok",
 		"    OK specs/app-platform-shipping-playbook.md#source-backed-inputs",
@@ -961,6 +962,14 @@ func TestPublishReadinessHonestAuditClaimsExposeImplementationTruth(t *testing.T
 	}
 	if !strings.Contains(competitor.Gap, "No watch packet generator") {
 		t.Fatalf("expected competitor watching gap to stay explicit, got %#v", competitor)
+	}
+
+	cliHandoff := claims["Configured CLI handoff"]
+	if cliHandoff.Status != "partial" || cliHandoff.RuntimeImplemented {
+		t.Fatalf("expected configured CLI handoff to be partial and not runtime implemented, got %#v", cliHandoff)
+	}
+	if !strings.Contains(cliHandoff.Gap, "fail closed instead of acting as provider aliases") {
+		t.Fatalf("expected configured CLI handoff gap to stay explicit, got %#v", cliHandoff)
 	}
 
 	goCLI := claims["Native Go CLI"]

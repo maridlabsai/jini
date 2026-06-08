@@ -338,8 +338,8 @@ func TestDetectRouteForRequestAutoKeepsCurrentCodingRouteWhenGapIsNotMaterial(t 
 		Source: "Continue implementing and refactoring the codebase.",
 	}, routeDecision{
 		Active:              true,
-		ToolMode:            "claude-code",
-		ToolLabel:           "Claude Code",
+		ToolMode:            "claude-api",
+		ToolLabel:           "Claude API route",
 		ChosenAutomatically: true,
 		Provider:            detectProviderForMode("anthropic"),
 		RoutePolicy:         "Automatic",
@@ -354,8 +354,8 @@ func TestDetectRouteForRequestAutoKeepsCurrentCodingRouteWhenGapIsNotMaterial(t 
 		Title:  "Large Coding Project",
 		Source: "Continue refactoring this code and clean up the implementation.",
 	})
-	if decision.ToolMode != "claude-code" {
-		t.Fatalf("expected continuity to keep claude-code, got %#v", decision)
+	if decision.ToolMode != "claude-api" {
+		t.Fatalf("expected continuity to keep claude-api, got %#v", decision)
 	}
 	if !strings.Contains(decision.ContinuityReason, "preserve context continuity") {
 		t.Fatalf("expected continuity explanation field, got %#v", decision)
@@ -373,8 +373,8 @@ func TestRenderRouteDecisionCardShowsContinuityReason(t *testing.T) {
 		Source: "Continue implementing and refactoring the codebase.",
 	}, routeDecision{
 		Active:              true,
-		ToolMode:            "claude-code",
-		ToolLabel:           "Claude Code",
+		ToolMode:            "claude-api",
+		ToolLabel:           "Claude API route",
 		ChosenAutomatically: true,
 		Provider:            detectProviderForMode("anthropic"),
 		RoutePolicy:         "Automatic",
@@ -457,7 +457,7 @@ func TestDetectRouteForRequestAutoUsesManualCodingRoutePreference(t *testing.T) 
 		Routes:        map[string]routeFeedbackRow{},
 		Cohorts:       map[string]map[string]localCohortFeedbackRow{},
 		ManualOverrides: map[string]map[string]int{
-			"claude-code": {
+			"claude-api": {
 				"build-readiness": 4,
 			},
 		},
@@ -467,8 +467,8 @@ func TestDetectRouteForRequestAutoUsesManualCodingRoutePreference(t *testing.T) 
 	}
 
 	decision := detectRouteForRequest(request)
-	if decision.ToolMode != "claude-code" {
-		t.Fatalf("expected manual coding preference to bias claude-code, got %#v", decision)
+	if decision.ToolMode != "claude-api" {
+		t.Fatalf("expected manual coding preference to bias claude-api, got %#v", decision)
 	}
 	if !strings.Contains(decision.Reason, "Past route choices on similar coding work") {
 		t.Fatalf("expected manual preference explanation, got %#v", decision)
@@ -1568,7 +1568,7 @@ func TestDetectRouteForRequestAutoPrefersAzureCodeRouteForCodeWork(t *testing.T)
 		Title:  "CLI test failure",
 		Source: "Fix failing CLI tests in this repo and update the Go code path.",
 	})
-	if decision.ToolMode != "codex" {
+	if decision.ToolMode != "azure-code" {
 		t.Fatalf("expected Azure code route for code work, got %#v", decision)
 	}
 	if decision.ToolLabel != "Azure code route" {
@@ -1630,8 +1630,8 @@ func TestDetectRouteForRequestAutoPrefersBestCodeToolForDeepWork(t *testing.T) {
 		Title:  "CLI architecture review",
 		Source: "Do deep work on the CLI architecture with rigorous critique and comprehensive code review.",
 	})
-	if decision.ToolMode != "claude-code" {
-		t.Fatalf("expected Claude Code route for deep code work, got %#v", decision)
+	if decision.ToolMode != "claude-api" {
+		t.Fatalf("expected Claude API route for deep code work, got %#v", decision)
 	}
 	if decision.ModelLabel != "Claude Sonnet 4" {
 		t.Fatalf("expected Claude model label for deep code work, got %#v", decision)

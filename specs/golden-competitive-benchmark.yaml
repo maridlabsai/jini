@@ -1064,6 +1064,10 @@ scenarios:
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
         contains: "Native Go CLI"
+      - id: publish-readiness-honest-audit-cli-handoff-claim-visible
+        command: ["publish-readiness", "--format", "json"]
+        path: "sections"
+        contains: "Configured CLI handoff"
       - id: publish-readiness-honest-audit-simplicity-claim-visible
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
