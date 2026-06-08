@@ -363,6 +363,65 @@ func TestStatusRendersPlainLanguageCurrentWorkScreen(t *testing.T) {
 	}
 }
 
+func TestStatusShowsPrivacyPreservingCLIHandoffReceipt(t *testing.T) {
+	stateDir := t.TempDir()
+	packDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, packDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+	writeCurrentWorkRoute(t, packDir, map[string]any{
+		"schema_version":       "0.1.0",
+		"context_type":         "JiniWorkRoute",
+		"tool_mode":            "claude-code",
+		"tool_label":           "Claude Code CLI handoff",
+		"route_policy":         "CLI handoff",
+		"model_label":          "Claude Code CLI handoff",
+		"provider_label":       "Claude Code CLI handoff",
+		"chosen_automatically": false,
+		"reason":               "Jini handed this request to the installed Claude Code CLI handoff subprocess.",
+		"cli_handoff_receipt": map[string]any{
+			"context_type":  "JiniCLIHandoffReceipt",
+			"mode":          "claude-code",
+			"label":         "Claude Code CLI handoff",
+			"executable":    "/tmp/fake-claude",
+			"args_template": []string{"--print", "{{prompt}}"},
+			"cwd":           "/tmp/jini-work",
+			"exit_status":   0,
+			"duration_ms":   42,
+			"prompt_chars":  79,
+			"stdout_chars":  18,
+			"stderr_chars":  0,
+			"completed_at":  "2026-06-08T22:11:00Z",
+		},
+	})
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"status"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected status to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Last CLI handoff",
+		"Claude Code CLI handoff via /tmp/fake-claude",
+		"Args: --print {{prompt}}",
+		"Exit 0 in 42ms; prompt 79 chars, stdout 18 chars, stderr 0 chars.",
+		"Completed: 2026-06-08T22:11:00Z",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected status to contain %q, got:\n%s", want, out)
+		}
+	}
+	for _, unwanted := range []string{
+		"Summarize the private launch notes",
+		"fake claude draft",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("status must not expose prompt or CLI output body %q, got:\n%s", unwanted, out)
+		}
+	}
+}
+
 func TestProviderDoctorDetectsAzureOpenAIWithoutLeakingSecrets(t *testing.T) {
 	t.Setenv("JINI_PROVIDER", "azure-openai")
 	t.Setenv("AZURE_OPENAI_ENDPOINT", "https://example.openai.azure.com")

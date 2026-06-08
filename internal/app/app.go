@@ -41,6 +41,7 @@ type workSummary struct {
 	AutoMode           autoModePolicy
 	RouteReason        string
 	ContinuityReason   string
+	CLIHandoffSummary  []string
 	State              string
 	Views              []catalogItem
 	Exports            []catalogItem
@@ -2595,6 +2596,7 @@ func loadWorkSummary(dir string, current *currentWork) (*workSummary, error) {
 		AutoMode:           autoModePolicyValue(route.AutoMode),
 		RouteReason:        strings.TrimSpace(route.Reason),
 		ContinuityReason:   strings.TrimSpace(route.ContinuityReason),
+		CLIHandoffSummary:  formatCLIHandoffReceiptSummary(route.CLIHandoffReceipt),
 		State:              state,
 		Views:              views,
 		Exports:            exports,
@@ -2954,6 +2956,44 @@ func providerRouteSettingValue(settings []string, name string) string {
 		}
 	}
 	return ""
+}
+
+func formatCLIHandoffReceiptSummary(receipt *cliHandoffReceipt) []string {
+	if receipt == nil {
+		return nil
+	}
+	lines := []string{}
+	label := firstNonEmpty(strings.TrimSpace(receipt.Label), strings.TrimSpace(receipt.Mode), "CLI handoff")
+	executable := firstNonEmpty(strings.TrimSpace(receipt.Executable), "unknown executable")
+	lines = append(lines, fmt.Sprintf("%s via %s", label, executable))
+	if len(receipt.ArgsTemplate) > 0 {
+		lines = append(lines, "Args: "+strings.Join(receipt.ArgsTemplate, " "))
+	}
+	lines = append(lines, fmt.Sprintf(
+		"Exit %d in %dms; prompt %d chars, stdout %d chars, stderr %d chars.",
+		receipt.ExitStatus,
+		receipt.DurationMS,
+		receipt.PromptChars,
+		receipt.StdoutChars,
+		receipt.StderrChars,
+	))
+	if strings.TrimSpace(receipt.CompletedAt) != "" {
+		lines = append(lines, "Completed: "+strings.TrimSpace(receipt.CompletedAt))
+	}
+	return lines
+}
+
+func renderCLIHandoffReceiptSummary(w io.Writer, lines []string) {
+	if len(lines) == 0 {
+		return
+	}
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Last CLI handoff")
+	for _, line := range lines {
+		if strings.TrimSpace(line) != "" {
+			fmt.Fprintln(w, line)
+		}
+	}
 }
 
 func routeReadinessLabel(provider providerConfig) string {
@@ -4419,6 +4459,7 @@ func renderCheck(w io.Writer, summary *workSummary) {
 		fmt.Fprintln(w, "AI route")
 		fmt.Fprintln(w, summary.Thread.CurrentRoute)
 	}
+	renderCLIHandoffReceiptSummary(w, summary.Thread.CLIHandoffSummary)
 	if strings.TrimSpace(summary.Thread.ModelLabel) != "" {
 		fmt.Fprintln(w)
 		fmt.Fprintln(w, "Model")

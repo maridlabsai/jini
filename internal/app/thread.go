@@ -82,6 +82,7 @@ type workThread struct {
 	AutoMode           autoModePolicy
 	RouteReason        string
 	ContinuityReason   string
+	CLIHandoffSummary  []string
 	MultimodalLearning []string
 	EffortLevel        string
 	VerificationLevel  string
@@ -330,6 +331,7 @@ func buildWorkThread(summary *workSummary, inputs []inputItem, state savedThread
 		AutoMode:           summary.AutoMode,
 		RouteReason:        summary.RouteReason,
 		ContinuityReason:   summary.ContinuityReason,
+		CLIHandoffSummary:  append([]string{}, summary.CLIHandoffSummary...),
 		MultimodalLearning: freshLocalMultimodalLearningViewLines(classifyRouteFeatures(request)),
 		EffortLevel:        summary.EffortLevel,
 		VerificationLevel:  summary.VerificationLevel,
