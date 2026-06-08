@@ -509,6 +509,22 @@ func TestScorecardGateBuilderSupportsCustomPolicy(t *testing.T) {
 	}
 }
 
+func requireOutcomeGateReason(t *testing.T, report scorecardGateReport, gateID, want string) {
+	t.Helper()
+	for _, gate := range report.OutcomeGates {
+		if gate.ID != gateID {
+			continue
+		}
+		for _, reason := range gate.Reasons {
+			if strings.Contains(reason, want) {
+				return
+			}
+		}
+		t.Fatalf("expected outcome gate %q to include reason containing %q, got %#v", gateID, want, gate.Reasons)
+	}
+	t.Fatalf("expected outcome gate %q in report, got %#v", gateID, report.OutcomeGates)
+}
+
 func TestScorecardGateBuilderRequiresOutcomeGateEvidenceReference(t *testing.T) {
 	root := t.TempDir()
 	scorecardPath := "custom-scorecard.yaml"
@@ -550,6 +566,7 @@ func TestScorecardGateBuilderRequiresOutcomeGateEvidenceReference(t *testing.T) 
 	if len(report.OutcomeGates) != 1 || report.OutcomeGates[0].Present || report.OutcomeGates[0].Status != "missing" {
 		t.Fatalf("expected custom outcome gate to be missing without evidence, got %#v", report.OutcomeGates)
 	}
+	requireOutcomeGateReason(t, report, "custom-outcome", "missing proof_references")
 }
 
 func TestScorecardGateBuilderRejectsProofReferenceWithoutRef(t *testing.T) {
@@ -595,6 +612,7 @@ func TestScorecardGateBuilderRejectsProofReferenceWithoutRef(t *testing.T) {
 	if len(report.OutcomeGates) != 1 || report.OutcomeGates[0].Present {
 		t.Fatalf("expected custom outcome gate to be missing without ref, got %#v", report.OutcomeGates)
 	}
+	requireOutcomeGateReason(t, report, "custom-outcome", "custom-proof is missing ref")
 }
 
 func TestScorecardGateBuilderRejectsNamedProofReferenceToMissingFile(t *testing.T) {
@@ -649,6 +667,7 @@ func TestScorecardGateBuilderRejectsNamedProofReferenceToMissingFile(t *testing.
 	if len(report.OutcomeGates) != 1 || report.OutcomeGates[0].Present {
 		t.Fatalf("expected custom outcome gate to be missing when named proof file is absent, got %#v", report.OutcomeGates)
 	}
+	requireOutcomeGateReason(t, report, "custom-outcome", "missing-proof references missing file specs/missing-scorecard-proof.md")
 }
 
 func TestScorecardGateBuilderRejectsUnsupportedProofReferenceKind(t *testing.T) {
@@ -700,6 +719,7 @@ func TestScorecardGateBuilderRejectsUnsupportedProofReferenceKind(t *testing.T) 
 	if len(report.OutcomeGates) != 1 || report.OutcomeGates[0].Present {
 		t.Fatalf("expected custom outcome gate to be missing when proof kind is unsupported, got %#v", report.OutcomeGates)
 	}
+	requireOutcomeGateReason(t, report, "custom-outcome", `unsupported-proof has unsupported kind "unsupported"`)
 }
 
 func TestScorecardGateBuilderRejectsExecutableProofReferenceToMissingTest(t *testing.T) {
@@ -746,6 +766,7 @@ func TestScorecardGateBuilderRejectsExecutableProofReferenceToMissingTest(t *tes
 	if len(report.OutcomeGates) != 1 || report.OutcomeGates[0].Present {
 		t.Fatalf("expected custom outcome gate to be missing when executable proof test is absent, got %#v", report.OutcomeGates)
 	}
+	requireOutcomeGateReason(t, report, "custom-outcome", "custom-proof names missing Go test function TestMissingScorecardProof")
 }
 
 func TestScorecardGateBuilderRejectsExecutableProofReferenceWithoutGoTestRun(t *testing.T) {
@@ -791,6 +812,36 @@ func TestScorecardGateBuilderRejectsExecutableProofReferenceWithoutGoTestRun(t *
 	}
 	if len(report.OutcomeGates) != 1 || report.OutcomeGates[0].Present {
 		t.Fatalf("expected custom outcome gate to be missing when executable proof is not a Go test run, got %#v", report.OutcomeGates)
+	}
+	requireOutcomeGateReason(t, report, "custom-outcome", "custom-proof must use go test ./internal/app -run")
+}
+
+func TestScorecardGateTextShowsFailureReasons(t *testing.T) {
+	report := scorecardGateReport{
+		Status: "needs-attention",
+		OutcomeGates: []scorecardPresenceCheck{
+			{
+				ID:      "custom-outcome",
+				Present: false,
+				Status:  "missing",
+				Reasons: []string{
+					"named-proof missing-proof references missing file specs/missing-scorecard-proof.md",
+				},
+			},
+		},
+	}
+
+	var stdout bytes.Buffer
+	renderScorecardGateText(&stdout, report)
+	out := stdout.String()
+	for _, want := range []string{
+		"OUTCOME GATES",
+		"  MISSING custom-outcome",
+		"    REASON named-proof missing-proof references missing file specs/missing-scorecard-proof.md",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected scorecard-gate text to contain %q, got:\n%s", want, out)
+		}
 	}
 }
 

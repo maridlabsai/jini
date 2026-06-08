@@ -92,9 +92,10 @@ type scorecardGateReport struct {
 }
 
 type scorecardPresenceCheck struct {
-	ID      string `json:"id"`
-	Present bool   `json:"present"`
-	Status  string `json:"status"`
+	ID      string   `json:"id"`
+	Present bool     `json:"present"`
+	Status  string   `json:"status"`
+	Reasons []string `json:"reasons,omitempty"`
 }
 
 type scorecardThresholdCheck struct {
@@ -102,6 +103,11 @@ type scorecardThresholdCheck struct {
 	Actual  int    `json:"actual"`
 	Minimum int    `json:"minimum"`
 	Status  string `json:"status"`
+}
+
+type scorecardPresenceResult struct {
+	Present bool
+	Reasons []string
 }
 
 type scorecardGateBuilder struct {
@@ -181,8 +187,25 @@ func (builder scorecardGateBuilder) Build() scorecardGateReport {
 	report.PressureVectors = builder.presenceChecks(builder.policy.RequiredPressureVectors, func(id string) bool {
 		return normalizedScorecardGate[id]
 	})
-	report.OutcomeGates = builder.presenceChecks(builder.policy.RequiredOutcomeGates, func(id string) bool {
-		return normalizedScorecardGate[id] && outcomeGateEvidence[id]
+	report.OutcomeGates = builder.presenceChecksWithReasons(builder.policy.RequiredOutcomeGates, func(id string) scorecardPresenceResult {
+		if !normalizedScorecardGate[id] {
+			return scorecardPresenceResult{
+				Present: false,
+				Reasons: []string{
+					"required outcome gate is missing from scorecard_gates.required_outcome_gates",
+				},
+			}
+		}
+		evidence, ok := outcomeGateEvidence[id]
+		if !ok {
+			return scorecardPresenceResult{
+				Present: false,
+				Reasons: []string{
+					"required outcome gate has no valid proof_references",
+				},
+			}
+		}
+		return evidence
 	})
 
 	if !scorecardChecksPass(report) {
@@ -221,6 +244,20 @@ func (builder scorecardGateBuilder) presenceChecks(ids []string, present func(st
 			ID:      id,
 			Present: isPresent,
 			Status:  scorecardPresenceStatus(isPresent),
+		})
+	}
+	return checks
+}
+
+func (builder scorecardGateBuilder) presenceChecksWithReasons(ids []string, present func(string) scorecardPresenceResult) []scorecardPresenceCheck {
+	checks := make([]scorecardPresenceCheck, 0, len(ids))
+	for _, id := range ids {
+		result := present(id)
+		checks = append(checks, scorecardPresenceCheck{
+			ID:      id,
+			Present: result.Present,
+			Status:  scorecardPresenceStatus(result.Present),
+			Reasons: append([]string{}, result.Reasons...),
 		})
 	}
 	return checks
@@ -279,18 +316,27 @@ func renderScorecardGateText(stdout io.Writer, report scorecardGateReport) {
 	fmt.Fprintln(stdout, "COMPETITORS")
 	for _, competitor := range report.RequiredCompetitors {
 		fmt.Fprintf(stdout, "  %s %s\n", strings.ToUpper(competitor.Status), competitor.ID)
+		renderScorecardPresenceReasons(stdout, competitor)
 	}
 	fmt.Fprintln(stdout, "PRESSURE VECTORS")
 	for _, vector := range report.PressureVectors {
 		fmt.Fprintf(stdout, "  %s %s\n", strings.ToUpper(vector.Status), vector.ID)
+		renderScorecardPresenceReasons(stdout, vector)
 	}
 	fmt.Fprintln(stdout, "OUTCOME GATES")
 	for _, gate := range report.OutcomeGates {
 		fmt.Fprintf(stdout, "  %s %s\n", strings.ToUpper(gate.Status), gate.ID)
+		renderScorecardPresenceReasons(stdout, gate)
 	}
 	fmt.Fprintln(stdout, "THRESHOLDS")
 	for _, check := range report.Checks {
 		fmt.Fprintf(stdout, "  %s %s %d/%d\n", strings.ToUpper(check.Status), check.ID, check.Actual, check.Minimum)
+	}
+}
+
+func renderScorecardPresenceReasons(stdout io.Writer, check scorecardPresenceCheck) {
+	for _, reason := range check.Reasons {
+		fmt.Fprintf(stdout, "    REASON %s\n", reason)
 	}
 }
 
@@ -309,19 +355,20 @@ func readScorecardMinimum(section, key string, fallback int) int {
 }
 
 type scorecardProofReference struct {
+	ID   string
 	Kind string
 	Ref  string
 }
 
-func (builder scorecardGateBuilder) outcomeGateEvidenceReferences(scorecardGateSection string) map[string]bool {
+func (builder scorecardGateBuilder) outcomeGateEvidenceReferences(scorecardGateSection string) map[string]scorecardPresenceResult {
 	outcomeGateSection := yamlSection(scorecardGateSection, "required_outcome_gates")
-	evidenceByID := map[string]bool{}
+	evidenceByID := map[string]scorecardPresenceResult{}
 	for _, block := range yamlListItemBlocks(outcomeGateSection) {
 		id := yamlBlockID(block)
-		if id == "" || !builder.yamlBlockHasEvidenceReference(block) {
+		if id == "" {
 			continue
 		}
-		evidenceByID[id] = true
+		evidenceByID[id] = builder.yamlBlockEvidenceResult(block)
 	}
 	return evidenceByID
 }
@@ -390,16 +437,32 @@ func isOutcomeGateEvidenceKey(key string) bool {
 }
 
 func (builder scorecardGateBuilder) yamlBlockHasEvidenceReference(block string) bool {
+	return builder.yamlBlockEvidenceResult(block).Present
+}
+
+func (builder scorecardGateBuilder) yamlBlockEvidenceResult(block string) scorecardPresenceResult {
 	references := yamlBlockProofReferences(block)
 	if len(references) == 0 {
-		return false
-	}
-	for _, reference := range references {
-		if !builder.scorecardProofReferenceExists(reference) {
-			return false
+		return scorecardPresenceResult{
+			Present: false,
+			Reasons: []string{
+				"missing proof_references",
+			},
 		}
 	}
-	return true
+	var reasons []string
+	for _, reference := range references {
+		if reason := builder.scorecardProofReferenceFailureReason(reference); reason != "" {
+			reasons = append(reasons, reason)
+		}
+	}
+	if len(reasons) > 0 {
+		return scorecardPresenceResult{
+			Present: false,
+			Reasons: reasons,
+		}
+	}
+	return scorecardPresenceResult{Present: true}
 }
 
 func yamlBlockProofReferences(block string) []scorecardProofReference {
@@ -407,6 +470,7 @@ func yamlBlockProofReferences(block string) []scorecardProofReference {
 	proofReferencesSection := nestedYAMLSection(block, "proof_references")
 	for _, proofBlock := range yamlListItemBlocks(proofReferencesSection) {
 		references = append(references, scorecardProofReference{
+			ID:   yamlBlockScalarValue(proofBlock, "id"),
 			Kind: yamlBlockScalarValue(proofBlock, "kind"),
 			Ref:  yamlBlockScalarValue(proofBlock, "ref"),
 		})
@@ -472,39 +536,67 @@ func nestedYAMLSection(text, key string) string {
 }
 
 func (builder scorecardGateBuilder) scorecardProofReferenceExists(reference scorecardProofReference) bool {
+	return builder.scorecardProofReferenceFailureReason(reference) == ""
+}
+
+func (builder scorecardGateBuilder) scorecardProofReferenceFailureReason(reference scorecardProofReference) string {
 	ref := scorecardScalarValue(reference.Ref)
+	label := scorecardProofReferenceLabel(reference)
 	if !hasScorecardReferenceValue(ref) {
-		return false
+		return fmt.Sprintf("proof reference %s is missing ref", label)
 	}
 	kind := normalizeScorecardID(reference.Kind)
 	switch kind {
 	case "named-proof":
-		return builder.namedProofReferenceExists(ref)
+		return builder.namedProofReferenceFailureReason(label, ref)
 	case "executable":
-		return builder.executableProofReferenceExists(ref)
+		return builder.executableProofReferenceFailureReason(label, ref)
 	case "":
 		if looksLikeNamedProofReference(ref) {
-			return builder.namedProofReferenceExists(ref)
+			return builder.namedProofReferenceFailureReason(label, ref)
 		}
 		if isInternalAppGoTestRunReference(ref) {
-			return builder.executableProofReferenceExists(ref)
+			return builder.executableProofReferenceFailureReason(label, ref)
 		}
-		return false
+		return fmt.Sprintf("proof reference %s has no supported kind or recognizable reference", label)
 	default:
-		return false
+		return fmt.Sprintf("proof reference %s has unsupported kind %q", label, scorecardScalarValue(reference.Kind))
 	}
 }
 
+func scorecardProofReferenceLabel(reference scorecardProofReference) string {
+	if id := scorecardScalarValue(reference.ID); id != "" {
+		return id
+	}
+	if ref := scorecardScalarValue(reference.Ref); ref != "" {
+		return ref
+	}
+	if kind := scorecardScalarValue(reference.Kind); kind != "" {
+		return kind + " proof"
+	}
+	return "unnamed proof reference"
+}
+
 func (builder scorecardGateBuilder) namedProofReferenceExists(ref string) bool {
+	return builder.namedProofReferenceFailureReason(scorecardScalarValue(ref), ref) == ""
+}
+
+func (builder scorecardGateBuilder) namedProofReferenceFailureReason(label, ref string) string {
 	if builder.root == "" {
-		return false
+		return fmt.Sprintf("named-proof %s cannot resolve without source root", label)
 	}
 	path, ok := scorecardRepoFilePath(ref)
 	if !ok {
-		return false
+		return fmt.Sprintf("named-proof %s has invalid repository file ref %q", label, ref)
 	}
 	info, err := os.Stat(filepath.Join(builder.root, path))
-	return err == nil && !info.IsDir()
+	if err != nil {
+		return fmt.Sprintf("named-proof %s references missing file %s", label, path)
+	}
+	if info.IsDir() {
+		return fmt.Sprintf("named-proof %s references directory %s", label, path)
+	}
+	return ""
 }
 
 func scorecardRepoFilePath(ref string) (string, bool) {
@@ -526,20 +618,24 @@ func looksLikeNamedProofReference(ref string) bool {
 }
 
 func (builder scorecardGateBuilder) executableProofReferenceExists(ref string) bool {
+	return builder.executableProofReferenceFailureReason(scorecardScalarValue(ref), ref) == ""
+}
+
+func (builder scorecardGateBuilder) executableProofReferenceFailureReason(label, ref string) string {
 	pattern, ok := internalAppGoTestRunPattern(ref)
 	if !ok {
-		return false
+		return fmt.Sprintf("executable proof %s must use go test ./internal/app -run ...", label)
 	}
 	testNames := scorecardTestNamesFromRunPattern(pattern)
 	if len(testNames) == 0 {
-		return false
+		return fmt.Sprintf("executable proof %s does not name any Test... functions", label)
 	}
 	for _, testName := range testNames {
 		if !builder.scorecardTestFunctionExists(testName) {
-			return false
+			return fmt.Sprintf("executable proof %s names missing Go test function %s", label, testName)
 		}
 	}
-	return true
+	return ""
 }
 
 func isInternalAppGoTestRunReference(ref string) bool {
