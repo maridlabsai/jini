@@ -93,6 +93,108 @@ func TestScorecardGateIsDocumentedAsCommitGate(t *testing.T) {
 	}
 }
 
+func TestRequiredOutcomeGatesDeclareProofReferences(t *testing.T) {
+	root := repoRootForMigrationTest(t)
+
+	goldenBenchmark := readRepoFile(t, root, "specs/golden-competitive-benchmark.yaml")
+	requiredProofs := map[string][]string{
+		"direct-cwd-file-edit-fixture": {
+			"id: cli-ux-regression-direct-edit",
+			"kind: executable",
+			`ref: "go test ./internal/app -run TestInteractiveLocalTextEditAppendsQuotedLineInsteadOfDrafting"`,
+		},
+		"simple-question-compact-answer": {
+			"id: cli-ux-regression-simple-question",
+			"kind: executable",
+			`ref: "go test ./internal/app -run 'TestCurrentWorkSimpleFactualQuestionAnswersDirectly|TestDirectArgsSimpleFactualQuestionAnswersDirectly|TestInteractiveSimpleFactualQuestionAnswersDirectlyWithoutCurrentWork'"`,
+		},
+		"async-work-receipt-fixture": {
+			"id: competitive-release-plan-async-work-receipt",
+			"kind: named-proof",
+			`ref: "specs/competitive-release-plan.md#async-work-receipt"`,
+		},
+		"offline-route-proof-fixture": {
+			"id: publish-readiness-offline-regression",
+			"kind: executable",
+			`ref: "go test ./internal/app -run TestPublishReadinessIncludesOfflineRegressionGuardrails"`,
+		},
+		"adversarial-code-review-fixture": {
+			"id: competitive-release-plan-code-review-quality",
+			"kind: named-proof",
+			`ref: "specs/competitive-release-plan.md#code-review-quality-is-now-a-product-bar"`,
+		},
+		"competitor-watch-refresh-fixture": {
+			"id: competitive-release-plan-competitive-watch-packet",
+			"kind: named-proof",
+			`ref: "specs/competitive-release-plan.md#competitive-watch-packet"`,
+		},
+		"commercial-tier-boundary-fixture": {
+			"id: product-simplicity-tier-boundary",
+			"kind: executable",
+			`ref: "go test ./internal/app -run TestP1SimplicityPriorityCoversCommandsSkillsAndAgents"`,
+		},
+		"cross-surface-continuity-fixture": {
+			"id: product-resource-cross-surface-continuity",
+			"kind: executable",
+			`ref: "go test ./internal/app -run TestResourcePolicyPrioritiesAreGated"`,
+		},
+		"token-frugality-route-proof-fixture": {
+			"id: product-resource-token-frugality",
+			"kind: executable",
+			`ref: "go test ./internal/app -run TestResourcePolicyPrioritiesAreGated"`,
+		},
+	}
+	for id, required := range requiredProofs {
+		block := requiredOutcomeGateBlock(t, goldenBenchmark, id)
+		if !strings.Contains(block, "proof_references:") {
+			t.Fatalf("required outcome gate %q must declare proof_references:\n%s", id, block)
+		}
+		for _, want := range required {
+			if !strings.Contains(block, want) {
+				t.Fatalf("required outcome gate %q must include proof reference %q:\n%s", id, want, block)
+			}
+		}
+	}
+
+	gateMatrix := readRepoFile(t, root, "specs/engineering-gate-matrix.md")
+	for _, want := range []string{
+		"Outcome gates require executable or named proof references, not just competitor or fixture names.",
+		"A gate name without a runnable command or named proof reference is planning prose, not evidence.",
+	} {
+		if !strings.Contains(gateMatrix, want) {
+			t.Fatalf("engineering gate matrix must document proof-backed outcome gates %q", want)
+		}
+	}
+
+	productSettling := readRepoFile(t, root, "specs/product-settling-decisions.md")
+	for _, want := range []string{
+		"Outcome gates require executable or named proof references; names alone do not satisfy the scorecard.",
+		"Each required outcome must point to a runnable check or a named proof surface that can be inspected later.",
+	} {
+		if !strings.Contains(productSettling, want) {
+			t.Fatalf("product settling decisions must document proof-backed outcome gates %q", want)
+		}
+	}
+}
+
+func requiredOutcomeGateBlock(t *testing.T, benchmark, id string) string {
+	t.Helper()
+	marker := "    - id: " + id
+	start := strings.Index(benchmark, marker)
+	if start == -1 {
+		t.Fatalf("required outcome gate %q is missing", id)
+	}
+	rest := benchmark[start+len(marker):]
+	end := strings.Index(rest, "\n    - id: ")
+	if end == -1 {
+		end = strings.Index(rest, "\nmethodology:")
+	}
+	if end == -1 {
+		return benchmark[start:]
+	}
+	return benchmark[start : start+len(marker)+end]
+}
+
 func TestEngineeringGateMatrixDoesNotListRequiredGatesAsPromotionCandidates(t *testing.T) {
 	root := repoRootForMigrationTest(t)
 

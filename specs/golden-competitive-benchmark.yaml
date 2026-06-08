@@ -146,51 +146,111 @@ scorecard_gates:
   required_outcome_gates:
     - id: direct-cwd-file-edit-fixture
       competitors: [claude-code, codex, aider, cline, opencode]
+      proof_references:
+        - id: cli-ux-regression-direct-edit
+          kind: executable
+          ref: "go test ./internal/app -run TestInteractiveLocalTextEditAppendsQuotedLineInsteadOfDrafting"
+        - id: cli-ux-regression-current-work-edit
+          kind: executable
+          ref: "go test ./internal/app -run TestCurrentWorkLocalTextEditExecutesWithoutStartPrompt"
       gate: >
         A user opening Jini in a directory and asking for a named file edit must
         see the file changed or a fail-closed ambiguity prompt, never a generic
         draft or Start/Keep workflow.
     - id: simple-question-compact-answer
       competitors: [chatgpt, claude-code, codex, gemini-cli]
+      proof_references:
+        - id: cli-ux-regression-simple-question
+          kind: executable
+          ref: "go test ./internal/app -run 'TestCurrentWorkSimpleFactualQuestionAnswersDirectly|TestDirectArgsSimpleFactualQuestionAnswersDirectly|TestInteractiveSimpleFactualQuestionAnswersDirectlyWithoutCurrentWork'"
       gate: >
         A simple factual question must return a compact answer without dumping
         stale current-work status or unrelated artifacts.
     - id: async-work-receipt-fixture
       competitors: [codex, github-copilot-coding-agent, google-jules, devin, replit-agent]
+      proof_references:
+        - id: competitive-release-plan-async-work-receipt
+          kind: named-proof
+          ref: "specs/competitive-release-plan.md#async-work-receipt"
+        - id: competitive-release-plan-outcome-gated-scorecard
+          kind: named-proof
+          ref: "specs/competitive-release-plan.md#outcome-gated-competitive-scorecard"
       gate: >
         Any delegated or background run must expose route, model or profile,
         context loaded, files changed, commands and tests run, blockers,
         approval state, and rollback path.
     - id: offline-route-proof-fixture
       competitors: [ollama, lm-studio, continue, cline, jan, open-webui]
+      proof_references:
+        - id: publish-readiness-offline-regression
+          kind: executable
+          ref: "go test ./internal/app -run TestPublishReadinessIncludesOfflineRegressionGuardrails"
+        - id: platform-offline-strategy-future-update-policy
+          kind: named-proof
+          ref: "specs/platform-offline-strategy.md#future-update-policy"
       gate: >
         Offline and local-model routes must be proven by executable diagnostics
         or fail with exact setup instructions; docs may not claim fake offline
         support.
     - id: adversarial-code-review-fixture
       competitors: [github-copilot-coding-agent, cursor, qodo-merge, ellipsis, tabnine-agent]
+      proof_references:
+        - id: competitive-release-plan-code-review-quality
+          kind: named-proof
+          ref: "specs/competitive-release-plan.md#code-review-quality-is-now-a-product-bar"
+        - id: open-source-prompt-validation-adversarial-review
+          kind: named-proof
+          ref: "specs/open-source-prompt-validation.yaml#adversarial-code-review"
       gate: >
         Code changes must pass a high-signal adversarial review path covering
         behavior, tests, security, integration risk, and false-positive control.
     - id: competitor-watch-refresh-fixture
       competitors: [claude-code, codex, github-copilot-coding-agent, google-jules, cursor, windsurf, opencode, langgraph]
+      proof_references:
+        - id: competitive-release-plan-competitive-watch-packet
+          kind: named-proof
+          ref: "specs/competitive-release-plan.md#competitive-watch-packet"
+        - id: competitive-release-plan-outcome-gated-scorecard
+          kind: named-proof
+          ref: "specs/competitive-release-plan.md#outcome-gated-competitive-scorecard"
       gate: >
         Competitor additions must update the benchmark, KPI watchlist, release
         plan, and required gates instead of remaining one-off analysis.
     - id: commercial-tier-boundary-fixture
       competitors: [continue, cline, litellm, openrouter, zapier-agents, lindy]
+      proof_references:
+        - id: product-simplicity-tier-boundary
+          kind: executable
+          ref: "go test ./internal/app -run TestP1SimplicityPriorityCoversCommandsSkillsAndAgents"
+        - id: skills-and-delegation-tier-boundary
+          kind: named-proof
+          ref: "specs/skills-and-delegation-slice.md#tier-boundary"
       gate: >
         Free tier must preserve useful local/BYO routing while commercial-only
         skills, agent fleets, managed throttle recovery, and team automation
         remain explicitly separated.
     - id: cross-surface-continuity-fixture
       competitors: [codex, claude-code, github-copilot-coding-agent, cursor]
+      proof_references:
+        - id: product-resource-cross-surface-continuity
+          kind: executable
+          ref: "go test ./internal/app -run TestResourcePolicyPrioritiesAreGated"
+        - id: cross-surface-session-platform-prd
+          kind: named-proof
+          ref: "specs/cross-surface-session-platform-prd.md#cross-surface-session-platform-prd"
       gate: >
         The same work item must preserve identity, route state, artifacts,
         approvals, and next action across CLI, desktop, mobile, and browser
         surfaces before cross-surface claims ship.
     - id: token-frugality-route-proof-fixture
       competitors: [aider, continue, cline, litellm, openrouter]
+      proof_references:
+        - id: product-resource-token-frugality
+          kind: executable
+          ref: "go test ./internal/app -run TestResourcePolicyPrioritiesAreGated"
+        - id: lean-platform-token-frugality-p0
+          kind: named-proof
+          ref: "specs/lean-platform-gate.md#token-frugality"
       gate: >
         Route decisions must show compact context reuse, transcript replay
         avoidance, cost/throttle rationale, and why a premium or high-context

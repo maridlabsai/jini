@@ -54,6 +54,8 @@ Required outcome:
   coverage for async/background agents, cross-surface continuity, visible
   progress and outputs, permissioned execution, skills/hooks/context routing,
   local/open-model optionality, and scorecard gate wiring
+- Outcome gates require executable or named proof references, not just competitor or fixture names.
+- A gate name without a runnable command or named proof reference is planning prose, not evidence.
 
 ### Push gate
 

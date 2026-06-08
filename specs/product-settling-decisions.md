@@ -196,6 +196,9 @@ also gate:
 - cross-surface session identity
 - token-frugal route proof
 
+Outcome gates require executable or named proof references; names alone do not satisfy the scorecard.
+Each required outcome must point to a runnable check or a named proof surface that can be inspected later.
+
 New competitor pressure from coding agents, review agents, local/offline tools,
 gateways, app builders, and agent frameworks is valid only when it changes one
 of those release-critical outcomes. Otherwise it is watchlist noise.

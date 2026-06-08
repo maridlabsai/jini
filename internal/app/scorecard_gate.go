@@ -172,6 +172,7 @@ func (builder scorecardGateBuilder) Build() scorecardGateReport {
 	scorecardGateSection := yamlSection(text, "scorecard_gates")
 	normalizedBenchmark := normalizedYAMLIDs(text)
 	normalizedScorecardGate := normalizedYAMLIDs(scorecardGateSection)
+	outcomeGateEvidence := outcomeGateEvidenceReferences(scorecardGateSection)
 
 	builder.addThresholdChecks(&report, text, scorecardGateSection)
 	report.RequiredCompetitors = builder.presenceChecks(builder.policy.RequiredCompetitors, func(id string) bool {
@@ -181,7 +182,7 @@ func (builder scorecardGateBuilder) Build() scorecardGateReport {
 		return normalizedScorecardGate[id]
 	})
 	report.OutcomeGates = builder.presenceChecks(builder.policy.RequiredOutcomeGates, func(id string) bool {
-		return normalizedScorecardGate[id]
+		return normalizedScorecardGate[id] && outcomeGateEvidence[id]
 	})
 
 	if !scorecardChecksPass(report) {
@@ -305,6 +306,134 @@ func readScorecardMinimum(section, key string, fallback int) int {
 		}
 	}
 	return fallback
+}
+
+func outcomeGateEvidenceReferences(scorecardGateSection string) map[string]bool {
+	outcomeGateSection := yamlSection(scorecardGateSection, "required_outcome_gates")
+	evidenceByID := map[string]bool{}
+	for _, block := range yamlListItemBlocks(outcomeGateSection) {
+		id := yamlBlockID(block)
+		if id == "" || !yamlBlockHasEvidenceReference(block) {
+			continue
+		}
+		evidenceByID[id] = true
+	}
+	return evidenceByID
+}
+
+func yamlListItemBlocks(section string) []string {
+	var blocks []string
+	var current []string
+	itemIndent := -1
+	for _, line := range strings.Split(section, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "- ") {
+			indent := leadingSpaceCount(line)
+			if itemIndent == -1 {
+				itemIndent = indent
+			}
+			if indent == itemIndent {
+				if len(current) > 0 {
+					blocks = append(blocks, strings.Join(current, "\n"))
+				}
+				current = []string{line}
+				continue
+			}
+		}
+		if len(current) > 0 {
+			current = append(current, line)
+		}
+	}
+	if len(current) > 0 {
+		blocks = append(blocks, strings.Join(current, "\n"))
+	}
+	return blocks
+}
+
+func yamlBlockID(block string) string {
+	for _, line := range strings.Split(block, "\n") {
+		value := strings.TrimSpace(line)
+		if strings.HasPrefix(value, "- ") {
+			value = strings.TrimSpace(strings.TrimPrefix(value, "- "))
+		}
+		key, raw, ok := splitYAMLKeyValue(value)
+		if !ok || key != "id" {
+			continue
+		}
+		return normalizeScorecardID(strings.Trim(raw, `"'[]`))
+	}
+	return ""
+}
+
+func yamlBlockHasEvidenceReference(block string) bool {
+	referenceParentIndent := -1
+	for _, line := range strings.Split(block, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		indent := leadingSpaceCount(line)
+		if referenceParentIndent >= 0 {
+			if indent <= referenceParentIndent {
+				referenceParentIndent = -1
+			} else if hasNestedScorecardReference(trimmed) {
+				return true
+			}
+		}
+
+		value := trimmed
+		if strings.HasPrefix(value, "- ") {
+			value = strings.TrimSpace(strings.TrimPrefix(value, "- "))
+		}
+		key, raw, ok := splitYAMLKeyValue(value)
+		if !ok || !isOutcomeGateEvidenceKey(key) {
+			continue
+		}
+		if hasScorecardReferenceValue(raw) {
+			return true
+		}
+		referenceParentIndent = indent
+	}
+	return false
+}
+
+func splitYAMLKeyValue(value string) (string, string, bool) {
+	key, raw, ok := strings.Cut(value, ":")
+	if !ok {
+		return "", "", false
+	}
+	key = strings.TrimSpace(key)
+	if key == "" || strings.ContainsAny(key, " []{}") {
+		return "", "", false
+	}
+	return key, strings.TrimSpace(raw), true
+}
+
+func isOutcomeGateEvidenceKey(key string) bool {
+	normalized := normalizeScorecardID(key)
+	return strings.Contains(normalized, "evidence") ||
+		strings.Contains(normalized, "proof") ||
+		strings.Contains(normalized, "reference")
+}
+
+func hasNestedScorecardReference(value string) bool {
+	if strings.HasPrefix(value, "- ") {
+		value = strings.TrimSpace(strings.TrimPrefix(value, "- "))
+	}
+	if _, raw, ok := splitYAMLKeyValue(value); ok {
+		return hasScorecardReferenceValue(raw)
+	}
+	return hasScorecardReferenceValue(value)
+}
+
+func hasScorecardReferenceValue(value string) bool {
+	value = strings.TrimSpace(strings.Trim(value, `"'`))
+	switch strings.ToLower(value) {
+	case "", "[]", "{}", ">", "|", "null", "none", "n/a":
+		return false
+	default:
+		return true
+	}
 }
 
 func yamlSection(text, key string) string {

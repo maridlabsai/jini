@@ -458,6 +458,8 @@ func TestScorecardGateBuilderSupportsCustomPolicy(t *testing.T) {
 		"    - id: custom-vector",
 		"  required_outcome_gates:",
 		"    - id: custom-outcome",
+		"      evidence:",
+		"        - specs/custom-scorecard.md#custom-outcome",
 		"core_benchmark_set:",
 		"  - id: custom-competitor",
 		"watchlist:",
@@ -497,6 +499,49 @@ func TestScorecardGateBuilderSupportsCustomPolicy(t *testing.T) {
 	}
 	if len(report.OutcomeGates) != 1 || !report.OutcomeGates[0].Present {
 		t.Fatalf("expected custom outcome gate to be present, got %#v", report.OutcomeGates)
+	}
+}
+
+func TestScorecardGateBuilderRequiresOutcomeGateEvidenceReference(t *testing.T) {
+	root := t.TempDir()
+	scorecardPath := "custom-scorecard.yaml"
+	writeTestFile(t, filepath.Join(root, scorecardPath), strings.Join([]string{
+		"scorecard_gates:",
+		"  minimum_core_competitors: 1",
+		"  minimum_watchlist_competitors: 1",
+		"  minimum_scenarios: 1",
+		"  required_core_competitors:",
+		"    - id: custom-competitor",
+		"  required_pressure_vectors:",
+		"    - id: custom-vector",
+		"  required_outcome_gates:",
+		"    - id: custom-outcome",
+		"      gate: Must not pass by id alone.",
+		"core_benchmark_set:",
+		"  - id: custom-competitor",
+		"watchlist:",
+		"  - id: custom-watch",
+		"scenarios:",
+		"  - id: custom-scenario",
+		"    checks:",
+		"      - id: custom-vector",
+	}, "\n"))
+
+	report := newScorecardGateBuilder(root, scorecardGatePolicy{
+		BenchmarkPath:               scorecardPath,
+		RequiredCompetitors:         []string{"custom-competitor"},
+		RequiredPressureVectors:     []string{"custom-vector"},
+		RequiredOutcomeGates:        []string{"custom-outcome"},
+		MinimumCoreCompetitors:      1,
+		MinimumWatchlistCompetitors: 1,
+		MinimumScenarios:            1,
+	}).Build()
+
+	if report.Status != "needs-attention" {
+		t.Fatalf("expected missing outcome evidence to need attention, got %#v", report)
+	}
+	if len(report.OutcomeGates) != 1 || report.OutcomeGates[0].Present || report.OutcomeGates[0].Status != "missing" {
+		t.Fatalf("expected custom outcome gate to be missing without evidence, got %#v", report.OutcomeGates)
 	}
 }
 
