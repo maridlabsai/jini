@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.1.1
+
+Product-facing CLI correction for first-minute user testing.
+
+What changed:
+
+- bare `jini` now opens as a compact task-first prompt even when saved work exists
+- saved work no longer appears as a startup dashboard
+- visible `Switch` and `Start/Keep` front-door vocabulary is removed from normal use
+- typing a saved work title resumes that thread naturally
+- canonical PRD is reduced to the current CLI-first GTM wedge
+- CLI UX regression gate now pins the rejected tester scenarios
+
 ## v0.1.0
 
 Initial public release of Jini.
