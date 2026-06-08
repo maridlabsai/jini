@@ -420,10 +420,11 @@ func hasNestedScorecardReference(value string) bool {
 	if strings.HasPrefix(value, "- ") {
 		value = strings.TrimSpace(strings.TrimPrefix(value, "- "))
 	}
-	if _, raw, ok := splitYAMLKeyValue(value); ok {
+	key, raw, ok := splitYAMLKeyValue(value)
+	if ok && normalizeScorecardID(key) == "ref" {
 		return hasScorecardReferenceValue(raw)
 	}
-	return hasScorecardReferenceValue(value)
+	return false
 }
 
 func hasScorecardReferenceValue(value string) bool {
