@@ -2879,12 +2879,17 @@ func renderSafePermissionsStatus(w io.Writer) {
 
 func renderRouteCostStatus(w io.Writer) {
 	device := currentDeviceProfile()
+	provider := detectProvider()
 	fmt.Fprintln(w, "Route and cost")
-	fmt.Fprintf(w, "Current route: %s.\n", workingWithLabel(detectProvider()))
+	fmt.Fprintf(w, "Current route: %s. Readiness: %s.\n", workingWithLabel(provider), routeReadinessLabel(provider))
 	fmt.Fprintln(w, "Token posture: compact context first; avoid transcript replay unless quality or safety requires it.")
 	fmt.Fprintln(w, "Continuity: offline and online work stitch into the same session.")
 	fmt.Fprintf(w, "Route inputs: device %s; battery, thermal, and CLI throttle levels affect switching.\n", firstNonEmpty(device.DeviceClass, "unknown"))
 	fmt.Fprintln(w, "Least-expense capable route is the default; use `doctor` to inspect setup or `auto` to restore automatic routing.")
+}
+
+func routeReadinessLabel(provider providerConfig) string {
+	return firstNonEmpty(strings.TrimSpace(provider.Status), "unknown")
 }
 
 func renderRouteDecisionCard(w io.Writer, request providerGenerationRequest, decision routeDecision) {

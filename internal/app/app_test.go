@@ -1186,6 +1186,34 @@ func TestRouteCommandListsAvailableRoutes(t *testing.T) {
 	}
 }
 
+func TestRouteCommandShowsReadinessAndTokenPosture(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_PROVIDER", "local-preview")
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"route"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected route status to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Route and cost",
+		"Current route: Local preview. Readiness: ok.",
+		"Token posture: compact context first",
+		"Continuity: offline and online work stitch into the same session.",
+		"Least-expense capable route is the default",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected route output to contain %q, got:\n%s", want, out)
+		}
+	}
+	if got := nonEmptyLineCount(out); got > 6 {
+		t.Fatalf("expected route status to stay compact, got %d non-empty lines:\n%s", got, out)
+	}
+}
+
 func TestRouteCommandCanSetRouteWithoutSetupWizard(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)
