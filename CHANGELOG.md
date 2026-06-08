@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.1.2
+
+Release candidate for the corrected first-minute CLI experience.
+
+What changed:
+
+- simple factual questions now answer directly instead of entering a saved-work frame
+- obvious local text edits now update the named file instead of producing a draft
+- ambiguous text edits fail closed with candidate filenames and no file changes
+- route output now shows readiness so users can understand online/offline routing posture
+- generic fallback tasks no longer expose the rejected `Start` workflow prompt
+- the CLI UX regression gate now covers direct edits, simple questions, stale saved work, route readiness, and fallback wording
+
 ## v0.1.1
 
 Product-facing CLI correction for first-minute user testing.
