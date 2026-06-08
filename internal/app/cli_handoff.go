@@ -4,9 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
 	"os/exec"
 	"runtime"
 	"strings"
+	"time"
+	"unicode/utf8"
 )
 
 type cliHandoffDescriptor struct {
@@ -22,6 +25,21 @@ type cliHandoffCommand struct {
 	Descriptor cliHandoffDescriptor
 	Executable string
 	Args       []string
+}
+
+type cliHandoffReceipt struct {
+	ContextType  string   `json:"context_type"`
+	Mode         string   `json:"mode"`
+	Label        string   `json:"label"`
+	Executable   string   `json:"executable"`
+	ArgsTemplate []string `json:"args_template"`
+	CWD          string   `json:"cwd"`
+	ExitStatus   int      `json:"exit_status"`
+	DurationMS   int64    `json:"duration_ms"`
+	PromptChars  int      `json:"prompt_chars"`
+	StdoutChars  int      `json:"stdout_chars"`
+	StderrChars  int      `json:"stderr_chars"`
+	CompletedAt  string   `json:"completed_at,omitempty"`
 }
 
 func cliHandoffDescriptorForMode(mode string) (cliHandoffDescriptor, bool) {
@@ -183,14 +201,14 @@ func cliHandoffTrustIssue(path string) string {
 	return ""
 }
 
-func runCLIHandoff(ctx context.Context, mode, prompt string) (string, error) {
+func runCLIHandoff(ctx context.Context, mode, prompt string) (string, *cliHandoffReceipt, error) {
 	descriptor, ok := cliHandoffDescriptorForMode(mode)
 	if !ok {
-		return "", fmt.Errorf("unknown CLI handoff route %q", mode)
+		return "", nil, fmt.Errorf("unknown CLI handoff route %q", mode)
 	}
 	command, missing := resolveCLIHandoffCommand(descriptor)
 	if len(missing) > 0 {
-		return "", cliHandoffSetupError(providerConfig{Missing: missing})
+		return "", nil, cliHandoffSetupError(providerConfig{Missing: missing})
 	}
 	args := cliHandoffArgsWithPrompt(command.Args, prompt)
 	cmd := exec.CommandContext(ctx, command.Executable, args...)
@@ -198,14 +216,17 @@ func runCLIHandoff(ctx context.Context, mode, prompt string) (string, error) {
 	var stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
+	startedAt := time.Now()
 	if err := cmd.Run(); err != nil {
+		receipt := buildCLIHandoffReceipt(command, prompt, stdout.String(), stderr.String(), cmd.ProcessState, time.Since(startedAt))
 		detail := strings.TrimSpace(stderr.String())
 		if detail != "" {
-			return "", fmt.Errorf("%s failed: %v\n%s", descriptor.Label, err, detail)
+			return "", receipt, fmt.Errorf("%s failed: %v\n%s", descriptor.Label, err, detail)
 		}
-		return "", fmt.Errorf("%s failed: %v", descriptor.Label, err)
+		return "", receipt, fmt.Errorf("%s failed: %v", descriptor.Label, err)
 	}
-	return strings.TrimSpace(stdout.String()), nil
+	receipt := buildCLIHandoffReceipt(command, prompt, stdout.String(), stderr.String(), cmd.ProcessState, time.Since(startedAt))
+	return strings.TrimSpace(stdout.String()), receipt, nil
 }
 
 func cliHandoffSetupError(provider providerConfig) error {
@@ -231,4 +252,26 @@ func cliHandoffArgsWithPrompt(args []string, prompt string) []string {
 		out = append(out, prompt)
 	}
 	return out
+}
+
+func buildCLIHandoffReceipt(command cliHandoffCommand, prompt, stdout, stderr string, processState *os.ProcessState, duration time.Duration) *cliHandoffReceipt {
+	cwd, _ := os.Getwd()
+	exitStatus := -1
+	if processState != nil {
+		exitStatus = processState.ExitCode()
+	}
+	return &cliHandoffReceipt{
+		ContextType:  "JiniCLIHandoffReceipt",
+		Mode:         command.Descriptor.Mode,
+		Label:        command.Descriptor.Label,
+		Executable:   command.Executable,
+		ArgsTemplate: append([]string{}, command.Args...),
+		CWD:          cwd,
+		ExitStatus:   exitStatus,
+		DurationMS:   duration.Milliseconds(),
+		PromptChars:  utf8.RuneCountInString(prompt),
+		StdoutChars:  utf8.RuneCountInString(stdout),
+		StderrChars:  utf8.RuneCountInString(stderr),
+		CompletedAt:  time.Now().UTC().Format(time.RFC3339),
+	}
 }

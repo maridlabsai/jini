@@ -115,10 +115,11 @@ func generateWithConfiguredProviderDecision(ctx context.Context, request provide
 		if prompt == "" {
 			prompt = providerUserPrompt(request)
 		}
-		text, err := runCLIHandoff(ctx, decision.ToolMode, prompt)
+		text, receipt, err := runCLIHandoff(ctx, decision.ToolMode, prompt)
 		if err != nil {
 			return "", true, decision, err
 		}
+		decision.CLIHandoffReceipt = receipt
 		return text, true, decision, nil
 	}
 	if provider.ID == "local-preview" {

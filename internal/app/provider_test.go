@@ -116,6 +116,98 @@ func TestGenerateWithConfiguredProviderHandsOffToConfiguredCLI(t *testing.T) {
 	}
 }
 
+func TestMaybeWriteProviderFirstDraftPersistsPrivacyPreservingCLIHandoffReceipt(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_TOOL", "claude-code")
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	binDir := t.TempDir()
+	fakeCLI := writeProviderFakeExecutable(t, binDir, "claude", "printf 'fake claude draft\\n'")
+	t.Setenv("PATH", binDir)
+
+	workDir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(workDir, "views"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	source := "Summarize the private launch notes without leaking the prompt into route state."
+	if err := maybeWriteProviderFirstDraft(context.Background(), starterChoice{PackID: "general-work"}, workDir, "Launch Notes", source); err != nil {
+		t.Fatalf("write CLI-backed provider draft: %v", err)
+	}
+
+	routeSaved := mustReadFile(t, filepath.Join(workDir, "route.json"))
+	for _, want := range []string{
+		`"cli_handoff_receipt": {`,
+		`"context_type": "JiniCLIHandoffReceipt"`,
+		`"mode": "claude-code"`,
+		`"label": "Claude Code CLI handoff"`,
+		`"executable": "` + fakeCLI + `"`,
+		`"args_template": [`,
+		`"--print"`,
+		`"{{prompt}}"`,
+		`"exit_status": 0`,
+		`"cwd": "`,
+		`"duration_ms":`,
+		`"prompt_chars": 79`,
+		`"stdout_chars": 18`,
+		`"stderr_chars": 0`,
+	} {
+		if !strings.Contains(routeSaved, want) {
+			t.Fatalf("expected route receipt to contain %q, got:\n%s", want, routeSaved)
+		}
+	}
+	for _, unwanted := range []string{
+		source,
+		"fake claude draft",
+	} {
+		if strings.Contains(routeSaved, unwanted) {
+			t.Fatalf("route receipt must not persist prompt or CLI output body %q, got:\n%s", unwanted, routeSaved)
+		}
+	}
+}
+
+func TestSaveWorkRouteClearsCLIHandoffReceiptWhenRouteSwitchesAwayFromCLI(t *testing.T) {
+	workDir := t.TempDir()
+	request := providerGenerationRequest{
+		Choice: starterChoice{PackID: "general-work"},
+		Title:  "Switch Route",
+		Source: "Switch this work back to local preview.",
+	}
+	if err := saveWorkRoute(workDir, request, routeDecision{
+		Active:      true,
+		ToolMode:    "claude-code",
+		ToolLabel:   "Claude Code CLI handoff",
+		RoutePolicy: "CLI handoff",
+		Provider:    detectCLIHandoffProvider("claude-code"),
+		CLIHandoffReceipt: &cliHandoffReceipt{
+			ContextType: "JiniCLIHandoffReceipt",
+			Mode:        "claude-code",
+			Label:       "Claude Code CLI handoff",
+			Executable:  "/tmp/fake-claude",
+			ExitStatus:  0,
+		},
+	}); err != nil {
+		t.Fatalf("save CLI route: %v", err)
+	}
+
+	if err := saveWorkRoute(workDir, request, routeDecision{
+		Active:      true,
+		ToolMode:    "local-preview",
+		ToolLabel:   "Local preview",
+		RoutePolicy: "Local fallback",
+		Provider:    detectLocalPreviewProvider(),
+	}); err != nil {
+		t.Fatalf("save local route: %v", err)
+	}
+
+	routeSaved := mustReadFile(t, filepath.Join(workDir, "route.json"))
+	if strings.Contains(routeSaved, "cli_handoff_receipt") || strings.Contains(routeSaved, "fake-claude") {
+		t.Fatalf("expected route switch away from CLI to clear stale handoff receipt, got:\n%s", routeSaved)
+	}
+	if !strings.Contains(routeSaved, `"previous_tool_mode": "claude-code"`) {
+		t.Fatalf("expected route switch metadata to remain, got:\n%s", routeSaved)
+	}
+}
+
 func TestGenerateWithConfiguredProviderFailsClosedForMissingCLI(t *testing.T) {
 	t.Setenv("JINI_TOOL", "aider")
 	t.Setenv("PATH", t.TempDir())

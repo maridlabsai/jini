@@ -54,6 +54,7 @@ type routeDecision struct {
 	EffortReason        string
 	VerificationLevel   string
 	VerificationReason  string
+	CLIHandoffReceipt   *cliHandoffReceipt
 }
 
 type autoModePolicy struct {
@@ -1177,36 +1178,37 @@ func modelReasonForToolMode(toolMode string) string {
 }
 
 type savedWorkRoute struct {
-	SchemaVersion                string          `json:"schema_version"`
-	ContextType                  string          `json:"context_type"`
-	ToolMode                     string          `json:"tool_mode"`
-	ToolLabel                    string          `json:"tool_label"`
-	RoutePolicy                  string          `json:"route_policy"`
-	AutoMode                     *autoModePolicy `json:"auto_mode,omitempty"`
-	FeedbackKey                  string          `json:"feedback_key,omitempty"`
-	ModelLabel                   string          `json:"model_label"`
-	ModelReason                  string          `json:"model_reason"`
-	ProviderLabel                string          `json:"provider_label"`
-	ChosenAutomatically          bool            `json:"chosen_automatically"`
-	Reason                       string          `json:"reason"`
-	ContinuityReason             string          `json:"continuity_reason,omitempty"`
-	EffortLevel                  string          `json:"effort_level"`
-	EffortReason                 string          `json:"effort_reason"`
-	VerificationLevel            string          `json:"verification_level,omitempty"`
-	VerificationReason           string          `json:"verification_reason,omitempty"`
-	ModelFeedback                string          `json:"model_feedback,omitempty"`
-	ArtifactFeedbackPath         string          `json:"artifact_feedback_path,omitempty"`
-	ArtifactFeedbackReason       string          `json:"artifact_feedback_reason,omitempty"`
-	ArtifactEditClass            string          `json:"artifact_edit_class,omitempty"`
-	ArtifactEditScope            string          `json:"artifact_edit_scope,omitempty"`
-	ArtifactSemanticClass        string          `json:"artifact_semantic_class,omitempty"`
-	ArtifactOutcomeSignal        string          `json:"artifact_outcome_signal,omitempty"`
-	ArtifactOutcomeReason        string          `json:"artifact_outcome_reason,omitempty"`
-	PassiveArtifactOutcomeSignal string          `json:"passive_artifact_outcome_signal,omitempty"`
-	PassiveArtifactOutcomeReason string          `json:"passive_artifact_outcome_reason,omitempty"`
-	PreviousToolMode             string          `json:"previous_tool_mode,omitempty"`
-	RouteSwitchCount             int             `json:"route_switch_count,omitempty"`
-	LastRouteSwitchReason        string          `json:"last_route_switch_reason,omitempty"`
+	SchemaVersion                string             `json:"schema_version"`
+	ContextType                  string             `json:"context_type"`
+	ToolMode                     string             `json:"tool_mode"`
+	ToolLabel                    string             `json:"tool_label"`
+	RoutePolicy                  string             `json:"route_policy"`
+	AutoMode                     *autoModePolicy    `json:"auto_mode,omitempty"`
+	FeedbackKey                  string             `json:"feedback_key,omitempty"`
+	ModelLabel                   string             `json:"model_label"`
+	ModelReason                  string             `json:"model_reason"`
+	ProviderLabel                string             `json:"provider_label"`
+	ChosenAutomatically          bool               `json:"chosen_automatically"`
+	Reason                       string             `json:"reason"`
+	ContinuityReason             string             `json:"continuity_reason,omitempty"`
+	EffortLevel                  string             `json:"effort_level"`
+	EffortReason                 string             `json:"effort_reason"`
+	VerificationLevel            string             `json:"verification_level,omitempty"`
+	VerificationReason           string             `json:"verification_reason,omitempty"`
+	ModelFeedback                string             `json:"model_feedback,omitempty"`
+	ArtifactFeedbackPath         string             `json:"artifact_feedback_path,omitempty"`
+	ArtifactFeedbackReason       string             `json:"artifact_feedback_reason,omitempty"`
+	ArtifactEditClass            string             `json:"artifact_edit_class,omitempty"`
+	ArtifactEditScope            string             `json:"artifact_edit_scope,omitempty"`
+	ArtifactSemanticClass        string             `json:"artifact_semantic_class,omitempty"`
+	ArtifactOutcomeSignal        string             `json:"artifact_outcome_signal,omitempty"`
+	ArtifactOutcomeReason        string             `json:"artifact_outcome_reason,omitempty"`
+	PassiveArtifactOutcomeSignal string             `json:"passive_artifact_outcome_signal,omitempty"`
+	PassiveArtifactOutcomeReason string             `json:"passive_artifact_outcome_reason,omitempty"`
+	PreviousToolMode             string             `json:"previous_tool_mode,omitempty"`
+	RouteSwitchCount             int                `json:"route_switch_count,omitempty"`
+	LastRouteSwitchReason        string             `json:"last_route_switch_reason,omitempty"`
+	CLIHandoffReceipt            *cliHandoffReceipt `json:"cli_handoff_receipt,omitempty"`
 }
 
 type artifactFeedbackBaseline struct {
@@ -1247,6 +1249,10 @@ func saveWorkRoute(workDir string, request providerGenerationRequest, decision r
 		routeSwitchCount++
 		lastRouteSwitchReason = strings.TrimSpace(decision.Reason)
 	}
+	cliHandoffReceipt := decision.CLIHandoffReceipt
+	if cliHandoffReceipt == nil && existing.ToolMode == decision.ToolMode {
+		cliHandoffReceipt = existing.CLIHandoffReceipt
+	}
 	data, err := json.MarshalIndent(savedWorkRoute{
 		SchemaVersion:                "0.1.0",
 		ContextType:                  "JiniWorkRoute",
@@ -1278,6 +1284,7 @@ func saveWorkRoute(workDir string, request providerGenerationRequest, decision r
 		PreviousToolMode:             previousToolMode,
 		RouteSwitchCount:             routeSwitchCount,
 		LastRouteSwitchReason:        lastRouteSwitchReason,
+		CLIHandoffReceipt:            cliHandoffReceipt,
 	}, "", "  ")
 	if err != nil {
 		return err
