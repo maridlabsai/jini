@@ -68,6 +68,8 @@ Non-negotiable invariants:
 - Route decisions stay inspectable, but routine answers avoid route ceremony.
 - Configured CLI route names require real installed-CLI handoff or fail-closed
   setup guidance; provider API routing is a separate route type.
+- Adapter breadth is P0 only for familiar tools users already trust; it must
+  not create a new workflow taxonomy or first-minute command surface.
 - Side-effecting work reports files changed, commands or tests run, blockers,
   approvals, and rollback or recovery path when relevant.
 - No hard-coded entity-to-template routing.
@@ -89,6 +91,10 @@ That means:
 This is P0. A provider-backed adapter can be an internal fallback or prototype,
 but it does not satisfy the configured-CLI route requirement.
 
+The first adapter wave is Codex, Claude Code, Gemini CLI, Aider, and OpenCode.
+The second wave is Continue, Cline/Roo, Cursor, Windsurf, GitHub Copilot coding
+agent, Ollama, LM Studio, OpenRouter, and LiteLLM-compatible gateways.
+
 Implementation plan:
 
 - P0.1: keep a golden CLI transcript suite for simple questions, bare
@@ -102,6 +108,8 @@ Implementation plan:
   generic drafts for file edits, or template routing from questions.
 - P0.5: accept new product surfaces only when they preserve this first-minute
   contract or are hidden behind explicit progressive disclosure.
+- P0.6: require familiar-tool adapter breadth to be scorecard-gated before it
+  is treated as a viral-adoption claim.
 
 ## Free Tier Decision
 

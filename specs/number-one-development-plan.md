@@ -27,6 +27,7 @@ This means:
 - simple questions answer directly
 - route inspection and route switching are clear
 - configured CLI routes actually hand off to configured CLIs
+- familiar tools are supported through adapters without adding a new UX curve
 - saved work helps continuation without becoming a startup dashboard
 - tests and gates catch regressions before commit
 
@@ -71,7 +72,7 @@ Status: next.
 Deliver:
 
 - keep `jini route` distinguishing CLI handoff, provider API, and local/offline routes
-- invoke installed Codex, Claude Code, or other configured CLI routes when selected
+- invoke installed Codex, Claude Code, Gemini CLI, Aider, or OpenCode when selected
 - preserve fail-closed guidance when a named CLI route is unavailable
 - keep provider API routes separately labeled instead of using CLI names
 - record route choice compactly so continuation does not replay stale context
@@ -89,7 +90,30 @@ Release blocker:
 - `codex`, `claude-code`, or another CLI route is implemented as a provider API
   alias or lacks visible handoff/fail-closed setup guidance
 
-### Cut 3: Saved Work Continuity Without Dashboard
+### Cut 3: Familiar-Tool Adapter Breadth
+
+Status: next.
+
+Deliver:
+
+- define one subprocess handoff contract for cwd, prompt, stdin/stdout,
+  approvals, changed files, exit status, and receipts
+- ship first-wave adapters for Codex, Claude Code, Gemini CLI, Aider, and OpenCode
+- plan second-wave adapters for Continue, Cline/Roo, Cursor, Windsurf, GitHub
+  Copilot coding agent, Ollama, LM Studio, OpenRouter, and LiteLLM
+- keep adapter setup behind `jini route` and `doctor`; no first-minute taxonomy
+
+Exit evidence:
+
+- adapter smoke tests cover available, missing, and failed handoff states
+- scorecard pressure vector `familiar-tool-adapter-breadth` remains green
+- docs list supported, reserved, and planned adapters without overclaiming
+
+Release blocker:
+
+- claiming broad framework support before the handoff contract has smoke tests
+
+### Cut 4: Saved Work Continuity Without Dashboard
 
 Status: next.
 
@@ -105,7 +129,7 @@ Exit evidence:
 - continuation tests prove saved state still helps
 - no public docs recommend a saved-work dashboard
 
-### Cut 4: User Feedback Loop
+### Cut 5: User Feedback Loop
 
 Status: next after the first tester pass.
 

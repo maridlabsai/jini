@@ -29,6 +29,7 @@ comparison_model:
     - JetBrains Junie
     - Zed Agent Panel
     - Continue
+    - Roo Code
     - OpenHands
     - Roomote
     - Devin
@@ -81,6 +82,12 @@ scorecard_gates:
     - devin
     - replit-agent
     - opencode
+    - google-gemini-cli
+    - roo-code
+    - ollama
+    - lm-studio
+    - litellm
+    - openrouter
     - sourcegraph-amp
     - tabnine-agent
     - qodo-merge
@@ -149,6 +156,12 @@ scorecard_gates:
         Questions, bare entities, and explicit task intents must behave like a
         familiar coding CLI before templates, vertical packs, or saved-work
         context are allowed to shape the response.
+    - id: familiar-tool-adapter-breadth
+      competitors: [claude-code, codex, google-gemini-cli, aider, opencode, continue, cline, roo-code, cursor, windsurf, ollama, lm-studio, openrouter, litellm]
+      gate: >
+        Viral adoption requires familiar-tool adapters across trusted CLIs,
+        local model hosts, and gateways, but each adapter must preserve the
+        normal tool workflow, fail closed when missing, and emit route receipts.
   required_outcome_gates:
     - id: direct-cwd-file-edit-fixture
       competitors: [claude-code, codex, aider, cline, opencode]

@@ -32,7 +32,7 @@ Core charter: intent-first Claude/Codex parity outranks feature expansion.
 - Fail closed with exact ambiguity when a file or code task is unclear.
 - Answer simple questions compactly without creating work.
 - Ask intent for bare entities without creating artifacts.
-- Route between configured CLIs, providers, and local/offline models.
+- Route between familiar CLIs, providers, gateways, and local/offline models.
 - Treat configured CLI routes as real installed-CLI handoffs, not provider API
   aliases.
 - Keep route, token, and local runtime diagnostics inspectable through `jini route`.
@@ -135,7 +135,7 @@ P0 now:
 - direct file edit reliability
 - simple question direct-answer behavior
 - route list, route set, route auto, route status
-- real downstream CLI handoff for configured CLI routes
+- real downstream CLI handoff and familiar-tool adapter breadth
 - self-sufficient install from release assets
 - CLI UX, PRD drift, and scorecard gates in commit gates
 

@@ -446,12 +446,20 @@ Add these items to the active release plan:
    - Keep Jini route policy above the gateway: the gateway may execute route
      switching, but Jini decides why the switch is justified.
 
-6. GitHub-native agent parity slice.
+6. Familiar-tool adapter breadth.
+   - First wave: Codex, Claude Code, Gemini CLI, Aider, and OpenCode.
+   - Second wave: Continue, Cline/Roo, Cursor, Windsurf, GitHub Copilot coding
+     agent, Ollama, LM Studio, OpenRouter, and LiteLLM-compatible gateways.
+   - Breadth is a viral-adoption requirement only when adapters preserve the
+     familiar CLI workflow and emit receipts; do not expose framework taxonomy
+     in the first minute.
+
+7. GitHub-native agent parity slice.
    - Add issue to work-thread to PR/review readiness as a benchmark scenario.
    - Compare against Copilot coding agent, Codex, Claude Code, Jules, and Devin
      style flows.
 
-7. Context-bloat gate.
+8. Context-bloat gate.
    - Release cannot add a giant global instruction file as a shortcut.
    - New rules must declare routing scope, evidence status, and load trigger.
 

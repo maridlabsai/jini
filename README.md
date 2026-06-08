@@ -217,6 +217,16 @@ Reserved CLI handoff names:
 - `codex`
 - `claude-code`
 
+Planned adapter breadth:
+
+- first wave: Codex, Claude Code, Gemini CLI, Aider, and OpenCode
+- second wave: Continue, Cline/Roo, Cursor, Windsurf, GitHub Copilot coding
+  agent, Ollama, LM Studio, OpenRouter, and LiteLLM-compatible gateways
+
+These are viral-adoption targets, not shipped claims. Each adapter must
+preserve the familiar tool workflow, fail closed when missing, and emit route
+receipts before it is listed as supported.
+
 Supported provider choices:
 
 - `auto`
