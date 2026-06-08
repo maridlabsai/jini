@@ -2972,7 +2972,7 @@ func formatCLIHandoffReceiptSummary(receipt *cliHandoffReceipt) []string {
 	}
 	lines = append(lines, "Status: "+status)
 	if len(receipt.ArgsTemplate) > 0 {
-		lines = append(lines, "Args: "+strings.Join(receipt.ArgsTemplate, " "))
+		lines = append(lines, "Args: "+formatCLIHandoffArgs(receipt.ArgsTemplate))
 	}
 	lines = append(lines, fmt.Sprintf(
 		"Exit %d in %dms; prompt %d chars, stdout %d chars, stderr %d chars.",

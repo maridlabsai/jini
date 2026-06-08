@@ -7,8 +7,10 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
+	"unicode"
 	"unicode/utf8"
 )
 
@@ -120,7 +122,7 @@ func detectCLIHandoffProvider(mode string) providerConfig {
 	settings := []string{
 		"JINI_TOOL: " + mode + " -> " + descriptor.Label,
 		"CLI_EXECUTABLE: " + firstNonEmpty(command.Executable, descriptor.DefaultExecutable),
-		"CLI_ARGS: " + strings.Join(command.Args, " "),
+		"CLI_ARGS: " + formatCLIHandoffArgs(command.Args),
 		"CLI_HANDOFF_CONTRACT: cwd, prompt, stdout, stderr, exit status, route receipt",
 	}
 	if configValue("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK") != "" {
@@ -162,7 +164,20 @@ func resolveCLIHandoffCommand(descriptor cliHandoffDescriptor) (cliHandoffComman
 	executable := firstNonEmpty(configValue(descriptor.ExecutableEnv), descriptor.DefaultExecutable)
 	args := descriptor.DefaultArgs
 	if rawArgs := strings.TrimSpace(configValue(descriptor.ArgsEnv)); rawArgs != "" {
-		args = strings.Fields(rawArgs)
+		parsedArgs, err := parseCLIHandoffArgs(rawArgs)
+		if err != nil {
+			command := cliHandoffCommand{
+				Descriptor: descriptor,
+				Executable: executable,
+			}
+			return command, []string{
+				descriptor.ArgsEnv + " has invalid quoting: " + err.Error() + ".",
+				"Use shell-like quoted args, for example: --model \"Claude Sonnet\" {{prompt}}.",
+				"Jini will not execute " + descriptor.Label + " until the custom args parse cleanly.",
+				"Run `jini doctor` after fixing " + descriptor.ArgsEnv + ".",
+			}
+		}
+		args = parsedArgs
 	}
 	command := cliHandoffCommand{
 		Descriptor: descriptor,
@@ -188,6 +203,68 @@ func resolveCLIHandoffCommand(descriptor cliHandoffDescriptor) (cliHandoffComman
 		}
 	}
 	return command, nil
+}
+
+func parseCLIHandoffArgs(raw string) ([]string, error) {
+	var args []string
+	var current strings.Builder
+	var quote rune
+	escaping := false
+	tokenStarted := false
+
+	for _, char := range raw {
+		if escaping {
+			current.WriteRune(char)
+			escaping = false
+			tokenStarted = true
+			continue
+		}
+		if quote != 0 {
+			if char == quote {
+				quote = 0
+				tokenStarted = true
+				continue
+			}
+			if quote == '"' && char == '\\' {
+				escaping = true
+				tokenStarted = true
+				continue
+			}
+			current.WriteRune(char)
+			tokenStarted = true
+			continue
+		}
+		switch {
+		case char == '\\':
+			escaping = true
+			tokenStarted = true
+		case char == '\'' || char == '"':
+			quote = char
+			tokenStarted = true
+		case unicode.IsSpace(char):
+			if tokenStarted {
+				args = append(args, current.String())
+				current.Reset()
+				tokenStarted = false
+			}
+		default:
+			current.WriteRune(char)
+			tokenStarted = true
+		}
+	}
+	if escaping {
+		return nil, fmt.Errorf("trailing escape")
+	}
+	if quote != 0 {
+		if quote == '\'' {
+			return nil, fmt.Errorf("unterminated single quote")
+		}
+		return nil, fmt.Errorf("unterminated double quote")
+	}
+	if tokenStarted {
+		args = append(args, current.String())
+	}
+	return args, nil
 }
 
 func cliHandoffTrustIssue(path string) string {
@@ -261,6 +338,29 @@ func cliHandoffArgsWithPrompt(args []string, prompt string) []string {
 		out = append(out, prompt)
 	}
 	return out
+}
+
+func formatCLIHandoffArgs(args []string) string {
+	if len(args) == 0 {
+		return ""
+	}
+	formatted := make([]string, 0, len(args))
+	for _, arg := range args {
+		formatted = append(formatted, quoteCLIHandoffArg(arg))
+	}
+	return strings.Join(formatted, " ")
+}
+
+func quoteCLIHandoffArg(arg string) string {
+	if arg == "" {
+		return `""`
+	}
+	for _, char := range arg {
+		if unicode.IsSpace(char) || char == '"' || char == '\'' || char == '\\' || unicode.IsControl(char) {
+			return strconv.Quote(arg)
+		}
+	}
+	return arg
 }
 
 func buildCLIHandoffReceipt(command cliHandoffCommand, prompt, stdout, stderr string, processState *os.ProcessState, duration time.Duration) *cliHandoffReceipt {

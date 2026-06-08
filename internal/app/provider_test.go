@@ -116,6 +116,78 @@ func TestGenerateWithConfiguredProviderHandsOffToConfiguredCLI(t *testing.T) {
 	}
 }
 
+func TestGenerateWithConfiguredProviderPreservesQuotedCustomCLIArgs(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_TOOL", "claude-code")
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	t.Setenv("JINI_CLAUDE_CODE_ARGS", `--model "Claude Sonnet" --permission-mode acceptEdits {{prompt}}`)
+	binDir := t.TempDir()
+	captureDir := t.TempDir()
+	argsPath := filepath.Join(captureDir, "args.txt")
+	t.Setenv("JINI_TEST_CLI_ARGS_PATH", argsPath)
+	writeProviderFakeExecutable(t, binDir, "claude", strings.Join([]string{
+		"printf '%s\\n' \"$@\" > \"$JINI_TEST_CLI_ARGS_PATH\"",
+		"printf 'fake claude handled quoted args\\n'",
+	}, "\n"))
+	t.Setenv("PATH", binDir)
+
+	_, used, actualDecision, err := generateWithConfiguredProviderDecision(context.Background(), providerGenerationRequest{
+		Choice: starterChoice{PackID: "general-work"},
+		Title:  "Fix failing tests",
+		Source: "fix failing tests",
+	}, detectRouteForToolMode("claude-code", false))
+	if err != nil {
+		t.Fatalf("generate with quoted CLI handoff args: %v", err)
+	}
+	if !used {
+		t.Fatalf("expected CLI handoff to be used")
+	}
+	if actualDecision.CLIHandoffReceipt == nil {
+		t.Fatalf("expected CLI handoff receipt")
+	}
+	args := strings.Split(strings.TrimSpace(mustReadFile(t, argsPath)), "\n")
+	want := []string{"--model", "Claude Sonnet", "--permission-mode", "acceptEdits", "fix failing tests"}
+	if strings.Join(args, "\n") != strings.Join(want, "\n") {
+		t.Fatalf("expected quoted args to stay grouped as %#v, got %#v", want, args)
+	}
+	if got := actualDecision.CLIHandoffReceipt.ArgsTemplate; strings.Join(got, "\n") != strings.Join([]string{"--model", "Claude Sonnet", "--permission-mode", "acceptEdits", "{{prompt}}"}, "\n") {
+		t.Fatalf("expected receipt args template to preserve parsed quoted arg, got %#v", got)
+	}
+	if got := formatCLIHandoffArgs(actualDecision.CLIHandoffReceipt.ArgsTemplate); got != `--model "Claude Sonnet" --permission-mode acceptEdits {{prompt}}` {
+		t.Fatalf("expected inspectable quoted args display, got %q", got)
+	}
+}
+
+func TestGenerateWithConfiguredProviderFailsClosedForMalformedCustomCLIArgs(t *testing.T) {
+	t.Setenv("JINI_TOOL", "claude-code")
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	t.Setenv("JINI_CLAUDE_CODE_ARGS", `--model "Claude Sonnet`)
+	binDir := t.TempDir()
+	writeProviderFakeExecutable(t, binDir, "claude", "printf 'should not run\\n'")
+	t.Setenv("PATH", binDir)
+
+	_, used, _, err := generateWithConfiguredProviderDecision(context.Background(), providerGenerationRequest{
+		Choice: starterChoice{PackID: "general-work"},
+		Title:  "Fix failing tests",
+		Source: "fix failing tests",
+	}, detectRouteForToolMode("claude-code", false))
+	if err == nil {
+		t.Fatalf("expected malformed CLI args to fail closed")
+	}
+	if !used {
+		t.Fatalf("expected CLI handoff route to be selected")
+	}
+	for _, want := range []string{
+		"CLI handoff needs setup",
+		"JINI_CLAUDE_CODE_ARGS has invalid quoting",
+	} {
+		if !strings.Contains(err.Error(), want) {
+			t.Fatalf("expected setup error to contain %q, got %v", want, err)
+		}
+	}
+}
+
 func TestMaybeWriteProviderFirstDraftPersistsPrivacyPreservingCLIHandoffReceipt(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)
