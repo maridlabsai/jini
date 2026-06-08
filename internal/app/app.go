@@ -1321,6 +1321,9 @@ func runDirectTaskArgsIntake(args []string, stdout, stderr io.Writer) int {
 	if maybeHandleSimpleAnswer(source, stdout) {
 		return 0
 	}
+	if maybeHandleAmbiguousBareEntity(source, stdout) {
+		return 0
+	}
 	envelope := classifyWorkEnvelope(starterChoice{}, source)
 	inputItems, normalizedSource := inputItemsForSource(source)
 	if strings.TrimSpace(normalizedSource) != "" {
@@ -1408,11 +1411,13 @@ func runNewWorkIntakeWithScanner(session *bufio.Scanner, stdout, stderr io.Write
 
 func startNewWorkFromRawInput(firstRaw string, session *bufio.Scanner, stdout, stderr io.Writer) int {
 	var source string
+	choiceExplicit := false
 	choice, err := resolveStarterChoice(firstRaw)
 	if err != nil {
 		source = strings.TrimSpace(firstRaw)
 		choice = classifyStarterChoice(source)
 	} else {
+		choiceExplicit = true
 		var ok bool
 		source, ok = readPromptLine(session, stdout, sourcePromptForChoice(choice))
 		if !ok {
@@ -1434,6 +1439,9 @@ func startNewWorkFromRawInput(firstRaw string, session *bufio.Scanner, stdout, s
 		return exitCode
 	}
 	if maybeHandleSimpleAnswer(source, stdout) {
+		return 0
+	}
+	if !choiceExplicit && maybeHandleAmbiguousBareEntity(source, stdout) {
 		return 0
 	}
 	envelope := classifyWorkEnvelope(choice, source)

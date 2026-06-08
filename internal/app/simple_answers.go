@@ -18,6 +18,15 @@ func maybeHandleSimpleAnswer(raw string, stdout io.Writer) bool {
 	return false
 }
 
+func maybeHandleAmbiguousBareEntity(raw string, stdout io.Writer) bool {
+	subject, ok := ambiguousBareEntitySubject(raw)
+	if !ok {
+		return false
+	}
+	fmt.Fprintf(stdout, "What would you like me to do with %s?\n", subject)
+	return true
+}
+
 func simpleCapitalAnswer(raw string) (string, bool) {
 	country := simpleCapitalCountry(raw)
 	if country == "" {
@@ -68,6 +77,45 @@ func simpleCapitalCountry(raw string) string {
 		}
 	}
 	return ""
+}
+
+func ambiguousBareEntitySubject(raw string) (string, bool) {
+	trimmed := strings.TrimSpace(raw)
+	normalized := normalizeName(trimmed)
+	if normalized == "" || looksLikeStandaloneQuestion(raw) {
+		return "", false
+	}
+	if strings.ContainsAny(trimmed, "\n\r:;?!") {
+		return "", false
+	}
+	words := strings.Fields(normalized)
+	if len(words) == 0 || len(words) > 3 {
+		return "", false
+	}
+	if hasStarterIntentSignal(normalized) {
+		return "", false
+	}
+	return trimmed, true
+}
+
+func hasStarterIntentSignal(normalized string) bool {
+	signals := []string{
+		"add", "answer", "book", "build", "change", "choose", "clean", "code",
+		"commit", "compare", "configure", "convert", "create", "debug", "delete",
+		"deploy", "design", "draft", "edit", "email", "explain", "find", "fix",
+		"flight", "follow up", "followup", "generate", "hotel", "implement",
+		"incident", "install", "itinerary", "make", "meeting", "memo", "open",
+		"plan", "push", "read", "recommend", "refactor", "remove", "research",
+		"review", "run", "send", "show", "summarize", "test", "travel", "trip",
+		"update", "vendor", "write",
+	}
+	padded := " " + normalized + " "
+	for _, signal := range signals {
+		if strings.Contains(padded, " "+signal+" ") {
+			return true
+		}
+	}
+	return false
 }
 
 func looksLikeStandaloneQuestion(raw string) bool {

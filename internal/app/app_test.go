@@ -4196,6 +4196,65 @@ func TestInteractiveMalformedCapitalQuestionCorrectsWithoutTravelFlow(t *testing
 	}
 }
 
+func TestInteractiveBareEntityAsksForIntentWithoutCreatingWork(t *testing.T) {
+	for _, input := range []string{"Paris\n", "France\n", "Acme Corp\n", "OpenAI\n"} {
+		t.Run(strings.TrimSpace(input), func(t *testing.T) {
+			stateDir := t.TempDir()
+			t.Setenv("JINI_STATE_DIR", stateDir)
+
+			var stdout bytes.Buffer
+			exitCode := app.RunInteractive(nil, strings.NewReader(input), &stdout, &stdout)
+			if exitCode != 0 {
+				t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+			}
+
+			out := stdout.String()
+			if !strings.Contains(out, "What would you like me to do with "+strings.TrimSpace(input)+"?") {
+				t.Fatalf("expected intent clarification, got:\n%s", out)
+			}
+			for _, unwanted := range []string{
+				"Before I draft it",
+				"Result ready.",
+				"Itinerary",
+				"Task Snapshot",
+				"Saved:",
+				"Working Draft",
+				"Your first draft is ready.",
+			} {
+				if strings.Contains(out, unwanted) {
+					t.Fatalf("expected bare entity to avoid %q, got:\n%s", unwanted, out)
+				}
+			}
+			if _, err := os.Stat(filepath.Join(stateDir, "current-work.json")); !errors.Is(err, os.ErrNotExist) {
+				t.Fatalf("expected bare entity not to create current work, stat error: %v", err)
+			}
+		})
+	}
+}
+
+func TestInteractiveExplicitTripChoiceCanUseBareDestination(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("trip\nParis\nskip\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	if !strings.Contains(out, "# Itinerary: Paris") || !strings.Contains(out, "Itinerary") {
+		t.Fatalf("expected explicit trip choice to create travel work, got:\n%s", out)
+	}
+	if strings.Contains(out, "What would you like me to do with Paris?") {
+		t.Fatalf("expected explicit trip choice not to trigger bare-entity clarification, got:\n%s", out)
+	}
+	current := readCurrentWork(t, stateDir)
+	if current["pack_id"] != "travel-plan" {
+		t.Fatalf("expected explicit trip choice to create travel work, got %#v", current)
+	}
+}
+
 func TestCurrentWorkMalformedCapitalQuestionCorrectsDirectly(t *testing.T) {
 	stateDir := t.TempDir()
 	meetingDir := seedMeetingWork(t)
