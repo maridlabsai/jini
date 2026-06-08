@@ -4046,6 +4046,90 @@ func TestCurrentWorkCapitalQuestionAnswersFromSmallLookup(t *testing.T) {
 	}
 }
 
+func TestCurrentWorkCapitalQuestionAcceptsNaturalPhrasing(t *testing.T) {
+	stateDir := t.TempDir()
+	meetingDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, meetingDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("what's the capital city of Germany?\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "Berlin.") {
+		t.Fatalf("expected direct capital answer, got:\n%s", stdout.String())
+	}
+	for _, unwanted := range []string{
+		"\nGoal\n",
+		"New work",
+		"Working Draft",
+		"Your first draft is ready.",
+		"I don't know locally.",
+	} {
+		if strings.Contains(stdout.String(), unwanted) {
+			t.Fatalf("expected natural capital question to avoid %q, got:\n%s", unwanted, stdout.String())
+		}
+	}
+}
+
+func TestDirectArgsSimpleFactualQuestionAnswersDirectly(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"what's", "the", "capital", "of", "the", "United", "States?"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "Washington, DC.") {
+		t.Fatalf("expected direct capital answer, got:\n%s", stdout.String())
+	}
+	for _, unwanted := range []string{
+		"Working on:",
+		"Saved.",
+		"Working Draft",
+		"Your first draft is ready.",
+		"I don't know locally.",
+	} {
+		if strings.Contains(stdout.String(), unwanted) {
+			t.Fatalf("expected direct question args to avoid %q, got:\n%s", unwanted, stdout.String())
+		}
+	}
+	if _, err := os.Stat(filepath.Join(stateDir, "current-work.json")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("expected direct question not to create current work, stat error: %v", err)
+	}
+}
+
+func TestInteractiveSimpleFactualQuestionAnswersDirectlyWithoutCurrentWork(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("what's the capital city of Germany?\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "Berlin.") {
+		t.Fatalf("expected direct capital answer, got:\n%s", stdout.String())
+	}
+	for _, unwanted := range []string{
+		"Result ready.",
+		"Task Snapshot",
+		"Saved:",
+		"Working Draft",
+		"Your first draft is ready.",
+		"I don't know locally.",
+	} {
+		if strings.Contains(stdout.String(), unwanted) {
+			t.Fatalf("expected standalone question to avoid %q, got:\n%s", unwanted, stdout.String())
+		}
+	}
+	if _, err := os.Stat(filepath.Join(stateDir, "current-work.json")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("expected standalone question not to create current work, stat error: %v", err)
+	}
+}
+
 func TestCurrentWorkUnknownStandaloneQuestionStaysCompact(t *testing.T) {
 	stateDir := t.TempDir()
 	meetingDir := seedMeetingWork(t)

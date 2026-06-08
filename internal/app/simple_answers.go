@@ -19,18 +19,10 @@ func maybeHandleSimpleAnswer(raw string, stdout io.Writer) bool {
 }
 
 func simpleCapitalAnswer(raw string) (string, bool) {
-	normalized := normalizeName(raw)
-	country := ""
-	for _, prefix := range []string{"what is the capital of ", "capital of "} {
-		if strings.HasPrefix(normalized, prefix) {
-			country = strings.TrimSpace(strings.TrimPrefix(normalized, prefix))
-			break
-		}
-	}
+	country := simpleCapitalCountry(raw)
 	if country == "" {
 		return "", false
 	}
-	country = strings.TrimSuffix(country, "?")
 	capitals := map[string]string{
 		"france":         "Paris.",
 		"germany":        "Berlin.",
@@ -44,6 +36,26 @@ func simpleCapitalAnswer(raw string) (string, bool) {
 	}
 	answer, ok := capitals[country]
 	return answer, ok
+}
+
+func simpleCapitalCountry(raw string) string {
+	normalized := normalizeName(raw)
+	for _, prefix := range []string{
+		"what is the capital city of ",
+		"whats the capital city of ",
+		"what is the capital of ",
+		"whats the capital of ",
+		"what is capital of ",
+		"whats capital of ",
+		"capital city of ",
+		"capital of ",
+	} {
+		if strings.HasPrefix(normalized, prefix) {
+			country := strings.TrimSpace(strings.TrimPrefix(normalized, prefix))
+			return strings.TrimSpace(strings.TrimPrefix(country, "the "))
+		}
+	}
+	return ""
 }
 
 func looksLikeStandaloneQuestion(raw string) bool {

@@ -1304,6 +1304,9 @@ func runDirectTaskArgsIntake(args []string, stdout, stderr io.Writer) int {
 	if handled, exitCode := maybeHandleLocalTextFileEditIntent(source, stdout, stderr); handled {
 		return exitCode
 	}
+	if maybeHandleSimpleAnswer(source, stdout) {
+		return 0
+	}
 	envelope := classifyWorkEnvelope(starterChoice{}, source)
 	inputItems, normalizedSource := inputItemsForSource(source)
 	if strings.TrimSpace(normalizedSource) != "" {
@@ -1415,6 +1418,9 @@ func startNewWorkFromRawInput(firstRaw string, session *bufio.Scanner, stdout, s
 	}
 	if handled, exitCode := maybeHandleLocalTextFileEditIntent(source, stdout, stderr); handled {
 		return exitCode
+	}
+	if maybeHandleSimpleAnswer(source, stdout) {
+		return 0
 	}
 	envelope := classifyWorkEnvelope(choice, source)
 	inputItems, normalizedSource := inputItemsForSource(source)
