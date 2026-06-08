@@ -44,6 +44,8 @@ type cliHandoffReceipt struct {
 	CompletedAt  string   `json:"completed_at,omitempty"`
 }
 
+var cliHandoffTrustIssueForPath = defaultCLIHandoffTrustIssue
+
 func cliHandoffDescriptorForMode(mode string) (cliHandoffDescriptor, bool) {
 	switch strings.TrimSpace(mode) {
 	case "codex":
@@ -268,6 +270,10 @@ func parseCLIHandoffArgs(raw string) ([]string, error) {
 }
 
 func cliHandoffTrustIssue(path string) string {
+	return cliHandoffTrustIssueForPath(path)
+}
+
+func defaultCLIHandoffTrustIssue(path string) string {
 	if runtime.GOOS != "darwin" || strings.TrimSpace(configValue("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK")) != "" {
 		return ""
 	}

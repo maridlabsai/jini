@@ -374,15 +374,14 @@ func TestScorecardGatePassesAndExposesCompetitorPressure(t *testing.T) {
 	if report.PRDImplementation.Status != "ok" {
 		t.Fatalf("expected PRD implementation status ok, got %#v", report.PRDImplementation)
 	}
-	if report.PRDImplementation.ResidualHardeningCount != 2 {
+	if report.PRDImplementation.ResidualHardeningCount != 1 {
 		t.Fatalf("expected residual hardening count to stay visible, got %#v", report.PRDImplementation)
 	}
-	if len(report.PRDImplementation.ResidualHardening) != 2 {
+	if len(report.PRDImplementation.ResidualHardening) != 1 {
 		t.Fatalf("expected residual hardening details to stay machine-readable, got %#v", report.PRDImplementation)
 	}
 	for _, want := range []string{
 		"Wave 1 command templates use fake downstream CLIs in automated tests. Real installed CLI dogfood remains required for auth, approvals, and output-shape differences.",
-		"macOS CLI handoff runs a Gatekeeper trust check before execution. Rejected binaries fail closed instead of triggering downstream execution.",
 	} {
 		if !containsString(report.PRDImplementation.ResidualHardening, want) {
 			t.Fatalf("expected residual hardening details to contain %q, got %#v", want, report.PRDImplementation.ResidualHardening)
@@ -977,7 +976,7 @@ func TestScorecardGateTextShowsCommitGatePressure(t *testing.T) {
 		"PRD IMPLEMENTATION",
 		"  OK 12/12 P0 requirements implemented (100%)",
 		"  SOURCE specs/prd-implementation-trace.md",
-		"  RESIDUAL_HARDENING 2",
+		"  RESIDUAL_HARDENING 1",
 		"    RESIDUAL Wave 1 command templates use fake downstream CLIs in automated tests. Real installed CLI dogfood remains required for auth, approvals, and output-shape differences.",
 		"COMPETITORS",
 		"  OK github-copilot-coding-agent",

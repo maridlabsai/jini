@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"os"
@@ -424,6 +425,51 @@ func TestGenerateWithConfiguredProviderFailsClosedForMissingCLI(t *testing.T) {
 	}
 	if strings.Contains(err.Error(), "Provider needs setup") {
 		t.Fatalf("missing CLI handoff must not be reported as provider setup: %v", err)
+	}
+}
+
+func TestGenerateWithConfiguredProviderFailsClosedWhenCLIHandoffTrustCheckRejectsExecutable(t *testing.T) {
+	t.Setenv("JINI_TOOL", "claude-code")
+	binDir := t.TempDir()
+	markerPath := filepath.Join(t.TempDir(), "executed.txt")
+	t.Setenv("JINI_TEST_CLI_MARKER", markerPath)
+	fakeCLI := writeProviderFakeExecutable(t, binDir, "claude", "printf 'executed\\n' > \"$JINI_TEST_CLI_MARKER\"\n")
+	t.Setenv("PATH", binDir)
+
+	previousTrustCheck := cliHandoffTrustIssueForPath
+	cliHandoffTrustIssueForPath = func(path string) string {
+		if path != fakeCLI {
+			t.Fatalf("expected trust check to inspect resolved fake CLI %q, got %q", fakeCLI, path)
+		}
+		return "macOS Gatekeeper rejected CLI executable: " + path + "."
+	}
+	t.Cleanup(func() { cliHandoffTrustIssueForPath = previousTrustCheck })
+
+	_, used, actualDecision, err := generateWithConfiguredProviderDecision(context.Background(), providerGenerationRequest{
+		Choice: starterChoice{PackID: "general-work"},
+		Title:  "Fix failing tests",
+		Source: "fix failing tests",
+	}, detectRouteForToolMode("claude-code", false))
+	if err == nil {
+		t.Fatalf("expected rejected CLI executable to fail closed")
+	}
+	if !used {
+		t.Fatalf("expected CLI handoff route to be selected")
+	}
+	if actualDecision.CLIHandoffReceipt != nil {
+		t.Fatalf("rejected CLI must not execute or create a handoff receipt, got %#v", actualDecision.CLIHandoffReceipt)
+	}
+	for _, want := range []string{
+		"CLI handoff needs setup",
+		"macOS Gatekeeper rejected CLI executable: " + fakeCLI + ".",
+		"until the executable passes local OS trust checks",
+	} {
+		if !strings.Contains(err.Error(), want) {
+			t.Fatalf("expected trust setup error to contain %q, got %v", want, err)
+		}
+	}
+	if _, statErr := os.Stat(markerPath); !errors.Is(statErr, os.ErrNotExist) {
+		t.Fatalf("rejected CLI must not execute; marker stat err: %v", statErr)
 	}
 }
 

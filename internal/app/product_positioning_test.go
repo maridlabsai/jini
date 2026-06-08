@@ -204,9 +204,9 @@ func TestPRDImplementationTraceCoversP0Requirements(t *testing.T) {
 		"Treat configured CLI routes as installed-CLI handoffs",
 		"`cli_handoff.go`, `generateWithConfiguredProviderDecision`",
 		"fake downstream CLI handoff smoke test",
+		"Gatekeeper rejection fail-closed regression",
 		"Keep route, token, and runtime diagnostics inspectable",
 		"Block regressions before commit and push",
-		"macOS CLI handoff runs a Gatekeeper trust check before execution",
 	} {
 		if !strings.Contains(trace, want) {
 			t.Fatalf("PRD implementation trace must preserve %q", want)
