@@ -80,6 +80,12 @@ func maybeWriteProviderFirstDraft(ctx context.Context, choice starterChoice, wor
 	}
 	text, used, actualDecision, err := generateWithConfiguredProviderDecision(ctx, request, decision)
 	if err != nil {
+		if actualDecision.CLIHandoffReceipt != nil {
+			if saveErr := saveWorkRoute(workDir, request, actualDecision); saveErr != nil {
+				return saveErr
+			}
+			return nil
+		}
 		return err
 	}
 	if !used {
@@ -116,10 +122,12 @@ func generateWithConfiguredProviderDecision(ctx context.Context, request provide
 			prompt = providerUserPrompt(request)
 		}
 		text, receipt, err := runCLIHandoff(ctx, decision.ToolMode, prompt)
+		if receipt != nil {
+			decision.CLIHandoffReceipt = receipt
+		}
 		if err != nil {
 			return "", true, decision, err
 		}
-		decision.CLIHandoffReceipt = receipt
 		return text, true, decision, nil
 	}
 	if provider.ID == "local-preview" {

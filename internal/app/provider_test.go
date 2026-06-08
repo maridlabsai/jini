@@ -165,6 +165,84 @@ func TestMaybeWriteProviderFirstDraftPersistsPrivacyPreservingCLIHandoffReceipt(
 	}
 }
 
+func TestRunInteractiveKeepsCurrentWorkAfterFailedCLIHandoff(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_TOOL", "claude-code")
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	binDir := t.TempDir()
+	writeProviderFakeExecutable(t, binDir, "claude", strings.Join([]string{
+		"printf 'partial stdout\\n'",
+		"printf 'downstream secret stderr\\n' >&2",
+		"exit 7",
+	}, "\n"))
+	t.Setenv("PATH", binDir)
+
+	var stdout bytes.Buffer
+	exitCode := RunInteractive(nil, strings.NewReader("Turn meeting notes into something I can send.\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected failed downstream CLI to keep local work available, got %d:\n%s", exitCode, stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "Result ready.") {
+		t.Fatalf("expected local starter result despite failed handoff, got:\n%s", stdout.String())
+	}
+
+	current, err := os.ReadFile(filepath.Join(stateDir, "current-work.json"))
+	if err != nil {
+		t.Fatalf("expected current work to remain available after failed handoff: %v", err)
+	}
+	var currentState map[string]any
+	if err := json.Unmarshal(current, &currentState); err != nil {
+		t.Fatalf("expected current work json: %v", err)
+	}
+	packDir, _ := currentState["pack_dir"].(string)
+	routeSaved := mustReadFile(t, filepath.Join(packDir, "route.json"))
+	for _, want := range []string{
+		`"cli_handoff_receipt": {`,
+		`"exit_status": 7`,
+		`"stdout_chars": 15`,
+		`"stderr_chars": 25`,
+	} {
+		if !strings.Contains(routeSaved, want) {
+			t.Fatalf("expected failed handoff route receipt to contain %q, got:\n%s", want, routeSaved)
+		}
+	}
+	for _, unwanted := range []string{
+		"partial stdout",
+		"downstream secret stderr",
+	} {
+		if strings.Contains(routeSaved, unwanted) {
+			t.Fatalf("route receipt must not persist CLI output body %q, got:\n%s", unwanted, routeSaved)
+		}
+	}
+
+	var status bytes.Buffer
+	exitCode = Run([]string{"status"}, &status, &status)
+	if exitCode != 0 {
+		t.Fatalf("expected status after failed handoff, got %d:\n%s", exitCode, status.String())
+	}
+	statusOut := status.String()
+	for _, want := range []string{
+		"Last CLI handoff",
+		"Status: failed",
+		"Exit 7 in",
+		"stdout 15 chars",
+		"stderr 25 chars",
+	} {
+		if !strings.Contains(statusOut, want) {
+			t.Fatalf("expected status to contain %q, got:\n%s", want, statusOut)
+		}
+	}
+	for _, unwanted := range []string{
+		"partial stdout",
+		"downstream secret stderr",
+	} {
+		if strings.Contains(statusOut, unwanted) {
+			t.Fatalf("status must not expose CLI output body %q, got:\n%s", unwanted, statusOut)
+		}
+	}
+}
+
 func TestSaveWorkRouteClearsCLIHandoffReceiptWhenRouteSwitchesAwayFromCLI(t *testing.T) {
 	workDir := t.TempDir()
 	request := providerGenerationRequest{

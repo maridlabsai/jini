@@ -2966,6 +2966,11 @@ func formatCLIHandoffReceiptSummary(receipt *cliHandoffReceipt) []string {
 	label := firstNonEmpty(strings.TrimSpace(receipt.Label), strings.TrimSpace(receipt.Mode), "CLI handoff")
 	executable := firstNonEmpty(strings.TrimSpace(receipt.Executable), "unknown executable")
 	lines = append(lines, fmt.Sprintf("%s via %s", label, executable))
+	status := "completed"
+	if receipt.ExitStatus != 0 {
+		status = "failed"
+	}
+	lines = append(lines, "Status: "+status)
 	if len(receipt.ArgsTemplate) > 0 {
 		lines = append(lines, "Args: "+strings.Join(receipt.ArgsTemplate, " "))
 	}
