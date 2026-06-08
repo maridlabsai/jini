@@ -2628,7 +2628,7 @@ func inferPackID(dir string) string {
 		return "vendor-selection"
 	case strings.Contains(base, "incident"):
 		return "incident-response"
-	case strings.Contains(base, "trip") || strings.Contains(base, "travel") || strings.Contains(base, "paris"):
+	case strings.Contains(base, "trip") || strings.Contains(base, "travel"):
 		return "travel-plan"
 	default:
 		return base

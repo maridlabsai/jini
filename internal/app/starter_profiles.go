@@ -242,7 +242,7 @@ var starterPackProfiles = map[string]starterPackProfile{
 		RequestCohort:      "trip-itinerary",
 		ArtifactFamily:     "itinerary-plan",
 		MenuAliases:        []string{"5", "trip", "plan a trip"},
-		DetectSignals:      []string{"trip", "travel", "paris", "hotel", "flight", "itinerary"},
+		DetectSignals:      []string{"trip", "travel", "hotel", "flight", "itinerary"},
 		PrimaryViewPath:    "itinerary.md",
 		PrimaryViewLabel:   "Itinerary",
 		WorkingWith:        "Trip notes, dates, and planning details",

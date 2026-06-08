@@ -4162,6 +4162,74 @@ func TestInteractiveSimpleFactualQuestionAnswersDirectlyWithoutCurrentWork(t *te
 	}
 }
 
+func TestInteractiveMalformedCapitalQuestionCorrectsWithoutTravelFlow(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("whats the capital of paris\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	if !strings.Contains(out, "Paris is a city, not a country. Paris is the capital of France.") {
+		t.Fatalf("expected compact correction, got:\n%s", out)
+	}
+	for _, unwanted := range []string{
+		"Before I draft it",
+		"travelers",
+		"Result ready.",
+		"Itinerary",
+		"Trip at a glance",
+		"Saved:",
+		"Working Draft",
+		"Your first draft is ready.",
+		"I don't know locally.",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected malformed capital question to avoid %q, got:\n%s", unwanted, out)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(stateDir, "current-work.json")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("expected malformed capital question not to create current work, stat error: %v", err)
+	}
+}
+
+func TestCurrentWorkMalformedCapitalQuestionCorrectsDirectly(t *testing.T) {
+	stateDir := t.TempDir()
+	meetingDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, meetingDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("whats the capital of paris\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	if !strings.Contains(out, "Paris is a city, not a country. Paris is the capital of France.") {
+		t.Fatalf("expected compact correction, got:\n%s", out)
+	}
+	for _, unwanted := range []string{
+		"\nGoal\n",
+		"\nAI route\n",
+		"\nJust finished\n",
+		"Before I draft it",
+		"Result ready.",
+		"Itinerary",
+		"New work",
+		"Working Draft",
+		"Your first draft is ready.",
+		"I don't know locally.",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected current-work malformed capital question to avoid %q, got:\n%s", unwanted, out)
+		}
+	}
+}
+
 func TestCurrentWorkUnknownStandaloneQuestionStaysCompact(t *testing.T) {
 	stateDir := t.TempDir()
 	meetingDir := seedMeetingWork(t)

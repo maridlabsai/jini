@@ -752,7 +752,7 @@ func classifyRequestCohort(request providerGenerationRequest) string {
 		return "sendable-followup"
 	case containsAny(source, []string{"readiness", "ready to hand off", "handoff", "spec", "build", "missing pieces"}):
 		return "build-readiness"
-	case containsAny(source, []string{"trip", "travel", "itinerary", "hotel", "flight", "france", "paris"}):
+	case containsAny(source, []string{"trip", "travel", "itinerary", "hotel", "flight"}):
 		return "trip-itinerary"
 	case containsAny(source, []string{"vendor", "option", "compare", "shortlist", "choose one"}):
 		return "option-compare"

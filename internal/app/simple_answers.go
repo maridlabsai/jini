@@ -23,6 +23,9 @@ func simpleCapitalAnswer(raw string) (string, bool) {
 	if country == "" {
 		return "", false
 	}
+	if correction, ok := capitalQuestionCorrection(country); ok {
+		return correction, true
+	}
 	capitals := map[string]string{
 		"france":         "Paris.",
 		"germany":        "Berlin.",
@@ -36,6 +39,15 @@ func simpleCapitalAnswer(raw string) (string, bool) {
 	}
 	answer, ok := capitals[country]
 	return answer, ok
+}
+
+func capitalQuestionCorrection(subject string) (string, bool) {
+	switch subject {
+	case "paris":
+		return "Paris is a city, not a country. Paris is the capital of France.", true
+	default:
+		return "", false
+	}
 }
 
 func simpleCapitalCountry(raw string) string {
@@ -65,7 +77,9 @@ func looksLikeStandaloneQuestion(raw string) bool {
 	}
 	for _, prefix := range []string{
 		"what is ",
+		"whats ",
 		"who is ",
+		"whos ",
 		"when is ",
 		"where is ",
 		"why is ",
