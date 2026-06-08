@@ -91,9 +91,17 @@ That means:
 This is P0. A provider-backed adapter can be an internal fallback or prototype,
 but it does not satisfy the configured-CLI route requirement.
 
-The first adapter wave is Codex, Claude Code, Gemini CLI, Aider, and OpenCode.
-The second wave is Continue, Cline/Roo, Cursor, Windsurf, GitHub Copilot coding
-agent, Ollama, LM Studio, OpenRouter, and LiteLLM-compatible gateways.
+Adapter support ships in waves:
+
+- Wave 0, foundation: one handoff contract, route receipts, `doctor` detection,
+  fail-closed setup guidance, and no first-minute adapter taxonomy.
+- Wave 1, terminal agents: Codex, Claude Code, Gemini CLI, Aider, and OpenCode.
+- Wave 2, local and gateway routes: Ollama, LM Studio, OpenRouter, and LiteLLM.
+- Wave 3, editor and cloud agents: Continue, Cline/Roo, Cursor, Windsurf, and
+  GitHub Copilot coding agent.
+
+An adapter moves from planned to supported only after smoke tests cover
+available, missing, and failed handoff states.
 
 Implementation plan:
 
@@ -108,8 +116,8 @@ Implementation plan:
   generic drafts for file edits, or template routing from questions.
 - P0.5: accept new product surfaces only when they preserve this first-minute
   contract or are hidden behind explicit progressive disclosure.
-- P0.6: require familiar-tool adapter breadth to be scorecard-gated before it
-  is treated as a viral-adoption claim.
+- P0.6: require adapter support waves to be scorecard-gated before breadth is
+  treated as a viral-adoption claim.
 
 ## Free Tier Decision
 

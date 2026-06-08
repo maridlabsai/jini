@@ -135,7 +135,7 @@ P0 now:
 - direct file edit reliability
 - simple question direct-answer behavior
 - route list, route set, route auto, route status
-- real downstream CLI handoff and familiar-tool adapter breadth
+- real downstream CLI handoff and adapter support waves
 - self-sufficient install from release assets
 - CLI UX, PRD drift, and scorecard gates in commit gates
 

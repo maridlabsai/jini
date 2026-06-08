@@ -72,7 +72,8 @@ Status: next.
 Deliver:
 
 - keep `jini route` distinguishing CLI handoff, provider API, and local/offline routes
-- invoke installed Codex, Claude Code, Gemini CLI, Aider, or OpenCode when selected
+- invoke installed Wave 1 CLIs when selected: Codex, Claude Code, Gemini CLI,
+  Aider, or OpenCode
 - preserve fail-closed guidance when a named CLI route is unavailable
 - keep provider API routes separately labeled instead of using CLI names
 - record route choice compactly so continuation does not replay stale context
@@ -98,20 +99,25 @@ Deliver:
 
 - define one subprocess handoff contract for cwd, prompt, stdin/stdout,
   approvals, changed files, exit status, and receipts
-- ship first-wave adapters for Codex, Claude Code, Gemini CLI, Aider, and OpenCode
-- plan second-wave adapters for Continue, Cline/Roo, Cursor, Windsurf, GitHub
-  Copilot coding agent, Ollama, LM Studio, OpenRouter, and LiteLLM
+- ship Wave 0 foundation: subprocess contract, route receipts, `doctor`
+  detection, and fail-closed setup guidance
+- ship Wave 1 terminal-agent adapters: Codex, Claude Code, Gemini CLI, Aider,
+  and OpenCode
+- plan Wave 2 local/gateway routes: Ollama, LM Studio, OpenRouter, and LiteLLM
+- plan Wave 3 editor/cloud-agent handoff: Continue, Cline/Roo, Cursor,
+  Windsurf, and GitHub Copilot coding agent
 - keep adapter setup behind `jini route` and `doctor`; no first-minute taxonomy
 
 Exit evidence:
 
-- adapter smoke tests cover available, missing, and failed handoff states
+- each supported wave has adapter smoke tests for available, missing, and
+  failed handoff states
 - scorecard pressure vector `familiar-tool-adapter-breadth` remains green
 - docs list supported, reserved, and planned adapters without overclaiming
 
 Release blocker:
 
-- claiming broad framework support before the handoff contract has smoke tests
+- claiming broad framework support before the relevant wave has smoke tests
 
 ### Cut 4: Saved Work Continuity Without Dashboard
 

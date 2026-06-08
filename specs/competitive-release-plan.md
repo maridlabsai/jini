@@ -447,12 +447,15 @@ Add these items to the active release plan:
      switching, but Jini decides why the switch is justified.
 
 6. Familiar-tool adapter breadth.
-   - First wave: Codex, Claude Code, Gemini CLI, Aider, and OpenCode.
-   - Second wave: Continue, Cline/Roo, Cursor, Windsurf, GitHub Copilot coding
-     agent, Ollama, LM Studio, OpenRouter, and LiteLLM-compatible gateways.
-   - Breadth is a viral-adoption requirement only when adapters preserve the
-     familiar CLI workflow and emit receipts; do not expose framework taxonomy
-     in the first minute.
+   - Wave 0: one handoff contract, route receipts, `doctor` detection,
+     fail-closed setup guidance, and no first-minute adapter taxonomy.
+   - Wave 1: Codex, Claude Code, Gemini CLI, Aider, and OpenCode.
+   - Wave 2: Ollama, LM Studio, OpenRouter, and LiteLLM-compatible gateways.
+   - Wave 3: Continue, Cline/Roo, Cursor, Windsurf, and GitHub Copilot coding
+     agent.
+   - Breadth is a viral-adoption requirement only when the relevant wave
+     preserves the familiar workflow, emits receipts, and passes adapter smoke
+     tests.
 
 7. GitHub-native agent parity slice.
    - Add issue to work-thread to PR/review readiness as a benchmark scenario.
@@ -463,7 +466,7 @@ Add these items to the active release plan:
    - Release cannot add a giant global instruction file as a shortcut.
    - New rules must declare routing scope, evidence status, and load trigger.
 
-8. Compounding user productivity learning.
+9. Compounding user productivity learning.
    - Learn stable user context, usage, habits, and repeated work patterns from
      canonical work history, explicit feedback, and observed outcomes.
    - Turn repeated patterns into better defaults, context routing, route
@@ -474,7 +477,7 @@ Add these items to the active release plan:
    - Evaluate the loop by time saved, rework avoided, interruptions avoided,
      cost reduced, and successful follow-through.
 
-9. Outcome-gated competitive scorecard.
+10. Outcome-gated competitive scorecard.
    - Add required outcome gates for direct current-directory file edits,
      compact factual answers, async receipts, offline route proof, adversarial
      code review, competitor-watch refresh, commercial tier separation,

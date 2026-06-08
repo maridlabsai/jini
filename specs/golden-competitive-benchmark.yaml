@@ -159,9 +159,11 @@ scorecard_gates:
     - id: familiar-tool-adapter-breadth
       competitors: [claude-code, codex, google-gemini-cli, aider, opencode, continue, cline, roo-code, cursor, windsurf, ollama, lm-studio, openrouter, litellm]
       gate: >
-        Viral adoption requires familiar-tool adapters across trusted CLIs,
-        local model hosts, and gateways, but each adapter must preserve the
-        normal tool workflow, fail closed when missing, and emit route receipts.
+        Viral adoption requires adapter support in waves: Wave 0 foundation,
+        Wave 1 terminal agents, Wave 2 local and gateway routes, and Wave 3
+        editor or cloud-agent handoff. Each supported wave must preserve the
+        normal tool workflow, fail closed when missing, emit route receipts,
+        and pass adapter smoke tests before support is claimed.
   required_outcome_gates:
     - id: direct-cwd-file-edit-fixture
       competitors: [claude-code, codex, aider, cline, opencode]
