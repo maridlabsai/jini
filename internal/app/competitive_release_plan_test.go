@@ -21,10 +21,15 @@ func TestCompetitiveReleasePlanIsWiredIntoReleasePlanning(t *testing.T) {
 		"Kiro",
 		"JetBrains Junie",
 		"Google Gemini CLI",
+		"OpenCode",
+		"Sourcegraph Amp",
 		"Cline",
 		"Continue",
 		"Aider",
 		"OpenHands",
+		"Tabnine Agent",
+		"Qodo Merge",
+		"Ellipsis",
 		"Roomote",
 		"Devin",
 		"Replit Agent",
@@ -32,6 +37,10 @@ func TestCompetitiveReleasePlanIsWiredIntoReleasePlanning(t *testing.T) {
 		"LM Studio",
 		"LiteLLM",
 		"OpenRouter",
+		"LangGraph",
+		"OpenAI Agents SDK",
+		"Pydantic AI",
+		"CrewAI",
 		"Base44",
 		"Competitive watch packet",
 		"Async work receipt",
@@ -43,6 +52,9 @@ func TestCompetitiveReleasePlanIsWiredIntoReleasePlanning(t *testing.T) {
 		"Competitor watching is a P0 feature-selection loop.",
 		"nominates next feature candidates and deletion candidates",
 		"Compounding user productivity learning",
+		"Outcome-gated competitive scorecard",
+		"Code review quality is now a product bar",
+		"Agent frameworks are implementation pressure, not product scope",
 	} {
 		if !strings.Contains(plan, want) {
 			t.Fatalf("competitive release plan must include %q", want)
@@ -76,6 +88,15 @@ func TestCompetitiveReleasePlanIsWiredIntoReleasePlanning(t *testing.T) {
 		"Base44",
 		"Ollama",
 		"LiteLLM",
+		"OpenCode",
+		"Sourcegraph Amp",
+		"Tabnine Agent",
+		"Qodo Merge",
+		"Ellipsis",
+		"LangGraph",
+		"OpenAI Agents SDK",
+		"Pydantic AI",
+		"CrewAI",
 	} {
 		if !strings.Contains(benchmark, want) {
 			t.Fatalf("golden benchmark watchlist must include %q", want)
@@ -89,6 +110,15 @@ func TestCompetitiveReleasePlanIsWiredIntoReleasePlanning(t *testing.T) {
 		"Base44",
 		"Ollama",
 		"LiteLLM",
+		"OpenCode",
+		"Sourcegraph Amp",
+		"Tabnine Agent",
+		"Qodo Merge",
+		"Ellipsis",
+		"LangGraph",
+		"OpenAI Agents SDK",
+		"Pydantic AI",
+		"CrewAI",
 	} {
 		if !strings.Contains(kpis, want) {
 			t.Fatalf("competitive KPI watchlist/comparison set must include %q", want)

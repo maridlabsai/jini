@@ -178,6 +178,28 @@ bash tools/product_prd_drift_gate.sh
 This makes product drift explicit. If a change does not justify updating the
 settled decision record, it should not modify the protected product surface.
 
+## Competitive Scorecard Decision
+
+Competitive scorecards are release gates only when they protect user outcomes.
+
+The scorecard must not pass solely because competitor names are listed. It must
+also gate:
+
+- direct current-directory file edits without draft/workflow detours
+- compact answers for simple factual questions
+- async work receipts with route, model/profile, context, commands, tests,
+  blockers, approvals, and rollback evidence
+- offline/local route proof or exact setup failure
+- adversarial code-review evidence for code-changing cuts
+- competitor-watch refresh across benchmark, KPI, release-plan, and gate files
+- free/commercial tier boundary protection
+- cross-surface session identity
+- token-frugal route proof
+
+New competitor pressure from coding agents, review agents, local/offline tools,
+gateways, app builders, and agent frameworks is valid only when it changes one
+of those release-critical outcomes. Otherwise it is watchlist noise.
+
 ## Release-Facing Copy Decision
 
 Public README and website copy must describe shipped behavior, not future CLI

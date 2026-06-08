@@ -42,6 +42,15 @@ watchlist:
   - Genspark Super Agent
   - Lindy
   - Zapier Agents
+  - OpenCode
+  - Sourcegraph Amp
+  - Tabnine Agent
+  - Qodo Merge
+  - Ellipsis
+  - LangGraph
+  - OpenAI Agents SDK
+  - Pydantic AI
+  - CrewAI
 comparison_set:
   - Kiro
   - Hermes
@@ -83,6 +92,15 @@ comparison_set:
   - Genspark Super Agent
   - Lindy
   - Zapier Agents
+  - OpenCode
+  - Sourcegraph Amp
+  - Tabnine Agent
+  - Qodo Merge
+  - Ellipsis
+  - LangGraph
+  - OpenAI Agents SDK
+  - Pydantic AI
+  - CrewAI
 notes:
   - AI Hero Studio is tracked as a focused agent platform, not as a full protocol peer.
   - Matt Pocock's multi-target skills installer is treated as a packaging and distribution benchmark.

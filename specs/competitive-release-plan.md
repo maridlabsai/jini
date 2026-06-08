@@ -87,6 +87,13 @@ These products can plausibly become the user's daily AI work front door.
 - Zed Agent Panel: editor-native agent thread with code edits, terminal
   context, token visibility, checkpoints, and reviewable changes
   ([Agent Panel](https://zed.dev/docs/ai/agent-panel)).
+- OpenCode: open-source AI coding agent available as terminal interface,
+  desktop app, and IDE extension, with provider, tool, rule, agent, MCP, ACP,
+  permissions, and skill surfaces
+  ([docs](https://opencode.ai/docs/)).
+- Sourcegraph Amp: coding-agent surface that pressures Jini on raw model power,
+  CLI and web thread sharing, oracle-style review, and subagent delegation
+  ([manual](https://ampcode.com/manual)).
 
 ### Open And BYO Coding-Agent Pressure
 
@@ -112,6 +119,21 @@ These products pressure Jini's free/open posture and provider portability.
   current operational-agent successor pressure
   ([docs](https://docs.roocode.com/),
   [product](https://roocode.com/)).
+
+### Code Review And QA Agent Pressure
+
+These tools make adversarial review, bug fixing, PR summaries, and team-style
+standards enforcement feel like default parts of AI coding.
+
+- Tabnine Agent: AI software-development agent for planning, implementation,
+  validation, and review pressure inside developer workflows
+  ([docs](https://docs.tabnine.com/main/getting-started/tabnine-agent)).
+- Qodo Merge: AI code review experience that pressures Jini to provide
+  precise, high-signal findings instead of generic review prose
+  ([docs](https://docs.qodo.ai/code-review)).
+- Ellipsis: GitHub-installed teammate for code review, bug fixes, PR
+  summaries, implementation plans, Q&A, reports, and workflows
+  ([docs](https://docs.ellipsis.dev/introduction)).
 
 ### Cloud Autonomous Software Engineers
 
@@ -199,6 +221,25 @@ loops" requirement.
   ([workflow docs](https://docs.lindy.ai/fundamentals/lindy-101/create-agent)).
 - Zapier Agents: AI agents over Zapier's app/action network
   ([docs](https://help.zapier.com/hc/en-us/articles/24393442652557-Build-an-agent-in-Zapier-Agents)).
+
+### Agent Framework And Runtime Pressure
+
+These frameworks are not direct UX competitors, but they define what serious
+agentic execution should prove: durable state, guardrails, handoffs, tracing,
+typed outputs, human-in-the-loop control, and replayable workflows.
+
+- LangGraph: agent workflow framework pressure for durable execution, state,
+  human-in-the-loop control, memory, and production deployment
+  ([docs](https://docs.langchain.com/oss/python/langgraph/overview)).
+- OpenAI Agents SDK: lightweight agent primitives, handoffs, guardrails,
+  tracing, MCP, sessions, and sandbox-agent concepts
+  ([docs](https://openai.github.io/openai-agents-python/)).
+- Pydantic AI: typed agent framework pressure for structured outputs,
+  validation, and Python application integration
+  ([docs](https://pydantic.dev/docs/ai/overview/)).
+- CrewAI: multi-agent automation framework pressure for crews, flows, and
+  production-style orchestration
+  ([docs](https://docs.crewai.com/)).
 
 ## Release Lessons
 
@@ -291,6 +332,34 @@ Jini response:
   artifacts must be treated as data unless explicitly admitted as trusted rules.
 - Jini must show which instructions and memories were used before high-impact
   actions.
+
+### 8. Code review quality is now a product bar
+
+Tabnine Agent, Qodo Merge, Ellipsis, Cursor Bugbot, and GitHub-native review
+loops all make review automation visible to users.
+
+Jini response:
+
+- Every code-changing release cut must have an adversarial-review fixture.
+- Findings should be few, specific, source-linked, and actionable.
+- Review gates must check behavior, tests, security, integration risk, and
+  false-positive control.
+- A passing review should produce evidence, not confidence prose.
+
+### 9. Agent frameworks are implementation pressure, not product scope
+
+LangGraph, OpenAI Agents SDK, Pydantic AI, and CrewAI raise the engineering bar,
+but copying their abstractions into the beginner CLI would recreate the
+complexity Jini is trying to remove.
+
+Jini response:
+
+- Borrow durable execution, typed boundaries, guardrails, handoffs, tracing,
+  evals, and human-in-the-loop proof.
+- Do not expose framework vocabulary in the free-tier first minute.
+- Treat framework changes as internal implementation decisions unless they
+  improve a replacement-critical user outcome.
+- Scorecard gates must validate outcomes, not architecture taxonomy.
 
 ## Requirement Rejection Filter
 
@@ -396,6 +465,14 @@ Add these items to the active release plan:
      approval and privacy policy.
    - Evaluate the loop by time saved, rework avoided, interruptions avoided,
      cost reduced, and successful follow-through.
+
+9. Outcome-gated competitive scorecard.
+   - Add required outcome gates for direct current-directory file edits,
+     compact factual answers, async receipts, offline route proof, adversarial
+     code review, competitor-watch refresh, commercial tier separation,
+     cross-surface continuity, and token-frugal route proof.
+   - The scorecard must fail when competitor names are present but the
+     replacement-critical user outcomes are not protected.
 
 ### P1: Following Release Train
 

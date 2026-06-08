@@ -28,6 +28,15 @@ var defaultScorecardGatePolicy = scorecardGatePolicy{
 		"continue",
 		"devin",
 		"replit-agent",
+		"opencode",
+		"sourcegraph-amp",
+		"tabnine-agent",
+		"qodo-merge",
+		"ellipsis",
+		"langgraph",
+		"openai-agents-sdk",
+		"pydantic-ai",
+		"crewai",
 	},
 	RequiredPressureVectors: []string{
 		"async-background-agents",
@@ -41,8 +50,19 @@ var defaultScorecardGatePolicy = scorecardGatePolicy{
 		"throttle-and-power-aware-routing",
 		"commit-gated-scorecard-drift",
 	},
+	RequiredOutcomeGates: []string{
+		"direct-cwd-file-edit-fixture",
+		"simple-question-compact-answer",
+		"async-work-receipt-fixture",
+		"offline-route-proof-fixture",
+		"adversarial-code-review-fixture",
+		"competitor-watch-refresh-fixture",
+		"commercial-tier-boundary-fixture",
+		"cross-surface-continuity-fixture",
+		"token-frugality-route-proof-fixture",
+	},
 	MinimumCoreCompetitors:      7,
-	MinimumWatchlistCompetitors: 30,
+	MinimumWatchlistCompetitors: 40,
 	MinimumScenarios:            8,
 }
 
@@ -50,6 +70,7 @@ type scorecardGatePolicy struct {
 	BenchmarkPath               string
 	RequiredCompetitors         []string
 	RequiredPressureVectors     []string
+	RequiredOutcomeGates        []string
 	MinimumCoreCompetitors      int
 	MinimumWatchlistCompetitors int
 	MinimumScenarios            int
@@ -66,6 +87,7 @@ type scorecardGateReport struct {
 	ScenarioCount            int                       `json:"scenario_count"`
 	RequiredCompetitors      []scorecardPresenceCheck  `json:"required_competitors"`
 	PressureVectors          []scorecardPresenceCheck  `json:"pressure_vectors"`
+	OutcomeGates             []scorecardPresenceCheck  `json:"outcome_gates"`
 	Checks                   []scorecardThresholdCheck `json:"checks"`
 }
 
@@ -158,6 +180,9 @@ func (builder scorecardGateBuilder) Build() scorecardGateReport {
 	report.PressureVectors = builder.presenceChecks(builder.policy.RequiredPressureVectors, func(id string) bool {
 		return normalizedScorecardGate[id]
 	})
+	report.OutcomeGates = builder.presenceChecks(builder.policy.RequiredOutcomeGates, func(id string) bool {
+		return normalizedScorecardGate[id]
+	})
 
 	if !scorecardChecksPass(report) {
 		report.Status = "needs-attention"
@@ -229,6 +254,11 @@ func scorecardChecksPass(report scorecardGateReport) bool {
 			return false
 		}
 	}
+	for _, gate := range report.OutcomeGates {
+		if !gate.Present {
+			return false
+		}
+	}
 	return true
 }
 
@@ -252,6 +282,10 @@ func renderScorecardGateText(stdout io.Writer, report scorecardGateReport) {
 	fmt.Fprintln(stdout, "PRESSURE VECTORS")
 	for _, vector := range report.PressureVectors {
 		fmt.Fprintf(stdout, "  %s %s\n", strings.ToUpper(vector.Status), vector.ID)
+	}
+	fmt.Fprintln(stdout, "OUTCOME GATES")
+	for _, gate := range report.OutcomeGates {
+		fmt.Fprintf(stdout, "  %s %s\n", strings.ToUpper(gate.Status), gate.ID)
 	}
 	fmt.Fprintln(stdout, "THRESHOLDS")
 	for _, check := range report.Checks {

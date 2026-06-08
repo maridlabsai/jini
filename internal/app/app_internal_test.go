@@ -377,6 +377,15 @@ func TestScorecardGatePassesAndExposesCompetitorPressure(t *testing.T) {
 		"continue":                    false,
 		"devin":                       false,
 		"replit-agent":                false,
+		"opencode":                    false,
+		"sourcegraph-amp":             false,
+		"tabnine-agent":               false,
+		"qodo-merge":                  false,
+		"ellipsis":                    false,
+		"langgraph":                   false,
+		"openai-agents-sdk":           false,
+		"pydantic-ai":                 false,
+		"crewai":                      false,
 	}
 	for _, competitor := range report.RequiredCompetitors {
 		if _, ok := requiredCompetitors[competitor.ID]; ok {
@@ -411,6 +420,28 @@ func TestScorecardGatePassesAndExposesCompetitorPressure(t *testing.T) {
 			t.Fatalf("expected pressure vector %q to be present in scorecard gate report: %#v", id, report.PressureVectors)
 		}
 	}
+
+	requiredOutcomeGates := map[string]bool{
+		"direct-cwd-file-edit-fixture":        false,
+		"simple-question-compact-answer":      false,
+		"async-work-receipt-fixture":          false,
+		"offline-route-proof-fixture":         false,
+		"adversarial-code-review-fixture":     false,
+		"competitor-watch-refresh-fixture":    false,
+		"commercial-tier-boundary-fixture":    false,
+		"cross-surface-continuity-fixture":    false,
+		"token-frugality-route-proof-fixture": false,
+	}
+	for _, gate := range report.OutcomeGates {
+		if _, ok := requiredOutcomeGates[gate.ID]; ok {
+			requiredOutcomeGates[gate.ID] = gate.Present
+		}
+	}
+	for id, present := range requiredOutcomeGates {
+		if !present {
+			t.Fatalf("expected outcome gate %q to be present in scorecard gate report: %#v", id, report.OutcomeGates)
+		}
+	}
 }
 
 func TestScorecardGateBuilderSupportsCustomPolicy(t *testing.T) {
@@ -425,6 +456,8 @@ func TestScorecardGateBuilderSupportsCustomPolicy(t *testing.T) {
 		"    - id: custom-competitor",
 		"  required_pressure_vectors:",
 		"    - id: custom-vector",
+		"  required_outcome_gates:",
+		"    - id: custom-outcome",
 		"core_benchmark_set:",
 		"  - id: custom-competitor",
 		"watchlist:",
@@ -439,6 +472,7 @@ func TestScorecardGateBuilderSupportsCustomPolicy(t *testing.T) {
 		BenchmarkPath:               scorecardPath,
 		RequiredCompetitors:         []string{"custom-competitor"},
 		RequiredPressureVectors:     []string{"custom-vector"},
+		RequiredOutcomeGates:        []string{"custom-outcome"},
 		MinimumCoreCompetitors:      2,
 		MinimumWatchlistCompetitors: 2,
 		MinimumScenarios:            2,
@@ -461,6 +495,9 @@ func TestScorecardGateBuilderSupportsCustomPolicy(t *testing.T) {
 	if len(report.PressureVectors) != 1 || !report.PressureVectors[0].Present {
 		t.Fatalf("expected custom pressure vector to be present, got %#v", report.PressureVectors)
 	}
+	if len(report.OutcomeGates) != 1 || !report.OutcomeGates[0].Present {
+		t.Fatalf("expected custom outcome gate to be present, got %#v", report.OutcomeGates)
+	}
 }
 
 func TestScorecardGateBuilderReportsMissingSource(t *testing.T) {
@@ -468,6 +505,7 @@ func TestScorecardGateBuilderReportsMissingSource(t *testing.T) {
 		BenchmarkPath:               "missing-scorecard.yaml",
 		RequiredCompetitors:         []string{"custom-competitor"},
 		RequiredPressureVectors:     []string{"custom-vector"},
+		RequiredOutcomeGates:        []string{"custom-outcome"},
 		MinimumCoreCompetitors:      1,
 		MinimumWatchlistCompetitors: 1,
 		MinimumScenarios:            1,
@@ -498,6 +536,10 @@ func TestScorecardGateTextShowsCommitGatePressure(t *testing.T) {
 		"  OK token-frugality-p0",
 		"  OK throttle-and-power-aware-routing",
 		"  OK commit-gated-scorecard-drift",
+		"OUTCOME GATES",
+		"  OK direct-cwd-file-edit-fixture",
+		"  OK simple-question-compact-answer",
+		"  OK async-work-receipt-fixture",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected scorecard-gate text to contain %q, got:\n%s", want, out)
