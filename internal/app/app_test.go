@@ -1218,6 +1218,72 @@ func TestRouteCommandShowsReadinessAndTokenPosture(t *testing.T) {
 	}
 }
 
+func TestRouteCommandShowsSelectedCLIWithoutExecutingIt(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_TOOL", "claude-code")
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	binDir := t.TempDir()
+	markerPath := filepath.Join(t.TempDir(), "executed.txt")
+	t.Setenv("JINI_TEST_CLI_MARKER", markerPath)
+	fakeCLI := writeFakeExecutable(t, binDir, "claude", "printf 'executed\\n' > \"$JINI_TEST_CLI_MARKER\"\n")
+	t.Setenv("PATH", binDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"route"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected route status to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Route and cost",
+		"Current route: Claude Code CLI handoff. Readiness: ok.",
+		"CLI handoff: " + fakeCLI,
+		"Args: --print {{prompt}}",
+		"Provider alias: disabled; Jini invokes the CLI subprocess only when running work.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected route output to contain %q, got:\n%s", want, out)
+		}
+	}
+	if _, err := os.Stat(markerPath); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("route status must not execute the configured CLI; marker stat err: %v", err)
+	}
+	if got := nonEmptyLineCount(out); got > 9 {
+		t.Fatalf("expected CLI route status to stay compact, got %d non-empty lines:\n%s", got, out)
+	}
+}
+
+func TestRouteCommandShowsMissingCLIAsHandoffSetupProblem(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_TOOL", "aider")
+	t.Setenv("PATH", t.TempDir())
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"route"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected route status to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Current route: Aider CLI handoff. Readiness: needs setup.",
+		"CLI handoff: aider",
+		"Args: --message {{prompt}}",
+		"Setup: Aider CLI handoff requires an installed CLI executable: aider.",
+		"Provider alias: disabled; Jini invokes the CLI subprocess only when running work.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected route output to contain %q, got:\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, "API route") {
+		t.Fatalf("expected missing CLI handoff to avoid provider API framing, got:\n%s", out)
+	}
+}
+
 func TestRouteCommandCanSetRouteWithoutSetupWizard(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)

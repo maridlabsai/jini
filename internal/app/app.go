@@ -2915,13 +2915,45 @@ func renderSafePermissionsStatus(w io.Writer) {
 
 func renderRouteCostStatus(w io.Writer) {
 	device := currentDeviceProfile()
-	provider := detectProvider()
+	route := detectRoute()
+	provider := detectLegacyProvider()
+	if route.Active {
+		provider = route.Provider
+	}
 	fmt.Fprintln(w, "Route and cost")
 	fmt.Fprintf(w, "Current route: %s. Readiness: %s.\n", workingWithLabel(provider), routeReadinessLabel(provider))
+	if route.Active && cliHandoffMode(route.ToolMode) {
+		renderCLIHandoffRouteInspection(w, provider)
+	}
 	fmt.Fprintln(w, "Token posture: compact context first; avoid transcript replay unless quality or safety requires it.")
 	fmt.Fprintln(w, "Continuity: offline and online work stitch into the same session.")
 	fmt.Fprintf(w, "Route inputs: device %s; battery, thermal, and CLI throttle levels affect switching.\n", firstNonEmpty(device.DeviceClass, "unknown"))
 	fmt.Fprintln(w, "Least-expense capable route is the default; use `doctor` to inspect setup or `auto` to restore automatic routing.")
+}
+
+func renderCLIHandoffRouteInspection(w io.Writer, provider providerConfig) {
+	executable := providerRouteSettingValue(provider.Settings, "CLI_EXECUTABLE")
+	args := providerRouteSettingValue(provider.Settings, "CLI_ARGS")
+	if executable != "" {
+		fmt.Fprintf(w, "CLI handoff: %s\n", executable)
+	}
+	if args != "" {
+		fmt.Fprintf(w, "Args: %s\n", args)
+	}
+	if strings.TrimSpace(provider.Status) != "" && provider.Status != "ok" && len(provider.Missing) > 0 {
+		fmt.Fprintf(w, "Setup: %s\n", provider.Missing[0])
+	}
+	fmt.Fprintln(w, "Provider alias: disabled; Jini invokes the CLI subprocess only when running work.")
+}
+
+func providerRouteSettingValue(settings []string, name string) string {
+	prefix := strings.TrimSpace(name) + ": "
+	for _, setting := range settings {
+		if strings.HasPrefix(setting, prefix) {
+			return strings.TrimSpace(strings.TrimPrefix(setting, prefix))
+		}
+	}
+	return ""
 }
 
 func routeReadinessLabel(provider providerConfig) string {
