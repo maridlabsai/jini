@@ -135,6 +135,7 @@ type scorecardPRDImplementationSummary struct {
 	Status                       string   `json:"status,omitempty"`
 	MissingImplementationDetails []string `json:"missing_implementation_details,omitempty"`
 	ResidualHardeningCount       int      `json:"residual_hardening_count,omitempty"`
+	ResidualHardening            []string `json:"residual_hardening,omitempty"`
 }
 
 type scorecardGateBuilder struct {
@@ -274,7 +275,8 @@ func (builder scorecardGateBuilder) buildPRDImplementationSummary() scorecardPRD
 		return summary
 	}
 	text := string(data)
-	summary.ResidualHardeningCount = countResidualHardeningItems(text)
+	summary.ResidualHardening = residualHardeningItems(text)
+	summary.ResidualHardeningCount = len(summary.ResidualHardening)
 	for _, row := range prdImplementationRows(text) {
 		summary.TotalRequirements++
 		var missing []string
@@ -370,9 +372,10 @@ func isPRDImplementationHeaderOrSeparator(cells []string) bool {
 	return true
 }
 
-func countResidualHardeningItems(text string) int {
+func residualHardeningItems(text string) []string {
 	inResidualSection := false
-	count := 0
+	var items []string
+	var current strings.Builder
 	for _, line := range strings.Split(text, "\n") {
 		trimmed := strings.TrimSpace(line)
 		if strings.EqualFold(trimmed, "Residual hardening:") {
@@ -386,10 +389,22 @@ func countResidualHardeningItems(text string) int {
 			break
 		}
 		if strings.HasPrefix(trimmed, "- ") {
-			count++
+			if current.Len() > 0 {
+				items = append(items, current.String())
+				current.Reset()
+			}
+			current.WriteString(strings.TrimSpace(strings.TrimPrefix(trimmed, "- ")))
+			continue
+		}
+		if trimmed != "" && current.Len() > 0 {
+			current.WriteString(" ")
+			current.WriteString(trimmed)
 		}
 	}
-	return count
+	if current.Len() > 0 {
+		items = append(items, current.String())
+	}
+	return items
 }
 
 func (builder scorecardGateBuilder) addThresholdChecks(report *scorecardGateReport, text, scorecardGateSection string) {
@@ -527,6 +542,9 @@ func renderPRDImplementationSummary(stdout io.Writer, summary scorecardPRDImplem
 	)
 	fmt.Fprintf(stdout, "  SOURCE %s\n", summary.SourcePath)
 	fmt.Fprintf(stdout, "  RESIDUAL_HARDENING %d\n", summary.ResidualHardeningCount)
+	for _, item := range summary.ResidualHardening {
+		fmt.Fprintf(stdout, "    RESIDUAL %s\n", item)
+	}
 	for _, missing := range summary.MissingImplementationDetails {
 		fmt.Fprintf(stdout, "    MISSING %s\n", missing)
 	}

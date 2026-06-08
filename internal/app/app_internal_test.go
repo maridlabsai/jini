@@ -377,6 +377,17 @@ func TestScorecardGatePassesAndExposesCompetitorPressure(t *testing.T) {
 	if report.PRDImplementation.ResidualHardeningCount != 2 {
 		t.Fatalf("expected residual hardening count to stay visible, got %#v", report.PRDImplementation)
 	}
+	if len(report.PRDImplementation.ResidualHardening) != 2 {
+		t.Fatalf("expected residual hardening details to stay machine-readable, got %#v", report.PRDImplementation)
+	}
+	for _, want := range []string{
+		"Wave 1 command templates use fake downstream CLIs in automated tests. Real installed CLI dogfood remains required for auth, approvals, and output-shape differences.",
+		"macOS CLI handoff runs a Gatekeeper trust check before execution. Rejected binaries fail closed instead of triggering downstream execution.",
+	} {
+		if !containsString(report.PRDImplementation.ResidualHardening, want) {
+			t.Fatalf("expected residual hardening details to contain %q, got %#v", want, report.PRDImplementation.ResidualHardening)
+		}
+	}
 	requiredCompetitors := map[string]bool{
 		"claude-code":                 false,
 		"codex":                       false,
@@ -589,6 +600,9 @@ func TestScorecardGateBuilderReportsIncompletePRDTraceCompletion(t *testing.T) {
 	}
 	if summary.Status != "needs-attention" || summary.ResidualHardeningCount != 1 {
 		t.Fatalf("expected incomplete PRD status and residual count, got %#v", summary)
+	}
+	if len(summary.ResidualHardening) != 1 || summary.ResidualHardening[0] != "Real-world dogfood still required." {
+		t.Fatalf("expected residual hardening detail to be preserved, got %#v", summary.ResidualHardening)
 	}
 	if len(summary.MissingImplementationDetails) != 1 || !strings.Contains(summary.MissingImplementationDetails[0], "Missing proof requirement missing proof") {
 		t.Fatalf("expected missing proof detail, got %#v", summary.MissingImplementationDetails)
@@ -964,6 +978,7 @@ func TestScorecardGateTextShowsCommitGatePressure(t *testing.T) {
 		"  OK 12/12 P0 requirements implemented (100%)",
 		"  SOURCE specs/prd-implementation-trace.md",
 		"  RESIDUAL_HARDENING 2",
+		"    RESIDUAL Wave 1 command templates use fake downstream CLIs in automated tests. Real installed CLI dogfood remains required for auth, approvals, and output-shape differences.",
 		"COMPETITORS",
 		"  OK github-copilot-coding-agent",
 		"PRESSURE VECTORS",
