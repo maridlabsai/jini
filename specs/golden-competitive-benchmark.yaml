@@ -171,10 +171,10 @@ scorecard_gates:
       proof_references:
         - id: competitive-release-plan-async-work-receipt
           kind: named-proof
-          ref: "specs/competitive-release-plan.md#async-work-receipt"
+          ref: "specs/competitive-release-plan.md"
         - id: competitive-release-plan-outcome-gated-scorecard
           kind: named-proof
-          ref: "specs/competitive-release-plan.md#outcome-gated-competitive-scorecard"
+          ref: "specs/competitive-release-plan.md"
       gate: >
         Any delegated or background run must expose route, model or profile,
         context loaded, files changed, commands and tests run, blockers,
@@ -187,7 +187,7 @@ scorecard_gates:
           ref: "go test ./internal/app -run TestPublishReadinessIncludesOfflineRegressionGuardrails"
         - id: platform-offline-strategy-future-update-policy
           kind: named-proof
-          ref: "specs/platform-offline-strategy.md#future-update-policy"
+          ref: "specs/platform-offline-strategy.md"
       gate: >
         Offline and local-model routes must be proven by executable diagnostics
         or fail with exact setup instructions; docs may not claim fake offline
@@ -197,10 +197,10 @@ scorecard_gates:
       proof_references:
         - id: competitive-release-plan-code-review-quality
           kind: named-proof
-          ref: "specs/competitive-release-plan.md#code-review-quality-is-now-a-product-bar"
+          ref: "specs/competitive-release-plan.md"
         - id: open-source-prompt-validation-adversarial-review
           kind: named-proof
-          ref: "specs/open-source-prompt-validation.yaml#adversarial-code-review"
+          ref: "specs/open-source-prompt-validation.yaml"
       gate: >
         Code changes must pass a high-signal adversarial review path covering
         behavior, tests, security, integration risk, and false-positive control.
@@ -209,10 +209,10 @@ scorecard_gates:
       proof_references:
         - id: competitive-release-plan-competitive-watch-packet
           kind: named-proof
-          ref: "specs/competitive-release-plan.md#competitive-watch-packet"
+          ref: "specs/competitive-release-plan.md"
         - id: competitive-release-plan-outcome-gated-scorecard
           kind: named-proof
-          ref: "specs/competitive-release-plan.md#outcome-gated-competitive-scorecard"
+          ref: "specs/competitive-release-plan.md"
       gate: >
         Competitor additions must update the benchmark, KPI watchlist, release
         plan, and required gates instead of remaining one-off analysis.
@@ -224,7 +224,7 @@ scorecard_gates:
           ref: "go test ./internal/app -run TestP1SimplicityPriorityCoversCommandsSkillsAndAgents"
         - id: skills-and-delegation-tier-boundary
           kind: named-proof
-          ref: "specs/skills-and-delegation-slice.md#tier-boundary"
+          ref: "specs/skills-and-delegation-slice.md"
       gate: >
         Free tier must preserve useful local/BYO routing while commercial-only
         skills, agent fleets, managed throttle recovery, and team automation
@@ -237,7 +237,7 @@ scorecard_gates:
           ref: "go test ./internal/app -run TestResourcePolicyPrioritiesAreGated"
         - id: cross-surface-session-platform-prd
           kind: named-proof
-          ref: "specs/cross-surface-session-platform-prd.md#cross-surface-session-platform-prd"
+          ref: "specs/cross-surface-session-platform-prd.md"
       gate: >
         The same work item must preserve identity, route state, artifacts,
         approvals, and next action across CLI, desktop, mobile, and browser
@@ -250,7 +250,7 @@ scorecard_gates:
           ref: "go test ./internal/app -run TestResourcePolicyPrioritiesAreGated"
         - id: lean-platform-token-frugality-p0
           kind: named-proof
-          ref: "specs/lean-platform-gate.md#token-frugality"
+          ref: "specs/lean-platform-gate.md"
       gate: >
         Route decisions must show compact context reuse, transcript replay
         avoidance, cost/throttle rationale, and why a premium or high-context

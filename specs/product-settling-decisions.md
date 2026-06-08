@@ -198,6 +198,8 @@ also gate:
 
 Outcome gates require executable or named proof references; names alone do not satisfy the scorecard.
 Each required outcome must point to a runnable check or a named proof surface that can be inspected later.
+Named-proof refs must resolve to existing repository files, and executable refs
+must name real Go test functions.
 
 New competitor pressure from coding agents, review agents, local/offline tools,
 gateways, app builders, and agent frameworks is valid only when it changes one

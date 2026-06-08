@@ -56,6 +56,8 @@ Required outcome:
   local/open-model optionality, and scorecard gate wiring
 - Outcome gates require executable or named proof references, not just competitor or fixture names.
 - A gate name without a runnable command or named proof reference is planning prose, not evidence.
+- Named-proof refs must resolve to existing repository files; executable refs
+  must name real Go test functions.
 
 ### Push gate
 

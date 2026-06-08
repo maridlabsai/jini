@@ -1,6 +1,9 @@
 package app_test
 
 import (
+	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -111,7 +114,7 @@ func TestRequiredOutcomeGatesDeclareProofReferences(t *testing.T) {
 		"async-work-receipt-fixture": {
 			"id: competitive-release-plan-async-work-receipt",
 			"kind: named-proof",
-			`ref: "specs/competitive-release-plan.md#async-work-receipt"`,
+			`ref: "specs/competitive-release-plan.md"`,
 		},
 		"offline-route-proof-fixture": {
 			"id: publish-readiness-offline-regression",
@@ -121,12 +124,12 @@ func TestRequiredOutcomeGatesDeclareProofReferences(t *testing.T) {
 		"adversarial-code-review-fixture": {
 			"id: competitive-release-plan-code-review-quality",
 			"kind: named-proof",
-			`ref: "specs/competitive-release-plan.md#code-review-quality-is-now-a-product-bar"`,
+			`ref: "specs/competitive-release-plan.md"`,
 		},
 		"competitor-watch-refresh-fixture": {
 			"id: competitive-release-plan-competitive-watch-packet",
 			"kind: named-proof",
-			`ref: "specs/competitive-release-plan.md#competitive-watch-packet"`,
+			`ref: "specs/competitive-release-plan.md"`,
 		},
 		"commercial-tier-boundary-fixture": {
 			"id: product-simplicity-tier-boundary",
@@ -160,6 +163,8 @@ func TestRequiredOutcomeGatesDeclareProofReferences(t *testing.T) {
 	for _, want := range []string{
 		"Outcome gates require executable or named proof references, not just competitor or fixture names.",
 		"A gate name without a runnable command or named proof reference is planning prose, not evidence.",
+		"Named-proof refs must resolve to existing repository files; executable refs",
+		"must name real Go test functions.",
 	} {
 		if !strings.Contains(gateMatrix, want) {
 			t.Fatalf("engineering gate matrix must document proof-backed outcome gates %q", want)
@@ -170,11 +175,170 @@ func TestRequiredOutcomeGatesDeclareProofReferences(t *testing.T) {
 	for _, want := range []string{
 		"Outcome gates require executable or named proof references; names alone do not satisfy the scorecard.",
 		"Each required outcome must point to a runnable check or a named proof surface that can be inspected later.",
+		"Named-proof refs must resolve to existing repository files, and executable refs",
+		"must name real Go test functions.",
 	} {
 		if !strings.Contains(productSettling, want) {
 			t.Fatalf("product settling decisions must document proof-backed outcome gates %q", want)
 		}
 	}
+}
+
+func TestRequiredOutcomeGateProofReferencesResolve(t *testing.T) {
+	root := repoRootForMigrationTest(t)
+	goldenBenchmark := readRepoFile(t, root, "specs/golden-competitive-benchmark.yaml")
+	goTests := goTestFunctions(t, root, "internal/app")
+
+	for _, id := range []string{
+		"direct-cwd-file-edit-fixture",
+		"simple-question-compact-answer",
+		"async-work-receipt-fixture",
+		"offline-route-proof-fixture",
+		"adversarial-code-review-fixture",
+		"competitor-watch-refresh-fixture",
+		"commercial-tier-boundary-fixture",
+		"cross-surface-continuity-fixture",
+		"token-frugality-route-proof-fixture",
+	} {
+		block := requiredOutcomeGateBlock(t, goldenBenchmark, id)
+		for _, proof := range proofReferencesFromOutcomeGateBlock(t, block) {
+			switch proof.kind {
+			case "named-proof":
+				assertNamedProofRefResolves(t, root, id, proof.ref)
+			case "executable":
+				assertExecutableProofRefNamesRealGoTests(t, id, proof.ref, goTests)
+			default:
+				t.Fatalf("required outcome gate %q has unsupported proof kind %q in ref %q", id, proof.kind, proof.ref)
+			}
+		}
+	}
+}
+
+type outcomeGateProofReference struct {
+	kind string
+	ref  string
+}
+
+func proofReferencesFromOutcomeGateBlock(t *testing.T, block string) []outcomeGateProofReference {
+	t.Helper()
+
+	var refs []outcomeGateProofReference
+	inProofReferences := false
+	for _, line := range strings.Split(block, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "proof_references:" {
+			inProofReferences = true
+			continue
+		}
+		if !inProofReferences {
+			continue
+		}
+		if strings.HasPrefix(trimmed, "gate:") {
+			break
+		}
+		if strings.HasPrefix(trimmed, "- id: ") {
+			refs = append(refs, outcomeGateProofReference{})
+			continue
+		}
+		if len(refs) == 0 {
+			continue
+		}
+		key, raw, ok := strings.Cut(trimmed, ":")
+		if !ok {
+			continue
+		}
+		switch strings.TrimSpace(key) {
+		case "kind":
+			refs[len(refs)-1].kind = unquoteYAMLScalar(raw)
+		case "ref":
+			refs[len(refs)-1].ref = unquoteYAMLScalar(raw)
+		}
+	}
+	if len(refs) == 0 {
+		t.Fatalf("required outcome gate block has no proof refs:\n%s", block)
+	}
+	for _, ref := range refs {
+		if ref.kind == "" || ref.ref == "" {
+			t.Fatalf("required outcome gate block has incomplete proof ref %#v:\n%s", ref, block)
+		}
+	}
+	return refs
+}
+
+func unquoteYAMLScalar(raw string) string {
+	value := strings.TrimSpace(raw)
+	if len(value) < 2 {
+		return value
+	}
+	first := value[0]
+	last := value[len(value)-1]
+	if (first == '"' && last == '"') || (first == '\'' && last == '\'') {
+		return value[1 : len(value)-1]
+	}
+	return value
+}
+
+func assertNamedProofRefResolves(t *testing.T, root, gateID, ref string) {
+	t.Helper()
+	if filepath.IsAbs(ref) || strings.Contains(ref, "#") {
+		t.Fatalf("required outcome gate %q named-proof ref must be a repository file path without a fragment: %q", gateID, ref)
+	}
+	info, err := os.Stat(filepath.Join(root, ref))
+	if err != nil {
+		t.Fatalf("required outcome gate %q named-proof ref must resolve to an existing file: %q: %v", gateID, ref, err)
+	}
+	if info.IsDir() {
+		t.Fatalf("required outcome gate %q named-proof ref must resolve to a file, got directory: %q", gateID, ref)
+	}
+}
+
+func assertExecutableProofRefNamesRealGoTests(t *testing.T, gateID, ref string, goTests map[string]bool) {
+	t.Helper()
+	runPattern := goTestRunPattern(t, gateID, ref)
+	for _, testName := range strings.Split(runPattern, "|") {
+		testName = strings.Trim(testName, "^$")
+		if !strings.HasPrefix(testName, "Test") || !goTests[testName] {
+			t.Fatalf("required outcome gate %q executable ref must name a real Go test function, got %q in %q", gateID, testName, ref)
+		}
+	}
+}
+
+func goTestRunPattern(t *testing.T, gateID, ref string) string {
+	t.Helper()
+	match := regexp.MustCompile(`(?:^|\s)-run\s+('([^']+)'|"([^"]+)"|([^\s]+))`).FindStringSubmatch(ref)
+	if match == nil {
+		t.Fatalf("required outcome gate %q executable ref must include go test -run pattern: %q", gateID, ref)
+	}
+	for _, group := range match[2:] {
+		if group != "" {
+			return group
+		}
+	}
+	t.Fatalf("required outcome gate %q executable ref has empty go test -run pattern: %q", gateID, ref)
+	return ""
+}
+
+func goTestFunctions(t *testing.T, root, rel string) map[string]bool {
+	t.Helper()
+	files, err := filepath.Glob(filepath.Join(root, rel, "*_test.go"))
+	if err != nil {
+		t.Fatalf("glob Go test files: %v", err)
+	}
+	functions := map[string]bool{}
+	functionPattern := regexp.MustCompile(`(?m)^func (Test[A-Za-z0-9_]+)\s*\(`)
+	for _, file := range files {
+		data, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatalf("read Go test file %s: %v", file, err)
+		}
+		for _, match := range functionPattern.FindAllStringSubmatch(string(data), -1) {
+			functions[match[1]] = true
+		}
+	}
+	if len(functions) == 0 {
+		t.Fatal("expected at least one Go test function under internal/app")
+	}
+	return functions
 }
 
 func requiredOutcomeGateBlock(t *testing.T, benchmark, id string) string {

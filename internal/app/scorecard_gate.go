@@ -172,7 +172,7 @@ func (builder scorecardGateBuilder) Build() scorecardGateReport {
 	scorecardGateSection := yamlSection(text, "scorecard_gates")
 	normalizedBenchmark := normalizedYAMLIDs(text)
 	normalizedScorecardGate := normalizedYAMLIDs(scorecardGateSection)
-	outcomeGateEvidence := outcomeGateEvidenceReferences(scorecardGateSection)
+	outcomeGateEvidence := builder.outcomeGateEvidenceReferences(scorecardGateSection)
 
 	builder.addThresholdChecks(&report, text, scorecardGateSection)
 	report.RequiredCompetitors = builder.presenceChecks(builder.policy.RequiredCompetitors, func(id string) bool {
@@ -308,12 +308,17 @@ func readScorecardMinimum(section, key string, fallback int) int {
 	return fallback
 }
 
-func outcomeGateEvidenceReferences(scorecardGateSection string) map[string]bool {
+type scorecardProofReference struct {
+	Kind string
+	Ref  string
+}
+
+func (builder scorecardGateBuilder) outcomeGateEvidenceReferences(scorecardGateSection string) map[string]bool {
 	outcomeGateSection := yamlSection(scorecardGateSection, "required_outcome_gates")
 	evidenceByID := map[string]bool{}
 	for _, block := range yamlListItemBlocks(outcomeGateSection) {
 		id := yamlBlockID(block)
-		if id == "" || !yamlBlockHasEvidenceReference(block) {
+		if id == "" || !builder.yamlBlockHasEvidenceReference(block) {
 			continue
 		}
 		evidenceByID[id] = true
@@ -365,38 +370,6 @@ func yamlBlockID(block string) string {
 	return ""
 }
 
-func yamlBlockHasEvidenceReference(block string) bool {
-	referenceParentIndent := -1
-	for _, line := range strings.Split(block, "\n") {
-		trimmed := strings.TrimSpace(line)
-		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
-			continue
-		}
-		indent := leadingSpaceCount(line)
-		if referenceParentIndent >= 0 {
-			if indent <= referenceParentIndent {
-				referenceParentIndent = -1
-			} else if hasNestedScorecardReference(trimmed) {
-				return true
-			}
-		}
-
-		value := trimmed
-		if strings.HasPrefix(value, "- ") {
-			value = strings.TrimSpace(strings.TrimPrefix(value, "- "))
-		}
-		key, raw, ok := splitYAMLKeyValue(value)
-		if !ok || !isOutcomeGateEvidenceKey(key) {
-			continue
-		}
-		if hasScorecardReferenceValue(raw) {
-			return true
-		}
-		referenceParentIndent = indent
-	}
-	return false
-}
-
 func splitYAMLKeyValue(value string) (string, string, bool) {
 	key, raw, ok := strings.Cut(value, ":")
 	if !ok {
@@ -416,25 +389,242 @@ func isOutcomeGateEvidenceKey(key string) bool {
 		strings.Contains(normalized, "reference")
 }
 
-func hasNestedScorecardReference(value string) bool {
-	if strings.HasPrefix(value, "- ") {
-		value = strings.TrimSpace(strings.TrimPrefix(value, "- "))
+func (builder scorecardGateBuilder) yamlBlockHasEvidenceReference(block string) bool {
+	references := yamlBlockProofReferences(block)
+	if len(references) == 0 {
+		return false
 	}
-	key, raw, ok := splitYAMLKeyValue(value)
-	if ok && normalizeScorecardID(key) == "ref" {
-		return hasScorecardReferenceValue(raw)
+	for _, reference := range references {
+		if !builder.scorecardProofReferenceExists(reference) {
+			return false
+		}
 	}
-	return false
+	return true
+}
+
+func yamlBlockProofReferences(block string) []scorecardProofReference {
+	var references []scorecardProofReference
+	proofReferencesSection := nestedYAMLSection(block, "proof_references")
+	for _, proofBlock := range yamlListItemBlocks(proofReferencesSection) {
+		references = append(references, scorecardProofReference{
+			Kind: yamlBlockScalarValue(proofBlock, "kind"),
+			Ref:  yamlBlockScalarValue(proofBlock, "ref"),
+		})
+	}
+	for _, line := range strings.Split(block, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		if strings.HasPrefix(trimmed, "- ") {
+			trimmed = strings.TrimSpace(strings.TrimPrefix(trimmed, "- "))
+		}
+		key, raw, ok := splitYAMLKeyValue(trimmed)
+		if !ok || normalizeScorecardID(key) == "proof-references" || !isOutcomeGateEvidenceKey(key) {
+			continue
+		}
+		if hasScorecardReferenceValue(raw) {
+			references = append(references, scorecardProofReference{Ref: raw})
+		}
+	}
+	return references
+}
+
+func yamlBlockScalarValue(block, wantKey string) string {
+	for _, line := range strings.Split(block, "\n") {
+		value := strings.TrimSpace(line)
+		if strings.HasPrefix(value, "- ") {
+			value = strings.TrimSpace(strings.TrimPrefix(value, "- "))
+		}
+		key, raw, ok := splitYAMLKeyValue(value)
+		if ok && key == wantKey {
+			return scorecardScalarValue(raw)
+		}
+	}
+	return ""
+}
+
+func nestedYAMLSection(text, key string) string {
+	lines := strings.Split(text, "\n")
+	start := -1
+	for i, line := range lines {
+		if strings.TrimSpace(line) == key+":" {
+			start = i
+			break
+		}
+	}
+	if start == -1 {
+		return ""
+	}
+	baseIndent := leadingSpaceCount(lines[start])
+	end := len(lines)
+	for i := start + 1; i < len(lines); i++ {
+		trimmed := strings.TrimSpace(lines[i])
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		if leadingSpaceCount(lines[i]) <= baseIndent {
+			end = i
+			break
+		}
+	}
+	return strings.Join(lines[start:end], "\n")
+}
+
+func (builder scorecardGateBuilder) scorecardProofReferenceExists(reference scorecardProofReference) bool {
+	ref := scorecardScalarValue(reference.Ref)
+	if !hasScorecardReferenceValue(ref) {
+		return false
+	}
+	kind := normalizeScorecardID(reference.Kind)
+	switch kind {
+	case "named-proof":
+		return builder.namedProofReferenceExists(ref)
+	case "executable":
+		return builder.executableProofReferenceExists(ref)
+	case "":
+		if looksLikeNamedProofReference(ref) {
+			return builder.namedProofReferenceExists(ref)
+		}
+		if isInternalAppGoTestRunReference(ref) {
+			return builder.executableProofReferenceExists(ref)
+		}
+		return false
+	default:
+		return false
+	}
+}
+
+func (builder scorecardGateBuilder) namedProofReferenceExists(ref string) bool {
+	if builder.root == "" {
+		return false
+	}
+	path, ok := scorecardRepoFilePath(ref)
+	if !ok {
+		return false
+	}
+	info, err := os.Stat(filepath.Join(builder.root, path))
+	return err == nil && !info.IsDir()
+}
+
+func scorecardRepoFilePath(ref string) (string, bool) {
+	path, _, _ := strings.Cut(scorecardScalarValue(ref), "#")
+	path = strings.TrimSpace(path)
+	if path == "" || filepath.IsAbs(path) || strings.Contains(path, "://") {
+		return "", false
+	}
+	cleaned := filepath.Clean(path)
+	if cleaned == "." || cleaned == ".." || strings.HasPrefix(cleaned, ".."+string(filepath.Separator)) {
+		return "", false
+	}
+	return cleaned, true
+}
+
+func looksLikeNamedProofReference(ref string) bool {
+	path, anchor, hasAnchor := strings.Cut(scorecardScalarValue(ref), "#")
+	return hasAnchor && strings.TrimSpace(path) != "" && strings.TrimSpace(anchor) != ""
+}
+
+func (builder scorecardGateBuilder) executableProofReferenceExists(ref string) bool {
+	pattern, ok := internalAppGoTestRunPattern(ref)
+	if !ok {
+		return false
+	}
+	testNames := scorecardTestNamesFromRunPattern(pattern)
+	if len(testNames) == 0 {
+		return false
+	}
+	for _, testName := range testNames {
+		if !builder.scorecardTestFunctionExists(testName) {
+			return false
+		}
+	}
+	return true
+}
+
+func isInternalAppGoTestRunReference(ref string) bool {
+	_, ok := internalAppGoTestRunPattern(ref)
+	return ok
+}
+
+func internalAppGoTestRunPattern(ref string) (string, bool) {
+	fields := strings.Fields(scorecardScalarValue(ref))
+	if len(fields) < 4 || fields[0] != "go" || fields[1] != "test" || fields[2] != "./internal/app" {
+		return "", false
+	}
+	for i := 3; i < len(fields); i++ {
+		if fields[i] == "-run" && i+1 < len(fields) {
+			return scorecardScalarValue(fields[i+1]), true
+		}
+		if strings.HasPrefix(fields[i], "-run=") {
+			return scorecardScalarValue(strings.TrimPrefix(fields[i], "-run=")), true
+		}
+	}
+	return "", false
+}
+
+func scorecardTestNamesFromRunPattern(pattern string) []string {
+	pattern = strings.Trim(scorecardScalarValue(pattern), "^$")
+	parts := strings.Split(pattern, "|")
+	names := make([]string, 0, len(parts))
+	for _, part := range parts {
+		name := strings.Trim(strings.TrimSpace(part), "()^$")
+		if beforeSlash, _, ok := strings.Cut(name, "/"); ok {
+			name = beforeSlash
+		}
+		if isGoTestFunctionName(name) {
+			names = append(names, name)
+		}
+	}
+	return names
+}
+
+func isGoTestFunctionName(name string) bool {
+	if !strings.HasPrefix(name, "Test") || len(name) == len("Test") {
+		return false
+	}
+	for _, r := range name {
+		if r != '_' && !unicode.IsLetter(r) && !unicode.IsDigit(r) {
+			return false
+		}
+	}
+	return true
+}
+
+func (builder scorecardGateBuilder) scorecardTestFunctionExists(testName string) bool {
+	if builder.root == "" {
+		return false
+	}
+	appDir := filepath.Join(builder.root, "internal", "app")
+	found := false
+	_ = filepath.WalkDir(appDir, func(path string, entry os.DirEntry, err error) error {
+		if err != nil || found || entry.IsDir() || filepath.Ext(path) != ".go" {
+			return nil
+		}
+		data, readErr := os.ReadFile(path)
+		if readErr != nil {
+			return nil
+		}
+		if strings.Contains(string(data), "func "+testName+"(") {
+			found = true
+		}
+		return nil
+	})
+	return found
 }
 
 func hasScorecardReferenceValue(value string) bool {
-	value = strings.TrimSpace(strings.Trim(value, `"'`))
+	value = scorecardScalarValue(value)
 	switch strings.ToLower(value) {
 	case "", "[]", "{}", ">", "|", "null", "none", "n/a":
 		return false
 	default:
 		return true
 	}
+}
+
+func scorecardScalarValue(value string) string {
+	return strings.TrimSpace(strings.Trim(strings.TrimSpace(value), `"'`))
 }
 
 func yamlSection(text, key string) string {
