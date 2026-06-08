@@ -145,6 +145,22 @@ P2:
 - broad demo verticals
 - commercial skills and agent UI surfaces
 
+## Focused Delivery Decision
+
+Jini delivery uses one active chain:
+
+- PRD: `specs/number-one-platform-prd.md`
+- dev design: `specs/launcher-intake-design.md`
+- implementation plan: `specs/number-one-development-plan.md`
+
+No drift without explicit agreement. A new requirement, product surface,
+interaction model, app surface, agent surface, or commercial/free tier boundary
+change is not active work until this decision record changes in the same
+commit.
+
+Older broad PRDs, research notes, and platform plans are background only. They
+may inform decisions, but they do not authorize implementation.
+
 ## PRD Drift Control
 
 Protected product and PRD surfaces must not change casually.

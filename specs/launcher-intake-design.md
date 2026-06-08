@@ -1,48 +1,73 @@
-# Launcher Intake Design
+# Launcher Intake Dev Design
 
-Updated: 2026-05-14
+Updated: 2026-06-08
+
+This is the active dev design for the CLI front door. It is subordinate to
+[number-one-platform-prd.md](./number-one-platform-prd.md) and
+[product-settling-decisions.md](./product-settling-decisions.md).
 
 ## Goal
 
-Make `jini` the real first-run product:
+Make `jini` feel like a familiar agent CLI, not a new workflow.
+
+The user should be able to:
 
 1. run `jini`
-2. paste what needs to be finished
-3. answer only the highest-value blocking question when needed
-4. get a first useful artifact fast
-5. keep missing information and next step visible without overwhelming the user
+2. describe the task
+3. get a direct answer, direct edit, route handoff, or one short question
 
-## Public launcher rules
+## Invariants
 
-- default to paste-first input
-- accept rough or messy context
-- avoid exposing tool, provider, or model theory before value appears
-- ask at most one high-impact clarification before first output when the request
-  is too underspecified to produce a good first draft
-- produce the artifact before the long explanation
-- keep `Start` and `Continue` as plain-language actions
+- Bare `jini` renders the same task prompt with or without saved work.
+- Startup is not a saved-work dashboard.
+- Saved work is passive context until the user asks for it.
+- Typing a saved work title resumes that thread naturally.
+- `status`, `continue`, `open`, and `help` are explicit inspection paths.
+- Slash commands are rejected instead of becoming work.
+- Greetings, acknowledgements, and help questions do not create work.
+- Clear local file edits execute instead of creating a draft artifact.
+- Simple factual questions answer directly without a work-state dump.
 
-## Current-work rules
+## Forbidden Front-Door UX
 
-When work already exists, startup should show a compact resume card:
+- no compact resume card on startup
+- no visible `Switch` startup control
+- no `Start/Keep` modal
+- no Working Draft for obvious file edits
+- no Goal/Working-with/status frame for simple questions
+- no agent tree or skills OS surface in the free CLI
 
-- `Goal`
-- `Working with`
-- `AI route`
-- `Up next`
-- `Ready now`
-- `Blocked`
+## Implementation Surfaces
 
-Detailed rationale such as `Why this matters`, `Options`, or `If you skip this`
-should remain available behind explicit actions like `Missing` or
-`jini status`.
+Primary code:
 
-## Starter design rules
+- `internal/app/app.go`
+- `runLauncher`
+- `runNoCurrentLauncher`
+- `handleCurrentWorkAction`
+- `maybeHandleLocalTextFileEditIntent`
+- `maybeHandleSimpleAnswer`
+- `resolveActiveWorkSelection`
 
-- starter behavior must come from shared profile metadata, not scattered
-  use-case branches
-- clarification prompts should ask only for missing high-value dimensions
-- starter output should reflect the parsed request shape instead of one default
-  canned example
+Regression tests:
 
-Use this stable path for public review and future links.
+- `TestLauncherStartsAsCompactShellWhenCurrentWorkExists`
+- `TestCurrentWorkInteractiveLauncherIsCompactByDefault`
+- `TestLauncherShowsOtherActiveWorkWhenMultipleProjectsExist`
+- `TestInteractiveLauncherCanResumeNamedActiveProject`
+- `TestInteractiveLocalTextEditAppendsQuotedLineInsteadOfDrafting`
+- `TestCurrentWorkSimpleFactualQuestionAnswersDirectly`
+
+Required gate:
+
+```bash
+bash tools/cli_ux_regression_gate.sh
+```
+
+## Change Rule
+
+Do not add a new front-door interaction pattern from implementation alone.
+
+If a change needs a new startup concept, modal, command category, saved-work
+surface, or route behavior, update `product-settling-decisions.md` first in the
+same commit. Otherwise, treat it as drift and reject it.

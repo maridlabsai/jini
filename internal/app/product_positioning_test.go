@@ -29,6 +29,8 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"no visible `Switch` startup control",
 		"Offline is a route state, not a separate product.",
 		"Until the CLI wedge is noticeably strong, defer broad expansion.",
+		"No drift without explicit agreement.",
+		"Older broad PRDs, research notes, and platform plans are background only.",
 		"Protected product and PRD surfaces must not change casually.",
 		"bash tools/product_prd_drift_gate.sh",
 	} {
@@ -43,6 +45,8 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"Jini should be built as a CLI-first AI work router and durable session layer",
 		"The near-term GTM product is not the broad OS.",
 		"Bare `jini` is a task prompt, not a dashboard.",
+		"[launcher-intake-design.md](./launcher-intake-design.md)",
+		"[number-one-development-plan.md](./number-one-development-plan.md)",
 		"Token frugality is P0.",
 		"Commercial value must be materially higher than the free CLI.",
 	} {
@@ -60,6 +64,55 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 	} {
 		if !strings.Contains(readme, want) {
 			t.Fatalf("README must teach settled product positioning %q", want)
+		}
+	}
+}
+
+func TestFocusedDeliveryChainGatesPRDDesignAndImplementation(t *testing.T) {
+	root := repoRootForMigrationTest(t)
+
+	launcherDesign := readProductPositioningFile(t, root, "specs/launcher-intake-design.md")
+	for _, want := range []string{
+		"This is the active dev design for the CLI front door.",
+		"Bare `jini` renders the same task prompt with or without saved work.",
+		"Startup is not a saved-work dashboard.",
+		"Do not add a new front-door interaction pattern from implementation alone.",
+		"update `product-settling-decisions.md` first in the",
+	} {
+		if !strings.Contains(launcherDesign, want) {
+			t.Fatalf("launcher design must preserve focused delivery rule %q", want)
+		}
+	}
+	for _, stale := range []string{
+		"startup should show a compact resume card",
+		"keep `Start` and `Continue` as plain-language actions",
+		"produce the artifact before the long explanation",
+	} {
+		if strings.Contains(launcherDesign, stale) {
+			t.Fatalf("launcher design must not preserve stale launcher rule %q", stale)
+		}
+	}
+
+	developmentPlan := readProductPositioningFile(t, root, "specs/number-one-development-plan.md")
+	for _, want := range []string{
+		"This is the active implementation plan. It is intentionally narrow.",
+		"Make the CLI good enough for users to prefer trying Jini again.",
+		"First-Minute CLI Quality",
+		"Paused work can restart only through `product-settling-decisions.md`.",
+		"If that trace cannot be written in one short paragraph, the cut is too broad.",
+	} {
+		if !strings.Contains(developmentPlan, want) {
+			t.Fatalf("development plan must preserve focused implementation rule %q", want)
+		}
+	}
+	for _, stale := range []string{
+		"make the CLI and apps feel like quantum jumps",
+		"monthly public release train",
+		"Workstream E: CLI And App Surface Specialization",
+		"desktop as the rich review and artifact-edit surface",
+	} {
+		if strings.Contains(developmentPlan, stale) {
+			t.Fatalf("development plan must not preserve stale broad-plan rule %q", stale)
 		}
 	}
 }

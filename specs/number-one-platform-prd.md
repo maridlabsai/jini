@@ -7,6 +7,13 @@ the work that matters for GTM. If this document conflicts with exploratory
 platform docs, demo docs, or older PRDs, this document and
 [product-settling-decisions.md](./product-settling-decisions.md) win.
 
+Delivery chain:
+
+- this PRD defines what matters
+- [launcher-intake-design.md](./launcher-intake-design.md) defines the dev design
+- [number-one-development-plan.md](./number-one-development-plan.md) defines the active cuts
+- drift requires [product-settling-decisions.md](./product-settling-decisions.md)
+
 ## Product Thesis
 
 Jini should be built as a CLI-first AI work router and durable session layer for

@@ -31,6 +31,7 @@ is_protected_product_surface() {
     specs/product-consensus-prd-and-plan.md | \
     specs/full-product-prd.md | \
     specs/full-product-prd-execution-plan.md | \
+    specs/launcher-intake-design.md | \
     specs/lean-platform-doctrine.md | \
     specs/client-surfaces-and-free-tier.md | \
     specs/platform-offline-strategy.md | \
