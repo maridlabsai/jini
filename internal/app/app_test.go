@@ -299,6 +299,14 @@ func TestLocalTextEditDoesNotGuessAmongAmbiguousTextFiles(t *testing.T) {
 	if !strings.Contains(stdout.String(), "I found multiple .txt files. Please include the exact filename.") {
 		t.Fatalf("expected ambiguity message, got:\n%s", stdout.String())
 	}
+	for _, want := range []string{
+		"- pear first.txt",
+		"- pear second.txt",
+	} {
+		if !strings.Contains(stdout.String(), want) {
+			t.Fatalf("expected ambiguity message to list candidate %q, got:\n%s", want, stdout.String())
+		}
+	}
 	if got := mustReadFile(t, first); got != "first\n" {
 		t.Fatalf("expected first file to remain unchanged, got:\n%s", got)
 	}

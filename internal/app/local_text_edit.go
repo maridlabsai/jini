@@ -195,9 +195,28 @@ func resolveLocalTextEditTarget(raw string, intent localTextEditIntent) (localTe
 		return candidates[i].Score > candidates[j].Score
 	})
 	if candidates[0].Score == 0 || candidates[0].Score == candidates[1].Score {
-		return localTextFileCandidate{}, fmt.Errorf("I found multiple .txt files. Please include the exact filename.")
+		message := "I found multiple .txt files. Please include the exact filename.\n" + localTextEditCandidateList(candidates)
+		return localTextFileCandidate{}, fmt.Errorf("%s", message)
 	}
 	return candidates[0], nil
+}
+
+func localTextEditCandidateList(candidates []localTextFileCandidate) string {
+	if len(candidates) == 0 {
+		return ""
+	}
+	limit := len(candidates)
+	if limit > 5 {
+		limit = 5
+	}
+	lines := []string{"Candidates:"}
+	for _, candidate := range candidates[:limit] {
+		lines = append(lines, "- "+candidate.Name)
+	}
+	if len(candidates) > limit {
+		lines = append(lines, "- ...")
+	}
+	return strings.Join(lines, "\n")
 }
 
 func localTextEditRequestTokens(raw, line string) map[string]bool {
