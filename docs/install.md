@@ -139,37 +139,42 @@ quick_links:
     <div class="step-card">
       <span class="step-number">1</span>
       <h3>Run <code>jini</code></h3>
-      <p>Do not start with provider jargon unless Jini tells you setup is missing. Inside a repo, Jini should immediately steer toward task-first asks like <code>jini review this repo</code> or <code>jini fix failing tests</code>.</p>
-      <p>That repo-aware start surface should stay light: skip the generic empty-state sentence, show one calm repo-context line, let the direct task suggestions stand on their own, use a soft cue like <code>Useful here:</code> above one or two useful commands Jini found in the repo, and keep at most one quiet adoption hint for existing Jini work.</p>
-      <p>Internal diagnostics like <code>repo-map</code> and setup surfaces like <code>doctor</code> should stay off the first screen. A Claude Code, Codex, or GitHub CLI user should see task suggestions first, then at most a small <code>Already have current work?</code> note with <code>jini status</code> when existing Jini work actually needs attention.</p>
-      <p>The three starter suggestions should stay brief and action-first: <code>Review the repo and suggest the next move.</code>, <code>Fix the failing tests in this repo.</code>, and <code>Review the current branch and call out risks.</code></p>
-      <p>In a real terminal, bare <code>jini</code> should stay open and let you type the first task directly at the <code>jini&gt;</code> prompt.</p>
-      <p>When there is no repo context and no existing Jini work, the fallback should stay concise there too: interactive <code>jini</code> should still open the live shell there too. If the user gives a task, Jini can answer with <code>Run this from the repo or folder that needs work.</code>, but it should stay open instead of exiting. Non-interactive fallback output should stay concise and avoid diagnostics or adoption guidance on first contact.</p>
-      <p>That same calm shell shape should appear when Jini resumes remembered work too, so zero-arg <code>jini</code> still feels like one shell instead of one prompt for fresh repo work and another prompt for active work.</p>
-      <p>For parity with Claude Code, Codex, and GitHub CLI expectations, the shell should drop the version banner, repo receipt, active-work receipt, and startup coaching line. It should skip the full outcome report before the prompt and open directly at <code>jini&gt;</code>.</p>
+      <p>Do not start with provider jargon unless Jini tells you setup is missing. The shipped <code>v0.1.2</code> first screen is intentionally small.</p>
       <pre><code class="language-bash">$ jini
-jini&gt; fix failing tests
+Jini
+Describe the task.
+Type `help` for examples and commands.
+&gt;
 </code></pre>
-      <p>That prompt should remain open for follow-up turns. The task should stay primary, and the controls should stay in the background until you need them. If you do, <code>commands</code>, <code>doctor</code>, <code>admin help</code>, and <code>exit</code> should still work as in-session escape hatches instead of forcing a relaunch, but they should answer with concise in-shell summaries instead of dumping the full catalog or operator cards. Prefixed habits like <code>jini commands</code> or <code>jini status</code> typed inside the shell should recover cleanly too.</p>
-      <p>Once the session is already in flow, Jini should only print one short steering line when it is actually pointing you to a concrete action. Otherwise it should acknowledge the task and go straight back to the prompt.</p>
+      <p>Saved work should not hijack this screen. Use <code>jini status</code>, <code>jini continue</code>, or <code>jini open</code> when you want to inspect prior work.</p>
     </div>
     <div class="step-card">
       <span class="step-number">2</span>
       <h3>Describe the task</h3>
-      <p>Start from the notes, draft, screenshot, transcript, or rough ask you already have.</p>
-      <p>After the first answer, keep typing plain follow-up asks like <code>fix failing tests</code>, <code>what is blocked?</code>, or <code>open the latest artifact</code> instead of learning Jini-specific action words.</p>
+      <p>Start with the thing you mean: a simple question, a named file edit, rough notes, a screenshot, a transcript, or a repo task.</p>
+      <pre><code class="language-text">&gt; what is the capital of france
+Paris.
+
+&gt; add a line saying "hello from Jini" in the pear fellow script .txt file in this folder
+Updated pear fellow script.txt
+- Added line: hello from Jini
+- Location: /path/to/pear fellow script.txt</code></pre>
     </div>
     <div class="step-card">
       <span class="step-number">3</span>
-      <h3>Use auto if needed</h3>
-      <p>If setup is missing, type <code>auto</code> and let Jini help you connect the best available route.</p>
+      <h3>Let ambiguity stop safely</h3>
+      <p>If a file edit is ambiguous, Jini should list candidate filenames and change nothing.</p>
+      <pre><code class="language-text">&gt; add a line saying "hello from Jini" in the pear script txt file in this folder
+I found multiple .txt files. Please include the exact filename.
+Candidates:
+- pear fellow script.txt
+- pear vc script.txt</code></pre>
     </div>
   </div>
 
   <p>If you want the small public command list before doing anything else, run <code>jini commands</code>. If you maintain routes, bundles, or release plumbing, the deeper inventory lives under <code>jini admin help</code>.</p>
   <p>That public list should stay deliberately short: <code>jini</code> first, then <code>status</code>, <code>continue</code>, <code>open</code>, and <code>doctor</code> only when the live session needs them.</p>
-  <p>When someone types a direct task outside a repo, Jini should stay concise there too: acknowledge the task, tell them to run it from the repo or folder that needs work, and stop there. It should not drop back to startup cards, examples, setup teaching, or adoption guidance on that path.</p>
-  <p>Direct task text belongs on the normal front door. Inside a repo, <code>jini review this repo</code>, <code>jini fix failing tests</code>, and <code>jini review this branch</code> should surface repo-aware intake instead of dropping into argparse usage output.</p>
+  <p>Direct task text belongs on the normal front door. Keep help and admin commands as catalogs, not request entrypoints.</p>
   <p>Help surfaces and <code>jini commands</code> are catalogs, not request entrypoints. If you paste a work request after <code>help</code>, <code>--help</code>, or <code>commands</code>, Jini should reject that tail text and point you back to starting with <code>jini</code> for the start surface.</p>
   <ul class="compact-list">
     <li><code>jini commands me edit pear fellow script.txt</code> should start with <code>ERROR `jini commands` shows the public command inventory; it does not take a request like "me edit pear fellow script.txt".</code></li>

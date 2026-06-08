@@ -177,3 +177,21 @@ bash tools/product_prd_drift_gate.sh
 
 This makes product drift explicit. If a change does not justify updating the
 settled decision record, it should not modify the protected product surface.
+
+## Release-Facing Copy Decision
+
+Public README and website copy must describe shipped behavior, not future CLI
+aspirations.
+
+For `v0.1.2`, the release-facing first-minute story is:
+
+- bare `jini` opens with the compact `Jini` / `Describe the task` prompt
+- simple factual questions answer directly
+- obvious local text edits update the named file in the current folder
+- ambiguous file edits fail closed and list candidate filenames
+- saved work stays behind explicit inspection commands or natural title
+  matching instead of becoming the startup frame
+
+Do not publish `jini>` live-shell examples, repo-aware startup coaching, or
+future prompt behavior in README or website pages until that behavior is
+implemented and release-smoked from the public installer.

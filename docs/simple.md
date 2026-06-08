@@ -21,8 +21,6 @@ quick_links:
 
 <p class="page-lead"><code>jini</code> is the front door. Describe the task, then use <code>jini open</code>, <code>jini continue</code>, or <code>jini status</code> when Jini points you there.</p>
 
-`jini` is the front door. `jini open` shows the current artifact. `jini continue` keeps the work moving. `jini status` shows the full state.
-
 <div class="section-card">
   <span class="section-kicker">Start here</span>
   <h2>The shortest first run</h2>
@@ -46,6 +44,17 @@ quick_links:
 
 <pre><code class="language-bash">curl -fsSL https://raw.githubusercontent.com/maridlabsai/jini/main/install.sh | bash
 jini</code></pre>
+
+<pre><code class="language-text">Jini
+Describe the task.
+Type `help` for examples and commands.
+&gt; what is the capital of france
+Paris.
+
+&gt; add a line saying "hello from Jini" in the pear fellow script .txt file in this folder
+Updated pear fellow script.txt
+- Added line: hello from Jini
+- Location: /path/to/pear fellow script.txt</code></pre>
 
   <p>If setup is missing, Jini should say so in the shell. Then type <code>auto</code>. If your company needs one strict route, use the matching setup path on the <a href="{{ '/install.html' | relative_url }}">Install</a> page instead.</p>
 
@@ -92,12 +101,11 @@ jini</code></pre>
 </div>
 
 <div class="section-card">
-  <span class="section-kicker">One concrete path</span>
-  <h2>If you use Claude</h2>
+  <span class="section-kicker">Route setup</span>
+  <h2>Only configure a route when Jini asks</h2>
 
-<pre><code>Claude</code></pre>
-
-  <p>Jini should ask only for the missing API key, save it in the repo-local <code>.jini</code> folder, and let you continue. If you do not know how to begin, type <code>help me finish this</code> and then say something plain like <code>turn these meeting notes into a follow-up I can send</code>.</p>
+  <p>Most first runs should not start with provider setup. If Jini needs help, it should ask for the missing route, key, or local model endpoint and keep the task visible.</p>
+  <p>If you do not know how to begin, type <code>help me finish this</code> and then say something plain like <code>turn these meeting notes into a follow-up I can send</code>.</p>
 </div>
 
 <div class="section-card">

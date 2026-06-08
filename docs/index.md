@@ -3,14 +3,14 @@ title: Jini
 description: Free orchestration for AI work across providers today. Pay only when Jini can prove it saves money or keeps work moving.
 ---
 
-**In plain words:** Jini helps turn rough AI work into a follow-up, readiness check, or decision memo you can actually hand to someone else.
+**In plain words:** Jini is a CLI-first work router. It keeps the first minute small: ask a simple question, edit the named local file, or hand off larger AI work to the right route without losing context.
 
 <div class="hero-panel hero-panel-marketing">
-  <p class="hero-kicker">AI work that has to survive week two, not just answer once.</p>
-  <h1 class="hero-title">Turn messy AI work into something you can actually send.</h1>
-  <p class="hero-category-claim">The open shell for artifact-safe AI work.</p>
-  <p class="hero-summary">Jini turns rough notes, transcripts, screenshots, and drafts into follow-ups, readiness checks, and decision memos that survive handoff.</p>
-  <p class="hero-summary-support">The core shell stays open. Start in the CLI today, then carry the same work forward as desktop and mobile come online.</p>
+  <p class="hero-kicker">One small front door for local edits, simple answers, and routed AI work.</p>
+  <h1 class="hero-title">Use AI CLIs without relearning the first minute.</h1>
+  <p class="hero-category-claim">The open shell for route-aware AI work.</p>
+  <p class="hero-summary">Jini starts as a compact CLI: describe the task, ask a question, or edit a named file in the current folder. Bigger work can still become a follow-up, readiness check, or decision memo when that is what you need.</p>
+  <p class="hero-summary-support">The free CLI is live today. Desktop and mobile should carry the same work forward only after those surfaces pass the same trust checks.</p>
   <div class="cta-row">
     <a class="cta-button" href="{{ '/install.html' | relative_url }}">Install Free</a>
     <a class="cta-button cta-button-secondary" href="{{ '/examples.html' | relative_url }}">See Examples</a>
@@ -20,7 +20,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
     <div class="hero-scene-card hero-scene-card-live hero-scene-card-primary">
       <span class="screen-reader-only">Live now</span>
       <strong>CLI thread</strong>
-      <p>Paste rough work into <code>jini</code> and leave with a usable next artifact instead of a chat dead-end.</p>
+      <p>Run <code>jini</code>, describe the task, and keep file edits or simple answers direct.</p>
     </div>
     <div class="hero-scene-card hero-scene-card-support">
       <div class="hero-scene-support-row">
@@ -46,11 +46,11 @@ description: Free orchestration for AI work across providers today. Pay only whe
         <span class="offer-card-eyebrow offer-card-eyebrow-core">Free orchestration core</span>
         <h3>Use the free Jini shell when the work has to survive handoff.</h3>
         <div class="offer-card-contexts" aria-label="Flagship jobs">
-          <span>After the meeting</span>
-          <span>Before the handoff</span>
-          <span>Before the decision</span>
+          <span>Named file edits</span>
+          <span>Simple questions</span>
+          <span>Routed AI work</span>
         </div>
-        <p class="offer-card-note offer-card-note-core">Jini earns the right to exist when the work has to leave chat with a sendable artifact, a safer handoff, and reasoning you can still explain later.</p>
+        <p class="offer-card-note offer-card-note-core">Jini earns the right to exist when the first minute stays obvious and the next route remains inspectable.</p>
       </div>
       <div class="offer-side-rail">
         <div class="offer-card offer-card-plain">
@@ -72,6 +72,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
       <div class="hero-install-main">
         <code>curl -fsSL https://raw.githubusercontent.com/maridlabsai/jini/main/install.sh | bash</code>
         <code>jini</code>
+        <code>&gt; add a line saying "hello from Jini" in notes.txt</code>
       </div>
       <div class="compat-pill-row" aria-label="Supported routes">
         <span class="compat-pill">Works with Claude Code</span>

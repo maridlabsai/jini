@@ -28,25 +28,21 @@ quick_links:
 <pre><code class="language-bash">jini</code></pre>
 
   <p>That should be the normal entry. Jini should always start task-first; saved work should stay behind explicit inspection commands or natural title matching.</p>
-  <p>When there is no repo context and no existing Jini work, the fallback should stay just as calm: interactive <code>jini</code> should still open the live shell. If the user gives a task there, Jini can answer briefly with <code>Run this from the repo or folder that needs work.</code>, but it should stay open instead of exiting. Non-interactive fallback output should stay just as calm and avoid banners, start cards, mini catalogs, diagnostics, or adoption guidance.</p>
-  <p>That repo-aware start surface should stay light: skip the generic empty-state sentence, show one calm repo-context line, let the direct task suggestions stand on their own, use a soft cue like <code>Useful here:</code> above one or two useful commands Jini found in the repo, and keep at most one quiet adoption hint for existing Jini work.</p>
-  <p>Internal diagnostics like <code>repo-map</code> and setup surfaces like <code>doctor</code> should stay off the first screen. A Claude Code, Codex, or GitHub CLI user should see task suggestions first, then at most a small <code>Already have current work?</code> note with <code>jini status</code> when existing Jini work actually needs attention.</p>
-  <p>The three starter suggestions should also stay brief and action-first: <code>Review the repo and suggest the next move.</code>, <code>Fix the failing tests in this repo.</code>, and <code>Review the current branch and call out risks.</code></p>
-  <p>Inside a repo, the first suggestions should be concrete asks like <code>jini review this repo</code>, <code>jini fix failing tests</code>, and <code>jini review this branch</code>, not examples and setup trivia.</p>
-  <p>In a real terminal, bare <code>jini</code> should not print a launcher card and exit. It should stay open and accept the first task line immediately.</p>
-  <p>That same calm shell shape should appear when Jini resumes remembered work too, so zero-arg <code>jini</code> still feels like one shell instead of one prompt for fresh repo work and another prompt for active work.</p>
-  <p>For parity with Claude Code, Codex, and GitHub CLI expectations, the shell should drop the version banner, repo receipt, active-work receipt, and startup coaching line. It should skip the full outcome report before the prompt and open directly at <code>jini&gt;</code>.</p>
-  <p>After the first answer it should keep the <code>jini&gt;</code> prompt open, let you type follow-up turns, and keep the controls in the background instead of teaching them before the task starts. If you need them, <code>commands</code>, <code>doctor</code>, <code>admin help</code>, and <code>exit</code> should still work inside the same live session, but they should answer with concise in-shell summaries instead of relaunching the full catalog or operator cards. Habitual prefixed input like <code>jini commands</code> or <code>jini status</code> typed inside the shell should still recover cleanly instead of turning into fake tasks.</p>
-  <p>Once the session is already in flow, Jini should only print one short steering line when it is genuinely pointing you toward a concrete action. Otherwise it should acknowledge the task and return to the prompt.</p>
+  <p>The shipped <code>v0.1.2</code> start shape is compact and literal:</p>
 
 <pre><code class="language-bash">$ jini
-jini&gt; fix failing tests
+Jini
+Describe the task.
+Type `help` for examples and commands.
+&gt; what is the capital of france
+Paris.
 
-Working on: fix failing tests
-Start with `make test`.
-jini&gt; doctor
+&gt; add a line saying "hello from Jini" in notes.txt
+Updated notes.txt
+- Added line: hello from Jini
+- Location: /path/to/notes.txt</code></pre>
 
-DOCTOR   Local preview [ok]</code></pre>
+  <p>If a file edit is ambiguous, Jini should stop and list candidate filenames instead of guessing. Setup, route, and status commands should support that flow, not appear before the task.</p>
 </div>
 
 <div class="section-card">

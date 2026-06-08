@@ -32,6 +32,8 @@ decisions live in
 
 Jini should feel small.
 
+Current release: [`v0.1.2`](https://github.com/maridlabsai/jini/releases/tag/v0.1.2).
+
 Install once with the normal path:
 
 ```bash
@@ -60,6 +62,30 @@ jini
 ```
 
 That opens Jini.
+
+The first run should look like this:
+
+```text
+Jini
+Describe the task.
+Type `help` for examples and commands.
+>
+```
+
+From there, direct work should stay direct:
+
+```text
+> what is the capital of france
+Paris.
+
+> add a line saying "hello from Jini" in the pear fellow script .txt file in this folder
+Updated pear fellow script.txt
+- Added line: hello from Jini
+- Location: /path/to/pear fellow script.txt
+```
+
+If Jini cannot safely choose a file, it should fail closed and list the
+candidate filenames instead of guessing.
 
 If you want the small public command catalog without dropping into the shell,
 run:
