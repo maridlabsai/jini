@@ -219,14 +219,23 @@ func runCLIHandoff(ctx context.Context, mode, prompt string) (string, *cliHandof
 	startedAt := time.Now()
 	if err := cmd.Run(); err != nil {
 		receipt := buildCLIHandoffReceipt(command, prompt, stdout.String(), stderr.String(), cmd.ProcessState, time.Since(startedAt))
-		detail := strings.TrimSpace(stderr.String())
-		if detail != "" {
-			return "", receipt, fmt.Errorf("%s failed: %v\n%s", descriptor.Label, err, detail)
-		}
-		return "", receipt, fmt.Errorf("%s failed: %v", descriptor.Label, err)
+		return "", receipt, cliHandoffExecutionError(descriptor.Label, err, receipt)
 	}
 	receipt := buildCLIHandoffReceipt(command, prompt, stdout.String(), stderr.String(), cmd.ProcessState, time.Since(startedAt))
 	return strings.TrimSpace(stdout.String()), receipt, nil
+}
+
+func cliHandoffExecutionError(label string, err error, receipt *cliHandoffReceipt) error {
+	if receipt == nil {
+		return fmt.Errorf("%s failed: %v", label, err)
+	}
+	return fmt.Errorf(
+		"%s failed: %v (stdout %d chars, stderr %d chars; output omitted)",
+		label,
+		err,
+		receipt.StdoutChars,
+		receipt.StderrChars,
+	)
 }
 
 func cliHandoffSetupError(provider providerConfig) error {

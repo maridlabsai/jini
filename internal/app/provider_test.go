@@ -243,6 +243,52 @@ func TestRunInteractiveKeepsCurrentWorkAfterFailedCLIHandoff(t *testing.T) {
 	}
 }
 
+func TestGenerateWithConfiguredProviderSanitizesFailedCLIHandoffError(t *testing.T) {
+	t.Setenv("JINI_TOOL", "claude-code")
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	binDir := t.TempDir()
+	writeProviderFakeExecutable(t, binDir, "claude", strings.Join([]string{
+		"printf 'partial stdout\\n'",
+		"printf 'downstream secret stderr\\n' >&2",
+		"exit 9",
+	}, "\n"))
+	t.Setenv("PATH", binDir)
+
+	_, used, actualDecision, err := generateWithConfiguredProviderDecision(context.Background(), providerGenerationRequest{
+		Choice: starterChoice{PackID: "general-work"},
+		Title:  "Failing CLI",
+		Source: "Use a downstream CLI that fails.",
+	}, detectRouteForToolMode("claude-code", false))
+	if err == nil {
+		t.Fatalf("expected failed CLI handoff error")
+	}
+	if !used {
+		t.Fatalf("expected CLI handoff route to be selected")
+	}
+	if actualDecision.CLIHandoffReceipt == nil || actualDecision.CLIHandoffReceipt.ExitStatus != 9 {
+		t.Fatalf("expected failed handoff receipt on actual decision, got %#v", actualDecision.CLIHandoffReceipt)
+	}
+	errorText := err.Error()
+	for _, want := range []string{
+		"Claude Code CLI handoff failed: exit status 9",
+		"stdout 15 chars",
+		"stderr 25 chars",
+		"output omitted",
+	} {
+		if !strings.Contains(errorText, want) {
+			t.Fatalf("expected sanitized error to contain %q, got %q", want, errorText)
+		}
+	}
+	for _, unwanted := range []string{
+		"partial stdout",
+		"downstream secret stderr",
+	} {
+		if strings.Contains(errorText, unwanted) {
+			t.Fatalf("sanitized error must not expose CLI output body %q, got %q", unwanted, errorText)
+		}
+	}
+}
+
 func TestSaveWorkRouteClearsCLIHandoffReceiptWhenRouteSwitchesAwayFromCLI(t *testing.T) {
 	workDir := t.TempDir()
 	request := providerGenerationRequest{
