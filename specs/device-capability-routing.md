@@ -50,13 +50,21 @@ This should be stored as a versioned repo-local device profile.
 
 Jini should classify the local machine into one of:
 
+- `mobile-small`
 - `tiny`
 - `laptop-light`
-- `laptop-strong`
+- `laptop-pro`
 - `workstation`
 - `gpu-heavy`
 
 These are product-facing heuristics, not hardware marketing terms.
+`laptop-strong` remains a backward-compatible alias for `laptop-pro`.
+
+Mobile devices must stay in the `mobile-small` envelope. They may use only
+fine-tuned lightweight local models for bounded transforms and should not
+expose workhorse, deep, or multimodal desktop-local profiles as available.
+Laptop devices should split into light or pro policy tiers from measured SKU
+signals such as OS, architecture, memory, CPU count, and accelerator class.
 
 ## Local Profile Availability
 

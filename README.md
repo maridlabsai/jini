@@ -347,6 +347,12 @@ readiness plus the device profile to decide whether `fast`, `workhorse`,
 win, but without them Jini scores the discovered local models by task, device
 class, and low-battery posture.
 
+Auto-discovered mobile routes are intentionally narrow: Jini only treats
+lightweight fine-tuned local models as eligible on iOS/Android-class devices.
+Laptop routes split into light and pro policy tiers from measured device SKU
+signals, so light laptops avoid pro-sized local models while pro laptops can
+use stronger local workhorse models when the device can handle them.
+
 When you run `jini doctor` on a Local SLM setup, Jini also records a
 small measured capability report for the local profiles. That report captures
 real request success, warm latency, cold-start cost, token throughput, and

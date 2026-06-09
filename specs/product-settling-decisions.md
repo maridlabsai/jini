@@ -232,6 +232,13 @@ route, provider, or model pins remain overrides. Zero-config discovery does not
 authorize silent model downloads or bundling large model assets into the CLI
 installer.
 
+Discovered local models must obey form-factor envelopes. Mobile-class devices
+may use only lightweight fine-tuned local SLMs for bounded work and must not
+silently expose desktop workhorse, deep, or multimodal profiles. Laptop-class
+devices split into light and pro policy tiers from measured SKU signals; light
+laptops avoid pro-sized discovered models, while pro laptops may use stronger
+mid-size local workhorse models when the device and power posture support it.
+
 ## Roadmap Consequence
 
 Until the CLI wedge is noticeably strong, defer broad expansion.

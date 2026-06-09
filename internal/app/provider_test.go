@@ -808,6 +808,48 @@ func TestDetectLocalSLMProviderUsesDiscoveredModelWithoutManualConfig(t *testing
 	}
 }
 
+func TestChooseLocalSLMModelForMobileRequiresLightweightTunedModel(t *testing.T) {
+	power := powerProfile{PowerSource: "battery", BatteryPercent: 80}
+	profile := deviceProfile{DeviceClass: "mobile-small"}
+
+	got := chooseLocalSLMModelForToolMode("local-workhorse", []string{
+		"llama3:8b-instruct",
+		"gemma3n:e2b-it",
+		"nomic-embed-text",
+	}, profile, power)
+	if got != "gemma3n:e2b-it" {
+		t.Fatalf("expected mobile to choose lightweight tuned model, got %q", got)
+	}
+
+	got = chooseLocalSLMModelForToolMode("local-workhorse", []string{
+		"llama3:8b-instruct",
+		"qwen3:14b-instruct",
+	}, profile, power)
+	if got != "" {
+		t.Fatalf("expected mobile to reject discovered heavy models, got %q", got)
+	}
+}
+
+func TestChooseLocalSLMModelForLaptopLightAvoidsProSizedModels(t *testing.T) {
+	got := chooseLocalSLMModelForToolMode("local-workhorse", []string{
+		"phi4-mini",
+		"qwen3:14b-instruct",
+	}, deviceProfile{DeviceClass: "laptop-light"}, powerProfile{})
+	if got != "phi4-mini" {
+		t.Fatalf("expected light laptop to avoid pro-sized model, got %q", got)
+	}
+}
+
+func TestChooseLocalSLMModelForLaptopProCanUseProSizedModels(t *testing.T) {
+	got := chooseLocalSLMModelForToolMode("local-workhorse", []string{
+		"phi4-mini",
+		"qwen3:14b-instruct",
+	}, deviceProfile{DeviceClass: "laptop-pro"}, powerProfile{})
+	if got != "qwen3:14b-instruct" {
+		t.Fatalf("expected pro laptop to use pro-sized workhorse model, got %q", got)
+	}
+}
+
 func TestLocalSLMAutoDiscoveryCachesNegativeResult(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", t.TempDir())
 	t.Setenv("JINI_PROVIDER", "local-slm")

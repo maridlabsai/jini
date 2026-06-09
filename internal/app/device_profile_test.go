@@ -70,6 +70,77 @@ func TestEffectiveLocalProfileStatesRequireActuallyLocalRuntime(t *testing.T) {
 	}
 }
 
+func TestClassifyDeviceClassTreatsMobileAsMobileSmall(t *testing.T) {
+	for _, goos := range []string{"android", "ios"} {
+		t.Run(goos, func(t *testing.T) {
+			got := classifyDeviceClass(deviceProfile{
+				OS:               goos,
+				Arch:             "arm64",
+				CPUCount:         8,
+				TotalMemoryGB:    16,
+				AcceleratorClass: "mobile-npu",
+			})
+			if got != "mobile-small" {
+				t.Fatalf("expected mobile-small for %s, got %q", goos, got)
+			}
+		})
+	}
+}
+
+func TestClassifyDeviceClassSplitsLaptopLightAndProSKU(t *testing.T) {
+	light := classifyDeviceClass(deviceProfile{
+		OS:               "darwin",
+		Arch:             "arm64",
+		CPUCount:         8,
+		TotalMemoryGB:    16,
+		AcceleratorClass: "apple-gpu",
+	})
+	if light != "laptop-light" {
+		t.Fatalf("expected 16GB 8-core laptop to stay light, got %q", light)
+	}
+
+	pro := classifyDeviceClass(deviceProfile{
+		OS:               "darwin",
+		Arch:             "arm64",
+		CPUCount:         12,
+		TotalMemoryGB:    32,
+		AcceleratorClass: "apple-gpu",
+	})
+	if pro != "laptop-pro" {
+		t.Fatalf("expected higher-SKU laptop to be pro, got %q", pro)
+	}
+}
+
+func TestHardwareProfileStatesForMobileOnlyAllowsFastLocalProfile(t *testing.T) {
+	states := hardwareProfileStatesForDevice(deviceProfile{
+		DeviceClass:       "mobile-small",
+		AcceleratorClass:  "mobile-npu",
+		LocalRuntimeClass: "local-openai-compatible",
+	})
+	if states["local-fast"] != "available" {
+		t.Fatalf("expected local-fast to be available on mobile, got %#v", states)
+	}
+	for _, mode := range []string{"local-workhorse", "local-deep", "local-multimodal"} {
+		if states[mode] != "unavailable" {
+			t.Fatalf("expected %s to be unavailable on mobile, got %#v", mode, states)
+		}
+	}
+}
+
+func TestDeviceClassForPolicyKeepsLegacyAndFriendlyAliases(t *testing.T) {
+	cases := map[string]string{
+		"laptop-strong": "laptop-pro",
+		"Laptop Light":  "laptop-light",
+		"pro_laptop":    "laptop-pro",
+		"iOS":           "mobile-small",
+	}
+	for input, want := range cases {
+		if got := deviceClassForPolicy(input); got != want {
+			t.Fatalf("expected %q to map to %q, got %q", input, want, got)
+		}
+	}
+}
+
 func writeTestDeviceProfile(t *testing.T, profile deviceProfile) {
 	t.Helper()
 	data, err := json.MarshalIndent(profile, "", "  ")

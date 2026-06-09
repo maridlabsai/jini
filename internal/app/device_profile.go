@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	deviceProfileSchemaVersion      = "0.2.0"
-	deviceCapabilityRegistryVersion = "2026-05-16.2"
+	deviceProfileSchemaVersion      = "0.3.0"
+	deviceCapabilityRegistryVersion = "2026-06-09.1"
 )
 
 type deviceProfile struct {
@@ -405,21 +405,74 @@ func probeFingerprint(profile deviceProfile) string {
 }
 
 func classifyDeviceClass(profile deviceProfile) string {
+	if isMobileOS(profile.OS) {
+		return "mobile-small"
+	}
 	ram := profile.TotalMemoryGB
 	cpu := profile.CPUCount
 	accel := profile.AcceleratorClass
 	switch {
-	case accel != "cpu-only" && ram >= 32:
+	case accel != "cpu-only" && ram >= 64:
 		return "gpu-heavy"
+	case ram >= 64 && cpu >= 12:
+		return "workstation"
+	case isAppleLaptopLike(profile) && ram >= 32 && cpu >= 10:
+		return "laptop-pro"
+	case isAppleLaptopLike(profile) && ram >= 8:
+		return "laptop-light"
 	case ram >= 32 && cpu >= 8:
 		return "workstation"
-	case ram >= 16:
-		return "laptop-strong"
+	case ram >= 24 || (ram >= 16 && cpu >= 10):
+		return "laptop-pro"
 	case ram >= 8:
 		return "laptop-light"
 	default:
 		return "tiny"
 	}
+}
+
+func isMobileOS(goos string) bool {
+	switch normalizeName(goos) {
+	case "android", "ios":
+		return true
+	default:
+		return false
+	}
+}
+
+func isAppleLaptopLike(profile deviceProfile) bool {
+	return strings.EqualFold(strings.TrimSpace(profile.OS), "darwin") &&
+		strings.EqualFold(strings.TrimSpace(profile.Arch), "arm64") &&
+		strings.EqualFold(strings.TrimSpace(profile.AcceleratorClass), "apple-gpu")
+}
+
+func deviceClassForPolicy(deviceClass string) string {
+	switch deviceClassToken(deviceClass) {
+	case "mobile", "mobile-small", "android", "ios":
+		return "mobile-small"
+	case "tiny":
+		return "tiny"
+	case "laptop-light", "light-laptop":
+		return "laptop-light"
+	case "laptop-pro", "laptop-strong", "pro-laptop":
+		return "laptop-pro"
+	case "workstation":
+		return "workstation"
+	case "gpu-heavy":
+		return "gpu-heavy"
+	default:
+		return strings.TrimSpace(deviceClass)
+	}
+}
+
+func deviceClassToken(deviceClass string) string {
+	value := strings.ToLower(strings.TrimSpace(deviceClass))
+	value = strings.ReplaceAll(value, "_", "-")
+	value = strings.ReplaceAll(value, " ", "-")
+	for strings.Contains(value, "--") {
+		value = strings.ReplaceAll(value, "--", "-")
+	}
+	return value
 }
 
 func hardwareProfileStatesForDevice(profile deviceProfile) map[string]string {
@@ -429,7 +482,11 @@ func hardwareProfileStatesForDevice(profile deviceProfile) map[string]string {
 		"local-deep":       "limited",
 		"local-multimodal": "limited",
 	}
-	switch profile.DeviceClass {
+	switch deviceClassForPolicy(profile.DeviceClass) {
+	case "mobile-small":
+		states["local-workhorse"] = "unavailable"
+		states["local-deep"] = "unavailable"
+		states["local-multimodal"] = "unavailable"
 	case "tiny":
 		states["local-workhorse"] = "limited"
 		states["local-deep"] = "unavailable"
@@ -437,7 +494,7 @@ func hardwareProfileStatesForDevice(profile deviceProfile) map[string]string {
 	case "laptop-light":
 		states["local-deep"] = "limited"
 		states["local-multimodal"] = "unavailable"
-	case "laptop-strong":
+	case "laptop-pro":
 		states["local-deep"] = "limited"
 		if profile.AcceleratorClass == "apple-gpu" {
 			states["local-multimodal"] = "limited"

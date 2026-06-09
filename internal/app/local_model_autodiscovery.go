@@ -18,6 +18,7 @@ import (
 )
 
 const localSLMAutoDiscoveryTimeout = 220 * time.Millisecond
+const localSLMRejectedModelScore = -100000
 
 var (
 	localSLMDiscoveryHTTPClient = &http.Client{Timeout: localSLMAutoDiscoveryTimeout}
@@ -241,9 +242,12 @@ func autoLocalSLMModelForToolMode(toolMode string) (string, string) {
 
 func chooseLocalSLMModelForToolMode(toolMode string, models []string, profile deviceProfile, power powerProfile) string {
 	bestModel := ""
-	bestScore := -99999
+	bestScore := localSLMRejectedModelScore
 	for index, modelID := range models {
 		score := scoreLocalSLMModelForToolMode(toolMode, modelID, profile, power)
+		if score <= localSLMRejectedModelScore {
+			continue
+		}
 		score -= index
 		if score > bestScore {
 			bestScore = score
@@ -258,7 +262,21 @@ func scoreLocalSLMModelForToolMode(toolMode, modelID string, profile deviceProfi
 	sizeB := localModelSizeBillions(modelID)
 	score := 0
 	if isNonChatLocalModel(modelID) {
-		return -10000
+		return localSLMRejectedModelScore
+	}
+	switch deviceClassForPolicy(profile.DeviceClass) {
+	case "mobile-small":
+		if !isLightweightTunedMobileLocalModel(modelID) {
+			return localSLMRejectedModelScore
+		}
+	case "laptop-light":
+		if localModelExceedsLaptopLightEnvelope(modelID) {
+			return localSLMRejectedModelScore
+		}
+	case "laptop-pro":
+		if localModelExceedsLaptopProEnvelope(modelID) {
+			return localSLMRejectedModelScore
+		}
 	}
 	if containsAny(normalized, []string{"qwen", "llama", "gemma", "mistral", "deepseek", "phi"}) {
 		score += 8
@@ -281,7 +299,14 @@ func scoreLocalSLMModelForToolMode(toolMode, modelID string, profile deviceProfi
 		score += scoreWorkhorseLocalModel(sizeB, normalized)
 	}
 
-	switch profile.DeviceClass {
+	switch deviceClassForPolicy(profile.DeviceClass) {
+	case "mobile-small":
+		if sizeB > 0 && sizeB <= 4 {
+			score += 24
+		}
+		if containsAny(normalized, []string{"3n", "mini", "small", "lite", "nano", "mobile", "phi"}) {
+			score += 18
+		}
 	case "tiny":
 		if sizeB > 4 {
 			score -= 28
@@ -290,7 +315,7 @@ func scoreLocalSLMModelForToolMode(toolMode, modelID string, profile deviceProfi
 		if sizeB > 8 {
 			score -= 18
 		}
-	case "laptop-strong":
+	case "laptop-pro":
 		if sizeB >= 7 && sizeB <= 14 {
 			score += 8
 		}
@@ -313,6 +338,31 @@ func scoreLocalSLMModelForToolMode(toolMode, modelID string, profile deviceProfi
 		}
 	}
 	return score
+}
+
+func isLightweightTunedMobileLocalModel(modelID string) bool {
+	normalized := normalizeName(modelID)
+	sizeB := localModelSizeBillions(modelID)
+	if sizeB > 4 {
+		return false
+	}
+	if sizeB == 0 && !containsAny(normalized, []string{"mini", "small", "lite", "nano", "mobile", "3n", "e2b", "e4b", "phi"}) {
+		return false
+	}
+	return containsAny(normalized, []string{
+		"instruct", "chat", "coder", "it", "assistant", "reason",
+		"gemma3n", "gemma-3n", "phi", "qwen3", "qwen2.5",
+	})
+}
+
+func localModelExceedsLaptopLightEnvelope(modelID string) bool {
+	sizeB := localModelSizeBillions(modelID)
+	return sizeB > 8
+}
+
+func localModelExceedsLaptopProEnvelope(modelID string) bool {
+	sizeB := localModelSizeBillions(modelID)
+	return sizeB > 14
 }
 
 func scoreFastLocalModel(sizeB float64, normalized string) int {
@@ -368,7 +418,8 @@ func scoreDeepLocalModel(sizeB float64, normalized string, profile deviceProfile
 	case sizeB > 0 && sizeB <= 4:
 		score -= 22
 	}
-	if profile.DeviceClass == "tiny" || profile.DeviceClass == "laptop-light" {
+	switch deviceClassForPolicy(profile.DeviceClass) {
+	case "mobile-small", "tiny", "laptop-light":
 		if sizeB >= 14 {
 			score -= 30
 		}

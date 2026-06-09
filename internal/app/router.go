@@ -675,7 +675,14 @@ func localDeviceCapabilityBias(mode string, profile deviceProfile) int {
 			return -22 + powerBias
 		}
 	case "available":
-		switch profile.DeviceClass {
+		switch deviceClassForPolicy(profile.DeviceClass) {
+		case "mobile-small":
+			switch mode {
+			case "local-fast":
+				return 22 + powerBias
+			case "local-workhorse", "local-deep", "local-multimodal":
+				return -40 + powerBias
+			}
 		case "tiny":
 			switch mode {
 			case "local-fast":
@@ -696,7 +703,7 @@ func localDeviceCapabilityBias(mode string, profile deviceProfile) int {
 			case "local-multimodal":
 				return -14 + powerBias
 			}
-		case "laptop-strong":
+		case "laptop-pro":
 			switch mode {
 			case "local-fast":
 				return 6 + powerBias

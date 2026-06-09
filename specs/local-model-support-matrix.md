@@ -91,6 +91,8 @@ Recommended primary model classes:
 - platform-native on-device model such as Gemini Nano when available
 - open-weight mobile class such as Gemma 3n when Jini needs a portable local
   path outside the platform-native stack
+- only lightweight fine-tuned models should be eligible for discovered local
+  mobile routes
 
 Recommended use:
 
@@ -122,19 +124,44 @@ Recommended primary model classes:
 - small local transform class only
 - open-weight mobile class such as Gemma 3n only when runtime maturity and app
   constraints make it practical
+- discovered local routes must reject desktop workhorse or deep models on iOS
 
 Product rule:
 
 - iOS should not be planned as a parity desktop inference surface
 - iOS should be planned as the strongest interruption-safe continuation surface
 
-### 3. macOS Laptop, 16GB Class
+### 3. macOS Laptop, Light SKU
 
 Primary Jini role:
 
 - day-to-day local authoring
 - cheap-first drafting
-- multimodal first pass
+- offline-first desktop work
+
+Preferred profiles:
+
+- `desktop-fast`
+- `desktop-workhorse`
+
+Recommended primary model classes:
+
+- `desktop-fast` -> Phi-class small text model
+- `desktop-workhorse` -> strong instruct model inside the light laptop envelope
+  rather than a pro-sized model
+
+Product rule:
+
+- light laptops should prefer fast and small workhorse models and avoid
+  pro-sized local models unless the user explicitly overrides policy
+
+### 4. macOS Laptop, Pro SKU
+
+Primary Jini role:
+
+- day-to-day local authoring
+- cheap-first drafting
+- multimodal first pass when the local runtime is ready
 - offline-first desktop work
 
 Preferred profiles:
@@ -142,20 +169,22 @@ Preferred profiles:
 - `desktop-fast`
 - `desktop-workhorse`
 - `desktop-multimodal`
+- `workstation-deep` only when measured capability supports it
 
 Recommended primary model classes:
 
 - `desktop-fast` -> Phi-class small text model
-- `desktop-workhorse` -> Gemma 4 12B or strong Qwen-class instruct model when
-  text-only quality wins on the actual machine
-- `desktop-multimodal` -> Gemma 4 12B
+- `desktop-workhorse` -> Gemma or strong Qwen-class instruct model in the
+  mid-size local envelope
+- `desktop-multimodal` -> Gemma-class multimodal model when latency and memory
+  are acceptable
 
 Product rule:
 
-- macOS should be the first-class local authoring host for the commercial
-  desktop tier
+- pro laptops may use stronger local models than light laptops, but should not
+  silently select workstation-sized models
 
-### 4. Windows Laptop, 16GB To 32GB Class
+### 5. Windows Laptop, 16GB To 32GB Class
 
 Primary Jini role:
 
@@ -183,7 +212,7 @@ Product rule:
 - Windows should stay symmetric with macOS at the routing-policy level even if
   runtime packaging differs
 
-### 5. Workstation Or Strong Desktop
+### 6. Workstation Or Strong Desktop
 
 Primary Jini role:
 
