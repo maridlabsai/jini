@@ -107,6 +107,12 @@ Wave 0 and Wave 1 are runtime-supported in the free CLI when the downstream
 tool is installed and trusted by the OS. Missing or rejected CLIs must fail
 closed and must not fall back to provider API aliases.
 
+Release claims require a separate dogfood evidence layer. Executable detection
+means a route is ready to validate; it does not prove auth, approvals, output
+shape, or route-receipt privacy. `jini check ship --format json` must keep
+those states separate and may read local `.jini/cli-dogfood.json` evidence for
+validated installed-CLI runs.
+
 Implementation plan:
 
 - P0.1: keep a golden CLI transcript suite for simple questions, bare

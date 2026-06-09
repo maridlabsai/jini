@@ -422,7 +422,10 @@ func TestPushGateRunsShipCheckEvidence(t *testing.T) {
 		"`jini check ship --format json`",
 		"push gate records local shipping evidence",
 		"dirty worktrees are blocked before push",
-		"CLI handoff dogfood matrix",
+		"Wave 1 CLI handoff setup status",
+		"dogfood validation status",
+		"missing validation checks",
+		"`.jini/cli-dogfood.json` evidence paths",
 		"auth, approvals, output shape, and route receipt privacy",
 	} {
 		if !strings.Contains(gateMatrix, want) {

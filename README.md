@@ -165,8 +165,8 @@ jini route auto
 
 That gives developers a clear escape hatch for framework switching without
 making every task start with routing setup. `codex` and `claude-code` are
-reserved for real installed-CLI handoff and fail closed until that handoff
-ships.
+reserved for real installed-CLI handoff: Jini invokes the installed CLI when it
+is present and trusted, and fails closed with setup guidance when it is not.
 
 For multi-step work, Jini now plans quietly before drafting. The user sees the
 result through better structure and clearer `Doing now` / `Next` state, not
