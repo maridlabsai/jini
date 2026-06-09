@@ -67,8 +67,6 @@ The first run should look like this:
 
 ```text
 Jini
-Describe the task.
-Type `help` for examples and commands.
 >
 ```
 
@@ -107,9 +105,8 @@ Inside the shell you can work naturally:
 - type the saved project title when you want to resume another active thread
 - if setup is missing, Jini should tell you what to connect instead of making you memorize route phrases
 
-The first screen should keep one obvious move in front of you:
-
-- `Describe the task. Jini will route it, act when safe, or ask one short question.`
+The first screen should stay light: no saved-work dashboard, no tutorial block,
+and no artifact/status frame before the user asks for work.
 
 If you are not sure how to start, type:
 

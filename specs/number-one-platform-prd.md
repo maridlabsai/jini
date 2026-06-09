@@ -6,12 +6,12 @@ This is the canonical near-term PRD. It defines the work that matters for GTM.
 If it conflicts with exploratory specs, demo docs, or older PRDs, this document
 and [product-settling-decisions.md](./product-settling-decisions.md) win.
 
-Delivery chain:
-
-- this PRD defines what matters
-- [launcher-intake-design.md](./launcher-intake-design.md) defines the dev design
-- [number-one-development-plan.md](./number-one-development-plan.md) defines active cuts
-- drift requires [product-settling-decisions.md](./product-settling-decisions.md)
+Delivery chain: this PRD defines what matters;
+[number-one-platform-hld.md](./number-one-platform-hld.md) defines architecture
+boundaries; [number-one-platform-lld.md](./number-one-platform-lld.md) defines
+runtime contracts; [launcher-intake-design.md](./launcher-intake-design.md)
+and [number-one-development-plan.md](./number-one-development-plan.md) define
+execution; drift requires [product-settling-decisions.md](./product-settling-decisions.md).
 
 ## Product Thesis
 
@@ -46,21 +46,19 @@ Core charter: intent-first Claude/Codex parity outranks feature expansion.
 
 Bare `jini` is a task prompt, not a dashboard.
 
-Required behavior:
-
-- Show only `Jini`, `Describe the task.`, and the short help hint on startup.
+- Keep startup to a minimal task prompt; do not teach a new shell before value.
+- Return compact answers or action receipts first, without product ceremony.
 - Treat a new freeform request as work to execute, not as a Start/Keep modal.
 - Resume saved work only through explicit commands or natural title matching.
 - Never show a full current-work overview for a simple factual question.
 - Never require users to learn Jini-specific command vocabulary before value.
-
-Forbidden front-door behavior:
-
 - no saved-work dashboard on bare startup
 - no visible `Switch` startup control
 - no `Start/Keep` interruption model
 - no Working Draft for obvious file edits
 - no verbose Goal/Working-with/status frame for simple questions
+- no `Result ready`, `Task Snapshot`, `Saved:`, or `Next: jini ...` shell around
+  simple factual questions
 - no visible agent-role theater in the free tier
 - no hard-coded entity-to-template routing
 
@@ -167,3 +165,5 @@ gates green:
 
 The gates exist to prevent old behavior from returning: verbose startup,
 Start/Keep modals, hidden Python-era assumptions, stale docs, and broad PRD drift.
+No release ships unless competitor-parity golden transcript gates for Claude,
+Codex, ChatGPT, and Gemini-style first-minute use cases are green.

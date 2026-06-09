@@ -17,15 +17,16 @@ If this document conflicts with the canonical PRD on tenets, priorities,
 requirements, roadmap order, or operating posture, the canonical PRD wins and
 this document should be reconciled.
 
-The goal is to stop Jini from behaving like a loose chat transcript.
+The goal is to stop Jini from behaving like either a loose chat transcript or a
+Jini-specific workflow shell.
 
-Jini should behave like a familiar agent CLI with a visible work thread:
+Jini should behave like a familiar agent CLI:
 
-- the goal stays visible
-- the current state stays visible
-- the inputs stay visible
-- the produced artifacts stay visible
-- the next step stays visible
+- answer or act directly when safe
+- keep saved work passive until the user asks for it
+- expose state, artifacts, and route diagnostics through explicit inspection
+- create artifacts only when the task benefits from durable output
+- avoid teaching a new layout before first value
 
 Jini must not create a new ramp-up curve. Users who already know Codex,
 Claude Code, Aider, Continue, or similar CLIs should not have to learn a new
@@ -45,20 +46,16 @@ artifact lifecycle, memory, skills where allowed by tier, approvals, diagnostics
 and recovery. The constraint is not "less product"; the constraint is familiar
 CLI behavior with no unnecessary Jini-specific learning curve.
 
-This spec is informed directly by the Codex collaboration pattern used in this
-rewrite:
-
-- durable work thread
-- progress updates while work moves
-- early concrete artifacts
-- explicit missing information
-- recoverable snapshots
+This spec is informed by familiar Codex, Claude Code, ChatGPT, and Gemini CLI
+behavior: compact answer first, visible receipts for side effects, and
+progressive disclosure for state.
 
 ## Product Rule
 
 Conversation is not the storage model.
 
-Conversation is the narration layer around a work thread.
+Conversation is the narration layer around an input turn. A work thread exists
+only when there is real durable work to preserve.
 
 The durable product objects are:
 
@@ -72,23 +69,24 @@ The durable product objects are:
 
 ## UX Principles
 
-### 1. One visible frame
+### 1. Lightweight default transcript
 
-At all times, Jini should keep this frame visible:
+The default transcript is answer-first:
 
-- `Goal`
-- `Working with`
-- `Just finished`
-- `Doing now`
-- `Up next`
-- `Now`
-- `Done`
-- `Need`
-- `Next`
+- simple questions return compact answers
+- file edits return changed-file receipts or exact ambiguity
+- route handoffs return route receipts only when a route is involved
+- saved-work state appears only through explicit inspection
 
-This frame must survive across turns.
+Forbidden default-shell output:
 
-### 2. Artifacts first, chat second
+- `Result ready.` around simple answers
+- `Task Snapshot` for factual questions
+- `Saved:` for questions that did not create work
+- `Next: jini continue/open/status` after compact answers
+- full `Goal` / `Working with` / `Doing now` status frames unless requested
+
+### 2. Artifacts only when useful
 
 Jini should produce named artifacts as early as possible.
 
@@ -101,7 +99,8 @@ Examples:
 - `Budget Sketch`
 - `Booking Checklist`
 
-The chat transcript must never be the only place where useful work exists.
+The chat transcript can be the only output for compact answers. Durable
+artifacts are for reusable work, not for every turn.
 
 ### 3. Inputs are first-class
 
@@ -376,7 +375,7 @@ Rules:
 - this card explains route trust, not provider plumbing
 - this card should be concise enough to skim
 
-## 3. First Result Screen
+## 3. Durable Result Screen
 
 ```text
 Result ready.
@@ -392,9 +391,11 @@ Next: `jini continue`, `jini open`, or `jini status`.
 
 Rules:
 
+- this screen is for reusable task artifacts, not compact answers
 - useful result appears before summary
 - no output-size question before value
 - follow-on commands must be familiar and real
+- simple factual questions must skip this screen completely
 
 ## 4. Current Thread Screen
 

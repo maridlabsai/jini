@@ -183,7 +183,7 @@ scorecard_gates:
       proof_references:
         - id: cli-ux-regression-simple-question
           kind: executable
-          ref: "go test ./internal/app -run 'TestCurrentWorkSimpleFactualQuestionAnswersDirectly|TestDirectArgsSimpleFactualQuestionAnswersDirectly|TestInteractiveSimpleFactualQuestionAnswersDirectlyWithoutCurrentWork'"
+          ref: "go test ./internal/app -run 'TestCurrentWorkSimpleFactualQuestionAnswersDirectly|TestCurrentWorkTypoCapitalQuestionAnswersDirectly|TestDirectArgsSimpleFactualQuestionAnswersDirectly|TestInteractiveSimpleFactualQuestionAnswersDirectlyWithoutCurrentWork|TestInteractiveTypoCapitalQuestionAnswersDirectlyWithoutArtifactShell'"
       gate: >
         A simple factual question must return a compact answer without dumping
         stale current-work status or unrelated artifacts.

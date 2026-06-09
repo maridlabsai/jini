@@ -142,8 +142,6 @@ quick_links:
       <p>Do not start with provider jargon unless Jini tells you setup is missing. The shipped <code>v0.1.2</code> first screen is intentionally small.</p>
       <pre><code class="language-bash">$ jini
 Jini
-Describe the task.
-Type `help` for examples and commands.
 &gt;
 </code></pre>
       <p>Saved work should not hijack this screen. Use <code>jini status</code>, <code>jini continue</code>, or <code>jini open</code> when you want to inspect prior work.</p>

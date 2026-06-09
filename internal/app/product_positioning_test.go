@@ -67,8 +67,11 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"Treat configured CLI routes as real installed-CLI handoffs",
 		"provider API routes separately from CLI handoff routes.",
 		"Bare `jini` is a task prompt, not a dashboard.",
+		"[number-one-platform-hld.md](./number-one-platform-hld.md)",
+		"[number-one-platform-lld.md](./number-one-platform-lld.md)",
 		"[launcher-intake-design.md](./launcher-intake-design.md)",
 		"[number-one-development-plan.md](./number-one-development-plan.md)",
+		"No release ships unless competitor-parity golden transcript gates",
 		"Token frugality is P0.",
 		"## Tier Boundary",
 		"Commercial value must be materially higher than the free CLI: managed",
@@ -99,6 +102,33 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 
 func TestFocusedDeliveryChainGatesPRDDesignAndImplementation(t *testing.T) {
 	root := repoRootForMigrationTest(t)
+
+	hld := readProductPositioningFile(t, root, "specs/number-one-platform-hld.md")
+	for _, want := range []string{
+		"This high-level design translates",
+		"Jini does not ship an iteration unless the competitor-parity transcript gates",
+		"Jini is five runtime layers:",
+		"Intent boundary",
+		"Simple questions must stop at step 2.",
+		"Saved work is passive context.",
+	} {
+		if !strings.Contains(hld, want) {
+			t.Fatalf("HLD must preserve architecture contract %q", want)
+		}
+	}
+
+	lld := readProductPositioningFile(t, root, "specs/number-one-platform-lld.md")
+	for _, want := range []string{
+		"This low-level design defines the executable contracts",
+		"Simple factual questions must not print `Result ready.`, `Task Snapshot`,",
+		"`whats teh",
+		"Do not create `current-work.json` for simple factual questions.",
+		"If the transcript would surprise a Claude Code or",
+	} {
+		if !strings.Contains(lld, want) {
+			t.Fatalf("LLD must preserve runtime contract %q", want)
+		}
+	}
 
 	launcherDesign := readProductPositioningFile(t, root, "specs/launcher-intake-design.md")
 	for _, want := range []string{
@@ -158,6 +188,7 @@ func TestCanonicalPRDStaysReducedToCurrentGTMWedge(t *testing.T) {
 	for _, want := range []string{
 		"## P0 Outcome Requirements",
 		"Bare `jini` is a task prompt, not a dashboard.",
+		"no `Result ready`, `Task Snapshot`, `Saved:`, or `Next: jini ...` shell around",
 		"no visible `Switch` startup control",
 		"no `Start/Keep` interruption model",
 		"no Working Draft for obvious file edits",
@@ -195,10 +226,13 @@ func TestPRDImplementationTraceCoversP0Requirements(t *testing.T) {
 	trace := readProductPositioningFile(t, root, "specs/prd-implementation-trace.md")
 	for _, want := range []string{
 		"maps the canonical P0 requirements",
+		"[number-one-platform-hld.md](./number-one-platform-hld.md)",
+		"[number-one-platform-lld.md](./number-one-platform-lld.md)",
 		"Start from a natural task in the current directory",
 		"Edit local files directly when clear and safe",
 		"Fail closed with exact ambiguity",
 		"Answer simple questions compactly",
+		"simple factual question tests including typo transcript",
 		"Ask intent for bare entities without artifacts",
 		"Route between familiar CLIs, providers, gateways, and local/offline models",
 		"Treat configured CLI routes as installed-CLI handoffs",

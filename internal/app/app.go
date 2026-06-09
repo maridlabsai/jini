@@ -2903,8 +2903,6 @@ func renderAdminCommandInventory(w io.Writer) {
 
 func renderNewWorkPrompt(w io.Writer) {
 	fmt.Fprintln(w, "Jini")
-	fmt.Fprintln(w, "Describe the task.")
-	fmt.Fprintln(w, "Type `help` for examples and commands.")
 }
 
 func renderNoCurrentWorkStatus(w io.Writer) {

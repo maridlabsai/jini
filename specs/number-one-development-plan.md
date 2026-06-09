@@ -8,8 +8,10 @@ Authority chain:
 
 1. PRD: [number-one-platform-prd.md](./number-one-platform-prd.md)
 2. Decision record: [product-settling-decisions.md](./product-settling-decisions.md)
-3. Dev design: [launcher-intake-design.md](./launcher-intake-design.md)
-4. Implementation plan: this file
+3. HLD: [number-one-platform-hld.md](./number-one-platform-hld.md)
+4. LLD: [number-one-platform-lld.md](./number-one-platform-lld.md)
+5. Dev design: [launcher-intake-design.md](./launcher-intake-design.md)
+6. Implementation plan: this file
 
 The current competitor-derived release pressure lives in
 [competitive-release-plan.md](./competitive-release-plan.md), but competitor
@@ -64,6 +66,8 @@ Release blockers:
 - file/code tasks produce drafts instead of side effects, receipts, or exact
   ambiguity
 - startup reintroduces `Start/Keep`, `Switch`, or saved-work dashboards
+- simple answers print `Result ready`, `Task Snapshot`, `Saved:`, or follow-on
+  command chrome instead of a compact answer
 
 ### Cut 2: Configured CLI Handoff And Token-Frugality Proof
 

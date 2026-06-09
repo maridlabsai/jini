@@ -51,6 +51,7 @@ func TestPublicDocsUseCurrentFirstRunFlow(t *testing.T) {
 		"<span>Plan</span>",
 		"<span>Switch</span>",
 		"What “Open” Should Feel Like",
+		"Describe the task.\nType `help` for examples and commands.",
 	}
 
 	for _, rel := range files {
@@ -64,7 +65,7 @@ func TestPublicDocsUseCurrentFirstRunFlow(t *testing.T) {
 
 	readme := readRepoFile(t, root, "README.md")
 	for _, want := range []string{
-		"Describe the task. Jini will route it, act when safe, or ask one short question.",
+		"The first screen should stay light: no saved-work dashboard, no tutorial block,",
 		"describe the task or paste the notes, files, screenshot, transcript, or rough ask",
 		"`auto` means: Jini picks the cheapest suitable route by default",
 		"`jini open` shows the build-readiness check. `jini status` shows the full state.",
@@ -77,6 +78,7 @@ func TestPublicDocsUseCurrentFirstRunFlow(t *testing.T) {
 	quickstart := readRepoFile(t, root, "docs/simple.md")
 	for _, want := range []string{
 		"Describe the task, then use <code>jini open</code>, <code>jini continue</code>, or <code>jini status</code>",
+		"<pre><code class=\"language-text\">Jini\n&gt; what is the capital of france\nParis.",
 		"<span>jini open</span>",
 		"<span>jini continue</span>",
 		"<span>jini status</span>",

@@ -7,12 +7,18 @@ This file maps the canonical P0 requirements in
 surfaces and gates. If a requirement cannot name code and a gate, it is not
 implementation-aligned.
 
+The trace must stay aligned with
+[number-one-platform-hld.md](./number-one-platform-hld.md) and
+[number-one-platform-lld.md](./number-one-platform-lld.md). The PRD states the
+outcome, the HLD states the architecture boundary, and the LLD states the
+runtime contract that tests enforce.
+
 | P0 requirement | Runtime surface | Proof |
 | --- | --- | --- |
 | Start from a natural task in the current directory | `RunInteractive`, `runLauncher`, direct task intake | `TestDirectTaskArgumentsStartNativeIntake`, CLI UX gate |
 | Edit local files directly when clear and safe | local text edit intent handler | `TestInteractiveLocalTextEditAppendsQuotedLineInsteadOfDrafting`, CLI UX gate |
 | Fail closed with exact ambiguity | local edit ambiguity handling and route setup errors | local text edit tests, route missing-CLI tests |
-| Answer simple questions compactly | simple answer classifier before work creation | simple factual question tests, CLI UX gate |
+| Answer simple questions compactly | simple answer classifier before work creation | simple factual question tests including typo transcript, CLI UX gate |
 | Ask intent for bare entities without artifacts | bare entity classifier before starter packs | intent-first routing fixture, CLI UX gate |
 | Route between familiar CLIs, providers, gateways, and local/offline models | adapter registry, router settings, route list/set/auto/status | route command tests, Claude/Codex use-case gate, scorecard gate |
 | Treat configured CLI routes as installed-CLI handoffs | `cli_handoff.go`, `generateWithConfiguredProviderDecision` | fake downstream CLI handoff smoke tests for Claude Code and Codex, failed-execution receipt regression, and Gatekeeper rejection fail-closed regression |

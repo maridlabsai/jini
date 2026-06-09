@@ -60,7 +60,7 @@ func capitalQuestionCorrection(subject string) (string, bool) {
 }
 
 func simpleCapitalCountry(raw string) string {
-	normalized := normalizeName(raw)
+	normalized := normalizeSimpleQuestion(raw)
 	for _, prefix := range []string{
 		"what is the capital city of ",
 		"whats the capital city of ",
@@ -77,6 +77,21 @@ func simpleCapitalCountry(raw string) string {
 		}
 	}
 	return ""
+}
+
+func normalizeSimpleQuestion(raw string) string {
+	normalized := normalizeName(raw)
+	replacements := map[string]string{
+		"teh":     "the",
+		"capitol": "capital",
+	}
+	words := strings.Fields(normalized)
+	for index, word := range words {
+		if replacement, ok := replacements[word]; ok {
+			words[index] = replacement
+		}
+	}
+	return strings.Join(words, " ")
 }
 
 func ambiguousBareEntitySubject(raw string) (string, bool) {

@@ -66,6 +66,10 @@ Non-negotiable invariants:
   ambiguity; they never become generic drafts.
 - Current work is passive context, not the default frame for unrelated input.
 - Route decisions stay inspectable, but routine answers avoid route ceremony.
+- Default output follows a lightweight Claude/Codex-style transcript: answer or
+  action receipt first, no status or artifact frame unless the user asks for it.
+- Simple factual questions never print `Result ready.`, `Task Snapshot`,
+  `Saved:`, or follow-on command chrome.
 - Configured CLI route names require real installed-CLI handoff or fail-closed
   setup guidance; provider API routing is a separate route type.
 - Adapter breadth is P0 only for familiar tools users already trust; it must
@@ -234,8 +238,18 @@ P2:
 Jini delivery uses one active chain:
 
 - PRD: `specs/number-one-platform-prd.md`
-- dev design: `specs/launcher-intake-design.md`
+- HLD: `specs/number-one-platform-hld.md`
+- LLD: `specs/number-one-platform-lld.md`
+- front-door dev design: `specs/launcher-intake-design.md`
 - implementation plan: `specs/number-one-development-plan.md`
+
+The PRD states product outcomes. The HLD owns architecture boundaries. The LLD
+owns executable runtime contracts. Implementation must be traceable to all
+three before it can be treated as release-ready.
+
+No release ships unless golden transcript gates prove first-minute quality at
+the level users expect from Claude Code, Codex, ChatGPT, and Gemini-style tools.
+Architecture quality does not compensate for a bad transcript.
 
 No drift without explicit agreement. A new requirement, product surface,
 interaction model, app surface, agent surface, or commercial/free tier boundary

@@ -32,8 +32,6 @@ quick_links:
 
 <pre><code class="language-bash">$ jini
 Jini
-Describe the task.
-Type `help` for examples and commands.
 &gt; what is the capital of france
 Paris.
 

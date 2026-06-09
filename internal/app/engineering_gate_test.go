@@ -123,7 +123,7 @@ func TestRequiredOutcomeGatesDeclareProofReferences(t *testing.T) {
 		"simple-question-compact-answer": {
 			"id: cli-ux-regression-simple-question",
 			"kind: executable",
-			`ref: "go test ./internal/app -run 'TestCurrentWorkSimpleFactualQuestionAnswersDirectly|TestDirectArgsSimpleFactualQuestionAnswersDirectly|TestInteractiveSimpleFactualQuestionAnswersDirectlyWithoutCurrentWork'"`,
+			`ref: "go test ./internal/app -run 'TestCurrentWorkSimpleFactualQuestionAnswersDirectly|TestCurrentWorkTypoCapitalQuestionAnswersDirectly|TestDirectArgsSimpleFactualQuestionAnswersDirectly|TestInteractiveSimpleFactualQuestionAnswersDirectlyWithoutCurrentWork|TestInteractiveTypoCapitalQuestionAnswersDirectlyWithoutArtifactShell'"`,
 		},
 		"intent-first-routing-fixture": {
 			"id: cli-ux-regression-intent-routing",
@@ -445,6 +445,8 @@ func TestCLIUXRegressionGatePinsIncidentScenarios(t *testing.T) {
 		"TestCurrentWorkCapitalQuestionAcceptsNaturalPhrasing",
 		"TestDirectArgsSimpleFactualQuestionAnswersDirectly",
 		"TestInteractiveSimpleFactualQuestionAnswersDirectlyWithoutCurrentWork",
+		"TestInteractiveTypoCapitalQuestionAnswersDirectlyWithoutArtifactShell",
+		"TestCurrentWorkTypoCapitalQuestionAnswersDirectly",
 		"TestInteractiveMalformedCapitalQuestionCorrectsWithoutTravelFlow",
 		"TestInteractiveBareEntityAsksForIntentWithoutCreatingWork",
 		"TestInteractiveExplicitTripChoiceCanUseBareDestination",
@@ -489,6 +491,8 @@ func TestClaudeCodexUsecaseGatePinsConcretePersonaScenarios(t *testing.T) {
 		"TestRunInteractiveKeepsCurrentWorkAfterFailedCLIHandoff",
 		"TestProviderDoctorFailsClosedForReservedCLIHandoffToolMode",
 		"TestCurrentWorkSimpleFactualQuestionAnswersDirectly",
+		"TestInteractiveTypoCapitalQuestionAnswersDirectlyWithoutArtifactShell",
+		"TestCurrentWorkTypoCapitalQuestionAnswersDirectly",
 		"Claude/Codex commit-gate use cases",
 	} {
 		if !strings.Contains(gate, want) {
@@ -546,6 +550,8 @@ func TestProductPRDDriftGateProtectsCanonicalSurfaces(t *testing.T) {
 		"README.md",
 		"specs/number-one-platform-prd.md",
 		"specs/product-settling-decisions.md",
+		"specs/number-one-platform-hld.md",
+		"specs/number-one-platform-lld.md",
 		"specs/launcher-intake-design.md",
 		"specs/number-one-development-plan.md",
 		"specs/client-surfaces-and-free-tier.md",

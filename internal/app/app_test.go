@@ -1919,8 +1919,6 @@ func TestLauncherRecoversFromStaleCurrentWork(t *testing.T) {
 	for _, want := range []string{
 		"Remembered work is no longer available.",
 		"Jini",
-		"Describe the task.",
-		"Type `help` for examples and commands.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -2030,8 +2028,6 @@ func TestLauncherStartsAsCompactShellWhenCurrentWorkExists(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Jini",
-		"Describe the task.",
-		"Type `help` for examples and commands.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -2246,8 +2242,6 @@ func TestLauncherStartsAsCompactShellWithoutCurrentWork(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Jini",
-		"Describe the task.",
-		"Type `help` for examples and commands.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -2322,7 +2316,6 @@ func TestInteractiveLauncherCreatesMeetingWork(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Jini",
-		"Describe the task.",
 		"Result ready.",
 		"Sendable Follow-up",
 		"## Send this",
@@ -2402,7 +2395,6 @@ func TestInteractiveLauncherCreatesSpecReadinessWork(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Jini",
-		"Describe the task.",
 		"Result ready.",
 		"Build-Readiness Check",
 		"## What looks ready now",
@@ -2470,7 +2462,6 @@ func TestInteractiveLauncherHandlesUnsureInputWithUsefulPass(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Jini",
-		"Describe the task.",
 		"Describe the task. Rough notes are fine.",
 		"Jini will route it, act when safe, or ask one short question.",
 		"Nothing will be sent, booked, committed, or changed without a visible step.",
@@ -2555,8 +2546,7 @@ func TestInteractiveLauncherGreetingDoesNotCreateWork(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Describe the task.",
-		"Type `help` for examples and commands.",
+		"Jini",
 		"Hi.",
 		"Describe the task when you're ready.",
 	} {
@@ -3044,8 +3034,6 @@ func TestCurrentWorkInteractiveLauncherIsCompactByDefault(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Jini",
-		"Describe the task.",
-		"Type `help` for examples and commands.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -4154,7 +4142,6 @@ func TestLauncherShowsOtherActiveWorkWhenMultipleProjectsExist(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Jini",
-		"Describe the task.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -4486,6 +4473,40 @@ func TestInteractiveSimpleFactualQuestionAnswersDirectlyWithoutCurrentWork(t *te
 	}
 }
 
+func TestInteractiveTypoCapitalQuestionAnswersDirectlyWithoutArtifactShell(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("whats teh capital of france\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	if !strings.Contains(out, "Paris.") {
+		t.Fatalf("expected direct capital answer, got:\n%s", out)
+	}
+	for _, unwanted := range []string{
+		"Result ready.",
+		"Task Snapshot",
+		"Saved:",
+		"Next: `jini continue`, `jini open`, or `jini status`.",
+		"Working Draft",
+		"Your first draft is ready.",
+		"I don't know locally.",
+		"Itinerary",
+		"Before I draft it",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected typo capital question to avoid %q, got:\n%s", unwanted, out)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(stateDir, "current-work.json")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("expected typo capital question not to create current work, stat error: %v", err)
+	}
+}
+
 func TestInteractiveMalformedCapitalQuestionCorrectsWithoutTravelFlow(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)
@@ -4576,6 +4597,40 @@ func TestInteractiveExplicitTripChoiceCanUseBareDestination(t *testing.T) {
 	current := readCurrentWork(t, stateDir)
 	if current["pack_id"] != "travel-plan" {
 		t.Fatalf("expected explicit trip choice to create travel work, got %#v", current)
+	}
+}
+
+func TestCurrentWorkTypoCapitalQuestionAnswersDirectly(t *testing.T) {
+	stateDir := t.TempDir()
+	meetingDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, meetingDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("whats teh capital of france\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	if !strings.Contains(out, "Paris.") {
+		t.Fatalf("expected direct capital answer, got:\n%s", out)
+	}
+	for _, unwanted := range []string{
+		"\nGoal\n",
+		"\nAI route\n",
+		"\nJust finished\n",
+		"Result ready.",
+		"Task Snapshot",
+		"Saved:",
+		"New work",
+		"Working Draft",
+		"Your first draft is ready.",
+		"I don't know locally.",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected current-work typo capital question to avoid %q, got:\n%s", unwanted, out)
+		}
 	}
 }
 
