@@ -37,7 +37,7 @@ func TestClassifyWorkEnvelopePreservesExplicitChoiceOverDetectedSignals(t *testi
 func TestClarificationPromptForEnvelopeUsesSharedCohortPlanner(t *testing.T) {
 	envelope := workEnvelope{
 		Choice:        starterChoice{PackID: "travel-plan", DefaultName: "Trip Plan", State: "decided"},
-		Source:        "7 day Paris trip",
+		Source:        "Paris trip",
 		RequestCohort: "trip-itinerary",
 	}
 	prompt, ok := clarificationPromptForEnvelope(envelope)

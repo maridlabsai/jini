@@ -191,7 +191,7 @@ func TestMacOSAppSidecarRouteHelpReturnsSetupLines(t *testing.T) {
 	if err != nil {
 		t.Fatalf("marshal route help lines: %v", err)
 	}
-	for _, want := range []string{"CLI handoff tools", "local-preview"} {
+	for _, want := range []string{"jini route list", "jini doctor", "local-preview"} {
 		if !strings.Contains(string(encoded), want) {
 			t.Fatalf("expected route help to contain %q, got %s", want, string(encoded))
 		}

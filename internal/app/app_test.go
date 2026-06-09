@@ -77,7 +77,7 @@ func TestDirectTaskArgumentsStartNativeIntake(t *testing.T) {
 	}
 }
 
-func TestDirectRepoReviewPrintsAndSavesModelFreeSnapshot(t *testing.T) {
+func TestDirectRepoReviewPrintsModelFreeSnapshotWithoutSavedWorkflow(t *testing.T) {
 	stateDir := t.TempDir()
 	repoDir := t.TempDir()
 	t.Chdir(repoDir)
@@ -100,45 +100,81 @@ func TestDirectRepoReviewPrintsAndSavesModelFreeSnapshot(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Working on: review this repo",
-		"Repo review snapshot",
+		"Repo review",
 		"- Workspace: " + filepath.Base(repoDir),
 		"- Changed files: 1",
 		"- Untracked files: 1",
-		"Saved. Use `jini status` for full status or `jini open` for the draft.",
+		"Changed:",
+		"- main.go",
+		"Untracked:",
+		"- README.md",
+		"Next:",
+		"- git diff --stat",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
 		}
 	}
-
-	current := readCurrentWork(t, stateDir)
-	draft := mustReadFile(t, filepath.Join(current["pack_dir"].(string), "views", "repo-review.md"))
-	for _, want := range []string{
-		"# Repo Review Snapshot",
-		"## Review focus",
-		"- Start with changed files before broad architecture commentary.",
-		"## Working tree",
-		"- Changed files: 1",
-		"- Changed: main.go",
-		"- Untracked files: 1",
-		"- Untracked: README.md",
-		"## Suggested next commands",
-		"- git status --short",
-		"- git diff --stat",
+	for _, unwanted := range []string{
+		"Working on:",
+		"Task Snapshot",
+		"Result ready.",
+		"Saved.",
+		"Open the saved draft",
 	} {
-		if !strings.Contains(draft, want) {
-			t.Fatalf("expected saved repo review draft to contain %q, got:\n%s", want, draft)
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected direct repo review to avoid %q, got:\n%s", unwanted, out)
 		}
 	}
-
-	stdout.Reset()
-	exitCode = app.Run([]string{"open"}, &stdout, &stdout)
-	if exitCode != 0 {
-		t.Fatalf("expected open to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	if _, err := os.Stat(filepath.Join(stateDir, "current-work.json")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("expected direct repo review not to create current work, stat error: %v", err)
 	}
-	if !strings.Contains(stdout.String(), "1. Repo Review") {
-		t.Fatalf("expected open shelf to prioritize Repo Review, got:\n%s", stdout.String())
+}
+
+func TestInteractiveRepoReviewInspectsCurrentGitRepoDirectly(t *testing.T) {
+	stateDir := t.TempDir()
+	repoDir := t.TempDir()
+	t.Chdir(repoDir)
+	runGitForTest(t, repoDir, "init")
+	runGitForTest(t, repoDir, "config", "user.email", "test@example.com")
+	runGitForTest(t, repoDir, "config", "user.name", "Test User")
+	writeFile(t, filepath.Join(repoDir, "go.mod"), "module example.com/reviewme\n")
+	runGitForTest(t, repoDir, "add", ".")
+	runGitForTest(t, repoDir, "commit", "-m", "initial")
+	writeFile(t, filepath.Join(repoDir, "go.mod"), "module example.com/reviewme\n\ngo 1.26\n")
+
+	out := runInteractiveForTest(t, stateDir, "review this repo for uncommitted changes\n")
+	for _, want := range []string{
+		"Repo review",
+		"- Workspace: " + filepath.Base(repoDir),
+		"- Changed files: 1",
+		"Changed:",
+		"- go.mod",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected interactive repo review to contain %q, got:\n%s", want, out)
+		}
+	}
+	for _, unwanted := range []string{"Task Snapshot", "Result ready.", "Saved:", "Open the saved draft"} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected interactive repo review to avoid %q, got:\n%s", unwanted, out)
+		}
+	}
+}
+
+func TestRepoReviewOutsideGitRepoSaysSoDirectly(t *testing.T) {
+	stateDir := t.TempDir()
+	workDir := t.TempDir()
+	t.Chdir(workDir)
+
+	out := runInteractiveForTest(t, stateDir, "review this repo for uncommitted changes\n")
+	if !strings.Contains(out, "This folder is not a git repo.") {
+		t.Fatalf("expected non-repo prompt to say so directly, got:\n%s", out)
+	}
+	for _, unwanted := range []string{"Task Snapshot", "Result ready.", "Saved:"} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected non-repo prompt to avoid %q, got:\n%s", unwanted, out)
+		}
 	}
 }
 
@@ -257,6 +293,56 @@ func TestCurrentWorkLocalTextEditPreservesUnquotedLineContainingIn(t *testing.T)
 	}
 	if strings.Contains(stdout.String(), "Working Draft") {
 		t.Fatalf("expected direct edit to avoid draft flow, got:\n%s", stdout.String())
+	}
+}
+
+func TestInteractiveFollowupEmailReturnsSendableEmailWithoutArtifactShell(t *testing.T) {
+	stateDir := t.TempDir()
+
+	out := runInteractiveForTest(t, stateDir, "write a follow-up email summarizing today standup: shipped login fix, analytics blocked, Sara owns QA by Friday\n")
+	for _, want := range []string{
+		"Subject: Standup follow-up",
+		"Hi team,",
+		"Shipped login fix.",
+		"Analytics is blocked.",
+		"Sara owns QA by Friday.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected sendable email to contain %q, got:\n%s", want, out)
+		}
+	}
+	for _, unwanted := range []string{
+		"Result ready.",
+		"Task Snapshot",
+		"Sendable Follow-up",
+		"Saved:",
+		"Next: `jini",
+		"Also ready:",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected direct email to avoid %q, got:\n%s", unwanted, out)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(stateDir, "current-work.json")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("expected direct email not to create current work, stat error: %v", err)
+	}
+}
+
+func TestDirectArgumentFollowupEmailWithHyphenIsTreatedAsPrompt(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"write a follow-up email summarizing today standup: shipped login fix"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected single-argument prompt to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	out := stdout.String()
+	if !strings.Contains(out, "Subject: Standup follow-up") || !strings.Contains(out, "Shipped login fix.") {
+		t.Fatalf("expected single-argument prompt to render email, got:\n%s", out)
+	}
+	if strings.Contains(out, "Unknown command") || strings.Contains(out, "Run `jini commands`") {
+		t.Fatalf("expected single-argument prompt not to be rejected as command, got:\n%s", out)
 	}
 }
 
@@ -1266,53 +1352,47 @@ func TestRouteCommandShowsSetupHelp(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
-	var stdout bytes.Buffer
-	exitCode := app.Run([]string{"route", "help"}, &stdout, &stdout)
-	if exitCode != 0 {
-		t.Fatalf("expected route help to succeed, got %d with output:\n%s", exitCode, stdout.String())
-	}
+	for _, args := range [][]string{
+		{"route", "help"},
+		{"route help"},
+	} {
+		var stdout bytes.Buffer
+		exitCode := app.Run(args, &stdout, &stdout)
+		if exitCode != 0 {
+			t.Fatalf("expected route help %v to succeed, got %d with output:\n%s", args, exitCode, stdout.String())
+		}
 
-	out := stdout.String()
-	for _, want := range []string{
-		"Route setup",
-		"Use `jini route` to inspect the current route.",
-		"Use `jini route list` to see supported routes.",
-		"Use `jini doctor` to verify setup without printing secrets.",
-		"CLI handoff tools",
-		"- codex: install Codex CLI, then run `jini route set codex`.",
-		"  Override path: `JINI_CODEX_CLI=/path/to/codex`",
-		"- claude-code: install Claude Code CLI, then run `jini route set claude-code`.",
-		"  Override path: `JINI_CLAUDE_CODE_CLI=/path/to/claude`",
-		"- gemini-cli: install Gemini CLI, then run `jini route set gemini-cli`.",
-		"  Override path: `JINI_GEMINI_CLI=/path/to/gemini`",
-		"- aider: install Aider CLI, then run `jini route set aider`.",
-		"  Override path: `JINI_AIDER_CLI=/path/to/aider`",
-		"- opencode: install OpenCode CLI, then run `jini route set opencode`.",
-		"  Override path: `JINI_OPENCODE_CLI=/path/to/opencode`",
-		"Provider and local routes",
-		"- claude-api: set `ANTHROPIC_API_KEY`, then `JINI_PROVIDER=claude`.",
-		"- bedrock-sonnet: set `AWS_REGION` and AWS credentials, then `JINI_PROVIDER=bedrock`.",
-		"- azure-code / azure-openai: set `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, and `AZURE_OPENAI_DEPLOYMENT`.",
-		"- local-fast / local-workhorse / local-deep / local-multimodal: set `JINI_LOCAL_SLM_ENDPOINT` and `JINI_LOCAL_SLM_MODEL`.",
-		"After setup, run `jini route set <route>` or `jini route auto`.",
-	} {
-		if !strings.Contains(out, want) {
-			t.Fatalf("expected route help to contain %q, got:\n%s", want, out)
+		out := stdout.String()
+		for _, want := range []string{
+			"Route setup",
+			"1. Run `jini route list`.",
+			"2. Run `jini doctor`.",
+			"3. Run `jini route set codex` or `jini route set claude-code`.",
+			"Local/offline: run `jini route set local-preview`.",
+			"Use env overrides only when auto-detect fails:",
+			"- `JINI_CODEX_CLI=/path/to/codex`",
+			"- `JINI_CLAUDE_CODE_CLI=/path/to/claude`",
+		} {
+			if !strings.Contains(out, want) {
+				t.Fatalf("expected route help %v to contain %q, got:\n%s", args, want, out)
+			}
 		}
-	}
-	for _, unwanted := range []string{
-		"Available",
-		"Task Snapshot",
-		"Working Draft",
-		"API key:",
-		"Secret:",
-	} {
-		if strings.Contains(out, unwanted) {
-			t.Fatalf("expected route help to avoid %q, got:\n%s", unwanted, out)
+		for _, unwanted := range []string{
+			"Available",
+			"Common commands",
+			"Provider and local routes",
+			"Task Snapshot",
+			"Working Draft",
+			"API key:",
+			"Secret:",
+		} {
+			if strings.Contains(out, unwanted) {
+				t.Fatalf("expected route help %v to avoid %q, got:\n%s", args, unwanted, out)
+			}
 		}
-	}
-	if got := nonEmptyLineCount(out); got > 36 {
-		t.Fatalf("expected route help to stay compact, got %d non-empty lines:\n%s", got, out)
+		if got := nonEmptyLineCount(out); got > 12 {
+			t.Fatalf("expected route help %v to stay compact, got %d non-empty lines:\n%s", args, got, out)
+		}
 	}
 }
 
@@ -2696,7 +2776,7 @@ func TestInteractiveLauncherSupportsSlashCommandAliasesWithoutCreatingWork(t *te
 		{
 			name: "route help",
 			line: "/route help\n",
-			want: []string{"Route setup", "CLI handoff tools", "JINI_CODEX_CLI=/path/to/codex"},
+			want: []string{"Route setup", "jini route list", "JINI_CODEX_CLI=/path/to/codex"},
 		},
 	}
 
@@ -3628,12 +3708,12 @@ func TestCurrentWorkInteractiveTacticalCommandsDoNotStartNewWork(t *testing.T) {
 		{
 			name: "route help",
 			line: "route help\n",
-			want: []string{"Route setup", "CLI handoff tools", "JINI_CODEX_CLI=/path/to/codex"},
+			want: []string{"Route setup", "jini route list", "JINI_CODEX_CLI=/path/to/codex"},
 		},
 		{
 			name: "slash route help",
 			line: "/route help\n",
-			want: []string{"Route setup", "CLI handoff tools", "JINI_CODEX_CLI=/path/to/codex"},
+			want: []string{"Route setup", "jini route list", "JINI_CODEX_CLI=/path/to/codex"},
 		},
 		{
 			name: "permissions",
@@ -3776,7 +3856,7 @@ func TestCurrentWorkTacticalSurfacesStayCompact(t *testing.T) {
 	}{
 		{name: "fuller", input: "Make it fuller\n", maxLines: 14},
 		{name: "ready shelf", input: "open\n", maxLines: 16},
-		{name: "direct travel clarification", input: "plan me a 7 day paris trip\n", maxLines: 15},
+		{name: "direct travel draft", input: "plan me a 7 day paris trip\n", maxLines: 55},
 	}
 
 	for _, tc := range cases {
@@ -3977,11 +4057,91 @@ func TestInteractiveLauncherCreatesTravelWork(t *testing.T) {
 	}
 }
 
-func TestInteractiveLauncherAsksForTravelClarificationWhenUnderspecified(t *testing.T) {
+func TestInteractiveTravelPromptDraftsFirstForClearDestinationAndDuration(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
-	stdin := strings.NewReader("7 day paris trip\ncouple, around $2500, early October, mixed pace, central hotel area, Versailles optional\n")
+	stdin := strings.NewReader("plan a 3 day trip to Paris for a first time visitor\n")
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, stdin, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"3 day Paris itinerary",
+		"Day 1: arrive, settle in, and take an easy first walk in Paris.",
+		"Day 2: pick one neighborhood or museum anchor, then leave room for food and wandering.",
+		"Day 3: keep this as a flexible final day with one favorite stop and departure buffer.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected travel prompt to draft with %q, got:\n%s", want, out)
+		}
+	}
+	for _, unwanted := range []string{
+		"Before I draft it",
+		"Type `skip`",
+		"Task Snapshot",
+		"Result ready.",
+		"Saved:",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected clear travel prompt to draft first without %q, got:\n%s", unwanted, out)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(stateDir, "current-work.json")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("expected direct travel prompt not to create current work, stat error: %v", err)
+	}
+}
+
+func TestInteractiveTravelPromptDraftsForGenericDestination(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	out := runInteractiveForTest(t, stateDir, "plan a 2 day trip to Kyoto for a first time visitor\n")
+	for _, want := range []string{
+		"2 day Kyoto itinerary",
+		"Day 1: arrive, settle in, and take an easy first walk in Kyoto.",
+		"Day 2: keep this as a flexible final day with one favorite stop and departure buffer.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected generic destination travel draft to contain %q, got:\n%s", want, out)
+		}
+	}
+	for _, unwanted := range []string{"Before I draft it", "Task Snapshot", "Saved:"} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected generic destination travel draft to avoid %q, got:\n%s", unwanted, out)
+		}
+	}
+}
+
+func TestInteractiveTravelPromptAsksWhenDestinationMissing(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	out := runInteractiveForTest(t, stateDir, "plan a 3 day trip for a first time visitor\n")
+	for _, want := range []string{
+		"Before I draft it",
+		"- base area, or whether you want help choosing one",
+		"Type `skip` if you want a generic first draft.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected destination-missing travel prompt to ask with %q, got:\n%s", want, out)
+		}
+	}
+	for _, unwanted := range []string{"3 day the destination itinerary", "Result ready.", "Saved:"} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected destination-missing travel prompt to avoid %q, got:\n%s", unwanted, out)
+		}
+	}
+}
+
+func TestInteractiveLauncherAsksForTravelClarificationWhenDestinationOnly(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	stdin := strings.NewReader("Paris trip\ncouple, around $2500, early October, mixed pace, central hotel area, Versailles optional\n")
 	var stdout bytes.Buffer
 	exitCode := app.RunInteractive(nil, stdin, &stdout, &stdout)
 	if exitCode != 0 {
@@ -3999,7 +4159,7 @@ func TestInteractiveLauncherAsksForTravelClarificationWhenUnderspecified(t *test
 		"- must-do anchors, or whether you want help choosing them",
 		"Type `skip` if you want a generic first draft.",
 		"Clarified scope",
-		"7 Day Paris Trip",
+		"Paris Trip",
 		"Itinerary",
 	} {
 		if !strings.Contains(out, want) {
@@ -4033,7 +4193,7 @@ func TestInteractiveLauncherAsksOnlyForMissingTravelDimensions(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
-	stdin := strings.NewReader("7 day Paris trip for a couple with a $2500 budget\nearly October, mixed pace, central hotel area, Louvre and Versailles are must-dos\n")
+	stdin := strings.NewReader("Paris trip for a couple with a $2500 budget\nearly October, mixed pace, central hotel area, Louvre and Versailles are must-dos\n")
 	var stdout bytes.Buffer
 	exitCode := app.RunInteractive(nil, stdin, &stdout, &stdout)
 	if exitCode != 0 {
@@ -4066,7 +4226,7 @@ func TestInteractiveLauncherCreatesNonParisTravelWithoutParisFallbacks(t *testin
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
-	stdin := strings.NewReader("5 day Rome trip\ncouple, around $2500, early October, mixed pace, central stay, Colosseum is a must-do\n")
+	stdin := strings.NewReader("5 day Rome trip for a couple, around $2500, early October, mixed pace, central stay, Colosseum is a must-do\n")
 	var stdout bytes.Buffer
 	exitCode := app.RunInteractive(nil, stdin, &stdout, &stdout)
 	if exitCode != 0 {
@@ -4335,7 +4495,7 @@ func TestCurrentWorkFreeformInputStartsNewWorkDirectly(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
-	exitCode := app.RunInteractive(nil, strings.NewReader("plan me a 7 day paris trip\ncouple, around $2500, early October, mixed pace, central hotel area\n"), &stdout, &stdout)
+	exitCode := app.RunInteractive(nil, strings.NewReader("plan me a 7 day paris trip for a couple, around $2500, early October, mixed pace, central hotel area\n"), &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -4851,13 +5011,12 @@ func TestInteractiveLauncherShowsAttachmentInputChipForTextFile(t *testing.T) {
 
 func TestPostResultCanShowWhatJiniUsed(t *testing.T) {
 	stateDir := t.TempDir()
-	out := runInteractiveForTest(t, stateDir, "7 day paris trip\ncouple, around $2500, early October, mixed pace, central hotel area, Versailles optional\ncontext\n")
+	out := runInteractiveForTest(t, stateDir, "7 day paris trip for a couple, around $2500, early October, mixed pace, central hotel area, Versailles optional\ncontext\n")
 
 	for _, want := range []string{
 		"Context",
 		"From you",
-		"Your request: 7 day paris trip",
-		"Clarified scope: couple, around $2500, early October, mixed pace, central hotel area, Versailles optional",
+		"Your request: 7 day paris trip for a couple, around $2500, early October, mixed pace, central hotel area, Versailles optional",
 		"Kept visible",
 		"Route and continuity",
 	} {
@@ -4871,7 +5030,7 @@ func TestPromptHidesContextResumeHintAfterOpeningContextSurface(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)
 
-	if exitCode := app.RunInteractive(nil, strings.NewReader("7 day paris trip\ncouple, around $2500, early October, mixed pace, central hotel area, Versailles optional\ncontext\n"), io.Discard, io.Discard); exitCode != 0 {
+	if exitCode := app.RunInteractive(nil, strings.NewReader("7 day paris trip for a couple, around $2500, early October, mixed pace, central hotel area, Versailles optional\ncontext\n"), io.Discard, io.Discard); exitCode != 0 {
 		t.Fatalf("expected context action to succeed, got %d", exitCode)
 	}
 

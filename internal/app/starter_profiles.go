@@ -566,6 +566,9 @@ func shouldPreferDraftForPlanner(source string, planner scopePlannerProfile, mis
 		return true
 	}
 	normalized := normalizeName(source)
+	if plannerHandlesCohort(planner, "trip-itinerary") && clearTravelDraftPrompt(source) {
+		return true
+	}
 	for _, group := range planner.PreferDraftSignalGroups {
 		if len(group) == 0 {
 			continue
@@ -582,6 +585,29 @@ func shouldPreferDraftForPlanner(source string, planner scopePlannerProfile, mis
 		}
 	}
 	return false
+}
+
+func plannerHandlesCohort(planner scopePlannerProfile, cohort string) bool {
+	for _, candidate := range planner.RequestCohorts {
+		if candidate == cohort {
+			return true
+		}
+	}
+	return false
+}
+
+func clearTravelDraftPrompt(source string) bool {
+	normalized := normalizeName(source)
+	if !containsAny(normalized, []string{"trip", "travel", "itinerary"}) {
+		return false
+	}
+	padded := " " + normalized + " "
+	hasDuration := extractTravelDayCount(source) > 0 ||
+		strings.Contains(padded, " day ") ||
+		strings.Contains(padded, " days ") ||
+		strings.Contains(padded, " weekend ") ||
+		strings.Contains(padded, " week ")
+	return hasDuration && strings.TrimSpace(extractTravelDestination(source)) != ""
 }
 
 func missingScopeDimensions(source string, dimensions []scopePlannerDimension) []string {

@@ -180,7 +180,10 @@ func shouldRunDirectTaskArgs(args []string) bool {
 		return false
 	}
 	first := strings.TrimSpace(args[0])
-	if first == "" || strings.HasPrefix(first, "-") || strings.Contains(first, "-") {
+	if first == "" || strings.HasPrefix(first, "-") {
+		return false
+	}
+	if strings.Contains(first, "-") && !(len(args) == 1 && strings.Contains(first, " ")) {
 		return false
 	}
 	if isRetiredCommandName(first) {
@@ -923,29 +926,16 @@ func renderRouteList(w io.Writer) {
 func renderRouteSetupHelp(w io.Writer) {
 	fmt.Fprintln(w, "Route setup")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Common commands")
-	fmt.Fprintln(w, "- Use `jini route` to inspect the current route.")
-	fmt.Fprintln(w, "- Use `jini route list` to see supported routes.")
-	fmt.Fprintln(w, "- Use `jini doctor` to verify setup without printing secrets.")
+	fmt.Fprintln(w, "1. Run `jini route list`.")
+	fmt.Fprintln(w, "2. Run `jini doctor`.")
+	fmt.Fprintln(w, "3. Run `jini route set codex` or `jini route set claude-code`.")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "CLI handoff tools")
-	for _, mode := range []string{"codex", "claude-code", "gemini-cli", "aider", "opencode"} {
-		descriptor, ok := cliHandoffDescriptorForMode(mode)
-		if !ok {
-			continue
-		}
-		fmt.Fprintf(w, "- %s: install %s, then run `jini route set %s`.\n", descriptor.Mode, strings.TrimSuffix(descriptor.Label, " handoff"), descriptor.Mode)
-		fmt.Fprintf(w, "  Override path: `%s=/path/to/%s`\n", descriptor.ExecutableEnv, descriptor.DefaultExecutable)
-	}
+	fmt.Fprintln(w, "Local/offline: run `jini route set local-preview`.")
+	fmt.Fprintln(w, "Auto mode: run `jini route auto`.")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Provider and local routes")
-	fmt.Fprintln(w, "- claude-api: set `ANTHROPIC_API_KEY`, then `JINI_PROVIDER=claude`.")
-	fmt.Fprintln(w, "- bedrock-sonnet: set `AWS_REGION` and AWS credentials, then `JINI_PROVIDER=bedrock`.")
-	fmt.Fprintln(w, "- azure-code / azure-openai: set `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, and `AZURE_OPENAI_DEPLOYMENT`.")
-	fmt.Fprintln(w, "- local-fast / local-workhorse / local-deep / local-multimodal: set `JINI_LOCAL_SLM_ENDPOINT` and `JINI_LOCAL_SLM_MODEL`.")
-	fmt.Fprintln(w, "- local-preview: no model setup; useful for safe local dry runs.")
-	fmt.Fprintln(w)
-	fmt.Fprintln(w, "After setup, run `jini route set <route>` or `jini route auto`.")
+	fmt.Fprintln(w, "Use env overrides only when auto-detect fails:")
+	fmt.Fprintln(w, "- `JINI_CODEX_CLI=/path/to/codex`")
+	fmt.Fprintln(w, "- `JINI_CLAUDE_CODE_CLI=/path/to/claude`")
 }
 
 func routeTargetReadinessLabel(target savedRouteTarget) string {
@@ -1384,6 +1374,9 @@ func runDirectTaskArgsIntake(args []string, stdout, stderr io.Writer) int {
 	if handled, exitCode := maybeHandleLocalTextFileEditIntent(source, stdout, stderr); handled {
 		return exitCode
 	}
+	if handled, exitCode := maybeHandleDirectPromptIntent(source, stdout, stderr); handled {
+		return exitCode
+	}
 	if maybeHandleSimpleAnswer(source, stdout) {
 		return 0
 	}
@@ -1502,6 +1495,9 @@ func startNewWorkFromRawInput(firstRaw string, session *bufio.Scanner, stdout, s
 		return 1
 	}
 	if handled, exitCode := maybeHandleLocalTextFileEditIntent(source, stdout, stderr); handled {
+		return exitCode
+	}
+	if handled, exitCode := maybeHandleDirectPromptIntent(source, stdout, stderr); handled {
 		return exitCode
 	}
 	if maybeHandleSimpleAnswer(source, stdout) {

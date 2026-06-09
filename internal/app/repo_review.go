@@ -33,6 +33,38 @@ func renderRepoReviewDirectTaskStarted(w io.Writer, source string, snapshot repo
 	fmt.Fprintln(w, "Saved. Use `jini status` for full status or `jini open` for the draft.")
 }
 
+func renderRepoReviewDirect(w io.Writer, snapshot repoReviewSnapshot) {
+	fmt.Fprintln(w, "Repo review")
+	fmt.Fprintf(w, "- Workspace: %s\n", firstNonEmpty(snapshot.Workspace, "current directory"))
+	if !snapshot.InGitRepo {
+		fmt.Fprintln(w, "This folder is not a git repo.")
+		return
+	}
+	if strings.TrimSpace(snapshot.Branch) != "" {
+		fmt.Fprintf(w, "- Branch: %s\n", snapshot.Branch)
+	}
+	fmt.Fprintf(w, "- Changed files: %d\n", len(snapshot.ChangedFiles))
+	fmt.Fprintf(w, "- Untracked files: %d\n", len(snapshot.UntrackedFiles))
+	if len(snapshot.ChangedFiles) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Changed:")
+		for _, path := range firstStrings(snapshot.ChangedFiles, 8) {
+			fmt.Fprintf(w, "- %s\n", path)
+		}
+	}
+	if len(snapshot.UntrackedFiles) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "Untracked:")
+		for _, path := range firstStrings(snapshot.UntrackedFiles, 8) {
+			fmt.Fprintf(w, "- %s\n", path)
+		}
+	}
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Next:")
+	fmt.Fprintln(w, "- git status --short")
+	fmt.Fprintln(w, "- git diff --stat")
+}
+
 func applyRepoReviewSnapshot(summary *workSummary, source string) (*workSummary, repoReviewSnapshot, error) {
 	snapshot := buildRepoReviewSnapshot()
 	if summary == nil {
