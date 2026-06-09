@@ -85,6 +85,9 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 			fmt.Fprintf(stderr, "Unknown command %q.\n", args[0])
 			return 1
 		}
+		if isHiddenAppSidecarServeCommand(args) {
+			return runAppSidecarServe(stdin, stdout, stderr)
+		}
 		if canonicalTopLevelCommand(args[0]) == "" {
 			if shouldRunDirectTaskArgs(args) {
 				return runDirectTaskArgsIntake(args, stdout, stderr)
