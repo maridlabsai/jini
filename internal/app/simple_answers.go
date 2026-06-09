@@ -3,10 +3,16 @@ package app
 import (
 	"fmt"
 	"io"
+	"regexp"
+	"strconv"
 	"strings"
 )
 
 func maybeHandleSimpleAnswer(raw string, stdout io.Writer) bool {
+	if answer, ok := simpleArithmeticAnswer(raw); ok {
+		fmt.Fprintln(stdout, answer)
+		return true
+	}
 	if answer, ok := simpleCapitalAnswer(raw); ok {
 		fmt.Fprintln(stdout, answer)
 		return true
@@ -25,6 +31,63 @@ func maybeHandleAmbiguousBareEntity(raw string, stdout io.Writer) bool {
 	}
 	fmt.Fprintf(stdout, "What would you like me to do with %s?\n", subject)
 	return true
+}
+
+var simpleArithmeticPattern = regexp.MustCompile(`^([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*([+\-*/x])\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))$`)
+
+func simpleArithmeticAnswer(raw string) (string, bool) {
+	expression := simpleArithmeticExpression(raw)
+	matches := simpleArithmeticPattern.FindStringSubmatch(expression)
+	if len(matches) != 4 {
+		return "", false
+	}
+
+	left, err := strconv.ParseFloat(matches[1], 64)
+	if err != nil {
+		return "", false
+	}
+	right, err := strconv.ParseFloat(matches[3], 64)
+	if err != nil {
+		return "", false
+	}
+
+	var result float64
+	switch matches[2] {
+	case "+":
+		result = left + right
+	case "-":
+		result = left - right
+	case "*", "x":
+		result = left * right
+	case "/":
+		if right == 0 {
+			return "", false
+		}
+		result = left / right
+	default:
+		return "", false
+	}
+	return strconv.FormatFloat(result, 'f', -1, 64) + ".", true
+}
+
+func simpleArithmeticExpression(raw string) string {
+	expression := strings.ToLower(strings.TrimSpace(raw))
+	expression = strings.TrimSpace(strings.TrimSuffix(expression, "?"))
+	expression = strings.ReplaceAll(expression, "×", "x")
+	expression = strings.ReplaceAll(expression, "÷", "/")
+	for _, prefix := range []string{
+		"what is ",
+		"what's ",
+		"whats ",
+		"calculate ",
+		"compute ",
+		"solve ",
+	} {
+		if strings.HasPrefix(expression, prefix) {
+			return strings.TrimSpace(strings.TrimPrefix(expression, prefix))
+		}
+	}
+	return expression
 }
 
 func simpleCapitalAnswer(raw string) (string, bool) {

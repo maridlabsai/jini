@@ -4702,6 +4702,70 @@ func TestInteractiveSimpleFactualQuestionAnswersDirectlyWithoutCurrentWork(t *te
 	}
 }
 
+func TestInteractiveSimpleArithmeticQuestionAnswersDirectlyWithoutArtifactShell(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("whats 3+7\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	if !strings.Contains(out, "10.") {
+		t.Fatalf("expected direct arithmetic answer, got:\n%s", out)
+	}
+	for _, unwanted := range []string{
+		"Result ready.",
+		"Task Snapshot",
+		"Saved:",
+		"Next: `jini continue`, `jini open`, or `jini status`.",
+		"Working Draft",
+		"Your first draft is ready.",
+		"I don't know locally.",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected arithmetic question to avoid %q, got:\n%s", unwanted, out)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(stateDir, "current-work.json")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("expected arithmetic question not to create current work, stat error: %v", err)
+	}
+}
+
+func TestCurrentWorkSimpleArithmeticQuestionAnswersDirectly(t *testing.T) {
+	stateDir := t.TempDir()
+	meetingDir := seedMeetingWork(t)
+	writeCurrentWork(t, stateDir, meetingDir, "meeting-followup", "example-meeting-followup", "Weekly Product Review", "decided", "ready-to-make")
+
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("what is 12 / 3?\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	if !strings.Contains(out, "4.") {
+		t.Fatalf("expected direct arithmetic answer, got:\n%s", out)
+	}
+	for _, unwanted := range []string{
+		"\nGoal\n",
+		"\nAI route\n",
+		"\nJust finished\n",
+		"New work",
+		"Task Snapshot",
+		"Working Draft",
+		"Your first draft is ready.",
+		"I don't know locally.",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected arithmetic question to avoid current-work flow %q, got:\n%s", unwanted, out)
+		}
+	}
+}
+
 func TestInteractiveTypoCapitalQuestionAnswersDirectlyWithoutArtifactShell(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)

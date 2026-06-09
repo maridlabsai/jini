@@ -74,6 +74,26 @@ func TestMacOSAppSidecarSimpleQuestionReturnsTransientResponse(t *testing.T) {
 	}
 }
 
+func TestMacOSAppSidecarSimpleArithmeticReturnsTransientResponse(t *testing.T) {
+	responses := runMacOSAppSidecar(t, `{"protocol_version":"macos-app-v1","id":"req_turn","idempotency_key":"idem_turn","method":"turn.submit","surface":"macos","params":{"text":"whats 3+7"}}`)
+
+	response := responses[0]
+	requireSidecarOK(t, response)
+	result := objectField(t, response, "result")
+	if got := stringField(t, result, "kind"); got != "compact_answer" {
+		t.Fatalf("expected compact answer, got %q", got)
+	}
+	if got := stringField(t, result, "assistant_text"); got != "10." {
+		t.Fatalf("expected arithmetic answer, got %q", got)
+	}
+	if got := boolField(t, result, "creates_session"); got {
+		t.Fatalf("expected transient arithmetic answer not to create a session")
+	}
+	if got := boolField(t, result, "route_visible"); got {
+		t.Fatalf("expected arithmetic answer not to show route chrome")
+	}
+}
+
 func TestMacOSAppSidecarTurnSubmitRequiresIdempotencyKey(t *testing.T) {
 	responses := runMacOSAppSidecar(t, `{"protocol_version":"macos-app-v1","id":"req_missing_idem","method":"turn.submit","surface":"macos","params":{"text":"what is the capital of france?"}}`)
 

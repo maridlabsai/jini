@@ -431,6 +431,16 @@ func (sidecar *macOSAppSidecar) subscribe(params appSubscribeParams) appSubscrib
 }
 
 func (sidecar *macOSAppSidecar) submitTurn(request appRPCRequest, params turnSubmitParams) appRPCResponse {
+	if answer, ok := simpleArithmeticAnswer(params.Text); ok {
+		return sidecar.ok(request, transientResponseVM{
+			Kind:           "compact_answer",
+			RequestID:      request.ID,
+			AssistantText:  answer,
+			CreatedAt:      sidecar.now().UTC().Format(time.RFC3339),
+			CreatesSession: false,
+			RouteVisible:   false,
+		}, nil)
+	}
 	if answer, ok := simpleCapitalAnswer(params.Text); ok {
 		return sidecar.ok(request, transientResponseVM{
 			Kind:           "compact_answer",
