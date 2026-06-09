@@ -33,7 +33,7 @@ func TestP1SimplicityPriorityCoversCommandsSkillsAndAgents(t *testing.T) {
 		"## Tier Boundary",
 		"Commercial tier owns the agent and skills OS productivity suite.",
 		"Free tier must not ship `skills`, `delegate`, developer agents, tester agents,",
-		"or a skills-based OS productivity suite.",
+		"internal engineering sub-agent controls, or a skills-based OS productivity",
 		"This is a P1 simplification slice, not a reason to teach another interaction",
 		"Natural `jini` intake remains the default path.",
 		"Commercial helper capability can be mentioned through progressive-disclosure",

@@ -1,6 +1,6 @@
 # Number One Development Plan
 
-Updated: 2026-06-08
+Updated: 2026-06-09
 
 This is the active implementation plan. It is intentionally narrow.
 
@@ -10,8 +10,10 @@ Authority chain:
 2. Decision record: [product-settling-decisions.md](./product-settling-decisions.md)
 3. HLD: [number-one-platform-hld.md](./number-one-platform-hld.md)
 4. LLD: [number-one-platform-lld.md](./number-one-platform-lld.md)
-5. Dev design: [launcher-intake-design.md](./launcher-intake-design.md)
-6. Implementation plan: this file
+5. Internal operating model:
+   [agentic-development-operating-model.md](./agentic-development-operating-model.md)
+6. Dev design: [launcher-intake-design.md](./launcher-intake-design.md)
+7. Implementation plan: this file
 
 The current competitor-derived release pressure lives in
 [competitive-release-plan.md](./competitive-release-plan.md), but competitor
@@ -36,6 +38,10 @@ This means:
 The core charter is intent-first Claude/Codex parity. If a cut makes Jini feel
 less like a familiar coding CLI, or turns questions and file tasks into generic
 artifacts, that cut stops until the regression is removed.
+
+Non-trivial engineering cuts must use the internal sub-agent divide-and-conquer
+model. The coordinator owns scope splits, disjoint write sets, integration, and
+evidence; users must not see this as a new command surface or role tree.
 
 ## Active Cuts
 
@@ -174,6 +180,7 @@ Every cut must stay traceable:
 
 - PRD requirement
 - dev design behavior
+- operating-model scope split and evidence
 - implementation surface
 - regression test
 - gate evidence

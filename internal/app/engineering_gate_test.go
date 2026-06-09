@@ -78,6 +78,7 @@ func TestScorecardGateIsDocumentedAsCommitGate(t *testing.T) {
 		"commit-gated-scorecard-drift",
 		"intent-first-cli-parity",
 		"familiar-tool-adapter-breadth",
+		"sub-agent-divide-and-conquer",
 		"direct-cwd-file-edit-fixture",
 		"simple-question-compact-answer",
 		"intent-first-routing-fixture",
@@ -88,6 +89,7 @@ func TestScorecardGateIsDocumentedAsCommitGate(t *testing.T) {
 		"commercial-tier-boundary-fixture",
 		"cross-surface-continuity-fixture",
 		"token-frugality-route-proof-fixture",
+		"sub-agent-divide-and-conquer-fixture",
 		"opencode",
 		"google-gemini-cli",
 		"roo-code",
@@ -165,6 +167,16 @@ func TestRequiredOutcomeGatesDeclareProofReferences(t *testing.T) {
 			"kind: executable",
 			`ref: "go test ./internal/app -run TestResourcePolicyPrioritiesAreGated"`,
 		},
+		"sub-agent-divide-and-conquer-fixture": {
+			"id: agentic-development-operating-model-test",
+			"kind: executable",
+			`ref: "go test ./internal/app -run TestAgenticDevelopmentOperatingModelPinsInternalDivideAndConquer"`,
+			"id: execution-routing-policy-sub-agent-depth",
+			"kind: named-proof",
+			`ref: "specs/execution-routing-policy.md"`,
+			"id: skills-and-delegation-sub-agent-boundary",
+			`ref: "specs/skills-and-delegation-slice.md"`,
+		},
 	}
 	for id, required := range requiredProofs {
 		block := requiredOutcomeGateBlock(t, goldenBenchmark, id)
@@ -219,6 +231,7 @@ func TestRequiredOutcomeGateProofReferencesResolve(t *testing.T) {
 		"commercial-tier-boundary-fixture",
 		"cross-surface-continuity-fixture",
 		"token-frugality-route-proof-fixture",
+		"sub-agent-divide-and-conquer-fixture",
 	} {
 		block := requiredOutcomeGateBlock(t, goldenBenchmark, id)
 		for _, proof := range proofReferencesFromOutcomeGateBlock(t, block) {
@@ -551,12 +564,14 @@ func TestProductPRDDriftGateProtectsCanonicalSurfaces(t *testing.T) {
 		"specs/number-one-platform-prd.md",
 		"specs/product-settling-decisions.md",
 		"specs/product-streamline-redline.md",
+		"specs/agentic-development-operating-model.md",
 		"specs/number-one-platform-hld.md",
 		"specs/number-one-platform-lld.md",
 		"specs/launcher-intake-design.md",
 		"specs/number-one-development-plan.md",
 		"specs/client-surfaces-and-free-tier.md",
 		"specs/platform-offline-strategy.md",
+		"specs/execution-routing-policy.md",
 		"specs/skills-and-delegation-slice.md",
 		"specs/competitive-release-plan.md",
 		"specs/travel-curated-experience-framework.md",

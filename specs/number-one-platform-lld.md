@@ -1,6 +1,6 @@
 # Number One Platform LLD
 
-Updated: 2026-06-08
+Updated: 2026-06-09
 
 This low-level design defines the executable contracts that implement
 [number-one-platform-hld.md](./number-one-platform-hld.md).
@@ -59,12 +59,17 @@ locally.` but must still avoid artifacts and saved work.
 | Direct file edit | `internal/app/local_text_edit.go` | `TestInteractiveLocalTextEditAppendsQuotedLineInsteadOfDrafting` |
 | CLI handoff | `internal/app/cli_handoff.go`, provider decision code | Claude/Codex use-case gate |
 | Release quality | `tools/run_required_gates.sh` | commit, push, and release gates |
+| Engineering cut control | coordinator-owned work split | `agentic-development-operating-model.md` evidence |
 
 ## Change Rule
 
 If a code change needs output not described here, update the PRD, HLD, LLD, and
 tests in the same commit. If the transcript would surprise a Claude Code or
 Codex user in the first minute, do not ship it.
+
+If a non-trivial cut cannot name disjoint write scopes, integration ownership,
+focused checks, and independent review evidence, do not treat it as complete.
+Do not add CLI commands or transcript chrome to expose that internal control.
 
 If the required change crosses shell, starter artifact creation, persistence,
 and route execution just to answer a simple question or perform a direct file

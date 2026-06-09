@@ -20,6 +20,10 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"Claude Code and Codex first-minute parity is the highest-precedence",
 		"[product-streamline-redline.md](./product-streamline-redline.md)",
 		"continues only while the Go kernel can preserve",
+		"[agentic-development-operating-model.md](./agentic-development-operating-model.md)",
+		"mandatory for non-trivial Jini engineering cuts",
+		"coordinator-owned process",
+		"must not become public UX, free-tier command",
 		"Questions answer compactly and do not create work.",
 		"Bare entities ask for intent and do not create work.",
 		"Configured CLI route names require real installed-CLI handoff",
@@ -41,6 +45,7 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"developer-agent fleets",
 		"skills-based OS productivity suite",
 		"Commercial tier is where Jini becomes an agent and skills based OS productivity",
+		"developer and tester agents hidden behind normal Jini outcomes",
 		"No new Jini conversation style.",
 		"saved work is resumed through `status`, `continue`, `open`, or natural title matching",
 		"no `Start/Keep` interruption model",
@@ -163,6 +168,9 @@ func TestFocusedDeliveryChainGatesPRDDesignAndImplementation(t *testing.T) {
 		"Intent-First CLI Parity",
 		"bare entities create `Task Snapshot`, itinerary, or other artifacts",
 		"Paused work can restart only through `product-settling-decisions.md`.",
+		"Non-trivial engineering cuts must use the internal sub-agent divide-and-conquer",
+		"The coordinator owns scope splits, disjoint write sets, integration, and",
+		"operating-model scope split and evidence",
 		"If that trace cannot be written in one short paragraph, the cut is too broad.",
 	} {
 		if !strings.Contains(developmentPlan, want) {
@@ -204,6 +212,59 @@ func TestProductStreamlineRedlineDefinesRewriteTriggers(t *testing.T) {
 	} {
 		if !strings.Contains(redline, want) {
 			t.Fatalf("streamline redline must preserve %q", want)
+		}
+	}
+}
+
+func TestAgenticDevelopmentOperatingModelPinsInternalDivideAndConquer(t *testing.T) {
+	root := repoRootForMigrationTest(t)
+
+	operatingModel := readProductPositioningFile(t, root, "specs/agentic-development-operating-model.md")
+	for _, want := range []string{
+		"internal engineering operating model, not a public product surface",
+		"Use divide-and-conquer sub-agents by default for non-trivial Jini engineering",
+		"This rule is mandatory for material cuts that change product behavior,",
+		"Every non-trivial cut must name its trace before completion:",
+		"lead agent remains accountable for the final answer, final diff, gate",
+		"Reasoning: map the problem, constraints, invariants, and likely failure modes.",
+		"Planning: turn the goal into ordered slices with explicit scope and gates.",
+		"Design: define contracts, boundaries, data flow, and user-facing behavior.",
+		"Coding: implement bounded changes inside an assigned write set.",
+		"Testing: create or run focused regression checks and required gates.",
+		"Code review: independently inspect the diff for bugs, regressions, missing",
+		"Delegation is capped at two levels.",
+		"one owner per writable file or glob",
+		"Sub-agents can make Jini development stronger. They must not make Jini harder to",
+		"If users need to understand the agent tree to trust or operate the default CLI,",
+	} {
+		if !strings.Contains(operatingModel, want) {
+			t.Fatalf("agentic development operating model must preserve %q", want)
+		}
+	}
+
+	executionPolicy := readProductPositioningFile(t, root, "specs/execution-routing-policy.md")
+	for _, want := range []string{
+		"does not create public `delegate` commands",
+		"coordinator-owned divide-and-conquer is required for non-trivial Jini",
+		"sub-agent write scopes must be disjoint and evidence-bound",
+		"max delegation depth is 2",
+		"overlapping sub-agent write scopes -> stop parallel work and serialize",
+	} {
+		if !strings.Contains(executionPolicy, want) {
+			t.Fatalf("execution routing policy must preserve sub-agent boundary %q", want)
+		}
+	}
+
+	delegationSlice := readProductPositioningFile(t, root, "specs/skills-and-delegation-slice.md")
+	for _, want := range []string{
+		"coordinator-owned process is mandatory for non-trivial engineering cuts",
+		"is not a public UX promise",
+		"internal engineering sub-agent controls",
+		"exposes internal engineering sub-agent orchestration as a free-tier command",
+		"It must not show agent trees, role theater, or step-by-step orchestration logs",
+	} {
+		if !strings.Contains(delegationSlice, want) {
+			t.Fatalf("skills/delegation slice must preserve sub-agent tier boundary %q", want)
 		}
 	}
 }

@@ -29,6 +29,7 @@ is_protected_product_surface() {
     specs/number-one-platform-prd.md | \
     specs/product-settling-decisions.md | \
     specs/product-streamline-redline.md | \
+    specs/agentic-development-operating-model.md | \
     specs/number-one-platform-hld.md | \
     specs/number-one-platform-lld.md | \
     specs/product-consensus-prd-and-plan.md | \
@@ -38,6 +39,7 @@ is_protected_product_surface() {
     specs/lean-platform-doctrine.md | \
     specs/client-surfaces-and-free-tier.md | \
     specs/platform-offline-strategy.md | \
+    specs/execution-routing-policy.md | \
     specs/cross-surface-session-platform-prd.md | \
     specs/skills-and-delegation-slice.md | \
     specs/competitive-release-plan.md | \

@@ -164,6 +164,13 @@ scorecard_gates:
         editor or cloud-agent handoff. Each supported wave must preserve the
         normal tool workflow, fail closed when missing, emit route receipts,
         and pass adapter smoke tests before support is claimed.
+    - id: sub-agent-divide-and-conquer
+      competitors: [claude-code, codex, github-copilot-coding-agent, google-jules, devin, factory-droids]
+      gate: >
+        Non-trivial implementation work must be split into bounded specialist
+        lanes with an accountable lead, independent verification, no hidden
+        recursive escalation, and integration evidence before the result is
+        accepted.
   required_outcome_gates:
     - id: direct-cwd-file-edit-fixture
       competitors: [claude-code, codex, aider, cline, opencode]
@@ -286,6 +293,23 @@ scorecard_gates:
         Route decisions must show compact context reuse, transcript replay
         avoidance, cost/throttle rationale, and why a premium or high-context
         route was necessary when selected.
+    - id: sub-agent-divide-and-conquer-fixture
+      competitors: [claude-code, codex, github-copilot-coding-agent, google-jules, devin, factory-droids]
+      proof_references:
+        - id: agentic-development-operating-model-test
+          kind: executable
+          ref: "go test ./internal/app -run TestAgenticDevelopmentOperatingModelPinsInternalDivideAndConquer"
+        - id: execution-routing-policy-sub-agent-depth
+          kind: named-proof
+          ref: "specs/execution-routing-policy.md"
+        - id: skills-and-delegation-sub-agent-boundary
+          kind: named-proof
+          ref: "specs/skills-and-delegation-slice.md"
+      gate: >
+        Sub-agent divide-and-conquer is required for non-trivial work only when
+        execution routing, skill/delegation boundaries, lead integration,
+        proof references, and verifier evidence stay explicit enough for the
+        commit gate to reject unsupported orchestration claims.
 methodology:
   benchmark_scope: internal-drift-benchmark-not-live-market-ranking
   baseline_type: fixed-competitor-baselines-grounded-in-official-docs

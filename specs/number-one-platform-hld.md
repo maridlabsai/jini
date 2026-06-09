@@ -1,6 +1,6 @@
 # Number One Platform HLD
 
-Updated: 2026-06-08
+Updated: 2026-06-09
 
 This high-level design translates
 [number-one-platform-prd.md](./number-one-platform-prd.md) into architecture
@@ -23,6 +23,12 @@ The streamline-or-rewrite decision is governed by
 [product-streamline-redline.md](./product-streamline-redline.md). If shell,
 intent, action, state, and gate boundaries cannot preserve those transcripts
 through localized changes, feature work stops and the kernel rewrite starts.
+
+Non-trivial engineering cuts are governed by
+[agentic-development-operating-model.md](./agentic-development-operating-model.md):
+coordinator-owned sub-agent splits, disjoint scopes, independent review, and
+named evidence are required. This is an internal architecture practice, not a
+runtime UX layer.
 
 ## Architecture Boundaries
 
@@ -73,6 +79,7 @@ The near-term architecture does not include:
 
 - a new conversation grammar
 - a visible agent-role tree in the free CLI
+- public controls for internal engineering sub-agents
 - broad desktop/mobile app surfaces
 - generic vertical-template routing from entities or questions
 - provider API aliases marketed as CLI handoffs

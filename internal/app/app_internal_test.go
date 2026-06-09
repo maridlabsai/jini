@@ -560,6 +560,7 @@ func TestScorecardGatePassesAndExposesCompetitorPressure(t *testing.T) {
 		"throttle-and-power-aware-routing": false,
 		"commit-gated-scorecard-drift":     false,
 		"intent-first-cli-parity":          false,
+		"sub-agent-divide-and-conquer":     false,
 	}
 	for _, vector := range report.PressureVectors {
 		if _, ok := requiredVectors[vector.ID]; ok {
@@ -573,16 +574,17 @@ func TestScorecardGatePassesAndExposesCompetitorPressure(t *testing.T) {
 	}
 
 	requiredOutcomeGates := map[string]bool{
-		"direct-cwd-file-edit-fixture":        false,
-		"simple-question-compact-answer":      false,
-		"intent-first-routing-fixture":        false,
-		"async-work-receipt-fixture":          false,
-		"offline-route-proof-fixture":         false,
-		"adversarial-code-review-fixture":     false,
-		"competitor-watch-refresh-fixture":    false,
-		"commercial-tier-boundary-fixture":    false,
-		"cross-surface-continuity-fixture":    false,
-		"token-frugality-route-proof-fixture": false,
+		"direct-cwd-file-edit-fixture":         false,
+		"simple-question-compact-answer":       false,
+		"intent-first-routing-fixture":         false,
+		"async-work-receipt-fixture":           false,
+		"offline-route-proof-fixture":          false,
+		"adversarial-code-review-fixture":      false,
+		"competitor-watch-refresh-fixture":     false,
+		"commercial-tier-boundary-fixture":     false,
+		"cross-surface-continuity-fixture":     false,
+		"token-frugality-route-proof-fixture":  false,
+		"sub-agent-divide-and-conquer-fixture": false,
 	}
 	for _, gate := range report.OutcomeGates {
 		if _, ok := requiredOutcomeGates[gate.ID]; ok {
@@ -1114,11 +1116,13 @@ func TestScorecardGateTextShowsCommitGatePressure(t *testing.T) {
 		"  OK throttle-and-power-aware-routing",
 		"  OK commit-gated-scorecard-drift",
 		"  OK intent-first-cli-parity",
+		"  OK sub-agent-divide-and-conquer",
 		"OUTCOME GATES",
 		"  OK direct-cwd-file-edit-fixture",
 		"  OK simple-question-compact-answer",
 		"  OK intent-first-routing-fixture",
 		"  OK async-work-receipt-fixture",
+		"  OK sub-agent-divide-and-conquer-fixture",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected scorecard-gate text to contain %q, got:\n%s", want, out)

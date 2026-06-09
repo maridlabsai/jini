@@ -1,18 +1,25 @@
 # Skills And Delegation Boundary
 
-Updated: 2026-06-07
+Updated: 2026-06-09
 
 ## Purpose
 
 This public spec is a boundary handoff for skills and delegated work in Jini.
 It is not a free-tier implementation slice.
 
+The internal development operating model is separate:
+[agentic-development-operating-model.md](./agentic-development-operating-model.md)
+governs how Jini engineering work is split across sub-agents. That
+coordinator-owned process is mandatory for non-trivial engineering cuts, but it
+is not a public UX promise.
+
 ## Tier Boundary
 
 Commercial tier owns the agent and skills OS productivity suite.
 
 Free tier must not ship `skills`, `delegate`, developer agents, tester agents,
-or a skills-based OS productivity suite.
+internal engineering sub-agent controls, or a skills-based OS productivity
+suite.
 
 ## Free Tier Rule
 
@@ -78,6 +85,7 @@ Reject any public/free change that:
 - adds `skills` or `delegate` as a free-tier command
 - defines file-backed skill discovery as a free-tier runtime requirement
 - adds developer agents or tester agents to the free tier
+- exposes internal engineering sub-agent orchestration as a free-tier command
 - makes skills or agent vocabulary a prerequisite for normal use
 - exposes visible agent trees or orchestration logs by default
 

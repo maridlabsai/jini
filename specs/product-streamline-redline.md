@@ -64,6 +64,12 @@ before that proof risks losing GTM time without solving product confusion.
 
 Jini continues with Approach B until a rewrite trigger fires.
 
+Non-trivial engineering cuts under Approach B also pass through
+[agentic-development-operating-model.md](./agentic-development-operating-model.md):
+mandatory divide-and-conquer, coordinator-owned integration, disjoint write
+sets, and named evidence. This protects implementation quality without changing
+the lightweight Claude/Codex-style user transcript.
+
 The active architecture is:
 
 1. Shell: prompt, commands, and receipts.
@@ -88,6 +94,8 @@ Stop streamlining and plan a rewrite if any trigger is true:
   without entering starter-pack or artifact-rendering code.
 - A new feature needs a default shell frame, modal, or command grammar that a
   Claude Code or Codex user would not expect in the first minute.
+- A development cut requires public agent-role UX, free-tier delegation
+  commands, or exposed orchestration logs to justify its internal work split.
 - A code change cannot map to a PRD outcome, HLD boundary, LLD contract, and
   executable gate in one short trace.
 - The golden transcript gate cannot express the expected behavior without
@@ -105,6 +113,7 @@ Do not release if any of these fail:
 - configured CLI handoff or fail-closed setup transcript
 - install smoke from release assets
 - scorecard PRD completion
+- operating-model evidence for non-trivial engineering cuts
 - ship check evidence
 
 Architecture quality does not compensate for a bad transcript. A release that

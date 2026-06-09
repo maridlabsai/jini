@@ -6,6 +6,12 @@ top-precedence product and operating PRD.
 The canonical product and operating PRD lives in
 [number-one-platform-prd.md](./number-one-platform-prd.md).
 
+Internal engineering delegation is governed by
+[agentic-development-operating-model.md](./agentic-development-operating-model.md).
+This execution policy may choose cheap, standard, or deep work classes, but it
+does not create public `delegate` commands or expose coordinator/sub-agent
+trees in the default CLI.
+
 If this policy conflicts with the canonical PRD on tenets, priorities,
 requirements, roadmap order, or automation posture, the canonical PRD wins and
 this policy should be updated.
@@ -54,12 +60,15 @@ Use for:
 - spec drafting
 - PRD synthesis
 - normal build execution
+- non-trivial engineering cuts with bounded sub-agent workstreams
 
 Rules:
 
 - targeted context only
-- at most one specialist helper by default
-- child helpers must return to the parent if deeper reasoning is required
+- coordinator-owned divide-and-conquer is required for non-trivial Jini
+  engineering cuts
+- sub-agent write scopes must be disjoint and evidence-bound
+- child helpers must return to the coordinator if deeper reasoning is required
 
 ### `deep`
 
@@ -76,6 +85,7 @@ Rules:
 - broad but bounded context
 - coordinator plus verifier allowed
 - max delegation depth is 2
+- disjoint scope ownership and independent review are mandatory
 - explicit approval and evidence requirements remain binding
 
 ## 3. Routing Rules
@@ -130,6 +140,8 @@ When live systems are unavailable:
 - Confluence unavailable -> keep the markdown wiki export as the final artifact
 - deeper reasoning unavailable -> return control to the parent and request
   rerouting instead of recursive escalation
+- overlapping sub-agent write scopes -> stop parallel work and serialize
+  through the coordinator
 
 ## 7. Safety Rules
 

@@ -62,6 +62,7 @@ var defaultScorecardGatePolicy = scorecardGatePolicy{
 		"commit-gated-scorecard-drift",
 		"intent-first-cli-parity",
 		"familiar-tool-adapter-breadth",
+		"sub-agent-divide-and-conquer",
 	},
 	RequiredOutcomeGates: []string{
 		"direct-cwd-file-edit-fixture",
@@ -74,6 +75,7 @@ var defaultScorecardGatePolicy = scorecardGatePolicy{
 		"commercial-tier-boundary-fixture",
 		"cross-surface-continuity-fixture",
 		"token-frugality-route-proof-fixture",
+		"sub-agent-divide-and-conquer-fixture",
 	},
 	MinimumCoreCompetitors:      7,
 	MinimumWatchlistCompetitors: 40,

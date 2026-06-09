@@ -1,6 +1,6 @@
 # Product Settling Decisions
 
-Updated: 2026-06-08
+Updated: 2026-06-09
 
 This document records the hard product decisions that reduce ambiguity for GTM,
 engineering, docs, and tiering.
@@ -60,6 +60,12 @@ The streamline-or-rewrite boundary lives in
 [product-streamline-redline.md](./product-streamline-redline.md). Current work
 continues only while the Go kernel can preserve the familiar first-minute
 transcript through clear shell, intent, action, state, and gate boundaries.
+
+The internal engineering operating model lives in
+[agentic-development-operating-model.md](./agentic-development-operating-model.md).
+It is mandatory for non-trivial Jini engineering cuts, but it is
+a coordinator-owned process. It must not become public UX, free-tier command
+grammar, or a visible agent-role layer.
 
 Non-negotiable invariants:
 
@@ -246,6 +252,7 @@ Jini delivery uses one active chain:
 - HLD: `specs/number-one-platform-hld.md`
 - LLD: `specs/number-one-platform-lld.md`
 - streamline redline: `specs/product-streamline-redline.md`
+- internal operating model: `specs/agentic-development-operating-model.md`
 - front-door dev design: `specs/launcher-intake-design.md`
 - implementation plan: `specs/number-one-development-plan.md`
 
@@ -256,6 +263,10 @@ three before it can be treated as release-ready.
 No release ships unless golden transcript gates prove first-minute quality at
 the level users expect from Claude Code, Codex, ChatGPT, and Gemini-style tools.
 Architecture quality does not compensate for a bad transcript.
+
+No non-trivial engineering cut is release-ready unless its work split, disjoint
+write ownership, integration decision, and evidence are traceable through the
+internal operating model.
 
 No drift without explicit agreement. A new requirement, product surface,
 interaction model, app surface, agent surface, or commercial/free tier boundary
