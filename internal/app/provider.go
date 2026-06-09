@@ -25,6 +25,10 @@ const (
 	defaultBedrockModel   = "anthropic.claude-sonnet-4-6"
 )
 
+type providerContextKey string
+
+const suppressLocalCohortTelemetryKey providerContextKey = "suppress-local-cohort-telemetry"
+
 type providerGenerationRequest struct {
 	Choice starterChoice
 	Title  string
@@ -451,10 +455,15 @@ func generateWithLocalSLM(ctx context.Context, request providerGenerationRequest
 		return "", fmt.Errorf("Local SLM returned an empty draft for %s", firstNonEmpty(modelLabel, "the configured model"))
 	}
 	text := strings.TrimSpace(decoded.Choices[0].Message.Content)
-	if toolMode := resolveLocalSLMToolModeForRequest(request); strings.HasPrefix(toolMode, "local-") {
+	if toolMode := resolveLocalSLMToolModeForRequest(request); strings.HasPrefix(toolMode, "local-") && !suppressLocalCohortTelemetry(ctx) {
 		_ = recordLocalCohortSample(toolMode, request, int(time.Since(start).Milliseconds()), text)
 	}
 	return text, nil
+}
+
+func suppressLocalCohortTelemetry(ctx context.Context) bool {
+	value, _ := ctx.Value(suppressLocalCohortTelemetryKey).(bool)
+	return value
 }
 
 func loadAWSCredentials() (awsCredentials, error) {
@@ -613,8 +622,8 @@ func providerSettingLine(mode string) string {
 }
 
 func buildProviderDoctorReport() providerDoctorReport {
-	if route := detectRoute(); route.Active && cliHandoffMode(route.ToolMode) {
-		return buildCLIHandoffDoctorReport(route.ToolMode)
+	if toolMode := configuredToolMode(); cliHandoffMode(toolMode) {
+		return buildCLIHandoffDoctorReport(toolMode)
 	}
 	providerID := configuredProviderMode()
 	if providerID == "auto" {
@@ -1404,10 +1413,12 @@ func providerHiddenPlanGuidance(request providerGenerationRequest) string {
 }
 
 func generateRefinedDraft(ctx context.Context, provider providerConfig, request providerGenerationRequest, firstDraft, reason string) (string, error) {
+	ctx = context.WithValue(ctx, suppressLocalCohortTelemetryKey, true)
 	return generateProviderText(ctx, provider, request, providerSystemPrompt(), providerRefinePrompt(request, firstDraft, reason))
 }
 
 func generateConsistencyDraft(ctx context.Context, provider providerConfig, request providerGenerationRequest, reason string) (string, error) {
+	ctx = context.WithValue(ctx, suppressLocalCohortTelemetryKey, true)
 	return generateProviderText(ctx, provider, request, providerSystemPrompt(), providerConsistencyPrompt(request, reason))
 }
 

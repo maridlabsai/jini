@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -17,6 +18,11 @@ import (
 )
 
 const localSLMAutoDiscoveryTimeout = 220 * time.Millisecond
+
+var (
+	localSLMDiscoveryHTTPClient = &http.Client{Timeout: localSLMAutoDiscoveryTimeout}
+	powerProfileProbeEnabled    = true
+)
 
 type localSLMRuntimeDiscovery struct {
 	Endpoint       string
@@ -52,9 +58,10 @@ func localSLMRuntimeDiscoveryResult() localSLMRuntimeDiscovery {
 		strings.TrimSpace(configValue("JINI_LOCAL_SLM_DEEP_MODEL")),
 		strings.TrimSpace(configValue("JINI_LOCAL_SLM_MULTIMODAL_MODEL")),
 		strings.TrimSpace(configValue("JINI_LOCAL_SLM_AUTO_DISCOVERY")),
+		strings.TrimSpace(configuredModelInput()),
 		configuredProviderMode(),
 		configuredToolMode(),
-		strconv.FormatBool(remoteProviderConfiguredForAutoDiscoveryGate()),
+		strconv.FormatBool(configuredModelAllowsLocalAutoDiscovery()),
 	}, "|")
 
 	localSLMAutoDiscoveryMu.Lock()
@@ -130,29 +137,18 @@ func localSLMAutoDiscoveryAllowed() bool {
 	if providerMode == "local-slm" || strings.HasPrefix(toolMode, "local-") {
 		return true
 	}
-	if providerMode == "auto" && !remoteProviderConfiguredForAutoDiscoveryGate() {
+	if providerMode == "auto" && configuredModelAllowsLocalAutoDiscovery() {
 		return true
 	}
 	return false
 }
 
-func remoteProviderConfiguredForAutoDiscoveryGate() bool {
-	if strings.TrimSpace(configValue("ANTHROPIC_API_KEY")) != "" {
+func configuredModelAllowsLocalAutoDiscovery() bool {
+	model := normalizeName(configuredModelInput())
+	if model == "" || model == "auto" {
 		return true
 	}
-	if strings.TrimSpace(configValue("AZURE_OPENAI_ENDPOINT")) != "" &&
-		strings.TrimSpace(configValue("AZURE_OPENAI_API_KEY")) != "" &&
-		strings.TrimSpace(configValue("AZURE_OPENAI_DEPLOYMENT")) != "" {
-		return true
-	}
-	if strings.TrimSpace(configValue("AWS_ACCESS_KEY_ID")) != "" &&
-		strings.TrimSpace(configValue("AWS_SECRET_ACCESS_KEY")) != "" {
-		return true
-	}
-	if strings.TrimSpace(configValue("AWS_PROFILE")) != "" || strings.TrimSpace(configValue("AWS_REGION")) != "" {
-		return true
-	}
-	return false
+	return containsAny(model, []string{"local", "offline", "slm"})
 }
 
 func defaultLocalSLMDiscoveryEndpoints() []string {
@@ -178,7 +174,7 @@ func discoverLocalSLMModelsAtEndpoint(endpoint string) []string {
 	if apiKey := strings.TrimSpace(configValue("JINI_LOCAL_SLM_API_KEY")); apiKey != "" {
 		req.Header.Set("Authorization", "Bearer "+apiKey)
 	}
-	resp, err := providerHTTPClient.Do(req)
+	resp, err := localSLMDiscoveryHTTPClient.Do(req)
 	if err != nil {
 		return nil
 	}
@@ -441,6 +437,9 @@ func currentPowerProfile() powerProfile {
 			LowBattery:     normalizeName(override) == "battery" && percent > 0 && percent <= 25,
 		}
 	}
+	if !powerProfileProbeEnabled || strings.TrimSpace(configValue("JINI_POWER_PROBE_DISABLE")) != "" {
+		return powerProfile{PowerSource: "unknown"}
+	}
 	switch runtime.GOOS {
 	case "darwin":
 		return probeDarwinPowerProfile()
@@ -452,7 +451,12 @@ func currentPowerProfile() powerProfile {
 }
 
 func probeDarwinPowerProfile() powerProfile {
-	output, err := runProbeCommand("pmset", "-g", "batt")
+	ctx, cancel := context.WithTimeout(context.Background(), localSLMAutoDiscoveryTimeout)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "pmset", "-g", "batt")
+	cmd.WaitDelay = 50 * time.Millisecond
+	outputBytes, err := cmd.CombinedOutput()
+	output := strings.TrimSpace(string(outputBytes))
 	if err != nil || strings.TrimSpace(output) == "" {
 		return powerProfile{PowerSource: "unknown"}
 	}

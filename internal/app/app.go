@@ -770,7 +770,7 @@ func runProvider(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "Unsupported doctor format. Try `jini doctor` or `jini doctor --format json`.")
 		return 1
 	}
-	if shouldRefreshLocalBenchmarkForDoctor() {
+	if shouldRefreshLocalBenchmarkForDoctor() && !shouldUseCachedProviderDeviceEvidence() {
 		_ = currentLocalRuntimeCapabilities(context.Background())
 	}
 	if format == "json" {
@@ -1095,7 +1095,7 @@ func detectLocalPreviewProvider() providerConfig {
 
 func detectLocalSLMProvider() providerConfig {
 	defaultModelID, defaultModelLabel := resolveLocalSLMDefaultModel()
-	device := currentDeviceProfile()
+	device := currentDeviceProfileForProviderEvidence()
 	missing := []string{}
 	endpoint, _ := resolvedLocalSLMEndpoint()
 	if strings.TrimSpace(endpoint) == "" {
@@ -1152,6 +1152,27 @@ func detectLocalSLMProvider() providerConfig {
 		Settings: settings,
 		Secrets:  []string{"JINI_LOCAL_SLM_API_KEY: " + presentOrMissing("JINI_LOCAL_SLM_API_KEY")},
 	}
+}
+
+func currentDeviceProfileForProviderEvidence() deviceProfile {
+	if !shouldUseCachedProviderDeviceEvidence() {
+		return currentDeviceProfile()
+	}
+	return loadDeviceProfile()
+}
+
+func shouldUseCachedProviderDeviceEvidence() bool {
+	return strings.TrimSpace(configValue("JINI_DEVICE_CLASS_OVERRIDE")) == "" && deviceProfileHasProviderEvidence(loadDeviceProfile())
+}
+
+func deviceProfileHasProviderEvidence(profile deviceProfile) bool {
+	return profile.ContextType == "JiniDeviceProfile" &&
+		strings.TrimSpace(profile.DeviceClass) != "" &&
+		strings.TrimSpace(profile.OS) != "" &&
+		strings.TrimSpace(profile.OSVersion) != "" &&
+		strings.TrimSpace(profile.AcceleratorClass) != "" &&
+		strings.TrimSpace(profile.LocalRuntimeClass) != "" &&
+		hasExpectedLocalProfileSlots(profile.LocalProfileStates)
 }
 
 func shouldRefreshLocalBenchmarkForDoctor() bool {

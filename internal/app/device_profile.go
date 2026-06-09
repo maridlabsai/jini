@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"encoding/json"
 	"net/url"
 	"os"
@@ -41,7 +42,11 @@ type deviceProfile struct {
 const deviceProfileTTL = 7 * 24 * time.Hour
 
 var runProbeCommand = func(name string, args ...string) (string, error) {
-	output, err := exec.Command(name, args...).Output()
+	ctx, cancel := context.WithTimeout(context.Background(), localSLMAutoDiscoveryTimeout)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, name, args...)
+	cmd.WaitDelay = 50 * time.Millisecond
+	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", err
 	}
@@ -460,6 +465,19 @@ func effectiveLocalProfileStatesForDevice(profile deviceProfile) map[string]stri
 	defaultModelID, _ := resolveLocalSLMDefaultModel()
 	if strings.TrimSpace(defaultModelID) == "" {
 		return unavailableLocalProfileStates()
+	}
+	for _, slot := range []struct {
+		mode string
+		env  string
+	}{
+		{"local-fast", "JINI_LOCAL_SLM_FAST_MODEL"},
+		{"local-workhorse", "JINI_LOCAL_SLM_WORKHORSE_MODEL"},
+		{"local-deep", "JINI_LOCAL_SLM_DEEP_MODEL"},
+		{"local-multimodal", "JINI_LOCAL_SLM_MULTIMODAL_MODEL"},
+	} {
+		if strings.TrimSpace(configValue(slot.env)) != "" && states[slot.mode] == "unavailable" {
+			states[slot.mode] = "limited"
+		}
 	}
 	multimodalModelID, _ := resolveLocalSLMModelForToolMode("local-multimodal")
 	if strings.TrimSpace(multimodalModelID) == "" {

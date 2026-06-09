@@ -309,8 +309,9 @@ JINI_TOOL=auto
 JINI_MODEL=auto
 ```
 
-If an OpenAI-compatible local server is already running on a common loopback
-port, Jini can discover it and choose the model automatically. Today it checks:
+In default `auto` mode, if an OpenAI-compatible local server is already running
+on a common loopback port, Jini can discover it and choose the model
+automatically before spending remote tokens. Today it checks:
 
 ```text
 http://127.0.0.1:11434/v1   # Ollama OpenAI-compatible endpoint

@@ -691,10 +691,17 @@ func TestGenerateWithConfiguredProviderAutoDiscoversLocalSLMModel(t *testing.T) 
 	resetLocalSLMAutoDiscoveryForTest(t)
 
 	requestSeen := false
-	withProviderHTTPClient(t, func(req *http.Request) (*http.Response, error) {
+	withLocalSLMDiscoveryHTTPClient(t, func(req *http.Request) (*http.Response, error) {
 		switch {
 		case req.Method == http.MethodGet && req.URL.String() == "http://127.0.0.1:11434/v1/models":
 			return jsonResponse(200, `{"data":[{"id":"phi4-mini"},{"id":"qwen3:8b-instruct"},{"id":"qwen3:14b"},{"id":"gemma3:12b"}]}`), nil
+		default:
+			t.Fatalf("unexpected Local SLM discovery request: %s %s", req.Method, req.URL.String())
+			return nil, nil
+		}
+	})
+	withProviderHTTPClient(t, func(req *http.Request) (*http.Response, error) {
+		switch {
 		case req.Method == http.MethodPost && req.URL.String() == "http://127.0.0.1:11434/v1/chat/completions":
 			requestSeen = true
 			body := mustReadAll(t, req.Body)
@@ -724,13 +731,61 @@ func TestGenerateWithConfiguredProviderAutoDiscoversLocalSLMModel(t *testing.T) 
 	}
 }
 
+func TestGenerateWithConfiguredProviderDefaultAutoUsesDiscoveredLocalBeforeCloud(t *testing.T) {
+	t.Setenv("JINI_STATE_DIR", t.TempDir())
+	t.Setenv("JINI_PROVIDER", "auto")
+	t.Setenv("JINI_MODEL", "auto")
+	t.Setenv("JINI_DEVICE_CLASS_OVERRIDE", "laptop-strong")
+	t.Setenv("AZURE_OPENAI_ENDPOINT", "https://example.openai.azure.com")
+	t.Setenv("AZURE_OPENAI_API_KEY", "super-secret-key")
+	t.Setenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o-prod")
+	resetLocalSLMAutoDiscoveryForTest(t)
+
+	withLocalSLMDiscoveryHTTPClient(t, func(req *http.Request) (*http.Response, error) {
+		if req.Method == http.MethodGet && req.URL.String() == "http://127.0.0.1:11434/v1/models" {
+			return jsonResponse(200, `{"data":[{"id":"phi4-mini"},{"id":"qwen3:8b-instruct"}]}`), nil
+		}
+		t.Fatalf("unexpected Local SLM discovery request: %s %s", req.Method, req.URL.String())
+		return nil, nil
+	})
+	withProviderHTTPClient(t, func(req *http.Request) (*http.Response, error) {
+		if req.Method != http.MethodPost || req.URL.String() != "http://127.0.0.1:11434/v1/chat/completions" {
+			t.Fatalf("expected auto route to use discovered local SLM before cloud, got %s %s", req.Method, req.URL.String())
+		}
+		body := mustReadAll(t, req.Body)
+		if !strings.Contains(body, `"model":"qwen3:8b-instruct"`) {
+			t.Fatalf("expected auto-selected local workhorse model, got:\n%s", body)
+		}
+		return jsonResponse(200, `{"choices":[{"message":{"content":"## Send this note\nLocal-first auto draft.\n\n## Decisions captured from the notes\n- One\n\n## Owners and due dates to confirm\n- Owner\n\n## Open questions to close\n- Question\n\n## Recommended next move\n- Next"}}]}`), nil
+	})
+
+	result, used, actualDecision, err := generateWithConfiguredProviderDecision(context.Background(), providerGenerationRequest{
+		Choice: starterChoice{PackID: "meeting-followup"},
+		Title:  "Weekly Product Review",
+		Source: "Turn meeting notes into something I can send.",
+	}, detectRouteForRequest(providerGenerationRequest{
+		Choice: starterChoice{PackID: "meeting-followup"},
+		Title:  "Weekly Product Review",
+		Source: "Turn meeting notes into something I can send.",
+	}))
+	if err != nil {
+		t.Fatalf("generate with local-first auto route: %v", err)
+	}
+	if !used || !strings.Contains(result, "Local-first auto draft") {
+		t.Fatalf("expected local-first draft, used=%v result=%q", used, result)
+	}
+	if actualDecision.ToolMode != "local-workhorse" || actualDecision.ModelLabel != "qwen3:8b-instruct" {
+		t.Fatalf("expected local workhorse decision, got %#v", actualDecision)
+	}
+}
+
 func TestDetectLocalSLMProviderUsesDiscoveredModelWithoutManualConfig(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", t.TempDir())
 	t.Setenv("JINI_PROVIDER", "local-slm")
 	t.Setenv("JINI_DEVICE_CLASS_OVERRIDE", "laptop-strong")
 	resetLocalSLMAutoDiscoveryForTest(t)
 
-	withProviderHTTPClient(t, func(req *http.Request) (*http.Response, error) {
+	withLocalSLMDiscoveryHTTPClient(t, func(req *http.Request) (*http.Response, error) {
 		if req.Method == http.MethodGet && req.URL.String() == "http://127.0.0.1:11434/v1/models" {
 			return jsonResponse(200, `{"data":[{"id":"phi4-mini"},{"id":"qwen3:8b-instruct"}]}`), nil
 		}
@@ -759,7 +814,7 @@ func TestLocalSLMAutoDiscoveryCachesNegativeResult(t *testing.T) {
 	resetLocalSLMAutoDiscoveryForTest(t)
 
 	probes := 0
-	withProviderHTTPClient(t, func(req *http.Request) (*http.Response, error) {
+	withLocalSLMDiscoveryHTTPClient(t, func(req *http.Request) (*http.Response, error) {
 		if req.Method == http.MethodGet && strings.HasSuffix(req.URL.String(), "/models") {
 			probes++
 			return nil, errors.New("local runtime unavailable")
@@ -786,6 +841,10 @@ func TestGenerateWithConfiguredProviderAutoPrefersBedrockForSonnet46Alias(t *tes
 	t.Setenv("AWS_ACCESS_KEY_ID", "AKIAEXAMPLE")
 	t.Setenv("AWS_SECRET_ACCESS_KEY", "SECRETEXAMPLE")
 
+	withLocalSLMDiscoveryHTTPClient(t, func(req *http.Request) (*http.Response, error) {
+		t.Fatalf("explicit remote model pin should not trigger local discovery, got %s %s", req.Method, req.URL.String())
+		return nil, nil
+	})
 	withProviderHTTPClient(t, func(req *http.Request) (*http.Response, error) {
 		if !strings.Contains(req.URL.String(), "bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-sonnet-4-6/converse") {
 			t.Fatalf("expected auto mode to choose Bedrock Sonnet 4.6, got %s", req.URL.String())

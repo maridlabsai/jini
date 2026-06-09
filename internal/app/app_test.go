@@ -1413,7 +1413,7 @@ func TestRouteCommandShowsReadinessAndTokenPosture(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Route and cost",
-		"Current route: Local preview. Readiness: ok.",
+		"Current route: Local preview (chosen automatically). Readiness: ok.",
 		"Token posture: compact context first",
 		"Continuity: offline and online work stitch into the same session.",
 		"Least-expense capable route is the default",

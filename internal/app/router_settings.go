@@ -91,6 +91,9 @@ func configuredToolMode() string {
 	if raw == "" {
 		raw = loadSavedRouterSettings().ToolMode
 	}
+	if strings.TrimSpace(raw) == "" {
+		raw = "auto"
+	}
 	return normalizeToolMode(raw)
 }
 
