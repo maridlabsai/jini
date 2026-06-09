@@ -151,9 +151,14 @@ Implementation plan:
 The free tier should prove Jini's routing and session value without giving away
 the commercial OS.
 
+CLI and app surfaces are available to both free and commercial users. Download,
+install, launch, and basic session review are not the subscription boundary.
+Subscription gates capabilities inside those surfaces.
+
 Free tier includes:
 
-- CLI-first direct task intake
+- CLI and app access when each surface is live
+- direct task intake
 - local preview and configured-route visibility
 - manual route switching
 - compact status, continue, open, and route inspection
@@ -175,7 +180,7 @@ Free tier does not include:
 Commercial tier is where Jini becomes an agent and skills based OS productivity
 suite.
 
-Commercial value must be materially higher than the free CLI:
+Commercial value must be materially higher than the free surfaces:
 
 - managed route policy across teams
 - preemptive throttle and quota recovery

@@ -22,7 +22,7 @@ quick_links:
 <div class="section-card section-card-soft surface-story">
   <span class="section-kicker">Current availability</span>
   <h2>What you get today</h2>
-  <p>The CLI is the live installable surface today. Desktop and mobile are the next release surfaces, stay free to download when live, and are not publicly downloadable yet. Desktop and Android should distribute directly first where policy allows, while iOS remains App Store constrained. Commercial pricing is planned to start with a 30-day free trial and become $1/month once checkout and entitlement activation are live.</p>
+  <p>The CLI is the live installable surface today. Desktop and mobile are the next release surfaces, stay free to download when live, and are not publicly downloadable yet. Desktop and Android should distribute directly first where policy allows, while iOS remains App Store constrained. Commercial pricing is planned to start with a 30-day free trial and become $1/month once checkout and entitlement activation are live. Subscription should unlock capabilities inside the same CLI and apps; it should not create paid-only app binaries.</p>
 
   <!-- | {{ surface.name }} | {{ surface.current_state }} | {{ surface.next_step }} | -->
   <p>In short: both the release-binary path and Go source-build path print the installed command plus an <code>install-receipt.txt</code> path. Source-build reasons live in <code>source_reason=</code> and release checks live in <code>release_validation=</code>.</p>

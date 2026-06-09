@@ -187,7 +187,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
   </div>
 </div>
 
-<p class="editorial-note">The free shell should already be enough to finish serious work. The paid layer should stay later and narrower: only after Jini can prove it saved money or prevented stalled work.</p>
+<p class="editorial-note">The free CLI and apps should already be enough to finish serious work. The paid layer should stay later and narrower: only after Jini can prove it saved money or prevented stalled work.</p>
 </div>
 
 <div class="section-card section-card-soft proof-signal-panel surface-story release-confidence-section">
@@ -267,7 +267,7 @@ description: Free orchestration for AI work across providers today. Pay only whe
   </tbody>
 </table>
 
-<p class="availability-note editorial-note">The CLI is the live installable surface right now. Desktop and mobile remain in release preparation and should stay free to download when each surface is live. Desktop and Android should distribute directly first where policy allows, while the paid layer should begin only after the planned 30-day free trial and measurable proof are real. Desktop launch plan: buy on the website, then sign in to unlock paid features. Android should prefer direct download first where policy allows, with store distribution secondary. iOS remains store-constrained. Mobile should not be the first place users subscribe.</p>
+<p class="availability-note editorial-note">The CLI is the live installable surface right now. Desktop and mobile remain in release preparation and should stay free to download when each surface is live. Desktop and Android should distribute directly first where policy allows, while the paid layer should begin only after the planned 30-day free trial and measurable proof are real. Desktop launch plan: free download first, then sign in to unlock paid capabilities when entitlement is live. Android should prefer direct download first where policy allows, with store distribution secondary. iOS remains store-constrained. Mobile should not be the first place users subscribe.</p>
 </div>
 </div>
 

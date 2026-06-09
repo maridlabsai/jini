@@ -1,11 +1,11 @@
 ---
 title: Commercial
-description: The shell stays free. App downloads stay free when live. The paid layer should exist only when Jini can prove it saves money or keeps work moving.
+description: CLI and app downloads stay free when live. The paid layer should exist only when Jini can prove it saves money or keeps work moving.
 eyebrow: Paid only after proof
-context_line: "The commercial story should be blunt: keep adoption cheap, keep downloads free when surfaces are live, and charge only for the optimizer layer that proves measurable value."
+context_line: "The commercial story should be blunt: keep adoption cheap, keep CLI and app downloads free when surfaces are live, and charge only for capabilities that prove measurable value."
 highlights:
-  - Shell stays free
-  - Free downloads when live
+  - CLI stays free
+  - Apps stay free
   - Planned 30-day trial
   - $1 only after proof
 quick_links:
@@ -17,7 +17,7 @@ quick_links:
     href: /contact.html
 ---
 
-<p class="page-lead">Jini should be easy to adopt and hard to overpay for. The shell stays free. App downloads stay free when each surface is live. The paid layer should exist only when Jini can show real savings or continuity proof that a team would miss without it.</p>
+<p class="page-lead">Jini should be easy to adopt and hard to overpay for. The CLI stays free. App downloads stay free when each surface is live. Subscription gates capabilities inside those surfaces, not the ability to install, open, or review basic work. The paid layer should exist only when Jini can show real savings or continuity proof that a team would miss without it.</p>
 
 <div class="section-card">
 <!-- ## The short version -->
@@ -26,7 +26,7 @@ quick_links:
 <div class="checklist-grid">
   <div class="checklist-card">
     <h3>What stays free</h3>
-    <p>CLI, runtime, docs, examples, tests, local SLM use, BYO provider use, resumable work state, and inspectable artifacts stay in the public product surface.</p>
+    <p>CLI, app access when live, runtime, docs, examples, tests, local SLM use, BYO provider use, resumable work state, and inspectable artifacts stay in the public product surface.</p>
   </div>
   <div class="checklist-card">
     <h3>What downloads are free</h3>
@@ -34,31 +34,31 @@ quick_links:
   </div>
   <div class="checklist-card">
     <h3>What the $1 license unlocks</h3>
-    <p>When live, the Commercial License unlocks provider-limit forecasting, throttle avoidance, automatic fallback, and automatic resume after limits or throttles hit. Everyone should get the planned 30-day free trial before asking for the $1/month subscription.</p>
+    <p>When live, the Commercial License unlocks provider-limit forecasting, throttle avoidance, automatic fallback, automatic resume, governed skills, and managed automation after limits or throttles hit. Everyone should get the planned 30-day free trial before asking for the $1/month subscription.</p>
   </div>
 </div>
 
 <div class="quote-strip">
-  <strong>Do not charge for the shell. Do not charge for app downloads. Give everyone the planned 30-day free trial before asking for the $1/month subscription. Charge only for the cost-saver and continuity layer that proves its value at runtime.</strong>
-  <p>Use the free shell when you want one stable place to run and resume work. Expect desktop and mobile apps to be free downloads when each surface is actually live. Start with the planned 30-day free trial of the commercial optimizer and pay only if Jini can prove that it saved money or prevented stalled work.</p>
+  <strong>Do not charge for the CLI. Do not charge for app downloads. Give everyone the planned 30-day free trial before asking for the $1/month subscription. Charge only for capabilities that prove value at runtime.</strong>
+  <p>Use the free CLI or app when you want one stable place to run and resume work. Expect desktop and mobile apps to be free downloads when each surface is actually live. Start with the planned 30-day free trial of the commercial capabilities and pay only if Jini can prove that it saved money or prevented stalled work.</p>
 </div>
 
-<p><strong>Manual proof stays free. Autopilot is paid.</strong> Free Jini should let users see route health, inspect token-saving structure, switch configured routes manually, and resume saved work. The paid optimizer should predict limits, choose among configured tools, CLIs, providers, and local models, recover from throttles, and keep the same session moving across devices without manual babysitting.</p>
+<p><strong>Surface access stays free. Capability automation is paid.</strong> Free Jini should let users see route health, inspect token-saving structure, switch configured routes manually, and resume saved work from the CLI or apps when those apps are live. The paid optimizer should predict limits, choose among configured tools, CLIs, providers, and local models, recover from throttles, and keep the same session moving across devices without manual babysitting.</p>
 
 <p>Upgrade when provider limits, throttles, or expensive routes are a real operating problem and you want Jini to keep work moving automatically instead of forcing manual babysitting. The paywall prompt should appear before downgrade, not after the account is already squeezed into constrained free mode.</p>
 </div>
 
 <div class="section-card section-card-soft surface-story">
-<!-- ## Free shell vs paid optimizer -->
-<h2>Free shell vs paid optimizer</h2>
+<!-- ## Free surfaces vs paid capabilities -->
+<h2>Free surfaces vs paid capabilities</h2>
 
-<!-- | Need | Free shell | Paid optimizer | -->
+<!-- | Need | Free surfaces | Paid capabilities | -->
 <table>
   <thead>
     <tr>
       <th scope="col">Need</th>
-      <th scope="col">Free shell</th>
-      <th scope="col">Paid optimizer</th>
+      <th scope="col">Free surfaces</th>
+      <th scope="col">Paid capabilities</th>
     </tr>
   </thead>
   <tbody>
@@ -105,7 +105,7 @@ quick_links:
   </tbody>
 </table>
 
-<p class="editorial-note">Keep the comparison blunt: the free shell should already be useful, and the paid layer should only appear where automation, continuity, and savings are meaningfully better than manual babysitting.</p>
+<p class="editorial-note">Keep the comparison blunt: the free CLI and apps should already be useful, and the paid layer should only appear where automation, continuity, and savings are meaningfully better than manual babysitting.</p>
 </div>
 
 <div class="section-card">
@@ -119,10 +119,10 @@ quick_links:
   <li>when the proof can be shown before payment, not explained after payment</li>
 </ul>
 
-<p>If those conditions are not true, the free shell should remain enough.</p>
+<p>If those conditions are not true, the free surfaces should remain enough.</p>
 <p class="page-lead"><strong>What the paid layer must prove before renewal</strong></p>
 
-<p>If the paid layer is worth keeping, it should show evidence that the free shell alone could not provide:</p>
+<p>If the paid layer is worth keeping, it should show evidence that the free surfaces alone could not provide:</p>
 
 <ul>
   <li>Token Savings Ledger</li>
@@ -164,7 +164,7 @@ quick_links:
   <li><strong>CLI remains first-class:</strong> the apps are another surface over the same session, not a separate product</li>
 </ul>
 
-<p>The commercial apps should help a wider user base without turning Jini into a different workflow for each device class.</p>
+<p>The apps should help a wider user base without turning Jini into a different workflow for each device class. Commercial entitlement unlocks capabilities inside the same apps; it should not create separate paid-only app binaries.</p>
 <p class="page-lead"><strong>What is not open source</strong></p>
 <p>The app downloads can be free without making the app implementation public.</p>
 

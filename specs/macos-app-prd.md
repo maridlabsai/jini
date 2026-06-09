@@ -72,6 +72,7 @@ P0 is the minimum credible internal dogfood bar.
 | MAC-P0-10 | Secure local trust | Direct builds must be Developer ID signed, notarized, stapled, hardened-runtime enabled, sandbox-entitlement reviewed, and Gatekeeper-smoked. |
 | MAC-P0-11 | Redacted diagnostics | Support bundles include app/core versions, session ids, route ids, sync state, command classes, and redacted logs; no secrets or raw prompts by default. |
 | MAC-P0-12 | No duplicate state | The app must not keep a private session store that can diverge from the CLI session graph. |
+| MAC-P0-13 | Surface available to both tiers | The macOS app is available to free and commercial users. Subscription gates capabilities inside the app, not the app download, launch, project selection, or basic session review. |
 
 ## P1 Requirements
 

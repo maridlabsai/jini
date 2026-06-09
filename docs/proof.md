@@ -20,7 +20,7 @@ quick_links:
 <div class="section-card">
   <span class="section-kicker">{{ site.data.public_proof.hero.eyebrow }}</span>
   <h2>{{ site.data.public_proof.hero.headline }}</h2>
-  <p class="page-lead">Proof has two jobs. First, the free shell should make its value obvious fast. Second, any paid layer should prove that it saved money or prevented stalled work before anyone is asked to pay or renew.</p>
+  <p class="page-lead">Proof has two jobs. First, the free CLI and apps should make their value obvious fast. Second, any paid layer should prove that it saved money or prevented stalled work before anyone is asked to pay or renew.</p>
   <p>{{ site.data.public_proof.hero.body }}</p>
   <p>{{ site.data.public_proof.sections[2].bullets[0] }}</p>
   <div class="proof-grid">
@@ -42,7 +42,7 @@ quick_links:
 
 <div class="section-card">
   <span class="section-kicker">Free value first</span>
-  <h2>What the free shell should make obvious</h2>
+  <h2>What the free surfaces should make obvious</h2>
   <div class="shell-panel">
 <pre><code>You're working on
 Research to PRD handoff

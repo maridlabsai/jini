@@ -424,6 +424,8 @@ The presentation shell must expose:
 
 ## Commercial Boundary
 
+Free and commercial users can install and open the macOS app. Entitlements gate capabilities, not the app shell.
+
 Free macOS app:
 
 - same session model

@@ -32,12 +32,10 @@ Core charter: intent-first Claude/Codex parity outranks feature expansion.
 - Answer simple questions compactly without creating work.
 - Ask intent for bare entities without creating artifacts.
 - Route between familiar CLIs, providers, gateways, and local/offline models.
-- Treat configured CLI routes as real installed-CLI handoffs, not provider API
-  aliases.
+- Treat configured CLI routes as real installed-CLI handoffs, not provider API aliases.
 - Keep route, token, and local runtime diagnostics inspectable through `jini route`.
 - Reuse durable session context without replaying large transcripts.
-- Keep saved work hidden until `status`, `continue`, `open`, `help`, or natural
-  title matching.
+- Keep saved work hidden until `status`, `continue`, `open`, `help`, or natural title matching.
 - Install from release assets without requiring source builds.
 - Block regressions with required gates before commit and push.
 
@@ -69,11 +67,8 @@ Routing requirements:
 
 - Default to the cheapest safe route that can complete the task.
 - Use local/offline routes when they meet the task quality bar.
-- Escalate to stronger online routes when correctness, codebase scope, or tool
-  access requires it.
-- Label provider API routes separately from CLI handoff routes. A route named
-  `codex` or `claude-code` must invoke that CLI or fail closed with setup
-  guidance.
+- Escalate to stronger online routes when correctness, codebase scope, or tool access requires it.
+- Label provider API routes separately from CLI handoff routes. A route named `codex` or `claude-code` must invoke that CLI or fail closed with setup guidance.
 - Preserve enough session state to continue work without replaying stale chat.
 
 Avoiding throttling is P1. Detect configured CLI/provider pressure, choose
@@ -85,14 +80,10 @@ loads unless the user explicitly asks for offline work.
 
 ## Market And Learning Guards
 
-Competitor watching is a P0 feature-selection loop through
-[competitive-release-plan.md](./competitive-release-plan.md), but it does not
-create active scope by itself.
+Competitor watching is a P0 feature-selection loop through [competitive-release-plan.md](./competitive-release-plan.md), but it does not create active scope by itself.
 
-- Competitor watch packets can nominate next feature candidates and deletion
-  candidates.
-- Each candidate must be classified as copy, integrate, watch, reject, or
-  delete.
+- Competitor watch packets can nominate next feature candidates and deletion candidates.
+- Each candidate must be classified as copy, integrate, watch, reject, or delete.
 - No competitor finding becomes active scope unless the decision record changes.
 
 User productivity learning remains P0 only when it improves the CLI wedge:
@@ -104,7 +95,10 @@ User productivity learning remains P0 only when it improves the CLI wedge:
 
 ## Tier Boundary
 
-Free proves the CLI wedge:
+CLI and app surfaces are available to both free and commercial users.
+Subscription gates capabilities, not the ability to install or open Jini.
+
+Free proves the product wedge across available surfaces:
 
 - direct task intake and local file edits
 - manual route inspection and route switching
@@ -119,10 +113,7 @@ Free excludes:
 - managed throttle recovery, governed approval workflows, team policy, audit,
   and automation loops
 
-Commercial value must be materially higher than the free CLI: managed
-route/throttle policy, governed skills and delegation, cross-device and
-offline-online continuation, team audit, and automation loops. Commercial UX
-must still follow the same rule: simple task in, useful result out.
+Commercial value must be materially higher than the free surfaces: managed route/throttle policy, governed skills and delegation, cross-device and offline-online continuation, team audit, and automation loops. Commercial UX must still follow the same rule: simple task in, useful result out.
 
 ## Roadmap
 

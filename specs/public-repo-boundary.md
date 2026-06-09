@@ -48,7 +48,7 @@ The public repo may contain:
 - public install and usage docs
 - public benchmark harnesses and scorecards
 - public examples and tests
-- public docs that describe the commercial apps and their distribution posture,
+- public docs that describe desktop/mobile app surfaces and their distribution posture,
   as long as app implementation code stays private
 
 The distinction is:

@@ -43,10 +43,13 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"P0.3: require the scorecard to include an intent-first routing outcome gate",
 		"The free tier should prove Jini's routing and session value without giving away",
 		"the commercial OS.",
+		"CLI and app surfaces are available to both free and commercial users.",
+		"Subscription gates capabilities inside those surfaces.",
 		"Free tier does not include:",
 		"developer-agent fleets",
 		"skills-based OS productivity suite",
 		"Commercial tier is where Jini becomes an agent and skills based OS productivity",
+		"Commercial value must be materially higher than the free surfaces:",
 		"developer and tester agents hidden behind normal Jini outcomes",
 		"No new Jini conversation style.",
 		"saved work is resumed through `status`, `continue`, `open`, or natural title matching",
@@ -93,7 +96,9 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"No release ships unless competitor-parity golden transcript gates",
 		"Token frugality is P0.",
 		"## Tier Boundary",
-		"Commercial value must be materially higher than the free CLI: managed",
+		"CLI and app surfaces are available to both free and commercial users.",
+		"Subscription gates capabilities, not the ability to install or open Jini.",
+		"Commercial value must be materially higher than the free surfaces:",
 	} {
 		if !strings.Contains(canonicalPRD, want) {
 			t.Fatalf("canonical PRD must point to settled product positioning %q", want)
@@ -223,6 +228,8 @@ func TestMacOSAppPRDPinsCodexParityWithoutProductDrift(t *testing.T) {
 		"Developer ID signed, notarized, stapled",
 		"sandbox-entitlement reviewed",
 		"Redacted diagnostics",
+		"macOS app is available to free and commercial users.",
+		"Subscription gates capabilities inside the app, not the app download",
 		"No Start/Keep model.",
 		"No visible Switch startup control.",
 		"No saved-work dashboard on bare launch.",
@@ -324,6 +331,8 @@ func TestMacOSAppHLDDefinesGoCoreTauriShellBoundary(t *testing.T) {
 		"simple factual questions stop before work creation",
 		"`codex` route never silently becomes provider API.",
 		"offline work appends to the same session graph.",
+		"Free and commercial users can install and open the macOS app.",
+		"Entitlements gate capabilities, not the app shell.",
 		"free app must not expose agent-role theater",
 		"[macos-app-lld.md](./macos-app-lld.md) defines the app protocol",
 	} {
