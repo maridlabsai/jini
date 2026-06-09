@@ -178,13 +178,12 @@ ready, what needs approval, and how to resume from CLI.
 
 ## Technical Direction
 
-Default implementation direction remains a Tauri 2 shell over the Go core.
+Default implementation direction is a Tauri 2 shell over the Go core.
 
-The HLD must compare Tauri 2 with native SwiftUI/AppKit before implementation.
-Tauri wins only if it preserves native trust, accessibility, performance,
-secure IPC, updater signing, and a small entitlement set. Native SwiftUI/AppKit
-wins if the Codex-caliber desktop bar requires deeper macOS integration than a
-webview shell can safely provide.
+[macos-app-hld.md](./macos-app-hld.md) compares Tauri 2 with native
+SwiftUI/AppKit and selects Tauri 2 for Phase 1. Native SwiftUI/AppKit remains
+an escape hatch if the prototype fails native trust, accessibility, performance,
+secure IPC, updater signing, or desktop fidelity.
 
 Non-negotiable architecture constraints:
 
@@ -279,7 +278,8 @@ Phase 4, release:
 
 ## Open Decisions
 
-- Tauri 2 versus SwiftUI/AppKit final implementation stack.
+- Depth of native SwiftUI/AppKit escape hatches after the Tauri Phase 1
+  prototype.
 - Direct-only distribution versus future Mac App Store path.
 - Exact local model runtime packaging and update policy.
 - Commercial skills and multi-agent UI timing after free macOS alpha proves the

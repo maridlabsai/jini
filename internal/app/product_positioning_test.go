@@ -59,6 +59,8 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"Focused implementation is the development philosophy.",
 		"macOS app PRD: `specs/macos-app-prd.md`",
 		"macOS app UX design: `specs/macos-app-ux-design.md`",
+		"macOS app HLD: `specs/macos-app-hld.md`",
+		"macOS app LLD: `specs/macos-app-lld.md`",
 		"smallest change that advances the active CLI wedge",
 		"No drift without explicit agreement.",
 		"Older broad PRDs, research notes, and platform plans are background only.",
@@ -225,8 +227,8 @@ func TestMacOSAppPRDPinsCodexParityWithoutProductDrift(t *testing.T) {
 		"No visible Switch startup control.",
 		"No saved-work dashboard on bare launch.",
 		"No free-tier skills-based OS productivity suite.",
-		"Default implementation direction remains a Tauri 2 shell over the Go core.",
-		"The HLD must compare Tauri 2 with native SwiftUI/AppKit",
+		"Default implementation direction is a Tauri 2 shell over the Go core.",
+		"[macos-app-hld.md](./macos-app-hld.md) compares Tauri 2 with native",
 		"Go core owns intent, routing, session graph",
 		"PRD/HLD/LLD trace covers every P0 requirement.",
 		"Competitor scorecard includes Codex desktop parity checks",
@@ -292,6 +294,90 @@ func TestMacOSAppUXDesignPinsFirstMinuteDesktopContract(t *testing.T) {
 	} {
 		if strings.Contains(ux, stale) {
 			t.Fatalf("macOS app UX design must reject stale UX language %q", stale)
+		}
+	}
+}
+
+func TestMacOSAppHLDDefinesGoCoreTauriShellBoundary(t *testing.T) {
+	root := repoRootForMigrationTest(t)
+
+	hld := readProductPositioningFile(t, root, "specs/macos-app-hld.md")
+	for _, want := range []string{
+		"This high-level design translates",
+		"This HLD covers the macOS app only.",
+		"Phase 1 uses a Tauri 2 shell over the Go core.",
+		"Go owns product runtime behavior.",
+		"Tauri owns the macOS window, shell packaging, updater, webview, and native",
+		"TypeScript/Rust code must stay presentation and IPC only.",
+		"SwiftUI/AppKit may be added only for narrow native controls",
+		"Renderer can request side effects but cannot perform them.",
+		"Only the Go sidecar may perform side effects.",
+		"Phase 1 uses stdio JSON-RPC for the Go sidecar.",
+		"Local TCP is not allowed for Phase 1",
+		"saved work is passive",
+		"simple factual questions stop before work creation",
+		"`codex` route never silently becomes provider API.",
+		"offline work appends to the same session graph.",
+		"free app must not expose agent-role theater",
+		"[macos-app-lld.md](./macos-app-lld.md) defines the app protocol",
+	} {
+		if !strings.Contains(hld, want) {
+			t.Fatalf("macOS app HLD must preserve architecture boundary %q", want)
+		}
+	}
+	for _, stale := range []string{
+		"Electron",
+		"local TCP is allowed",
+		"provider API alias",
+		"agent-role theater as default UX",
+	} {
+		if strings.Contains(hld, stale) {
+			t.Fatalf("macOS app HLD must reject stale or unsafe architecture %q", stale)
+		}
+	}
+}
+
+func TestMacOSAppLLDDefinesExecutableContracts(t *testing.T) {
+	root := repoRootForMigrationTest(t)
+
+	lld := readProductPositioningFile(t, root, "specs/macos-app-lld.md")
+	for _, want := range []string{
+		"This low-level design defines the executable contracts for the Jini macOS app.",
+		"Go owns product logic.",
+		"The renderer owns presentation only.",
+		"jini app serve --stdio --surface macos",
+		"JSON-RPC-like messages over stdout/stdin",
+		"no local TCP in Phase 1",
+		"`app.handshake`",
+		"`turn.submit`",
+		"`approval.resolve`",
+		"`route.status`",
+		"`diagnostics.export`",
+		"RouteEvidenceVM",
+		"ApprovalRequestVM",
+		"OfflineDebtVM",
+		"DiagnosticsPreviewVM",
+		"`compact_answer` cannot create session state by itself.",
+		"Approval ids are single-use.",
+		"`route_kind` must distinguish `cli_handoff`, `provider_api`, `gateway`,",
+		"CLI handoff routes do not fall back to provider APIs.",
+		"Renderer must not change when persistence migrates",
+		"simple answer returns compact turn with no session creation",
+		"route `codex` unavailable state does not fallback to provider API",
+		"HLD and LLD are protected by PRD drift gate.",
+	} {
+		if !strings.Contains(lld, want) {
+			t.Fatalf("macOS app LLD must preserve executable contract %q", want)
+		}
+	}
+	for _, stale := range []string{
+		"Working Draft for clear file edits",
+		"Start/Keep",
+		"Switch control",
+		"renderer owns route choice",
+	} {
+		if strings.Contains(lld, stale) {
+			t.Fatalf("macOS app LLD must reject stale contract %q", stale)
 		}
 	}
 }

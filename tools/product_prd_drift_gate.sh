@@ -29,6 +29,8 @@ is_protected_product_surface() {
     specs/number-one-platform-prd.md | \
     specs/macos-app-prd.md | \
     specs/macos-app-ux-design.md | \
+    specs/macos-app-hld.md | \
+    specs/macos-app-lld.md | \
     specs/product-settling-decisions.md | \
     specs/product-streamline-redline.md | \
     specs/agentic-development-operating-model.md | \

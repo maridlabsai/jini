@@ -264,6 +264,8 @@ Jini delivery uses one active chain:
 - PRD: `specs/number-one-platform-prd.md`
 - macOS app PRD: `specs/macos-app-prd.md`
 - macOS app UX design: `specs/macos-app-ux-design.md`
+- macOS app HLD: `specs/macos-app-hld.md`
+- macOS app LLD: `specs/macos-app-lld.md`
 - HLD: `specs/number-one-platform-hld.md`
 - LLD: `specs/number-one-platform-lld.md`
 - streamline redline: `specs/product-streamline-redline.md`

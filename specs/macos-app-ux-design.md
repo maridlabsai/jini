@@ -491,9 +491,11 @@ Avoid:
 
 Before implementation:
 
-- HLD maps every UX surface to Go core responsibilities and IPC boundaries.
-- LLD defines view models for projects, sessions, thread turns, approvals,
-  diffs, route evidence, offline debt, and diagnostics.
+- [macos-app-hld.md](./macos-app-hld.md) maps every UX surface to Go core
+  responsibilities and IPC boundaries.
+- [macos-app-lld.md](./macos-app-lld.md) defines view models for projects,
+  sessions, thread turns, approvals, diffs, route evidence, offline debt, and
+  diagnostics.
 - Prototype validates the three-pane layout at wide, medium, and narrow widths.
 
 Before alpha:
