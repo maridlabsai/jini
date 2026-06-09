@@ -31,6 +31,8 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"Adapter breadth is P0 only for familiar tools users already trust",
 		"## CLI Handoff Decision",
 		"provider API routes may exist, but they must not be marketed as Codex,",
+		"route setup guidance is public through `jini route help`",
+		"provider/local route setup without printing secrets",
 		"Adapter support ships in waves:",
 		"Wave 0, foundation: one handoff contract, route receipts, `doctor` detection",
 		"Wave 1, terminal agents: Codex, Claude Code, Gemini CLI, Aider, and OpenCode.",

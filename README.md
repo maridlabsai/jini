@@ -156,6 +156,7 @@ When you need to steer the route directly, keep it explicit and reversible:
 
 ```bash
 jini route list
+jini route help
 jini route set azure-code
 jini route auto
 ```
@@ -164,6 +165,8 @@ That gives developers a clear escape hatch for framework switching without
 making every task start with routing setup. `codex` and `claude-code` are
 reserved for real installed-CLI handoff: Jini invokes the installed CLI when it
 is present and trusted, and fails closed with setup guidance when it is not.
+Use `jini route help` when you need the env vars for Codex, Claude Code,
+Gemini CLI, Aider, OpenCode, provider routes, or local SLM routes.
 
 For multi-step work, Jini now plans quietly before drafting. The user sees the
 result through better structure and clearer `Doing now` / `Next` state, not
@@ -243,12 +246,13 @@ Supported provider choices:
 For setup or troubleshooting:
 
 ```bash
+jini route help
 jini doctor
 ```
 
-The doctor tells you what Jini will use, what `auto` resolved to, what is
-missing, and never prints API keys, AWS secret keys, profile values, or model
-IDs.
+Route help shows what to install or which env vars to set. The doctor tells you
+what Jini will use, what `auto` resolved to, what is missing, and never prints
+API keys, AWS secret keys, profile values, or model IDs.
 
 For multimodal work, doctor also shows the separate learning buckets Jini keeps
 for screenshot work, scanned PDF/document work, and audio/transcript work.

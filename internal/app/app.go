@@ -627,6 +627,8 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 		renderInteractiveProviderDoctor(stdout)
 	case "route":
 		renderRouteCostStatus(stdout)
+	case "route help":
+		renderRouteSetupHelp(stdout)
 	case "memory":
 		renderCurrentWorkMemoryStatus(stdout, summary)
 	case "permissions":
@@ -793,8 +795,11 @@ func runRoute(args []string, stdout, stderr io.Writer) int {
 		return 0
 	}
 	switch exactCommandToken(args[0]) {
-	case "list", "help", "--help", "-h":
+	case "list":
 		renderRouteList(stdout)
+		return 0
+	case "help", "setup", "--help", "-h":
+		renderRouteSetupHelp(stdout)
 		return 0
 	case "status":
 		renderRouteCostStatus(stdout)
@@ -908,7 +913,36 @@ func renderRouteList(w io.Writer) {
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Use `jini route set codex` or `jini route set azure-code` to lock a configured route.")
 	fmt.Fprintln(w, "CLI handoffs invoke installed CLIs or fail closed; they are not provider aliases.")
+	fmt.Fprintln(w, "Use `jini route help` for setup guidance.")
 	fmt.Fprintln(w, "Use `jini route auto` to restore automatic routing.")
+}
+
+func renderRouteSetupHelp(w io.Writer) {
+	fmt.Fprintln(w, "Route setup")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Common commands")
+	fmt.Fprintln(w, "- Use `jini route` to inspect the current route.")
+	fmt.Fprintln(w, "- Use `jini route list` to see supported routes.")
+	fmt.Fprintln(w, "- Use `jini doctor` to verify setup without printing secrets.")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "CLI handoff tools")
+	for _, mode := range []string{"codex", "claude-code", "gemini-cli", "aider", "opencode"} {
+		descriptor, ok := cliHandoffDescriptorForMode(mode)
+		if !ok {
+			continue
+		}
+		fmt.Fprintf(w, "- %s: install %s, then run `jini route set %s`.\n", descriptor.Mode, strings.TrimSuffix(descriptor.Label, " handoff"), descriptor.Mode)
+		fmt.Fprintf(w, "  Override path: `%s=/path/to/%s`\n", descriptor.ExecutableEnv, descriptor.DefaultExecutable)
+	}
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Provider and local routes")
+	fmt.Fprintln(w, "- claude-api: set `ANTHROPIC_API_KEY`, then `JINI_PROVIDER=claude`.")
+	fmt.Fprintln(w, "- bedrock-sonnet: set `AWS_REGION` and AWS credentials, then `JINI_PROVIDER=bedrock`.")
+	fmt.Fprintln(w, "- azure-code / azure-openai: set `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, and `AZURE_OPENAI_DEPLOYMENT`.")
+	fmt.Fprintln(w, "- local-fast / local-workhorse / local-deep / local-multimodal: set `JINI_LOCAL_SLM_ENDPOINT` and `JINI_LOCAL_SLM_MODEL`.")
+	fmt.Fprintln(w, "- local-preview: no model setup; useful for safe local dry runs.")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "After setup, run `jini route set <route>` or `jini route auto`.")
 }
 
 func routeTargetReadinessLabel(target savedRouteTarget) string {
@@ -1625,6 +1659,10 @@ func maybeHandleNewWorkUtilityIntent(raw string, stdout io.Writer) (bool, int) {
 	case "route":
 		fmt.Fprintln(stdout)
 		renderRouteCostStatus(stdout)
+		return true, 0
+	case "route help":
+		fmt.Fprintln(stdout)
+		renderRouteSetupHelp(stdout)
 		return true, 0
 	case "memory":
 		fmt.Fprintln(stdout)
@@ -4753,7 +4791,7 @@ func isSlashCommandInput(value string) bool {
 		return false
 	}
 	for _, r := range trimmed[1:] {
-		if !(unicode.IsLetter(r) || unicode.IsDigit(r) || r == '-' || r == '_') {
+		if !(unicode.IsLetter(r) || unicode.IsDigit(r) || r == '-' || r == '_' || unicode.IsSpace(r)) {
 			return false
 		}
 	}

@@ -1262,6 +1262,60 @@ func TestRouteCommandListsAvailableRoutes(t *testing.T) {
 	}
 }
 
+func TestRouteCommandShowsSetupHelp(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"route", "help"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected route help to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Route setup",
+		"Use `jini route` to inspect the current route.",
+		"Use `jini route list` to see supported routes.",
+		"Use `jini doctor` to verify setup without printing secrets.",
+		"CLI handoff tools",
+		"- codex: install Codex CLI, then run `jini route set codex`.",
+		"  Override path: `JINI_CODEX_CLI=/path/to/codex`",
+		"- claude-code: install Claude Code CLI, then run `jini route set claude-code`.",
+		"  Override path: `JINI_CLAUDE_CODE_CLI=/path/to/claude`",
+		"- gemini-cli: install Gemini CLI, then run `jini route set gemini-cli`.",
+		"  Override path: `JINI_GEMINI_CLI=/path/to/gemini`",
+		"- aider: install Aider CLI, then run `jini route set aider`.",
+		"  Override path: `JINI_AIDER_CLI=/path/to/aider`",
+		"- opencode: install OpenCode CLI, then run `jini route set opencode`.",
+		"  Override path: `JINI_OPENCODE_CLI=/path/to/opencode`",
+		"Provider and local routes",
+		"- claude-api: set `ANTHROPIC_API_KEY`, then `JINI_PROVIDER=claude`.",
+		"- bedrock-sonnet: set `AWS_REGION` and AWS credentials, then `JINI_PROVIDER=bedrock`.",
+		"- azure-code / azure-openai: set `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, and `AZURE_OPENAI_DEPLOYMENT`.",
+		"- local-fast / local-workhorse / local-deep / local-multimodal: set `JINI_LOCAL_SLM_ENDPOINT` and `JINI_LOCAL_SLM_MODEL`.",
+		"After setup, run `jini route set <route>` or `jini route auto`.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected route help to contain %q, got:\n%s", want, out)
+		}
+	}
+	for _, unwanted := range []string{
+		"Available",
+		"Task Snapshot",
+		"Working Draft",
+		"API key:",
+		"Secret:",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected route help to avoid %q, got:\n%s", unwanted, out)
+		}
+	}
+	if got := nonEmptyLineCount(out); got > 36 {
+		t.Fatalf("expected route help to stay compact, got %d non-empty lines:\n%s", got, out)
+	}
+}
+
 func TestRouteCommandShowsReadinessAndTokenPosture(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)
@@ -2639,6 +2693,11 @@ func TestInteractiveLauncherSupportsSlashCommandAliasesWithoutCreatingWork(t *te
 			line: "/route\n",
 			want: []string{"Route and cost", "Token posture: compact context first"},
 		},
+		{
+			name: "route help",
+			line: "/route help\n",
+			want: []string{"Route setup", "CLI handoff tools", "JINI_CODEX_CLI=/path/to/codex"},
+		},
 	}
 
 	for _, tc := range cases {
@@ -3565,6 +3624,16 @@ func TestCurrentWorkInteractiveTacticalCommandsDoNotStartNewWork(t *testing.T) {
 				"CLI throttle levels affect switching",
 				"Least-expense capable route",
 			},
+		},
+		{
+			name: "route help",
+			line: "route help\n",
+			want: []string{"Route setup", "CLI handoff tools", "JINI_CODEX_CLI=/path/to/codex"},
+		},
+		{
+			name: "slash route help",
+			line: "/route help\n",
+			want: []string{"Route setup", "CLI handoff tools", "JINI_CODEX_CLI=/path/to/codex"},
 		},
 		{
 			name: "permissions",

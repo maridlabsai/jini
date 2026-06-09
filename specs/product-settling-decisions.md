@@ -102,6 +102,8 @@ That means:
   Claude Code, or another CLI unless that CLI is actually invoked
 - route output must make the difference between CLI handoff, provider API, and
   local/offline execution visible without adding startup ceremony
+- route setup guidance is public through `jini route help`; it lists CLI
+  handoff env vars and provider/local route setup without printing secrets
 
 This is P0. A provider-backed adapter can be an internal fallback or prototype,
 but it does not satisfy the configured-CLI route requirement.
