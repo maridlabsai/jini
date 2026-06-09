@@ -18,6 +18,8 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"The first product people should notice is the CLI.",
 		"Anything that does not improve that wedge is not P0 for GTM.",
 		"Claude Code and Codex first-minute parity is the highest-precedence",
+		"[product-streamline-redline.md](./product-streamline-redline.md)",
+		"continues only while the Go kernel can preserve",
 		"Questions answer compactly and do not create work.",
 		"Bare entities ask for intent and do not create work.",
 		"Configured CLI route names require real installed-CLI handoff",
@@ -124,6 +126,7 @@ func TestFocusedDeliveryChainGatesPRDDesignAndImplementation(t *testing.T) {
 		"`whats teh",
 		"Do not create `current-work.json` for simple factual questions.",
 		"If the transcript would surprise a Claude Code or",
+		"rewrite-trigger candidate",
 	} {
 		if !strings.Contains(lld, want) {
 			t.Fatalf("LLD must preserve runtime contract %q", want)
@@ -174,6 +177,33 @@ func TestFocusedDeliveryChainGatesPRDDesignAndImplementation(t *testing.T) {
 	} {
 		if strings.Contains(developmentPlan, stale) {
 			t.Fatalf("development plan must not preserve stale broad-plan rule %q", stale)
+		}
+	}
+}
+
+func TestProductStreamlineRedlineDefinesRewriteTriggers(t *testing.T) {
+	root := repoRootForMigrationTest(t)
+
+	redline := readProductPositioningFile(t, root, "specs/product-streamline-redline.md")
+	for _, want := range []string{
+		"Current competitor research supports one clear product shape:",
+		"OpenAI Codex CLI is a local terminal coding agent",
+		"Claude Code emphasizes real developer tools, explicit permission",
+		"Gemini CLI is an interactive terminal REPL",
+		"GitHub Copilot cloud agent shows the platform direction",
+		"Aider reinforces the basics",
+		"## Design Alternatives",
+		"## Selected Approach",
+		"Jini continues with Approach B until a rewrite trigger fires.",
+		"## Rewrite Triggers",
+		"Three P0 first-minute transcript incidents recur",
+		"without entering starter-pack or artifact-rendering code",
+		"cannot map to a PRD outcome, HLD boundary, LLD contract, and",
+		"Architecture quality does not compensate for a bad transcript.",
+		"## Research Cadence",
+	} {
+		if !strings.Contains(redline, want) {
+			t.Fatalf("streamline redline must preserve %q", want)
 		}
 	}
 }

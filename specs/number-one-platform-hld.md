@@ -19,6 +19,11 @@ Codex, ChatGPT, and Gemini CLI:
 - saved work stays passive until explicitly requested
 - route and token diagnostics remain inspectable without startup ceremony
 
+The streamline-or-rewrite decision is governed by
+[product-streamline-redline.md](./product-streamline-redline.md). If shell,
+intent, action, state, and gate boundaries cannot preserve those transcripts
+through localized changes, feature work stops and the kernel rewrite starts.
+
 ## Architecture Boundaries
 
 Jini is five runtime layers:

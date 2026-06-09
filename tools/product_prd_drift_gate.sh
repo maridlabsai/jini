@@ -28,6 +28,7 @@ is_protected_product_surface() {
     README.md | \
     specs/number-one-platform-prd.md | \
     specs/product-settling-decisions.md | \
+    specs/product-streamline-redline.md | \
     specs/number-one-platform-hld.md | \
     specs/number-one-platform-lld.md | \
     specs/product-consensus-prd-and-plan.md | \

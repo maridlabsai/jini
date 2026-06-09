@@ -550,6 +550,7 @@ func TestProductPRDDriftGateProtectsCanonicalSurfaces(t *testing.T) {
 		"README.md",
 		"specs/number-one-platform-prd.md",
 		"specs/product-settling-decisions.md",
+		"specs/product-streamline-redline.md",
 		"specs/number-one-platform-hld.md",
 		"specs/number-one-platform-lld.md",
 		"specs/launcher-intake-design.md",

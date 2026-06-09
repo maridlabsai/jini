@@ -56,6 +56,11 @@ If this charter conflicts with vertical templates, broad app surfaces, demo
 flows, agent-role UX, or roadmap expansion, this charter wins until a newer
 explicit product decision changes it.
 
+The streamline-or-rewrite boundary lives in
+[product-streamline-redline.md](./product-streamline-redline.md). Current work
+continues only while the Go kernel can preserve the familiar first-minute
+transcript through clear shell, intent, action, state, and gate boundaries.
+
 Non-negotiable invariants:
 
 - Questions answer compactly and do not create work.
@@ -240,6 +245,7 @@ Jini delivery uses one active chain:
 - PRD: `specs/number-one-platform-prd.md`
 - HLD: `specs/number-one-platform-hld.md`
 - LLD: `specs/number-one-platform-lld.md`
+- streamline redline: `specs/product-streamline-redline.md`
 - front-door dev design: `specs/launcher-intake-design.md`
 - implementation plan: `specs/number-one-development-plan.md`
 

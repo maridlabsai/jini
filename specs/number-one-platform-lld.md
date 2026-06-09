@@ -65,3 +65,8 @@ locally.` but must still avoid artifacts and saved work.
 If a code change needs output not described here, update the PRD, HLD, LLD, and
 tests in the same commit. If the transcript would surprise a Claude Code or
 Codex user in the first minute, do not ship it.
+
+If the required change crosses shell, starter artifact creation, persistence,
+and route execution just to answer a simple question or perform a direct file
+edit, treat that as a rewrite-trigger candidate under
+[product-streamline-redline.md](./product-streamline-redline.md).
