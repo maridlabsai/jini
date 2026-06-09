@@ -14,13 +14,13 @@ implementation-aligned.
 | Fail closed with exact ambiguity | local edit ambiguity handling and route setup errors | local text edit tests, route missing-CLI tests |
 | Answer simple questions compactly | simple answer classifier before work creation | simple factual question tests, CLI UX gate |
 | Ask intent for bare entities without artifacts | bare entity classifier before starter packs | intent-first routing fixture, CLI UX gate |
-| Route between familiar CLIs, providers, gateways, and local/offline models | adapter registry, router settings, route list/set/auto/status | route command tests, scorecard gate |
-| Treat configured CLI routes as installed-CLI handoffs | `cli_handoff.go`, `generateWithConfiguredProviderDecision` | fake downstream CLI handoff smoke test, failed-execution receipt regression, and Gatekeeper rejection fail-closed regression |
+| Route between familiar CLIs, providers, gateways, and local/offline models | adapter registry, router settings, route list/set/auto/status | route command tests, Claude/Codex use-case gate, scorecard gate |
+| Treat configured CLI routes as installed-CLI handoffs | `cli_handoff.go`, `generateWithConfiguredProviderDecision` | fake downstream CLI handoff smoke tests for Claude Code and Codex, failed-execution receipt regression, and Gatekeeper rejection fail-closed regression |
 | Keep route, token, and runtime diagnostics inspectable | `jini route`, `jini status`, `jini doctor`, route receipt state | route status/list tests, privacy-preserving CLI handoff receipt status test, publish readiness |
 | Reuse durable session context without transcript replay | saved work state, metadata-only route receipts, compact status/open/continue | saved work and route receipt tests |
 | Keep saved work hidden until explicit commands or title matching | launcher and current-work interruption handling | startup and current-work regression tests |
 | Install from release assets without source builds | `install.sh`, release manifest, publish checks | install tests and release gate |
-| Block regressions before commit and push | `tools/run_required_gates.sh`, scorecard PRD completion summary | commit/push/release gate tests, scorecard PRD implementation completion tests |
+| Block regressions before commit and push | `tools/run_required_gates.sh`, scorecard PRD completion summary | commit/push/release gate tests, Claude/Codex use-case gate, scorecard PRD implementation completion tests |
 
 Residual hardening:
 

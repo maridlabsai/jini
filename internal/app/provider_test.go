@@ -117,6 +117,62 @@ func TestGenerateWithConfiguredProviderHandsOffToConfiguredCLI(t *testing.T) {
 	}
 }
 
+func TestGenerateWithConfiguredProviderHandsOffToCodexCLI(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_TOOL", "codex")
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	binDir := t.TempDir()
+	captureDir := t.TempDir()
+	argsPath := filepath.Join(captureDir, "args.txt")
+	stdinPath := filepath.Join(captureDir, "stdin.txt")
+	cwdPath := filepath.Join(captureDir, "cwd.txt")
+	t.Setenv("JINI_TEST_CLI_ARGS_PATH", argsPath)
+	t.Setenv("JINI_TEST_CLI_STDIN_PATH", stdinPath)
+	t.Setenv("JINI_TEST_CLI_CWD_PATH", cwdPath)
+	writeProviderFakeExecutable(t, binDir, "codex", strings.Join([]string{
+		"printf '%s\\n' \"$@\" > \"$JINI_TEST_CLI_ARGS_PATH\"",
+		"pwd > \"$JINI_TEST_CLI_CWD_PATH\"",
+		"cat > \"$JINI_TEST_CLI_STDIN_PATH\"",
+		"printf 'fake codex handled repo task\\n'",
+	}, "\n"))
+	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
+	workDir := t.TempDir()
+	t.Chdir(workDir)
+
+	result, used, actualDecision, err := generateWithConfiguredProviderDecision(context.Background(), providerGenerationRequest{
+		Choice: starterChoice{PackID: "general-work"},
+		Title:  "Review this repo",
+		Source: "review this repo and identify the top issue",
+	}, detectRouteForToolMode("codex", false))
+	if err != nil {
+		t.Fatalf("generate with Codex CLI handoff: %v", err)
+	}
+	if !used {
+		t.Fatalf("expected Codex CLI handoff to be used")
+	}
+	if strings.TrimSpace(result) != "fake codex handled repo task" {
+		t.Fatalf("expected fake Codex output, got:\n%s", result)
+	}
+	if actualDecision.ToolMode != "codex" || actualDecision.RoutePolicy != "CLI handoff" {
+		t.Fatalf("expected actual Codex CLI handoff decision, got %#v", actualDecision)
+	}
+	args := strings.Split(strings.TrimSpace(mustReadFile(t, argsPath)), "\n")
+	wantArgs := []string{"exec", "review this repo and identify the top issue"}
+	if strings.Join(args, "\n") != strings.Join(wantArgs, "\n") {
+		t.Fatalf("expected Codex CLI handoff args %#v, got %#v", wantArgs, args)
+	}
+	if strings.TrimSpace(mustReadFile(t, cwdPath)) != workDir {
+		t.Fatalf("expected Codex handoff to run in cwd %q, got:\n%s", workDir, mustReadFile(t, cwdPath))
+	}
+	if stdin := strings.TrimSpace(mustReadFile(t, stdinPath)); stdin != "" {
+		t.Fatalf("expected prompt to be passed as args, not stdin, got:\n%s", stdin)
+	}
+	if actualDecision.CLIHandoffReceipt == nil || actualDecision.CLIHandoffReceipt.Mode != "codex" {
+		t.Fatalf("expected Codex route receipt, got %#v", actualDecision.CLIHandoffReceipt)
+	}
+}
+
 func TestGenerateWithConfiguredProviderPreservesQuotedCustomCLIArgs(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)

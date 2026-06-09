@@ -38,7 +38,8 @@ Required commands:
 4. `bash tools/security_configuration_gate.sh`
 5. `bash tools/product_prd_drift_gate.sh`
 6. `bash tools/cli_ux_regression_gate.sh`
-7. `jini scorecard-gate --format json`
+7. `bash tools/claude_codex_usecase_gate.sh`
+8. `jini scorecard-gate --format json`
 
 Required outcome:
 
@@ -53,6 +54,7 @@ Required outcome:
 - the intent/parity golden transcript gate blocks questions, bare entities, and
   explicit task intents from regressing away from Claude/Codex first-minute
   expectations
+- Claude and Codex user journeys are exercised as concrete commit-gate use cases, not only as personas in docs: local file edits, repo review, strict CLI handoff, custom Claude args, Codex handoff, failed handoff recovery, and compact questions
 - competitive scorecard drift is blocked before commit, including required
   coverage for async/background agents, cross-surface continuity, visible
   progress and outputs, permissioned execution, skills/hooks/context routing,

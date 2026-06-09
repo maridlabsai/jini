@@ -19,6 +19,8 @@ func TestRequiredCommitGateChecksStagedAndUnstagedWhitespace(t *testing.T) {
 		"tools/product_prd_drift_gate.sh",
 		"run_cli_ux_regression_gate",
 		"tools/cli_ux_regression_gate.sh",
+		"run_claude_codex_usecase_gate",
+		"tools/claude_codex_usecase_gate.sh",
 		"run_scorecard_gate",
 		"scorecard-gate --format json",
 	} {
@@ -33,11 +35,13 @@ func TestRequiredCommitGateChecksStagedAndUnstagedWhitespace(t *testing.T) {
 		"`git diff --cached --check`",
 		"`bash tools/product_prd_drift_gate.sh`",
 		"`bash tools/cli_ux_regression_gate.sh`",
+		"`bash tools/claude_codex_usecase_gate.sh`",
 		"`jini scorecard-gate --format json`",
 		"staged and unstaged whitespace",
 		"protected PRD and product-positioning surfaces cannot drift",
 		"direct CLI edit and simple-question flows cannot regress into draft/status frames",
 		"intent/parity golden transcript gate blocks questions, bare entities, and",
+		"Claude and Codex user journeys are exercised as concrete commit-gate use cases, not only as personas in docs",
 		"competitive scorecard drift is blocked before commit",
 	} {
 		if !strings.Contains(gateMatrix, want) {
@@ -391,6 +395,7 @@ func TestEngineeringGateMatrixDoesNotListRequiredGatesAsPromotionCandidates(t *t
 		"security_configuration_gate.sh",
 		"product_prd_drift_gate.sh",
 		"cli_ux_regression_gate.sh",
+		"claude_codex_usecase_gate.sh",
 		"scorecard-gate",
 	} {
 		if strings.Contains(promotionCandidates, alreadyRequired) {
@@ -453,6 +458,49 @@ func TestCLIUXRegressionGatePinsIncidentScenarios(t *testing.T) {
 	} {
 		if !strings.Contains(gate, want) {
 			t.Fatalf("CLI UX regression gate must pin %q", want)
+		}
+	}
+}
+
+func TestClaudeCodexUsecaseGatePinsConcretePersonaScenarios(t *testing.T) {
+	root := repoRootForMigrationTest(t)
+
+	requiredGates := readRepoFile(t, root, "tools/run_required_gates.sh")
+	for _, want := range []string{
+		"CLAUDE_CODEX_USECASE_GATE=\"${ROOT_DIR}/tools/claude_codex_usecase_gate.sh\"",
+		"run_claude_codex_usecase_gate",
+		"bash \"${CLAUDE_CODEX_USECASE_GATE}\"",
+	} {
+		if !strings.Contains(requiredGates, want) {
+			t.Fatalf("required commit gate must wire Claude/Codex use-case gate %q", want)
+		}
+	}
+
+	gate := readRepoFile(t, root, "tools/claude_codex_usecase_gate.sh")
+	for _, want := range []string{
+		"TestInteractiveLocalTextEditAppendsQuotedLineInsteadOfDrafting",
+		"TestDirectRepoReviewPrintsAndSavesModelFreeSnapshot",
+		"TestGenerateWithConfiguredProviderHandsOffToConfiguredCLI",
+		"TestGenerateWithConfiguredProviderHandsOffToCodexCLI",
+		"TestGenerateWithConfiguredProviderPreservesQuotedCustomCLIArgs",
+		"TestRunInteractiveKeepsCurrentWorkAfterFailedCLIHandoff",
+		"TestProviderDoctorFailsClosedForReservedCLIHandoffToolMode",
+		"TestCurrentWorkSimpleFactualQuestionAnswersDirectly",
+		"Claude/Codex commit-gate use cases",
+	} {
+		if !strings.Contains(gate, want) {
+			t.Fatalf("Claude/Codex use-case gate must pin %q", want)
+		}
+	}
+
+	gateMatrix := readRepoFile(t, root, "specs/engineering-gate-matrix.md")
+	for _, want := range []string{
+		"`bash tools/claude_codex_usecase_gate.sh`",
+		"Claude and Codex user journeys are exercised as concrete commit-gate use cases",
+		"local file edits, repo review, strict CLI handoff, custom Claude args, Codex handoff, failed handoff recovery, and compact questions",
+	} {
+		if !strings.Contains(gateMatrix, want) {
+			t.Fatalf("engineering gate matrix must document Claude/Codex use-case gate %q", want)
 		}
 	}
 }
