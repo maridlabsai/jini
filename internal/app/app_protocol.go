@@ -85,6 +85,26 @@ type routeHelpVM struct {
 	Lines []string `json:"lines"`
 }
 
+type diagnosticsPreviewVM struct {
+	Kind         string   `json:"kind"`
+	CreatedAt    string   `json:"created_at"`
+	Redacted     bool     `json:"redacted"`
+	WritesBundle bool     `json:"writes_bundle"`
+	Included     []string `json:"included"`
+	Excluded     []string `json:"excluded"`
+}
+
+type diagnosticsExportVM struct {
+	Kind               string   `json:"kind"`
+	BundleName         string   `json:"bundle_name"`
+	BundlePath         string   `json:"bundle_path"`
+	BundlePathRedacted string   `json:"bundle_path_redacted"`
+	CreatedAt          string   `json:"created_at"`
+	Redacted           bool     `json:"redacted"`
+	Included           []string `json:"included"`
+	Excluded           []string `json:"excluded"`
+}
+
 type transientResponseVM struct {
 	Kind           string `json:"kind"`
 	RequestID      string `json:"request_id"`

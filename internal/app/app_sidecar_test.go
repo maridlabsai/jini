@@ -3,6 +3,8 @@ package app_test
 import (
 	"bytes"
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -198,6 +200,96 @@ func TestMacOSAppSidecarRouteHelpReturnsSetupLines(t *testing.T) {
 	}
 }
 
+func TestMacOSAppSidecarDiagnosticsPreviewIsRedactedAndDoesNotWriteBundle(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("ANTHROPIC_API_KEY", "sk-test-secret")
+
+	responses := runMacOSAppSidecarWithState(t, stateDir, `{"protocol_version":"macos-app-v1","id":"req_diagnostics_preview","method":"diagnostics.preview","surface":"macos","params":{}}`)
+
+	response := responses[0]
+	requireSidecarOK(t, response)
+	result := objectField(t, response, "result")
+	if got := stringField(t, result, "kind"); got != "diagnostics_preview" {
+		t.Fatalf("expected diagnostics preview, got %q", got)
+	}
+	if got := boolField(t, result, "redacted"); !got {
+		t.Fatalf("expected diagnostics preview to be redacted")
+	}
+	if got := boolField(t, result, "writes_bundle"); got {
+		t.Fatalf("expected preview not to write a diagnostics bundle")
+	}
+	encoded, err := json.Marshal(result)
+	if err != nil {
+		t.Fatalf("marshal diagnostics preview: %v", err)
+	}
+	for _, forbidden := range []string{"sk-test-secret", "ANTHROPIC_API_KEY", stateDir} {
+		if strings.Contains(string(encoded), forbidden) {
+			t.Fatalf("expected diagnostics preview to redact %q, got %s", forbidden, string(encoded))
+		}
+	}
+	if _, err := os.Stat(filepath.Join(stateDir, "diagnostics")); !os.IsNotExist(err) {
+		t.Fatalf("expected diagnostics preview not to create bundle dir, stat error: %v", err)
+	}
+}
+
+func TestMacOSAppSidecarDiagnosticsExportWritesRedactedBundle(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("OPENAI_API_KEY", "sk-test-secret")
+
+	responses := runMacOSAppSidecarWithState(t, stateDir, `{"protocol_version":"macos-app-v1","id":"req_diagnostics_export","idempotency_key":"idem_diagnostics_export","method":"diagnostics.export","surface":"macos","params":{}}`)
+
+	response := responses[0]
+	requireSidecarOK(t, response)
+	result := objectField(t, response, "result")
+	if got := stringField(t, result, "kind"); got != "diagnostics_export" {
+		t.Fatalf("expected diagnostics export, got %q", got)
+	}
+	if got := boolField(t, result, "redacted"); !got {
+		t.Fatalf("expected diagnostics export to be redacted")
+	}
+	bundlePath := stringField(t, result, "bundle_path")
+	if !strings.HasPrefix(bundlePath, filepath.Join(stateDir, "diagnostics")+string(os.PathSeparator)) {
+		t.Fatalf("expected bundle under diagnostics state dir, got %q", bundlePath)
+	}
+	if got := stringField(t, result, "bundle_path_redacted"); strings.Contains(got, stateDir) {
+		t.Fatalf("expected redacted bundle path not to expose full state dir, got %q", got)
+	}
+
+	data, err := os.ReadFile(bundlePath)
+	if err != nil {
+		t.Fatalf("read diagnostics bundle: %v", err)
+	}
+	var bundle map[string]any
+	if err := json.Unmarshal(data, &bundle); err != nil {
+		t.Fatalf("decode diagnostics bundle: %v", err)
+	}
+	if got := stringField(t, bundle, "schema_version"); got != "jini-macos-diagnostics-v1" {
+		t.Fatalf("expected diagnostics schema, got %q", got)
+	}
+	encoded := string(data)
+	for _, forbidden := range []string{"sk-test-secret", "OPENAI_API_KEY", stateDir, "raw_prompt", "artifact_body"} {
+		if strings.Contains(encoded, forbidden) {
+			t.Fatalf("expected diagnostics bundle to redact %q, got %s", forbidden, encoded)
+		}
+	}
+}
+
+func TestMacOSAppSidecarDiagnosticsRejectsUnknownParams(t *testing.T) {
+	responses := runMacOSAppSidecar(t, `{"protocol_version":"macos-app-v1","id":"req_bad_diagnostics","idempotency_key":"idem_bad_diagnostics","method":"diagnostics.export","surface":"macos","params":{"include_raw_prompts":true}}`)
+
+	response := responses[0]
+	if ok := boolField(t, response, "ok"); ok {
+		t.Fatalf("expected diagnostics export with unknown params to fail, got %#v", response)
+	}
+	err := objectField(t, response, "error")
+	if got := stringField(t, err, "code"); got != "invalid_request" {
+		t.Fatalf("expected invalid_request, got %q", got)
+	}
+	if !strings.Contains(stringField(t, err, "message"), "params are invalid") {
+		t.Fatalf("expected invalid params message, got %#v", err)
+	}
+}
+
 func TestMacOSAppSidecarCommandIsNotPublicInventory(t *testing.T) {
 	for _, args := range [][]string{
 		{"commands"},
@@ -219,7 +311,12 @@ func TestMacOSAppSidecarCommandIsNotPublicInventory(t *testing.T) {
 
 func runMacOSAppSidecar(t *testing.T, requestLines ...string) []map[string]any {
 	t.Helper()
-	t.Setenv("JINI_STATE_DIR", t.TempDir())
+	return runMacOSAppSidecarWithState(t, t.TempDir(), requestLines...)
+}
+
+func runMacOSAppSidecarWithState(t *testing.T, stateDir string, requestLines ...string) []map[string]any {
+	t.Helper()
+	t.Setenv("JINI_STATE_DIR", stateDir)
 
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer

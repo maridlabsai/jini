@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -154,6 +156,16 @@ func (sidecar *macOSAppSidecar) dispatch(request appRPCRequest) appRPCResponse {
 		return sidecar.ok(request, routeSummaryFromDecision(detectRoute()), nil)
 	case "route.help":
 		return sidecar.ok(request, appRouteHelp(), nil)
+	case "diagnostics.preview":
+		if _, err := decodeAppParams[struct{}](request.Params); err != nil {
+			return appErrorResponse(request.ID, "invalid_request", "diagnostics.preview params are invalid.", "Send an empty params object.", true)
+		}
+		return sidecar.ok(request, sidecar.diagnosticsPreview(), nil)
+	case "diagnostics.export":
+		if _, err := decodeAppParams[struct{}](request.Params); err != nil {
+			return appErrorResponse(request.ID, "invalid_request", "diagnostics.export params are invalid.", "Send an empty params object.", true)
+		}
+		return sidecar.exportDiagnostics(request)
 	case "turn.submit":
 		params, err := decodeAppParams[turnSubmitParams](request.Params)
 		if err != nil || strings.TrimSpace(params.Text) == "" {
@@ -250,6 +262,156 @@ func appRouteHelp() routeHelpVM {
 		Title: "Route setup",
 		Lines: strings.Split(strings.TrimRight(buffer.String(), "\n"), "\n"),
 	}
+}
+
+func (sidecar *macOSAppSidecar) diagnosticsPreview() diagnosticsPreviewVM {
+	return diagnosticsPreviewVM{
+		Kind:         "diagnostics_preview",
+		CreatedAt:    sidecar.now().UTC().Format(time.RFC3339),
+		Redacted:     true,
+		WritesBundle: false,
+		Included:     diagnosticsIncludedCategories(),
+		Excluded:     diagnosticsExcludedCategories(),
+	}
+}
+
+func (sidecar *macOSAppSidecar) exportDiagnostics(request appRPCRequest) appRPCResponse {
+	createdAt := sidecar.now().UTC()
+	stateRoot := sessionStateRoot()
+	diagnosticsDir := filepath.Join(stateRoot, "diagnostics")
+	if err := os.MkdirAll(diagnosticsDir, 0o755); err != nil {
+		return appErrorResponse(request.ID, "io_error", "Could not create diagnostics directory.", "Check local file permissions and try diagnostics export again.", true)
+	}
+
+	bundleName := "jini-diagnostics-" + createdAt.Format("20060102T150405Z") + ".json"
+	bundlePath := filepath.Join(diagnosticsDir, bundleName)
+	bundle := sidecar.diagnosticsBundle(createdAt)
+	data, err := json.MarshalIndent(bundle, "", "  ")
+	if err != nil {
+		return appErrorResponse(request.ID, "internal_error", "Could not render diagnostics bundle.", "Try again after restarting Jini.", true)
+	}
+	data = append(data, '\n')
+	if err := os.WriteFile(bundlePath, data, 0o600); err != nil {
+		return appErrorResponse(request.ID, "io_error", "Could not write diagnostics bundle.", "Check local file permissions and try diagnostics export again.", true)
+	}
+
+	return sidecar.ok(request, diagnosticsExportVM{
+		Kind:               "diagnostics_export",
+		BundleName:         bundleName,
+		BundlePath:         bundlePath,
+		BundlePathRedacted: redactDiagnosticsBundlePath(bundlePath),
+		CreatedAt:          createdAt.Format(time.RFC3339),
+		Redacted:           true,
+		Included:           diagnosticsIncludedCategories(),
+		Excluded:           diagnosticsExcludedCategories(),
+	}, nil)
+}
+
+func (sidecar *macOSAppSidecar) diagnosticsBundle(createdAt time.Time) map[string]any {
+	version := currentJiniVersion()
+	return map[string]any{
+		"schema_version":    "jini-macos-diagnostics-v1",
+		"generated_at":      createdAt.UTC().Format(time.RFC3339),
+		"app_version":       version,
+		"core_version":      version,
+		"protocol_version":  macOSAppProtocolVersion,
+		"surface":           "macos",
+		"online_state":      "online",
+		"offline_state":     "available",
+		"route_summary":     diagnosticsRouteSummary(),
+		"session_ids":       []string{},
+		"sync_debt_count":   0,
+		"command_classes":   diagnosticsCommandClasses(),
+		"included":          diagnosticsIncludedCategories(),
+		"excluded":          diagnosticsExcludedCategories(),
+		"redaction_summary": diagnosticsRedactionSummary(),
+	}
+}
+
+func diagnosticsCommandClasses() []string {
+	return []string{
+		"app.handshake",
+		"app.snapshot",
+		"app.subscribe",
+		"project.listRecent",
+		"route.status",
+		"route.help",
+		"turn.submit",
+		"diagnostics.preview",
+		"diagnostics.export",
+	}
+}
+
+func diagnosticsRouteSummary() appRouteSummary {
+	summary := routeSummaryFromDecision(detectRoute())
+	summary.Reason = redactDiagnosticsText(summary.Reason)
+	for index, guidance := range summary.SetupGuidance {
+		summary.SetupGuidance[index] = redactDiagnosticsText(guidance)
+	}
+	return summary
+}
+
+func diagnosticsIncludedCategories() []string {
+	return []string{
+		"app and core versions",
+		"protocol version",
+		"route summary",
+		"offline and sync state",
+		"allowed command classes",
+		"redaction summary",
+	}
+}
+
+func diagnosticsExcludedCategories() []string {
+	return []string{
+		"secrets",
+		"provider payloads",
+		"prompt text",
+		"artifact content",
+		"full local paths",
+	}
+}
+
+func redactDiagnosticsText(text string) string {
+	redacted := strings.ReplaceAll(text, sessionStateRoot(), "$JINI_STATE_DIR")
+	if home := homeDir(); home != "" && home != "." {
+		redacted = strings.ReplaceAll(redacted, home, "~")
+	}
+	for _, env := range os.Environ() {
+		name, value, ok := strings.Cut(env, "=")
+		if !ok || len(value) < 6 || !looksLikeSensitiveEnvName(name) {
+			continue
+		}
+		redacted = strings.ReplaceAll(redacted, value, "[redacted]")
+	}
+	return redacted
+}
+
+func looksLikeSensitiveEnvName(name string) bool {
+	upper := strings.ToUpper(strings.TrimSpace(name))
+	return strings.Contains(upper, "KEY") ||
+		strings.Contains(upper, "TOKEN") ||
+		strings.Contains(upper, "SECRET") ||
+		strings.Contains(upper, "PASSWORD") ||
+		strings.Contains(upper, "CREDENTIAL")
+}
+
+func diagnosticsRedactionSummary() map[string]string {
+	return map[string]string{
+		"secrets":           "excluded",
+		"provider_payloads": "excluded",
+		"prompt_text":       "excluded",
+		"artifact_content":  "excluded",
+		"full_local_paths":  "excluded",
+	}
+}
+
+func redactDiagnosticsBundlePath(bundlePath string) string {
+	stateRoot := sessionStateRoot()
+	if rel, err := filepath.Rel(stateRoot, bundlePath); err == nil && !strings.HasPrefix(rel, "..") {
+		return filepath.ToSlash(filepath.Join("$JINI_STATE_DIR", rel))
+	}
+	return filepath.Join("$JINI_DIAGNOSTICS_DIR", filepath.Base(bundlePath))
 }
 
 func (sidecar *macOSAppSidecar) subscribe(params appSubscribeParams) appSubscribeResult {

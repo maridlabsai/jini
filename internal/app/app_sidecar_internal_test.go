@@ -1,6 +1,9 @@
 package app
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestHiddenAppSidecarServeCommandRequiresExactShape(t *testing.T) {
 	if !isHiddenAppSidecarServeCommand([]string{"app", "serve", "--stdio", "--surface", "macos"}) {
@@ -28,5 +31,23 @@ func TestAppSidecarCommandStaysOutOfPublicCommandCanonicalization(t *testing.T) 
 	}
 	if got := canonicalHelpTopic("app"); got != "" {
 		t.Fatalf("expected app not to be a public help topic, got %q", got)
+	}
+}
+
+func TestDiagnosticsTextRedactionRemovesStateHomeAndSecretValues(t *testing.T) {
+	t.Setenv("JINI_STATE_DIR", "/tmp/jini-state")
+	t.Setenv("HOME", "/Users/example")
+	t.Setenv("OPENAI_API_KEY", "sk-test-secret")
+
+	redacted := redactDiagnosticsText("state=/tmp/jini-state home=/Users/example key=sk-test-secret")
+	for _, forbidden := range []string{"/tmp/jini-state", "/Users/example", "sk-test-secret"} {
+		if strings.Contains(redacted, forbidden) {
+			t.Fatalf("expected diagnostics text to redact %q, got %q", forbidden, redacted)
+		}
+	}
+	for _, want := range []string{"$JINI_STATE_DIR", "~", "[redacted]"} {
+		if !strings.Contains(redacted, want) {
+			t.Fatalf("expected diagnostics redaction marker %q, got %q", want, redacted)
+		}
 	}
 }

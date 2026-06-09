@@ -24,3 +24,7 @@ docs/.jekyll-cache/
 docs/_site/
 docs/.preview-config.local.yml
 docs/vendor/
+apps/macos/node_modules/
+apps/macos/dist/
+apps/macos/src-tauri/target/
+apps/macos/src-tauri/binaries/jini-sidecar-*

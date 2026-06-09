@@ -1,0 +1,22 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Main Jini window can start only the packaged Go sidecar and write JSON-RPC requests to it.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "binaries/jini-sidecar",
+          "sidecar": true,
+          "args": ["app", "serve", "--stdio", "--surface", "macos"]
+        }
+      ]
+    },
+    {
+      "identifier": "shell:allow-stdin-write"
+    }
+  ]
+}
