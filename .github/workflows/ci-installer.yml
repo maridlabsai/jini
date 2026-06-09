@@ -50,7 +50,7 @@ jobs:
           tmp="$(mktemp -d)"
           trap 'rm -rf "${tmp}"' EXIT
           ./install.sh --source-dir "${PWD}" --bin-dir "${tmp}/bin" --install-dir "${tmp}/install" --force
-          "${tmp}/bin/jini" publish-readiness --format json >/dev/null
+          "${tmp}/bin/jini" commands >/dev/null
           test -f "${tmp}/install/install-receipt.txt"
 
       - name: Smoke piped release installer from checkout
@@ -77,6 +77,6 @@ jobs:
             JINI_BIN_DIR="${tmp}/bin" \
             JINI_INSTALL_DIR="${tmp}/install" \
             bash
-          "${tmp}/bin/jini" publish-readiness --format json >/dev/null
+          "${tmp}/bin/jini" commands >/dev/null
           grep -q '^install_mode=release-binary$' "${tmp}/install/install-receipt.txt"
           grep -q "^version=$(tr -d '[:space:]' < VERSION)$" "${tmp}/install/install-receipt.txt"

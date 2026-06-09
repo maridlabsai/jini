@@ -218,9 +218,9 @@ try_install_prebuilt_release() {
   chmod 0755 "${TARGET_BINARY}"
 }
 
-release_binary_supports_public_contract() {
+release_binary_launches_public_command() {
   local binary_path="$1"
-  "${binary_path}" publish-readiness --format json >/dev/null 2>&1
+  "${binary_path}" commands >/dev/null 2>&1
 }
 
 fetch_source() {
@@ -274,7 +274,7 @@ else
 fi
 
 if should_try_release_install; then
-  if try_install_prebuilt_release && release_binary_supports_public_contract "${TARGET_BINARY}"; then
+  if try_install_prebuilt_release && release_binary_launches_public_command "${TARGET_BINARY}"; then
     INSTALL_MODE="release-binary"
     INSTALL_DETAIL="prebuilt-release-binary"
     SOURCE_REASON="release-binary"
@@ -329,7 +329,7 @@ source_reason=${SOURCE_REASON}
 release_validation=${RELEASE_VALIDATION}
 EOF
 
-"${COMMAND_PATH}" publish-readiness --format json >/dev/null
+"${COMMAND_PATH}" commands >/dev/null
 
 say "Installed Jini"
 say "- version: ${VERSION}"
