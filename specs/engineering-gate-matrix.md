@@ -78,6 +78,10 @@ Required outcome:
 - free security scanning remains configured before the branch reaches CI
 - push gate records local shipping evidence, including git repository state and
   required validation evidence
+- `jini check ship --format json` exposes the CLI handoff dogfood matrix for
+  Wave 1 routes so release reviewers can see which real downstream CLIs are
+  ready to validate
+- installed CLI dogfood before release must verify auth, approvals, output shape, and route receipt privacy
 - dirty worktrees are blocked before push
 
 ### Release gate

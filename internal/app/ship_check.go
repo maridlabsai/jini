@@ -11,22 +11,33 @@ import (
 )
 
 type shipCheckReport struct {
-	SchemaVersion    string   `json:"schema_version"`
-	ResultType       string   `json:"result_type"`
-	GeneratedAt      string   `json:"generated_at"`
-	Status           string   `json:"status"`
-	Workspace        string   `json:"workspace"`
-	InGitRepo        bool     `json:"in_git_repo"`
-	Branch           string   `json:"branch,omitempty"`
-	Upstream         string   `json:"upstream,omitempty"`
-	AheadCount       int      `json:"ahead_count"`
-	BehindCount      int      `json:"behind_count"`
-	DirtyFiles       int      `json:"dirty_files"`
-	UntrackedFiles   int      `json:"untracked_files"`
-	RequiredEvidence []string `json:"required_evidence"`
-	Blockers         []string `json:"blockers,omitempty"`
-	Warnings         []string `json:"warnings,omitempty"`
-	Next             []string `json:"next"`
+	SchemaVersion     string                  `json:"schema_version"`
+	ResultType        string                  `json:"result_type"`
+	GeneratedAt       string                  `json:"generated_at"`
+	Status            string                  `json:"status"`
+	Workspace         string                  `json:"workspace"`
+	InGitRepo         bool                    `json:"in_git_repo"`
+	Branch            string                  `json:"branch,omitempty"`
+	Upstream          string                  `json:"upstream,omitempty"`
+	AheadCount        int                     `json:"ahead_count"`
+	BehindCount       int                     `json:"behind_count"`
+	DirtyFiles        int                     `json:"dirty_files"`
+	UntrackedFiles    int                     `json:"untracked_files"`
+	RequiredEvidence  []string                `json:"required_evidence"`
+	CLIHandoffDogfood []shipCLIHandoffDogfood `json:"cli_handoff_dogfood"`
+	Blockers          []string                `json:"blockers,omitempty"`
+	Warnings          []string                `json:"warnings,omitempty"`
+	Next              []string                `json:"next"`
+}
+
+type shipCLIHandoffDogfood struct {
+	RouteID        string   `json:"route_id"`
+	Label          string   `json:"label"`
+	Status         string   `json:"status"`
+	Executable     string   `json:"executable"`
+	ArgsTemplate   []string `json:"args_template"`
+	RequiredChecks []string `json:"required_checks"`
+	Missing        []string `json:"missing,omitempty"`
 }
 
 func runShipCheck(args []string, stdout, stderr io.Writer) int {
@@ -63,12 +74,18 @@ func buildShipCheckReport() shipCheckReport {
 			"bash tools/run_required_gates.sh push",
 			"git worktree add",
 			"write validation report before push",
+			"real installed CLI handoff dogfood for Wave 1 routes",
 		},
 		Next: []string{
 			"Create an isolated worktree for validation.",
 			"Run the required push gates there.",
 			"Push only after the validation report is clean.",
 		},
+	}
+	report.CLIHandoffDogfood = buildShipCLIHandoffDogfood()
+	readyDogfood, missingDogfood := summarizeShipCLIHandoffDogfood(report.CLIHandoffDogfood)
+	if missingDogfood > 0 {
+		report.Warnings = append(report.Warnings, fmt.Sprintf("CLI handoff dogfood incomplete: %d ready, %d need setup", readyDogfood, missingDogfood))
 	}
 
 	if cwd, ok := runGitOutput("rev-parse", "--show-toplevel"); ok {
@@ -99,6 +116,52 @@ func buildShipCheckReport() shipCheckReport {
 		report.Blockers = append(report.Blockers, "working tree has uncommitted changes")
 	}
 	return report
+}
+
+func buildShipCLIHandoffDogfood() []shipCLIHandoffDogfood {
+	modes := []string{"codex", "claude-code", "gemini-cli", "aider", "opencode"}
+	out := make([]shipCLIHandoffDogfood, 0, len(modes))
+	for _, mode := range modes {
+		descriptor, ok := cliHandoffDescriptorForMode(mode)
+		if !ok {
+			continue
+		}
+		command, missing := resolveCLIHandoffCommand(descriptor)
+		status := "ready"
+		if len(missing) > 0 {
+			status = "needs-setup"
+		}
+		args := command.Args
+		if len(args) == 0 {
+			args = descriptor.DefaultArgs
+		}
+		out = append(out, shipCLIHandoffDogfood{
+			RouteID:      descriptor.Mode,
+			Label:        descriptor.Label,
+			Status:       status,
+			Executable:   firstNonEmpty(command.Executable, descriptor.DefaultExecutable),
+			ArgsTemplate: append([]string(nil), args...),
+			RequiredChecks: []string{
+				"auth",
+				"approvals",
+				"output shape",
+				"route receipt privacy",
+			},
+			Missing: missing,
+		})
+	}
+	return out
+}
+
+func summarizeShipCLIHandoffDogfood(items []shipCLIHandoffDogfood) (ready, needsSetup int) {
+	for _, item := range items {
+		if item.Status == "ready" {
+			ready++
+		} else {
+			needsSetup++
+		}
+	}
+	return ready, needsSetup
 }
 
 func gitAheadBehind() (int, int) {
@@ -148,6 +211,9 @@ func renderShipCheckText(w io.Writer, report shipCheckReport) {
 	for _, warning := range report.Warnings {
 		fmt.Fprintf(w, "Warning: %s\n", warning)
 	}
+	readyDogfood, missingDogfood := summarizeShipCLIHandoffDogfood(report.CLIHandoffDogfood)
+	fmt.Fprintf(w, "CLI handoff dogfood: %d ready, %d need setup\n", readyDogfood, missingDogfood)
+	fmt.Fprintln(w, "Dogfood before release: verify auth, approvals, output shape, and route receipt privacy on real installed CLIs.")
 	fmt.Fprintln(w, "Run before push: bash tools/run_required_gates.sh push")
 	fmt.Fprintln(w, "Safe lane: create an isolated worktree, run gates, then push only after evidence is clean.")
 }

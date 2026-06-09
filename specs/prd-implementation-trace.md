@@ -24,6 +24,7 @@ implementation-aligned.
 
 Residual hardening:
 
-- Wave 1 command templates use fake downstream CLIs in automated tests. Real
-  installed CLI dogfood remains required for auth, approvals, and output-shape
-  differences.
+- Wave 1 command templates use fake downstream CLIs in automated tests and now
+  expose a `jini check ship --format json` dogfood matrix. Real installed CLI
+  dogfood remains required before release claims for auth, approvals,
+  output-shape differences, and route receipt privacy.

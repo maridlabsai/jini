@@ -268,8 +268,17 @@ func TestShipCheckReportsRepoValidationEvidenceAsJSON(t *testing.T) {
 	runGitCommandForInternalTest(t, repoDir, "add", ".")
 	runGitCommandForInternalTest(t, repoDir, "commit", "-m", "initial")
 	writeTestFile(t, filepath.Join(repoDir, "main.go"), "package main\n")
+	fakeBin := t.TempDir()
+	fakeCodex := writeProviderFakeExecutable(t, fakeBin, "codex", "printf 'ok\\n'")
 
 	t.Chdir(repoDir)
+	t.Setenv("JINI_STATE_DIR", t.TempDir())
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	t.Setenv("JINI_CODEX_CLI", fakeCodex)
+	t.Setenv("JINI_CLAUDE_CODE_CLI", filepath.Join(fakeBin, "missing-claude"))
+	t.Setenv("JINI_GEMINI_CLI", filepath.Join(fakeBin, "missing-gemini"))
+	t.Setenv("JINI_AIDER_CLI", filepath.Join(fakeBin, "missing-aider"))
+	t.Setenv("JINI_OPENCODE_CLI", filepath.Join(fakeBin, "missing-opencode"))
 
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
@@ -298,10 +307,30 @@ func TestShipCheckReportsRepoValidationEvidenceAsJSON(t *testing.T) {
 		"bash tools/run_required_gates.sh push",
 		"git worktree add",
 		"write validation report before push",
+		"real installed CLI handoff dogfood for Wave 1 routes",
 	} {
 		if !stringSliceContains(report.RequiredEvidence, want) {
 			t.Fatalf("expected ship check evidence %q, got %#v", want, report.RequiredEvidence)
 		}
+	}
+	if len(report.CLIHandoffDogfood) != 5 {
+		t.Fatalf("expected Wave 1 CLI dogfood matrix for 5 routes, got %#v", report.CLIHandoffDogfood)
+	}
+	codexDogfood := shipCLIHandoffDogfoodByRoute(report.CLIHandoffDogfood, "codex")
+	if codexDogfood == nil {
+		t.Fatalf("expected codex dogfood row, got %#v", report.CLIHandoffDogfood)
+	}
+	if codexDogfood.Status != "ready" || codexDogfood.Executable != fakeCodex {
+		t.Fatalf("expected fake codex to be ready, got %#v", codexDogfood)
+	}
+	for _, want := range []string{"auth", "approvals", "output shape", "route receipt privacy"} {
+		if !stringSliceContains(codexDogfood.RequiredChecks, want) {
+			t.Fatalf("expected codex dogfood required check %q, got %#v", want, codexDogfood.RequiredChecks)
+		}
+	}
+	claudeDogfood := shipCLIHandoffDogfoodByRoute(report.CLIHandoffDogfood, "claude-code")
+	if claudeDogfood == nil || claudeDogfood.Status != "needs-setup" || len(claudeDogfood.Missing) == 0 {
+		t.Fatalf("expected missing claude-code dogfood setup row, got %#v", claudeDogfood)
 	}
 }
 
@@ -313,8 +342,17 @@ func TestShipCheckTextKeepsSafePushInstructionsCompact(t *testing.T) {
 	writeTestFile(t, filepath.Join(repoDir, "README.md"), "# Ship Check\n")
 	runGitCommandForInternalTest(t, repoDir, "add", ".")
 	runGitCommandForInternalTest(t, repoDir, "commit", "-m", "initial")
+	fakeBin := t.TempDir()
+	fakeCodex := writeProviderFakeExecutable(t, fakeBin, "codex", "printf 'ok\\n'")
 
 	t.Chdir(repoDir)
+	t.Setenv("JINI_STATE_DIR", t.TempDir())
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	t.Setenv("JINI_CODEX_CLI", fakeCodex)
+	t.Setenv("JINI_CLAUDE_CODE_CLI", filepath.Join(fakeBin, "missing-claude"))
+	t.Setenv("JINI_GEMINI_CLI", filepath.Join(fakeBin, "missing-gemini"))
+	t.Setenv("JINI_AIDER_CLI", filepath.Join(fakeBin, "missing-aider"))
+	t.Setenv("JINI_OPENCODE_CLI", filepath.Join(fakeBin, "missing-opencode"))
 
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
@@ -328,6 +366,8 @@ func TestShipCheckTextKeepsSafePushInstructionsCompact(t *testing.T) {
 		"Branch:",
 		"Run before push: bash tools/run_required_gates.sh push",
 		"Safe lane: create an isolated worktree, run gates, then push only after evidence is clean.",
+		"CLI handoff dogfood: 1 ready, 4 need setup",
+		"Dogfood before release: verify auth, approvals, output shape, and route receipt privacy on real installed CLIs.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected compact ship check text %q, got:\n%s", want, out)
@@ -338,6 +378,15 @@ func TestShipCheckTextKeepsSafePushInstructionsCompact(t *testing.T) {
 			t.Fatalf("expected ship check to avoid %q, got:\n%s", unwanted, out)
 		}
 	}
+}
+
+func shipCLIHandoffDogfoodByRoute(items []shipCLIHandoffDogfood, routeID string) *shipCLIHandoffDogfood {
+	for i := range items {
+		if items[i].RouteID == routeID {
+			return &items[i]
+		}
+	}
+	return nil
 }
 
 func runGitCommandForInternalTest(t *testing.T, dir string, args ...string) {
@@ -381,7 +430,7 @@ func TestScorecardGatePassesAndExposesCompetitorPressure(t *testing.T) {
 		t.Fatalf("expected residual hardening details to stay machine-readable, got %#v", report.PRDImplementation)
 	}
 	for _, want := range []string{
-		"Wave 1 command templates use fake downstream CLIs in automated tests. Real installed CLI dogfood remains required for auth, approvals, and output-shape differences.",
+		"Wave 1 command templates use fake downstream CLIs in automated tests and now expose a `jini check ship --format json` dogfood matrix. Real installed CLI dogfood remains required before release claims for auth, approvals, output-shape differences, and route receipt privacy.",
 	} {
 		if !containsString(report.PRDImplementation.ResidualHardening, want) {
 			t.Fatalf("expected residual hardening details to contain %q, got %#v", want, report.PRDImplementation.ResidualHardening)
@@ -977,7 +1026,7 @@ func TestScorecardGateTextShowsCommitGatePressure(t *testing.T) {
 		"  OK 12/12 P0 requirements implemented (100%)",
 		"  SOURCE specs/prd-implementation-trace.md",
 		"  RESIDUAL_HARDENING 1",
-		"    RESIDUAL Wave 1 command templates use fake downstream CLIs in automated tests. Real installed CLI dogfood remains required for auth, approvals, and output-shape differences.",
+		"    RESIDUAL Wave 1 command templates use fake downstream CLIs in automated tests and now expose a `jini check ship --format json` dogfood matrix. Real installed CLI dogfood remains required before release claims for auth, approvals, output-shape differences, and route receipt privacy.",
 		"COMPETITORS",
 		"  OK github-copilot-coding-agent",
 		"PRESSURE VECTORS",
@@ -1070,7 +1119,10 @@ func TestPublishReadinessHonestAuditClaimsExposeImplementationTruth(t *testing.T
 	if cliHandoff.Status != "implemented" || !cliHandoff.RuntimeImplemented {
 		t.Fatalf("expected configured CLI handoff to be implemented with runtime evidence, got %#v", cliHandoff)
 	}
-	if !strings.Contains(cliHandoff.Evidence, "Wave 0 handoff contract") || !strings.Contains(cliHandoff.Gap, "real-world dogfood") {
+	if !strings.Contains(cliHandoff.Evidence, "Wave 0 handoff contract") ||
+		!strings.Contains(cliHandoff.Evidence, "check ship dogfood matrix") ||
+		!strings.Contains(cliHandoff.Gap, "real-world dogfood") ||
+		!strings.Contains(cliHandoff.Gap, "route receipt privacy") {
 		t.Fatalf("expected configured CLI handoff gap to stay explicit, got %#v", cliHandoff)
 	}
 

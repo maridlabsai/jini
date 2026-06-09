@@ -417,6 +417,8 @@ func TestPushGateRunsShipCheckEvidence(t *testing.T) {
 		"`jini check ship --format json`",
 		"push gate records local shipping evidence",
 		"dirty worktrees are blocked before push",
+		"CLI handoff dogfood matrix",
+		"auth, approvals, output shape, and route receipt privacy",
 	} {
 		if !strings.Contains(gateMatrix, want) {
 			t.Fatalf("engineering gate matrix must document ship-check evidence %q", want)
