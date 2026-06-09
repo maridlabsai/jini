@@ -1,6 +1,20 @@
 package app
 
-import "strings"
+import (
+	"net"
+	"strings"
+	"time"
+)
+
+const runtimeConnectivityProbeTimeout = 120 * time.Millisecond
+
+type runtimeConnectivityProbeResult struct {
+	State  string
+	Reason string
+	Known  bool
+}
+
+var runtimeConnectivityProbe = probeDefaultRuntimeConnectivity
 
 type runtimeAvailability struct {
 	OnlineState       string
@@ -22,10 +36,16 @@ func detectRuntimeAvailability(request providerGenerationRequest) runtimeAvailab
 	}
 	remoteConfigured := anyRemoteProviderReady()
 	connectivityState, connectivityReason, connectivityForced := configuredConnectivityState()
+	if !connectivityForced && remoteConfigured {
+		if probed := runtimeConnectivityProbe(); probed.Known {
+			connectivityState = probed.State
+			connectivityReason = probed.Reason
+		}
+	}
 	offlineMode := false
 	reason := ""
 	switch {
-	case connectivityForced && connectivityState == "offline":
+	case connectivityState == "offline":
 		offlineMode = true
 		reason = connectivityReason
 	case !remoteConfigured:
@@ -61,6 +81,46 @@ func configuredConnectivityState() (string, string, bool) {
 		return "online", "Internet connectivity is available.", true
 	default:
 		return "", "", false
+	}
+}
+
+func probeDefaultRuntimeConnectivity() runtimeConnectivityProbeResult {
+	switch normalizeName(configValue("JINI_CONNECTIVITY_PROBE")) {
+	case "0", "false", "off", "disabled", "no":
+		return runtimeConnectivityProbeResult{State: "unknown", Known: false}
+	}
+	target := strings.TrimSpace(configValue("JINI_CONNECTIVITY_PROBE_TARGET"))
+	if target == "" {
+		target = "1.1.1.1:443"
+	} else if !strings.Contains(target, ":") {
+		target += ":443"
+	}
+	conn, err := net.DialTimeout("udp", target, runtimeConnectivityProbeTimeout)
+	if err == nil {
+		_ = conn.Close()
+		return runtimeConnectivityProbeResult{
+			State:  "online",
+			Reason: "Internet route is available.",
+			Known:  true,
+		}
+	}
+	message := strings.ToLower(err.Error())
+	if containsAny(message, []string{
+		"network is unreachable",
+		"network unreachable",
+		"no route to host",
+		"can't assign requested address",
+	}) {
+		return runtimeConnectivityProbeResult{
+			State:  "offline",
+			Reason: "No usable internet route was detected, so Jini is using offline-capable routes.",
+			Known:  true,
+		}
+	}
+	return runtimeConnectivityProbeResult{
+		State:  "unknown",
+		Reason: "Internet route could not be proven quickly.",
+		Known:  false,
 	}
 }
 

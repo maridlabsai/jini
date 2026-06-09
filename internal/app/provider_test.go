@@ -831,6 +831,55 @@ func TestDetectRouteAutoTreatsInternetUnavailableAsOfflineMode(t *testing.T) {
 	}
 }
 
+func TestDetectRouteAutoTreatsConnectivityProbeOfflineAsOfflineMode(t *testing.T) {
+	t.Setenv("JINI_STATE_DIR", t.TempDir())
+	t.Setenv("JINI_TOOL", "auto")
+	t.Setenv("JINI_PROVIDER", "auto")
+	t.Setenv("JINI_MODEL", "auto")
+	t.Setenv("AZURE_OPENAI_ENDPOINT", "https://example.openai.azure.com")
+	t.Setenv("AZURE_OPENAI_API_KEY", "super-secret-key")
+	t.Setenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o-prod")
+	withRuntimeConnectivityProbe(t, runtimeConnectivityProbeResult{
+		State:  "offline",
+		Reason: "No usable internet route was detected.",
+		Known:  true,
+	})
+
+	decision := detectRouteForRequest(providerGenerationRequest{
+		Choice: starterChoice{PackID: "general-work"},
+		Title:  "Probe offline prompt",
+		Source: "Summarize this note while the internet route is unavailable.",
+	})
+	if decision.ToolMode != "local-preview" {
+		t.Fatalf("expected connectivity probe offline state to route locally, got %#v", decision)
+	}
+	if !strings.Contains(decision.Reason, "internet route") {
+		t.Fatalf("expected probe offline reason in route decision, got %q", decision.Reason)
+	}
+}
+
+func TestDetectRuntimeAvailabilityConnectivityProbeOnlineKeepsRemoteAvailable(t *testing.T) {
+	t.Setenv("JINI_STATE_DIR", t.TempDir())
+	t.Setenv("JINI_TOOL", "auto")
+	t.Setenv("JINI_PROVIDER", "auto")
+	t.Setenv("AZURE_OPENAI_ENDPOINT", "https://example.openai.azure.com")
+	t.Setenv("AZURE_OPENAI_API_KEY", "super-secret-key")
+	t.Setenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o-prod")
+	withRuntimeConnectivityProbe(t, runtimeConnectivityProbeResult{
+		State:  "online",
+		Reason: "Internet route is available.",
+		Known:  true,
+	})
+
+	availability := detectRuntimeAvailability(providerGenerationRequest{})
+	if availability.OfflineMode {
+		t.Fatalf("expected online probe to keep remote available, got %#v", availability)
+	}
+	if availability.OnlineState != "online" {
+		t.Fatalf("expected online state, got %#v", availability)
+	}
+}
+
 func TestGenerateWithConfiguredProviderAutoFailsOverFromRemoteNetworkToLocalSLM(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", t.TempDir())
 	t.Setenv("JINI_TOOL", "auto")

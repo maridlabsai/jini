@@ -237,7 +237,9 @@ or when connectivity is unavailable. CLI and app surfaces must read the same
 runtime availability signal and route engine. Automatic remote routes may fail
 over to local SLM or local preview after a network-class provider failure;
 explicit user-pinned remote routes must fail closed instead of silently
-switching providers.
+switching providers. Route-time connectivity detection should use a fast
+no-payload network-route probe; generation-time provider errors remain the
+source of truth for DNS, provider, captive-network, and mid-flight failures.
 
 Discovered local models must obey form-factor envelopes. Mobile-class devices
 may use only lightweight fine-tuned local SLMs for bounded work and must not
