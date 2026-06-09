@@ -6,12 +6,11 @@ This is the canonical near-term PRD. It defines the work that matters for GTM.
 If it conflicts with exploratory specs, demo docs, or older PRDs, this document
 and [product-settling-decisions.md](./product-settling-decisions.md) win.
 
-Delivery chain: this PRD defines what matters;
-[number-one-platform-hld.md](./number-one-platform-hld.md) defines architecture
-boundaries; [number-one-platform-lld.md](./number-one-platform-lld.md) defines
-runtime contracts; [launcher-intake-design.md](./launcher-intake-design.md)
-and [number-one-development-plan.md](./number-one-development-plan.md) define
-execution; drift requires [product-settling-decisions.md](./product-settling-decisions.md).
+Delivery chain: this PRD defines what matters; [number-one-platform-hld.md](./number-one-platform-hld.md) defines architecture
+boundaries; [number-one-platform-lld.md](./number-one-platform-lld.md) defines runtime contracts;
+[launcher-intake-design.md](./launcher-intake-design.md) and [number-one-development-plan.md](./number-one-development-plan.md) define execution;
+[macOS app planning](./macos-app-prd.md) is a focused P1 desktop surface over the same session model;
+drift requires [product-settling-decisions.md](./product-settling-decisions.md).
 
 ## Product Thesis
 
@@ -142,11 +141,12 @@ P1 next:
 - powered-mode and low-battery routing
 - offline local-model quality regression harness
 - cross-surface session handoff
+- macOS app HLD/LLD for a Codex desktop-caliber session and artifact surface
 - clearer diagnostics for configured CLIs and local runtimes
 
 Deferred until a decision-record update:
 
-- desktop and mobile app surfaces
+- Windows and mobile app surfaces
 - richer commercial agent and skills UI
 - team-level policy controls
 - broad proof verticals and demo templates

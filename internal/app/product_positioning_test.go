@@ -54,7 +54,10 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"no visible `Switch` startup control",
 		"Offline is a route state, not a separate product.",
 		"Until the CLI wedge is noticeably strong, defer broad expansion.",
+		"macOS app PRD, HLD, and LLD for a Codex desktop-caliber surface",
+		"The macOS app may proceed only as a focused desktop surface",
 		"Focused implementation is the development philosophy.",
+		"macOS app PRD: `specs/macos-app-prd.md`",
 		"smallest change that advances the active CLI wedge",
 		"No drift without explicit agreement.",
 		"Older broad PRDs, research notes, and platform plans are background only.",
@@ -82,6 +85,8 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"[number-one-platform-lld.md](./number-one-platform-lld.md)",
 		"[launcher-intake-design.md](./launcher-intake-design.md)",
 		"[number-one-development-plan.md](./number-one-development-plan.md)",
+		"[macOS app planning](./macos-app-prd.md)",
+		"macOS app HLD/LLD for a Codex desktop-caliber session and artifact surface",
 		"No release ships unless competitor-parity golden transcript gates",
 		"Token frugality is P0.",
 		"## Tier Boundary",
@@ -191,6 +196,52 @@ func TestFocusedDeliveryChainGatesPRDDesignAndImplementation(t *testing.T) {
 	} {
 		if strings.Contains(developmentPlan, stale) {
 			t.Fatalf("development plan must not preserve stale broad-plan rule %q", stale)
+		}
+	}
+}
+
+func TestMacOSAppPRDPinsCodexParityWithoutProductDrift(t *testing.T) {
+	root := repoRootForMigrationTest(t)
+
+	prd := readProductPositioningFile(t, root, "specs/macos-app-prd.md")
+	for _, want := range []string{
+		"This is a specialized PRD for the Jini macOS app.",
+		"Build a macOS app at the Codex desktop-caliber UX bar",
+		"The app is not a new product",
+		"same session model as the CLI",
+		"Task first, not dashboard first.",
+		"Claude/Codex familiarity beats Jini-specific workflow invention.",
+		"Offline is a route state, not a separate product.",
+		"Token frugality is visible when useful and silent when not useful.",
+		"route evidence",
+		"file diffs",
+		"signed, notarized",
+		"hardened runtime enabled",
+		"Developer ID signed, notarized, stapled",
+		"sandbox-entitlement reviewed",
+		"Redacted diagnostics",
+		"No Start/Keep model.",
+		"No visible Switch startup control.",
+		"No saved-work dashboard on bare launch.",
+		"No free-tier skills-based OS productivity suite.",
+		"Default implementation direction remains a Tauri 2 shell over the Go core.",
+		"The HLD must compare Tauri 2 with native SwiftUI/AppKit",
+		"Go core owns intent, routing, session graph",
+		"PRD/HLD/LLD trace covers every P0 requirement.",
+		"Competitor scorecard includes Codex desktop parity checks",
+	} {
+		if !strings.Contains(prd, want) {
+			t.Fatalf("macOS app PRD must preserve focused desktop requirement %q", want)
+		}
+	}
+	for _, stale := range []string{
+		"Start/Keep way of thinking",
+		"desktop and mobile apps",
+		"agentic automation in all aspects of running this company is non negotiable",
+		"Current work\n-",
+	} {
+		if strings.Contains(prd, stale) {
+			t.Fatalf("macOS app PRD must not preserve stale or broad requirement %q", stale)
 		}
 	}
 }

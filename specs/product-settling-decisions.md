@@ -239,12 +239,19 @@ P1:
 - powered-mode and low-battery route policy
 - offline local model quality bars
 - cross-surface session handoff
+- macOS app PRD, HLD, and LLD for a Codex desktop-caliber surface over the same
+  Go session graph
 
 P2:
 
-- desktop and mobile apps
+- Windows and mobile apps
 - broad demo verticals
 - commercial skills and agent UI surfaces
+
+The macOS app may proceed only as a focused desktop surface over the existing
+CLI/session/router core. It must use the same session model as the CLI, preserve
+the lightweight Claude/Codex transcript contract, and avoid Start/Keep, Switch,
+dashboard-first startup, generic drafting shells, or free-tier agent-role UX.
 
 ## Focused Delivery Decision
 
@@ -255,6 +262,7 @@ quality risk.
 Jini delivery uses one active chain:
 
 - PRD: `specs/number-one-platform-prd.md`
+- macOS app PRD: `specs/macos-app-prd.md`
 - HLD: `specs/number-one-platform-hld.md`
 - LLD: `specs/number-one-platform-lld.md`
 - streamline redline: `specs/product-streamline-redline.md`

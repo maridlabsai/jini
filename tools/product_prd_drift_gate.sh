@@ -27,6 +27,7 @@ is_protected_product_surface() {
   case "$1" in
     README.md | \
     specs/number-one-platform-prd.md | \
+    specs/macos-app-prd.md | \
     specs/product-settling-decisions.md | \
     specs/product-streamline-redline.md | \
     specs/agentic-development-operating-model.md | \
