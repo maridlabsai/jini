@@ -3,6 +3,7 @@ package app
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
@@ -192,14 +193,15 @@ func (sidecar *macOSAppSidecar) ok(request appRPCRequest, result any, events []a
 
 func (sidecar *macOSAppSidecar) snapshot() appSnapshotVM {
 	version := currentJiniVersion()
+	availability := detectRuntimeAvailability(providerGenerationRequest{})
 	return appSnapshotVM{
 		AppVersion:        version,
 		CoreVersion:       version,
 		ProtocolVersion:   macOSAppProtocolVersion,
 		SelectedProjectID: "",
 		SelectedSessionID: "",
-		OnlineState:       "online",
-		OfflineState:      "available",
+		OnlineState:       availability.OnlineState,
+		OfflineState:      availability.OfflineRouteMode,
 		RouteSummary:      routeSummaryFromDecision(detectRoute()),
 		SetupWarnings:     []string{},
 		RecentProjects:    []projectVM{},
@@ -209,6 +211,7 @@ func (sidecar *macOSAppSidecar) snapshot() appSnapshotVM {
 
 func routeSummaryFromDecision(decision routeDecision) appRouteSummary {
 	routeID := firstNonEmpty(decision.ToolMode, "auto")
+	availability := detectRuntimeAvailability(providerGenerationRequest{})
 	providerStatus := strings.TrimSpace(decision.Provider.Status)
 	guidance := []string{}
 	if len(decision.Provider.Missing) > 0 {
@@ -223,9 +226,16 @@ func routeSummaryFromDecision(decision routeDecision) appRouteSummary {
 		Reason:        strings.TrimSpace(decision.Reason),
 		TokenPosture:  "frugal",
 		PowerPosture:  "normal",
-		OfflineState:  "available",
+		OfflineState:  routeOfflineState(routeID, availability),
 		SetupGuidance: guidance,
 	}
+}
+
+func routeOfflineState(routeID string, availability runtimeAvailability) string {
+	if availability.OfflineMode && routeID == availability.OfflineRouteMode {
+		return "active"
+	}
+	return availability.OfflineState
 }
 
 func routeAppStatus(providerStatus string) string {
@@ -309,6 +319,7 @@ func (sidecar *macOSAppSidecar) exportDiagnostics(request appRPCRequest) appRPCR
 
 func (sidecar *macOSAppSidecar) diagnosticsBundle(createdAt time.Time) map[string]any {
 	version := currentJiniVersion()
+	availability := detectRuntimeAvailability(providerGenerationRequest{})
 	return map[string]any{
 		"schema_version":    "jini-macos-diagnostics-v1",
 		"generated_at":      createdAt.UTC().Format(time.RFC3339),
@@ -316,8 +327,8 @@ func (sidecar *macOSAppSidecar) diagnosticsBundle(createdAt time.Time) map[strin
 		"core_version":      version,
 		"protocol_version":  macOSAppProtocolVersion,
 		"surface":           "macos",
-		"online_state":      "online",
-		"offline_state":     "available",
+		"online_state":      availability.OnlineState,
+		"offline_state":     availability.OfflineState,
 		"route_summary":     diagnosticsRouteSummary(),
 		"session_ids":       []string{},
 		"sync_debt_count":   0,
@@ -451,17 +462,47 @@ func (sidecar *macOSAppSidecar) submitTurn(request appRPCRequest, params turnSub
 			RouteVisible:   false,
 		}, nil)
 	}
-	if looksLikeStandaloneQuestion(params.Text) {
-		return sidecar.ok(request, transientResponseVM{
-			Kind:           "compact_answer",
-			RequestID:      request.ID,
-			AssistantText:  "I don't know locally.",
-			CreatedAt:      sidecar.now().UTC().Format(time.RFC3339),
-			CreatesSession: false,
-			RouteVisible:   false,
-		}, nil)
+	if appTurnRequiresApproval(params.Text) {
+		return appErrorResponse(request.ID, "approval_required", "This app action needs the macOS approval and diff flow.", "Use the Jini CLI for this action until the macOS approval and diff flow is available.", false)
 	}
-	return appErrorResponse(request.ID, "approval_required", "This app action is not implemented in the sidecar yet.", "Use the Jini CLI for this action until the macOS approval and diff flow is available.", false)
+	providerRequest := providerGenerationRequest{
+		Choice: starterChoice{PackID: "general-work"},
+		Title:  compactTurnTitle(params.Text),
+		Source: params.Text,
+	}
+	text, used, actualDecision, err := generateWithConfiguredProviderDecision(context.Background(), providerRequest, detectRouteForRequest(providerRequest))
+	if err != nil {
+		return appErrorResponse(request.ID, "route_unavailable", err.Error(), "Run `jini route status` or `jini route help` to inspect setup, then retry.", true)
+	}
+	if !used || strings.TrimSpace(text) == "" {
+		return appErrorResponse(request.ID, "route_unavailable", "No local or configured route could answer this request.", "Configure a local SLM or an online provider, then retry.", true)
+	}
+	return sidecar.ok(request, transientResponseVM{
+		Kind:           "routed_answer",
+		RequestID:      request.ID,
+		AssistantText:  strings.TrimSpace(text),
+		CreatedAt:      sidecar.now().UTC().Format(time.RFC3339),
+		CreatesSession: false,
+		RouteVisible:   actualDecision.ToolMode != "local-preview",
+	}, nil)
+}
+
+func appTurnRequiresApproval(text string) bool {
+	normalized := normalizeName(text)
+	return containsAny(normalized, []string{
+		"edit file", "modify file", "change file", "delete file", "remove file",
+		"create file", "rename file", "move file", "write to file", "append to file",
+		"add line", "add a line", "run command", "execute command", "commit", "push",
+		"install package",
+	})
+}
+
+func compactTurnTitle(text string) string {
+	fields := strings.Fields(strings.TrimSpace(text))
+	if len(fields) > 8 {
+		fields = fields[:8]
+	}
+	return strings.Join(fields, " ")
 }
 
 func (sidecar *macOSAppSidecar) nextEvent(eventType, sessionID string, payload any) appRPCEvent {

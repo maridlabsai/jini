@@ -232,6 +232,13 @@ route, provider, or model pins remain overrides. Zero-config discovery does not
 authorize silent model downloads or bundling large model assets into the CLI
 installer.
 
+Offline mode is active when no usable remote provider or CLI API is configured
+or when connectivity is unavailable. CLI and app surfaces must read the same
+runtime availability signal and route engine. Automatic remote routes may fail
+over to local SLM or local preview after a network-class provider failure;
+explicit user-pinned remote routes must fail closed instead of silently
+switching providers.
+
 Discovered local models must obey form-factor envelopes. Mobile-class devices
 may use only lightweight fine-tuned local SLMs for bounded work and must not
 silently expose desktop workhorse, deep, or multimodal profiles. Laptop-class

@@ -145,6 +145,15 @@ func generateWithConfiguredProviderDecision(ctx context.Context, request provide
 	userPrompt := providerUserPrompt(request)
 	text, err := generateProviderText(ctx, provider, request, systemPrompt, userPrompt)
 	if err != nil {
+		if fallbackDecision, ok := offlineFailoverDecisionForProviderError(request, decision, err); ok {
+			if fallbackDecision.Provider.ID == "local-preview" {
+				return "", false, fallbackDecision, nil
+			}
+			fallbackText, fallbackErr := generateProviderText(ctx, fallbackDecision.Provider, request, systemPrompt, userPrompt)
+			if fallbackErr == nil {
+				return fallbackText, true, fallbackDecision, nil
+			}
+		}
 		return "", true, decision, err
 	}
 	consistencyUsed := false
@@ -163,6 +172,50 @@ func generateWithConfiguredProviderDecision(ctx context.Context, request provide
 	}
 	decision = actualizeVerificationDecision(request, decision, consistencyUsed, refinedUsed)
 	return text, true, decision, nil
+}
+
+func offlineFailoverDecisionForProviderError(request providerGenerationRequest, decision routeDecision, err error) (routeDecision, bool) {
+	if err == nil || !decision.ChosenAutomatically || !isRemoteProviderID(decision.Provider.ID) || !isProviderNetworkError(err) {
+		return routeDecision{}, false
+	}
+	availability := detectRuntimeAvailability(request)
+	mode := firstNonEmpty(availability.OfflineRouteMode, "local-preview")
+	fallback := enrichRouteDecisionForRequest(request, detectRouteForToolMode(mode, true))
+	if fallback.Provider.Status != "ok" && mode != "local-preview" {
+		fallback = enrichRouteDecisionForRequest(request, detectRouteForToolMode("local-preview", true))
+	}
+	if fallback.Provider.Status != "ok" {
+		return routeDecision{}, false
+	}
+	fallback.Reason = appendRuntimeAvailabilityReason("The automatic remote route failed because network access is unavailable, so Jini switched to "+firstNonEmpty(fallback.ToolLabel, fallback.ToolMode)+".", availability)
+	fallback.Provider = withRouteReason(fallback.Provider, fallback.Reason)
+	return fallback, true
+}
+
+func isRemoteProviderID(providerID string) bool {
+	switch strings.TrimSpace(providerID) {
+	case "anthropic", "azure-openai", "bedrock":
+		return true
+	default:
+		return false
+	}
+}
+
+func isProviderNetworkError(err error) bool {
+	if err == nil {
+		return false
+	}
+	message := strings.ToLower(err.Error())
+	return containsAny(message, []string{
+		"network access",
+		"network unreachable",
+		"no such host",
+		"connection refused",
+		"connection reset",
+		"timeout",
+		"temporary failure",
+		"i/o timeout",
+	})
 }
 
 func generateProviderText(ctx context.Context, provider providerConfig, request providerGenerationRequest, systemPrompt, userPrompt string) (string, error) {

@@ -808,6 +808,107 @@ func TestDetectLocalSLMProviderUsesDiscoveredModelWithoutManualConfig(t *testing
 	}
 }
 
+func TestDetectRouteAutoTreatsInternetUnavailableAsOfflineMode(t *testing.T) {
+	t.Setenv("JINI_STATE_DIR", t.TempDir())
+	t.Setenv("JINI_TOOL", "auto")
+	t.Setenv("JINI_PROVIDER", "auto")
+	t.Setenv("JINI_MODEL", "auto")
+	t.Setenv("JINI_CONNECTIVITY_OVERRIDE", "offline")
+	t.Setenv("AZURE_OPENAI_ENDPOINT", "https://example.openai.azure.com")
+	t.Setenv("AZURE_OPENAI_API_KEY", "super-secret-key")
+	t.Setenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o-prod")
+
+	decision := detectRouteForRequest(providerGenerationRequest{
+		Choice: starterChoice{PackID: "general-work"},
+		Title:  "Offline prompt",
+		Source: "Summarize this note while the network is offline.",
+	})
+	if decision.ToolMode != "local-preview" {
+		t.Fatalf("expected offline auto route to avoid remote providers, got %#v", decision)
+	}
+	if !strings.Contains(decision.Reason, "offline") {
+		t.Fatalf("expected offline route reason, got %q", decision.Reason)
+	}
+}
+
+func TestGenerateWithConfiguredProviderAutoFailsOverFromRemoteNetworkToLocalSLM(t *testing.T) {
+	t.Setenv("JINI_STATE_DIR", t.TempDir())
+	t.Setenv("JINI_TOOL", "auto")
+	t.Setenv("JINI_PROVIDER", "auto")
+	t.Setenv("JINI_MODEL", "auto")
+	t.Setenv("JINI_LOCAL_SLM_ENDPOINT", "http://127.0.0.1:11434/v1")
+	t.Setenv("JINI_LOCAL_SLM_MODEL", "phi4-mini")
+	t.Setenv("AZURE_OPENAI_ENDPOINT", "https://example.openai.azure.com")
+	t.Setenv("AZURE_OPENAI_API_KEY", "super-secret-key")
+	t.Setenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o-prod")
+
+	remoteAttempts := 0
+	localAttempts := 0
+	withProviderHTTPClient(t, func(req *http.Request) (*http.Response, error) {
+		switch req.URL.Host {
+		case "example.openai.azure.com":
+			remoteAttempts++
+			return nil, errors.New("network unreachable")
+		case "127.0.0.1:11434":
+			localAttempts++
+			return jsonResponse(200, `{"choices":[{"message":{"content":"Local recovered answer."}}]}`), nil
+		default:
+			t.Fatalf("unexpected provider request: %s", req.URL.String())
+			return nil, nil
+		}
+	})
+
+	text, used, actualDecision, err := generateWithConfiguredProviderDecision(context.Background(), providerGenerationRequest{
+		Choice: starterChoice{PackID: "general-work"},
+		Title:  "Network fallback",
+		Source: "Summarize this note after remote network failure.",
+	}, detectRouteForToolMode("azure-openai", true))
+	if err != nil {
+		t.Fatalf("expected auto remote network failure to fall back locally: %v", err)
+	}
+	if !used || !strings.Contains(text, "Local recovered answer") {
+		t.Fatalf("expected local failover text, used=%v text=%q", used, text)
+	}
+	if !strings.HasPrefix(actualDecision.ToolMode, "local-") || actualDecision.ToolMode == "local-preview" {
+		t.Fatalf("expected actual decision to switch to Local SLM, got %#v", actualDecision)
+	}
+	if remoteAttempts != 1 || localAttempts != 1 {
+		t.Fatalf("expected one remote attempt and one local attempt, got remote=%d local=%d", remoteAttempts, localAttempts)
+	}
+}
+
+func TestGenerateWithConfiguredProviderExplicitRemoteDoesNotFailOverOnNetworkError(t *testing.T) {
+	t.Setenv("JINI_STATE_DIR", t.TempDir())
+	t.Setenv("JINI_TOOL", "azure-openai")
+	t.Setenv("JINI_PROVIDER", "azure-openai")
+	t.Setenv("JINI_LOCAL_SLM_ENDPOINT", "http://127.0.0.1:11434/v1")
+	t.Setenv("JINI_LOCAL_SLM_MODEL", "phi4-mini")
+	t.Setenv("AZURE_OPENAI_ENDPOINT", "https://example.openai.azure.com")
+	t.Setenv("AZURE_OPENAI_API_KEY", "super-secret-key")
+	t.Setenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o-prod")
+
+	localAttempts := 0
+	withProviderHTTPClient(t, func(req *http.Request) (*http.Response, error) {
+		if req.URL.Host == "127.0.0.1:11434" {
+			localAttempts++
+			return jsonResponse(200, `{"choices":[{"message":{"content":"should not be used"}}]}`), nil
+		}
+		return nil, errors.New("network unreachable")
+	})
+
+	_, _, _, err := generateWithConfiguredProviderDecision(context.Background(), providerGenerationRequest{
+		Choice: starterChoice{PackID: "general-work"},
+		Title:  "Explicit remote",
+		Source: "Use the explicitly configured remote provider.",
+	}, detectRouteForToolMode("azure-openai", false))
+	if err == nil {
+		t.Fatalf("expected explicit remote route to fail closed")
+	}
+	if localAttempts != 0 {
+		t.Fatalf("expected explicit remote route not to call local fallback, got %d attempts", localAttempts)
+	}
+}
+
 func TestChooseLocalSLMModelForMobileRequiresLightweightTunedModel(t *testing.T) {
 	power := powerProfile{PowerSource: "battery", BatteryPercent: 80}
 	profile := deviceProfile{DeviceClass: "mobile-small"}

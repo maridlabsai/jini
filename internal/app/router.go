@@ -93,9 +93,10 @@ func detectAutoRoute() routeDecision {
 
 func detectAutoRouteForRequest(request providerGenerationRequest) routeDecision {
 	features := classifyRouteFeatures(request)
+	availability := detectRuntimeAvailability(request)
 	scored := routeCandidatesForRequest(request)
 	if preserved, ok := preserveCurrentCodingRoute(request, features, scored); ok {
-		preserved.Reason = explainAutoRouteChoice(features, preserved, false)
+		preserved.Reason = appendRuntimeAvailabilityReason(explainAutoRouteChoice(features, preserved, false), availability)
 		preserved.ContinuityReason = "Kept the current coding route to preserve context continuity because the quality gap was not material."
 		return enrichRouteDecisionForRequest(request, preserved)
 	}
@@ -116,7 +117,7 @@ func detectAutoRouteForRequest(request providerGenerationRequest) routeDecision 
 	first := routeDecision{}
 	for index, mode := range candidates {
 		decision := detectRouteForToolMode(mode, true)
-		decision.Reason = explainAutoRouteChoice(features, decision, index > 0)
+		decision.Reason = appendRuntimeAvailabilityReason(explainAutoRouteChoice(features, decision, index > 0), availability)
 		decision = enrichRouteDecisionForRequest(request, decision)
 		if index == 0 {
 			first = decision
@@ -161,19 +162,20 @@ func enrichRouteDecisionForRequest(request providerGenerationRequest, decision r
 
 func routeCandidatesForRequest(request providerGenerationRequest) []routeCandidateScore {
 	features := classifyRouteFeatures(request)
+	availability := detectRuntimeAvailability(request)
 	scores := []routeCandidateScore{
-		{Mode: "claude-api", Score: scoreRouteMode("claude-api", features)},
-		{Mode: "bedrock-sonnet", Score: scoreRouteMode("bedrock-sonnet", features)},
-		{Mode: "chatgpt", Score: scoreRouteMode("chatgpt", features)},
-		{Mode: "azure-code", Score: scoreRouteMode("azure-code", features)},
-		{Mode: "azure-openai", Score: scoreRouteMode("azure-openai", features)},
-		{Mode: "local-preview", Score: scoreRouteMode("local-preview", features)},
+		{Mode: "claude-api", Score: scoreRouteMode("claude-api", features) + runtimeAvailabilityRouteBias("claude-api", availability)},
+		{Mode: "bedrock-sonnet", Score: scoreRouteMode("bedrock-sonnet", features) + runtimeAvailabilityRouteBias("bedrock-sonnet", availability)},
+		{Mode: "chatgpt", Score: scoreRouteMode("chatgpt", features) + runtimeAvailabilityRouteBias("chatgpt", availability)},
+		{Mode: "azure-code", Score: scoreRouteMode("azure-code", features) + runtimeAvailabilityRouteBias("azure-code", availability)},
+		{Mode: "azure-openai", Score: scoreRouteMode("azure-openai", features) + runtimeAvailabilityRouteBias("azure-openai", availability)},
+		{Mode: "local-preview", Score: scoreRouteMode("local-preview", features) + runtimeAvailabilityRouteBias("local-preview", availability)},
 	}
 	if localSLMRuntimeReady() {
 		for _, slot := range localSLMProfileSlots() {
 			scores = append(scores, routeCandidateScore{
 				Mode:  slot.ID,
-				Score: scoreRouteMode(slot.ID, features),
+				Score: scoreRouteMode(slot.ID, features) + runtimeAvailabilityRouteBias(slot.ID, availability),
 			})
 		}
 	}
