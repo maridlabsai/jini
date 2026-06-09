@@ -226,6 +226,8 @@ No macOS release ships unless these gates pass:
 - Security review covers sandbox entitlements, hardened runtime exceptions,
   IPC allowlist, updater signatures, secret storage, diagnostics redaction, and
   local file access prompts.
+- macOS file access review proves whether Phase 1 ships hardened-runtime-only
+  direct distribution or App Sandbox with security-scoped project bookmarks.
 - Session compatibility tests prove CLI-to-app and app-to-CLI continuity.
 - Offline tests prove local open, local append, route evidence, and sync debt.
 - Performance tests record cold start, warm resume, artifact open, diff open,
@@ -242,7 +244,8 @@ Phase 0, design:
 - approve this PRD
 - write macOS UX design
 - write macOS HLD and LLD
-- choose Tauri 2 versus SwiftUI/AppKit with a prototype-backed decision
+- validate the Tauri Phase 1 stack and trigger the native SwiftUI/AppKit escape
+  hatch only if prototype evidence fails
 - add macOS PRD trace and golden transcript fixtures
 
 Phase 1, internal dogfood:

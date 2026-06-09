@@ -195,11 +195,9 @@ Side effects include:
 - commit, push, PR, send, publish, or export
 - diagnostics export
 
-The renderer can request side effects but cannot perform them.
-
 ## Tauri Capability Model
 
-Windows:
+App windows:
 
 - main window: thread, sidebar, inspector, composer
 - approval sheet: explicit approval decisions
@@ -332,6 +330,32 @@ Phase 1 strategy:
 - do not let the UI learn current-state file layout
 - keep desktop view models compatible with the target session graph
 - migrate persistence later behind the Go API without changing the app UX
+- introduce a `SessionIdentityMap` that binds current `.jini/work` pack dirs,
+  `current-work.json` records, target `.jini/sessions/<session-id>` records,
+  and app-facing ids without creating duplicate sessions
+- preserve one stable app-facing `session_id` across CLI and app even while
+  persistence is backed by legacy current-work state
+- never create a session identity for transient simple answers
+
+## macOS File Access Posture
+
+Phase 1 direct distribution uses Developer ID signing, hardened runtime,
+notarization, stapling, and Gatekeeper launch checks.
+
+The sandbox decision is explicit:
+
+- Internal dogfood may start hardened-runtime-only while the app is distributed
+  directly and file access stays user-selected through the project picker.
+- Public alpha must either keep hardened-runtime-only direct distribution with a
+  documented entitlement rationale or adopt App Sandbox with security-scoped project bookmarks.
+- If App Sandbox is adopted, the Tauri shell obtains the bookmark and the Go
+  sidecar receives only a validated project access token plus a resolved
+  project path through the bridge.
+- The renderer never receives a broad filesystem capability.
+- File writes remain project-scoped and approval-gated in Go.
+
+The implementation cannot proceed to public alpha until the chosen entitlement
+posture is captured in release gates and smoke-tested on a clean Mac.
 
 ## Error Handling
 

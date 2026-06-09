@@ -273,6 +273,11 @@ Jini delivery uses one active chain:
 - front-door dev design: `specs/launcher-intake-design.md`
 - implementation plan: `specs/number-one-development-plan.md`
 
+macOS app design review feedback is active scope only where it hardens the
+existing macOS PRD/HLD/LLD chain: transient simple answers, session identity
+mapping, macOS file-access posture, sidecar protocol idempotency/replay,
+approval scope/audit contracts, and removal of stale or ambiguous app wording.
+
 The PRD states product outcomes. The HLD owns architecture boundaries. The LLD
 owns executable runtime contracts. Implementation must be traceable to all
 three before it can be treated as release-ready.
