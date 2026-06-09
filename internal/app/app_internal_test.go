@@ -367,6 +367,12 @@ func TestShipCheckTextKeepsSafePushInstructionsCompact(t *testing.T) {
 		"Run before push: bash tools/run_required_gates.sh push",
 		"Safe lane: create an isolated worktree, run gates, then push only after evidence is clean.",
 		"CLI handoff dogfood: 1 ready, 4 need setup",
+		"CLI handoff routes:",
+		"- codex: ready",
+		"- claude-code: needs setup (missing executable)",
+		"- gemini-cli: needs setup (missing executable)",
+		"- aider: needs setup (missing executable)",
+		"- opencode: needs setup (missing executable)",
 		"Dogfood before release: verify auth, approvals, output shape, and route receipt privacy on real installed CLIs.",
 	} {
 		if !strings.Contains(out, want) {
@@ -377,6 +383,9 @@ func TestShipCheckTextKeepsSafePushInstructionsCompact(t *testing.T) {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("expected ship check to avoid %q, got:\n%s", unwanted, out)
 		}
+	}
+	if strings.Contains(out, fakeCodex) {
+		t.Fatalf("expected compact ship check text to avoid local executable path %q, got:\n%s", fakeCodex, out)
 	}
 }
 

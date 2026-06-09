@@ -213,7 +213,39 @@ func renderShipCheckText(w io.Writer, report shipCheckReport) {
 	}
 	readyDogfood, missingDogfood := summarizeShipCLIHandoffDogfood(report.CLIHandoffDogfood)
 	fmt.Fprintf(w, "CLI handoff dogfood: %d ready, %d need setup\n", readyDogfood, missingDogfood)
+	renderShipCLIHandoffDogfoodText(w, report.CLIHandoffDogfood)
 	fmt.Fprintln(w, "Dogfood before release: verify auth, approvals, output shape, and route receipt privacy on real installed CLIs.")
 	fmt.Fprintln(w, "Run before push: bash tools/run_required_gates.sh push")
 	fmt.Fprintln(w, "Safe lane: create an isolated worktree, run gates, then push only after evidence is clean.")
+}
+
+func renderShipCLIHandoffDogfoodText(w io.Writer, items []shipCLIHandoffDogfood) {
+	if len(items) == 0 {
+		return
+	}
+	fmt.Fprintln(w, "CLI handoff routes:")
+	for _, item := range items {
+		if item.Status == "ready" {
+			fmt.Fprintf(w, "- %s: ready\n", item.RouteID)
+			continue
+		}
+		fmt.Fprintf(w, "- %s: needs setup (%s)\n", item.RouteID, shipCLIHandoffSetupCategory(item.Missing))
+	}
+}
+
+func shipCLIHandoffSetupCategory(missing []string) string {
+	for _, item := range missing {
+		normalized := strings.ToLower(item)
+		switch {
+		case strings.Contains(normalized, "gatekeeper rejected"):
+			return "macOS Gatekeeper"
+		case strings.Contains(normalized, "requires an installed cli executable"):
+			return "missing executable"
+		case strings.Contains(normalized, "invalid quoting"):
+			return "invalid args"
+		case strings.Contains(normalized, "trust checks"):
+			return "local trust check"
+		}
+	}
+	return "see JSON details"
 }
