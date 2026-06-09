@@ -4,6 +4,10 @@ Updated: 2026-06-09
 
 This is the active implementation plan. It is intentionally narrow.
 
+The development philosophy is focused implementation: ship the smallest
+traceable cut that improves the active CLI wedge, then stop before the work
+turns into adjacent scope.
+
 Authority chain:
 
 1. PRD: [number-one-platform-prd.md](./number-one-platform-prd.md)

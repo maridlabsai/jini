@@ -54,6 +54,8 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"no visible `Switch` startup control",
 		"Offline is a route state, not a separate product.",
 		"Until the CLI wedge is noticeably strong, defer broad expansion.",
+		"Focused implementation is the development philosophy.",
+		"smallest change that advances the active CLI wedge",
 		"No drift without explicit agreement.",
 		"Older broad PRDs, research notes, and platform plans are background only.",
 		"Protected product and PRD surfaces must not change casually.",
@@ -165,6 +167,8 @@ func TestFocusedDeliveryChainGatesPRDDesignAndImplementation(t *testing.T) {
 	developmentPlan := readProductPositioningFile(t, root, "specs/number-one-development-plan.md")
 	for _, want := range []string{
 		"This is the active implementation plan. It is intentionally narrow.",
+		"The development philosophy is focused implementation: ship the smallest",
+		"stop before the work",
 		"Make the CLI good enough for users to prefer trying Jini again.",
 		"The core charter is intent-first Claude/Codex parity.",
 		"Intent-First CLI Parity",

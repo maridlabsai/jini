@@ -248,6 +248,10 @@ P2:
 
 ## Focused Delivery Decision
 
+Focused implementation is the development philosophy. Every cut should be the
+smallest change that advances the active CLI wedge or removes a release-blocking
+quality risk.
+
 Jini delivery uses one active chain:
 
 - PRD: `specs/number-one-platform-prd.md`
