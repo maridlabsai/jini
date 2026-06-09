@@ -896,6 +896,9 @@ func renderRouteList(w io.Writer) {
 			locality = descriptor.Locality
 		}
 		readiness := routeTargetReadinessLabel(target)
+		if detail := routeTargetReadinessDetail(target); detail != "" {
+			readiness = strings.TrimSpace(readiness + ": " + detail)
+		}
 		details := strings.Trim(strings.Join([]string{locality, cost, readiness}, ", "), ", ")
 		if details != "" {
 			details = " (" + details + ")"
@@ -922,6 +925,17 @@ func routeTargetReadinessLabel(target savedRouteTarget) string {
 		return "unknown"
 	}
 	return routeReadinessLabel(detectProviderForMode(mode))
+}
+
+func routeTargetReadinessDetail(target savedRouteTarget) string {
+	if !cliHandoffMode(target.ID) {
+		return ""
+	}
+	provider := detectCLIHandoffProvider(target.ID)
+	if routeReadinessLabel(provider) == "ok" || len(provider.Missing) == 0 {
+		return ""
+	}
+	return shipCLIHandoffSetupCategory(provider.Missing)
 }
 
 func parseOptionalFormatArgs(args []string) (string, bool) {

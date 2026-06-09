@@ -1221,6 +1221,14 @@ func TestInteractiveSetupCanSaveClaudeAPIRouteInsideJini(t *testing.T) {
 func TestRouteCommandListsAvailableRoutes(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	fakeBin := t.TempDir()
+	fakeCodex := writeFakeExecutable(t, fakeBin, "codex", "printf 'fake codex\\n'\n")
+	t.Setenv("JINI_CODEX_CLI", fakeCodex)
+	t.Setenv("JINI_CLAUDE_CODE_CLI", filepath.Join(fakeBin, "missing-claude"))
+	t.Setenv("JINI_GEMINI_CLI", filepath.Join(fakeBin, "missing-gemini"))
+	t.Setenv("JINI_AIDER_CLI", filepath.Join(fakeBin, "missing-aider"))
+	t.Setenv("JINI_OPENCODE_CLI", filepath.Join(fakeBin, "missing-opencode"))
 
 	var stdout bytes.Buffer
 	exitCode := app.Run([]string{"route", "list"}, &stdout, &stdout)
@@ -1234,9 +1242,11 @@ func TestRouteCommandListsAvailableRoutes(t *testing.T) {
 		"Current: auto",
 		"Available",
 		"auto",
-		"- codex: Codex CLI handoff",
-		"- claude-code: Claude Code CLI handoff",
-		"- gemini-cli: Gemini CLI handoff",
+		"- codex: Codex CLI handoff (cli, external, ok)",
+		"- claude-code: Claude Code CLI handoff (cli, external, needs setup: missing executable)",
+		"- gemini-cli: Gemini CLI handoff (cli, external, needs setup: missing executable)",
+		"- aider: Aider CLI handoff (cli, external, needs setup: missing executable)",
+		"- opencode: OpenCode CLI handoff (cli, external, needs setup: missing executable)",
 		"claude-api",
 		"- azure-code: Azure code route (remote, standard, needs setup)",
 		"- local-preview: Local preview (local, free, ok)",
@@ -1246,6 +1256,9 @@ func TestRouteCommandListsAvailableRoutes(t *testing.T) {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected route list to contain %q, got:\n%s", want, out)
 		}
+	}
+	if strings.Contains(out, fakeCodex) {
+		t.Fatalf("route list must not leak executable path %q, got:\n%s", fakeCodex, out)
 	}
 }
 
