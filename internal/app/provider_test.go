@@ -682,6 +682,102 @@ func TestGenerateWithConfiguredProviderCallsLocalSLMOpenAICompatible(t *testing.
 	}
 }
 
+func TestGenerateWithConfiguredProviderAutoDiscoversLocalSLMModel(t *testing.T) {
+	t.Setenv("JINI_STATE_DIR", t.TempDir())
+	t.Setenv("JINI_PROVIDER", "local-slm")
+	t.Setenv("JINI_TOOL", "auto")
+	t.Setenv("JINI_MODEL", "auto")
+	t.Setenv("JINI_DEVICE_CLASS_OVERRIDE", "laptop-strong")
+	resetLocalSLMAutoDiscoveryForTest(t)
+
+	requestSeen := false
+	withProviderHTTPClient(t, func(req *http.Request) (*http.Response, error) {
+		switch {
+		case req.Method == http.MethodGet && req.URL.String() == "http://127.0.0.1:11434/v1/models":
+			return jsonResponse(200, `{"data":[{"id":"phi4-mini"},{"id":"qwen3:8b-instruct"},{"id":"qwen3:14b"},{"id":"gemma3:12b"}]}`), nil
+		case req.Method == http.MethodPost && req.URL.String() == "http://127.0.0.1:11434/v1/chat/completions":
+			requestSeen = true
+			body := mustReadAll(t, req.Body)
+			if !strings.Contains(body, `"model":"qwen3:8b-instruct"`) {
+				t.Fatalf("expected auto-selected workhorse model in request body, got:\n%s", body)
+			}
+			return jsonResponse(200, `{"choices":[{"message":{"content":"## Send this note\nAuto local draft.\n\n## Decisions captured from the notes\n- One\n\n## Owners and due dates to confirm\n- Owner\n\n## Open questions to close\n- Question\n\n## Recommended next move\n- Next"}}]}`), nil
+		default:
+			t.Fatalf("unexpected Local SLM discovery request: %s %s", req.Method, req.URL.String())
+			return nil, nil
+		}
+	})
+
+	result, used, err := generateWithConfiguredProvider(context.Background(), providerGenerationRequest{
+		Choice: starterChoice{PackID: "meeting-followup"},
+		Title:  "Weekly Product Review",
+		Source: "Turn meeting notes into something I can send.",
+	})
+	if err != nil {
+		t.Fatalf("generate with auto-discovered Local SLM: %v", err)
+	}
+	if !used || !requestSeen {
+		t.Fatalf("expected auto-discovered Local SLM provider to be used")
+	}
+	if !strings.Contains(result, "Auto local draft") {
+		t.Fatalf("expected Local SLM content, got:\n%s", result)
+	}
+}
+
+func TestDetectLocalSLMProviderUsesDiscoveredModelWithoutManualConfig(t *testing.T) {
+	t.Setenv("JINI_STATE_DIR", t.TempDir())
+	t.Setenv("JINI_PROVIDER", "local-slm")
+	t.Setenv("JINI_DEVICE_CLASS_OVERRIDE", "laptop-strong")
+	resetLocalSLMAutoDiscoveryForTest(t)
+
+	withProviderHTTPClient(t, func(req *http.Request) (*http.Response, error) {
+		if req.Method == http.MethodGet && req.URL.String() == "http://127.0.0.1:11434/v1/models" {
+			return jsonResponse(200, `{"data":[{"id":"phi4-mini"},{"id":"qwen3:8b-instruct"}]}`), nil
+		}
+		t.Fatalf("unexpected Local SLM discovery request: %s %s", req.Method, req.URL.String())
+		return nil, nil
+	})
+
+	provider := detectLocalSLMProvider()
+	if provider.Status != "ok" {
+		t.Fatalf("expected auto-discovered Local SLM to be ready, got %#v", provider)
+	}
+	joined := strings.Join(provider.Settings, "\n")
+	for _, want := range []string{
+		"JINI_LOCAL_SLM_ENDPOINT: auto -> http://127.0.0.1:11434/v1",
+		"JINI_LOCAL_SLM_MODEL: auto -> qwen3:8b-instruct",
+	} {
+		if !strings.Contains(joined, want) {
+			t.Fatalf("expected provider settings to contain %q, got:\n%s", want, joined)
+		}
+	}
+}
+
+func TestLocalSLMAutoDiscoveryCachesNegativeResult(t *testing.T) {
+	t.Setenv("JINI_STATE_DIR", t.TempDir())
+	t.Setenv("JINI_PROVIDER", "local-slm")
+	resetLocalSLMAutoDiscoveryForTest(t)
+
+	probes := 0
+	withProviderHTTPClient(t, func(req *http.Request) (*http.Response, error) {
+		if req.Method == http.MethodGet && strings.HasSuffix(req.URL.String(), "/models") {
+			probes++
+			return nil, errors.New("local runtime unavailable")
+		}
+		t.Fatalf("unexpected Local SLM discovery request: %s %s", req.Method, req.URL.String())
+		return nil, nil
+	})
+
+	first := localSLMRuntimeDiscoveryResult()
+	second := localSLMRuntimeDiscoveryResult()
+	if first.Endpoint != "" || second.Endpoint != "" {
+		t.Fatalf("expected no discovered endpoint, got first=%#v second=%#v", first, second)
+	}
+	if probes != len(defaultLocalSLMDiscoveryEndpoints()) {
+		t.Fatalf("expected one discovery sweep to be cached, got %d probes", probes)
+	}
+}
+
 func TestGenerateWithConfiguredProviderAutoPrefersBedrockForSonnet46Alias(t *testing.T) {
 	t.Setenv("JINI_PROVIDER", "auto")
 	t.Setenv("JINI_MODEL", "sonnet-4.6")
@@ -951,6 +1047,32 @@ func TestDetectRouteForRequestAutoPrefersLocalFastOnTinyDeviceForQuickPass(t *te
 	})
 	if decision.ToolMode != "local-fast" {
 		t.Fatalf("expected Local SLM fast for a tiny device quick pass, got %#v", decision)
+	}
+	if decision.ModelLabel != "phi4-mini" {
+		t.Fatalf("expected fast local model label, got %#v", decision)
+	}
+}
+
+func TestDetectRouteForRequestAutoPrefersLocalFastOnLowBattery(t *testing.T) {
+	t.Setenv("JINI_STATE_DIR", t.TempDir())
+	t.Setenv("JINI_TOOL", "auto")
+	t.Setenv("JINI_PROVIDER", "auto")
+	t.Setenv("JINI_MODEL", "auto")
+	t.Setenv("JINI_DEVICE_CLASS_OVERRIDE", "laptop-strong")
+	t.Setenv("JINI_POWER_SOURCE_OVERRIDE", "battery")
+	t.Setenv("JINI_BATTERY_PERCENT_OVERRIDE", "18")
+	t.Setenv("JINI_LOCAL_SLM_ENDPOINT", "http://127.0.0.1:11434/v1")
+	t.Setenv("JINI_LOCAL_SLM_MODEL", "qwen3:8b")
+	t.Setenv("JINI_LOCAL_SLM_FAST_MODEL", "phi4-mini")
+	t.Setenv("JINI_LOCAL_SLM_WORKHORSE_MODEL", "qwen3:8b-instruct")
+
+	decision := detectRouteForRequest(providerGenerationRequest{
+		Choice: starterChoice{PackID: "meeting-followup"},
+		Title:  "Quick follow-up",
+		Source: "Quick one-line follow-up from this meeting.",
+	})
+	if decision.ToolMode != "local-fast" {
+		t.Fatalf("expected Local SLM fast on low battery, got %#v", decision)
 	}
 	if decision.ModelLabel != "phi4-mini" {
 		t.Fatalf("expected fast local model label, got %#v", decision)

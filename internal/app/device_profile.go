@@ -327,22 +327,12 @@ func defaultAcceleratorClass(goos, arch string) string {
 }
 
 func detectLocalRuntimeClass() string {
-	endpoint := strings.ToLower(strings.TrimSpace(configValue("JINI_LOCAL_SLM_ENDPOINT")))
-	switch {
-	case endpoint == "":
-		return "not-configured"
-	case strings.Contains(endpoint, "127.0.0.1") || strings.Contains(endpoint, "localhost"):
-		if strings.Contains(endpoint, "11434") {
-			return "ollama-openai-compatible"
-		}
-		return "local-openai-compatible"
-	default:
-		return "remote-openai-compatible"
-	}
+	endpoint, _ := resolvedLocalSLMEndpoint()
+	return runtimeClassForLocalSLMEndpoint(endpoint)
 }
 
 func normalizedLocalEndpointSignature() string {
-	raw := strings.TrimSpace(configValue("JINI_LOCAL_SLM_ENDPOINT"))
+	raw, source := resolvedLocalSLMEndpoint()
 	if raw == "" {
 		return "not-configured"
 	}
@@ -353,7 +343,11 @@ func normalizedLocalEndpointSignature() string {
 		if scheme == "" && host == "" {
 			return strings.ToLower(strings.TrimSpace(raw))
 		}
-		return strings.TrimSpace(scheme + "://" + host + path)
+		signature := strings.TrimSpace(scheme + "://" + host + path)
+		if source == "auto" {
+			return "auto:" + signature
+		}
+		return signature
 	}
 	return strings.ToLower(raw)
 }
@@ -467,7 +461,8 @@ func effectiveLocalProfileStatesForDevice(profile deviceProfile) map[string]stri
 	if strings.TrimSpace(defaultModelID) == "" {
 		return unavailableLocalProfileStates()
 	}
-	if strings.TrimSpace(configValue("JINI_LOCAL_SLM_MULTIMODAL_MODEL")) == "" {
+	multimodalModelID, _ := resolveLocalSLMModelForToolMode("local-multimodal")
+	if strings.TrimSpace(multimodalModelID) == "" {
 		if states["local-multimodal"] == "available" {
 			states["local-multimodal"] = "limited"
 		}

@@ -307,6 +307,21 @@ hint for the shell.
 JINI_PROVIDER=local-slm
 JINI_TOOL=auto
 JINI_MODEL=auto
+```
+
+If an OpenAI-compatible local server is already running on a common loopback
+port, Jini can discover it and choose the model automatically. Today it checks:
+
+```text
+http://127.0.0.1:11434/v1   # Ollama OpenAI-compatible endpoint
+http://127.0.0.1:1234/v1    # LM Studio
+http://127.0.0.1:8080/v1    # llama.cpp-style local servers
+http://127.0.0.1:8000/v1    # local OpenAI-compatible servers
+```
+
+Use explicit settings only when auto-discovery is not enough:
+
+```bash
 JINI_LOCAL_SLM_ENDPOINT=http://127.0.0.1:11434/v1
 JINI_LOCAL_SLM_MODEL=qwen3:8b
 jini doctor
@@ -324,10 +339,12 @@ JINI_LOCAL_SLM_MULTIMODAL_MODEL=gemma3:12b
 Inside Jini, the easiest path is `Connect Local SLM`.
 
 Jini now treats these local slots as device-aware. It probes the OS, version,
-architecture, memory, accelerator class, and local runtime shape, refreshes
-that profile when the Jini/OS/runtime shape drifts, and uses backend readiness
-plus the device profile to decide whether `fast`, `workhorse`, `deep`, or
-`multimodal` is actually suitable.
+architecture, memory, accelerator class, local runtime shape, and power state,
+refreshes that profile when the Jini/OS/runtime shape drifts, and uses backend
+readiness plus the device profile to decide whether `fast`, `workhorse`,
+`deep`, or `multimodal` is actually suitable. Explicit model settings still
+win, but without them Jini scores the discovered local models by task, device
+class, and low-battery posture.
 
 When you run `jini doctor` on a Local SLM setup, Jini also records a
 small measured capability report for the local profiles. That report captures

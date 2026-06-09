@@ -1368,10 +1368,13 @@ func TestRouteCommandShowsSetupHelp(t *testing.T) {
 			"1. Run `jini route list`.",
 			"2. Run `jini doctor`.",
 			"3. Run `jini route set codex` or `jini route set claude-code`.",
-			"Local/offline: run `jini route set local-preview`.",
+			"Local/offline model: run a local OpenAI-compatible server, then `jini route set local-slm` or `jini route auto`.",
+			"Local preview: run `jini route set local-preview` when you want deterministic no-model fallback.",
 			"Use env overrides only when auto-detect fails:",
 			"- `JINI_CODEX_CLI=/path/to/codex`",
 			"- `JINI_CLAUDE_CODE_CLI=/path/to/claude`",
+			"- `JINI_LOCAL_SLM_ENDPOINT=http://127.0.0.1:11434/v1`",
+			"- `JINI_LOCAL_SLM_MODEL=qwen3:8b`",
 		} {
 			if !strings.Contains(out, want) {
 				t.Fatalf("expected route help %v to contain %q, got:\n%s", args, want, out)

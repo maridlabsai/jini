@@ -108,7 +108,7 @@ func detectAutoRouteForRequest(request providerGenerationRequest) routeDecision 
 	case "azure-openai":
 		candidates = []string{"chatgpt", "azure-code", "azure-openai"}
 	case "local-slm":
-		candidates = localSLMCandidateModes()
+		candidates = localSLMCandidateModesForScores(scored)
 	case "local-preview":
 		candidates = []string{"local-preview"}
 	}
@@ -646,84 +646,115 @@ func localSLMRuntimeReady() bool {
 
 func localDeviceCapabilityBias(mode string, profile deviceProfile) int {
 	state := strings.TrimSpace(profile.LocalProfileStates[mode])
+	power := currentPowerProfile()
+	powerBias := 0
+	if power.LowBattery {
+		switch mode {
+		case "local-fast":
+			powerBias = 24
+		case "local-workhorse":
+			powerBias = -6
+		case "local-deep":
+			powerBias = -30
+		case "local-multimodal":
+			powerBias = -24
+		}
+	}
 	switch state {
 	case "unavailable":
 		return -100
 	case "limited":
 		switch mode {
 		case "local-fast":
-			return 4
+			return 4 + powerBias
 		case "local-workhorse":
-			return -4
+			return -4 + powerBias
 		case "local-deep":
-			return -18
+			return -18 + powerBias
 		case "local-multimodal":
-			return -22
+			return -22 + powerBias
 		}
 	case "available":
 		switch profile.DeviceClass {
 		case "tiny":
 			switch mode {
 			case "local-fast":
-				return 16
+				return 16 + powerBias
 			case "local-workhorse":
-				return -8
+				return -8 + powerBias
 			case "local-deep", "local-multimodal":
-				return -24
+				return -24 + powerBias
 			}
 		case "laptop-light":
 			switch mode {
 			case "local-fast":
-				return 12
+				return 12 + powerBias
 			case "local-workhorse":
-				return 6
+				return 6 + powerBias
 			case "local-deep":
-				return -8
+				return -8 + powerBias
 			case "local-multimodal":
-				return -14
+				return -14 + powerBias
 			}
 		case "laptop-strong":
 			switch mode {
 			case "local-fast":
-				return 6
+				return 6 + powerBias
 			case "local-workhorse":
-				return 10
+				return 10 + powerBias
 			case "local-deep":
-				return 2
+				return 2 + powerBias
 			case "local-multimodal":
-				return -4
+				return -4 + powerBias
 			}
 		case "workstation":
 			switch mode {
 			case "local-fast":
-				return 2
+				return 2 + powerBias
 			case "local-workhorse":
-				return 10
+				return 10 + powerBias
 			case "local-deep":
-				return 10
+				return 10 + powerBias
 			case "local-multimodal":
-				return 8
+				return 8 + powerBias
 			}
 		case "gpu-heavy":
 			switch mode {
 			case "local-fast":
-				return 2
+				return 2 + powerBias
 			case "local-workhorse":
-				return 8
+				return 8 + powerBias
 			case "local-deep":
-				return 14
+				return 14 + powerBias
 			case "local-multimodal":
-				return 16
+				return 16 + powerBias
 			}
 		}
 	}
-	return 0
+	return powerBias
 }
 
 func localSLMCandidateModes() []string {
 	modes := make([]string, 0, len(localSLMProfileSlots()))
 	for _, slot := range localSLMProfileSlots() {
 		modes = append(modes, slot.ID)
+	}
+	return modes
+}
+
+func localSLMCandidateModesForScores(scored []routeCandidateScore) []string {
+	allowed := map[string]bool{}
+	for _, mode := range localSLMCandidateModes() {
+		allowed[mode] = true
+	}
+	modes := []string{}
+	for _, candidate := range scored {
+		if allowed[candidate.Mode] {
+			modes = append(modes, candidate.Mode)
+		}
+	}
+	if len(modes) == 0 {
+		return localSLMCandidateModes()
 	}
 	return modes
 }
@@ -1119,13 +1150,14 @@ func classifyModelChoice(request providerGenerationRequest, toolMode string) (st
 		deviceClass := strings.TrimSpace(currentDeviceProfile().DeviceClass)
 		suffix := localBenchmarkReasonSuffixForRequest(toolMode, request)
 		separationNote := multimodalLearningSeparationNote(classifyRouteFeatures(request))
+		powerNote := localSLMModelSelectionReasonSuffix()
 		if strings.TrimSpace(modelID) == "" {
-			return "Local SLM", "Jini will use the configured Local SLM profile for this route." + suffix + separationNote
+			return "Local SLM", "Jini will use the configured Local SLM profile for this route." + suffix + separationNote + powerNote
 		}
 		if deviceClass == "" {
-			return modelLabel, "Jini uses the Local SLM profile mapped to this route." + suffix + separationNote
+			return modelLabel, "Jini uses the Local SLM profile mapped to this route." + suffix + separationNote + powerNote
 		}
-		return modelLabel, "Jini uses the Local SLM profile mapped to this route for a " + deviceClass + " device." + suffix + separationNote
+		return modelLabel, "Jini uses the Local SLM profile mapped to this route for a " + deviceClass + " device." + suffix + separationNote + powerNote
 	case toolMode == "local-preview":
 		return "Local preview", "Jini stays local when no cloud route is selected or ready."
 	default:
@@ -2096,6 +2128,9 @@ func resolveLocalSLMDefaultModel() (string, string) {
 		"JINI_LOCAL_SLM_DEEP_MODEL",
 		"JINI_LOCAL_SLM_MULTIMODAL_MODEL",
 	))
+	if modelID == "" {
+		return autoLocalSLMModelForToolMode("local-workhorse")
+	}
 	return modelID, modelID
 }
 
@@ -2103,15 +2138,27 @@ func resolveLocalSLMModelForToolMode(toolMode string) (string, string) {
 	switch toolMode {
 	case "local-fast":
 		modelID := strings.TrimSpace(configFirstNonEmpty("JINI_LOCAL_SLM_FAST_MODEL", "JINI_LOCAL_SLM_MODEL"))
+		if modelID == "" {
+			return autoLocalSLMModelForToolMode(toolMode)
+		}
 		return modelID, firstNonEmpty(modelID, "Local SLM fast")
 	case "local-workhorse":
 		modelID := strings.TrimSpace(configFirstNonEmpty("JINI_LOCAL_SLM_WORKHORSE_MODEL", "JINI_LOCAL_SLM_MODEL", "JINI_LOCAL_SLM_FAST_MODEL"))
+		if modelID == "" {
+			return autoLocalSLMModelForToolMode(toolMode)
+		}
 		return modelID, firstNonEmpty(modelID, "Local SLM workhorse")
 	case "local-deep":
 		modelID := strings.TrimSpace(configFirstNonEmpty("JINI_LOCAL_SLM_DEEP_MODEL", "JINI_LOCAL_SLM_WORKHORSE_MODEL", "JINI_LOCAL_SLM_MODEL"))
+		if modelID == "" {
+			return autoLocalSLMModelForToolMode(toolMode)
+		}
 		return modelID, firstNonEmpty(modelID, "Local SLM deep")
 	case "local-multimodal":
 		modelID := strings.TrimSpace(configFirstNonEmpty("JINI_LOCAL_SLM_MULTIMODAL_MODEL", "JINI_LOCAL_SLM_MODEL"))
+		if modelID == "" {
+			return autoLocalSLMModelForToolMode(toolMode)
+		}
 		return modelID, firstNonEmpty(modelID, "Local SLM multimodal")
 	default:
 		return resolveLocalSLMDefaultModel()

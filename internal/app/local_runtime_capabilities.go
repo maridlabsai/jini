@@ -310,7 +310,7 @@ func benchmarkLocalAdapter(ctx context.Context, descriptor adapterDescriptor) lo
 		base.QualityClass = "unknown"
 		return base
 	}
-	endpoint := strings.TrimRight(strings.TrimSpace(configValue("JINI_LOCAL_SLM_ENDPOINT")), "/")
+	endpoint, _ := resolvedLocalSLMEndpoint()
 	if endpoint == "" {
 		base.Status = "not-configured"
 		base.QualityClass = "unknown"

@@ -930,12 +930,15 @@ func renderRouteSetupHelp(w io.Writer) {
 	fmt.Fprintln(w, "2. Run `jini doctor`.")
 	fmt.Fprintln(w, "3. Run `jini route set codex` or `jini route set claude-code`.")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Local/offline: run `jini route set local-preview`.")
+	fmt.Fprintln(w, "Local/offline model: run a local OpenAI-compatible server, then `jini route set local-slm` or `jini route auto`.")
+	fmt.Fprintln(w, "Local preview: run `jini route set local-preview` when you want deterministic no-model fallback.")
 	fmt.Fprintln(w, "Auto mode: run `jini route auto`.")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Use env overrides only when auto-detect fails:")
 	fmt.Fprintln(w, "- `JINI_CODEX_CLI=/path/to/codex`")
 	fmt.Fprintln(w, "- `JINI_CLAUDE_CODE_CLI=/path/to/claude`")
+	fmt.Fprintln(w, "- `JINI_LOCAL_SLM_ENDPOINT=http://127.0.0.1:11434/v1`")
+	fmt.Fprintln(w, "- `JINI_LOCAL_SLM_MODEL=qwen3:8b`")
 }
 
 func routeTargetReadinessLabel(target savedRouteTarget) string {
@@ -1094,15 +1097,16 @@ func detectLocalSLMProvider() providerConfig {
 	defaultModelID, defaultModelLabel := resolveLocalSLMDefaultModel()
 	device := currentDeviceProfile()
 	missing := []string{}
-	if strings.TrimSpace(configValue("JINI_LOCAL_SLM_ENDPOINT")) == "" {
-		missing = append(missing, "JINI_LOCAL_SLM_ENDPOINT")
+	endpoint, _ := resolvedLocalSLMEndpoint()
+	if strings.TrimSpace(endpoint) == "" {
+		missing = append(missing, "JINI_LOCAL_SLM_ENDPOINT or local OpenAI-compatible server")
 	}
 	if strings.TrimSpace(defaultModelID) == "" {
-		missing = append(missing, "JINI_LOCAL_SLM_MODEL")
+		missing = append(missing, "JINI_LOCAL_SLM_MODEL or discoverable local chat model")
 	}
 	settings := []string{
 		providerSettingLine("local-slm"),
-		"JINI_LOCAL_SLM_ENDPOINT: " + presentOrMissing("JINI_LOCAL_SLM_ENDPOINT"),
+		localSLMEndpointSettingLine(),
 		"DEVICE_CLASS: " + firstNonEmpty(device.DeviceClass, "unknown"),
 		"DEVICE_OS: " + strings.TrimSpace(firstNonEmpty(device.OS, "unknown")) + " " + strings.TrimSpace(firstNonEmpty(device.OSVersion, "unknown")),
 		"LOCAL_ACCELERATOR: " + firstNonEmpty(device.AcceleratorClass, "unknown"),
@@ -1118,16 +1122,23 @@ func detectLocalSLMProvider() providerConfig {
 		{"JINI_LOCAL_SLM_DEEP_MODEL", "Deep profile"},
 		{"JINI_LOCAL_SLM_MULTIMODAL_MODEL", "Multimodal profile"},
 	} {
+		modelID, modelLabel := resolveLocalSLMModelForToolMode(toolModeForLocalSetting(slot.env))
 		if slot.env == "JINI_LOCAL_SLM_MODEL" {
-			settings = append(settings, slot.env+": "+presentOrMissing(slot.env)+" -> "+firstNonEmpty(defaultModelLabel, "missing"))
+			modelID, modelLabel = defaultModelID, defaultModelLabel
+		}
+		if slot.env == "JINI_LOCAL_SLM_MODEL" {
+			settings = append(settings, localSLMModelSettingLine(slot.env, modelID, firstNonEmpty(modelLabel, defaultModelLabel)))
 			continue
 		}
 		state := strings.TrimSpace(device.LocalProfileStates[toolModeForLocalSetting(slot.env)])
 		if state != "" {
-			settings = append(settings, slot.env+": "+presentOrMissing(slot.env)+" ("+state+" on this device)")
+			settings = append(settings, localSLMModelSettingLine(slot.env, modelID, modelLabel)+" ("+state+" on this device)")
 			continue
 		}
-		settings = append(settings, slot.env+": "+presentOrMissing(slot.env))
+		settings = append(settings, localSLMModelSettingLine(slot.env, modelID, modelLabel))
+	}
+	if power := formatPowerProfileForRoute(); power != "" {
+		settings = append(settings, "POWER_STATE: "+power)
 	}
 	if len(missing) == 0 {
 		settings = append(settings, freshLocalBenchmarkSummaryLines()...)

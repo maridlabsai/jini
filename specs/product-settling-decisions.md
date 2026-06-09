@@ -224,6 +224,14 @@ router and session layer around that CLI.
 
 The user should experience one session either way.
 
+Offline local-model selection is Jini intelligence, not user homework. If the
+user selects local SLM mode, or auto mode has no configured remote provider to
+use, Jini should discover common loopback OpenAI-compatible local runtimes,
+inspect available chat models, and choose the smallest suitable profile for the
+task, device class, and battery posture. Explicit local model settings remain
+overrides. Zero-config discovery does not authorize silent model downloads or
+bundling large model assets into the CLI installer.
+
 ## Roadmap Consequence
 
 Until the CLI wedge is noticeably strong, defer broad expansion.

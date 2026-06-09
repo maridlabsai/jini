@@ -391,9 +391,12 @@ func generateWithBedrock(ctx context.Context, request providerGenerationRequest,
 }
 
 func generateWithLocalSLM(ctx context.Context, request providerGenerationRequest, systemPrompt, userPrompt string) (string, error) {
-	endpoint := strings.TrimRight(strings.TrimSpace(configValue("JINI_LOCAL_SLM_ENDPOINT")), "/")
+	endpoint, _ := resolvedLocalSLMEndpoint()
 	modelID, modelLabel := resolveLocalSLMModelForRequest(request)
 	if endpoint == "" || strings.TrimSpace(modelID) == "" {
+		if issue := localSLMRuntimeSetupIssue(); issue != "" {
+			return "", providerSetupError(providerConfig{Missing: []string{issue}})
+		}
 		return "", providerSetupError(providerConfig{Missing: []string{"JINI_LOCAL_SLM_ENDPOINT", "JINI_LOCAL_SLM_MODEL"}})
 	}
 
