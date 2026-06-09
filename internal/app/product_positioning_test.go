@@ -54,10 +54,11 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"no visible `Switch` startup control",
 		"Offline is a route state, not a separate product.",
 		"Until the CLI wedge is noticeably strong, defer broad expansion.",
-		"macOS app PRD, HLD, and LLD for a Codex desktop-caliber surface",
+		"macOS app PRD, UX design, HLD, and LLD for a Codex desktop-caliber surface",
 		"The macOS app may proceed only as a focused desktop surface",
 		"Focused implementation is the development philosophy.",
 		"macOS app PRD: `specs/macos-app-prd.md`",
+		"macOS app UX design: `specs/macos-app-ux-design.md`",
 		"smallest change that advances the active CLI wedge",
 		"No drift without explicit agreement.",
 		"Older broad PRDs, research notes, and platform plans are background only.",
@@ -242,6 +243,55 @@ func TestMacOSAppPRDPinsCodexParityWithoutProductDrift(t *testing.T) {
 	} {
 		if strings.Contains(prd, stale) {
 			t.Fatalf("macOS app PRD must not preserve stale or broad requirement %q", stale)
+		}
+	}
+}
+
+func TestMacOSAppUXDesignPinsFirstMinuteDesktopContract(t *testing.T) {
+	root := repoRootForMigrationTest(t)
+
+	ux := readProductPositioningFile(t, root, "specs/macos-app-ux-design.md")
+	for _, want := range []string{
+		"This is the active UX design for the Jini macOS app.",
+		"same session model as the CLI",
+		"Use a three-pane desktop supervision shell",
+		"left sidebar for projects, sessions, and search",
+		"center thread for compact task input",
+		"right inspector for progress, diffs, artifacts, route evidence",
+		"Dashboard-first: too slow to first useful output",
+		"Default launch:",
+		"Simple question:",
+		"Direct edit:",
+		"Forbidden first-minute states:",
+		"Start/Keep modal",
+		"Switch control",
+		"saved-work dashboard",
+		"Task Snapshot for factual questions",
+		"Working Draft for clear file edits",
+		"route ceremony before a route matters",
+		"agent role list before useful output",
+		"Pass condition: `what is the capital of france?` returns `Paris.`",
+		"Pass condition: no Working Draft, no generic artifact, no unnecessary plan.",
+		"Pass condition: route named `codex` never silently becomes provider API.",
+		"Pass condition: offline work does not fork the session.",
+		"Approval request anatomy:",
+		"Keyboard And Menu Contract",
+		"VoiceOver labels for route state",
+		"Golden transcripts pass for simple answer, direct edit, ambiguous edit",
+		"Visual QA rejects Start/Keep, Switch, Task Snapshot, Working Draft",
+	} {
+		if !strings.Contains(ux, want) {
+			t.Fatalf("macOS app UX design must preserve first-minute desktop contract %q", want)
+		}
+	}
+	for _, stale := range []string{
+		"Start/Keep way of thinking",
+		"Current work\n-",
+		"Type Switch",
+		"Other active work",
+	} {
+		if strings.Contains(ux, stale) {
+			t.Fatalf("macOS app UX design must reject stale UX language %q", stale)
 		}
 	}
 }

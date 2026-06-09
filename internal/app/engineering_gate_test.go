@@ -563,6 +563,7 @@ func TestProductPRDDriftGateProtectsCanonicalSurfaces(t *testing.T) {
 		"README.md",
 		"specs/number-one-platform-prd.md",
 		"specs/macos-app-prd.md",
+		"specs/macos-app-ux-design.md",
 		"specs/product-settling-decisions.md",
 		"specs/product-streamline-redline.md",
 		"specs/agentic-development-operating-model.md",

@@ -241,6 +241,7 @@ No macOS release ships unless these gates pass:
 Phase 0, design:
 
 - approve this PRD
+- write macOS UX design
 - write macOS HLD and LLD
 - choose Tauri 2 versus SwiftUI/AppKit with a prototype-backed decision
 - add macOS PRD trace and golden transcript fixtures

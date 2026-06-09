@@ -239,8 +239,8 @@ P1:
 - powered-mode and low-battery route policy
 - offline local model quality bars
 - cross-surface session handoff
-- macOS app PRD, HLD, and LLD for a Codex desktop-caliber surface over the same
-  Go session graph
+- macOS app PRD, UX design, HLD, and LLD for a Codex desktop-caliber surface
+  over the same Go session graph
 
 P2:
 
@@ -263,6 +263,7 @@ Jini delivery uses one active chain:
 
 - PRD: `specs/number-one-platform-prd.md`
 - macOS app PRD: `specs/macos-app-prd.md`
+- macOS app UX design: `specs/macos-app-ux-design.md`
 - HLD: `specs/number-one-platform-hld.md`
 - LLD: `specs/number-one-platform-lld.md`
 - streamline redline: `specs/product-streamline-redline.md`
