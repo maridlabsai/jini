@@ -40,13 +40,15 @@ Required commands:
 6. `bash tools/customer_value_gate.sh`
 7. `bash tools/cli_ux_regression_gate.sh`
 8. `bash tools/claude_codex_usecase_gate.sh`
-9. `jini scorecard-gate --format json`
+9. `bash tools/macos_bundle_hygiene_gate.sh`
+10. `jini scorecard-gate --format json`
 
 Required outcome:
 
 - Go runtime regressions are caught immediately
 - the migration boundary blocks tracked Python files and Python gate invocations
 - staged and unstaged whitespace and patch-format drift are blocked before commit
+- macOS sidecar binaries are generated locally and must not be tracked
 - scanner wiring for CodeQL, govulncheck, OSV-Scanner, TruffleHog, and
   Dependabot cannot be removed without failing the local gate
 - protected PRD and product-positioning surfaces cannot drift unless
