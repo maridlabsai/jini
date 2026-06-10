@@ -961,10 +961,10 @@ func renderRouteSetupHelp(w io.Writer) {
 	fmt.Fprintln(w, "- `AZURE_OPENAI_ENDPOINT=https://...openai.azure.com`")
 	fmt.Fprintln(w, "- `AZURE_OPENAI_DEPLOYMENT=your-deployment`")
 	fmt.Fprintln(w, "- `AWS_PROFILE=your-profile` or `AWS_ACCESS_KEY_ID=...`")
-	fmt.Fprintln(w, "- `JINI_CODEX_CLI=/path/to/codex`")
-	fmt.Fprintln(w, "- `JINI_CLAUDE_CODE_CLI=/path/to/claude`")
+	fmt.Fprintln(w, "- Wave 1 CLI overrides: `JINI_CODEX_CLI`, `JINI_CLAUDE_CODE_CLI`, `JINI_GEMINI_CLI`, `JINI_AIDER_CLI`, `JINI_OPENCODE_CLI`.")
 	fmt.Fprintln(w, "- `JINI_LOCAL_SLM_ENDPOINT=http://127.0.0.1:11434/v1`")
 	fmt.Fprintln(w, "- `JINI_LOCAL_SLM_MODEL=qwen3:8b`")
+	fmt.Fprintln(w, "Gemini API and Vertex AI provider routes stay planned until `gemini-cli` dogfood evidence is complete.")
 }
 
 func routeTargetReadinessLabel(target savedRouteTarget) string {

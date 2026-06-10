@@ -187,6 +187,10 @@ That means:
 - BYO provider API routes include Azure OpenAI and Amazon Bedrock; setup must
   support common enterprise credential paths, stay inspectable through
   `jini route help` and `jini doctor`, and never print API keys or AWS secrets
+- Gemini sequence: finish real `gemini-cli` dogfood before adding or marketing
+  a Gemini API or Vertex AI provider route. When those provider routes are
+  added, they must be labeled as provider API routes, not `gemini-cli`, and
+  must not satisfy the CLI handoff requirement.
 - route output must make the difference between CLI handoff, provider API, and
   local/offline execution visible without adding startup ceremony
 - route setup guidance is public through `jini route help`; it lists CLI

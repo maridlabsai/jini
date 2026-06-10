@@ -42,6 +42,9 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"provider API routes may exist, but they must not be marketed as Codex,",
 		"route setup guidance is public through `jini route help`",
 		"provider/local route setup without printing secrets",
+		"Gemini sequence: finish real `gemini-cli` dogfood before adding or",
+		"Gemini API or Vertex AI provider route.",
+		"must be labeled as provider API routes, not `gemini-cli`",
 		"Adapter support ships in waves:",
 		"Wave 0, foundation: one handoff contract, route receipts, `doctor` detection",
 		"Wave 1, terminal agents: Codex, Claude Code, Gemini CLI, Aider, and OpenCode.",
@@ -129,6 +132,8 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"Wave 2: Ollama, LM Studio, OpenRouter, and LiteLLM-compatible gateways",
 		"Wave 0 and Wave 1 are runtime-supported when the downstream CLI is installed",
 		"Wave 2 and Wave 3 are planned targets, not shipped claims.",
+		"Gemini API and Vertex AI provider routes are planned only after",
+		"`gemini-cli` dogfood validates the CLI route.",
 		"Meeting, plan-readiness, travel, and vendor-comparison flows are proof",
 		"[specs/product-settling-decisions.md](specs/product-settling-decisions.md)",
 	} {
@@ -247,6 +252,8 @@ func TestFocusedDeliveryChainGatesPRDDesignAndImplementation(t *testing.T) {
 		"Paused work can restart only through `product-settling-decisions.md`.",
 		"Non-trivial engineering cuts must use the internal sub-agent divide-and-conquer",
 		"The coordinator owns scope splits, disjoint write sets, integration, and",
+		"complete `gemini-cli` dogfood before adding Gemini API or Vertex AI",
+		"provider support",
 		"operating-model scope split and evidence",
 		"If that trace cannot be written in one short paragraph, the cut is too broad.",
 	} {

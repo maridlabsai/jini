@@ -110,6 +110,8 @@ Exit evidence:
 - route tests cover CLI handoff success, missing CLI setup, reserved-route
   fail-closed behavior, provider API routes, auto, manual, local preview,
   local SLM, Codex, and Claude
+- complete `gemini-cli` dogfood before adding Gemini API or Vertex AI
+  provider support
 - docs show route inspection without teaching a new workflow first
 - scorecard pressure vector `token-frugality-p0` remains green
 

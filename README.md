@@ -245,6 +245,9 @@ Wave 0 and Wave 1 are runtime-supported when the downstream CLI is installed
 and trusted by the OS. Missing or rejected CLIs fail closed with setup guidance
 instead of silently falling back to a provider API alias.
 Wave 2 and Wave 3 are planned targets, not shipped claims.
+Gemini API and Vertex AI provider routes are planned only after
+`gemini-cli` dogfood validates the CLI route. When added, they will be labeled
+as provider API routes, not as `gemini-cli`.
 
 Supported provider choices:
 

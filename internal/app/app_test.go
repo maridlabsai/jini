@@ -1425,10 +1425,10 @@ func TestRouteCommandShowsSetupHelp(t *testing.T) {
 			"- `AZURE_OPENAI_ENDPOINT=https://...openai.azure.com`",
 			"- `AZURE_OPENAI_DEPLOYMENT=your-deployment`",
 			"- `AWS_PROFILE=your-profile` or `AWS_ACCESS_KEY_ID=...`",
-			"- `JINI_CODEX_CLI=/path/to/codex`",
-			"- `JINI_CLAUDE_CODE_CLI=/path/to/claude`",
+			"- Wave 1 CLI overrides: `JINI_CODEX_CLI`, `JINI_CLAUDE_CODE_CLI`, `JINI_GEMINI_CLI`, `JINI_AIDER_CLI`, `JINI_OPENCODE_CLI`.",
 			"- `JINI_LOCAL_SLM_ENDPOINT=http://127.0.0.1:11434/v1`",
 			"- `JINI_LOCAL_SLM_MODEL=qwen3:8b`",
+			"Gemini API and Vertex AI provider routes stay planned until `gemini-cli` dogfood evidence is complete.",
 		} {
 			if !strings.Contains(out, want) {
 				t.Fatalf("expected route help %v to contain %q, got:\n%s", args, want, out)
@@ -1447,7 +1447,7 @@ func TestRouteCommandShowsSetupHelp(t *testing.T) {
 				t.Fatalf("expected route help %v to avoid %q, got:\n%s", args, unwanted, out)
 			}
 		}
-		if got := nonEmptyLineCount(out); got > 17 {
+		if got := nonEmptyLineCount(out); got > 18 {
 			t.Fatalf("expected route help %v to stay compact, got %d non-empty lines:\n%s", args, got, out)
 		}
 	}
@@ -2945,7 +2945,7 @@ func TestInteractiveLauncherSupportsSlashCommandAliasesWithoutCreatingWork(t *te
 		{
 			name: "route help",
 			line: "/route help\n",
-			want: []string{"Route setup", "jini route list", "JINI_CODEX_CLI=/path/to/codex"},
+			want: []string{"Route setup", "jini route list", "Wave 1 CLI overrides", "JINI_GEMINI_CLI", "Gemini API and Vertex AI provider routes stay planned"},
 		},
 	}
 
@@ -3877,12 +3877,12 @@ func TestCurrentWorkInteractiveTacticalCommandsDoNotStartNewWork(t *testing.T) {
 		{
 			name: "route help",
 			line: "route help\n",
-			want: []string{"Route setup", "jini route list", "JINI_CODEX_CLI=/path/to/codex"},
+			want: []string{"Route setup", "jini route list", "Wave 1 CLI overrides", "JINI_GEMINI_CLI", "Gemini API and Vertex AI provider routes stay planned"},
 		},
 		{
 			name: "slash route help",
 			line: "/route help\n",
-			want: []string{"Route setup", "jini route list", "JINI_CODEX_CLI=/path/to/codex"},
+			want: []string{"Route setup", "jini route list", "Wave 1 CLI overrides", "JINI_GEMINI_CLI", "Gemini API and Vertex AI provider routes stay planned"},
 		},
 		{
 			name: "permissions",
