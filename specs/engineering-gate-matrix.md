@@ -37,9 +37,10 @@ Required commands:
 3. `git diff --cached --check`
 4. `bash tools/security_configuration_gate.sh`
 5. `bash tools/product_prd_drift_gate.sh`
-6. `bash tools/cli_ux_regression_gate.sh`
-7. `bash tools/claude_codex_usecase_gate.sh`
-8. `jini scorecard-gate --format json`
+6. `bash tools/customer_value_gate.sh`
+7. `bash tools/cli_ux_regression_gate.sh`
+8. `bash tools/claude_codex_usecase_gate.sh`
+9. `jini scorecard-gate --format json`
 
 Required outcome:
 
@@ -50,6 +51,9 @@ Required outcome:
   Dependabot cannot be removed without failing the local gate
 - protected PRD and product-positioning surfaces cannot drift unless
   `specs/product-settling-decisions.md` is updated in the same change
+- customer-value viability cannot regress into amateur platform claims,
+  unsupported route claims, generic workflow scaffolds, or new vocabulary
+  before value
 - direct CLI edit and simple-question flows cannot regress into draft/status frames, `Start/Keep` choices, or verbose current-work summaries
 - the intent/parity golden transcript gate blocks questions, bare entities, and
   explicit task intents from regressing away from Claude/Codex first-minute
@@ -63,6 +67,9 @@ Required outcome:
 - A gate name without a runnable command or named proof reference is planning prose, not evidence.
 - Named-proof refs must resolve to existing repository files; executable refs
   must name real Go test functions.
+- customer-value gates must name concrete customer outcomes: token savings,
+  throttle resilience, configured-tool switching reduction, direct action,
+  safety, or session continuity
 
 ### Push gate
 

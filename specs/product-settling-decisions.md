@@ -47,6 +47,41 @@ The CLI must make these jobs obvious:
 
 Anything that does not improve that wedge is not P0 for GTM.
 
+## Customer Value Bar
+
+Jini is viable only when it makes the user's existing AI tools easier to use
+with less wasted context, fewer interruptions, and less tool-switching friction.
+It is not viable if it merely adds a new workflow layer, a new command grammar,
+or a polished-looking scaffold around unsupported behavior.
+
+Every product, routing, CLI UX, or docs cut must map to at least one customer
+value outcome:
+
+- less token spend through compact context reuse instead of transcript replay
+- fewer throttle stalls through route choice, fallback, or explicit setup
+  guidance
+- faster completion through direct local action or correct downstream handoff
+- safer side effects through clear approvals, receipts, and recovery paths
+- lower switching cost across Claude Code, Codex, Gemini CLI, Aider, OpenCode,
+  local models, provider APIs, and gateways the user configured
+
+Anti-amateur constraints:
+
+- Do not claim Kiro-scale IDE, team platform, or managed automation scope while
+  shipping only a CLI router.
+- Do not claim support for a framework, model, or CLI unless Jini can detect it,
+  invoke it when selected, and fail closed when it is unavailable.
+- Do not answer with generic templates, dashboards, task snapshots, or workflow
+  ceremony when the user asked a simple question or clear file/task action.
+- Do not hide fake intelligence behind hard-coded entity routing or canned
+  vertical flows.
+- Do not ship commercial-suite language into the free CLI unless entitlement,
+  fallback, and customer-value boundaries are implemented.
+
+The customer-value gate is required on every commit. If a cut cannot explain its
+value in terms of token savings, throttle resilience, tool-switching reduction,
+direct action, safety, or session continuity, it should not ship.
+
 ## Core Development Charter
 
 Claude Code and Codex first-minute parity is the highest-precedence

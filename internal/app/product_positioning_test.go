@@ -17,6 +17,15 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"the product identity.",
 		"The first product people should notice is the CLI.",
 		"Anything that does not improve that wedge is not P0 for GTM.",
+		"## Customer Value Bar",
+		"Jini is viable only when it makes the user's existing AI tools easier to use",
+		"Every product, routing, CLI UX, or docs cut must map to at least one customer",
+		"less token spend through compact context reuse instead of transcript replay",
+		"fewer throttle stalls through route choice, fallback, or explicit setup",
+		"lower switching cost across Claude Code, Codex, Gemini CLI, Aider, OpenCode,",
+		"Anti-amateur constraints:",
+		"Do not claim support for a framework, model, or CLI unless Jini can detect it",
+		"The customer-value gate is required on every commit.",
 		"Claude Code and Codex first-minute parity is the highest-precedence",
 		"[product-streamline-redline.md](./product-streamline-redline.md)",
 		"continues only while the Go kernel can preserve",
@@ -85,6 +94,7 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"Jini is a CLI-first AI work router and durable session layer",
 		"The near-term product is not the broad OS.",
 		"Core charter: intent-first Claude/Codex parity outranks feature expansion.",
+		"Customer value bar: every shipped cut must improve token frugality, throttle",
 		"Route between familiar CLIs, providers, gateways, and local/offline models.",
 		"Treat configured CLI routes as real installed-CLI handoffs",
 		"provider API routes separately from CLI handoff routes.",
@@ -97,6 +107,7 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"macOS app HLD/LLD for a Codex desktop-caliber session and artifact surface",
 		"No release ships unless competitor-parity golden transcript gates",
 		"Token frugality is P0.",
+		"Preserve customer-value viability: reduce token waste, throttle friction,",
 		"## Tier Boundary",
 		"CLI is available now. App surfaces, when shipped, are available to both free",
 		"and commercial users. Subscription gates capabilities, not the ability to",
@@ -123,6 +134,50 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 	} {
 		if !strings.Contains(readme, want) {
 			t.Fatalf("README must teach settled product positioning %q", want)
+		}
+	}
+}
+
+func TestProductViabilityGatePinsCustomerValueAndAntiAmateurBoundary(t *testing.T) {
+	root := repoRootForMigrationTest(t)
+
+	gate := readProductPositioningFile(t, root, "tools/customer_value_gate.sh")
+	for _, want := range []string{
+		"Blocks product drift where Jini looks polished but no longer proves real",
+		"customer value: token frugality, throttle resilience, configured-tool routing,",
+		"require_fragment \"specs/product-settling-decisions.md\" \"## Customer Value Bar\"",
+		"require_fragment \"specs/product-settling-decisions.md\" \"Jini is viable only when it makes the user's existing AI tools easier to use\"",
+		"require_fragment \"specs/number-one-platform-prd.md\" \"Customer value bar: every shipped cut must improve token frugality, throttle\"",
+		"require_fragment \"specs/golden-competitive-benchmark.yaml\" \"customer-value-viability-fixture\"",
+		"require_fragment \"tools/run_required_gates.sh\" \"run_customer_value_gate\"",
+	} {
+		if !strings.Contains(gate, want) {
+			t.Fatalf("customer value gate must preserve %q", want)
+		}
+	}
+
+	requiredGates := readProductPositioningFile(t, root, "tools/run_required_gates.sh")
+	for _, want := range []string{
+		"CUSTOMER_VALUE_GATE=\"${ROOT_DIR}/tools/customer_value_gate.sh\"",
+		"run_customer_value_gate",
+		"bash \"${CUSTOMER_VALUE_GATE}\"",
+	} {
+		if !strings.Contains(requiredGates, want) {
+			t.Fatalf("required gate runner must wire customer value gate %q", want)
+		}
+	}
+
+	benchmark := readProductPositioningFile(t, root, "specs/golden-competitive-benchmark.yaml")
+	for _, want := range []string{
+		"customer-value-viability-fixture",
+		"product-viability-customer-value",
+		`ref: "go test ./internal/app -run TestProductViabilityGatePinsCustomerValueAndAntiAmateurBoundary"`,
+		"A green product cut must map to customer value, not just implementation activity",
+		"configured-tool switching reduction",
+		"reject amateur",
+	} {
+		if !strings.Contains(benchmark, want) {
+			t.Fatalf("golden benchmark must preserve customer-value fixture %q", want)
 		}
 	}
 }

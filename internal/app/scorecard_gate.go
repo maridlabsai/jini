@@ -76,6 +76,7 @@ var defaultScorecardGatePolicy = scorecardGatePolicy{
 		"cross-surface-continuity-fixture",
 		"token-frugality-route-proof-fixture",
 		"sub-agent-divide-and-conquer-fixture",
+		"customer-value-viability-fixture",
 	},
 	MinimumCoreCompetitors:      7,
 	MinimumWatchlistCompetitors: 40,

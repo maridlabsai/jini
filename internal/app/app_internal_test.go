@@ -496,8 +496,8 @@ func TestScorecardGatePassesAndExposesCompetitorPressure(t *testing.T) {
 	if report.PRDImplementation.SourcePath != "specs/prd-implementation-trace.md" {
 		t.Fatalf("expected PRD implementation trace source, got %#v", report.PRDImplementation)
 	}
-	if report.PRDImplementation.TotalRequirements != 12 || report.PRDImplementation.ImplementedRequirements != 12 || report.PRDImplementation.CompletionPercent != 100 {
-		t.Fatalf("expected P0 PRD implementation completion to be 12/12 = 100%%, got %#v", report.PRDImplementation)
+	if report.PRDImplementation.TotalRequirements != 13 || report.PRDImplementation.ImplementedRequirements != 13 || report.PRDImplementation.CompletionPercent != 100 {
+		t.Fatalf("expected P0 PRD implementation completion to be 13/13 = 100%%, got %#v", report.PRDImplementation)
 	}
 	if report.PRDImplementation.Status != "ok" {
 		t.Fatalf("expected PRD implementation status ok, got %#v", report.PRDImplementation)
@@ -585,6 +585,7 @@ func TestScorecardGatePassesAndExposesCompetitorPressure(t *testing.T) {
 		"cross-surface-continuity-fixture":     false,
 		"token-frugality-route-proof-fixture":  false,
 		"sub-agent-divide-and-conquer-fixture": false,
+		"customer-value-viability-fixture":     false,
 	}
 	for _, gate := range report.OutcomeGates {
 		if _, ok := requiredOutcomeGates[gate.ID]; ok {
@@ -1104,7 +1105,7 @@ func TestScorecardGateTextShowsCommitGatePressure(t *testing.T) {
 	for _, want := range []string{
 		"STATUS ok",
 		"PRD IMPLEMENTATION",
-		"  OK 12/12 P0 requirements implemented (100%)",
+		"  OK 13/13 P0 requirements implemented (100%)",
 		"  SOURCE specs/prd-implementation-trace.md",
 		"  RESIDUAL_HARDENING 1",
 		"    RESIDUAL Wave 1 command templates use fake downstream CLIs in automated tests and now expose `jini check ship --format json` setup status plus local `.jini/cli-dogfood.json` validation evidence. Real installed CLI dogfood remains required before release claims for auth, approvals, output-shape differences, and route receipt privacy.",
@@ -1123,6 +1124,7 @@ func TestScorecardGateTextShowsCommitGatePressure(t *testing.T) {
 		"  OK intent-first-routing-fixture",
 		"  OK async-work-receipt-fixture",
 		"  OK sub-agent-divide-and-conquer-fixture",
+		"  OK customer-value-viability-fixture",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected scorecard-gate text to contain %q, got:\n%s", want, out)

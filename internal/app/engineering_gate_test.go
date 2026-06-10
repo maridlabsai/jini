@@ -17,6 +17,8 @@ func TestRequiredCommitGateChecksStagedAndUnstagedWhitespace(t *testing.T) {
 		"git diff --cached --check",
 		"run_product_prd_drift_gate",
 		"tools/product_prd_drift_gate.sh",
+		"run_customer_value_gate",
+		"tools/customer_value_gate.sh",
 		"run_cli_ux_regression_gate",
 		"tools/cli_ux_regression_gate.sh",
 		"run_claude_codex_usecase_gate",
@@ -34,11 +36,13 @@ func TestRequiredCommitGateChecksStagedAndUnstagedWhitespace(t *testing.T) {
 		"`git diff --check`",
 		"`git diff --cached --check`",
 		"`bash tools/product_prd_drift_gate.sh`",
+		"`bash tools/customer_value_gate.sh`",
 		"`bash tools/cli_ux_regression_gate.sh`",
 		"`bash tools/claude_codex_usecase_gate.sh`",
 		"`jini scorecard-gate --format json`",
 		"staged and unstaged whitespace",
 		"protected PRD and product-positioning surfaces cannot drift",
+		"customer-value viability cannot regress into amateur platform claims",
 		"direct CLI edit and simple-question flows cannot regress into draft/status frames",
 		"intent/parity golden transcript gate blocks questions, bare entities, and",
 		"Claude and Codex user journeys are exercised as concrete commit-gate use cases, not only as personas in docs",
@@ -90,6 +94,7 @@ func TestScorecardGateIsDocumentedAsCommitGate(t *testing.T) {
 		"cross-surface-continuity-fixture",
 		"token-frugality-route-proof-fixture",
 		"sub-agent-divide-and-conquer-fixture",
+		"customer-value-viability-fixture",
 		"opencode",
 		"google-gemini-cli",
 		"roo-code",
@@ -177,6 +182,14 @@ func TestRequiredOutcomeGatesDeclareProofReferences(t *testing.T) {
 			"id: skills-and-delegation-sub-agent-boundary",
 			`ref: "specs/skills-and-delegation-slice.md"`,
 		},
+		"customer-value-viability-fixture": {
+			"id: product-viability-customer-value",
+			"kind: executable",
+			`ref: "go test ./internal/app -run TestProductViabilityGatePinsCustomerValueAndAntiAmateurBoundary"`,
+			"id: product-settling-customer-value-bar",
+			"kind: named-proof",
+			`ref: "specs/product-settling-decisions.md"`,
+		},
 	}
 	for id, required := range requiredProofs {
 		block := requiredOutcomeGateBlock(t, goldenBenchmark, id)
@@ -232,6 +245,7 @@ func TestRequiredOutcomeGateProofReferencesResolve(t *testing.T) {
 		"cross-surface-continuity-fixture",
 		"token-frugality-route-proof-fixture",
 		"sub-agent-divide-and-conquer-fixture",
+		"customer-value-viability-fixture",
 	} {
 		block := requiredOutcomeGateBlock(t, goldenBenchmark, id)
 		for _, proof := range proofReferencesFromOutcomeGateBlock(t, block) {
@@ -409,6 +423,7 @@ func TestEngineeringGateMatrixDoesNotListRequiredGatesAsPromotionCandidates(t *t
 		"product_prd_drift_gate.sh",
 		"cli_ux_regression_gate.sh",
 		"claude_codex_usecase_gate.sh",
+		"customer_value_gate.sh",
 		"scorecard-gate",
 	} {
 		if strings.Contains(promotionCandidates, alreadyRequired) {

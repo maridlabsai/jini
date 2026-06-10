@@ -24,6 +24,11 @@ conversation style.
 
 Core charter: intent-first Claude/Codex parity outranks feature expansion.
 
+Customer value bar: every shipped cut must improve token frugality, throttle
+resilience, tool-switching reduction, direct action, safety, or session
+continuity for configured tools the user already trusts. If it does not, it is
+not P0 work.
+
 ## Current Release Contract
 
 R0 is CLI-first: minimal task prompt, compact answers, clear local edits,
@@ -46,6 +51,8 @@ Side effects follow the LLD approval matrix.
 - Reuse durable session context without replaying large transcripts.
 - Keep saved work hidden until `status`, `continue`, `open`, `help`, or natural title matching.
 - Install from release assets without requiring source builds.
+- Preserve customer-value viability: reduce token waste, throttle friction,
+  tool-switching cost, completion risk, or unsafe side effects.
 - Block regressions with required gates before commit and push.
 
 ## UX Contract
@@ -148,6 +155,7 @@ gates green:
 
 - `go test ./...`
 - `bash tools/cli_ux_regression_gate.sh`
+- `bash tools/customer_value_gate.sh`
 - `bash tools/product_prd_drift_gate.sh`
 - `jini scorecard-gate --format json`
 - `jini check ship --format json` before push/release
@@ -156,3 +164,5 @@ The gates exist to prevent old behavior from returning: verbose startup,
 Start/Keep modals, hidden Python-era assumptions, stale docs, and broad PRD drift.
 No release ships unless competitor-parity golden transcript gates for Claude,
 Codex, ChatGPT, and Gemini-style first-minute use cases are green.
+No commit ships unless the customer-value gate can still prove the solution is
+useful, route-backed, and non-amateur rather than a generic workflow shell.

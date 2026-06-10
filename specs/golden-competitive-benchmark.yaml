@@ -310,6 +310,21 @@ scorecard_gates:
         execution routing, skill/delegation boundaries, lead integration,
         proof references, and verifier evidence stay explicit enough for the
         commit gate to reject unsupported orchestration claims.
+    - id: customer-value-viability-fixture
+      competitors: [claude-code, codex, chatgpt, kiro, cursor, windsurf, aider, opencode]
+      proof_references:
+        - id: product-viability-customer-value
+          kind: executable
+          ref: "go test ./internal/app -run TestProductViabilityGatePinsCustomerValueAndAntiAmateurBoundary"
+        - id: product-settling-customer-value-bar
+          kind: named-proof
+          ref: "specs/product-settling-decisions.md"
+      gate: >
+        A green product cut must map to customer value, not just implementation activity:
+        token frugality, throttle resilience, configured-tool switching reduction,
+        direct action, safety, or session continuity. Jini must reject amateur
+        platform claims, unsupported route claims, and generic workflow shells
+        before they reach users.
 methodology:
   benchmark_scope: internal-drift-benchmark-not-live-market-ranking
   baseline_type: fixed-competitor-baselines-grounded-in-official-docs

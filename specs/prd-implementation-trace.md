@@ -26,6 +26,7 @@ runtime contract that tests enforce.
 | Reuse durable session context without transcript replay | saved work state, metadata-only route receipts, compact status/open/continue | saved work and route receipt tests |
 | Keep saved work hidden until explicit commands or title matching | launcher and current-work interruption handling | startup and current-work regression tests |
 | Install from release assets without source builds | `install.sh`, release manifest, publish checks | install tests and release gate |
+| Preserve customer-value viability and anti-amateur scope | `tools/customer_value_gate.sh`, product settling decisions, competitive benchmark outcome gate | `TestProductViabilityGatePinsCustomerValueAndAntiAmateurBoundary`, customer value gate, scorecard gate |
 | Block regressions before commit and push | `tools/run_required_gates.sh`, scorecard PRD completion summary | commit/push/release gate tests, Claude/Codex use-case gate, scorecard PRD implementation completion tests |
 
 Residual hardening:
