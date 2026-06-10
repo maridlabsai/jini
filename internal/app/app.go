@@ -1632,7 +1632,7 @@ func readPromptLine(scanner *bufio.Scanner, stdout io.Writer, prompt string) (st
 
 func resolveStarterChoice(raw string) (starterChoice, error) {
 	if !looksLikeStarterMenuSelection(raw) {
-		return starterChoice{}, fmt.Errorf("I couldn't match %q to a starter flow yet.", raw)
+		return starterChoice{}, fmt.Errorf("No starter flow matches %q yet.", raw)
 	}
 	choice := normalizeName(raw)
 	switch choice {
@@ -1655,7 +1655,7 @@ func resolveStarterChoice(raw string) (starterChoice, error) {
 			}
 		}
 	}
-	return starterChoice{}, fmt.Errorf("I couldn't match %q to a starter flow yet.", raw)
+	return starterChoice{}, fmt.Errorf("No starter flow matches %q yet.", raw)
 }
 
 func looksLikeStarterMenuSelection(raw string) bool {
@@ -1754,12 +1754,12 @@ func maybeHandleNewWorkUtilityIntent(raw string, stdout io.Writer) (bool, int) {
 func sourcePromptForChoice(choice starterChoice) string {
 	if choice.PackID == "auto" {
 		return strings.Join([]string{
-			"Describe the task. Rough notes are fine.",
-			"Jini will route it, act when safe, or ask one short question.",
+			"Describe the task in one sentence.",
+			"Jini can answer, edit files, route to a configured tool, or ask one clarification.",
 			"Nothing will be sent, booked, committed, or changed without a visible step.",
 		}, "\n")
 	}
-	return "Describe the task. Rough notes are fine."
+	return "Describe the task in one sentence."
 }
 
 func classifyStarterChoice(source string) starterChoice {
@@ -2943,13 +2943,13 @@ func resolveOpenItem(summary *workSummary, name string) (*catalogItem, error) {
 			}
 		}
 	}
-	return nil, fmt.Errorf("I couldn't find %q. Use `jini open` to see what is ready.", name)
+	return nil, fmt.Errorf("Artifact not found: %q. Run `jini open` to list available artifacts.", name)
 }
 
 func renderNewWorkLauncher(w io.Writer) {
 	fmt.Fprintln(w, "Jini")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Describe the task. Jini will route it, act when safe, or ask one short question.")
+	fmt.Fprintln(w, "Describe the task. Jini can answer, edit files, route to a configured tool, or ask one clarification.")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Examples:")
 	fmt.Fprintln(w, "- Add a line to the matching .txt file in this folder")
@@ -2958,7 +2958,7 @@ func renderNewWorkLauncher(w io.Writer) {
 	fmt.Fprintln(w, "- Plan a 7 day Paris trip for two adults in October")
 	fmt.Fprintln(w, "- Compare these vendors and recommend one")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Jini will not send, book, commit, or run destructive changes without a visible step.")
+	fmt.Fprintln(w, "Jini asks before sending, booking, committing, or running destructive changes.")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Type `help` for examples and commands.")
 }
@@ -3013,7 +3013,7 @@ func renderNoCurrentWorkStatus(w io.Writer) {
 
 func renderNoInitRequired(w io.Writer) {
 	fmt.Fprintln(w, "No init step is required before first value.")
-	fmt.Fprintln(w, "Describe a task and Jini will route it, act when safe, or save the work state.")
+	fmt.Fprintln(w, "Describe a task. Jini can answer, edit files, route to a configured tool, or save the work state.")
 }
 
 func renderNoCurrentMemoryStatus(w io.Writer) {
@@ -3476,11 +3476,11 @@ func runProviderSetupWizard(mode string, scanner *bufio.Scanner, stdout, stderr 
 
 func renderFirstRunResult(w io.Writer, summary *workSummary) {
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Result ready.")
-	fmt.Fprintln(w)
 
 	item := firstResultItem(summary)
 	if item == nil {
+		fmt.Fprintln(w, "Work saved.")
+		fmt.Fprintln(w)
 		fmt.Fprintln(w, "Work item")
 		fmt.Fprintln(w)
 		fmt.Fprintln(w, "No result file is ready yet. Jini still created the work record so the source context is not lost.")
@@ -3488,6 +3488,8 @@ func renderFirstRunResult(w io.Writer, summary *workSummary) {
 		return
 	}
 
+	fmt.Fprintln(w, "Artifact created.")
+	fmt.Fprintln(w)
 	fmt.Fprintln(w, item.Label)
 	fmt.Fprintln(w)
 	content, err := os.ReadFile(item.Path)
@@ -3702,9 +3704,9 @@ func renderPostResultContext(w io.Writer, summary *workSummary, item *catalogIte
 		}
 	}
 	if item != nil && strings.TrimSpace(item.Path) != "" {
-		fmt.Fprintf(w, "Saved: %s\n", item.Path)
+		fmt.Fprintf(w, "Saved artifact: %s\n", item.Path)
 	}
-	fmt.Fprintln(w, "Next: `jini continue`, `jini open`, or `jini status`.")
+	fmt.Fprintln(w, "Next commands: `jini continue`, `jini open`, or `jini status`.")
 }
 
 func richerUsefulItem(summary *workSummary) *catalogItem {
@@ -4550,7 +4552,7 @@ func resolveActiveWorkSelection(action string, active []*workSummary) (*workSumm
 			return item, nil
 		}
 	}
-	return nil, fmt.Errorf("I couldn't find that work. Pick a shown number or title.")
+	return nil, fmt.Errorf("Work not found. Enter a shown number or saved title.")
 }
 
 func saveSummaryAsCurrent(summary *workSummary) error {

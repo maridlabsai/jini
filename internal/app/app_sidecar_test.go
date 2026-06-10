@@ -67,7 +67,7 @@ func TestMacOSAppSidecarSimpleQuestionReturnsTransientResponse(t *testing.T) {
 	if err != nil {
 		t.Fatalf("marshal response: %v", err)
 	}
-	for _, unwanted := range []string{"session_id", "Task Snapshot", "Saved:", "Result ready"} {
+	for _, unwanted := range []string{"session_id", "Task Snapshot", "Saved:", "Saved artifact:", "Result ready", "Artifact created"} {
 		if strings.Contains(string(encoded), unwanted) {
 			t.Fatalf("expected transient answer to avoid %q, got %s", unwanted, string(encoded))
 		}

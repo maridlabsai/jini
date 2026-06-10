@@ -69,7 +69,7 @@ func maybeHandleAmbiguousBareEntity(raw string, stdout io.Writer) bool {
 	if !ok {
 		return false
 	}
-	fmt.Fprintf(stdout, "What would you like me to do with %s?\n", subject)
+	fmt.Fprintf(stdout, "Specify what to do with %s.\n", subject)
 	return true
 }
 

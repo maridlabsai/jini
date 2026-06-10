@@ -480,6 +480,7 @@ func TestCLIUXRegressionGatePinsIncidentScenarios(t *testing.T) {
 		"TestInteractiveExplicitTripChoiceCanUseBareDestination",
 		"TestCurrentWorkMalformedCapitalQuestionCorrectsDirectly",
 		"TestCurrentWorkUnknownStandaloneQuestionStaysCompact",
+		"TestShellOutputUsesPreciseProfessionalLanguage",
 		"TestInteractiveLauncherHandlesUnsureInputWithUsefulPass",
 		"TestLauncherStartsAsCompactShellWhenCurrentWorkExists",
 		"TestCurrentWorkInteractiveLauncherIsCompactByDefault",

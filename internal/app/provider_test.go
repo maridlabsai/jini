@@ -312,7 +312,7 @@ func TestRunInteractiveKeepsCurrentWorkAfterFailedCLIHandoff(t *testing.T) {
 	if exitCode != 0 {
 		t.Fatalf("expected failed downstream CLI to keep local work available, got %d:\n%s", exitCode, stdout.String())
 	}
-	if !strings.Contains(stdout.String(), "Result ready.") {
+	if !strings.Contains(stdout.String(), "Artifact created.") {
 		t.Fatalf("expected local starter result despite failed handoff, got:\n%s", stdout.String())
 	}
 
@@ -3368,11 +3368,11 @@ func TestInteractiveLauncherShowsDecisionCardBeforeFirstDraft(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Result ready.",
+		"Artifact created.",
 		"Itinerary",
 		"Provider Paris",
-		"Saved:",
-		"Next: `jini continue`, `jini open`, or `jini status`.",
+		"Saved artifact:",
+		"Next commands: `jini continue`, `jini open`, or `jini status`.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)

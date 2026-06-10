@@ -118,7 +118,7 @@ func TestDirectRepoReviewPrintsModelFreeSnapshotWithoutSavedWorkflow(t *testing.
 	for _, unwanted := range []string{
 		"Working on:",
 		"Task Snapshot",
-		"Result ready.",
+		"Artifact created.",
 		"Saved.",
 		"Open the saved draft",
 	} {
@@ -155,7 +155,7 @@ func TestInteractiveRepoReviewInspectsCurrentGitRepoDirectly(t *testing.T) {
 			t.Fatalf("expected interactive repo review to contain %q, got:\n%s", want, out)
 		}
 	}
-	for _, unwanted := range []string{"Task Snapshot", "Result ready.", "Saved:", "Open the saved draft"} {
+	for _, unwanted := range []string{"Task Snapshot", "Artifact created.", "Saved artifact:", "Open the saved draft"} {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("expected interactive repo review to avoid %q, got:\n%s", unwanted, out)
 		}
@@ -171,7 +171,7 @@ func TestRepoReviewOutsideGitRepoSaysSoDirectly(t *testing.T) {
 	if !strings.Contains(out, "This folder is not a git repo.") {
 		t.Fatalf("expected non-repo prompt to say so directly, got:\n%s", out)
 	}
-	for _, unwanted := range []string{"Task Snapshot", "Result ready.", "Saved:"} {
+	for _, unwanted := range []string{"Task Snapshot", "Artifact created.", "Saved artifact:"} {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("expected non-repo prompt to avoid %q, got:\n%s", unwanted, out)
 		}
@@ -312,10 +312,10 @@ func TestInteractiveFollowupEmailReturnsSendableEmailWithoutArtifactShell(t *tes
 		}
 	}
 	for _, unwanted := range []string{
-		"Result ready.",
+		"Artifact created.",
 		"Task Snapshot",
 		"Sendable Follow-up",
-		"Saved:",
+		"Saved artifact:",
 		"Next: `jini",
 		"Also ready:",
 	} {
@@ -382,7 +382,7 @@ func TestLocalTextEditDoesNotGuessAmongAmbiguousTextFiles(t *testing.T) {
 	if exitCode == 0 {
 		t.Fatalf("expected ambiguous local edit to fail safely, got output:\n%s", stdout.String())
 	}
-	if !strings.Contains(stdout.String(), "I found multiple .txt files. Please include the exact filename.") {
+	if !strings.Contains(stdout.String(), "Multiple .txt files match. Include the exact filename.") {
 		t.Fatalf("expected ambiguity message, got:\n%s", stdout.String())
 	}
 	for _, want := range []string{
@@ -779,7 +779,7 @@ func TestLauncherHelpHidesProviderStateWhenUsingLocalPreview(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Describe the task.",
-		"Describe the task. Jini will route it, act when safe, or ask one short question.",
+		"Describe the task. Jini can answer, edit files, route to a configured tool, or ask one clarification.",
 		"Add a line to the matching .txt file in this folder",
 	} {
 		if !strings.Contains(out, want) {
@@ -946,7 +946,7 @@ func TestCommercialOnlyInteractiveInputDoesNotCreateWork(t *testing.T) {
 	if !strings.Contains(out, "Managed delegation requires commercial entitlement") {
 		t.Fatalf("expected entitlement boundary output, got:\n%s", out)
 	}
-	for _, unwanted := range []string{"Task Snapshot", "Working Draft", "Saved:"} {
+	for _, unwanted := range []string{"Task Snapshot", "Working Draft", "Saved artifact:"} {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("expected entitlement boundary to avoid %q, got:\n%s", unwanted, out)
 		}
@@ -2473,7 +2473,7 @@ func TestLauncherStartsAsCompactShellWithoutCurrentWork(t *testing.T) {
 		"choose a common job below",
 		"1. Turn meeting notes",
 		"2. Check whether",
-		"Describe the task. Rough notes are fine.",
+		"Describe the task in one sentence.",
 	} {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("expected shell-first launcher not to expose menu %q, got:\n%s", unwanted, out)
@@ -2499,7 +2499,7 @@ func TestLauncherHelpShowsStartChoicesWithoutCurrentWork(t *testing.T) {
 		"Check whether a plan is ready to hand off",
 		"Plan a 7 day Paris trip for two adults in October",
 		"Compare these vendors and recommend one",
-		"Describe the task. Jini will route it, act when safe, or ask one short question.",
+		"Describe the task. Jini can answer, edit files, route to a configured tool, or ask one clarification.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -2521,6 +2521,61 @@ func TestLauncherHelpShowsStartChoicesWithoutCurrentWork(t *testing.T) {
 	}
 }
 
+func TestShellOutputUsesPreciseProfessionalLanguage(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var helpOut bytes.Buffer
+	if exitCode := app.RunInteractive(nil, strings.NewReader("help\n"), &helpOut, &helpOut); exitCode != 0 {
+		t.Fatalf("expected help to succeed, got %d with output:\n%s", exitCode, helpOut.String())
+	}
+	for _, want := range []string{
+		"Describe the task. Jini can answer, edit files, route to a configured tool, or ask one clarification.",
+		"Jini asks before sending, booking, committing, or running destructive changes.",
+	} {
+		if !strings.Contains(helpOut.String(), want) {
+			t.Fatalf("expected precise help output %q, got:\n%s", want, helpOut.String())
+		}
+	}
+
+	var artifactOut bytes.Buffer
+	if exitCode := app.RunInteractive(nil, strings.NewReader("Weekly product review for pricing launch. Need owners, due dates, and open questions.\n"), &artifactOut, &artifactOut); exitCode != 0 {
+		t.Fatalf("expected artifact creation to succeed, got %d with output:\n%s", exitCode, artifactOut.String())
+	}
+	for _, want := range []string{
+		"Artifact created.",
+		"Saved artifact:",
+		"Next commands: `jini continue`, `jini open`, or `jini status`.",
+	} {
+		if !strings.Contains(artifactOut.String(), want) {
+			t.Fatalf("expected precise artifact output %q, got:\n%s", want, artifactOut.String())
+		}
+	}
+
+	freshStateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", freshStateDir)
+	var bareEntityOut bytes.Buffer
+	if exitCode := app.RunInteractive(nil, strings.NewReader("Paris\n"), &bareEntityOut, &bareEntityOut); exitCode != 0 {
+		t.Fatalf("expected bare entity clarification to succeed, got %d with output:\n%s", exitCode, bareEntityOut.String())
+	}
+	if !strings.Contains(bareEntityOut.String(), "Specify what to do with Paris.") {
+		t.Fatalf("expected precise bare-entity clarification, got:\n%s", bareEntityOut.String())
+	}
+
+	for _, output := range []string{helpOut.String(), artifactOut.String(), bareEntityOut.String()} {
+		for _, forbidden := range []string{
+			"Result ready.",
+			"What would you like me to do",
+			"Rough notes are fine",
+			"act when safe",
+		} {
+			if strings.Contains(output, forbidden) {
+				t.Fatalf("shell output must avoid imprecise phrase %q, got:\n%s", forbidden, output)
+			}
+		}
+	}
+}
+
 func TestInteractiveLauncherCreatesMeetingWork(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)
@@ -2535,11 +2590,11 @@ func TestInteractiveLauncherCreatesMeetingWork(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Jini",
-		"Result ready.",
+		"Artifact created.",
 		"Sendable Follow-up",
 		"## Send this",
-		"Saved:",
-		"Next: `jini continue`, `jini open`, or `jini status`.",
+		"Saved artifact:",
+		"Next commands: `jini continue`, `jini open`, or `jini status`.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -2614,11 +2669,11 @@ func TestInteractiveLauncherCreatesSpecReadinessWork(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Jini",
-		"Result ready.",
+		"Artifact created.",
 		"Build-Readiness Check",
 		"## What looks ready now",
-		"Saved:",
-		"Next: `jini continue`, `jini open`, or `jini status`.",
+		"Saved artifact:",
+		"Next commands: `jini continue`, `jini open`, or `jini status`.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -2681,10 +2736,10 @@ func TestInteractiveLauncherHandlesUnsureInputWithUsefulPass(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Jini",
-		"Describe the task. Rough notes are fine.",
-		"Jini will route it, act when safe, or ask one short question.",
+		"Describe the task in one sentence.",
+		"Jini can answer, edit files, route to a configured tool, or ask one clarification.",
 		"Nothing will be sent, booked, committed, or changed without a visible step.",
-		"Result ready.",
+		"Artifact created.",
 		"Task Snapshot",
 		"Request",
 		"Current read",
@@ -2692,7 +2747,7 @@ func TestInteractiveLauncherHandlesUnsureInputWithUsefulPass(t *testing.T) {
 		"Safety",
 		"Nothing has been sent",
 		"Describe a new task when you want to move on.",
-		"Next: `jini continue`, `jini open`, or `jini status`.",
+		"Next commands: `jini continue`, `jini open`, or `jini status`.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -2728,8 +2783,8 @@ func TestInteractiveLauncherHelpMeFinishThisAsksForRoughContext(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Describe the task. Rough notes are fine.",
-		"Jini will route it, act when safe, or ask one short question.",
+		"Describe the task in one sentence.",
+		"Jini can answer, edit files, route to a configured tool, or ask one clarification.",
 		"Sendable Follow-up",
 		"## Send this",
 	} {
@@ -2821,7 +2876,7 @@ func TestInteractiveLauncherSupportsSlashCommandAliasesWithoutCreatingWork(t *te
 		{
 			name: "help",
 			line: "/help\n",
-			want: []string{"Examples:", "Describe the task. Jini will route it"},
+			want: []string{"Examples:", "Describe the task. Jini can answer"},
 		},
 		{
 			name: "status",
@@ -2961,10 +3016,10 @@ func TestInteractiveLauncherMenuPhraseWithSentencePunctuationStartsWork(t *testi
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Result ready.",
+		"Artifact created.",
 		"Sendable Follow-up",
-		"Saved:",
-		"Next: `jini continue`, `jini open`, or `jini status`.",
+		"Saved artifact:",
+		"Next commands: `jini continue`, `jini open`, or `jini status`.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -2997,10 +3052,10 @@ func TestNewCommandWithInputMatchesRunNew(t *testing.T) {
 
 	for _, out := range []string{newOut, runNewOut} {
 		for _, want := range []string{
-			"Result ready.",
+			"Artifact created.",
 			"Sendable Follow-up",
-			"Saved:",
-			"Next: `jini continue`, `jini open`, or `jini status`.",
+			"Saved artifact:",
+			"Next commands: `jini continue`, `jini open`, or `jini status`.",
 		} {
 			if !strings.Contains(out, want) {
 				t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -3047,7 +3102,7 @@ func TestInteractiveLauncherRunsMeetingPostResultActions(t *testing.T) {
 			out := runInteractiveForTest(t, t.TempDir(), source+"\n"+tc.action+"\n")
 			for _, want := range []string{
 				"## Send this",
-				"Next: `jini continue`, `jini open`, or `jini status`.",
+				"Next commands: `jini continue`, `jini open`, or `jini status`.",
 			} {
 				if !strings.Contains(out, want) {
 					t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -3096,7 +3151,7 @@ func TestInteractiveLauncherRunsSpecPostResultActions(t *testing.T) {
 			out := runInteractiveForTest(t, t.TempDir(), source+"\n"+tc.action+"\n")
 			for _, want := range []string{
 				"## What looks ready now",
-				"Next: `jini continue`, `jini open`, or `jini status`.",
+				"Next commands: `jini continue`, `jini open`, or `jini status`.",
 			} {
 				if !strings.Contains(out, want) {
 					t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -3884,7 +3939,7 @@ func TestPostResultStatusCommandShowsFullState(t *testing.T) {
 			out := runInteractiveForTest(t, t.TempDir(), source+"\n"+command+"\n")
 
 			for _, want := range []string{
-				"Result ready.",
+				"Artifact created.",
 				"Goal",
 				"Weekly Product Review Need Owners",
 				"Ready now",
@@ -4168,8 +4223,8 @@ func TestInteractiveTravelPromptDraftsFirstForClearDestinationAndDuration(t *tes
 		"Before I draft it",
 		"Type `skip`",
 		"Task Snapshot",
-		"Result ready.",
-		"Saved:",
+		"Artifact created.",
+		"Saved artifact:",
 	} {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("expected clear travel prompt to draft first without %q, got:\n%s", unwanted, out)
@@ -4194,7 +4249,7 @@ func TestInteractiveTravelPromptDraftsForGenericDestination(t *testing.T) {
 			t.Fatalf("expected generic destination travel draft to contain %q, got:\n%s", want, out)
 		}
 	}
-	for _, unwanted := range []string{"Before I draft it", "Task Snapshot", "Saved:"} {
+	for _, unwanted := range []string{"Before I draft it", "Task Snapshot", "Saved artifact:"} {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("expected generic destination travel draft to avoid %q, got:\n%s", unwanted, out)
 		}
@@ -4215,7 +4270,7 @@ func TestInteractiveTravelPromptAsksWhenDestinationMissing(t *testing.T) {
 			t.Fatalf("expected destination-missing travel prompt to ask with %q, got:\n%s", want, out)
 		}
 	}
-	for _, unwanted := range []string{"3 day the destination itinerary", "Result ready.", "Saved:"} {
+	for _, unwanted := range []string{"3 day the destination itinerary", "Artifact created.", "Saved artifact:"} {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("expected destination-missing travel prompt to avoid %q, got:\n%s", unwanted, out)
 		}
@@ -4587,7 +4642,7 @@ func TestCurrentWorkFreeformInputStartsNewWorkDirectly(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Result ready.",
+		"Artifact created.",
 		"7 Day Paris Trip",
 		"Itinerary",
 		"Budget Sketch",
@@ -4632,7 +4687,7 @@ func TestCurrentWorkFreeformInputDoesNotTreatKeepAsModalChoice(t *testing.T) {
 	}
 
 	out := stdout.String()
-	if !strings.Contains(out, "Result ready.") || !strings.Contains(out, "7 Day Paris Trip") {
+	if !strings.Contains(out, "Artifact created.") || !strings.Contains(out, "7 Day Paris Trip") {
 		t.Fatalf("expected freeform request to start new work directly, got:\n%s", out)
 	}
 	for _, unwanted := range []string{
@@ -4771,9 +4826,9 @@ func TestInteractiveSimpleFactualQuestionAnswersDirectlyWithoutCurrentWork(t *te
 		t.Fatalf("expected direct capital answer, got:\n%s", stdout.String())
 	}
 	for _, unwanted := range []string{
-		"Result ready.",
+		"Artifact created.",
 		"Task Snapshot",
-		"Saved:",
+		"Saved artifact:",
 		"Working Draft",
 		"Your first draft is ready.",
 		"I don't know locally.",
@@ -4802,10 +4857,10 @@ func TestInteractiveSimpleArithmeticQuestionAnswersDirectlyWithoutArtifactShell(
 		t.Fatalf("expected direct arithmetic answer, got:\n%s", out)
 	}
 	for _, unwanted := range []string{
-		"Result ready.",
+		"Artifact created.",
 		"Task Snapshot",
-		"Saved:",
-		"Next: `jini continue`, `jini open`, or `jini status`.",
+		"Saved artifact:",
+		"Next commands: `jini continue`, `jini open`, or `jini status`.",
 		"Working Draft",
 		"Your first draft is ready.",
 		"I don't know locally.",
@@ -4866,10 +4921,10 @@ func TestInteractiveTypoCapitalQuestionAnswersDirectlyWithoutArtifactShell(t *te
 		t.Fatalf("expected direct capital answer, got:\n%s", out)
 	}
 	for _, unwanted := range []string{
-		"Result ready.",
+		"Artifact created.",
 		"Task Snapshot",
-		"Saved:",
-		"Next: `jini continue`, `jini open`, or `jini status`.",
+		"Saved artifact:",
+		"Next commands: `jini continue`, `jini open`, or `jini status`.",
 		"Working Draft",
 		"Your first draft is ready.",
 		"I don't know locally.",
@@ -4902,10 +4957,10 @@ func TestInteractiveMalformedCapitalQuestionCorrectsWithoutTravelFlow(t *testing
 	for _, unwanted := range []string{
 		"Before I draft it",
 		"travelers",
-		"Result ready.",
+		"Artifact created.",
 		"Itinerary",
 		"Trip at a glance",
-		"Saved:",
+		"Saved artifact:",
 		"Working Draft",
 		"Your first draft is ready.",
 		"I don't know locally.",
@@ -4932,15 +4987,15 @@ func TestInteractiveBareEntityAsksForIntentWithoutCreatingWork(t *testing.T) {
 			}
 
 			out := stdout.String()
-			if !strings.Contains(out, "What would you like me to do with "+strings.TrimSpace(input)+"?") {
+			if !strings.Contains(out, "Specify what to do with "+strings.TrimSpace(input)+".") {
 				t.Fatalf("expected intent clarification, got:\n%s", out)
 			}
 			for _, unwanted := range []string{
 				"Before I draft it",
-				"Result ready.",
+				"Artifact created.",
 				"Itinerary",
 				"Task Snapshot",
-				"Saved:",
+				"Saved artifact:",
 				"Working Draft",
 				"Your first draft is ready.",
 			} {
@@ -4969,7 +5024,7 @@ func TestInteractiveExplicitTripChoiceCanUseBareDestination(t *testing.T) {
 	if !strings.Contains(out, "# Itinerary: Paris") || !strings.Contains(out, "Itinerary") {
 		t.Fatalf("expected explicit trip choice to create travel work, got:\n%s", out)
 	}
-	if strings.Contains(out, "What would you like me to do with Paris?") {
+	if strings.Contains(out, "Specify what to do with Paris.") {
 		t.Fatalf("expected explicit trip choice not to trigger bare-entity clarification, got:\n%s", out)
 	}
 	current := readCurrentWork(t, stateDir)
@@ -4998,9 +5053,9 @@ func TestCurrentWorkTypoCapitalQuestionAnswersDirectly(t *testing.T) {
 		"\nGoal\n",
 		"\nAI route\n",
 		"\nJust finished\n",
-		"Result ready.",
+		"Artifact created.",
 		"Task Snapshot",
-		"Saved:",
+		"Saved artifact:",
 		"New work",
 		"Working Draft",
 		"Your first draft is ready.",
@@ -5033,7 +5088,7 @@ func TestCurrentWorkMalformedCapitalQuestionCorrectsDirectly(t *testing.T) {
 		"\nAI route\n",
 		"\nJust finished\n",
 		"Before I draft it",
-		"Result ready.",
+		"Artifact created.",
 		"Itinerary",
 		"New work",
 		"Working Draft",
@@ -5099,9 +5154,9 @@ func TestStandaloneQuestionUsesConfiguredCLIRouteWithoutCreatingWork(t *testing.
 		t.Fatalf("expected compact routed answer, got:\n%s", out)
 	}
 	for _, unwanted := range []string{
-		"Result ready.",
+		"Artifact created.",
 		"Task Snapshot",
-		"Saved:",
+		"Saved artifact:",
 		"Working Draft",
 		"Your first draft is ready.",
 		"I don't know locally.",
@@ -5138,7 +5193,7 @@ func TestStandaloneQuestionTimeoutStaysCompact(t *testing.T) {
 	}
 	for _, unwanted := range []string{
 		"Task Snapshot",
-		"Saved:",
+		"Saved artifact:",
 		"Working Draft",
 		"stdout",
 		"stderr",
@@ -5174,7 +5229,7 @@ func TestStandaloneQuestionFailedCLIRouteStaysCompact(t *testing.T) {
 		"stdout",
 		"stderr",
 		"Task Snapshot",
-		"Saved:",
+		"Saved artifact:",
 	} {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("expected compact failed CLI fallback to avoid %q, got:\n%s", unwanted, out)
@@ -5582,8 +5637,8 @@ func nonEmptyLineCount(out string) int {
 func normalizeSavedPathsForTest(out string) string {
 	lines := strings.Split(out, "\n")
 	for index, line := range lines {
-		if strings.HasPrefix(line, "Saved: ") {
-			lines[index] = "Saved: <path>"
+		if strings.HasPrefix(line, "Saved artifact: ") {
+			lines[index] = "Saved artifact: <path>"
 		}
 	}
 	return strings.Join(lines, "\n")

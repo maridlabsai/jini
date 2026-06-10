@@ -74,7 +74,7 @@ Required flow:
 
 ```text
 Jini
-Describe the task. Jini will route it, act when safe, or ask one short question.
+Describe the task. Jini can answer, edit files, route to a configured tool, or ask one clarification.
 
 Examples:
 - Add a line to the matching .txt file in this folder
@@ -93,8 +93,8 @@ that input without making the user choose a command.
 If the user types `I am not sure`:
 
 ```text
-Describe the task. Rough notes are fine.
-Jini will route it, act when safe, or ask one short question.
+Describe the task in one sentence.
+Jini can answer, edit files, route to a configured tool, or ask one clarification.
 Nothing will be sent, booked, committed, or changed without a visible step.
 ```
 

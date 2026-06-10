@@ -378,15 +378,15 @@ Rules:
 ## 3. Durable Result Screen
 
 ```text
-Result ready.
+Artifact created.
 
 Trip Plan
 
 [artifact preview]
 
 Also ready: Budget Sketch, Travel Logistics
-Saved: views/itinerary.md
-Next: `jini continue`, `jini open`, or `jini status`.
+Saved artifact: views/itinerary.md
+Next commands: `jini continue`, `jini open`, or `jini status`.
 ```
 
 Rules:

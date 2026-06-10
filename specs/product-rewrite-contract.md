@@ -238,7 +238,7 @@ quality and parity gates.
 2. If no current work exists, Jini asks:
    - `Jini`
 3. Jini supports natural paste-first intake:
-   - `Describe the task. Jini will route it, act when safe, or ask one short question.`
+   - `Describe the task. Jini can answer, edit files, route to a configured tool, or ask one clarification.`
 4. Jini shows example inputs without requiring command selection:
    - Add a line to the matching .txt file in this folder
    - Turn meeting notes into something I can send

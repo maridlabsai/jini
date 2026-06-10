@@ -114,6 +114,9 @@ Non-negotiable invariants:
 - Route decisions stay inspectable, but routine answers avoid route ceremony.
 - Default output follows a lightweight Claude/Codex-style transcript: answer or
   action receipt first, no status or artifact frame unless the user asks for it.
+- Shell output must stay precise and professional: name the actual action,
+  artifact, route, blocker, or next command instead of vague readiness,
+  conversational filler, or product ceremony.
 - Simple factual questions never print `Result ready.`, `Task Snapshot`,
   `Saved:`, or follow-on command chrome.
 - Unknown standalone questions route through a configured CLI, provider, or

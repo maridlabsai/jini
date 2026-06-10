@@ -61,6 +61,7 @@ Bare `jini` is a task prompt, not a dashboard.
 
 - Keep startup to a minimal task prompt; do not teach a new shell before value.
 - Return compact answers or action receipts first, without product ceremony.
+- Keep shell output precise: name the answer, action, artifact, route, blocker, or next command.
 - Treat a new freeform request as work to execute, not as a Start/Keep modal.
 - Resume saved work only through explicit commands or natural title matching.
 - Never show a full current-work overview for a simple factual question.

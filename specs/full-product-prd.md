@@ -284,7 +284,7 @@ Required first-run shape:
 What do you need help finishing?
 
 Jini shell
-Describe the task. Jini will route it, act when safe, or ask one short question.
+Describe the task. Jini can answer, edit files, route to a configured tool, or ask one clarification.
 
 If you need setup help, type `Auto`.
 

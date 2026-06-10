@@ -164,11 +164,11 @@ func localTextTargetScore(targetText string, names []string) int {
 func resolveLocalTextEditTarget(raw string, intent localTextEditIntent) (localTextFileCandidate, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
-		return localTextFileCandidate{}, fmt.Errorf("Could not read the current folder: %v", err)
+		return localTextFileCandidate{}, fmt.Errorf("Current folder is not readable: %v", err)
 	}
 	entries, err := os.ReadDir(cwd)
 	if err != nil {
-		return localTextFileCandidate{}, fmt.Errorf("Could not list the current folder: %v", err)
+		return localTextFileCandidate{}, fmt.Errorf("Current folder cannot be listed: %v", err)
 	}
 	candidates := []localTextFileCandidate{}
 	requestTokens := localTextEditRequestTokens(raw, intent.Line)
@@ -183,7 +183,7 @@ func resolveLocalTextEditTarget(raw string, intent localTextEditIntent) (localTe
 		})
 	}
 	if len(candidates) == 0 {
-		return localTextFileCandidate{}, fmt.Errorf("Could not find a .txt file in this folder.")
+		return localTextFileCandidate{}, fmt.Errorf("No .txt file found in the current folder.")
 	}
 	if len(candidates) == 1 {
 		return candidates[0], nil
@@ -195,7 +195,7 @@ func resolveLocalTextEditTarget(raw string, intent localTextEditIntent) (localTe
 		return candidates[i].Score > candidates[j].Score
 	})
 	if candidates[0].Score == 0 || candidates[0].Score == candidates[1].Score {
-		message := "I found multiple .txt files. Please include the exact filename.\n" + localTextEditCandidateList(candidates)
+		message := "Multiple .txt files match. Include the exact filename.\n" + localTextEditCandidateList(candidates)
 		return localTextFileCandidate{}, fmt.Errorf("%s", message)
 	}
 	return candidates[0], nil
