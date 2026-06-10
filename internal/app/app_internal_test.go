@@ -401,6 +401,50 @@ func TestShipCheckReadsLocalCLIHandoffDogfoodEvidence(t *testing.T) {
 	}
 }
 
+func TestShipCheckBlocksInstalledCLIHandoffSetupFailures(t *testing.T) {
+	repoDir := t.TempDir()
+	runGitCommandForInternalTest(t, repoDir, "init")
+	runGitCommandForInternalTest(t, repoDir, "config", "user.email", "test@example.com")
+	runGitCommandForInternalTest(t, repoDir, "config", "user.name", "Test User")
+	writeTestFile(t, filepath.Join(repoDir, "README.md"), "# Ship Check\n")
+	runGitCommandForInternalTest(t, repoDir, "add", ".")
+	runGitCommandForInternalTest(t, repoDir, "commit", "-m", "initial")
+	fakeBin := t.TempDir()
+
+	t.Chdir(repoDir)
+	t.Setenv("JINI_STATE_DIR", t.TempDir())
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	t.Setenv("JINI_CODEX_CLI", filepath.Join(fakeBin, "codex"))
+	t.Setenv("JINI_CODEX_ARGS", `exec "{{prompt}`)
+	t.Setenv("JINI_CLAUDE_CODE_CLI", filepath.Join(fakeBin, "missing-claude"))
+	t.Setenv("JINI_GEMINI_CLI", filepath.Join(fakeBin, "missing-gemini"))
+	t.Setenv("JINI_AIDER_CLI", filepath.Join(fakeBin, "missing-aider"))
+	t.Setenv("JINI_OPENCODE_CLI", filepath.Join(fakeBin, "missing-opencode"))
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := Run([]string{"check", "ship", "--format=json"}, &stdout, &stderr)
+	if exitCode != 1 {
+		t.Fatalf("expected installed CLI handoff setup failure to block ship check, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+
+	var report shipCheckReport
+	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil {
+		t.Fatalf("decode ship check JSON: %v\n%s", err, stdout.String())
+	}
+	if report.Status != "blocked" {
+		t.Fatalf("expected invalid CLI handoff setup to block, got %#v", report)
+	}
+	if !stringSliceContains(report.Blockers, "CLI handoff setup blocked for installed route: codex (invalid args)") {
+		t.Fatalf("expected invalid args blocker, got %#v", report.Blockers)
+	}
+	for _, blocker := range report.Blockers {
+		if strings.Contains(blocker, "claude-code") || strings.Contains(blocker, "gemini-cli") || strings.Contains(blocker, "aider") || strings.Contains(blocker, "opencode") {
+			t.Fatalf("missing optional CLI executables should stay warnings, got blockers %#v", report.Blockers)
+		}
+	}
+}
+
 func TestShipCheckTextKeepsSafePushInstructionsCompact(t *testing.T) {
 	repoDir := t.TempDir()
 	runGitCommandForInternalTest(t, repoDir, "init")
@@ -424,13 +468,14 @@ func TestShipCheckTextKeepsSafePushInstructionsCompact(t *testing.T) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	exitCode := Run([]string{"check", "ship"}, &stdout, &stderr)
-	if exitCode != 0 {
-		t.Fatalf("expected clean repo ship check to pass, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	if exitCode != 1 {
+		t.Fatalf("expected clean repo with undogfooded installed CLI to block, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
 	}
 	out := stdout.String()
 	for _, want := range []string{
-		"Ship check ok",
+		"Ship check blocked",
 		"Branch:",
+		"Blocker: CLI handoff dogfood missing validation for installed route: codex",
 		"Run before push: bash tools/run_required_gates.sh push",
 		"Safe lane: create an isolated worktree, run gates, then push only after evidence is clean.",
 		"CLI handoff setup: 1 executable ready, 4 need setup",

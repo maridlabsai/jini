@@ -110,6 +110,10 @@ func buildShipCheckReport() shipCheckReport {
 	if needsValidationDogfood > 0 || setupBlockedDogfood > 0 {
 		report.Warnings = append(report.Warnings, fmt.Sprintf("CLI handoff dogfood incomplete: %d validated, %d need validation, %d setup blocked", validatedDogfood, needsValidationDogfood, setupBlockedDogfood))
 	}
+	report.Blockers = append(report.Blockers, shipCLIHandoffDogfoodBlockers(report.CLIHandoffDogfood)...)
+	if len(report.Blockers) > 0 {
+		report.Status = "blocked"
+	}
 
 	if cwd, ok := runGitOutput("rev-parse", "--show-toplevel"); ok {
 		report.Workspace = filepath.Base(strings.TrimSpace(cwd))
@@ -139,6 +143,21 @@ func buildShipCheckReport() shipCheckReport {
 		report.Blockers = append(report.Blockers, "working tree has uncommitted changes")
 	}
 	return report
+}
+
+func shipCLIHandoffDogfoodBlockers(items []shipCLIHandoffDogfood) []string {
+	var blockers []string
+	for _, item := range items {
+		switch item.DogfoodStatus {
+		case "needs-validation":
+			blockers = append(blockers, "CLI handoff dogfood missing validation for installed route: "+item.RouteID)
+		case "setup-blocked":
+			if shipCLIHandoffSetupCategory(item.Missing) != "missing executable" {
+				blockers = append(blockers, "CLI handoff setup blocked for installed route: "+item.RouteID+" ("+shipCLIHandoffSetupCategory(item.Missing)+")")
+			}
+		}
+	}
+	return blockers
 }
 
 func buildShipCLIHandoffDogfood() []shipCLIHandoffDogfood {
