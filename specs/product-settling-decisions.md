@@ -82,6 +82,23 @@ The customer-value gate is required on every commit. If a cut cannot explain its
 value in terms of token savings, throttle resilience, tool-switching reduction,
 direct action, safety, or session continuity, it should not ship.
 
+## Open Source Reference Priority
+
+Open-source competitors are not equal inputs. Jini should use this priority
+stack when translating competitor pressure into implementation work:
+
+1. Goose for the macOS app, CLI, API, extension, and local/server shape.
+2. OpenCode and Aider for terminal ergonomics, repository context, git-aware
+   workflows, and low-ramp coding-agent behavior.
+3. Cline and Roo Code for approval, diff review, plan/act, and agent UX.
+4. LiteLLM, Ollama, and Jan for routing, cost controls, provider optionality,
+   and offline/local model expectations.
+5. Continue for source-controlled gates, quality scorecards, and policy checks.
+
+This priority stack is a filter, not a scope expansion. Adopt the behavior only
+when it strengthens the CLI wedge, macOS continuity, route quality, approval
+clarity, offline story, or commit gates.
+
 ## Core Development Charter
 
 Claude Code and Codex first-minute parity is the highest-precedence

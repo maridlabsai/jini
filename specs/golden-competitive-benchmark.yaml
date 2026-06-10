@@ -1,8 +1,8 @@
 schema_version: "0.1.0"
 benchmark_id: jini-product-golden-benchmark
 label: Jini Golden Product Benchmark
-updated_at: "2026-06-08"
-last_verified_at: "2026-06-08"
+updated_at: "2026-06-10"
+last_verified_at: "2026-06-10"
 purpose: >
   Validate Jini against a rerunnable golden dataset and compare it against the
   major product, harness, coding-agent, and UX competitors using weighted
@@ -35,6 +35,7 @@ comparison_model:
     - Devin
     - Factory Droids
     - Replit Agent
+    - Goose
     - Lovable
     - Bolt.new
     - Vercel v0
@@ -81,6 +82,7 @@ scorecard_gates:
     - continue
     - devin
     - replit-agent
+    - goose
     - opencode
     - google-gemini-cli
     - roo-code
@@ -156,8 +158,19 @@ scorecard_gates:
         Questions, bare entities, and explicit task intents must behave like a
         familiar coding CLI before templates, vertical packs, or saved-work
         context are allowed to shape the response.
+    - id: open-source-reference-priority
+      competitors: [goose, opencode, aider, cline, roo-code, litellm, ollama, jan, continue]
+      gate: >
+        Open-source competitor pressure must use the explicit priority stack:
+        Goose for macOS app, CLI, API, extension, and local/server shape;
+        OpenCode and Aider for terminal ergonomics; Cline and Roo Code for
+        approval, diff, plan/act, and agent UX; LiteLLM, Ollama, and Jan for
+        routing, cost, and offline local-model behavior; Continue for
+        source-controlled gates and scorecards. This stack filters future
+        work and must not expand scope unless it improves the active CLI,
+        macOS continuity, route quality, approvals, offline story, or gates.
     - id: familiar-tool-adapter-breadth
-      competitors: [claude-code, codex, google-gemini-cli, aider, opencode, continue, cline, roo-code, cursor, windsurf, ollama, lm-studio, openrouter, litellm]
+      competitors: [claude-code, codex, google-gemini-cli, aider, opencode, goose, continue, cline, roo-code, cursor, windsurf, ollama, lm-studio, openrouter, litellm]
       gate: >
         Viral adoption requires adapter support in waves: Wave 0 foundation,
         Wave 1 terminal agents, Wave 2 local and gateway routes, and Wave 3

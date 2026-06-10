@@ -1,4 +1,4 @@
-updated_at: "2026-06-06"
+updated_at: "2026-06-10"
 target_score: 9.0
 core_benchmark_set:
   - Kiro
@@ -26,6 +26,7 @@ watchlist:
   - Devin
   - Factory Droids
   - Replit Agent
+  - Goose
   - Lovable
   - Bolt.new
   - Vercel v0
@@ -76,6 +77,7 @@ comparison_set:
   - Devin
   - Factory Droids
   - Replit Agent
+  - Goose
   - Lovable
   - Bolt.new
   - Vercel v0
@@ -106,6 +108,7 @@ notes:
   - Matt Pocock's multi-target skills installer is treated as a packaging and distribution benchmark.
   - The core benchmark set must align with the rerunnable golden benchmark; the watchlist is tracked for strategy pressure but does not require scenario coverage.
   - The expanded watchlist comes from specs/competitive-release-plan.md and is meant to pressure release planning, not inflate the rerunnable core benchmark.
+  - The active open-source reference priority is Goose first for macOS app, CLI, API, extension, and local/server shape; OpenCode and Aider for CLI ergonomics; Cline and Roo Code for approval/diff/agent UX; LiteLLM, Ollama, and Jan for routing, cost, and offline model behavior; Continue for gates and scorecards.
   - No replacement-critical score may clear 9.0 while the public docs, built install artifact, and taught command surface disagree.
 dimensions:
   - id: workflow-rigor

@@ -43,6 +43,19 @@ The core charter is intent-first Claude/Codex parity. If a cut makes Jini feel
 less like a familiar coding CLI, or turns questions and file tasks into generic
 artifacts, that cut stops until the regression is removed.
 
+Reference priorities:
+
+- Goose is the primary reference for macOS app, CLI, API, extension, and
+  local/server shape.
+- OpenCode and Aider are the primary references for terminal ergonomics,
+  repository context, git-aware flows, and low-ramp coding-agent behavior.
+- Cline and Roo Code are the primary references for approval, diff review,
+  plan/act, and agent UX.
+- LiteLLM, Ollama, and Jan are the primary references for routing, cost
+  controls, provider optionality, and offline/local model expectations.
+- Continue is the primary reference for source-controlled gates, quality
+  scorecards, and policy checks.
+
 Non-trivial engineering cuts must use the internal sub-agent divide-and-conquer
 model. The coordinator owns scope splits, disjoint write sets, integration, and
 evidence; users must not see this as a new command surface or role tree.
@@ -133,6 +146,28 @@ Release blocker:
 
 - claiming broad framework support before the relevant wave has smoke tests
 
+### Cut 3a: Goose-Shaped macOS Shell And API Boundary
+
+Status: next, after route handoff and route setup stay green.
+
+Deliver:
+
+- keep the app as a thin desktop surface over the same Go session/router core
+- expose project/session browser, task composer, compact answer panel,
+  route/diff/artifact/approval panels, and diagnostics through a narrow sidecar
+  API
+- use Goose as the primary shape reference for app, CLI, API, extension, and
+  local/server seams
+- avoid new app-only workflow grammar, hidden state, or unsupported background
+  automation
+
+Exit evidence:
+
+- macOS shell validation passes
+- sidecar protocol tests cover route status, route help, turn submit,
+  diagnostics, and idempotency
+- no app feature claims exceed the implemented Go sidecar contract
+
 ### Cut 4: Saved Work Continuity Without Dashboard
 
 Status: next.
@@ -168,7 +203,7 @@ Exit evidence:
 
 These are not active implementation work:
 
-- desktop and mobile apps
+- broad desktop and mobile apps beyond the focused macOS shell over the Go core
 - broad agent OS surfaces
 - free-tier skills or delegation commands
 - visible developer/tester agent fleets

@@ -572,6 +572,7 @@ func TestScorecardGatePassesAndExposesCompetitorPressure(t *testing.T) {
 		"continue":                    false,
 		"devin":                       false,
 		"replit-agent":                false,
+		"goose":                       false,
 		"opencode":                    false,
 		"sourcegraph-amp":             false,
 		"tabnine-agent":               false,
@@ -605,6 +606,7 @@ func TestScorecardGatePassesAndExposesCompetitorPressure(t *testing.T) {
 		"throttle-and-power-aware-routing": false,
 		"commit-gated-scorecard-drift":     false,
 		"intent-first-cli-parity":          false,
+		"open-source-reference-priority":   false,
 		"sub-agent-divide-and-conquer":     false,
 	}
 	for _, vector := range report.PressureVectors {
