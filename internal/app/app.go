@@ -1637,7 +1637,7 @@ func resolveStarterChoice(raw string) (starterChoice, error) {
 	choice := normalizeName(raw)
 	switch choice {
 	case "3", "i am not sure", "i'm not sure", "i’m not sure", "im not sure", "i m not sure", "not sure", "unsure", "help me finish this":
-		return starterChoice{PackID: "auto", ChoiceLabel: "I am not sure", DefaultName: "Task Snapshot", State: "decided"}, nil
+		return starterChoice{PackID: "auto", ChoiceLabel: "I am not sure", DefaultName: "Request Brief", State: "decided"}, nil
 	case "plan this first", "plan first":
 		return starterChoice{PackID: "auto", ChoiceLabel: "Plan", DefaultName: "Plan", State: "modeled"}, nil
 	}
@@ -1799,7 +1799,7 @@ func classifyWorkEnvelope(explicitChoice starterChoice, source string) workEnvel
 		packID := detectStarterPackFromSource(source)
 		resolved, ok := starterChoiceForPack(packID)
 		if !ok {
-			resolved = starterChoice{PackID: "general-work", ChoiceLabel: "Task Snapshot", DefaultName: "Task Snapshot", State: "decided"}
+			resolved = starterChoice{PackID: "general-work", ChoiceLabel: "Request Brief", DefaultName: "Request Brief", State: "decided"}
 		}
 		choice = resolved
 	}
@@ -3694,7 +3694,7 @@ func renderPostResultContext(w io.Writer, summary *workSummary, item *catalogIte
 	alsoReady := postResultAlsoReady(summary.Thread.ReadyNow, item)
 	fmt.Fprintln(w)
 	if len(alsoReady) > 0 {
-		fmt.Fprintf(w, "Also ready: %s\n", strings.Join(alsoReady, ", "))
+		fmt.Fprintf(w, "Artifacts available: %s\n", strings.Join(alsoReady, ", "))
 	}
 	if len(summary.Thread.MultimodalLearning) > 0 {
 		fmt.Fprintln(w)
@@ -3851,7 +3851,7 @@ func renderThreadAsk(w io.Writer, summary *workSummary, ask *threadAsk) {
 	}
 	if strings.TrimSpace(summary.SafeToDo) != "" {
 		fmt.Fprintln(w)
-		fmt.Fprintln(w, "Safe right now")
+		fmt.Fprintln(w, "Safety")
 		fmt.Fprintln(w, summary.SafeToDo)
 	}
 }

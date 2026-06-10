@@ -481,6 +481,7 @@ func TestCLIUXRegressionGatePinsIncidentScenarios(t *testing.T) {
 		"TestCurrentWorkMalformedCapitalQuestionCorrectsDirectly",
 		"TestCurrentWorkUnknownStandaloneQuestionStaysCompact",
 		"TestShellOutputUsesPreciseProfessionalLanguage",
+		"TestShellOutputRejectsStaleWorkflowVocabulary",
 		"TestInteractiveLauncherHandlesUnsureInputWithUsefulPass",
 		"TestLauncherStartsAsCompactShellWhenCurrentWorkExists",
 		"TestCurrentWorkInteractiveLauncherIsCompactByDefault",
@@ -489,6 +490,7 @@ func TestCLIUXRegressionGatePinsIncidentScenarios(t *testing.T) {
 		"TestPublicDocsUseCurrentFirstRunFlow",
 		"TestP1SimplicityPriorityCoversCommandsSkillsAndAgents",
 		"direct CLI edit, simple-question, and intent-first UX regression gate",
+		"stale vocabulary",
 	} {
 		if !strings.Contains(gate, want) {
 			t.Fatalf("CLI UX regression gate must pin %q", want)

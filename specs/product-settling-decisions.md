@@ -117,6 +117,8 @@ Non-negotiable invariants:
 - Shell output must stay precise and professional: name the actual action,
   artifact, route, blocker, or next command instead of vague readiness,
   conversational filler, or product ceremony.
+- Stale shell vocabulary is disallowed in runtime output; the CLI UX gate owns
+  the forbidden list and must fail when old scaffolding reappears.
 - Simple factual questions never print `Result ready.`, `Task Snapshot`,
   `Saved:`, or follow-on command chrome.
 - Unknown standalone questions route through a configured CLI, provider, or

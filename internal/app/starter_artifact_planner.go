@@ -233,7 +233,7 @@ func buildFirstUsefulPassArtifactPlan(title, source string) starterArtifactPlan 
 		Docs: []starterArtifactDoc{
 			{
 				Path:  "first-useful-pass.md",
-				Title: fmt.Sprintf("Task Snapshot: %s", title),
+				Title: fmt.Sprintf("Request Brief: %s", title),
 				Sections: []starterArtifactSection{
 					{Heading: "Request", Bullets: []string{source}},
 					{
@@ -262,7 +262,7 @@ func buildFirstUsefulPassArtifactPlan(title, source string) starterArtifactPlan 
 			},
 			{
 				Path:  "tasks.md",
-				Title: "Next Actions",
+				Title: "Next Steps",
 				Sections: []starterArtifactSection{
 					{Bullets: []string{"Resolve the best route for this task.", "Use a configured downstream CLI when available.", "Use local/offline execution only when the task can be handled safely."}},
 				},

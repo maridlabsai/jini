@@ -2576,6 +2576,29 @@ func TestShellOutputUsesPreciseProfessionalLanguage(t *testing.T) {
 	}
 }
 
+func TestShellOutputRejectsStaleWorkflowVocabulary(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("3\nI have a messy note about renewal risks and next steps\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected generic fallback to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	out := stdout.String()
+	for _, want := range []string{
+		"Artifact created.",
+		"Request Brief",
+		"Saved artifact:",
+		"Next commands: `jini continue`, `jini open`, or `jini status`.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected stale-free shell output to contain %q, got:\n%s", want, out)
+		}
+	}
+	assertNoStaleShellVocabulary(t, out)
+}
+
 func TestInteractiveLauncherCreatesMeetingWork(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)
@@ -2740,7 +2763,7 @@ func TestInteractiveLauncherHandlesUnsureInputWithUsefulPass(t *testing.T) {
 		"Jini can answer, edit files, route to a configured tool, or ask one clarification.",
 		"Nothing will be sent, booked, committed, or changed without a visible step.",
 		"Artifact created.",
-		"Task Snapshot",
+		"Request Brief",
 		"Request",
 		"Current read",
 		"Next options",
@@ -2759,9 +2782,10 @@ func TestInteractiveLauncherHandlesUnsureInputWithUsefulPass(t *testing.T) {
 	if strings.Contains(out, "Short version or full version") {
 		t.Fatalf("expected no first-run output-size prompt, got:\n%s", out)
 	}
-	if strings.Contains(out, "Goal") && strings.Index(out, "Task Snapshot") > strings.Index(out, "Goal") {
+	if strings.Contains(out, "Goal") && strings.Index(out, "Request Brief") > strings.Index(out, "Goal") {
 		t.Fatalf("expected first useful result before work summary, got:\n%s", out)
 	}
+	assertNoStaleShellVocabulary(t, out)
 	assertNoFirstRunStatusDump(t, out)
 
 	current := readCurrentWork(t, stateDir)
@@ -5642,6 +5666,31 @@ func normalizeSavedPathsForTest(out string) string {
 		}
 	}
 	return strings.Join(lines, "\n")
+}
+
+func assertNoStaleShellVocabulary(t *testing.T, out string) {
+	t.Helper()
+	for _, forbidden := range []string{
+		"Task Snapshot",
+		"Working Draft",
+		"Your first draft is ready",
+		"Result ready",
+		"Start/Keep",
+		"Switch to change focus",
+		"Also ready:",
+		"Next Actions",
+		"Safe right now",
+		"Useful starting point",
+		"Best next inputs",
+		"What this looks like",
+		"Paste what you want finished",
+		"Rough notes are fine",
+		"act when safe",
+	} {
+		if strings.Contains(out, forbidden) {
+			t.Fatalf("shell output must not include stale vocabulary %q, got:\n%s", forbidden, out)
+		}
+	}
 }
 
 func BenchmarkInteractiveNoWorkHelp(b *testing.B) {
