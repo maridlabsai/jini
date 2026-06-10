@@ -202,6 +202,8 @@ Implementation plan:
   explicit vertical opt-in.
 - P0.2: run that suite in `bash tools/cli_ux_regression_gate.sh` on every
   commit gate.
+- P0.2a: keep `specs/claude-codex-prompt-bank.jsonl` at exactly 100 Aryan-derived prompts with diverse domain, age, gender, and race or ethnicity coverage.
+- P0.2b: run the prompt bank validator through `bash tools/claude_codex_usecase_gate.sh` on every commit gate.
 - P0.3: require the scorecard to include an intent-first routing outcome gate
   with executable proof references.
 - P0.4: block releases that reintroduce status dumps, `Start/Keep`, `Switch`,

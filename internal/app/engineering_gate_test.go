@@ -522,6 +522,8 @@ func TestClaudeCodexUsecaseGatePinsConcretePersonaScenarios(t *testing.T) {
 		"TestCurrentWorkSimpleFactualQuestionAnswersDirectly",
 		"TestInteractiveTypoCapitalQuestionAnswersDirectlyWithoutArtifactShell",
 		"TestCurrentWorkTypoCapitalQuestionAnswersDirectly",
+		"TestClaudeCodexPromptBankCoversDiverseFirstMinuteUseCases",
+		"100-prompt Aryan-derived first-minute prompt bank",
 		"Claude/Codex commit-gate use cases",
 	} {
 		if !strings.Contains(gate, want) {
@@ -533,7 +535,8 @@ func TestClaudeCodexUsecaseGatePinsConcretePersonaScenarios(t *testing.T) {
 	for _, want := range []string{
 		"`bash tools/claude_codex_usecase_gate.sh`",
 		"Claude and Codex user journeys are exercised as concrete commit-gate use cases",
-		"local file edits, repo review, strict CLI handoff, custom Claude args, Codex handoff, failed handoff recovery, and compact questions",
+		"100-prompt Aryan-derived first-minute prompt bank",
+		"local file edits, repo review, strict CLI handoff, custom Claude args, Codex handoff, failed handoff recovery, compact questions",
 	} {
 		if !strings.Contains(gateMatrix, want) {
 			t.Fatalf("engineering gate matrix must document Claude/Codex use-case gate %q", want)

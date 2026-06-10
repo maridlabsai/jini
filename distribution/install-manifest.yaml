@@ -316,6 +316,7 @@ bundles:
       - WHITEPAPER.md
       - specs/competitive-kpis.yaml
       - specs/golden-competitive-benchmark.yaml
+      - specs/claude-codex-prompt-bank.jsonl
 
   - id: travel-plan-pack
     label: Travel Plan Pack
@@ -467,6 +468,7 @@ bundles:
       - specs/learning-system.md
       - specs/competitive-kpis.yaml
       - specs/golden-competitive-benchmark.yaml
+      - specs/claude-codex-prompt-bank.jsonl
 
   - id: runtime-portability-surface
     label: Runtime Portability Surface

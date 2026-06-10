@@ -151,19 +151,18 @@ company automation loops.
 
 ## Gates
 
-Every commit that touches product, CLI UX, routing, or docs must keep these
-gates green:
+Every commit touching product, CLI UX, routing, or docs must keep these gates green:
 
 - `go test ./...`
 - `bash tools/cli_ux_regression_gate.sh`
+- `bash tools/claude_codex_usecase_gate.sh`
 - `bash tools/customer_value_gate.sh`
 - `bash tools/product_prd_drift_gate.sh`
 - `jini scorecard-gate --format json`
 - `jini check ship --format json` before push/release
 
-The gates exist to prevent old behavior from returning: verbose startup,
-Start/Keep modals, hidden Python-era assumptions, stale docs, and broad PRD drift.
+The gates prevent verbose startup, Start/Keep modals, stale docs, and broad PRD drift.
 No release ships unless competitor-parity golden transcript gates for Claude,
-Codex, ChatGPT, and Gemini-style first-minute use cases are green.
+Codex, ChatGPT, Gemini-style, and 100-prompt Aryan-derived first-minute use cases are green.
 No commit ships unless the customer-value gate can still prove the solution is
 useful, route-backed, and non-amateur rather than a generic workflow shell.

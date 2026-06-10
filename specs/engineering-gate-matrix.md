@@ -58,7 +58,7 @@ Required outcome:
 - the intent/parity golden transcript gate blocks questions, bare entities, and
   explicit task intents from regressing away from Claude/Codex first-minute
   expectations
-- Claude and Codex user journeys are exercised as concrete commit-gate use cases, not only as personas in docs: local file edits, repo review, strict CLI handoff, custom Claude args, Codex handoff, failed handoff recovery, and compact questions
+- Claude and Codex user journeys are exercised as concrete commit-gate use cases, not only as personas in docs: local file edits, repo review, strict CLI handoff, custom Claude args, Codex handoff, failed handoff recovery, compact questions, and the 100-prompt Aryan-derived first-minute prompt bank
 - competitive scorecard drift is blocked before commit, including required
   coverage for async/background agents, cross-surface continuity, visible
   progress and outputs, permissioned execution, skills/hooks/context routing,
