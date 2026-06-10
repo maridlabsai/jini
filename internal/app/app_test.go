@@ -838,9 +838,9 @@ func TestTopLevelHelpFlagShowsPublicInventory(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Public command inventory",
-		"FREE-TIER VALUE",
-		"jini commands",
+		"Jini",
+		"Usage:",
+		"Essential commands:",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -860,9 +860,9 @@ func TestTopLevelShortHelpFlagShowsPublicInventory(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Public command inventory",
-		"FREE-TIER VALUE",
-		"jini commands",
+		"Jini",
+		"Usage:",
+		"Essential commands:",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -879,22 +879,18 @@ func TestCommandsAliasShowsPublicCommandInventory(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Public command inventory",
-		"FREE-TIER VALUE",
-		"START WITH JINI",
-		"SUPPORT THE CURRENT WORK",
-		"TRY FIRST IN A REPO",
-		"jini review this repo",
-		"jini fix failing tests",
-		"jini review this branch",
-		"jini commands",
+		"Jini",
+		"Usage:",
+		"Examples:",
+		"Essential commands:",
+		"Setup:",
+		"review this repo",
 		"jini status",
 		"jini continue",
 		"jini open",
 		"jini route",
 		"jini doctor",
 		"jini admin help",
-		"native Go preview",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
@@ -904,6 +900,44 @@ func TestCommandsAliasShowsPublicCommandInventory(t *testing.T) {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("did not expect output to contain %q, got:\n%s", unwanted, out)
 		}
+	}
+}
+
+func TestPublicHelpReadsLikeShippedProduct(t *testing.T) {
+	for _, args := range [][]string{{"help"}, {"commands"}, {"--help"}, {"-h"}} {
+		t.Run(strings.Join(args, " "), func(t *testing.T) {
+			var stdout bytes.Buffer
+			exitCode := app.Run(args, &stdout, &stdout)
+			if exitCode != 0 {
+				t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+			}
+
+			out := stdout.String()
+			for _, want := range []string{
+				"Jini",
+				"Usage:",
+				"Examples:",
+				"Essential commands:",
+				"Setup:",
+				"jini route help",
+			} {
+				if !strings.Contains(out, want) {
+					t.Fatalf("expected polished help to contain %q, got:\n%s", want, out)
+				}
+			}
+			for _, unwanted := range []string{
+				"Public command inventory",
+				"FREE-TIER VALUE",
+				"START WITH JINI",
+				"TRY FIRST IN A REPO",
+				"native Go preview",
+				"preview",
+			} {
+				if strings.Contains(out, unwanted) {
+					t.Fatalf("expected polished help not to contain %q, got:\n%s", unwanted, out)
+				}
+			}
+		})
 	}
 }
 
@@ -967,10 +1001,10 @@ func TestTopLevelHelpFlagsShowPublicCommandInventory(t *testing.T) {
 
 			out := stdout.String()
 			for _, want := range []string{
-				"Public command inventory",
-				"FREE-TIER VALUE",
-				"START WITH JINI",
-				"jini commands",
+				"Jini",
+				"Usage:",
+				"Essential commands:",
+				"Setup:",
 				"jini admin help",
 			} {
 				if !strings.Contains(out, want) {
@@ -993,9 +1027,9 @@ func TestTopLevelHelpShowsPublicCommandInventory(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Public command inventory",
-		"FREE-TIER VALUE",
-		"jini commands",
+		"Jini",
+		"Usage:",
+		"Essential commands:",
 		"jini admin help",
 	} {
 		if !strings.Contains(out, want) {
@@ -1013,8 +1047,8 @@ func TestHelpAllShowsPublicCommandInventory(t *testing.T) {
 	if exitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 	}
-	if !strings.Contains(stdout.String(), "Public command inventory") {
-		t.Fatalf("expected public command inventory, got:\n%s", stdout.String())
+	if !strings.Contains(stdout.String(), "Essential commands:") {
+		t.Fatalf("expected public help, got:\n%s", stdout.String())
 	}
 }
 
@@ -1026,8 +1060,8 @@ func TestHelpCommandAliasesShowPublicCommandInventory(t *testing.T) {
 			if exitCode != 0 {
 				t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
 			}
-			if !strings.Contains(stdout.String(), "Public command inventory") {
-				t.Fatalf("expected public command inventory, got:\n%s", stdout.String())
+			if !strings.Contains(stdout.String(), "Essential commands:") {
+				t.Fatalf("expected public help, got:\n%s", stdout.String())
 			}
 		})
 	}
@@ -1064,7 +1098,7 @@ func TestAdminHelpAliasShowsAdminInventory(t *testing.T) {
 				"jini observe status",
 				"jini check ship",
 				"jini open <artifact>",
-				"native Go preview",
+				"Admin commands stay intentionally narrow.",
 				"jini publish-readiness",
 			} {
 				if !strings.Contains(out, want) {

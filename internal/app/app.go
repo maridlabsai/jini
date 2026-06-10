@@ -97,13 +97,13 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 				return runDirectTaskArgsIntake(args, stdout, stderr)
 			}
 			fmt.Fprintf(stderr, "Unknown command %q.\n", args[0])
-			fmt.Fprintln(stderr, "Run `jini commands` to see the native Go command surface.")
+			fmt.Fprintln(stderr, "Run `jini commands` to see supported commands.")
 			return 1
 		}
 		if err := validateNativeArgs(args); err != nil {
 			fmt.Fprintln(stderr, err.Error())
 			if shouldShowNativeCommandHint(err) {
-				fmt.Fprintln(stderr, "Run `jini commands` to see the native Go command surface.")
+				fmt.Fprintln(stderr, "Run `jini commands` to see supported commands.")
 			}
 			return 1
 		}
@@ -173,7 +173,7 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 			return runScorecardGate(args[1:], stdout, stderr)
 		default:
 			fmt.Fprintf(stderr, "Unknown command %q.\n", args[0])
-			fmt.Fprintln(stderr, "Run `jini commands` to see the native Go command surface.")
+			fmt.Fprintln(stderr, "Run `jini commands` to see supported commands.")
 			return 1
 		}
 	})
@@ -2969,28 +2969,25 @@ func renderNewWorkLauncher(w io.Writer) {
 }
 
 func renderPublicCommandInventory(w io.Writer) {
-	fmt.Fprintln(w, "Public command inventory")
+	fmt.Fprintln(w, "Jini")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "FREE-TIER VALUE")
-	fmt.Fprintln(w, "- Start without setup: capture work, see what is ready, and keep blockers visible.")
-	fmt.Fprintln(w, "- Bring your own provider only when you want generation or deeper model help.")
-	fmt.Fprintln(w, "- Share `jini commands` when someone asks what to try first.")
+	fmt.Fprintln(w, "Usage:")
+	fmt.Fprintln(w, "- `jini`")
+	fmt.Fprintln(w, "- `jini <request>`")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "START WITH JINI: jini")
+	fmt.Fprintln(w, "Examples:")
+	fmt.Fprintln(w, "- `jini \"what is the capital of france?\"`")
+	fmt.Fprintln(w, "- `jini \"add a line to the matching .txt file in this folder\"`")
+	fmt.Fprintln(w, "- `jini \"review this repo\"`")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "TRY FIRST IN A REPO: `jini review this repo`, `jini fix failing tests`, or `jini review this branch`.")
+	fmt.Fprintln(w, "Essential commands:")
+	fmt.Fprintln(w, "- `jini status`, `jini continue`, `jini open`")
+	fmt.Fprintln(w, "- `jini route`, `jini doctor`")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "SUPPORT THE CURRENT WORK")
-	fmt.Fprintln(w, "- jini status")
-	fmt.Fprintln(w, "- jini continue")
-	fmt.Fprintln(w, "- jini open")
-	fmt.Fprintln(w, "- jini route")
-	fmt.Fprintln(w, "- jini doctor")
+	fmt.Fprintln(w, "Setup:")
+	fmt.Fprintln(w, "- `jini route help`")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "MORE")
-	fmt.Fprintln(w, "- jini admin help")
-	fmt.Fprintln(w)
-	fmt.Fprintln(w, "This native Go preview keeps the public surface small and inspectable.")
+	fmt.Fprintln(w, "More: `jini admin help`")
 }
 
 func renderAdminCommandInventory(w io.Writer) {
@@ -3004,7 +3001,7 @@ func renderAdminCommandInventory(w io.Writer) {
 	fmt.Fprintln(w, "- jini run")
 	fmt.Fprintln(w, "- jini scorecard-gate")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "This native Go preview stays intentionally narrow. Broader release plumbing should graduate through `jini publish-readiness` before it becomes public.")
+	fmt.Fprintln(w, "Admin commands stay intentionally narrow. Broader release plumbing should graduate through `jini publish-readiness` before it becomes public.")
 }
 
 func renderNewWorkPrompt(w io.Writer) {
