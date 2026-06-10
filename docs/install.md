@@ -251,7 +251,7 @@ export JINI_MODEL=sonnet-4.6
 jini doctor
 jini
 </code></pre>
-      <p>Use this when AWS policy or Bedrock access already exists. If you know the exact model id, you can set <code>BEDROCK_MODEL_ID</code> instead.</p>
+      <p>Use this when AWS policy or Bedrock access already exists. If your team does not use AWS profiles, set <code>AWS_ACCESS_KEY_ID</code> and <code>AWS_SECRET_ACCESS_KEY</code> instead, plus <code>AWS_SESSION_TOKEN</code> for temporary credentials. If you know the exact model id, you can set <code>BEDROCK_MODEL_ID</code> instead.</p>
     </div>
 
     <div class="scenario-card">

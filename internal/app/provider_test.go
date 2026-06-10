@@ -1,6 +1,7 @@
 package app
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -3132,6 +3133,67 @@ func TestGenerateWithConfiguredProviderUsesAWSProfileCredentialsAndRegion(t *tes
 	}
 	if !used || !strings.Contains(result, "Profile-backed Bedrock draft") {
 		t.Fatalf("expected profile-backed Bedrock draft, used=%v result=%q", used, result)
+	}
+}
+
+func TestProviderSetupWizardAcceptsBedrockAccessKeysWithoutAWSProfile(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	stdin := strings.NewReader(strings.Join([]string{
+		"us-west-2",
+		"",
+		"AKIAEXAMPLE",
+		"SECRETEXAMPLE",
+		"SESSIONEXAMPLE",
+	}, "\n") + "\n")
+	scanner := bufio.NewScanner(stdin)
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+
+	exitCode := runProviderSetupWizard("bedrock-sonnet", scanner, &stdout, &stderr)
+	if exitCode != 0 {
+		t.Fatalf("expected Bedrock setup with access keys to succeed, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+	out := stdout.String()
+	for _, want := range []string{
+		"Bedrock",
+		"AWS profile name (press Enter to use access keys)",
+		"AWS access key ID",
+		"AWS secret access key",
+		"AWS session token (press Enter if not needed)",
+		"Setup saved. Working with",
+		"Amazon Bedrock",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected Bedrock wizard output to contain %q, got:\n%s", want, out)
+		}
+	}
+	for _, secret := range []string{"SECRETEXAMPLE", "SESSIONEXAMPLE"} {
+		if strings.Contains(out, secret) || strings.Contains(stderr.String(), secret) {
+			t.Fatalf("Bedrock wizard must not echo %s\nstdout:\n%s\nstderr:\n%s", secret, out, stderr.String())
+		}
+	}
+
+	providerSaved, err := os.ReadFile(filepath.Join(stateDir, "provider.json"))
+	if err != nil {
+		t.Fatalf("expected provider settings file: %v", err)
+	}
+	saved := string(providerSaved)
+	for _, want := range []string{
+		`"JINI_PROVIDER": "bedrock"`,
+		`"AWS_REGION": "us-west-2"`,
+		`"AWS_ACCESS_KEY_ID": "AKIAEXAMPLE"`,
+		`"AWS_SECRET_ACCESS_KEY": "SECRETEXAMPLE"`,
+		`"AWS_SESSION_TOKEN": "SESSIONEXAMPLE"`,
+		`"JINI_MODEL": "sonnet-4.6"`,
+	} {
+		if !strings.Contains(saved, want) {
+			t.Fatalf("expected saved Bedrock settings to contain %q, got:\n%s", want, saved)
+		}
+	}
+	if strings.Contains(saved, `"AWS_PROFILE"`) {
+		t.Fatalf("expected access-key setup not to save empty AWS_PROFILE, got:\n%s", saved)
 	}
 }
 

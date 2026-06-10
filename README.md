@@ -297,7 +297,9 @@ jini doctor
 ```
 
 `JINI_MODEL=sonnet-4.6` resolves to Claude Sonnet 4.6 on Bedrock. You can also
-set `BEDROCK_MODEL_ID` directly.
+set `BEDROCK_MODEL_ID` directly. If your team does not use AWS profiles, use
+`AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` instead of `AWS_PROFILE`; add
+`AWS_SESSION_TOKEN` when your credentials are temporary.
 
 ### Azure OpenAI
 

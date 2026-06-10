@@ -951,11 +951,16 @@ func renderRouteSetupHelp(w io.Writer) {
 	fmt.Fprintln(w, "2. Run `jini doctor`.")
 	fmt.Fprintln(w, "3. Run `jini route set codex` or `jini route set claude-code`.")
 	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Azure OpenAI API: set `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, and `AZURE_OPENAI_DEPLOYMENT`; then `jini route set azure-openai`.")
+	fmt.Fprintln(w, "Bedrock API: set `AWS_REGION` plus `AWS_PROFILE` or `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`; then `jini route set bedrock-sonnet`.")
 	fmt.Fprintln(w, "Local/offline model: run a local OpenAI-compatible server, then `jini route set local-slm` or `jini route auto`.")
 	fmt.Fprintln(w, "Local preview: run `jini route set local-preview` when you want deterministic no-model fallback.")
 	fmt.Fprintln(w, "Auto mode: run `jini route auto`.")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Use env overrides only when auto-detect fails:")
+	fmt.Fprintln(w, "- `AZURE_OPENAI_ENDPOINT=https://...openai.azure.com`")
+	fmt.Fprintln(w, "- `AZURE_OPENAI_DEPLOYMENT=your-deployment`")
+	fmt.Fprintln(w, "- `AWS_PROFILE=your-profile` or `AWS_ACCESS_KEY_ID=...`")
 	fmt.Fprintln(w, "- `JINI_CODEX_CLI=/path/to/codex`")
 	fmt.Fprintln(w, "- `JINI_CLAUDE_CODE_CLI=/path/to/claude`")
 	fmt.Fprintln(w, "- `JINI_LOCAL_SLM_ENDPOINT=http://127.0.0.1:11434/v1`")
@@ -3270,25 +3275,15 @@ func runProviderSetupWizard(mode string, scanner *bufio.Scanner, stdout, stderr 
 		}
 	case "bedrock-sonnet":
 		fmt.Fprintln(stdout, "Bedrock")
-		region, ok := readPromptLine(scanner, stdout, "AWS region (press Enter for us-east-1)")
+		settings, ok := readBedrockSetupInputs(scanner, stdout, stderr, false)
 		if !ok {
-			return 1
-		}
-		profile, ok := readPromptLine(scanner, stdout, "AWS profile name")
-		if !ok || strings.TrimSpace(profile) == "" {
-			fmt.Fprintln(stderr, "Bedrock Sonnet setup needs an AWS profile name.")
 			return 1
 		}
 		if err := saveRouterSettings("bedrock-sonnet"); err != nil {
 			fmt.Fprintf(stderr, "Could not save Bedrock Sonnet route: %v\n", err)
 			return 1
 		}
-		if err := saveProviderSettings(map[string]string{
-			"JINI_PROVIDER": "bedrock",
-			"AWS_REGION":    firstNonEmpty(region, "us-east-1"),
-			"AWS_PROFILE":   profile,
-			"JINI_MODEL":    "sonnet-4.6",
-		}); err != nil {
+		if err := saveProviderSettings(settings); err != nil {
 			fmt.Fprintf(stderr, "Could not save Bedrock setup: %v\n", err)
 			return 1
 		}
@@ -3354,16 +3349,7 @@ func runProviderSetupWizard(mode string, scanner *bufio.Scanner, stdout, stderr 
 		}
 	case "bedrock":
 		fmt.Fprintln(stdout, "Bedrock")
-		region, ok := readPromptLine(scanner, stdout, "AWS region (press Enter for us-east-1)")
-		if !ok {
-			return 1
-		}
-		profile, ok := readPromptLine(scanner, stdout, "AWS profile name")
-		if !ok || strings.TrimSpace(profile) == "" {
-			fmt.Fprintln(stderr, "Bedrock setup needs an AWS profile name.")
-			return 1
-		}
-		model, ok := readPromptLine(scanner, stdout, "Model (press Enter for sonnet-4.6)")
+		settings, ok := readBedrockSetupInputs(scanner, stdout, stderr, true)
 		if !ok {
 			return 1
 		}
@@ -3371,12 +3357,7 @@ func runProviderSetupWizard(mode string, scanner *bufio.Scanner, stdout, stderr 
 			fmt.Fprintf(stderr, "Could not clear saved tool route: %v\n", err)
 			return 1
 		}
-		if err := saveProviderSettings(map[string]string{
-			"JINI_PROVIDER": "bedrock",
-			"AWS_REGION":    firstNonEmpty(region, "us-east-1"),
-			"AWS_PROFILE":   profile,
-			"JINI_MODEL":    firstNonEmpty(model, "sonnet-4.6"),
-		}); err != nil {
+		if err := saveProviderSettings(settings); err != nil {
 			fmt.Fprintf(stderr, "Could not save Bedrock setup: %v\n", err)
 			return 1
 		}
@@ -3472,6 +3453,56 @@ func runProviderSetupWizard(mode string, scanner *bufio.Scanner, stdout, stderr 
 	}
 	fmt.Fprintf(stderr, "Setup is still incomplete. Missing: %s\n", strings.Join(provider.Missing, ", "))
 	return 1
+}
+
+func readBedrockSetupInputs(scanner *bufio.Scanner, stdout, stderr io.Writer, promptForModel bool) (map[string]string, bool) {
+	region, ok := readPromptLine(scanner, stdout, "AWS region (press Enter for us-east-1)")
+	if !ok {
+		return nil, false
+	}
+	profile, ok := readPromptLine(scanner, stdout, "AWS profile name (press Enter to use access keys)")
+	if !ok {
+		return nil, false
+	}
+
+	values := map[string]string{
+		"JINI_PROVIDER": "bedrock",
+		"AWS_REGION":    firstNonEmpty(region, "us-east-1"),
+		"JINI_MODEL":    "sonnet-4.6",
+	}
+	if strings.TrimSpace(profile) != "" {
+		values["AWS_PROFILE"] = profile
+		values["AWS_ACCESS_KEY_ID"] = ""
+		values["AWS_SECRET_ACCESS_KEY"] = ""
+		values["AWS_SESSION_TOKEN"] = ""
+	} else {
+		accessKeyID, ok := readPromptLine(scanner, stdout, "AWS access key ID")
+		if !ok || strings.TrimSpace(accessKeyID) == "" {
+			fmt.Fprintln(stderr, "Bedrock setup needs AWS profile or AWS access keys.")
+			return nil, false
+		}
+		secretAccessKey, ok := readPromptLine(scanner, stdout, "AWS secret access key")
+		if !ok || strings.TrimSpace(secretAccessKey) == "" {
+			fmt.Fprintln(stderr, "Bedrock setup needs AWS secret access key.")
+			return nil, false
+		}
+		sessionToken, ok := readPromptLine(scanner, stdout, "AWS session token (press Enter if not needed)")
+		if !ok {
+			return nil, false
+		}
+		values["AWS_PROFILE"] = ""
+		values["AWS_ACCESS_KEY_ID"] = accessKeyID
+		values["AWS_SECRET_ACCESS_KEY"] = secretAccessKey
+		values["AWS_SESSION_TOKEN"] = sessionToken
+	}
+	if promptForModel {
+		model, ok := readPromptLine(scanner, stdout, "Model (press Enter for sonnet-4.6)")
+		if !ok {
+			return nil, false
+		}
+		values["JINI_MODEL"] = firstNonEmpty(model, "sonnet-4.6")
+	}
+	return values, true
 }
 
 func renderFirstRunResult(w io.Writer, summary *workSummary) {

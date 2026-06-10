@@ -1417,9 +1417,14 @@ func TestRouteCommandShowsSetupHelp(t *testing.T) {
 			"1. Run `jini route list`.",
 			"2. Run `jini doctor`.",
 			"3. Run `jini route set codex` or `jini route set claude-code`.",
+			"Azure OpenAI API: set `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, and `AZURE_OPENAI_DEPLOYMENT`; then `jini route set azure-openai`.",
+			"Bedrock API: set `AWS_REGION` plus `AWS_PROFILE` or `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`; then `jini route set bedrock-sonnet`.",
 			"Local/offline model: run a local OpenAI-compatible server, then `jini route set local-slm` or `jini route auto`.",
 			"Local preview: run `jini route set local-preview` when you want deterministic no-model fallback.",
 			"Use env overrides only when auto-detect fails:",
+			"- `AZURE_OPENAI_ENDPOINT=https://...openai.azure.com`",
+			"- `AZURE_OPENAI_DEPLOYMENT=your-deployment`",
+			"- `AWS_PROFILE=your-profile` or `AWS_ACCESS_KEY_ID=...`",
 			"- `JINI_CODEX_CLI=/path/to/codex`",
 			"- `JINI_CLAUDE_CODE_CLI=/path/to/claude`",
 			"- `JINI_LOCAL_SLM_ENDPOINT=http://127.0.0.1:11434/v1`",
@@ -1442,7 +1447,7 @@ func TestRouteCommandShowsSetupHelp(t *testing.T) {
 				t.Fatalf("expected route help %v to avoid %q, got:\n%s", args, unwanted, out)
 			}
 		}
-		if got := nonEmptyLineCount(out); got > 12 {
+		if got := nonEmptyLineCount(out); got > 17 {
 			t.Fatalf("expected route help %v to stay compact, got %d non-empty lines:\n%s", args, got, out)
 		}
 	}

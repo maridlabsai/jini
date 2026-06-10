@@ -167,6 +167,9 @@ That means:
   with exact setup guidance
 - provider API routes may exist, but they must not be marketed as Codex,
   Claude Code, or another CLI unless that CLI is actually invoked
+- BYO provider API routes include Azure OpenAI and Amazon Bedrock; setup must
+  support common enterprise credential paths, stay inspectable through
+  `jini route help` and `jini doctor`, and never print API keys or AWS secrets
 - route output must make the difference between CLI handoff, provider API, and
   local/offline execution visible without adding startup ceremony
 - route setup guidance is public through `jini route help`; it lists CLI
