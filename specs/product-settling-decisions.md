@@ -1,6 +1,6 @@
 # Product Settling Decisions
 
-Updated: 2026-06-09
+Updated: 2026-06-10
 
 This document records the hard product decisions that reduce ambiguity for GTM,
 engineering, docs, and tiering.
@@ -81,6 +81,9 @@ Non-negotiable invariants:
   action receipt first, no status or artifact frame unless the user asks for it.
 - Simple factual questions never print `Result ready.`, `Task Snapshot`,
   `Saved:`, or follow-on command chrome.
+- Unknown standalone questions route through a configured CLI, provider, or
+  local model when one is available; otherwise they return compact setup
+  guidance and still create no work.
 - Configured CLI route names require real installed-CLI handoff or fail-closed
   setup guidance; provider API routing is a separate route type.
 - Adapter breadth is P0 only for familiar tools users already trust; it must
@@ -88,6 +91,30 @@ Non-negotiable invariants:
 - Side-effecting work reports files changed, commands or tests run, blockers,
   approvals, and rollback or recovery path when relevant.
 - No hard-coded entity-to-template routing.
+
+## Dynamic Platform Decision
+
+Jini should remove hard-coded scaffolding wherever it affects first-minute
+behavior, route claims, feature availability, or pricing boundaries.
+
+Dynamic platform rules:
+
+- Routing is registry-backed. Adapter descriptors, installed CLI checks,
+  provider readiness, local runtime probes, model/profile eligibility, health
+  history, and user route choices feed route selection.
+- Route scoring must be capability-gated before it is preference-scored. An
+  unavailable local profile, rejected CLI, missing provider, or denied paid
+  feature cannot win because of score bias.
+- Graceful degradation is explicit. Jini chooses the next safe configured route
+  or fails closed with setup guidance; it must not fake support with a generic
+  scaffold.
+- Subscription boundaries happen at the feature boundary. Installing and using
+  the core CLI stays available; commercial-only feature names fail closed in the
+  public CLI until managed commercial automation has real entitlement checks and
+  manual free fallbacks where possible.
+- User and work context learning is bounded to repeated preferences, route
+  choices, local runtime outcomes, and resumable work. It must be inspectable
+  and must not become hidden surveillance or public agent-role UX.
 
 ## CLI Handoff Decision
 
@@ -149,11 +176,12 @@ Implementation plan:
 ## Free Tier Decision
 
 The free tier should prove Jini's routing and session value without giving away
-the commercial OS.
+future commercial automation.
 
-CLI and app surfaces are available to both free and commercial users. Download,
-install, launch, and basic session review are not the subscription boundary.
-Subscription gates capabilities inside those surfaces.
+CLI is available now. App surfaces, when shipped, are available to both free and
+commercial users. Download, install, launch, and basic session review are not
+the subscription boundary. Subscription gates capabilities inside those
+surfaces.
 
 Free tier includes:
 
@@ -177,8 +205,8 @@ Free tier does not include:
 
 ## Commercial Tier Decision
 
-Commercial tier is where Jini becomes an agent and skills based OS productivity
-suite.
+Commercial tier is the future managed automation layer for skills, delegation,
+agents, policy, and continuity.
 
 Commercial value must be materially higher than the free surfaces:
 

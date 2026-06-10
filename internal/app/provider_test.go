@@ -858,6 +858,150 @@ func TestDetectRouteAutoTreatsConnectivityProbeOfflineAsOfflineMode(t *testing.T
 	}
 }
 
+func TestDetectRouteAutoCanChooseReadyCLIHandoffCandidate(t *testing.T) {
+	t.Setenv("JINI_STATE_DIR", t.TempDir())
+	t.Setenv("JINI_TOOL", "auto")
+	t.Setenv("JINI_PROVIDER", "auto")
+	t.Setenv("JINI_MODEL", "auto")
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	fakeBin := t.TempDir()
+	fakeCodex := writeProviderFakeExecutable(t, fakeBin, "codex", "printf 'fake codex route\\n'")
+	t.Setenv("JINI_CODEX_CLI", fakeCodex)
+	t.Setenv("JINI_CLAUDE_CODE_CLI", filepath.Join(fakeBin, "missing-claude"))
+	t.Setenv("JINI_GEMINI_CLI", filepath.Join(fakeBin, "missing-gemini"))
+	t.Setenv("JINI_AIDER_CLI", filepath.Join(fakeBin, "missing-aider"))
+	t.Setenv("JINI_OPENCODE_CLI", filepath.Join(fakeBin, "missing-opencode"))
+	withRuntimeConnectivityProbe(t, runtimeConnectivityProbeResult{
+		State:  "online",
+		Reason: "Internet route is available.",
+		Known:  true,
+	})
+
+	decision := detectRouteForRequest(providerGenerationRequest{
+		Choice: starterChoice{PackID: "general-work"},
+		Title:  "Fix tests",
+		Source: "fix failing tests in this repo",
+	})
+	if decision.ToolMode != "codex" || decision.RoutePolicy != "CLI handoff" {
+		t.Fatalf("expected auto route to choose ready Codex CLI handoff, got %#v", decision)
+	}
+}
+
+func TestDetectRouteAutoAvoidsCLIHandoffWhenConnectivityIsOffline(t *testing.T) {
+	t.Setenv("JINI_STATE_DIR", t.TempDir())
+	t.Setenv("JINI_TOOL", "auto")
+	t.Setenv("JINI_PROVIDER", "auto")
+	t.Setenv("JINI_MODEL", "auto")
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	fakeBin := t.TempDir()
+	fakeCodex := writeProviderFakeExecutable(t, fakeBin, "codex", "printf 'fake codex route\\n'")
+	t.Setenv("JINI_CODEX_CLI", fakeCodex)
+	t.Setenv("JINI_CLAUDE_CODE_CLI", filepath.Join(fakeBin, "missing-claude"))
+	t.Setenv("JINI_GEMINI_CLI", filepath.Join(fakeBin, "missing-gemini"))
+	t.Setenv("JINI_AIDER_CLI", filepath.Join(fakeBin, "missing-aider"))
+	t.Setenv("JINI_OPENCODE_CLI", filepath.Join(fakeBin, "missing-opencode"))
+	withRuntimeConnectivityProbe(t, runtimeConnectivityProbeResult{
+		State:  "offline",
+		Reason: "No usable internet route was detected.",
+		Known:  true,
+	})
+
+	decision := detectRouteForRequest(providerGenerationRequest{
+		Choice: starterChoice{PackID: "general-work"},
+		Title:  "Offline code",
+		Source: "fix failing tests in this repo while offline",
+	})
+	if decision.ToolMode != "local-preview" {
+		t.Fatalf("expected offline auto route to avoid CLI handoff, got %#v", decision)
+	}
+	if !strings.Contains(decision.Reason, "internet route") {
+		t.Fatalf("expected offline route reason, got %q", decision.Reason)
+	}
+}
+
+func TestDetectRouteAutoAvoidsPinnedRemoteProviderWhenConnectivityIsOffline(t *testing.T) {
+	t.Setenv("JINI_STATE_DIR", t.TempDir())
+	t.Setenv("JINI_TOOL", "auto")
+	t.Setenv("JINI_PROVIDER", "azure-openai")
+	t.Setenv("JINI_MODEL", "auto")
+	t.Setenv("JINI_CONNECTIVITY_OVERRIDE", "offline")
+	t.Setenv("AZURE_OPENAI_ENDPOINT", "https://example.openai.azure.com")
+	t.Setenv("AZURE_OPENAI_API_KEY", "super-secret-key")
+	t.Setenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o-prod")
+
+	decision := detectRouteForRequest(providerGenerationRequest{
+		Choice: starterChoice{PackID: "general-work"},
+		Title:  "Offline pinned provider",
+		Source: "summarize this note while offline",
+	})
+	if decision.ToolMode != "local-preview" {
+		t.Fatalf("expected offline auto route to avoid pinned remote provider, got %#v", decision)
+	}
+	if !strings.Contains(decision.Reason, "offline") {
+		t.Fatalf("expected offline route reason, got %q", decision.Reason)
+	}
+}
+
+func TestDetectRouteForLocalSLMAliasChoosesEligibleProfile(t *testing.T) {
+	t.Setenv("JINI_STATE_DIR", t.TempDir())
+	t.Setenv("JINI_TOOL", "local-slm")
+	t.Setenv("JINI_PROVIDER", "auto")
+	t.Setenv("JINI_DEVICE_CLASS_OVERRIDE", "mobile-small")
+	t.Setenv("JINI_LOCAL_SLM_ENDPOINT", "http://127.0.0.1:11434/v1")
+	t.Setenv("JINI_LOCAL_SLM_MODEL", "gemma3n:e2b-it")
+
+	decision := detectRouteForRequest(providerGenerationRequest{
+		Choice: starterChoice{PackID: "general-work"},
+		Title:  "Local alias",
+		Source: "summarize this note offline",
+	})
+	if decision.ToolMode != "local-fast" {
+		t.Fatalf("expected local-slm alias to resolve to eligible mobile local-fast profile, got %#v", decision)
+	}
+}
+
+func TestDetectRouteAutoPinnedLocalSLMWithoutRuntimeFallsBackToLocalPreview(t *testing.T) {
+	t.Setenv("JINI_STATE_DIR", t.TempDir())
+	t.Setenv("JINI_TOOL", "auto")
+	t.Setenv("JINI_PROVIDER", "local-slm")
+	t.Setenv("JINI_MODEL", "auto")
+
+	decision := detectRouteForRequest(providerGenerationRequest{
+		Choice: starterChoice{PackID: "general-work"},
+		Title:  "Local SLM unavailable",
+		Source: "summarize this note offline",
+	})
+	if decision.ToolMode != "local-preview" {
+		t.Fatalf("expected local-slm provider pin without runtime to fall back to local-preview, got %#v", decision)
+	}
+	if !decision.Active {
+		t.Fatalf("expected active fallback route, got %#v", decision)
+	}
+}
+
+func TestDetectRouteAutoDoesNotSelectUnavailableLocalProfileInOfflineMode(t *testing.T) {
+	t.Setenv("JINI_STATE_DIR", t.TempDir())
+	t.Setenv("JINI_TOOL", "auto")
+	t.Setenv("JINI_PROVIDER", "auto")
+	t.Setenv("JINI_MODEL", "auto")
+	t.Setenv("JINI_CONNECTIVITY_OVERRIDE", "offline")
+	t.Setenv("JINI_DEVICE_CLASS_OVERRIDE", "mobile-small")
+	t.Setenv("JINI_LOCAL_SLM_ENDPOINT", "http://127.0.0.1:11434/v1")
+	t.Setenv("JINI_LOCAL_SLM_MODEL", "gemma3n:e2b-it")
+	t.Setenv("AZURE_OPENAI_ENDPOINT", "https://example.openai.azure.com")
+	t.Setenv("AZURE_OPENAI_API_KEY", "super-secret-key")
+	t.Setenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o-prod")
+
+	decision := detectRouteForRequest(providerGenerationRequest{
+		Choice: starterChoice{PackID: "general-work"},
+		Title:  "Offline code",
+		Source: "deep code architecture review while offline",
+	})
+	if decision.ToolMode != "local-fast" {
+		t.Fatalf("expected offline auto route to exclude unavailable heavy mobile profiles, got %#v", decision)
+	}
+}
+
 func TestDetectRuntimeAvailabilityConnectivityProbeOnlineKeepsRemoteAvailable(t *testing.T) {
 	t.Setenv("JINI_STATE_DIR", t.TempDir())
 	t.Setenv("JINI_TOOL", "auto")

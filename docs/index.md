@@ -275,10 +275,12 @@ description: Free orchestration for AI work across providers today. Pay only whe
 <!-- ## Where you can use it now -->
 <h2>Where you can use it now</h2>
 
+<p class="page-lead closing-boundary-brief"><strong>Current source contract for the next release:</strong> Jini is CLI-first today. Bare <code>jini</code> opens a compact task prompt, not a dashboard, Start/Keep modal, or Task Snapshot scaffold. Routes, future paid features, and side effects should be claimed only when the current binary can invoke them, check entitlement where implemented, ask for visible approval, or fail closed.</p>
+
 <!-- ## Small front door. Clear paid boundary. -->
 <h3>Small front door. Clear paid boundary.</h3>
 
-<p class="page-lead closing-boundary-brief"><strong>Start with <code>jini</code>.</strong> If you need the small public command list, use <code>jini commands</code>. Outside the front door, the public support list should stay short: <code>status</code>, <code>continue</code>, <code>open</code>, and <code>doctor</code>. Everything else is support plumbing, not the product story.</p>
+<p class="page-lead closing-boundary-brief"><strong>Start with <code>jini</code>.</strong> If you need the small public command list, use <code>jini commands</code>. Outside the front door, the public support list should stay short: <code>status</code>, <code>continue</code>, <code>open</code>, <code>route</code>, and <code>doctor</code>. Everything else is support plumbing, not the product story.</p>
 
 <div class="economics-table surface-story">
 <table>

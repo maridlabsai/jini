@@ -88,6 +88,10 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 		if isHiddenAppSidecarServeCommand(args) {
 			return runAppSidecarServe(stdin, stdout, stderr)
 		}
+		if access, ok := commercialOnlyCommandAccess(args[0]); ok {
+			renderFeatureAccessDenied(stderr, access)
+			return 1
+		}
 		if canonicalTopLevelCommand(args[0]) == "" {
 			if shouldRunDirectTaskArgs(args) {
 				return runDirectTaskArgsIntake(args, stdout, stderr)
@@ -501,6 +505,13 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 	if maybeHandleCurrentWorkQuestion(action, summary, stdout) {
 		return 0
 	}
+	if maybeHandleStandaloneQuestion(action, stdout) {
+		return 0
+	}
+	if access, ok := commercialOnlyCommandAccess(action); ok {
+		renderFeatureAccessDenied(stdout, access)
+		return 1
+	}
 	if resolution, resolved, err := resolveActiveAskAction(summary.Dir, summary, action); resolved {
 		if err != nil {
 			fmt.Fprintf(stderr, "Could not save the decision: %v\n", err)
@@ -847,7 +858,7 @@ func saveExplicitRoute(raw string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "Run `jini route list` to see available routes.")
 		return 1
 	}
-	decision := detectRouteForToolMode(mode, false)
+	decision := detectExplicitRouteForMode(mode)
 	if !decision.Active {
 		fmt.Fprintf(stderr, "Unknown route %q.\n", strings.TrimSpace(raw))
 		fmt.Fprintln(stderr, "Run `jini route list` to see available routes.")
@@ -881,8 +892,18 @@ func knownRouteMode(mode string) bool {
 	if mode == "auto" {
 		return true
 	}
+	if mode == "local-slm" {
+		return true
+	}
 	_, ok := adapterDescriptorForMode(mode)
 	return ok
+}
+
+func detectExplicitRouteForMode(mode string) routeDecision {
+	if mode == "local-slm" {
+		return detectLocalSLMAliasRouteForRequest(providerGenerationRequest{}, false)
+	}
+	return detectRouteForToolMode(mode, false)
 }
 
 func renderRouteList(w io.Writer) {
@@ -1412,6 +1433,9 @@ func runDirectTaskArgsIntake(args []string, stdout, stderr io.Writer) int {
 	if maybeHandleSimpleAnswer(source, stdout) {
 		return 0
 	}
+	if maybeHandleStandaloneQuestion(source, stdout) {
+		return 0
+	}
 	if maybeHandleAmbiguousBareEntity(source, stdout) {
 		return 0
 	}
@@ -1533,6 +1557,9 @@ func startNewWorkFromRawInput(firstRaw string, session *bufio.Scanner, stdout, s
 		return exitCode
 	}
 	if maybeHandleSimpleAnswer(source, stdout) {
+		return 0
+	}
+	if !choiceExplicit && maybeHandleStandaloneQuestion(source, stdout) {
 		return 0
 	}
 	if !choiceExplicit && maybeHandleAmbiguousBareEntity(source, stdout) {
@@ -1678,6 +1705,11 @@ func isHelpInput(raw string) bool {
 }
 
 func maybeHandleNewWorkUtilityIntent(raw string, stdout io.Writer) (bool, int) {
+	if access, ok := commercialOnlyCommandAccess(raw); ok {
+		fmt.Fprintln(stdout)
+		renderFeatureAccessDenied(stdout, access)
+		return true, 1
+	}
 	switch interactiveCommandName(raw) {
 	case "status":
 		fmt.Fprintln(stdout)
@@ -3941,6 +3973,10 @@ func handlePostResultAction(action string, summary *workSummary, scanner *bufio.
 		}
 		fmt.Fprintf(stdout, "Recorded decision: %s.\n", resolution)
 		return 0
+	}
+	if access, ok := commercialOnlyCommandAccess(action); ok {
+		renderFeatureAccessDenied(stdout, access)
+		return 1
 	}
 	switch interactiveCommandName(action) {
 	case "resume":

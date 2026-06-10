@@ -68,7 +68,8 @@ func TestPublicDocsUseCurrentFirstRunFlow(t *testing.T) {
 		"The first screen should stay light: no saved-work dashboard, no tutorial block,",
 		"describe the task or paste the notes, files, screenshot, transcript, or rough ask",
 		"`auto` means: Jini picks the cheapest suitable route by default",
-		"`jini open` shows the build-readiness check. `jini status` shows the full state.",
+		"Durable work details belong behind explicit commands such as",
+		"`jini status`, `jini continue`, `jini open`, and `jini route`",
 	} {
 		if !strings.Contains(readme, want) {
 			t.Fatalf("README must teach current public flow %q", want)

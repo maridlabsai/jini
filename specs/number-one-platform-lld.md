@@ -1,6 +1,6 @@
 # Number One Platform LLD
 
-Updated: 2026-06-09
+Updated: 2026-06-10
 
 This low-level design defines the executable contracts that implement
 [number-one-platform-hld.md](./number-one-platform-hld.md).
@@ -29,8 +29,9 @@ Intent handlers run before work creation:
 6. route or work creation
 
 The direct-answer classifier owns typo-tolerant small facts such as `whats teh
-capital of france`. Unknown standalone questions may answer `I don't know
-locally.` but must still avoid artifacts and saved work.
+capital of france`. Unknown standalone questions must route through a configured
+CLI, provider, or local model when one is available; otherwise they return
+compact setup guidance. They still must avoid artifacts and saved work.
 
 ### Action Contract
 
@@ -39,8 +40,30 @@ locally.` but must still avoid artifacts and saved work.
   guidance; they must not silently fall back to provider API aliases.
 - Provider and local/offline routes are labeled separately from CLI handoff
   routes.
+- Route selection reads from registered adapters, provider readiness, local
+  runtime probes, installed CLI checks, capability tags, and recent health
+  evidence. It must not infer a hard-coded workflow template from an entity
+  name alone.
+- Missing routes and unavailable features degrade to the next safe configured
+  path or fail closed with setup guidance. Commercial-only feature names fail
+  closed in the public CLI until a real entitlement runtime exists.
 - Side-effect receipts name files changed, commands/tests run, blockers, and
   recovery path when relevant.
+
+### Side-Effect Approval Matrix
+
+| Action class | Approval rule | Receipt rule |
+| --- | --- | --- |
+| Read-only inspection, route diagnosis, simple answers | No approval needed | No durable work unless explicitly requested |
+| Explicit unambiguous local file edit | No extra approval needed | Name changed file and edit made |
+| Ambiguous, multi-file, generated, or risky local edit | Ask first or fail closed | Name candidates, chosen scope, and recovery path |
+| Commands that install, mutate, use network, or may be slow/expensive | Ask first unless already covered by an explicit user request | Name command and outcome |
+| External send/share/book/pay actions | Require visible approval at the action boundary | Name destination and confirm nothing else was sent |
+| Commit, push, release, deploy, destructive change, or credential/policy update | Require visible approval and recovery path | Name irreversible effect, owner, and rollback or next step |
+| Paid, managed, or team automation | Fail closed in the public CLI; when implemented, check entitlement before starting | Show free/manual fallback or fail closed |
+
+Approval is not product ceremony. It is a narrow safety gate before effects
+that leave the local reversible work path.
 
 ### Persistence Contract
 
@@ -49,6 +72,9 @@ locally.` but must still avoid artifacts and saved work.
   questions, or unknown standalone questions.
 - Create durable work only after task intent needs continuation, artifacts, or
   route receipts.
+- Persist learned user/work context only when it improves repeated CLI work,
+  route choice, or continuation. Keep it inspectable and avoid broad hidden
+  surveillance.
 
 ## Implementation Map
 

@@ -130,7 +130,7 @@ func anyRemoteProviderReady() bool {
 			return true
 		}
 	}
-	return false
+	return anyCLIHandoffReady()
 }
 
 func bestLocalSLMRouteModeForRequest(request providerGenerationRequest) string {
@@ -138,13 +138,16 @@ func bestLocalSLMRouteModeForRequest(request providerGenerationRequest) string {
 	bestScore := -100000
 	features := classifyRouteFeatures(request)
 	for _, slot := range localSLMProfileSlots() {
+		if !localSLMRouteModeEligible(slot.ID) {
+			continue
+		}
 		score := scoreRouteMode(slot.ID, features)
 		if score > bestScore {
 			bestScore = score
 			bestMode = slot.ID
 		}
 	}
-	return firstNonEmpty(bestMode, "local-workhorse")
+	return firstNonEmpty(bestMode, "local-preview")
 }
 
 func runtimeAvailabilityRouteBias(mode string, availability runtimeAvailability) int {
@@ -164,7 +167,11 @@ func runtimeAvailabilityRouteBias(mode string, availability runtimeAvailability)
 }
 
 func isRemoteRouteMode(mode string) bool {
-	switch strings.TrimSpace(mode) {
+	normalized := strings.TrimSpace(mode)
+	if cliHandoffMode(normalized) {
+		return true
+	}
+	switch normalized {
 	case "claude-api", "bedrock-sonnet", "chatgpt", "azure-code", "azure-openai":
 		return true
 	default:

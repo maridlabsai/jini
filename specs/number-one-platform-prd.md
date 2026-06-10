@@ -1,6 +1,6 @@
 # Number One Platform PRD
 
-Updated: 2026-06-08
+Updated: 2026-06-10
 
 This is the canonical near-term PRD. It defines the work that matters for GTM.
 If it conflicts with exploratory specs, demo docs, or older PRDs, this document
@@ -23,6 +23,15 @@ state, and lets users move between configured tools without learning a new
 conversation style.
 
 Core charter: intent-first Claude/Codex parity outranks feature expansion.
+
+## Current Release Contract
+
+R0 is CLI-first: minimal task prompt, compact answers, clear local edits,
+explicit route/status/continue/open/doctor flows, real provider/local/CLI route
+execution or fail-closed setup guidance, and release-asset install. R0 must not
+claim dashboards, `Start/Keep`, `Task Snapshot` scaffolds, generally available
+desktop/mobile/team/agent-suite surfaces, or automatic commercial optimization.
+Side effects follow the LLD approval matrix.
 
 ## P0 Outcome Requirements
 
@@ -93,55 +102,44 @@ User productivity learning remains P0 only when it improves the CLI wedge:
 - keep learning inspectable and controllable
 - avoid hidden surveillance, broad OS scope, or free-tier agent-suite creep
 
+## Dynamic Platform Principles
+
+These principles guide internals without expanding R0: registry-backed routing,
+capability-gated scoring, explicit graceful degradation, fail-closed commercial
+feature boundaries until entitlement runtime exists, and bounded/inspectable
+user-work context learning.
+
 ## Tier Boundary
 
-CLI and app surfaces are available to both free and commercial users.
-Subscription gates capabilities, not the ability to install or open Jini.
+CLI is available now. App surfaces, when shipped, are available to both free
+and commercial users. Subscription gates capabilities, not the ability to
+install or open Jini.
 
-Free proves the product wedge across available surfaces:
-
-- direct task intake and local file edits
-- manual route inspection and route switching
-- compact status, continue, and open flows
-- basic offline/local route support when configured
-- basic token-frugal session reuse
-- setup and provider diagnostics
-
-Free excludes:
-
-- developer-agent fleets, tester-agent fleets, a commercial skills-based OS productivity suite
-- managed throttle recovery, governed approval workflows, team policy, audit,
-  and automation loops
-
-Commercial value must be materially higher than the free surfaces: managed route/throttle policy, governed skills and delegation, cross-device and offline-online continuation, team audit, and automation loops. Commercial UX must still follow the same rule: simple task in, useful result out.
+Free proves the wedge: direct intake/edits, manual route inspection/switching,
+compact status/continue/open, configured offline/local support, token-frugal
+session reuse, and setup diagnostics. Free excludes: developer-agent fleets,
+tester-agent fleets, commercial skills-based OS productivity suite, managed
+throttle recovery, governed approvals, team policy, audit, and automation
+loops. Commercial value must be materially higher than the free surfaces:
+managed route/throttle policy, governed skills/delegation, cross-device and
+offline-online continuation, team audit, and automation loops. Commercial UX
+must still follow the same rule: simple task in, useful result out.
 
 ## Roadmap
 
-P0 now:
-- intent-first CLI parity
-- task-first startup even with saved work
-- direct file edit reliability
-- simple question direct-answer behavior
-- route list, route set, route auto, route status
-- real downstream CLI handoff and adapter support waves
-- self-sufficient install from release assets
-- CLI UX, PRD drift, and scorecard gates in commit gates
+P0 now: intent-first CLI parity, task-first startup even with saved work, direct
+file edit reliability, simple question direct-answer behavior, route
+list/set/auto/status, real downstream CLI handoff and adapter support waves,
+release-asset install, and CLI UX, PRD drift, and scorecard gates in commit gates.
 
-P1 next:
-- throttle-aware route switching
-- powered-mode and low-battery routing
-- offline local-model quality regression harness
-- cross-surface session handoff
-- macOS app HLD/LLD for a Codex desktop-caliber session and artifact surface
-- clearer diagnostics for configured CLIs and local runtimes
+P1 next: throttle-aware route switching, powered-mode and low-battery routing,
+offline local-model quality regression harness, cross-surface session handoff,
+macOS app HLD/LLD for a Codex desktop-caliber session and artifact surface, and
+clearer CLI/local runtime diagnostics.
 
-Deferred until a decision-record update:
-
-- Windows and mobile app surfaces
-- richer commercial agent and skills UI
-- team-level policy controls
-- broad proof verticals and demo templates
-- company automation loops
+Deferred until decision-record update: Windows/mobile apps, richer commercial
+agent and skills UI, team policy controls, broad proof verticals/templates, and
+company automation loops.
 
 ## Gates
 

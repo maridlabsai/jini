@@ -84,6 +84,9 @@ func detectRouteForRequest(request providerGenerationRequest) routeDecision {
 	if toolMode == "auto" {
 		return detectAutoRouteForRequest(request)
 	}
+	if toolMode == "local-slm" {
+		return detectLocalSLMAliasRouteForRequest(request, false)
+	}
 	return enrichRouteDecisionForRequest(request, detectRouteForToolMode(toolMode, false))
 }
 
@@ -103,14 +106,23 @@ func detectAutoRouteForRequest(request providerGenerationRequest) routeDecision 
 	candidates := candidateModes(scored)
 	switch configuredProviderMode() {
 	case "anthropic":
-		candidates = []string{"claude-api"}
+		if !shouldSkipPinnedRemoteProvider(availability) {
+			candidates = []string{"claude-api"}
+		}
 	case "bedrock":
-		candidates = []string{"bedrock-sonnet"}
+		if !shouldSkipPinnedRemoteProvider(availability) {
+			candidates = []string{"bedrock-sonnet"}
+		}
 	case "azure-openai":
-		candidates = []string{"chatgpt", "azure-code", "azure-openai"}
+		if !shouldSkipPinnedRemoteProvider(availability) {
+			candidates = []string{"chatgpt", "azure-code", "azure-openai"}
+		}
 	case "local-slm":
 		candidates = localSLMCandidateModesForScores(scored)
 	case "local-preview":
+		candidates = []string{"local-preview"}
+	}
+	if len(candidates) == 0 {
 		candidates = []string{"local-preview"}
 	}
 
@@ -127,6 +139,10 @@ func detectAutoRouteForRequest(request providerGenerationRequest) routeDecision 
 		}
 	}
 	return first
+}
+
+func shouldSkipPinnedRemoteProvider(availability runtimeAvailability) bool {
+	return availability.OfflineMode && availability.ConnectivityState == "offline"
 }
 
 func enrichRouteDecisionForRequest(request providerGenerationRequest, decision routeDecision) routeDecision {
@@ -163,26 +179,81 @@ func enrichRouteDecisionForRequest(request providerGenerationRequest, decision r
 func routeCandidatesForRequest(request providerGenerationRequest) []routeCandidateScore {
 	features := classifyRouteFeatures(request)
 	availability := detectRuntimeAvailability(request)
-	scores := []routeCandidateScore{
-		{Mode: "claude-api", Score: scoreRouteMode("claude-api", features) + runtimeAvailabilityRouteBias("claude-api", availability)},
-		{Mode: "bedrock-sonnet", Score: scoreRouteMode("bedrock-sonnet", features) + runtimeAvailabilityRouteBias("bedrock-sonnet", availability)},
-		{Mode: "chatgpt", Score: scoreRouteMode("chatgpt", features) + runtimeAvailabilityRouteBias("chatgpt", availability)},
-		{Mode: "azure-code", Score: scoreRouteMode("azure-code", features) + runtimeAvailabilityRouteBias("azure-code", availability)},
-		{Mode: "azure-openai", Score: scoreRouteMode("azure-openai", features) + runtimeAvailabilityRouteBias("azure-openai", availability)},
-		{Mode: "local-preview", Score: scoreRouteMode("local-preview", features) + runtimeAvailabilityRouteBias("local-preview", availability)},
-	}
-	if localSLMRuntimeReady() {
-		for _, slot := range localSLMProfileSlots() {
-			scores = append(scores, routeCandidateScore{
-				Mode:  slot.ID,
-				Score: scoreRouteMode(slot.ID, features) + runtimeAvailabilityRouteBias(slot.ID, availability),
-			})
+	scores := []routeCandidateScore{}
+	for _, mode := range autoRouteCandidateModes() {
+		if !routeModeAutoEligible(mode) {
+			continue
 		}
+		scores = append(scores, routeCandidateScore{
+			Mode:  mode,
+			Score: scoreRouteMode(mode, features) + runtimeAvailabilityRouteBias(mode, availability),
+		})
+	}
+	if !routeCandidateScoresContain(scores, "local-preview") {
+		scores = append(scores, routeCandidateScore{
+			Mode:  "local-preview",
+			Score: scoreRouteMode("local-preview", features) + runtimeAvailabilityRouteBias("local-preview", availability),
+		})
 	}
 	sort.SliceStable(scores, func(i, j int) bool {
 		return scores[i].Score > scores[j].Score
 	})
 	return scores
+}
+
+func autoRouteCandidateModes() []string {
+	modes := []string{}
+	for _, target := range defaultSavedRouteTargets() {
+		if !target.Enabled {
+			continue
+		}
+		if descriptor, ok := adapterDescriptorForMode(target.ID); ok && descriptor.SupportsAutoRoute {
+			modes = append(modes, descriptor.ID)
+		}
+	}
+	return modes
+}
+
+func routeCandidateScoresContain(scores []routeCandidateScore, mode string) bool {
+	for _, score := range scores {
+		if score.Mode == mode {
+			return true
+		}
+	}
+	return false
+}
+
+func routeModeAutoEligible(mode string) bool {
+	if mode == "local-preview" {
+		return true
+	}
+	if cliHandoffMode(mode) {
+		return detectCLIHandoffProvider(mode).Status == "ok"
+	}
+	descriptor, ok := adapterDescriptorForMode(mode)
+	if !ok {
+		return false
+	}
+	switch descriptor.ProviderMode {
+	case "local-slm":
+		return localSLMRouteModeEligible(mode)
+	case "local-preview":
+		return true
+	default:
+		return detectProviderForMode(descriptor.ProviderMode).Status == "ok"
+	}
+}
+
+func anyCLIHandoffReady() bool {
+	for _, target := range defaultSavedRouteTargets() {
+		if !target.Enabled || !cliHandoffMode(target.ID) {
+			continue
+		}
+		if detectCLIHandoffProvider(target.ID).Status == "ok" {
+			return true
+		}
+	}
+	return false
 }
 
 func candidateModes(scored []routeCandidateScore) []string {
@@ -239,6 +310,16 @@ func classifyRouteFeatures(request providerGenerationRequest) routeFeatures {
 func scoreRouteMode(mode string, features routeFeatures) int {
 	score := 0
 	switch mode {
+	case "codex":
+		score = 66
+	case "claude-code":
+		score = 65
+	case "gemini-cli":
+		score = 58
+	case "aider":
+		score = 62
+	case "opencode":
+		score = 60
 	case "claude-api":
 		score = 62
 	case "bedrock-sonnet":
@@ -283,6 +364,16 @@ func scoreRouteMode(mode string, features routeFeatures) int {
 		}
 	case "code":
 		switch mode {
+		case "codex":
+			score += 28
+		case "claude-code":
+			score += 26
+		case "aider":
+			score += 24
+		case "opencode":
+			score += 20
+		case "gemini-cli":
+			score += 14
 		case "azure-code":
 			score += 24
 		case "claude-api":
@@ -302,9 +393,9 @@ func scoreRouteMode(mode string, features routeFeatures) int {
 		}
 	default:
 		switch mode {
-		case "chatgpt", "claude-api":
+		case "chatgpt", "claude-api", "claude-code", "codex":
 			score += 10
-		case "azure-code", "bedrock-sonnet", "azure-openai":
+		case "azure-code", "bedrock-sonnet", "azure-openai", "gemini-cli", "aider", "opencode":
 			score += 7
 		case "local-fast":
 			score += 18
@@ -325,11 +416,11 @@ func scoreRouteMode(mode string, features routeFeatures) int {
 
 	if features.DepthClass == "deep" {
 		switch mode {
-		case "claude-api":
+		case "claude-api", "claude-code", "codex":
 			score += 24
-		case "bedrock-sonnet":
+		case "bedrock-sonnet", "gemini-cli":
 			score += 23
-		case "azure-code":
+		case "azure-code", "aider", "opencode":
 			score += 9
 		case "chatgpt":
 			score += 7
@@ -342,9 +433,9 @@ func scoreRouteMode(mode string, features routeFeatures) int {
 		}
 	} else if features.PrefersCheapest {
 		switch mode {
-		case "chatgpt", "azure-code":
+		case "chatgpt", "azure-code", "codex", "aider", "opencode":
 			score += 10
-		case "azure-openai":
+		case "azure-openai", "gemini-cli":
 			score += 8
 		case "local-fast":
 			score += 20
@@ -646,6 +737,37 @@ func localSLMRuntimeReady() bool {
 	return detectProviderForMode("local-slm").Status == "ok"
 }
 
+func localSLMRouteModeEligible(mode string) bool {
+	if !localSLMRuntimeReady() {
+		return false
+	}
+	descriptor, ok := adapterDescriptorForMode(mode)
+	if !ok || descriptor.ProviderMode != "local-slm" {
+		return false
+	}
+	return strings.TrimSpace(currentDeviceProfile().LocalProfileStates[mode]) != "unavailable"
+}
+
+func detectLocalSLMAliasRouteForRequest(request providerGenerationRequest, auto bool) routeDecision {
+	mode := bestLocalSLMRouteModeForRequest(request)
+	if mode == "" || mode == "local-preview" {
+		provider := detectLocalSLMProvider()
+		return routeDecision{
+			Active:              true,
+			ToolMode:            "local-slm",
+			ToolLabel:           "Local SLM",
+			RoutePolicy:         "Local SLM required",
+			FeedbackKey:         routeFeedbackKeyForCurrentMode("local-slm"),
+			ModelLabel:          "Local SLM",
+			ModelReason:         "Jini cannot use Local SLM until an eligible local profile is available.",
+			ChosenAutomatically: auto,
+			Reason:              "Local SLM is selected, but no eligible local profile is ready for this device and request.",
+			Provider:            withRoutePolicy(provider, "Local SLM required"),
+		}
+	}
+	return enrichRouteDecisionForRequest(request, detectRouteForToolMode(mode, auto))
+}
+
 func localDeviceCapabilityBias(mode string, profile deviceProfile) int {
 	state := strings.TrimSpace(profile.LocalProfileStates[mode])
 	power := currentPowerProfile()
@@ -746,6 +868,9 @@ func localDeviceCapabilityBias(mode string, profile deviceProfile) int {
 func localSLMCandidateModes() []string {
 	modes := make([]string, 0, len(localSLMProfileSlots()))
 	for _, slot := range localSLMProfileSlots() {
+		if !localSLMRouteModeEligible(slot.ID) {
+			continue
+		}
 		modes = append(modes, slot.ID)
 	}
 	return modes
@@ -761,9 +886,6 @@ func localSLMCandidateModesForScores(scored []routeCandidateScore) []string {
 		if allowed[candidate.Mode] {
 			modes = append(modes, candidate.Mode)
 		}
-	}
-	if len(modes) == 0 {
-		return localSLMCandidateModes()
 	}
 	return modes
 }

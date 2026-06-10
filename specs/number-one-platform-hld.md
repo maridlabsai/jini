@@ -1,6 +1,6 @@
 # Number One Platform HLD
 
-Updated: 2026-06-09
+Updated: 2026-06-10
 
 This high-level design translates
 [number-one-platform-prd.md](./number-one-platform-prd.md) into architecture
@@ -18,6 +18,8 @@ Codex, ChatGPT, and Gemini CLI:
 - configured CLI route invokes the real installed CLI or fails closed
 - saved work stays passive until explicitly requested
 - route and token diagnostics remain inspectable without startup ceremony
+- side-effect approvals are enforced before irreversible, external, or paid
+  managed actions
 
 The streamline-or-rewrite decision is governed by
 [product-streamline-redline.md](./product-streamline-redline.md). If shell,
@@ -43,6 +45,25 @@ Jini is five runtime layers:
   there is real work to preserve.
 - Gate boundary: blocks commits, pushes, and releases when golden transcripts,
   PRD drift, scorecard, security, or ship checks fail.
+
+The current release is CLI-first. Desktop, mobile, team policy, commercial
+automation, and broad agent-suite surfaces remain outside the shipped claim
+until the PRD changes and equivalent gates exist.
+
+## Dynamic Platform Boundaries
+
+Dynamic behavior belongs behind the small CLI front door:
+
+- Routing is registry-backed. Adapter, provider, local runtime, installed CLI,
+  capability, and health records decide what can run; entity names must not
+  map directly to hard-coded demo templates.
+- Degradation is explicit. If a preferred route or feature is unavailable, Jini
+  chooses a safe configured alternative or fails closed with setup guidance.
+- Commercial feature boundaries fail closed in the public CLI. When managed
+  paid capabilities are implemented, they require entitlement before automation
+  starts.
+- User and work context learning is bounded to route choice, repeated
+  preferences, and resumable work. It is not a hidden OS memory layer.
 
 ## Request Flow
 

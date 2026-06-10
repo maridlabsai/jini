@@ -1,6 +1,6 @@
 # Jini Product Rewrite Contract
 
-Updated: 2026-06-05
+Updated: 2026-06-10
 
 ## Purpose
 
@@ -16,6 +16,13 @@ The canonical product and operating PRD lives in
 
 If this rewrite contract and the canonical PRD disagree on product tenets,
 priorities, requirements, or roadmap order, the canonical PRD wins.
+
+Current status: rewrite-era claims about a launcher dashboard, startup
+`Start`/`Keep` choices, `Task Snapshot` fallback artifacts, broad flow
+scaffolding, or app-wide surfaces are stale unless the canonical PRD restates
+them. The current release contract is CLI-first: compact task prompt, direct
+answers, safe local edits, explicit saved-work commands, real route handoff or
+fail-closed setup guidance, and no broad OS or agent-suite claim.
 
 The merge-time guardrails for this contract live in:
 
@@ -88,32 +95,19 @@ Primary human-facing entry:
 
 - `jini`
 
-Scriptable commands:
+Small support commands:
 
-- `jini run`
 - `jini status`
+- `jini continue`
 - `jini open`
+- `jini route`
+- `jini doctor`
 
-Human-facing docs should center `jini` first.
+Human-facing docs should center `jini` first. Older command families and
+admin plumbing should stay out of the beginner path.
 
-Older command families should stay out of the human-facing surface.
-
-Inside `jini`, the public actions are plain-language shell actions:
-
-- `Continue`
-- `Open`
-- `Missing`
-- `Plan`
-- `Start`
-
-When the problem needs planning, `Plan` moves the work into a
-Kiro-like sequence:
-
-- goal
-- requirements
-- design
-- steps
-- run
+Inside `jini`, natural language remains primary. Planning is a behavior Jini
+may choose for complex work, not a mandatory startup action label.
 
 ## Remembered-Work Rule
 
@@ -127,21 +121,16 @@ Users should not need to manage:
 - artifact locations
 - internal file stems
 
-If current work exists, `jini` should offer:
-
-- continue current work
-- open what is ready
-- start something new
-
-Jini must never switch current work silently.
-
-Jini must always make the remembered work visible before acting on it.
+Current R0 rule: bare `jini` still starts at the task prompt. Remembered work
+is surfaced through `status`, `continue`, `open`, explicit work-state
+questions, or natural title matching. Jini must never switch remembered work
+silently, but it must not turn every new input into a saved-work dashboard.
 
 ## First Result Screen
 
 The first screen after intake must be the thing the user asked Jini to make.
 
-Default first result examples:
+Durable artifact first-result examples:
 
 - meeting: `Sendable Follow-up`
 - plan/spec: `Build-Readiness Check`
@@ -153,24 +142,22 @@ Rules:
 
 - Do not show the work summary before the first useful result on first run.
 - Do not ask the user to choose output size before the first useful result.
-- Default silently to a quick useful draft.
+- Default silently to a quick useful result when the request truly needs a
+  durable artifact.
 - Do not offer decorative continuation actions. If Jini cannot materially
   change or open a useful artifact from the action, remove it from the default
   surface.
 - The first result must include enough content to be useful without opening a second screen.
 
-After the first result, Jini should offer:
-
-- `Continue`
-- `Missing`
-- `Plan`
-- `Start`
+After the first result, Jini should show one useful next step or the compact
+action receipt. It should not add decorative continuation labels that do not
+change, open, or inspect real work.
 
 ## Work Summary Screen
 
-The work summary screen should read like a calm recap, not telemetry.
-It appears after the first result, when the user asks what is missing, or when
-the user returns to current work.
+The work summary screen should read like a calm recap, not telemetry. It is a
+durable-work view only. It appears after useful artifact work exists and the
+user asks for status, missing pieces, open outputs, or continuation.
 
 Default sections:
 
@@ -258,57 +245,36 @@ quality and parity gates.
    - Check whether a plan is ready to hand off
    - Plan a 7 day Paris trip for two adults in October
    - Compare these vendors and recommend one
-5. If the user chooses `I am not sure`, Jini says:
-   - `Describe the task. Rough notes are fine.`
-   - `Jini will route it, act when safe, or ask one short question.`
-   - `Nothing will be sent, booked, committed, or changed without a visible step.`
-   If the input does not clearly match a flagship flow, Jini still returns a
-   useful first object called `Task Snapshot` with:
-   - what the user appears to be trying to finish
-   - what can be used now
-   - what Jini needs next
-   - what is safe because nothing has been sent
-6. If the user chooses a job, Jini asks one plain source question:
-   - `Describe the task. Rough notes are fine.`
-7. Inline helper text may show one example for the selected job.
-8. Jini asks only blocking questions after that.
-9. Jini silently defaults to a quick useful draft.
-10. The first visible result is the useful object itself.
-11. The work summary appears after the useful object, or when the user asks what is still missing.
-12. Jini ends the first pass with clear actions:
-   - keep going
-   - see what is still missing
-   - help me plan this
-   - start something new
+5. If the input is unclear, Jini asks the shortest blocking question or fails
+   closed with candidates.
+6. Jini does not create a generic snapshot, working draft, or saved-work
+   scaffold for simple questions, bare entities, greetings, acknowledgements,
+   or unclear input.
+7. Jini asks only blocking questions after that.
+8. Jini defaults to the cheapest safe route that can complete the task.
+9. The first visible result is the compact answer, file-edit receipt, setup
+   guidance, or useful work object itself.
+10. Work summaries appear only after useful work exists and the user asks for
+    status, continuation, opening, or missing pieces.
 
 ### Post-Result Continuation
 
 At least one real continuation path must exist in the replacement-critical
 slice.
 
-For meeting follow-up and plan/spec readiness, these actions are required in
-Phase 1:
-
-- `Continue`
-- `Missing`
-
-Both must be real. They must not be placeholders.
+Continuation labels from the rewrite phase are examples, not current startup
+chrome. Any exposed continuation must be real: continue the work, inspect a
+missing piece, open an artifact, or ask a blocking question. Placeholders are
+not allowed.
 
 ### Continuing Current Work
 
-1. User runs `jini`.
-2. If current work exists, Jini shows a compact recap:
-   - what the work is
-   - what is ready
-   - what is still missing
-   - what to do next
-3. Jini offers exactly three choices:
-   - continue current work
-   - open what is ready
-   - start something new
-4. If continuing, Jini returns to the stable status screen and resumes in place.
-5. If opening, Jini shows the output shelf.
-6. If starting new work, Jini explicitly parks the previous work.
+1. User asks for `jini status`, `jini continue`, `jini open`, a work-state
+   question, or a natural saved-work title.
+2. Jini shows only the compact recap needed for that request.
+3. If continuing, Jini resumes in place.
+4. If opening, Jini shows the output shelf.
+5. If switching remembered work, Jini makes the switch explicit.
 
 ## Must-Have Competitor Merits
 
@@ -596,7 +562,7 @@ End-user critique changed that.
 
 The revised rules are:
 
-- `jini` should be a launcher or dashboard, not a second shell
+- `jini` should be a compact task prompt, not a dashboard or second shell
 - the screen should use plain phrases, not operator labels
 - the first output must be useful before the system explains itself
 - remembered work must be visible and controllable

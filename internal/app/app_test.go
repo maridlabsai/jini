@@ -907,6 +907,55 @@ func TestCommandsAliasShowsPublicCommandInventory(t *testing.T) {
 	}
 }
 
+func TestCommercialOnlyCommandFailsClosedInFreeCLI(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"skills"}, &stdout, &stdout)
+	if exitCode == 0 {
+		t.Fatalf("expected commercial-only command to fail closed, got output:\n%s", stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"Not available in this CLI.",
+		"Skills OS requires commercial entitlement",
+		"jini route help",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(stateDir, "current-work.json")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("expected commercial-only command not to create current work, stat error: %v", err)
+	}
+}
+
+func TestCommercialOnlyInteractiveInputDoesNotCreateWork(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("delegate\n"), &stdout, &stdout)
+	if exitCode != 1 {
+		t.Fatalf("expected interactive commercial-only input to fail closed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	if !strings.Contains(out, "Managed delegation requires commercial entitlement") {
+		t.Fatalf("expected entitlement boundary output, got:\n%s", out)
+	}
+	for _, unwanted := range []string{"Task Snapshot", "Working Draft", "Saved:"} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected entitlement boundary to avoid %q, got:\n%s", unwanted, out)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(stateDir, "current-work.json")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("expected commercial-only input not to create current work, stat error: %v", err)
+	}
+}
+
 func TestTopLevelHelpFlagsShowPublicCommandInventory(t *testing.T) {
 	for _, args := range [][]string{{"--help"}, {"-h"}} {
 		t.Run(strings.Join(args, " "), func(t *testing.T) {
@@ -1559,6 +1608,39 @@ func TestRouteCommandCanSetWaveOneCLIWhenExecutableIsPresent(t *testing.T) {
 	}
 }
 
+func TestRouteCommandCanSetLocalSLMAliasToEligibleProfile(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_DEVICE_CLASS_OVERRIDE", "mobile-small")
+	t.Setenv("JINI_LOCAL_SLM_ENDPOINT", "http://127.0.0.1:11434/v1")
+	t.Setenv("JINI_LOCAL_SLM_MODEL", "gemma3n:e2b-it")
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"route", "set", "local-slm"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected local-slm route set to succeed, got %d:\n%s", exitCode, stdout.String())
+	}
+	out := stdout.String()
+	for _, want := range []string{
+		"Route saved.",
+		"Current: Local SLM fast",
+		"Mode: local-slm",
+		"Use `jini route auto` to restore automatic routing.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected local-slm route set output to contain %q, got:\n%s", want, out)
+		}
+	}
+
+	routerSaved, err := os.ReadFile(filepath.Join(stateDir, "router.json"))
+	if err != nil {
+		t.Fatalf("expected router settings file: %v", err)
+	}
+	if !strings.Contains(string(routerSaved), `"tool_mode": "local-slm"`) {
+		t.Fatalf("expected saved Local SLM alias route, got:\n%s", string(routerSaved))
+	}
+}
+
 func TestRouteCommandFailsClosedForMissingWaveOneCLI(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)
@@ -1753,7 +1835,7 @@ func TestProviderDoctorShowsAutoToolDecision(t *testing.T) {
 		"ROUTE_POLICY: Automatic",
 		"JINI_MODEL_DECISION: Claude Sonnet 4",
 		"AUTO_MODEL: Jini uses Claude Sonnet 4 by default on the Claude API route.",
-		"AUTO_ROUTE: Auto mode chose Claude API route because this looks like general work, the request does not ask for deep review, so Jini favored the cheapest suitable route. It was the first ready route in this environment.",
+		"AUTO_ROUTE: Auto mode chose Claude API route because this looks like general work, the request does not ask for deep review, so Jini favored the cheapest suitable route.",
 		"JINI_EFFORT: auto -> dynamic per request",
 		"AUTO_EFFORT: Jini judges effort separately for each request instead of pinning one level globally.",
 		"AUTO_MODE: frameworks=auto; models=auto; speed=auto; approvals=approval-gated",
@@ -4977,14 +5059,15 @@ func TestCurrentWorkUnknownStandaloneQuestionStaysCompact(t *testing.T) {
 	}
 
 	out := stdout.String()
-	if !strings.Contains(out, "I don't know locally.") {
-		t.Fatalf("expected compact direct-answer fallback, got:\n%s", out)
+	if !strings.Contains(out, "No configured route can answer this locally.") {
+		t.Fatalf("expected compact setup-needed fallback, got:\n%s", out)
 	}
 	for _, unwanted := range []string{
 		"\nGoal\n",
 		"\nAI route\n",
 		"\nJust finished\n",
 		"New work",
+		"Task Snapshot",
 		"Working Draft",
 		"Your first draft is ready.",
 		"- Start",
@@ -4993,6 +5076,128 @@ func TestCurrentWorkUnknownStandaloneQuestionStaysCompact(t *testing.T) {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("expected unknown question to avoid work flow %q, got:\n%s", unwanted, out)
 		}
+	}
+}
+
+func TestStandaloneQuestionUsesConfiguredCLIRouteWithoutCreatingWork(t *testing.T) {
+	stateDir := t.TempDir()
+	fakeBin := t.TempDir()
+	fakeCodex := writeFakeExecutable(t, fakeBin, "codex", "printf 'Tim Cook.\\n'\n")
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_TOOL", "codex")
+	t.Setenv("JINI_CODEX_CLI", fakeCodex)
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("who is the CEO of Apple?\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	if !strings.Contains(out, "Tim Cook.") {
+		t.Fatalf("expected compact routed answer, got:\n%s", out)
+	}
+	for _, unwanted := range []string{
+		"Result ready.",
+		"Task Snapshot",
+		"Saved:",
+		"Working Draft",
+		"Your first draft is ready.",
+		"I don't know locally.",
+		"No configured route",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected routed standalone question to avoid %q, got:\n%s", unwanted, out)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(stateDir, "current-work.json")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("expected routed standalone question not to create current work, stat error: %v", err)
+	}
+}
+
+func TestStandaloneQuestionTimeoutStaysCompact(t *testing.T) {
+	stateDir := t.TempDir()
+	fakeBin := t.TempDir()
+	fakeCodex := writeFakeExecutable(t, fakeBin, "codex", "sleep 1\n")
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_TOOL", "codex")
+	t.Setenv("JINI_CODEX_CLI", fakeCodex)
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	t.Setenv("JINI_STANDALONE_QUESTION_TIMEOUT", "20ms")
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("who is the CEO of Apple?\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	if !strings.Contains(out, "Route timed out.") {
+		t.Fatalf("expected compact timeout fallback, got:\n%s", out)
+	}
+	for _, unwanted := range []string{
+		"Task Snapshot",
+		"Saved:",
+		"Working Draft",
+		"stdout",
+		"stderr",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected timeout fallback to avoid %q, got:\n%s", unwanted, out)
+		}
+	}
+}
+
+func TestStandaloneQuestionFailedCLIRouteStaysCompact(t *testing.T) {
+	stateDir := t.TempDir()
+	fakeBin := t.TempDir()
+	fakeCodex := writeFakeExecutable(t, fakeBin, "codex", "printf 'long internal stdout that should not appear\\n'; printf 'secret stderr detail\\n' >&2; exit 42\n")
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_TOOL", "codex")
+	t.Setenv("JINI_CODEX_CLI", fakeCodex)
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("who is the CEO of Apple?\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	if !strings.Contains(out, "Route unavailable.") {
+		t.Fatalf("expected compact route unavailable fallback, got:\n%s", out)
+	}
+	for _, unwanted := range []string{
+		"long internal stdout",
+		"secret stderr detail",
+		"stdout",
+		"stderr",
+		"Task Snapshot",
+		"Saved:",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected compact failed CLI fallback to avoid %q, got:\n%s", unwanted, out)
+		}
+	}
+}
+
+func TestTaskShapedQuestionDoesNotUseStandaloneQuestionFallback(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive(nil, strings.NewReader("can you fix the failing tests?\n"), &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected task-shaped question to start normal work, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	if strings.Contains(out, "No configured route can answer this locally.") {
+		t.Fatalf("expected task-shaped question not to use standalone fallback, got:\n%s", out)
+	}
+	if _, err := os.Stat(filepath.Join(stateDir, "current-work.json")); err != nil {
+		t.Fatalf("expected task-shaped question to create normal work, stat error: %v", err)
 	}
 }
 
@@ -5035,13 +5240,14 @@ func TestCurrentWorkQuestionClassifierDoesNotHijackStandaloneNextQuestion(t *tes
 	}
 
 	out := stdout.String()
-	if !strings.Contains(out, "I don't know locally.") {
+	if !strings.Contains(out, "No configured route can answer this locally.") {
 		t.Fatalf("expected standalone fallback, got:\n%s", out)
 	}
 	for _, unwanted := range []string{
 		"\nNext\n",
 		"ready-to-make",
 		"New work",
+		"Task Snapshot",
 		"\n- Start\n",
 		"\n- Keep\n",
 	} {

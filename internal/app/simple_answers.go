@@ -1,11 +1,15 @@
 package app
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"io"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func maybeHandleSimpleAnswer(raw string, stdout io.Writer) bool {
@@ -17,11 +21,47 @@ func maybeHandleSimpleAnswer(raw string, stdout io.Writer) bool {
 		fmt.Fprintln(stdout, answer)
 		return true
 	}
-	if looksLikeStandaloneQuestion(raw) {
-		fmt.Fprintln(stdout, "I don't know locally.")
+	return false
+}
+
+func maybeHandleStandaloneQuestion(raw string, stdout io.Writer) bool {
+	if !looksLikeStandaloneQuestion(raw) {
+		return false
+	}
+	request := providerGenerationRequest{
+		Choice: starterChoice{PackID: "general-work", ChoiceLabel: "Question", DefaultName: "Question", State: "answered"},
+		Title:  compactTurnTitle(raw),
+		Source: raw,
+	}
+	decision := detectRouteForRequest(request)
+	ctx, cancel := context.WithTimeout(context.Background(), standaloneQuestionTimeout())
+	defer cancel()
+	text, used, _, err := generateWithConfiguredProviderDecision(ctx, request, decision)
+	if err == nil && used && strings.TrimSpace(text) != "" {
+		fmt.Fprintln(stdout, strings.TrimSpace(text))
 		return true
 	}
-	return false
+	fmt.Fprintln(stdout, standaloneQuestionSetupMessage(decision, err))
+	return true
+}
+
+func standaloneQuestionSetupMessage(decision routeDecision, err error) string {
+	if errors.Is(err, context.DeadlineExceeded) {
+		return "Route timed out. Run `jini route help` to connect a faster route or local model."
+	}
+	if err != nil && strings.TrimSpace(decision.ToolMode) != "" && decision.ToolMode != "local-preview" {
+		return "Route unavailable. Run `jini doctor` for details, or `jini route help` to connect a working route."
+	}
+	return "No configured route can answer this locally. Run `jini route help` to connect a CLI, provider, or local model."
+}
+
+func standaloneQuestionTimeout() time.Duration {
+	if raw := strings.TrimSpace(os.Getenv("JINI_STANDALONE_QUESTION_TIMEOUT")); raw != "" {
+		if parsed, err := time.ParseDuration(raw); err == nil && parsed > 0 {
+			return parsed
+		}
+	}
+	return 10 * time.Second
 }
 
 func maybeHandleAmbiguousBareEntity(raw string, stdout io.Writer) bool {
@@ -201,6 +241,9 @@ func looksLikeStandaloneQuestion(raw string) bool {
 	if normalized == "" || looksLikeCurrentWorkQuestion(normalized) {
 		return false
 	}
+	if looksLikeTaskQuestion(normalized) {
+		return false
+	}
 	for _, prefix := range []string{
 		"what is ",
 		"whats ",
@@ -217,7 +260,32 @@ func looksLikeStandaloneQuestion(raw string) bool {
 			return true
 		}
 	}
-	return strings.HasSuffix(strings.TrimSpace(raw), "?")
+	if strings.HasSuffix(strings.TrimSpace(raw), "?") && !hasStarterIntentSignal(normalized) {
+		return true
+	}
+	return false
+}
+
+func looksLikeTaskQuestion(normalized string) bool {
+	if !hasStarterIntentSignal(normalized) {
+		return false
+	}
+	for _, prefix := range []string{
+		"can you ",
+		"could you ",
+		"would you ",
+		"will you ",
+		"please ",
+		"help me ",
+		"can we ",
+		"could we ",
+		"should we ",
+	} {
+		if strings.HasPrefix(normalized, prefix) {
+			return true
+		}
+	}
+	return false
 }
 
 func looksLikeCurrentWorkQuestion(normalized string) bool {

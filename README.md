@@ -32,7 +32,19 @@ decisions live in
 
 Jini should feel small.
 
-Current release: [`v0.1.2`](https://github.com/maridlabsai/jini/releases/tag/v0.1.2).
+Published release: [`v0.1.2`](https://github.com/maridlabsai/jini/releases/tag/v0.1.2).
+
+Current source contract for the next release:
+
+- CLI-first: `jini` opens a compact task prompt, not a saved-work dashboard.
+- Simple questions, explicit local file edits, setup guidance, and route
+  inspection stay direct.
+- No `Start/Keep` modal, `Task Snapshot`, or generic scaffold appears for
+  simple input.
+- Routes are claimed only when Jini can invoke the configured provider, local
+  runtime, or installed CLI handoff, or fail closed with setup guidance.
+- External sends, bookings, payments, commits, pushes, destructive changes,
+  credential changes, and paid managed automation require visible approval.
 
 Install once with the normal path:
 
@@ -422,8 +434,9 @@ In auto mode, Jini also looks at the work itself:
 - the chosen route is saved with the work so later screens keep showing the same `Working with` label
 
 Real downstream CLI handoff for names like `codex` and `claude-code` is a P0
-implementation requirement. Until that ships, public route claims must stay
-limited to provider, model, and local routes that Jini actually invokes.
+contract: Jini invokes the installed trusted CLI or fails closed with setup
+guidance. Public route claims must stay limited to routes the current binary
+actually invokes.
 
 Current provider support in the Go binary:
 
@@ -436,88 +449,14 @@ Current provider support in the Go binary:
 
 ## What The Screen Should Tell You
 
-When Jini is helping, the screen should read like this:
+The default screen should stay small: prompt, answer, edit receipt, or one short
+setup hint. Durable work details belong behind explicit commands such as
+`jini status`, `jini continue`, `jini open`, and `jini route`; they are not the
+first-minute product.
 
-```text
-Goal
-Research to PRD handoff
-
-Working with
-- Latest PRD draft and review comments
-
-AI route
-Azure OpenAI
-
-How chosen
-Automatic
-
-Model
-gpt-4o-prod
-
-Effort level
-Medium
-
-Why this route
-auto mode prefers the cheapest suitable tool for this kind of work.
-
-Continuity
-Kept the current coding route to preserve context continuity because the quality gap was not material.
-
-Just finished
-- Build-readiness draft created
-- Missing build blockers identified
-
-Doing now
-Separating what is ready from what still blocks build
-
-Up next
-Next: `jini open` for the readiness check, or `jini continue` to resolve missing pieces.
-
-Now
-Checking assumptions and approval gaps
-
-Done
-- Build-readiness draft created
-- Missing build blockers identified
-
-Need
-Name the approval owner and confirm the first implementation slice.
-
-Why this matters
-The readiness check is useful now, but build should not start until approval and the first slice are explicit.
-
-Options
-- Set approval owner
-- Set first slice
-- Skip for now
-
-If you skip this
-- Jini will keep approval and first-slice gaps visible instead of treating the plan as build-ready.
-
-Next
-`jini open` shows the build-readiness check. `jini status` shows the full state.
-
-Ready now
-- Build-Readiness Check
-- Handoff Brief
-
-Blocked
-- Product approval
-- Rollback note
-
-Not sure about
-- Whether approval was already granted in the review thread
-
-Safe to do
-Nothing has been sent yet. You can review before sharing.
-```
-
-That is the product. Not a wall of commands. Not a file tree. Not a hidden
-chat state.
-
-It should also feel like a live work thread, not only a static summary. Users
-should be able to see what changed this turn, what Jini is doing now, what is
-next, and the one high-impact clarification Jini is waiting on.
+For durable work only, requested status can show the goal, route, ready outputs,
+missing blockers, and next safe action. It must not appear around simple
+questions, obvious local edits, greetings, or unclear input.
 
 ## The Problems Jini Is Being Tuned For
 
