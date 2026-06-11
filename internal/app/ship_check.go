@@ -41,17 +41,20 @@ type shipCLIHandoffDogfood struct {
 	Status          string   `json:"status"`
 	SetupStatus     string   `json:"setup_status"`
 	DogfoodStatus   string   `json:"dogfood_status"`
+	SetupCategory   string   `json:"setup_category,omitempty"`
 	SmokeStatus     string   `json:"smoke_status,omitempty"`
-	Executable      string   `json:"executable"`
-	ArgsTemplate    []string `json:"args_template"`
+	Executable      string   `json:"-"`
+	ArgsTemplate    []string `json:"-"`
 	RequiredChecks  []string `json:"required_checks"`
 	ValidatedChecks []string `json:"validated_checks,omitempty"`
 	MissingChecks   []string `json:"missing_checks,omitempty"`
-	EvidencePath    string   `json:"evidence_path,omitempty"`
-	SmokePath       string   `json:"smoke_path,omitempty"`
+	EvidenceFile    string   `json:"evidence_file,omitempty"`
+	EvidencePath    string   `json:"-"`
+	SmokeFile       string   `json:"smoke_file,omitempty"`
+	SmokePath       string   `json:"-"`
 	LastValidatedAt string   `json:"last_validated_at,omitempty"`
 	LastSmokedAt    string   `json:"last_smoked_at,omitempty"`
-	Missing         []string `json:"missing,omitempty"`
+	Missing         []string `json:"-"`
 }
 
 type shipCLIHandoffDogfoodEvidenceFile struct {
@@ -334,10 +337,16 @@ func buildShipCLIHandoffDogfood() ([]shipCLIHandoffDogfood, []string, []string) 
 		var validatedChecks []string
 		var missingChecks []string
 		var routeEvidencePath string
+		var routeEvidenceFile string
 		var smokeEvidencePath string
+		var smokeEvidenceFile string
 		var lastValidatedAt string
 		var lastSmokedAt string
 		smokeStatus := ""
+		setupCategory := ""
+		if len(missing) > 0 {
+			setupCategory = shipCLIHandoffSetupCategory(missing)
+		}
 		if setupStatus == "ready" {
 			routeProof := evidenceLoad.Routes[descriptor.Mode]
 			validatedChecks, missingChecks = dogfoodCheckCoverage(requiredChecks, routeProof.Checks)
@@ -352,12 +361,14 @@ func buildShipCLIHandoffDogfood() ([]shipCLIHandoffDogfood, []string, []string) 
 				} else {
 					smokeStatus = "recent"
 					smokeEvidencePath = smokeLoad.Path
+					smokeEvidenceFile = ".jini/cli-smoke.json"
 					lastSmokedAt = strings.TrimSpace(smokeProof.SmokedAt)
 				}
 			}
 			if len(missingChecks) == 0 {
 				dogfoodStatus = "validated"
 				routeEvidencePath = evidenceLoad.Path
+				routeEvidenceFile = ".jini/cli-dogfood.json"
 				lastValidatedAt = strings.TrimSpace(routeProof.ValidatedAt)
 			} else {
 				dogfoodStatus = "needs-validation"
@@ -370,13 +381,16 @@ func buildShipCLIHandoffDogfood() ([]shipCLIHandoffDogfood, []string, []string) 
 			Status:          status,
 			SetupStatus:     setupStatus,
 			DogfoodStatus:   dogfoodStatus,
+			SetupCategory:   setupCategory,
 			SmokeStatus:     smokeStatus,
 			Executable:      firstNonEmpty(command.Executable, descriptor.DefaultExecutable),
 			ArgsTemplate:    append([]string(nil), args...),
 			RequiredChecks:  requiredChecks,
 			ValidatedChecks: validatedChecks,
 			MissingChecks:   missingChecks,
+			EvidenceFile:    routeEvidenceFile,
 			EvidencePath:    routeEvidencePath,
+			SmokeFile:       smokeEvidenceFile,
 			SmokePath:       smokeEvidencePath,
 			LastValidatedAt: lastValidatedAt,
 			LastSmokedAt:    lastSmokedAt,

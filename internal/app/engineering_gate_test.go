@@ -458,8 +458,8 @@ func TestPushGateRunsShipCheckEvidence(t *testing.T) {
 		"dogfood validation status",
 		"smoke freshness for claimed routes",
 		"missing validation checks",
-		"`.jini/cli-dogfood.json` evidence paths",
-		"`.jini/cli-smoke.json` evidence paths",
+		"`.jini/cli-dogfood.json` evidence files",
+		"`.jini/cli-smoke.json` evidence files",
 		"auth, approvals, output shape, and route receipt privacy",
 	} {
 		if !strings.Contains(gateMatrix, want) {

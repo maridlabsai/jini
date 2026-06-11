@@ -91,7 +91,7 @@ Required outcome:
   required validation evidence
 - `jini check ship --format json` exposes Wave 1 CLI handoff setup status,
   dogfood validation status, smoke freshness for claimed routes, missing validation checks,
-  local `.jini/cli-dogfood.json` evidence paths, and local `.jini/cli-smoke.json` evidence paths
+  relative `.jini/cli-dogfood.json` evidence files, and relative `.jini/cli-smoke.json` evidence files
 - installed CLI dogfood before release must verify auth, approvals, output shape, and route receipt privacy
 - dirty worktrees are blocked before push
 

@@ -305,6 +305,7 @@ func TestShipCheckReportsRepoValidationEvidenceAsJSON(t *testing.T) {
 	if report.DirtyFiles != 1 || !stringSliceContains(report.Blockers, "working tree has uncommitted changes") {
 		t.Fatalf("expected dirty file blocker, got %#v", report)
 	}
+	assertShipCheckJSONDoesNotLeakCLIHandoffRuntime(t, stdout.String(), fakeBin)
 	for _, want := range []string{
 		"bash tools/run_required_gates.sh push",
 		"git worktree add",
@@ -329,8 +330,8 @@ func TestShipCheckReportsRepoValidationEvidenceAsJSON(t *testing.T) {
 	if codexDogfood == nil {
 		t.Fatalf("expected codex dogfood row, got %#v", report.CLIHandoffDogfood)
 	}
-	if codexDogfood.Status != "ready" || codexDogfood.Executable != fakeCodex {
-		t.Fatalf("expected fake codex to be ready, got %#v", codexDogfood)
+	if codexDogfood.Status != "ready" || codexDogfood.SetupCategory != "" {
+		t.Fatalf("expected fake codex to be ready without setup category, got %#v", codexDogfood)
 	}
 	if codexDogfood.SetupStatus != "ready" || codexDogfood.DogfoodStatus != "needs-validation" {
 		t.Fatalf("expected fake codex to separate setup readiness from dogfood validation, got %#v", codexDogfood)
@@ -350,7 +351,7 @@ func TestShipCheckReportsRepoValidationEvidenceAsJSON(t *testing.T) {
 		t.Fatalf("expected claimed codex to require recent smoke, got %#v", codexDogfood.MissingChecks)
 	}
 	claudeDogfood := shipCLIHandoffDogfoodByRoute(report.CLIHandoffDogfood, "claude-code")
-	if claudeDogfood == nil || claudeDogfood.Status != "needs-setup" || claudeDogfood.SetupStatus != "needs-setup" || claudeDogfood.DogfoodStatus != "setup-blocked" || len(claudeDogfood.Missing) == 0 {
+	if claudeDogfood == nil || claudeDogfood.Status != "needs-setup" || claudeDogfood.SetupStatus != "needs-setup" || claudeDogfood.DogfoodStatus != "setup-blocked" || claudeDogfood.SetupCategory != "missing executable" {
 		t.Fatalf("expected missing claude-code dogfood setup row, got %#v", claudeDogfood)
 	}
 }
@@ -408,8 +409,8 @@ func TestShipCheckReadsLocalCLIHandoffDogfoodEvidence(t *testing.T) {
 	if len(codexDogfood.ValidatedChecks) != 4 || len(codexDogfood.MissingChecks) != 0 {
 		t.Fatalf("expected all codex dogfood checks validated, got %#v", codexDogfood)
 	}
-	if codexDogfood.EvidencePath != filepath.Join(stateDir, "cli-dogfood.json") {
-		t.Fatalf("expected dogfood evidence path, got %#v", codexDogfood)
+	if codexDogfood.EvidenceFile != ".jini/cli-dogfood.json" {
+		t.Fatalf("expected safe dogfood evidence file, got %#v", codexDogfood)
 	}
 }
 
@@ -509,8 +510,8 @@ func TestShipCheckAcceptsRecentSmokeForClaimedValidatedRoute(t *testing.T) {
 	if codexDogfood.LastValidatedAt != validatedAt || codexDogfood.LastSmokedAt != smokedAt {
 		t.Fatalf("expected validation and smoke timestamps, got %#v", codexDogfood)
 	}
-	if codexDogfood.SmokePath != filepath.Join(stateDir, "cli-smoke.json") {
-		t.Fatalf("expected smoke evidence path, got %#v", codexDogfood)
+	if codexDogfood.EvidenceFile != ".jini/cli-dogfood.json" || codexDogfood.SmokeFile != ".jini/cli-smoke.json" {
+		t.Fatalf("expected safe dogfood and smoke evidence files, got %#v", codexDogfood)
 	}
 }
 
@@ -708,6 +709,7 @@ func TestShipCheckBlocksInstalledCLIHandoffSetupFailures(t *testing.T) {
 	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil {
 		t.Fatalf("decode ship check JSON: %v\n%s", err, stdout.String())
 	}
+	assertShipCheckJSONDoesNotLeakCLIHandoffRuntime(t, stdout.String(), fakeBin)
 	if report.Status != "blocked" {
 		t.Fatalf("expected invalid CLI handoff setup to block, got %#v", report)
 	}
@@ -760,6 +762,7 @@ func TestShipCheckLabelsClaimedGatekeeperFailures(t *testing.T) {
 	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil {
 		t.Fatalf("decode ship check JSON: %v\n%s", err, stdout.String())
 	}
+	assertShipCheckJSONDoesNotLeakCLIHandoffRuntime(t, stdout.String(), fakeBin)
 	if !stringSliceContains(report.Blockers, "CLI handoff setup blocked for claimed route: codex (macOS Gatekeeper)") {
 		t.Fatalf("expected claimed Gatekeeper blocker, got %#v", report.Blockers)
 	}
@@ -815,6 +818,7 @@ func TestShipCheckBlocksMissingClaimedCLIHandoffRoute(t *testing.T) {
 	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil {
 		t.Fatalf("decode ship check JSON: %v\n%s", err, stdout.String())
 	}
+	assertShipCheckJSONDoesNotLeakCLIHandoffRuntime(t, stdout.String(), fakeBin)
 	if !stringSliceContains(report.Blockers, "CLI handoff setup blocked for claimed route: gemini-cli (missing executable)") {
 		t.Fatalf("expected claimed gemini missing executable blocker, got %#v", report.Blockers)
 	}
@@ -958,6 +962,21 @@ func shipCLIHandoffDogfoodByRoute(items []shipCLIHandoffDogfood, routeID string)
 		}
 	}
 	return nil
+}
+
+func assertShipCheckJSONDoesNotLeakCLIHandoffRuntime(t *testing.T, output, fakeBin string) {
+	t.Helper()
+	for _, unwanted := range []string{
+		fakeBin,
+		`"executable"`,
+		`"args_template"`,
+		`"missing":`,
+		"{{prompt}}",
+	} {
+		if strings.Contains(output, unwanted) {
+			t.Fatalf("ship-check JSON must not leak CLI handoff runtime detail %q, got:\n%s", unwanted, output)
+		}
+	}
 }
 
 func writeCodexCLIHandoffDogfoodEvidence(t *testing.T, stateDir, validatedAt string) {
