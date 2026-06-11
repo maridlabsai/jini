@@ -1517,6 +1517,9 @@ func TestRouteDogfoodShowsWave1ValidationGuide(t *testing.T) {
 		"Setup fixes:",
 		"- claude-code: install Claude Code CLI or set JINI_CLAUDE_CODE_CLI, then rerun `jini route dogfood`.",
 		"- gemini-cli: install Gemini CLI or set JINI_GEMINI_CLI, then rerun `jini route dogfood`.",
+		"Release claim policy:",
+		"- Installed or explicitly configured CLI routes must be trusted and dogfooded before release claims.",
+		"- Missing optional CLI executables are setup backlog until the release claim names them.",
 		"Validation steps:",
 		"- For each ready route, select that route and run a harmless prompt through Jini using the real installed CLI.",
 		"- Confirm downstream auth, approval behavior, output shape, and route receipt privacy before editing evidence.",
@@ -1557,7 +1560,7 @@ func TestRouteDogfoodShowsWave1ValidationGuide(t *testing.T) {
 	if got := payload["result_type"]; got != "JiniRouteDogfoodGuide" {
 		t.Fatalf("expected route dogfood result type, got %#v in %s", got, stdout.String())
 	}
-	for _, key := range []string{"validation_steps", "evidence_rules"} {
+	for _, key := range []string{"release_claim_policy", "validation_steps", "evidence_rules"} {
 		values, ok := payload[key].([]any)
 		if !ok || len(values) == 0 {
 			t.Fatalf("expected route dogfood JSON %s to be a non-empty list, got %#v in %s", key, payload[key], stdout.String())

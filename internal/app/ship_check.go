@@ -12,23 +12,24 @@ import (
 )
 
 type shipCheckReport struct {
-	SchemaVersion     string                  `json:"schema_version"`
-	ResultType        string                  `json:"result_type"`
-	GeneratedAt       string                  `json:"generated_at"`
-	Status            string                  `json:"status"`
-	Workspace         string                  `json:"workspace"`
-	InGitRepo         bool                    `json:"in_git_repo"`
-	Branch            string                  `json:"branch,omitempty"`
-	Upstream          string                  `json:"upstream,omitempty"`
-	AheadCount        int                     `json:"ahead_count"`
-	BehindCount       int                     `json:"behind_count"`
-	DirtyFiles        int                     `json:"dirty_files"`
-	UntrackedFiles    int                     `json:"untracked_files"`
-	RequiredEvidence  []string                `json:"required_evidence"`
-	CLIHandoffDogfood []shipCLIHandoffDogfood `json:"cli_handoff_dogfood"`
-	Blockers          []string                `json:"blockers,omitempty"`
-	Warnings          []string                `json:"warnings,omitempty"`
-	Next              []string                `json:"next"`
+	SchemaVersion      string                  `json:"schema_version"`
+	ResultType         string                  `json:"result_type"`
+	GeneratedAt        string                  `json:"generated_at"`
+	Status             string                  `json:"status"`
+	Workspace          string                  `json:"workspace"`
+	InGitRepo          bool                    `json:"in_git_repo"`
+	Branch             string                  `json:"branch,omitempty"`
+	Upstream           string                  `json:"upstream,omitempty"`
+	AheadCount         int                     `json:"ahead_count"`
+	BehindCount        int                     `json:"behind_count"`
+	DirtyFiles         int                     `json:"dirty_files"`
+	UntrackedFiles     int                     `json:"untracked_files"`
+	RequiredEvidence   []string                `json:"required_evidence"`
+	ReleaseClaimPolicy []string                `json:"release_claim_policy"`
+	CLIHandoffDogfood  []shipCLIHandoffDogfood `json:"cli_handoff_dogfood"`
+	Blockers           []string                `json:"blockers,omitempty"`
+	Warnings           []string                `json:"warnings,omitempty"`
+	Next               []string                `json:"next"`
 }
 
 type shipCLIHandoffDogfood struct {
@@ -54,15 +55,16 @@ type shipCLIHandoffDogfoodEvidenceFile struct {
 }
 
 type routeDogfoodGuideReport struct {
-	SchemaVersion    string                            `json:"schema_version"`
-	ResultType       string                            `json:"result_type"`
-	EvidenceFile     string                            `json:"evidence_file"`
-	RequiredChecks   []string                          `json:"required_checks"`
-	Routes           []routeDogfoodGuideRoute          `json:"routes"`
-	ValidationSteps  []string                          `json:"validation_steps"`
-	EvidenceRules    []string                          `json:"evidence_rules"`
-	EvidenceTemplate shipCLIHandoffDogfoodEvidenceFile `json:"evidence_template"`
-	Next             []string                          `json:"next"`
+	SchemaVersion      string                            `json:"schema_version"`
+	ResultType         string                            `json:"result_type"`
+	EvidenceFile       string                            `json:"evidence_file"`
+	RequiredChecks     []string                          `json:"required_checks"`
+	Routes             []routeDogfoodGuideRoute          `json:"routes"`
+	ReleaseClaimPolicy []string                          `json:"release_claim_policy"`
+	ValidationSteps    []string                          `json:"validation_steps"`
+	EvidenceRules      []string                          `json:"evidence_rules"`
+	EvidenceTemplate   shipCLIHandoffDogfoodEvidenceFile `json:"evidence_template"`
+	Next               []string                          `json:"next"`
 }
 
 type routeDogfoodGuideRoute struct {
@@ -118,6 +120,7 @@ func buildShipCheckReport() shipCheckReport {
 			"write validation report before push",
 			"real installed CLI handoff dogfood for Wave 1 routes",
 		},
+		ReleaseClaimPolicy: cliHandoffReleaseClaimPolicy(),
 		Next: []string{
 			"Create an isolated worktree for validation.",
 			"Run the required push gates there.",
@@ -182,6 +185,14 @@ func shipCLIHandoffDogfoodBlockers(items []shipCLIHandoffDogfood) []string {
 		}
 	}
 	return blockers
+}
+
+func cliHandoffReleaseClaimPolicy() []string {
+	return []string{
+		"Installed or explicitly configured CLI routes must be trusted and dogfooded before release claims.",
+		"Missing optional CLI executables are setup backlog until the release claim names them.",
+		"Do not publicly claim a CLI route until it is installed, trusted, and validated in .jini/cli-dogfood.json.",
+	}
 }
 
 func buildShipCLIHandoffDogfood() []shipCLIHandoffDogfood {
@@ -281,11 +292,12 @@ func buildRouteDogfoodGuide() routeDogfoodGuideReport {
 		})
 	}
 	return routeDogfoodGuideReport{
-		SchemaVersion:  "0.1.0",
-		ResultType:     "JiniRouteDogfoodGuide",
-		EvidenceFile:   ".jini/cli-dogfood.json",
-		RequiredChecks: requiredChecks,
-		Routes:         routes,
+		SchemaVersion:      "0.1.0",
+		ResultType:         "JiniRouteDogfoodGuide",
+		EvidenceFile:       ".jini/cli-dogfood.json",
+		RequiredChecks:     requiredChecks,
+		Routes:             routes,
+		ReleaseClaimPolicy: cliHandoffReleaseClaimPolicy(),
 		ValidationSteps: []string{
 			"For each ready route, select that route and run a harmless prompt through Jini using the real installed CLI.",
 			"Confirm downstream auth, approval behavior, output shape, and route receipt privacy before editing evidence.",
@@ -429,6 +441,7 @@ func renderShipCheckText(w io.Writer, report shipCheckReport) {
 	fmt.Fprintf(w, "CLI handoff setup: %d executable ready, %d need setup\n", readyDogfood, missingDogfood)
 	fmt.Fprintf(w, "CLI handoff dogfood: %d validated, %d need validation, %d setup blocked\n", validatedDogfood, needsValidationDogfood, setupBlockedDogfood)
 	renderShipCLIHandoffDogfoodText(w, report.CLIHandoffDogfood)
+	renderRouteDogfoodListSection(w, "Release claim policy:", report.ReleaseClaimPolicy)
 	fmt.Fprintln(w, "Dogfood before release: verify auth, approvals, output shape, and route receipt privacy on real installed CLIs.")
 	fmt.Fprintln(w, "Evidence file: .jini/cli-dogfood.json")
 	fmt.Fprintln(w, "Evidence checks: auth, approvals, output shape, route receipt privacy")
@@ -453,6 +466,7 @@ func renderRouteDogfoodGuide(w io.Writer, report routeDogfoodGuideReport) {
 		}
 	}
 	renderRouteDogfoodSetupHints(w, report.Routes)
+	renderRouteDogfoodListSection(w, "Release claim policy:", report.ReleaseClaimPolicy)
 	renderRouteDogfoodListSection(w, "Validation steps:", report.ValidationSteps)
 	renderRouteDogfoodListSection(w, "Evidence rules:", report.EvidenceRules)
 	fmt.Fprintln(w)

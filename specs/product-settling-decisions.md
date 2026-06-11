@@ -220,6 +220,10 @@ means a route is ready to validate; it does not prove auth, approvals, output
 shape, or route-receipt privacy. `jini check ship --format json` must keep
 those states separate and may read local `.jini/cli-dogfood.json` evidence for
 validated installed-CLI runs.
+Installed or explicitly configured CLI routes must be trusted and dogfooded
+before release claims. Missing optional CLI executables are setup backlog until
+the release claim names them. Do not publicly claim a CLI route until it is
+installed, trusted, and validated in `.jini/cli-dogfood.json`.
 `jini route dogfood` is the read-only guide for that evidence. It may show
 setup status, missing checks, and a copyable evidence template, but it must not
 execute downstream CLIs, write `.jini/cli-dogfood.json`, or mark a route
