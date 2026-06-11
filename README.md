@@ -170,6 +170,7 @@ When you need to steer the route directly, keep it explicit and reversible:
 jini route list
 jini route help
 jini route dogfood
+jini route smoke codex
 jini route validate codex --real-cli --checks all
 jini route set azure-code
 jini route auto
@@ -271,6 +272,7 @@ For setup or troubleshooting:
 ```bash
 jini route help
 jini route dogfood
+jini route smoke codex
 jini route validate codex --real-cli --checks all
 jini doctor
 ```
@@ -281,6 +283,8 @@ API keys, AWS secret keys, profile values, or model IDs.
 Route dogfood shows the Wave 1 CLI validation checklist and a copyable evidence
 template without marking any route validated automatically. Route validate
 records evidence only after you explicitly confirm a real installed CLI smoke.
+Route smoke runs the configured CLI with a harmless prompt and reports receipt
+metadata without printing prompt or output bodies.
 
 For multimodal work, doctor also shows the separate learning buckets Jini keeps
 for screenshot work, scanned PDF/document work, and audio/transcript work.

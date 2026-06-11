@@ -1451,7 +1451,7 @@ func TestRouteCommandShowsSetupHelp(t *testing.T) {
 			"1. Run `jini route list`.",
 			"2. Run `jini doctor`.",
 			"3. Run `jini route set codex` or `jini route set claude-code`.",
-			"4. Run `jini route dogfood`, then `jini route validate codex --real-cli --checks all` after a real CLI smoke.",
+			"4. Run `jini route dogfood`, `jini route smoke codex`, then validate after the real CLI smoke.",
 			"Azure OpenAI API: set `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, and `AZURE_OPENAI_DEPLOYMENT`; then `jini route set azure-openai`.",
 			"Bedrock API: set `AWS_REGION` plus `AWS_PROFILE` or `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`; then `jini route set bedrock-sonnet`.",
 			"Local/offline model: run a local OpenAI-compatible server, then `jini route set local-slm` or `jini route auto`.",
@@ -1629,6 +1629,84 @@ func TestRouteValidateWritesDogfoodEvidence(t *testing.T) {
 		if !containsString(codex.Checks, want) {
 			t.Fatalf("expected evidence check %q, got %#v", want, codex.Checks)
 		}
+	}
+}
+
+func TestRouteSmokeRunsReadyCLIHandoffWithoutLeakingBodies(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	fakeBin := t.TempDir()
+	fakeCodex := writeFakeExecutable(t, fakeBin, "codex", "printf 'jini route smoke ok\\n'\n")
+	t.Setenv("JINI_CODEX_CLI", fakeCodex)
+	t.Setenv("JINI_CLAUDE_CODE_CLI", filepath.Join(fakeBin, "missing-claude"))
+	t.Setenv("JINI_GEMINI_CLI", filepath.Join(fakeBin, "missing-gemini"))
+	t.Setenv("JINI_AIDER_CLI", filepath.Join(fakeBin, "missing-aider"))
+	t.Setenv("JINI_OPENCODE_CLI", filepath.Join(fakeBin, "missing-opencode"))
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"route", "smoke", "codex"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected route smoke to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	out := stdout.String()
+	for _, want := range []string{
+		"Route smoke complete.",
+		"- route: codex",
+		"- exit: 0",
+		"- stdout: 20 chars",
+		"- stderr: 0 chars",
+		"- receipt: prompt and output bodies omitted",
+		"Next: jini route validate codex --real-cli --checks all",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected route smoke output to contain %q, got:\n%s", want, out)
+		}
+	}
+	for _, unwanted := range []string{fakeCodex, "Reply with exactly", "jini route smoke ok"} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("route smoke text must not leak %q, got:\n%s", unwanted, out)
+		}
+	}
+
+	stdout.Reset()
+	exitCode = app.Run([]string{"route", "smoke", "codex", "--format", "json"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected route smoke JSON to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	var payload map[string]any
+	if err := json.Unmarshal(stdout.Bytes(), &payload); err != nil {
+		t.Fatalf("decode route smoke JSON: %v\n%s", err, stdout.String())
+	}
+	if payload["result_type"] != "JiniRouteSmoke" || payload["route_id"] != "codex" || payload["status"] != "ok" {
+		t.Fatalf("expected route smoke JSON envelope, got %#v", payload)
+	}
+	for _, unwanted := range []string{fakeCodex, "Reply with exactly", "jini route smoke ok", "executable", "args_template"} {
+		if strings.Contains(stdout.String(), unwanted) {
+			t.Fatalf("route smoke JSON must not leak %q, got:\n%s", unwanted, stdout.String())
+		}
+	}
+}
+
+func TestRouteSmokeRefusesSetupBlockedRoute(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	fakeBin := t.TempDir()
+	fakeCodex := writeFakeExecutable(t, fakeBin, "codex", "printf 'jini route smoke ok\\n'\n")
+	t.Setenv("JINI_CODEX_CLI", fakeCodex)
+	t.Setenv("JINI_CLAUDE_CODE_CLI", filepath.Join(fakeBin, "missing-claude"))
+	t.Setenv("JINI_GEMINI_CLI", filepath.Join(fakeBin, "missing-gemini"))
+	t.Setenv("JINI_AIDER_CLI", filepath.Join(fakeBin, "missing-aider"))
+	t.Setenv("JINI_OPENCODE_CLI", filepath.Join(fakeBin, "missing-opencode"))
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"route", "smoke", "gemini-cli"}, &stdout, &stdout)
+	if exitCode != 1 {
+		t.Fatalf("expected route smoke refusal, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "Route not ready: gemini-cli (missing executable).") {
+		t.Fatalf("expected setup-blocked route smoke refusal, got:\n%s", stdout.String())
 	}
 }
 

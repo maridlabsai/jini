@@ -821,6 +821,8 @@ func runRoute(args []string, stdout, stderr io.Writer) int {
 		return 0
 	case "dogfood":
 		return runRouteDogfood(args[1:], stdout, stderr)
+	case "smoke":
+		return runRouteSmoke(args[1:], stdout, stderr)
 	case "validate":
 		return runRouteValidate(args[1:], stdout, stderr)
 	case "status":
@@ -880,6 +882,106 @@ type routeValidateReport struct {
 	Checks         []string `json:"checks,omitempty"`
 	RequiredChecks []string `json:"required_checks"`
 	Next           []string `json:"next"`
+}
+
+type routeSmokeOptions struct {
+	RouteID string
+	Format  string
+}
+
+type routeSmokeReport struct {
+	SchemaVersion string   `json:"schema_version"`
+	ResultType    string   `json:"result_type"`
+	Status        string   `json:"status"`
+	RouteID       string   `json:"route_id"`
+	ExitStatus    int      `json:"exit_status"`
+	DurationMS    int64    `json:"duration_ms"`
+	PromptChars   int      `json:"prompt_chars"`
+	StdoutChars   int      `json:"stdout_chars"`
+	StderrChars   int      `json:"stderr_chars"`
+	Next          []string `json:"next"`
+}
+
+func runRouteSmoke(args []string, stdout, stderr io.Writer) int {
+	opts, message, ok := parseRouteSmokeArgs(args)
+	if !ok {
+		fmt.Fprintln(stderr, message)
+		fmt.Fprintln(stderr, "Try `jini route smoke codex`.")
+		return 1
+	}
+	descriptor, found := cliHandoffDescriptorForMode(opts.RouteID)
+	if !found {
+		fmt.Fprintf(stderr, "Unknown CLI handoff route %q.\n", opts.RouteID)
+		fmt.Fprintf(stderr, "Valid routes: %s\n", strings.Join(cliHandoffRouteIDs(), ", "))
+		return 1
+	}
+	if _, missing := resolveCLIHandoffCommand(descriptor); len(missing) > 0 {
+		fmt.Fprintf(stderr, "Route not ready: %s (%s).\n", opts.RouteID, shipCLIHandoffSetupCategory(missing))
+		fmt.Fprintln(stderr, "Run `jini route dogfood` for setup fixes.")
+		return 1
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	_, receipt, err := runCLIHandoff(ctx, opts.RouteID, "Reply with exactly: jini route smoke ok")
+	if err != nil {
+		fmt.Fprintf(stderr, "Route smoke failed: %v\n", err)
+		return 1
+	}
+	if receipt == nil {
+		fmt.Fprintln(stderr, "Route smoke failed: missing route receipt.")
+		return 1
+	}
+	report := routeSmokeReport{
+		SchemaVersion: "0.1.0",
+		ResultType:    "JiniRouteSmoke",
+		Status:        "ok",
+		RouteID:       opts.RouteID,
+		ExitStatus:    receipt.ExitStatus,
+		DurationMS:    receipt.DurationMS,
+		PromptChars:   receipt.PromptChars,
+		StdoutChars:   receipt.StdoutChars,
+		StderrChars:   receipt.StderrChars,
+		Next: []string{
+			"Inspect auth, approvals, output shape, and receipt privacy.",
+			"Then run `jini route validate " + opts.RouteID + " --real-cli --checks all` only if the real CLI smoke passed.",
+		},
+	}
+	if opts.Format == "json" {
+		encoder := json.NewEncoder(stdout)
+		encoder.SetIndent("", "  ")
+		encoder.SetEscapeHTML(false)
+		if err := encoder.Encode(report); err != nil {
+			fmt.Fprintf(stderr, "Could not render route smoke report: %v\n", err)
+			return 1
+		}
+		return 0
+	}
+	fmt.Fprintln(stdout, "Route smoke complete.")
+	fmt.Fprintf(stdout, "- route: %s\n", report.RouteID)
+	fmt.Fprintf(stdout, "- exit: %d\n", report.ExitStatus)
+	fmt.Fprintf(stdout, "- stdout: %d chars\n", report.StdoutChars)
+	fmt.Fprintf(stdout, "- stderr: %d chars\n", report.StderrChars)
+	fmt.Fprintln(stdout, "- receipt: prompt and output bodies omitted")
+	fmt.Fprintf(stdout, "Next: jini route validate %s --real-cli --checks all\n", opts.RouteID)
+	return 0
+}
+
+func parseRouteSmokeArgs(args []string) (routeSmokeOptions, string, bool) {
+	var opts routeSmokeOptions
+	if len(args) == 0 {
+		return opts, "Choose a CLI handoff route to smoke.", false
+	}
+	routeID := normalizeCLIHandoffRouteID(args[0])
+	if routeID == "" {
+		return opts, "Choose a valid CLI handoff route to smoke.", false
+	}
+	opts.RouteID = routeID
+	format, ok := parseOptionalFormatArgs(args[1:])
+	if !ok {
+		return opts, "Unsupported route smoke format.", false
+	}
+	opts.Format = format
+	return opts, "", true
 }
 
 func runRouteValidate(args []string, stdout, stderr io.Writer) int {
@@ -1157,7 +1259,7 @@ func renderRouteSetupHelp(w io.Writer) {
 	fmt.Fprintln(w, "1. Run `jini route list`.")
 	fmt.Fprintln(w, "2. Run `jini doctor`.")
 	fmt.Fprintln(w, "3. Run `jini route set codex` or `jini route set claude-code`.")
-	fmt.Fprintln(w, "4. Run `jini route dogfood`, then `jini route validate codex --real-cli --checks all` after a real CLI smoke.")
+	fmt.Fprintln(w, "4. Run `jini route dogfood`, `jini route smoke codex`, then validate after the real CLI smoke.")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Azure OpenAI API: set `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, and `AZURE_OPENAI_DEPLOYMENT`; then `jini route set azure-openai`.")
 	fmt.Fprintln(w, "Bedrock API: set `AWS_REGION` plus `AWS_PROFILE` or `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`; then `jini route set bedrock-sonnet`.")
