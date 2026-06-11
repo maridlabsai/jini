@@ -445,6 +445,79 @@ func TestShipCheckBlocksInstalledCLIHandoffSetupFailures(t *testing.T) {
 	}
 }
 
+func TestShipCheckBlocksMissingClaimedCLIHandoffRoute(t *testing.T) {
+	repoDir := t.TempDir()
+	runGitCommandForInternalTest(t, repoDir, "init")
+	runGitCommandForInternalTest(t, repoDir, "config", "user.email", "test@example.com")
+	runGitCommandForInternalTest(t, repoDir, "config", "user.name", "Test User")
+	writeTestFile(t, filepath.Join(repoDir, "README.md"), "# Ship Check\n")
+	runGitCommandForInternalTest(t, repoDir, "add", ".")
+	runGitCommandForInternalTest(t, repoDir, "commit", "-m", "initial")
+	fakeBin := t.TempDir()
+	fakeCodex := writeProviderFakeExecutable(t, fakeBin, "codex", "printf 'ok\\n'")
+	stateDir := t.TempDir()
+	writeTestFile(t, filepath.Join(stateDir, "cli-dogfood.json"), `{
+  "schema_version": "0.1.0",
+  "context_type": "JiniCLIHandoffDogfoodEvidence",
+  "routes": {
+    "codex": {
+      "validated_at": "2026-06-09T00:00:00Z",
+      "checks": ["auth", "approvals", "output shape", "route receipt privacy"]
+    }
+  }
+}
+`)
+
+	t.Chdir(repoDir)
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	t.Setenv("JINI_CLI_RELEASE_ROUTES", "codex, gemini-cli")
+	t.Setenv("JINI_CODEX_CLI", fakeCodex)
+	t.Setenv("JINI_CLAUDE_CODE_CLI", filepath.Join(fakeBin, "missing-claude"))
+	t.Setenv("JINI_GEMINI_CLI", filepath.Join(fakeBin, "missing-gemini"))
+	t.Setenv("JINI_AIDER_CLI", filepath.Join(fakeBin, "missing-aider"))
+	t.Setenv("JINI_OPENCODE_CLI", filepath.Join(fakeBin, "missing-opencode"))
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := Run([]string{"check", "ship", "--format=json"}, &stdout, &stderr)
+	if exitCode != 1 {
+		t.Fatalf("expected missing claimed CLI handoff route to block ship check, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+
+	var report shipCheckReport
+	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil {
+		t.Fatalf("decode ship check JSON: %v\n%s", err, stdout.String())
+	}
+	if !stringSliceContains(report.Blockers, "CLI handoff setup blocked for claimed route: gemini-cli (missing executable)") {
+		t.Fatalf("expected claimed gemini missing executable blocker, got %#v", report.Blockers)
+	}
+	for _, blocker := range report.Blockers {
+		if strings.Contains(blocker, "aider") || strings.Contains(blocker, "opencode") || strings.Contains(blocker, "claude-code") {
+			t.Fatalf("unclaimed missing optional CLIs should stay warnings, got blockers %#v", report.Blockers)
+		}
+	}
+	codexDogfood := shipCLIHandoffDogfoodByRoute(report.CLIHandoffDogfood, "codex")
+	if codexDogfood == nil || !codexDogfood.ReleaseClaimed || codexDogfood.DogfoodStatus != "validated" {
+		t.Fatalf("expected claimed codex route to remain validated, got %#v", codexDogfood)
+	}
+	geminiDogfood := shipCLIHandoffDogfoodByRoute(report.CLIHandoffDogfood, "gemini-cli")
+	if geminiDogfood == nil || !geminiDogfood.ReleaseClaimed || geminiDogfood.SetupStatus != "needs-setup" {
+		t.Fatalf("expected claimed missing gemini route to be visible, got %#v", geminiDogfood)
+	}
+}
+
+func TestCLIHandoffReleaseClaimSetSupportsAll(t *testing.T) {
+	t.Setenv("JINI_CLI_RELEASE_ROUTES", "all")
+
+	claims := cliHandoffReleaseClaimSet()
+	for _, routeID := range []string{"codex", "claude-code", "gemini-cli", "aider", "opencode"} {
+		if !claims[routeID] {
+			t.Fatalf("expected all release claim to include %s, got %#v", routeID, claims)
+		}
+	}
+}
+
 func TestShipCheckTextKeepsSafePushInstructionsCompact(t *testing.T) {
 	repoDir := t.TempDir()
 	runGitCommandForInternalTest(t, repoDir, "init")
@@ -487,7 +560,7 @@ func TestShipCheckTextKeepsSafePushInstructionsCompact(t *testing.T) {
 		"- aider: needs setup (missing executable)",
 		"- opencode: needs setup (missing executable)",
 		"Release claim policy:",
-		"- Installed or explicitly configured CLI routes must be trusted and dogfooded before release claims.",
+		"- Installed CLI routes and routes named in JINI_CLI_RELEASE_ROUTES must be trusted and dogfooded before release claims.",
 		"- Missing optional CLI executables are setup backlog until the release claim names them.",
 		"Dogfood before release: verify auth, approvals, output shape, and route receipt privacy on real installed CLIs.",
 		"Evidence file: .jini/cli-dogfood.json",

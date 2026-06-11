@@ -1518,7 +1518,7 @@ func TestRouteDogfoodShowsWave1ValidationGuide(t *testing.T) {
 		"- claude-code: install Claude Code CLI or set JINI_CLAUDE_CODE_CLI, then rerun `jini route dogfood`.",
 		"- gemini-cli: install Gemini CLI or set JINI_GEMINI_CLI, then rerun `jini route dogfood`.",
 		"Release claim policy:",
-		"- Installed or explicitly configured CLI routes must be trusted and dogfooded before release claims.",
+		"- Installed CLI routes and routes named in JINI_CLI_RELEASE_ROUTES must be trusted and dogfooded before release claims.",
 		"- Missing optional CLI executables are setup backlog until the release claim names them.",
 		"Validation steps:",
 		"- For each ready route, select that route and run a harmless prompt through Jini using the real installed CLI.",
