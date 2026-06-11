@@ -59,6 +59,8 @@ type routeDogfoodGuideReport struct {
 	EvidenceFile     string                            `json:"evidence_file"`
 	RequiredChecks   []string                          `json:"required_checks"`
 	Routes           []routeDogfoodGuideRoute          `json:"routes"`
+	ValidationSteps  []string                          `json:"validation_steps"`
+	EvidenceRules    []string                          `json:"evidence_rules"`
 	EvidenceTemplate shipCLIHandoffDogfoodEvidenceFile `json:"evidence_template"`
 	Next             []string                          `json:"next"`
 }
@@ -284,6 +286,16 @@ func buildRouteDogfoodGuide() routeDogfoodGuideReport {
 		EvidenceFile:   ".jini/cli-dogfood.json",
 		RequiredChecks: requiredChecks,
 		Routes:         routes,
+		ValidationSteps: []string{
+			"For each ready route, select that route and run a harmless prompt through Jini using the real installed CLI.",
+			"Confirm downstream auth, approval behavior, output shape, and route receipt privacy before editing evidence.",
+			"Record the route only after the installed CLI completed successfully on the validation machine.",
+		},
+		EvidenceRules: []string{
+			"Do not use fake CLIs, provider API aliases, skipped trust checks, or stale evidence from an older CLI version.",
+			"Do not mark setup-blocked routes validated.",
+			"Rerun `jini check ship --format json` after editing .jini/cli-dogfood.json.",
+		},
 		EvidenceTemplate: shipCLIHandoffDogfoodEvidenceFile{
 			SchemaVersion: "0.1.0",
 			ContextType:   "JiniCLIHandoffDogfoodEvidence",
@@ -441,12 +453,28 @@ func renderRouteDogfoodGuide(w io.Writer, report routeDogfoodGuideReport) {
 		}
 	}
 	renderRouteDogfoodSetupHints(w, report.Routes)
+	renderRouteDogfoodListSection(w, "Validation steps:", report.ValidationSteps)
+	renderRouteDogfoodListSection(w, "Evidence rules:", report.EvidenceRules)
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Template:")
 	renderRouteDogfoodEvidenceTemplate(w, report.EvidenceTemplate, report.Routes)
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Do not mark a route validated until you used the real installed CLI.")
 	fmt.Fprintln(w, "Then run `jini check ship --format json`.")
+}
+
+func renderRouteDogfoodListSection(w io.Writer, title string, items []string) {
+	if len(items) == 0 {
+		return
+	}
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, title)
+	for _, item := range items {
+		if strings.TrimSpace(item) == "" {
+			continue
+		}
+		fmt.Fprintf(w, "- %s\n", item)
+	}
 }
 
 func renderRouteDogfoodSetupHints(w io.Writer, routes []routeDogfoodGuideRoute) {

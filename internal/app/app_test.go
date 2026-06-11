@@ -1517,6 +1517,11 @@ func TestRouteDogfoodShowsWave1ValidationGuide(t *testing.T) {
 		"Setup fixes:",
 		"- claude-code: install Claude Code CLI or set JINI_CLAUDE_CODE_CLI, then rerun `jini route dogfood`.",
 		"- gemini-cli: install Gemini CLI or set JINI_GEMINI_CLI, then rerun `jini route dogfood`.",
+		"Validation steps:",
+		"- For each ready route, select that route and run a harmless prompt through Jini using the real installed CLI.",
+		"- Confirm downstream auth, approval behavior, output shape, and route receipt privacy before editing evidence.",
+		"Evidence rules:",
+		"- Do not use fake CLIs, provider API aliases, skipped trust checks, or stale evidence from an older CLI version.",
 		"Template:",
 		`"context_type": "JiniCLIHandoffDogfoodEvidence"`,
 		`"codex"`,
@@ -1551,6 +1556,12 @@ func TestRouteDogfoodShowsWave1ValidationGuide(t *testing.T) {
 	}
 	if got := payload["result_type"]; got != "JiniRouteDogfoodGuide" {
 		t.Fatalf("expected route dogfood result type, got %#v in %s", got, stdout.String())
+	}
+	for _, key := range []string{"validation_steps", "evidence_rules"} {
+		values, ok := payload[key].([]any)
+		if !ok || len(values) == 0 {
+			t.Fatalf("expected route dogfood JSON %s to be a non-empty list, got %#v in %s", key, payload[key], stdout.String())
+		}
 	}
 	if strings.Contains(stdout.String(), fakeCodex) || strings.Contains(stdout.String(), `"executable"`) || strings.Contains(stdout.String(), "args_template") {
 		t.Fatalf("route dogfood JSON must not leak executable paths or command templates, got:\n%s", stdout.String())
