@@ -414,6 +414,9 @@ competitive risk.
 Add these items to the active release plan:
 
 1. Competitive watch packet.
+   - Current runtime hook: `jini check competitor-watch` emits the local
+     baseline packet with scorecard deltas, stale-requirement risks, and
+     release-plan ingestion fields.
    - Weekly packet covering direct replacement threats, local/offline hosts,
      gateways, app builders, and general workflow agents.
    - Each packet records changed competitor capability, source URL, Jini

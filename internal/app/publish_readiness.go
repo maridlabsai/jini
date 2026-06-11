@@ -292,11 +292,11 @@ func buildPublishHonestAuditClaims() []publishEvidenceClaim {
 		},
 		{
 			Claim:              "P0 competitor watching",
-			Status:             "guarded",
-			Evidence:           "PRD, competitive release plan, readiness guard, benchmark coverage",
-			Gap:                "No watch packet generator, scheduler, or feature-selection ingestion loop exists yet",
-			NextCut:            "Build a watch-packet artifact and release-plan ingestion path",
-			RuntimeImplemented: false,
+			Status:             "partial",
+			Evidence:           "jini check competitor-watch runtime packet, release-plan ingestion feed, scorecard deltas, stale-requirement risks, PRD, competitive release plan, readiness guard, benchmark coverage",
+			Gap:                "Runtime packet and ingestion feed exist, but scheduler automation and live source refresh are not implemented",
+			NextCut:            "Add source-backed refresh and scheduled competitor-watch packets without changing active scope automatically",
+			RuntimeImplemented: true,
 		},
 		{
 			Claim:              "P0 compounding user productivity learning",

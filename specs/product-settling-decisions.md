@@ -510,6 +510,20 @@ New competitor pressure from coding agents, review agents, local/offline tools,
 gateways, app builders, and agent frameworks is valid only when it changes one
 of those release-critical outcomes. Otherwise it is watchlist noise.
 
+## Competitor Watch Runtime Decision
+
+`jini check competitor-watch` is the settled runtime hook for local competitor
+watch packets.
+
+The command may emit scorecard deltas, stale-requirement risks, candidate
+updates, deletion candidates, and release-plan ingestion fields. It must not
+change the PRD, roadmap, tier boundary, or active release scope by itself.
+
+Every competitor-derived candidate still requires a decision-record update
+before it becomes active work. Live source refresh and scheduling are next cuts;
+until then, the runtime packet is a local baseline, not a claim that the latest
+public market has been refreshed.
+
 ## Release-Facing Copy Decision
 
 Public README and website copy must describe shipped behavior, not future CLI

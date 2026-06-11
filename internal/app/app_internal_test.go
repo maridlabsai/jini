@@ -260,6 +260,76 @@ func TestPublishReadinessSupportsTextAndInlineJSONFormat(t *testing.T) {
 	}
 }
 
+func TestCompetitorWatchCheckProducesDecisionReadyPacket(t *testing.T) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := Run([]string{"check", "competitor-watch", "--format=json"}, &stdout, &stderr)
+	if exitCode != 0 {
+		t.Fatalf("expected competitor-watch check to pass, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+
+	var packet competitorWatchPacket
+	if err := json.Unmarshal(stdout.Bytes(), &packet); err != nil {
+		t.Fatalf("decode competitor watch packet: %v\n%s", err, stdout.String())
+	}
+	if packet.ResultType != "JiniCompetitorWatchPacket" || packet.Status != "ok" {
+		t.Fatalf("expected ok competitor watch packet, got %#v", packet)
+	}
+	for _, want := range []string{
+		"specs/golden-competitive-benchmark.yaml",
+		"specs/competitive-release-plan.md",
+		"specs/number-one-platform-prd.md",
+	} {
+		if !stringSliceContains(packet.SourcePaths, want) {
+			t.Fatalf("expected source path %q, got %#v", want, packet.SourcePaths)
+		}
+	}
+	if len(packet.ScorecardDeltas) == 0 || len(packet.RecommendedP0) == 0 || len(packet.StaleRequirementRisks) == 0 {
+		t.Fatalf("expected decision-ready deltas, recommendations, and stale risks, got %#v", packet)
+	}
+	if packet.ReleasePlanIngestion.DecisionRecordRequired != true {
+		t.Fatalf("expected release-plan ingestion to require decision record, got %#v", packet.ReleasePlanIngestion)
+	}
+	if !strings.Contains(strings.Join(packet.ReleasePlanIngestion.NextActions, "\n"), "No competitor finding becomes active scope") {
+		t.Fatalf("expected ingestion guardrail to preserve PRD decision record boundary, got %#v", packet.ReleasePlanIngestion)
+	}
+}
+
+func TestCompetitorWatchCheckTextStaysConcise(t *testing.T) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := Run([]string{"check", "competitor-watch"}, &stdout, &stderr)
+	if exitCode != 0 {
+		t.Fatalf("expected competitor-watch text check to pass, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+	out := stdout.String()
+	for _, want := range []string{
+		"Competitor watch",
+		"Mode: local-baseline",
+		"Scorecard deltas",
+		"Recommended P0",
+		"Stale risks",
+		"Next: source-backed refresh, decision record, then release-plan update.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected text packet to contain %q, got:\n%s", want, out)
+		}
+	}
+	if got := internalNonEmptyLineCount(out); got > 18 {
+		t.Fatalf("expected concise competitor-watch text, got %d lines:\n%s", got, out)
+	}
+}
+
+func internalNonEmptyLineCount(out string) int {
+	count := 0
+	for _, line := range strings.Split(out, "\n") {
+		if strings.TrimSpace(line) != "" {
+			count++
+		}
+	}
+	return count
+}
+
 func TestShipCheckReportsRepoValidationEvidenceAsJSON(t *testing.T) {
 	repoDir := t.TempDir()
 	runGitCommandForInternalTest(t, repoDir, "init")
@@ -1826,7 +1896,7 @@ func TestPublishReadinessTextIncludesGuardrailCheckDetails(t *testing.T) {
 		"    OK specs/honest-system-audit.md#current-implementation-reality",
 		"    OK specs/skills-and-delegation-slice.md#tier-boundary",
 		"    OK specs/lean-platform-gate.md#command-surface-discipline",
-		"    CLAIM P0 competitor watching STATUS guarded RUNTIME false",
+		"    CLAIM P0 competitor watching STATUS partial RUNTIME true",
 		"    CLAIM Configured CLI handoff STATUS implemented RUNTIME true",
 		"    CLAIM Native Go CLI STATUS implemented RUNTIME true",
 		"  APP-PLATFORM ok",
@@ -1873,11 +1943,13 @@ func TestPublishReadinessHonestAuditClaimsExposeImplementationTruth(t *testing.T
 	}
 
 	competitor := claims["P0 competitor watching"]
-	if competitor.Status != "guarded" || competitor.RuntimeImplemented {
-		t.Fatalf("expected competitor watching to be guarded but not runtime implemented, got %#v", competitor)
+	if competitor.Status != "partial" || !competitor.RuntimeImplemented {
+		t.Fatalf("expected competitor watching to be partial with runtime packet evidence, got %#v", competitor)
 	}
-	if !strings.Contains(competitor.Gap, "No watch packet generator") {
-		t.Fatalf("expected competitor watching gap to stay explicit, got %#v", competitor)
+	if !strings.Contains(competitor.Evidence, "jini check competitor-watch") ||
+		!strings.Contains(competitor.Gap, "scheduler") ||
+		!strings.Contains(competitor.Gap, "live source refresh") {
+		t.Fatalf("expected competitor watching gap to keep scheduler/live refresh explicit, got %#v", competitor)
 	}
 
 	cliHandoff := claims["Configured CLI handoff"]
@@ -1922,8 +1994,8 @@ func TestPublishHonestAuditClaimsRemainVisibleWithoutSourceCheckout(t *testing.T
 		t.Fatalf("expected total claim metric to match claims, got details=%#v claims=%#v", section.Details, section.Claims)
 	}
 	for _, claim := range section.Claims {
-		if claim.Claim == "P0 competitor watching" && claim.RuntimeImplemented {
-			t.Fatalf("expected embedded competitor watching claim to remain non-runtime, got %#v", claim)
+		if claim.Claim == "P0 competitor watching" && (claim.Status != "partial" || !claim.RuntimeImplemented) {
+			t.Fatalf("expected embedded competitor watching claim to expose runtime packet evidence, got %#v", claim)
 		}
 	}
 }

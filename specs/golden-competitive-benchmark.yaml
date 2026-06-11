@@ -264,6 +264,9 @@ scorecard_gates:
         - id: competitive-release-plan-outcome-gated-scorecard
           kind: named-proof
           ref: "specs/competitive-release-plan.md"
+        - id: competitor-watch-runtime-packet
+          kind: executable
+          ref: "go test ./internal/app -run TestCompetitorWatchCheckProducesDecisionReadyPacket"
       gate: >
         Competitor additions must update the benchmark, KPI watchlist, release
         plan, and required gates instead of remaining one-off analysis.

@@ -160,6 +160,9 @@ func TestRequiredOutcomeGatesDeclareProofReferences(t *testing.T) {
 			"id: competitive-release-plan-competitive-watch-packet",
 			"kind: named-proof",
 			`ref: "specs/competitive-release-plan.md"`,
+			"id: competitor-watch-runtime-packet",
+			"kind: executable",
+			`ref: "go test ./internal/app -run TestCompetitorWatchCheckProducesDecisionReadyPacket"`,
 		},
 		"commercial-tier-boundary-fixture": {
 			"id: product-simplicity-tier-boundary",
