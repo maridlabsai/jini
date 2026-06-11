@@ -1898,6 +1898,16 @@ func TestPublishReadinessHonestAuditClaimsExposeImplementationTruth(t *testing.T
 	if goCLI.Status != "implemented" || !goCLI.RuntimeImplemented {
 		t.Fatalf("expected native Go CLI to be implemented runtime evidence, got %#v", goCLI)
 	}
+
+	learning := claims["P0 compounding user productivity learning"]
+	if learning.Status != "implemented" || !learning.RuntimeImplemented {
+		t.Fatalf("expected productivity learning to expose runtime memory controls, got %#v", learning)
+	}
+	if !strings.Contains(learning.Evidence, "user-context.json") ||
+		!strings.Contains(learning.Evidence, "jini memory inspect/on/off/forget") ||
+		!strings.Contains(learning.Gap, "broader habit signals") {
+		t.Fatalf("expected productivity learning to keep narrow remaining gap explicit, got %#v", learning)
+	}
 }
 
 func TestPublishHonestAuditClaimsRemainVisibleWithoutSourceCheckout(t *testing.T) {

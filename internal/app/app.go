@@ -132,15 +132,7 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 		case "route":
 			return runRoute(args[1:], stdout, stderr)
 		case "memory":
-			current, err := loadCurrentWork()
-			if err == nil && current != nil {
-				if summary, loadErr := loadWorkSummary(current.PackDir, current); loadErr == nil {
-					renderCurrentWorkMemoryStatus(stdout, summary)
-					return 0
-				}
-			}
-			renderNoCurrentMemoryStatus(stdout)
-			return 0
+			return runMemory(args[1:], stdout, stderr)
 		case "permissions":
 			renderSafePermissionsStatus(stdout)
 			return 0
@@ -251,9 +243,19 @@ func validateNativeArgs(args []string) error {
 		if len(args) == 2 && canonicalHelpTopic(args[1]) != "" {
 			return nil
 		}
-	case "commands", "init", "memory", "new", "permissions", "status", "continue":
+	case "commands", "init", "new", "permissions", "status", "continue":
 		if len(args) == 1 {
 			return nil
+		}
+	case "memory":
+		if len(args) == 1 {
+			return nil
+		}
+		if len(args) == 2 {
+			switch exactCommandToken(args[1]) {
+			case "inspect", "status", "off", "disable", "on", "enable", "forget", "clear", "revoke":
+				return nil
+			}
 		}
 	case "route":
 		return nil
@@ -648,7 +650,15 @@ func handleCurrentWorkAction(action string, summary *workSummary, scanner *bufio
 	case "route help":
 		renderRouteSetupHelp(stdout)
 	case "memory":
-		renderCurrentWorkMemoryStatus(stdout, summary)
+		renderUserContextMemorySummary(stdout, summary.Title)
+	case "memory inspect", "memory status":
+		return runMemory([]string{"inspect"}, stdout, stderr)
+	case "memory off", "memory disable":
+		return runMemory([]string{"off"}, stdout, stderr)
+	case "memory on", "memory enable":
+		return runMemory([]string{"on"}, stdout, stderr)
+	case "memory forget", "memory clear", "memory revoke":
+		return runMemory([]string{"forget"}, stdout, stderr)
 	case "permissions":
 		renderSafePermissionsStatus(stdout)
 	case "init":
@@ -1380,6 +1390,7 @@ func saveAutoRoute(stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "Could not save auto route: %v\n", err)
 		return 1
 	}
+	recordUserContextSignal("route_preference", "Automatic route", "auto route selection")
 	fmt.Fprintln(stdout, "Auto route restored.")
 	fmt.Fprintln(stdout, "Current: auto")
 	fmt.Fprintln(stdout, "Jini will choose the least-expense capable route per request.")
@@ -1413,6 +1424,7 @@ func saveExplicitRoute(raw string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "Could not save route: %v\n", err)
 		return 1
 	}
+	recordUserContextSignal("route_preference", firstNonEmpty(decision.ToolLabel, titleCase(mode)), "explicit route selection")
 	fmt.Fprintln(stdout, "Route saved.")
 	fmt.Fprintf(stdout, "Current: %s\n", firstNonEmpty(decision.ToolLabel, titleCase(mode)))
 	fmt.Fprintf(stdout, "Mode: %s\n", mode)
@@ -2273,8 +2285,20 @@ func maybeHandleNewWorkUtilityIntent(raw string, stdout io.Writer) (bool, int) {
 		return true, 0
 	case "memory":
 		fmt.Fprintln(stdout)
-		renderNoCurrentMemoryStatus(stdout)
+		renderUserContextMemorySummary(stdout, "none")
 		return true, 0
+	case "memory inspect", "memory status":
+		fmt.Fprintln(stdout)
+		return true, runMemory([]string{"inspect"}, stdout, stdout)
+	case "memory off", "memory disable":
+		fmt.Fprintln(stdout)
+		return true, runMemory([]string{"off"}, stdout, stdout)
+	case "memory on", "memory enable":
+		fmt.Fprintln(stdout)
+		return true, runMemory([]string{"on"}, stdout, stdout)
+	case "memory forget", "memory clear", "memory revoke":
+		fmt.Fprintln(stdout)
+		return true, runMemory([]string{"forget"}, stdout, stdout)
 	case "permissions":
 		fmt.Fprintln(stdout)
 		renderSafePermissionsStatus(stdout)
@@ -3522,6 +3546,7 @@ func renderPublicCommandInventory(w io.Writer) {
 	fmt.Fprintln(w, "Essential commands:")
 	fmt.Fprintln(w, "- `jini status`, `jini continue`, `jini open`")
 	fmt.Fprintln(w, "- `jini route`, `jini doctor`")
+	fmt.Fprintln(w, "- `jini memory inspect`, `jini memory off`, `jini memory forget`")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Setup:")
 	fmt.Fprintln(w, "- `jini route help`")
@@ -3558,9 +3583,7 @@ func renderNoInitRequired(w io.Writer) {
 }
 
 func renderNoCurrentMemoryStatus(w io.Writer) {
-	fmt.Fprintln(w, "Memory")
-	fmt.Fprintln(w, "No current work is saved yet.")
-	fmt.Fprintln(w, "Jini starts durable memory only when there is real work, an artifact, or a setting to preserve.")
+	renderUserContextMemorySummary(w, "none")
 }
 
 func renderSafePermissionsStatus(w io.Writer) {
@@ -4224,9 +4247,11 @@ func renderCurrentWorkNoop(w io.Writer) {
 }
 
 func renderCurrentWorkMemoryStatus(w io.Writer, summary *workSummary) {
-	fmt.Fprintln(w, "Memory")
-	fmt.Fprintf(w, "Current work is saved: %s.\n", summary.Title)
-	fmt.Fprintln(w, "Type `status` for the full work state, blockers, route, and ready artifacts.")
+	if summary == nil {
+		renderUserContextMemorySummary(w, "none")
+		return
+	}
+	renderUserContextMemorySummary(w, summary.Title)
 }
 
 func renderPostResultContext(w io.Writer, summary *workSummary, item *catalogItem) {
@@ -4959,7 +4984,7 @@ func renderCurrentWorkHelp(w io.Writer, summary *workSummary) {
 	fmt.Fprintln(w)
 	renderPrimaryActionMenu(w, summary, "Actions", "Open")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Commands: `open`, `status`, `doctor`.")
+	fmt.Fprintln(w, "Commands: `open`, `status`, `doctor`, `memory`.")
 }
 
 func runActiveWorkLauncher(active []*workSummary, stdin io.Reader, stdout, stderr io.Writer) int {

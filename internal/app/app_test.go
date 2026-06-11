@@ -894,6 +894,9 @@ func TestCommandsAliasShowsPublicCommandInventory(t *testing.T) {
 		"jini open",
 		"jini route",
 		"jini doctor",
+		"jini memory inspect",
+		"jini memory off",
+		"jini memory forget",
 		"jini admin help",
 	} {
 		if !strings.Contains(out, want) {
@@ -3460,7 +3463,7 @@ func TestInteractiveLauncherSupportsSlashCommandAliasesWithoutCreatingWork(t *te
 		{
 			name: "memory",
 			line: "/memory\n",
-			want: []string{"Memory", "No current work is saved yet."},
+			want: []string{"Memory", "Learning: on, 0 signals.", "Current work: none."},
 		},
 		{
 			name: "permissions",
@@ -3510,6 +3513,124 @@ func TestInteractiveLauncherSupportsSlashCommandAliasesWithoutCreatingWork(t *te
 				t.Fatalf("expected no current work file after slash command, got err=%v", err)
 			}
 		})
+	}
+}
+
+func TestMemoryCommandShowsPrivacySafeUserContextStore(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	if err := os.MkdirAll(stateDir, 0o755); err != nil {
+		t.Fatalf("create state dir: %v", err)
+	}
+	raw := `{
+  "schema_version": "0.1.0",
+  "context_type": "JiniUserContextMemory",
+  "enabled": true,
+  "signals": [
+    {
+      "id": "route-preference-codex",
+      "kind": "route_preference",
+      "label": "Codex CLI handoff",
+      "evidence": "explicit route selection",
+      "count": 2,
+      "last_seen_at": "2026-06-10T10:00:00Z"
+    },
+    {
+      "id": "unsafe",
+      "kind": "task_shape",
+      "label": "Summarize private acquisition notes",
+      "evidence": "SECRET_API_KEY=abc123",
+      "count": 1
+    }
+  ],
+  "raw_prompt": "Summarize private acquisition notes",
+  "cli_output": "SECRET_API_KEY=abc123"
+}`
+	if err := os.WriteFile(filepath.Join(stateDir, "user-context.json"), []byte(raw), 0o600); err != nil {
+		t.Fatalf("seed memory: %v", err)
+	}
+
+	var stdout bytes.Buffer
+	exitCode := app.RunInteractive([]string{"memory", "inspect"}, nil, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	out := stdout.String()
+	for _, want := range []string{
+		"Memory",
+		"Learning: on",
+		"Signals: 1",
+		"- route_preference: Codex CLI handoff (explicit route selection)",
+		"Privacy: stores safe labels only; no raw prompts, file contents, or CLI output.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, out)
+		}
+	}
+	for _, unwanted := range []string{
+		"Summarize private acquisition notes",
+		"SECRET_API_KEY",
+		"abc123",
+		"raw_prompt",
+		"cli_output",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("expected memory inspect to hide unsafe text %q, got:\n%s", unwanted, out)
+		}
+	}
+}
+
+func TestMemoryCommandCanDisableEnableAndForget(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+
+	var stdout bytes.Buffer
+	if exitCode := app.RunInteractive([]string{"memory", "off"}, nil, &stdout, &stdout); exitCode != 0 {
+		t.Fatalf("expected memory off to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "Memory learning off.") {
+		t.Fatalf("expected off confirmation, got:\n%s", stdout.String())
+	}
+
+	stdout.Reset()
+	if exitCode := app.RunInteractive([]string{"route", "auto"}, nil, &stdout, &stdout); exitCode != 0 {
+		t.Fatalf("expected route auto to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	stdout.Reset()
+	if exitCode := app.RunInteractive([]string{"memory", "inspect"}, nil, &stdout, &stdout); exitCode != 0 {
+		t.Fatalf("expected memory inspect to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "Learning: off") || !strings.Contains(stdout.String(), "Signals: 0") {
+		t.Fatalf("expected disabled memory with no captured route signal, got:\n%s", stdout.String())
+	}
+
+	stdout.Reset()
+	if exitCode := app.RunInteractive([]string{"memory", "on"}, nil, &stdout, &stdout); exitCode != 0 {
+		t.Fatalf("expected memory on to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "Memory learning on.") {
+		t.Fatalf("expected on confirmation, got:\n%s", stdout.String())
+	}
+
+	stdout.Reset()
+	if exitCode := app.RunInteractive([]string{"route", "auto"}, nil, &stdout, &stdout); exitCode != 0 {
+		t.Fatalf("expected route auto to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	stdout.Reset()
+	if exitCode := app.RunInteractive([]string{"memory", "inspect"}, nil, &stdout, &stdout); exitCode != 0 {
+		t.Fatalf("expected memory inspect to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "Learning: on") || !strings.Contains(stdout.String(), "Signals: 1") || !strings.Contains(stdout.String(), "route_preference") {
+		t.Fatalf("expected enabled route signal capture, got:\n%s", stdout.String())
+	}
+
+	stdout.Reset()
+	if exitCode := app.RunInteractive([]string{"memory", "revoke"}, nil, &stdout, &stdout); exitCode != 0 {
+		t.Fatalf("expected memory revoke to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "Memory forgotten.") || !strings.Contains(stdout.String(), "Learning: on") {
+		t.Fatalf("expected forget to preserve enabled state, got:\n%s", stdout.String())
 	}
 }
 
@@ -4378,12 +4499,12 @@ func TestCurrentWorkInteractiveTacticalCommandsDoNotStartNewWork(t *testing.T) {
 		{
 			name: "memory",
 			line: "memory\n",
-			want: []string{"Memory", "Current work is saved: Weekly Product Review."},
+			want: []string{"Memory", "Learning: on, 0 signals.", "Current work: Weekly Product Review."},
 		},
 		{
 			name: "slash memory",
 			line: "/memory\n",
-			want: []string{"Memory", "Current work is saved: Weekly Product Review."},
+			want: []string{"Memory", "Learning: on, 0 signals.", "Current work: Weekly Product Review."},
 		},
 		{
 			name: "route",

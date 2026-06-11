@@ -300,11 +300,11 @@ func buildPublishHonestAuditClaims() []publishEvidenceClaim {
 		},
 		{
 			Claim:              "P0 compounding user productivity learning",
-			Status:             "guarded",
-			Evidence:           "PRD, learning-system spec, readiness guard, benchmark coverage",
-			Gap:                "Runtime learning is partial: multimodal and route signals exist, but stable user context, habits, and inspect/revoke controls are not implemented",
-			NextCut:            "Build inspectable user-context learning store with opt-out and productivity metrics",
-			RuntimeImplemented: false,
+			Status:             "implemented",
+			Evidence:           "user-context.json runtime store, jini memory inspect/on/off/forget, route preference signal capture, privacy filtering tests, PRD, learning-system spec, readiness guard, benchmark coverage",
+			Gap:                "Runtime learning now has inspect, opt-out, forget, and safe route preference signals; broader habit signals and productivity metrics still need expansion",
+			NextCut:            "Expand learning signals across accepted/rejected actions and add productivity impact metrics",
+			RuntimeImplemented: true,
 		},
 		{
 			Claim:              "Offline and local model story",
