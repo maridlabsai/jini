@@ -504,6 +504,46 @@ func TestShipCheckTextKeepsSafePushInstructionsCompact(t *testing.T) {
 	}
 }
 
+func TestRouteDogfoodShowsGatekeeperSetupHint(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	fakeBin := t.TempDir()
+	fakeCodex := writeProviderFakeExecutable(t, fakeBin, "codex", "printf 'fake codex\\n'")
+	t.Setenv("JINI_CODEX_CLI", fakeCodex)
+	t.Setenv("JINI_CLAUDE_CODE_CLI", filepath.Join(fakeBin, "missing-claude"))
+	t.Setenv("JINI_GEMINI_CLI", filepath.Join(fakeBin, "missing-gemini"))
+	t.Setenv("JINI_AIDER_CLI", filepath.Join(fakeBin, "missing-aider"))
+	t.Setenv("JINI_OPENCODE_CLI", filepath.Join(fakeBin, "missing-opencode"))
+	previousTrustCheck := cliHandoffTrustIssueForPath
+	cliHandoffTrustIssueForPath = func(path string) string {
+		if path == fakeCodex {
+			return "macOS Gatekeeper rejected CLI executable: " + path + "."
+		}
+		return ""
+	}
+	t.Cleanup(func() { cliHandoffTrustIssueForPath = previousTrustCheck })
+
+	var stdout bytes.Buffer
+	exitCode := Run([]string{"route", "dogfood"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected route dogfood guide to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"- codex: setup blocked (macOS Gatekeeper)",
+		"Setup fixes:",
+		"- codex: reinstall from a trusted source, open the CLI once, approve it in macOS Privacy & Security if prompted, then rerun `jini route dogfood`.",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected Gatekeeper dogfood output to contain %q, got:\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, fakeCodex) {
+		t.Fatalf("route dogfood text must not leak executable path %q, got:\n%s", fakeCodex, out)
+	}
+}
+
 func shipCLIHandoffDogfoodByRoute(items []shipCLIHandoffDogfood, routeID string) *shipCLIHandoffDogfood {
 	for i := range items {
 		if items[i].RouteID == routeID {

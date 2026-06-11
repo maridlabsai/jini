@@ -69,6 +69,7 @@ type routeDogfoodGuideRoute struct {
 	SetupStatus     string   `json:"setup_status"`
 	DogfoodStatus   string   `json:"dogfood_status"`
 	SetupCategory   string   `json:"setup_category,omitempty"`
+	SetupHint       string   `json:"setup_hint,omitempty"`
 	ValidatedChecks []string `json:"validated_checks,omitempty"`
 	MissingChecks   []string `json:"missing_checks,omitempty"`
 	LastValidatedAt string   `json:"last_validated_at,omitempty"`
@@ -252,12 +253,14 @@ func buildRouteDogfoodGuide() routeDogfoodGuideReport {
 	routes := make([]routeDogfoodGuideRoute, 0, len(dogfoodRows))
 	for _, route := range dogfoodRows {
 		if route.SetupStatus != "ready" {
+			setupCategory := shipCLIHandoffSetupCategory(route.Missing)
 			routes = append(routes, routeDogfoodGuideRoute{
 				RouteID:       route.RouteID,
 				Label:         route.Label,
 				SetupStatus:   route.SetupStatus,
 				DogfoodStatus: route.DogfoodStatus,
-				SetupCategory: shipCLIHandoffSetupCategory(route.Missing),
+				SetupCategory: setupCategory,
+				SetupHint:     routeDogfoodSetupHint(route.RouteID, route.Label, setupCategory),
 			})
 			continue
 		}
@@ -437,12 +440,53 @@ func renderRouteDogfoodGuide(w io.Writer, report routeDogfoodGuideReport) {
 			fmt.Fprintf(w, "- %s: setup blocked (%s)\n", route.RouteID, firstNonEmpty(route.SetupCategory, "see doctor"))
 		}
 	}
+	renderRouteDogfoodSetupHints(w, report.Routes)
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Template:")
 	renderRouteDogfoodEvidenceTemplate(w, report.EvidenceTemplate, report.Routes)
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Do not mark a route validated until you used the real installed CLI.")
 	fmt.Fprintln(w, "Then run `jini check ship --format json`.")
+}
+
+func renderRouteDogfoodSetupHints(w io.Writer, routes []routeDogfoodGuideRoute) {
+	hasHints := false
+	for _, route := range routes {
+		if strings.TrimSpace(route.SetupHint) != "" {
+			hasHints = true
+			break
+		}
+	}
+	if !hasHints {
+		return
+	}
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Setup fixes:")
+	for _, route := range routes {
+		if strings.TrimSpace(route.SetupHint) == "" {
+			continue
+		}
+		fmt.Fprintf(w, "- %s: %s\n", route.RouteID, route.SetupHint)
+	}
+}
+
+func routeDogfoodSetupHint(routeID, label, category string) string {
+	descriptor, _ := cliHandoffDescriptorForMode(routeID)
+	toolName := strings.TrimSuffix(label, " handoff")
+	switch category {
+	case "macOS Gatekeeper":
+		return "reinstall from a trusted source, open the CLI once, approve it in macOS Privacy & Security if prompted, then rerun `jini route dogfood`."
+	case "missing executable":
+		envVar := firstNonEmpty(descriptor.ExecutableEnv, "the route executable env var")
+		return "install " + toolName + " or set " + envVar + ", then rerun `jini route dogfood`."
+	case "invalid args":
+		envVar := firstNonEmpty(descriptor.ArgsEnv, "the route args env var")
+		return "fix " + envVar + " quoting, then rerun `jini route dogfood`."
+	case "local trust check":
+		return "resolve the local trust check in `jini doctor`, then rerun `jini route dogfood`."
+	default:
+		return "run `jini doctor` for setup details, then rerun `jini route dogfood`."
+	}
 }
 
 func renderRouteDogfoodEvidenceTemplate(w io.Writer, template shipCLIHandoffDogfoodEvidenceFile, routes []routeDogfoodGuideRoute) {
