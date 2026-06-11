@@ -41,13 +41,16 @@ type shipCLIHandoffDogfood struct {
 	Status          string   `json:"status"`
 	SetupStatus     string   `json:"setup_status"`
 	DogfoodStatus   string   `json:"dogfood_status"`
+	SmokeStatus     string   `json:"smoke_status,omitempty"`
 	Executable      string   `json:"executable"`
 	ArgsTemplate    []string `json:"args_template"`
 	RequiredChecks  []string `json:"required_checks"`
 	ValidatedChecks []string `json:"validated_checks,omitempty"`
 	MissingChecks   []string `json:"missing_checks,omitempty"`
 	EvidencePath    string   `json:"evidence_path,omitempty"`
+	SmokePath       string   `json:"smoke_path,omitempty"`
 	LastValidatedAt string   `json:"last_validated_at,omitempty"`
+	LastSmokedAt    string   `json:"last_smoked_at,omitempty"`
 	Missing         []string `json:"missing,omitempty"`
 }
 
@@ -90,6 +93,21 @@ type shipCLIHandoffDogfoodRouteProof struct {
 	Checks      []string `json:"checks"`
 }
 
+type cliHandoffSmokeEvidenceFile struct {
+	SchemaVersion string                               `json:"schema_version"`
+	ContextType   string                               `json:"context_type"`
+	Routes        map[string]cliHandoffSmokeRouteProof `json:"routes"`
+}
+
+type cliHandoffSmokeRouteProof struct {
+	SmokedAt    string `json:"smoked_at"`
+	ExitStatus  int    `json:"exit_status"`
+	DurationMS  int64  `json:"duration_ms"`
+	PromptChars int    `json:"prompt_chars"`
+	StdoutChars int    `json:"stdout_chars"`
+	StderrChars int    `json:"stderr_chars"`
+}
+
 type cliHandoffReleaseClaimConfig struct {
 	Claims map[string]bool
 	Issues []string
@@ -98,6 +116,12 @@ type cliHandoffReleaseClaimConfig struct {
 type shipCLIHandoffDogfoodEvidenceLoad struct {
 	Path   string
 	Routes map[string]shipCLIHandoffDogfoodRouteProof
+	Issues []string
+}
+
+type cliHandoffSmokeEvidenceLoad struct {
+	Path   string
+	Routes map[string]cliHandoffSmokeRouteProof
 	Issues []string
 }
 
@@ -136,11 +160,13 @@ func buildShipCheckReport() shipCheckReport {
 			"git worktree add",
 			"write validation report before push",
 			"real installed CLI handoff dogfood for Wave 1 routes",
+			"recent route smoke evidence for claimed CLI routes",
 		},
 		ReleaseClaimPolicy: cliHandoffReleaseClaimPolicy(),
 		Next: []string{
 			"Create an isolated worktree for validation.",
 			"Run the required push gates there.",
+			"Run jini route smoke for each claimed CLI route.",
 			"Record installed CLI dogfood evidence in .jini/cli-dogfood.json.",
 			"Push only after the validation report is clean.",
 		},
@@ -204,7 +230,11 @@ func shipCLIHandoffDogfoodBlockers(items []shipCLIHandoffDogfood) []string {
 	for _, item := range items {
 		switch item.DogfoodStatus {
 		case "needs-validation":
-			blockers = append(blockers, "CLI handoff dogfood missing validation for installed route: "+item.RouteID)
+			if item.ReleaseClaimed {
+				blockers = append(blockers, "CLI handoff dogfood missing validation for claimed route: "+item.RouteID)
+			} else {
+				blockers = append(blockers, "CLI handoff dogfood missing validation for installed route: "+item.RouteID)
+			}
 		case "setup-blocked":
 			category := shipCLIHandoffSetupCategory(item.Missing)
 			if item.ReleaseClaimed {
@@ -222,6 +252,7 @@ func cliHandoffReleaseClaimPolicy() []string {
 		"Installed CLI routes and routes named in JINI_CLI_RELEASE_ROUTES must be trusted and dogfooded before release claims.",
 		"Missing optional CLI executables are setup backlog until the release claim names them.",
 		"Do not publicly claim a CLI route until it is installed, trusted, and validated in .jini/cli-dogfood.json.",
+		"Claimed CLI routes must also have recent .jini/cli-smoke.json evidence from jini route smoke.",
 	}
 }
 
@@ -280,6 +311,7 @@ func cliHandoffRouteIDs() []string {
 func buildShipCLIHandoffDogfood() ([]shipCLIHandoffDogfood, []string, []string) {
 	releaseClaimConfig := parseCLIHandoffReleaseClaimConfig()
 	evidenceLoad := loadShipCLIHandoffDogfoodEvidence()
+	smokeLoad := loadCLIHandoffSmokeEvidence()
 	routeIDs := cliHandoffRouteIDs()
 	out := make([]shipCLIHandoffDogfood, 0, len(routeIDs))
 	for _, mode := range routeIDs {
@@ -302,12 +334,26 @@ func buildShipCLIHandoffDogfood() ([]shipCLIHandoffDogfood, []string, []string) 
 		var validatedChecks []string
 		var missingChecks []string
 		var routeEvidencePath string
+		var smokeEvidencePath string
 		var lastValidatedAt string
+		var lastSmokedAt string
+		smokeStatus := ""
 		if setupStatus == "ready" {
 			routeProof := evidenceLoad.Routes[descriptor.Mode]
 			validatedChecks, missingChecks = dogfoodCheckCoverage(requiredChecks, routeProof.Checks)
 			if timestampIssue := dogfoodValidationTimestampIssue(routeProof.ValidatedAt); timestampIssue != "" {
 				missingChecks = append(missingChecks, timestampIssue)
+			}
+			if releaseClaimConfig.Claims[descriptor.Mode] {
+				smokeProof := smokeLoad.Routes[descriptor.Mode]
+				if smokeIssue := cliHandoffRecentSmokeIssue(smokeProof, time.Now().UTC()); smokeIssue != "" {
+					missingChecks = append(missingChecks, smokeIssue)
+					smokeStatus = "missing"
+				} else {
+					smokeStatus = "recent"
+					smokeEvidencePath = smokeLoad.Path
+					lastSmokedAt = strings.TrimSpace(smokeProof.SmokedAt)
+				}
 			}
 			if len(missingChecks) == 0 {
 				dogfoodStatus = "validated"
@@ -324,17 +370,22 @@ func buildShipCLIHandoffDogfood() ([]shipCLIHandoffDogfood, []string, []string) 
 			Status:          status,
 			SetupStatus:     setupStatus,
 			DogfoodStatus:   dogfoodStatus,
+			SmokeStatus:     smokeStatus,
 			Executable:      firstNonEmpty(command.Executable, descriptor.DefaultExecutable),
 			ArgsTemplate:    append([]string(nil), args...),
 			RequiredChecks:  requiredChecks,
 			ValidatedChecks: validatedChecks,
 			MissingChecks:   missingChecks,
 			EvidencePath:    routeEvidencePath,
+			SmokePath:       smokeEvidencePath,
 			LastValidatedAt: lastValidatedAt,
+			LastSmokedAt:    lastSmokedAt,
 			Missing:         missing,
 		})
 	}
-	return out, releaseClaimConfig.Issues, evidenceLoad.Issues
+	evidenceIssues := append([]string{}, evidenceLoad.Issues...)
+	evidenceIssues = append(evidenceIssues, smokeLoad.Issues...)
+	return out, releaseClaimConfig.Issues, evidenceIssues
 }
 
 func requiredCLIHandoffDogfoodChecks() []string {
@@ -353,6 +404,29 @@ func dogfoodValidationTimestampIssue(value string) string {
 	}
 	if _, err := time.Parse(time.RFC3339, value); err != nil {
 		return "valid validated_at timestamp"
+	}
+	return ""
+}
+
+const cliHandoffSmokeFreshness = 24 * time.Hour
+
+func cliHandoffRecentSmokeIssue(proof cliHandoffSmokeRouteProof, now time.Time) string {
+	smokedAt := strings.TrimSpace(proof.SmokedAt)
+	if smokedAt == "" {
+		return "recent route smoke"
+	}
+	parsed, err := time.Parse(time.RFC3339, smokedAt)
+	if err != nil {
+		return "recent route smoke"
+	}
+	if proof.ExitStatus != 0 {
+		return "recent route smoke"
+	}
+	if now.Sub(parsed) > cliHandoffSmokeFreshness {
+		return "recent route smoke"
+	}
+	if parsed.After(now.Add(5 * time.Minute)) {
+		return "recent route smoke"
 	}
 	return ""
 }
@@ -495,6 +569,85 @@ func saveCLIHandoffDogfoodEvidence(routeID string, checks []string, validatedAt 
 	return load.Path, os.WriteFile(load.Path, append(data, '\n'), 0o600)
 }
 
+func loadCLIHandoffSmokeEvidence() cliHandoffSmokeEvidenceLoad {
+	path := cliHandoffSmokeEvidencePath()
+	load := cliHandoffSmokeEvidenceLoad{
+		Path:   path,
+		Routes: map[string]cliHandoffSmokeRouteProof{},
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			load.Issues = append(load.Issues, "CLI smoke evidence file could not be read: "+filepath.Base(path))
+		}
+		return load
+	}
+	var payload cliHandoffSmokeEvidenceFile
+	if err := json.Unmarshal(data, &payload); err != nil {
+		load.Issues = append(load.Issues, "CLI smoke evidence file is invalid JSON: "+filepath.Base(path))
+		return load
+	}
+	if strings.TrimSpace(payload.SchemaVersion) != "0.1.0" {
+		load.Issues = append(load.Issues, "CLI smoke evidence file has invalid schema_version: expected 0.1.0")
+	}
+	if strings.TrimSpace(payload.ContextType) != "JiniCLIHandoffSmokeEvidence" {
+		load.Issues = append(load.Issues, "CLI smoke evidence file has invalid context_type: expected JiniCLIHandoffSmokeEvidence")
+	}
+	if payload.Routes == nil {
+		load.Issues = append(load.Issues, "CLI smoke evidence file has no routes object: "+filepath.Base(path))
+		return load
+	}
+	out := make(map[string]cliHandoffSmokeRouteProof, len(payload.Routes))
+	for routeID, proof := range payload.Routes {
+		normalizedRouteID := normalizeCLIHandoffRouteID(routeID)
+		if normalizedRouteID == "" {
+			load.Issues = append(load.Issues, "CLI smoke evidence ignored unknown route: "+strings.TrimSpace(routeID)+" (valid: "+strings.Join(cliHandoffRouteIDs(), ", ")+")")
+			continue
+		}
+		out[normalizedRouteID] = proof
+	}
+	load.Routes = out
+	return load
+}
+
+func cliHandoffSmokeEvidencePath() string {
+	return filepath.Join(sessionStateRoot(), "cli-smoke.json")
+}
+
+func saveCLIHandoffSmokeEvidence(routeID string, receipt *cliHandoffReceipt, smokedAt string) (string, error) {
+	if receipt == nil {
+		return cliHandoffSmokeEvidencePath(), fmt.Errorf("missing route smoke receipt")
+	}
+	load := loadCLIHandoffSmokeEvidence()
+	if len(load.Issues) > 0 {
+		return load.Path, fmt.Errorf("%s", strings.Join(load.Issues, "; "))
+	}
+	payload := cliHandoffSmokeEvidenceFile{
+		SchemaVersion: "0.1.0",
+		ContextType:   "JiniCLIHandoffSmokeEvidence",
+		Routes:        load.Routes,
+	}
+	if payload.Routes == nil {
+		payload.Routes = map[string]cliHandoffSmokeRouteProof{}
+	}
+	payload.Routes[routeID] = cliHandoffSmokeRouteProof{
+		SmokedAt:    smokedAt,
+		ExitStatus:  receipt.ExitStatus,
+		DurationMS:  receipt.DurationMS,
+		PromptChars: receipt.PromptChars,
+		StdoutChars: receipt.StdoutChars,
+		StderrChars: receipt.StderrChars,
+	}
+	data, err := json.MarshalIndent(payload, "", "  ")
+	if err != nil {
+		return load.Path, err
+	}
+	if err := os.MkdirAll(filepath.Dir(load.Path), 0o755); err != nil {
+		return load.Path, err
+	}
+	return load.Path, os.WriteFile(load.Path, append(data, '\n'), 0o600)
+}
+
 func dogfoodCheckCoverage(required, actual []string) (validated, missing []string) {
 	actualSet := map[string]bool{}
 	for _, item := range actual {
@@ -596,6 +749,7 @@ func renderShipCheckText(w io.Writer, report shipCheckReport) {
 	renderRouteDogfoodListSection(w, "Release claim policy:", report.ReleaseClaimPolicy)
 	fmt.Fprintln(w, "Dogfood before release: verify auth, approvals, output shape, and route receipt privacy on real installed CLIs.")
 	fmt.Fprintln(w, "Evidence file: .jini/cli-dogfood.json")
+	fmt.Fprintln(w, "Smoke evidence: .jini/cli-smoke.json for claimed routes")
 	fmt.Fprintln(w, "Evidence checks: auth, approvals, output shape, route receipt privacy")
 	fmt.Fprintln(w, "Run before push: bash tools/run_required_gates.sh push")
 	fmt.Fprintln(w, "Safe lane: create an isolated worktree, run gates, then push only after evidence is clean.")
@@ -727,11 +881,15 @@ func renderShipCLIHandoffDogfoodText(w io.Writer, items []shipCLIHandoffDogfood)
 	for _, item := range items {
 		routeLabel := formatCLIHandoffRouteLabel(item.RouteID, item.ReleaseClaimed)
 		if item.SetupStatus == "ready" {
+			smokeSuffix := ""
+			if item.ReleaseClaimed {
+				smokeSuffix = ", smoke " + firstNonEmpty(item.SmokeStatus, "missing")
+			}
 			if item.DogfoodStatus == "validated" {
-				fmt.Fprintf(w, "- %s: executable ready, dogfood validated\n", routeLabel)
+				fmt.Fprintf(w, "- %s: executable ready, dogfood validated%s\n", routeLabel, smokeSuffix)
 				continue
 			}
-			fmt.Fprintf(w, "- %s: executable ready, dogfood needs validation\n", routeLabel)
+			fmt.Fprintf(w, "- %s: executable ready, dogfood needs validation%s\n", routeLabel, smokeSuffix)
 			continue
 		}
 		fmt.Fprintf(w, "- %s: needs setup (%s)\n", routeLabel, shipCLIHandoffSetupCategory(item.Missing))

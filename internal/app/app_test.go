@@ -1520,6 +1520,7 @@ func TestRouteDogfoodShowsWave1ValidationGuide(t *testing.T) {
 		"Release claim policy:",
 		"- Installed CLI routes and routes named in JINI_CLI_RELEASE_ROUTES must be trusted and dogfooded before release claims.",
 		"- Missing optional CLI executables are setup backlog until the release claim names them.",
+		"- Claimed CLI routes must also have recent .jini/cli-smoke.json evidence from jini route smoke.",
 		"Validation steps:",
 		"- For each ready route, select that route and run a harmless prompt through Jini using the real installed CLI.",
 		"- Confirm downstream auth, approval behavior, output shape, and route receipt privacy before editing evidence.",
@@ -1656,6 +1657,7 @@ func TestRouteSmokeRunsReadyCLIHandoffWithoutLeakingBodies(t *testing.T) {
 		"- exit: 0",
 		"- stdout: 20 chars",
 		"- stderr: 0 chars",
+		"- evidence: .jini/cli-smoke.json",
 		"- receipt: prompt and output bodies omitted",
 		"Next: jini route validate codex --real-cli --checks all",
 	} {
@@ -1667,6 +1669,37 @@ func TestRouteSmokeRunsReadyCLIHandoffWithoutLeakingBodies(t *testing.T) {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("route smoke text must not leak %q, got:\n%s", unwanted, out)
 		}
+	}
+	data, err := os.ReadFile(filepath.Join(stateDir, "cli-smoke.json"))
+	if err != nil {
+		t.Fatalf("expected route smoke to write smoke evidence: %v", err)
+	}
+	var smokeEvidence struct {
+		SchemaVersion string `json:"schema_version"`
+		ContextType   string `json:"context_type"`
+		Routes        map[string]struct {
+			SmokedAt    string `json:"smoked_at"`
+			ExitStatus  int    `json:"exit_status"`
+			PromptChars int    `json:"prompt_chars"`
+			StdoutChars int    `json:"stdout_chars"`
+			StderrChars int    `json:"stderr_chars"`
+		} `json:"routes"`
+	}
+	if err := json.Unmarshal(data, &smokeEvidence); err != nil {
+		t.Fatalf("decode smoke evidence: %v\n%s", err, string(data))
+	}
+	codexSmoke := smokeEvidence.Routes["codex"]
+	if smokeEvidence.SchemaVersion != "0.1.0" || smokeEvidence.ContextType != "JiniCLIHandoffSmokeEvidence" {
+		t.Fatalf("expected current smoke evidence envelope, got %#v", smokeEvidence)
+	}
+	if _, err := time.Parse(time.RFC3339, codexSmoke.SmokedAt); err != nil {
+		t.Fatalf("expected RFC3339 smoke time, got %q", codexSmoke.SmokedAt)
+	}
+	if codexSmoke.ExitStatus != 0 || codexSmoke.PromptChars == 0 || codexSmoke.StdoutChars != 20 || codexSmoke.StderrChars != 0 {
+		t.Fatalf("expected privacy-safe smoke counts, got %#v", codexSmoke)
+	}
+	if strings.Contains(string(data), fakeCodex) || strings.Contains(string(data), "Reply with exactly") || strings.Contains(string(data), "jini route smoke ok") {
+		t.Fatalf("smoke evidence must not leak executable, prompt, or output bodies, got:\n%s", string(data))
 	}
 
 	stdout.Reset()
@@ -1680,6 +1713,16 @@ func TestRouteSmokeRunsReadyCLIHandoffWithoutLeakingBodies(t *testing.T) {
 	}
 	if payload["result_type"] != "JiniRouteSmoke" || payload["route_id"] != "codex" || payload["status"] != "ok" {
 		t.Fatalf("expected route smoke JSON envelope, got %#v", payload)
+	}
+	if got, ok := payload["evidence_file"].(string); !ok || got == "" {
+		t.Fatalf("expected route smoke JSON evidence file, got %#v", payload["evidence_file"])
+	}
+	smokedAt, ok := payload["smoked_at"].(string)
+	if !ok || smokedAt == "" {
+		t.Fatalf("expected route smoke JSON smoke timestamp, got %#v", payload["smoked_at"])
+	}
+	if _, err := time.Parse(time.RFC3339, smokedAt); err != nil {
+		t.Fatalf("expected RFC3339 route smoke JSON timestamp, got %q", smokedAt)
 	}
 	for _, unwanted := range []string{fakeCodex, "Reply with exactly", "jini route smoke ok", "executable", "args_template"} {
 		if strings.Contains(stdout.String(), unwanted) {

@@ -33,6 +33,7 @@ Residual hardening:
 
 - Wave 1 command templates use fake downstream CLIs in automated tests and now
   expose `jini check ship --format json` setup status plus local
-  `.jini/cli-dogfood.json` validation evidence. Real installed CLI dogfood
-  remains required before release claims for auth, approvals,
-  output-shape differences, and route receipt privacy.
+  `.jini/cli-dogfood.json` validation evidence plus recent
+  `.jini/cli-smoke.json` evidence for claimed routes. Real installed CLI
+  dogfood remains required before release claims for auth, approvals,
+  output-shape differences, route receipt privacy, and smoke freshness.

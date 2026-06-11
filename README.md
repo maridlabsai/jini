@@ -188,6 +188,8 @@ evidence in `.jini/cli-dogfood.json`.
 After a real installed CLI smoke succeeds, use
 `jini route validate <route> --real-cli --checks all` to record that evidence
 without hand-editing JSON.
+Claimed CLI routes must also have recent `.jini/cli-smoke.json` evidence from
+`jini route smoke <route>` before release claims are allowed.
 
 For multi-step work, Jini now plans quietly before drafting. The user sees the
 result through better structure and clearer `Doing now` / `Next` state, not
@@ -284,7 +286,8 @@ Route dogfood shows the Wave 1 CLI validation checklist and a copyable evidence
 template without marking any route validated automatically. Route validate
 records evidence only after you explicitly confirm a real installed CLI smoke.
 Route smoke runs the configured CLI with a harmless prompt and reports receipt
-metadata without printing prompt or output bodies.
+metadata without printing prompt or output bodies. For claimed CLI routes, that
+smoke metadata is also recorded in `.jini/cli-smoke.json` for ship checks.
 
 For multimodal work, doctor also shows the separate learning buckets Jini keeps
 for screenshot work, scanned PDF/document work, and audio/transcript work.

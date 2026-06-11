@@ -894,6 +894,8 @@ type routeSmokeReport struct {
 	ResultType    string   `json:"result_type"`
 	Status        string   `json:"status"`
 	RouteID       string   `json:"route_id"`
+	EvidenceFile  string   `json:"evidence_file,omitempty"`
+	SmokedAt      string   `json:"smoked_at,omitempty"`
 	ExitStatus    int      `json:"exit_status"`
 	DurationMS    int64    `json:"duration_ms"`
 	PromptChars   int      `json:"prompt_chars"`
@@ -931,11 +933,19 @@ func runRouteSmoke(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "Route smoke failed: missing route receipt.")
 		return 1
 	}
+	smokedAt := time.Now().UTC().Format(time.RFC3339)
+	evidenceFile, err := saveCLIHandoffSmokeEvidence(opts.RouteID, receipt, smokedAt)
+	if err != nil {
+		fmt.Fprintf(stderr, "Could not write CLI smoke evidence: %v\n", err)
+		return 1
+	}
 	report := routeSmokeReport{
 		SchemaVersion: "0.1.0",
 		ResultType:    "JiniRouteSmoke",
 		Status:        "ok",
 		RouteID:       opts.RouteID,
+		EvidenceFile:  evidenceFile,
+		SmokedAt:      smokedAt,
 		ExitStatus:    receipt.ExitStatus,
 		DurationMS:    receipt.DurationMS,
 		PromptChars:   receipt.PromptChars,
@@ -961,6 +971,7 @@ func runRouteSmoke(args []string, stdout, stderr io.Writer) int {
 	fmt.Fprintf(stdout, "- exit: %d\n", report.ExitStatus)
 	fmt.Fprintf(stdout, "- stdout: %d chars\n", report.StdoutChars)
 	fmt.Fprintf(stdout, "- stderr: %d chars\n", report.StderrChars)
+	fmt.Fprintln(stdout, "- evidence: .jini/cli-smoke.json")
 	fmt.Fprintln(stdout, "- receipt: prompt and output bodies omitted")
 	fmt.Fprintf(stdout, "Next: jini route validate %s --real-cli --checks all\n", opts.RouteID)
 	return 0

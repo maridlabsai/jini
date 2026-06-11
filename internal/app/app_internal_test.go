@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestSafelyRunInteractiveRecoversPanics(t *testing.T) {
@@ -309,10 +310,14 @@ func TestShipCheckReportsRepoValidationEvidenceAsJSON(t *testing.T) {
 		"git worktree add",
 		"write validation report before push",
 		"real installed CLI handoff dogfood for Wave 1 routes",
+		"recent route smoke evidence for claimed CLI routes",
 	} {
 		if !stringSliceContains(report.RequiredEvidence, want) {
 			t.Fatalf("expected ship check evidence %q, got %#v", want, report.RequiredEvidence)
 		}
+	}
+	if !stringSliceContains(report.Next, "Run jini route smoke for each claimed CLI route.") {
+		t.Fatalf("expected ship check next steps to include smoke evidence recording, got %#v", report.Next)
 	}
 	if !stringSliceContains(report.Next, "Record installed CLI dogfood evidence in .jini/cli-dogfood.json.") {
 		t.Fatalf("expected ship check next steps to include dogfood evidence recording, got %#v", report.Next)
@@ -330,6 +335,9 @@ func TestShipCheckReportsRepoValidationEvidenceAsJSON(t *testing.T) {
 	if codexDogfood.SetupStatus != "ready" || codexDogfood.DogfoodStatus != "needs-validation" {
 		t.Fatalf("expected fake codex to separate setup readiness from dogfood validation, got %#v", codexDogfood)
 	}
+	if codexDogfood.SmokeStatus != "missing" {
+		t.Fatalf("expected claimed codex to surface missing smoke status, got %#v", codexDogfood)
+	}
 	for _, want := range []string{"auth", "approvals", "output shape", "route receipt privacy"} {
 		if !stringSliceContains(codexDogfood.RequiredChecks, want) {
 			t.Fatalf("expected codex dogfood required check %q, got %#v", want, codexDogfood.RequiredChecks)
@@ -337,6 +345,9 @@ func TestShipCheckReportsRepoValidationEvidenceAsJSON(t *testing.T) {
 		if !stringSliceContains(codexDogfood.MissingChecks, want) {
 			t.Fatalf("expected codex dogfood missing check %q before validation evidence, got %#v", want, codexDogfood.MissingChecks)
 		}
+	}
+	if !stringSliceContains(codexDogfood.MissingChecks, "recent route smoke") {
+		t.Fatalf("expected claimed codex to require recent smoke, got %#v", codexDogfood.MissingChecks)
 	}
 	claudeDogfood := shipCLIHandoffDogfoodByRoute(report.CLIHandoffDogfood, "claude-code")
 	if claudeDogfood == nil || claudeDogfood.Status != "needs-setup" || claudeDogfood.SetupStatus != "needs-setup" || claudeDogfood.DogfoodStatus != "setup-blocked" || len(claudeDogfood.Missing) == 0 {
@@ -399,6 +410,107 @@ func TestShipCheckReadsLocalCLIHandoffDogfoodEvidence(t *testing.T) {
 	}
 	if codexDogfood.EvidencePath != filepath.Join(stateDir, "cli-dogfood.json") {
 		t.Fatalf("expected dogfood evidence path, got %#v", codexDogfood)
+	}
+}
+
+func TestShipCheckRequiresRecentSmokeForClaimedValidatedRoute(t *testing.T) {
+	repoDir := t.TempDir()
+	runGitCommandForInternalTest(t, repoDir, "init")
+	runGitCommandForInternalTest(t, repoDir, "config", "user.email", "test@example.com")
+	runGitCommandForInternalTest(t, repoDir, "config", "user.name", "Test User")
+	writeTestFile(t, filepath.Join(repoDir, "README.md"), "# Ship Check\n")
+	runGitCommandForInternalTest(t, repoDir, "add", ".")
+	runGitCommandForInternalTest(t, repoDir, "commit", "-m", "initial")
+	fakeBin := t.TempDir()
+	fakeCodex := writeProviderFakeExecutable(t, fakeBin, "codex", "printf 'ok\\n'")
+	stateDir := t.TempDir()
+	writeCodexCLIHandoffDogfoodEvidence(t, stateDir, time.Now().UTC().Format(time.RFC3339))
+
+	t.Chdir(repoDir)
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	t.Setenv("JINI_CLI_RELEASE_ROUTES", "codex")
+	t.Setenv("JINI_CODEX_CLI", fakeCodex)
+	t.Setenv("JINI_CLAUDE_CODE_CLI", filepath.Join(fakeBin, "missing-claude"))
+	t.Setenv("JINI_GEMINI_CLI", filepath.Join(fakeBin, "missing-gemini"))
+	t.Setenv("JINI_AIDER_CLI", filepath.Join(fakeBin, "missing-aider"))
+	t.Setenv("JINI_OPENCODE_CLI", filepath.Join(fakeBin, "missing-opencode"))
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := Run([]string{"check", "ship", "--format=json"}, &stdout, &stderr)
+	if exitCode != 1 {
+		t.Fatalf("expected claimed route without smoke evidence to block, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+
+	var report shipCheckReport
+	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil {
+		t.Fatalf("decode ship check JSON: %v\n%s", err, stdout.String())
+	}
+	if !stringSliceContains(report.Blockers, "CLI handoff dogfood missing validation for claimed route: codex") {
+		t.Fatalf("expected claimed route validation blocker, got %#v", report.Blockers)
+	}
+	codexDogfood := shipCLIHandoffDogfoodByRoute(report.CLIHandoffDogfood, "codex")
+	if codexDogfood == nil {
+		t.Fatalf("expected codex dogfood row, got %#v", report.CLIHandoffDogfood)
+	}
+	if codexDogfood.DogfoodStatus != "needs-validation" || codexDogfood.SmokeStatus != "missing" {
+		t.Fatalf("expected claimed codex to require recent smoke, got %#v", codexDogfood)
+	}
+	if !stringSliceContains(codexDogfood.MissingChecks, "recent route smoke") {
+		t.Fatalf("expected missing smoke check, got %#v", codexDogfood.MissingChecks)
+	}
+}
+
+func TestShipCheckAcceptsRecentSmokeForClaimedValidatedRoute(t *testing.T) {
+	repoDir := t.TempDir()
+	runGitCommandForInternalTest(t, repoDir, "init")
+	runGitCommandForInternalTest(t, repoDir, "config", "user.email", "test@example.com")
+	runGitCommandForInternalTest(t, repoDir, "config", "user.name", "Test User")
+	writeTestFile(t, filepath.Join(repoDir, "README.md"), "# Ship Check\n")
+	runGitCommandForInternalTest(t, repoDir, "add", ".")
+	runGitCommandForInternalTest(t, repoDir, "commit", "-m", "initial")
+	fakeBin := t.TempDir()
+	fakeCodex := writeProviderFakeExecutable(t, fakeBin, "codex", "printf 'ok\\n'")
+	stateDir := t.TempDir()
+	validatedAt := time.Now().UTC().Format(time.RFC3339)
+	smokedAt := time.Now().UTC().Format(time.RFC3339)
+	writeCodexCLIHandoffDogfoodEvidence(t, stateDir, validatedAt)
+	writeCodexCLIHandoffSmokeEvidence(t, stateDir, smokedAt)
+
+	t.Chdir(repoDir)
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	t.Setenv("JINI_CLI_RELEASE_ROUTES", "codex")
+	t.Setenv("JINI_CODEX_CLI", fakeCodex)
+	t.Setenv("JINI_CLAUDE_CODE_CLI", filepath.Join(fakeBin, "missing-claude"))
+	t.Setenv("JINI_GEMINI_CLI", filepath.Join(fakeBin, "missing-gemini"))
+	t.Setenv("JINI_AIDER_CLI", filepath.Join(fakeBin, "missing-aider"))
+	t.Setenv("JINI_OPENCODE_CLI", filepath.Join(fakeBin, "missing-opencode"))
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := Run([]string{"check", "ship", "--format=json"}, &stdout, &stderr)
+	if exitCode != 0 {
+		t.Fatalf("expected claimed route with dogfood and smoke evidence to pass, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+
+	var report shipCheckReport
+	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil {
+		t.Fatalf("decode ship check JSON: %v\n%s", err, stdout.String())
+	}
+	codexDogfood := shipCLIHandoffDogfoodByRoute(report.CLIHandoffDogfood, "codex")
+	if codexDogfood == nil {
+		t.Fatalf("expected codex dogfood row, got %#v", report.CLIHandoffDogfood)
+	}
+	if codexDogfood.DogfoodStatus != "validated" || codexDogfood.SmokeStatus != "recent" {
+		t.Fatalf("expected claimed codex to be validated with recent smoke, got %#v", codexDogfood)
+	}
+	if codexDogfood.LastValidatedAt != validatedAt || codexDogfood.LastSmokedAt != smokedAt {
+		t.Fatalf("expected validation and smoke timestamps, got %#v", codexDogfood)
+	}
+	if codexDogfood.SmokePath != filepath.Join(stateDir, "cli-smoke.json") {
+		t.Fatalf("expected smoke evidence path, got %#v", codexDogfood)
 	}
 }
 
@@ -680,6 +792,7 @@ func TestShipCheckBlocksMissingClaimedCLIHandoffRoute(t *testing.T) {
   }
 }
 `)
+	writeCodexCLIHandoffSmokeEvidence(t, stateDir, time.Now().UTC().Format(time.RFC3339))
 
 	t.Chdir(repoDir)
 	t.Setenv("JINI_STATE_DIR", stateDir)
@@ -711,7 +824,7 @@ func TestShipCheckBlocksMissingClaimedCLIHandoffRoute(t *testing.T) {
 		}
 	}
 	codexDogfood := shipCLIHandoffDogfoodByRoute(report.CLIHandoffDogfood, "codex")
-	if codexDogfood == nil || !codexDogfood.ReleaseClaimed || codexDogfood.DogfoodStatus != "validated" {
+	if codexDogfood == nil || !codexDogfood.ReleaseClaimed || codexDogfood.DogfoodStatus != "validated" || codexDogfood.SmokeStatus != "recent" {
 		t.Fatalf("expected claimed codex route to remain validated, got %#v", codexDogfood)
 	}
 	geminiDogfood := shipCLIHandoffDogfoodByRoute(report.CLIHandoffDogfood, "gemini-cli")
@@ -762,14 +875,14 @@ func TestShipCheckTextKeepsSafePushInstructionsCompact(t *testing.T) {
 	for _, want := range []string{
 		"Ship check blocked",
 		"Branch:",
-		"Blocker: CLI handoff dogfood missing validation for installed route: codex",
+		"Blocker: CLI handoff dogfood missing validation for claimed route: codex",
 		"Blocker: CLI handoff setup blocked for claimed route: gemini-cli (missing executable)",
 		"Run before push: bash tools/run_required_gates.sh push",
 		"Safe lane: create an isolated worktree, run gates, then push only after evidence is clean.",
 		"CLI handoff setup: 1 executable ready, 4 need setup",
 		"CLI handoff dogfood: 0 validated, 1 need validation, 4 setup blocked",
 		"CLI handoff routes:",
-		"- codex (claimed): executable ready, dogfood needs validation",
+		"- codex (claimed): executable ready, dogfood needs validation, smoke missing",
 		"- claude-code: needs setup (missing executable)",
 		"- gemini-cli (claimed): needs setup (missing executable)",
 		"- aider: needs setup (missing executable)",
@@ -777,8 +890,10 @@ func TestShipCheckTextKeepsSafePushInstructionsCompact(t *testing.T) {
 		"Release claim policy:",
 		"- Installed CLI routes and routes named in JINI_CLI_RELEASE_ROUTES must be trusted and dogfooded before release claims.",
 		"- Missing optional CLI executables are setup backlog until the release claim names them.",
+		"- Claimed CLI routes must also have recent .jini/cli-smoke.json evidence from jini route smoke.",
 		"Dogfood before release: verify auth, approvals, output shape, and route receipt privacy on real installed CLIs.",
 		"Evidence file: .jini/cli-dogfood.json",
+		"Smoke evidence: .jini/cli-smoke.json for claimed routes",
 		"Evidence checks: auth, approvals, output shape, route receipt privacy",
 	} {
 		if !strings.Contains(out, want) {
@@ -845,6 +960,40 @@ func shipCLIHandoffDogfoodByRoute(items []shipCLIHandoffDogfood, routeID string)
 	return nil
 }
 
+func writeCodexCLIHandoffDogfoodEvidence(t *testing.T, stateDir, validatedAt string) {
+	t.Helper()
+	writeTestFile(t, filepath.Join(stateDir, "cli-dogfood.json"), `{
+  "schema_version": "0.1.0",
+  "context_type": "JiniCLIHandoffDogfoodEvidence",
+  "routes": {
+    "codex": {
+      "validated_at": "`+validatedAt+`",
+      "checks": ["auth", "approvals", "output shape", "route receipt privacy"]
+    }
+  }
+}
+`)
+}
+
+func writeCodexCLIHandoffSmokeEvidence(t *testing.T, stateDir, smokedAt string) {
+	t.Helper()
+	writeTestFile(t, filepath.Join(stateDir, "cli-smoke.json"), `{
+  "schema_version": "0.1.0",
+  "context_type": "JiniCLIHandoffSmokeEvidence",
+  "routes": {
+    "codex": {
+      "smoked_at": "`+smokedAt+`",
+      "exit_status": 0,
+      "duration_ms": 12,
+      "prompt_chars": 42,
+      "stdout_chars": 3,
+      "stderr_chars": 0
+    }
+  }
+}
+`)
+}
+
 func runGitCommandForInternalTest(t *testing.T, dir string, args ...string) {
 	t.Helper()
 	cmd := exec.Command("git", args...)
@@ -886,7 +1035,7 @@ func TestScorecardGatePassesAndExposesCompetitorPressure(t *testing.T) {
 		t.Fatalf("expected residual hardening details to stay machine-readable, got %#v", report.PRDImplementation)
 	}
 	for _, want := range []string{
-		"Wave 1 command templates use fake downstream CLIs in automated tests and now expose `jini check ship --format json` setup status plus local `.jini/cli-dogfood.json` validation evidence. Real installed CLI dogfood remains required before release claims for auth, approvals, output-shape differences, and route receipt privacy.",
+		"Wave 1 command templates use fake downstream CLIs in automated tests and now expose `jini check ship --format json` setup status plus local `.jini/cli-dogfood.json` validation evidence plus recent `.jini/cli-smoke.json` evidence for claimed routes. Real installed CLI dogfood remains required before release claims for auth, approvals, output-shape differences, route receipt privacy, and smoke freshness.",
 	} {
 		if !containsString(report.PRDImplementation.ResidualHardening, want) {
 			t.Fatalf("expected residual hardening details to contain %q, got %#v", want, report.PRDImplementation.ResidualHardening)
@@ -1487,7 +1636,7 @@ func TestScorecardGateTextShowsCommitGatePressure(t *testing.T) {
 		"  OK 13/13 P0 requirements implemented (100%)",
 		"  SOURCE specs/prd-implementation-trace.md",
 		"  RESIDUAL_HARDENING 1",
-		"    RESIDUAL Wave 1 command templates use fake downstream CLIs in automated tests and now expose `jini check ship --format json` setup status plus local `.jini/cli-dogfood.json` validation evidence. Real installed CLI dogfood remains required before release claims for auth, approvals, output-shape differences, and route receipt privacy.",
+		"    RESIDUAL Wave 1 command templates use fake downstream CLIs in automated tests and now expose `jini check ship --format json` setup status plus local `.jini/cli-dogfood.json` validation evidence plus recent `.jini/cli-smoke.json` evidence for claimed routes. Real installed CLI dogfood remains required before release claims for auth, approvals, output-shape differences, route receipt privacy, and smoke freshness.",
 		"COMPETITORS",
 		"  OK github-copilot-coding-agent",
 		"PRESSURE VECTORS",
@@ -1585,8 +1734,10 @@ func TestPublishReadinessHonestAuditClaimsExposeImplementationTruth(t *testing.T
 	}
 	if !strings.Contains(cliHandoff.Evidence, "Wave 0 handoff contract") ||
 		!strings.Contains(cliHandoff.Evidence, ".jini/cli-dogfood.json validation evidence") ||
+		!strings.Contains(cliHandoff.Evidence, ".jini/cli-smoke.json freshness") ||
 		!strings.Contains(cliHandoff.Gap, "real-world dogfood") ||
-		!strings.Contains(cliHandoff.Gap, "route receipt privacy") {
+		!strings.Contains(cliHandoff.Gap, "route receipt privacy") ||
+		!strings.Contains(cliHandoff.Gap, "fresh smoke evidence") {
 		t.Fatalf("expected configured CLI handoff gap to stay explicit, got %#v", cliHandoff)
 	}
 

@@ -90,8 +90,8 @@ Required outcome:
 - push gate records local shipping evidence, including git repository state and
   required validation evidence
 - `jini check ship --format json` exposes Wave 1 CLI handoff setup status,
-  dogfood validation status, missing validation checks, and local
-  `.jini/cli-dogfood.json` evidence paths
+  dogfood validation status, smoke freshness for claimed routes, missing validation checks,
+  local `.jini/cli-dogfood.json` evidence paths, and local `.jini/cli-smoke.json` evidence paths
 - installed CLI dogfood before release must verify auth, approvals, output shape, and route receipt privacy
 - dirty worktrees are blocked before push
 
