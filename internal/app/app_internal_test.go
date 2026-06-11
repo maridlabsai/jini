@@ -274,6 +274,7 @@ func TestShipCheckReportsRepoValidationEvidenceAsJSON(t *testing.T) {
 	t.Chdir(repoDir)
 	t.Setenv("JINI_STATE_DIR", t.TempDir())
 	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	t.Setenv("JINI_CLI_RELEASE_ROUTES", "codex, gemini-cli")
 	t.Setenv("JINI_CODEX_CLI", fakeCodex)
 	t.Setenv("JINI_CLAUDE_CODE_CLI", filepath.Join(fakeBin, "missing-claude"))
 	t.Setenv("JINI_GEMINI_CLI", filepath.Join(fakeBin, "missing-gemini"))
@@ -401,6 +402,169 @@ func TestShipCheckReadsLocalCLIHandoffDogfoodEvidence(t *testing.T) {
 	}
 }
 
+func TestShipCheckRejectsPlaceholderCLIHandoffDogfoodTimestamp(t *testing.T) {
+	repoDir := t.TempDir()
+	runGitCommandForInternalTest(t, repoDir, "init")
+	runGitCommandForInternalTest(t, repoDir, "config", "user.email", "test@example.com")
+	runGitCommandForInternalTest(t, repoDir, "config", "user.name", "Test User")
+	writeTestFile(t, filepath.Join(repoDir, "README.md"), "# Ship Check\n")
+	runGitCommandForInternalTest(t, repoDir, "add", ".")
+	runGitCommandForInternalTest(t, repoDir, "commit", "-m", "initial")
+	fakeBin := t.TempDir()
+	fakeCodex := writeProviderFakeExecutable(t, fakeBin, "codex", "printf 'ok\\n'")
+	stateDir := t.TempDir()
+	writeTestFile(t, filepath.Join(stateDir, "cli-dogfood.json"), `{
+  "schema_version": "0.1.0",
+  "context_type": "JiniCLIHandoffDogfoodEvidence",
+  "routes": {
+    "codex": {
+      "validated_at": "YYYY-MM-DDTHH:MM:SSZ",
+      "checks": ["auth", "approvals", "output shape", "route receipt privacy"]
+    }
+  }
+}
+`)
+
+	t.Chdir(repoDir)
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	t.Setenv("JINI_CODEX_CLI", fakeCodex)
+	t.Setenv("JINI_CLAUDE_CODE_CLI", filepath.Join(fakeBin, "missing-claude"))
+	t.Setenv("JINI_GEMINI_CLI", filepath.Join(fakeBin, "missing-gemini"))
+	t.Setenv("JINI_AIDER_CLI", filepath.Join(fakeBin, "missing-aider"))
+	t.Setenv("JINI_OPENCODE_CLI", filepath.Join(fakeBin, "missing-opencode"))
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := Run([]string{"check", "ship", "--format=json"}, &stdout, &stderr)
+	if exitCode != 1 {
+		t.Fatalf("expected placeholder dogfood timestamp to block ship check, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+
+	var report shipCheckReport
+	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil {
+		t.Fatalf("decode ship check JSON: %v\n%s", err, stdout.String())
+	}
+	codexDogfood := shipCLIHandoffDogfoodByRoute(report.CLIHandoffDogfood, "codex")
+	if codexDogfood == nil || codexDogfood.DogfoodStatus != "needs-validation" {
+		t.Fatalf("expected placeholder timestamp to keep codex unvalidated, got %#v", codexDogfood)
+	}
+	if !stringSliceContains(codexDogfood.MissingChecks, "valid validated_at timestamp") {
+		t.Fatalf("expected missing timestamp check, got %#v", codexDogfood.MissingChecks)
+	}
+
+	stdout.Reset()
+	exitCode = Run([]string{"route", "dogfood"}, &stdout, &stderr)
+	if exitCode != 0 {
+		t.Fatalf("expected route dogfood guide to render, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "- codex: ready; missing valid validated_at timestamp") {
+		t.Fatalf("expected route dogfood text to surface timestamp issue, got:\n%s", stdout.String())
+	}
+}
+
+func TestShipCheckBlocksInvalidCLIHandoffDogfoodEvidenceAndClaimConfig(t *testing.T) {
+	repoDir := t.TempDir()
+	runGitCommandForInternalTest(t, repoDir, "init")
+	runGitCommandForInternalTest(t, repoDir, "config", "user.email", "test@example.com")
+	runGitCommandForInternalTest(t, repoDir, "config", "user.name", "Test User")
+	writeTestFile(t, filepath.Join(repoDir, "README.md"), "# Ship Check\n")
+	runGitCommandForInternalTest(t, repoDir, "add", ".")
+	runGitCommandForInternalTest(t, repoDir, "commit", "-m", "initial")
+	fakeBin := t.TempDir()
+	fakeCodex := writeProviderFakeExecutable(t, fakeBin, "codex", "printf 'ok\\n'")
+	stateDir := t.TempDir()
+	writeTestFile(t, filepath.Join(stateDir, "cli-dogfood.json"), `{
+  "schema_version": "0.1.0",
+  "context_type": "JiniCLIHandoffDogfoodEvidence",
+  "routes": {
+    "gemini": {
+      "validated_at": "2026-06-09T00:00:00Z",
+      "checks": ["auth", "approvals", "output shape", "route receipt privacy"]
+    }
+  }
+}
+`)
+
+	t.Chdir(repoDir)
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	t.Setenv("JINI_CLI_RELEASE_ROUTES", "codex, gemini")
+	t.Setenv("JINI_CODEX_CLI", fakeCodex)
+	t.Setenv("JINI_CLAUDE_CODE_CLI", filepath.Join(fakeBin, "missing-claude"))
+	t.Setenv("JINI_GEMINI_CLI", filepath.Join(fakeBin, "missing-gemini"))
+	t.Setenv("JINI_AIDER_CLI", filepath.Join(fakeBin, "missing-aider"))
+	t.Setenv("JINI_OPENCODE_CLI", filepath.Join(fakeBin, "missing-opencode"))
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := Run([]string{"check", "ship", "--format=json"}, &stdout, &stderr)
+	if exitCode != 1 {
+		t.Fatalf("expected invalid dogfood evidence and claim config to block ship check, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+
+	var report shipCheckReport
+	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil {
+		t.Fatalf("decode ship check JSON: %v\n%s", err, stdout.String())
+	}
+	invalidClaim := "unknown CLI release claim route: gemini (valid: codex, claude-code, gemini-cli, aider, opencode)"
+	unknownEvidence := "CLI dogfood evidence ignored unknown route: gemini (valid: codex, claude-code, gemini-cli, aider, opencode)"
+	if !stringSliceContains(report.ConfigIssues, invalidClaim) || !stringSliceContains(report.Blockers, invalidClaim) {
+		t.Fatalf("expected invalid release claim to be surfaced as blocker, got issues %#v blockers %#v", report.ConfigIssues, report.Blockers)
+	}
+	if !stringSliceContains(report.EvidenceIssues, unknownEvidence) || !stringSliceContains(report.Blockers, unknownEvidence) {
+		t.Fatalf("expected unknown evidence route to be surfaced as blocker, got issues %#v blockers %#v", report.EvidenceIssues, report.Blockers)
+	}
+}
+
+func TestShipCheckBlocksStaleCLIHandoffDogfoodEvidenceShape(t *testing.T) {
+	repoDir := t.TempDir()
+	runGitCommandForInternalTest(t, repoDir, "init")
+	runGitCommandForInternalTest(t, repoDir, "config", "user.email", "test@example.com")
+	runGitCommandForInternalTest(t, repoDir, "config", "user.name", "Test User")
+	writeTestFile(t, filepath.Join(repoDir, "README.md"), "# Ship Check\n")
+	runGitCommandForInternalTest(t, repoDir, "add", ".")
+	runGitCommandForInternalTest(t, repoDir, "commit", "-m", "initial")
+	fakeBin := t.TempDir()
+	fakeCodex := writeProviderFakeExecutable(t, fakeBin, "codex", "printf 'ok\\n'")
+	stateDir := t.TempDir()
+	writeTestFile(t, filepath.Join(stateDir, "cli-dogfood.json"), `{
+  "schema_version": "0.0.1",
+  "context_type": "OldEvidence"
+}
+`)
+
+	t.Chdir(repoDir)
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	t.Setenv("JINI_CODEX_CLI", fakeCodex)
+	t.Setenv("JINI_CLAUDE_CODE_CLI", filepath.Join(fakeBin, "missing-claude"))
+	t.Setenv("JINI_GEMINI_CLI", filepath.Join(fakeBin, "missing-gemini"))
+	t.Setenv("JINI_AIDER_CLI", filepath.Join(fakeBin, "missing-aider"))
+	t.Setenv("JINI_OPENCODE_CLI", filepath.Join(fakeBin, "missing-opencode"))
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := Run([]string{"check", "ship", "--format=json"}, &stdout, &stderr)
+	if exitCode != 1 {
+		t.Fatalf("expected stale dogfood evidence shape to block ship check, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+
+	var report shipCheckReport
+	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil {
+		t.Fatalf("decode ship check JSON: %v\n%s", err, stdout.String())
+	}
+	for _, want := range []string{
+		"CLI dogfood evidence file has invalid schema_version: expected 0.1.0",
+		"CLI dogfood evidence file has invalid context_type: expected JiniCLIHandoffDogfoodEvidence",
+		"CLI dogfood evidence file has no routes object: cli-dogfood.json",
+	} {
+		if !stringSliceContains(report.EvidenceIssues, want) || !stringSliceContains(report.Blockers, want) {
+			t.Fatalf("expected evidence issue %q as blocker, got issues %#v blockers %#v", want, report.EvidenceIssues, report.Blockers)
+		}
+	}
+}
+
 func TestShipCheckBlocksInstalledCLIHandoffSetupFailures(t *testing.T) {
 	repoDir := t.TempDir()
 	runGitCommandForInternalTest(t, repoDir, "init")
@@ -441,6 +605,55 @@ func TestShipCheckBlocksInstalledCLIHandoffSetupFailures(t *testing.T) {
 	for _, blocker := range report.Blockers {
 		if strings.Contains(blocker, "claude-code") || strings.Contains(blocker, "gemini-cli") || strings.Contains(blocker, "aider") || strings.Contains(blocker, "opencode") {
 			t.Fatalf("missing optional CLI executables should stay warnings, got blockers %#v", report.Blockers)
+		}
+	}
+}
+
+func TestShipCheckLabelsClaimedGatekeeperFailures(t *testing.T) {
+	repoDir := t.TempDir()
+	runGitCommandForInternalTest(t, repoDir, "init")
+	runGitCommandForInternalTest(t, repoDir, "config", "user.email", "test@example.com")
+	runGitCommandForInternalTest(t, repoDir, "config", "user.name", "Test User")
+	writeTestFile(t, filepath.Join(repoDir, "README.md"), "# Ship Check\n")
+	runGitCommandForInternalTest(t, repoDir, "add", ".")
+	runGitCommandForInternalTest(t, repoDir, "commit", "-m", "initial")
+	fakeBin := t.TempDir()
+	fakeCodex := writeProviderFakeExecutable(t, fakeBin, "codex", "printf 'ok\\n'")
+
+	t.Chdir(repoDir)
+	t.Setenv("JINI_STATE_DIR", t.TempDir())
+	t.Setenv("JINI_CLI_RELEASE_ROUTES", "codex")
+	t.Setenv("JINI_CODEX_CLI", fakeCodex)
+	t.Setenv("JINI_CLAUDE_CODE_CLI", filepath.Join(fakeBin, "missing-claude"))
+	t.Setenv("JINI_GEMINI_CLI", filepath.Join(fakeBin, "missing-gemini"))
+	t.Setenv("JINI_AIDER_CLI", filepath.Join(fakeBin, "missing-aider"))
+	t.Setenv("JINI_OPENCODE_CLI", filepath.Join(fakeBin, "missing-opencode"))
+	previousTrustCheck := cliHandoffTrustIssueForPath
+	cliHandoffTrustIssueForPath = func(path string) string {
+		if path == fakeCodex {
+			return "macOS Gatekeeper rejected CLI executable: " + path + "."
+		}
+		return ""
+	}
+	t.Cleanup(func() { cliHandoffTrustIssueForPath = previousTrustCheck })
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := Run([]string{"check", "ship", "--format=json"}, &stdout, &stderr)
+	if exitCode != 1 {
+		t.Fatalf("expected claimed Gatekeeper failure to block ship check, got %d\nstdout:\n%s\nstderr:\n%s", exitCode, stdout.String(), stderr.String())
+	}
+
+	var report shipCheckReport
+	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil {
+		t.Fatalf("decode ship check JSON: %v\n%s", err, stdout.String())
+	}
+	if !stringSliceContains(report.Blockers, "CLI handoff setup blocked for claimed route: codex (macOS Gatekeeper)") {
+		t.Fatalf("expected claimed Gatekeeper blocker, got %#v", report.Blockers)
+	}
+	for _, blocker := range report.Blockers {
+		if strings.Contains(blocker, fakeCodex) {
+			t.Fatalf("expected blocker to avoid executable path %q, got %#v", fakeCodex, report.Blockers)
 		}
 	}
 }
@@ -532,6 +745,7 @@ func TestShipCheckTextKeepsSafePushInstructionsCompact(t *testing.T) {
 	t.Chdir(repoDir)
 	t.Setenv("JINI_STATE_DIR", t.TempDir())
 	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	t.Setenv("JINI_CLI_RELEASE_ROUTES", "codex, gemini-cli")
 	t.Setenv("JINI_CODEX_CLI", fakeCodex)
 	t.Setenv("JINI_CLAUDE_CODE_CLI", filepath.Join(fakeBin, "missing-claude"))
 	t.Setenv("JINI_GEMINI_CLI", filepath.Join(fakeBin, "missing-gemini"))
@@ -549,14 +763,15 @@ func TestShipCheckTextKeepsSafePushInstructionsCompact(t *testing.T) {
 		"Ship check blocked",
 		"Branch:",
 		"Blocker: CLI handoff dogfood missing validation for installed route: codex",
+		"Blocker: CLI handoff setup blocked for claimed route: gemini-cli (missing executable)",
 		"Run before push: bash tools/run_required_gates.sh push",
 		"Safe lane: create an isolated worktree, run gates, then push only after evidence is clean.",
 		"CLI handoff setup: 1 executable ready, 4 need setup",
 		"CLI handoff dogfood: 0 validated, 1 need validation, 4 setup blocked",
 		"CLI handoff routes:",
-		"- codex: executable ready, dogfood needs validation",
+		"- codex (claimed): executable ready, dogfood needs validation",
 		"- claude-code: needs setup (missing executable)",
-		"- gemini-cli: needs setup (missing executable)",
+		"- gemini-cli (claimed): needs setup (missing executable)",
 		"- aider: needs setup (missing executable)",
 		"- opencode: needs setup (missing executable)",
 		"Release claim policy:",
@@ -583,6 +798,7 @@ func TestShipCheckTextKeepsSafePushInstructionsCompact(t *testing.T) {
 func TestRouteDogfoodShowsGatekeeperSetupHint(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_CLI_RELEASE_ROUTES", "codex")
 	fakeBin := t.TempDir()
 	fakeCodex := writeProviderFakeExecutable(t, fakeBin, "codex", "printf 'fake codex\\n'")
 	t.Setenv("JINI_CODEX_CLI", fakeCodex)
@@ -607,9 +823,9 @@ func TestRouteDogfoodShowsGatekeeperSetupHint(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"- codex: setup blocked (macOS Gatekeeper)",
+		"- codex (claimed): setup blocked (macOS Gatekeeper)",
 		"Setup fixes:",
-		"- codex: reinstall from a trusted source, open the CLI once, approve it in macOS Privacy & Security if prompted, then rerun `jini route dogfood`.",
+		"- codex (claimed): reinstall from a trusted source, open the CLI once, approve it in macOS Privacy & Security if prompted, then rerun `jini route dogfood`.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected Gatekeeper dogfood output to contain %q, got:\n%s", want, out)

@@ -26,6 +26,8 @@ type shipCheckReport struct {
 	UntrackedFiles     int                     `json:"untracked_files"`
 	RequiredEvidence   []string                `json:"required_evidence"`
 	ReleaseClaimPolicy []string                `json:"release_claim_policy"`
+	ConfigIssues       []string                `json:"config_issues,omitempty"`
+	EvidenceIssues     []string                `json:"evidence_issues,omitempty"`
 	CLIHandoffDogfood  []shipCLIHandoffDogfood `json:"cli_handoff_dogfood"`
 	Blockers           []string                `json:"blockers,omitempty"`
 	Warnings           []string                `json:"warnings,omitempty"`
@@ -62,6 +64,8 @@ type routeDogfoodGuideReport struct {
 	RequiredChecks     []string                          `json:"required_checks"`
 	Routes             []routeDogfoodGuideRoute          `json:"routes"`
 	ReleaseClaimPolicy []string                          `json:"release_claim_policy"`
+	ConfigIssues       []string                          `json:"config_issues,omitempty"`
+	EvidenceIssues     []string                          `json:"evidence_issues,omitempty"`
 	ValidationSteps    []string                          `json:"validation_steps"`
 	EvidenceRules      []string                          `json:"evidence_rules"`
 	EvidenceTemplate   shipCLIHandoffDogfoodEvidenceFile `json:"evidence_template"`
@@ -84,6 +88,17 @@ type routeDogfoodGuideRoute struct {
 type shipCLIHandoffDogfoodRouteProof struct {
 	ValidatedAt string   `json:"validated_at"`
 	Checks      []string `json:"checks"`
+}
+
+type cliHandoffReleaseClaimConfig struct {
+	Claims map[string]bool
+	Issues []string
+}
+
+type shipCLIHandoffDogfoodEvidenceLoad struct {
+	Path   string
+	Routes map[string]shipCLIHandoffDogfoodRouteProof
+	Issues []string
 }
 
 func runShipCheck(args []string, stdout, stderr io.Writer) int {
@@ -130,7 +145,17 @@ func buildShipCheckReport() shipCheckReport {
 			"Push only after the validation report is clean.",
 		},
 	}
-	report.CLIHandoffDogfood = buildShipCLIHandoffDogfood()
+	var cliConfigIssues []string
+	var evidenceIssues []string
+	report.CLIHandoffDogfood, cliConfigIssues, evidenceIssues = buildShipCLIHandoffDogfood()
+	report.ConfigIssues = cliConfigIssues
+	report.EvidenceIssues = evidenceIssues
+	for _, issue := range cliConfigIssues {
+		report.Blockers = append(report.Blockers, issue)
+	}
+	for _, issue := range evidenceIssues {
+		report.Blockers = append(report.Blockers, issue)
+	}
 	readyDogfood, missingDogfood := summarizeShipCLIHandoffDogfood(report.CLIHandoffDogfood)
 	validatedDogfood, needsValidationDogfood, setupBlockedDogfood := summarizeShipCLIHandoffValidation(report.CLIHandoffDogfood)
 	if missingDogfood > 0 {
@@ -182,10 +207,10 @@ func shipCLIHandoffDogfoodBlockers(items []shipCLIHandoffDogfood) []string {
 			blockers = append(blockers, "CLI handoff dogfood missing validation for installed route: "+item.RouteID)
 		case "setup-blocked":
 			category := shipCLIHandoffSetupCategory(item.Missing)
-			if category != "missing executable" {
-				blockers = append(blockers, "CLI handoff setup blocked for installed route: "+item.RouteID+" ("+shipCLIHandoffSetupCategory(item.Missing)+")")
-			} else if item.ReleaseClaimed {
+			if item.ReleaseClaimed {
 				blockers = append(blockers, "CLI handoff setup blocked for claimed route: "+item.RouteID+" ("+category+")")
+			} else if category != "missing executable" {
+				blockers = append(blockers, "CLI handoff setup blocked for installed route: "+item.RouteID+" ("+category+")")
 			}
 		}
 	}
@@ -201,30 +226,38 @@ func cliHandoffReleaseClaimPolicy() []string {
 }
 
 func cliHandoffReleaseClaimSet() map[string]bool {
-	claims := map[string]bool{}
+	return parseCLIHandoffReleaseClaimConfig().Claims
+}
+
+func parseCLIHandoffReleaseClaimConfig() cliHandoffReleaseClaimConfig {
+	config := cliHandoffReleaseClaimConfig{Claims: map[string]bool{}}
 	raw := strings.TrimSpace(configValue("JINI_CLI_RELEASE_ROUTES"))
 	if raw == "" {
-		return claims
+		return config
 	}
 	for _, token := range strings.FieldsFunc(raw, func(r rune) bool {
 		return r == ',' || r == ';' || r == ' ' || r == '\t' || r == '\n'
 	}) {
 		rawToken := strings.ToLower(strings.TrimSpace(token))
+		if rawToken == "" {
+			continue
+		}
 		if rawToken == "all" {
 			for _, mode := range cliHandoffRouteIDs() {
-				claims[mode] = true
+				config.Claims[mode] = true
 			}
 			continue
 		}
 		routeID := normalizeCLIHandoffRouteID(token)
 		if routeID == "" {
+			config.Issues = append(config.Issues, "unknown CLI release claim route: "+rawToken+" (valid: "+strings.Join(cliHandoffRouteIDs(), ", ")+")")
 			continue
 		}
 		if _, ok := cliHandoffDescriptorForMode(routeID); ok {
-			claims[routeID] = true
+			config.Claims[routeID] = true
 		}
 	}
-	return claims
+	return config
 }
 
 func normalizeCLIHandoffRouteID(value string) string {
@@ -244,9 +277,9 @@ func cliHandoffRouteIDs() []string {
 	return []string{"codex", "claude-code", "gemini-cli", "aider", "opencode"}
 }
 
-func buildShipCLIHandoffDogfood() []shipCLIHandoffDogfood {
-	releaseClaims := cliHandoffReleaseClaimSet()
-	evidencePath, evidence := loadShipCLIHandoffDogfoodEvidence()
+func buildShipCLIHandoffDogfood() ([]shipCLIHandoffDogfood, []string, []string) {
+	releaseClaimConfig := parseCLIHandoffReleaseClaimConfig()
+	evidenceLoad := loadShipCLIHandoffDogfoodEvidence()
 	routeIDs := cliHandoffRouteIDs()
 	out := make([]shipCLIHandoffDogfood, 0, len(routeIDs))
 	for _, mode := range routeIDs {
@@ -271,11 +304,14 @@ func buildShipCLIHandoffDogfood() []shipCLIHandoffDogfood {
 		var routeEvidencePath string
 		var lastValidatedAt string
 		if setupStatus == "ready" {
-			routeProof := evidence[descriptor.Mode]
+			routeProof := evidenceLoad.Routes[descriptor.Mode]
 			validatedChecks, missingChecks = dogfoodCheckCoverage(requiredChecks, routeProof.Checks)
+			if timestampIssue := dogfoodValidationTimestampIssue(routeProof.ValidatedAt); timestampIssue != "" {
+				missingChecks = append(missingChecks, timestampIssue)
+			}
 			if len(missingChecks) == 0 {
 				dogfoodStatus = "validated"
-				routeEvidencePath = evidencePath
+				routeEvidencePath = evidenceLoad.Path
 				lastValidatedAt = strings.TrimSpace(routeProof.ValidatedAt)
 			} else {
 				dogfoodStatus = "needs-validation"
@@ -284,7 +320,7 @@ func buildShipCLIHandoffDogfood() []shipCLIHandoffDogfood {
 		out = append(out, shipCLIHandoffDogfood{
 			RouteID:         descriptor.Mode,
 			Label:           descriptor.Label,
-			ReleaseClaimed:  releaseClaims[descriptor.Mode],
+			ReleaseClaimed:  releaseClaimConfig.Claims[descriptor.Mode],
 			Status:          status,
 			SetupStatus:     setupStatus,
 			DogfoodStatus:   dogfoodStatus,
@@ -298,7 +334,7 @@ func buildShipCLIHandoffDogfood() []shipCLIHandoffDogfood {
 			Missing:         missing,
 		})
 	}
-	return out
+	return out, releaseClaimConfig.Issues, evidenceLoad.Issues
 }
 
 func requiredCLIHandoffDogfoodChecks() []string {
@@ -310,8 +346,19 @@ func requiredCLIHandoffDogfoodChecks() []string {
 	}
 }
 
+func dogfoodValidationTimestampIssue(value string) string {
+	value = strings.TrimSpace(value)
+	if value == "" || value == "YYYY-MM-DDTHH:MM:SSZ" {
+		return "valid validated_at timestamp"
+	}
+	if _, err := time.Parse(time.RFC3339, value); err != nil {
+		return "valid validated_at timestamp"
+	}
+	return ""
+}
+
 func buildRouteDogfoodGuide() routeDogfoodGuideReport {
-	dogfoodRows := buildShipCLIHandoffDogfood()
+	dogfoodRows, configIssues, evidenceIssues := buildShipCLIHandoffDogfood()
 	requiredChecks := requiredCLIHandoffDogfoodChecks()
 	templateRoutes := map[string]shipCLIHandoffDogfoodRouteProof{}
 	routes := make([]routeDogfoodGuideRoute, 0, len(dogfoodRows))
@@ -351,6 +398,8 @@ func buildRouteDogfoodGuide() routeDogfoodGuideReport {
 		RequiredChecks:     requiredChecks,
 		Routes:             routes,
 		ReleaseClaimPolicy: cliHandoffReleaseClaimPolicy(),
+		ConfigIssues:       configIssues,
+		EvidenceIssues:     evidenceIssues,
 		ValidationSteps: []string{
 			"For each ready route, select that route and run a harmless prompt through Jini using the real installed CLI.",
 			"Confirm downstream auth, approval behavior, output shape, and route receipt privacy before editing evidence.",
@@ -374,28 +423,45 @@ func buildRouteDogfoodGuide() routeDogfoodGuideReport {
 	}
 }
 
-func loadShipCLIHandoffDogfoodEvidence() (string, map[string]shipCLIHandoffDogfoodRouteProof) {
+func loadShipCLIHandoffDogfoodEvidence() shipCLIHandoffDogfoodEvidenceLoad {
 	path := filepath.Join(sessionStateRoot(), "cli-dogfood.json")
+	load := shipCLIHandoffDogfoodEvidenceLoad{
+		Path:   path,
+		Routes: map[string]shipCLIHandoffDogfoodRouteProof{},
+	}
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return path, map[string]shipCLIHandoffDogfoodRouteProof{}
+		if !os.IsNotExist(err) {
+			load.Issues = append(load.Issues, "CLI dogfood evidence file could not be read: "+filepath.Base(path))
+		}
+		return load
 	}
 	var payload shipCLIHandoffDogfoodEvidenceFile
 	if err := json.Unmarshal(data, &payload); err != nil {
-		return path, map[string]shipCLIHandoffDogfoodRouteProof{}
+		load.Issues = append(load.Issues, "CLI dogfood evidence file is invalid JSON: "+filepath.Base(path))
+		return load
+	}
+	if strings.TrimSpace(payload.SchemaVersion) != "0.1.0" {
+		load.Issues = append(load.Issues, "CLI dogfood evidence file has invalid schema_version: expected 0.1.0")
+	}
+	if strings.TrimSpace(payload.ContextType) != "JiniCLIHandoffDogfoodEvidence" {
+		load.Issues = append(load.Issues, "CLI dogfood evidence file has invalid context_type: expected JiniCLIHandoffDogfoodEvidence")
 	}
 	if payload.Routes == nil {
-		return path, map[string]shipCLIHandoffDogfoodRouteProof{}
+		load.Issues = append(load.Issues, "CLI dogfood evidence file has no routes object: "+filepath.Base(path))
+		return load
 	}
 	out := make(map[string]shipCLIHandoffDogfoodRouteProof, len(payload.Routes))
 	for routeID, proof := range payload.Routes {
-		routeID = normalizeCLIHandoffRouteID(routeID)
-		if routeID == "" {
+		normalizedRouteID := normalizeCLIHandoffRouteID(routeID)
+		if normalizedRouteID == "" {
+			load.Issues = append(load.Issues, "CLI dogfood evidence ignored unknown route: "+strings.TrimSpace(routeID)+" (valid: "+strings.Join(cliHandoffRouteIDs(), ", ")+")")
 			continue
 		}
-		out[routeID] = proof
+		out[normalizedRouteID] = proof
 	}
-	return path, out
+	load.Routes = out
+	return load
 }
 
 func dogfoodCheckCoverage(required, actual []string) (validated, missing []string) {
@@ -489,6 +555,8 @@ func renderShipCheckText(w io.Writer, report shipCheckReport) {
 	for _, warning := range report.Warnings {
 		fmt.Fprintf(w, "Warning: %s\n", warning)
 	}
+	renderRouteDogfoodListSection(w, "Config issues:", report.ConfigIssues)
+	renderRouteDogfoodListSection(w, "Evidence issues:", report.EvidenceIssues)
 	readyDogfood, missingDogfood := summarizeShipCLIHandoffDogfood(report.CLIHandoffDogfood)
 	validatedDogfood, needsValidationDogfood, setupBlockedDogfood := summarizeShipCLIHandoffValidation(report.CLIHandoffDogfood)
 	fmt.Fprintf(w, "CLI handoff setup: %d executable ready, %d need setup\n", readyDogfood, missingDogfood)
@@ -509,15 +577,18 @@ func renderRouteDogfoodGuide(w io.Writer, report routeDogfoodGuideReport) {
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Routes:")
 	for _, route := range report.Routes {
+		routeLabel := formatCLIHandoffRouteLabel(route.RouteID, route.ReleaseClaimed)
 		switch {
 		case route.DogfoodStatus == "validated":
-			fmt.Fprintf(w, "- %s: validated at %s\n", route.RouteID, firstNonEmpty(route.LastValidatedAt, "unknown time"))
+			fmt.Fprintf(w, "- %s: validated at %s\n", routeLabel, firstNonEmpty(route.LastValidatedAt, "unknown time"))
 		case route.SetupStatus == "ready":
-			fmt.Fprintf(w, "- %s: ready; missing %s\n", route.RouteID, strings.Join(route.MissingChecks, ", "))
+			fmt.Fprintf(w, "- %s: ready; missing %s\n", routeLabel, strings.Join(route.MissingChecks, ", "))
 		default:
-			fmt.Fprintf(w, "- %s: setup blocked (%s)\n", route.RouteID, firstNonEmpty(route.SetupCategory, "see doctor"))
+			fmt.Fprintf(w, "- %s: setup blocked (%s)\n", routeLabel, firstNonEmpty(route.SetupCategory, "see doctor"))
 		}
 	}
+	renderRouteDogfoodListSection(w, "Config issues:", report.ConfigIssues)
+	renderRouteDogfoodListSection(w, "Evidence issues:", report.EvidenceIssues)
 	renderRouteDogfoodSetupHints(w, report.Routes)
 	renderRouteDogfoodListSection(w, "Release claim policy:", report.ReleaseClaimPolicy)
 	renderRouteDogfoodListSection(w, "Validation steps:", report.ValidationSteps)
@@ -561,7 +632,7 @@ func renderRouteDogfoodSetupHints(w io.Writer, routes []routeDogfoodGuideRoute) 
 		if strings.TrimSpace(route.SetupHint) == "" {
 			continue
 		}
-		fmt.Fprintf(w, "- %s: %s\n", route.RouteID, route.SetupHint)
+		fmt.Fprintf(w, "- %s: %s\n", formatCLIHandoffRouteLabel(route.RouteID, route.ReleaseClaimed), route.SetupHint)
 	}
 }
 
@@ -623,16 +694,24 @@ func renderShipCLIHandoffDogfoodText(w io.Writer, items []shipCLIHandoffDogfood)
 	}
 	fmt.Fprintln(w, "CLI handoff routes:")
 	for _, item := range items {
+		routeLabel := formatCLIHandoffRouteLabel(item.RouteID, item.ReleaseClaimed)
 		if item.SetupStatus == "ready" {
 			if item.DogfoodStatus == "validated" {
-				fmt.Fprintf(w, "- %s: executable ready, dogfood validated\n", item.RouteID)
+				fmt.Fprintf(w, "- %s: executable ready, dogfood validated\n", routeLabel)
 				continue
 			}
-			fmt.Fprintf(w, "- %s: executable ready, dogfood needs validation\n", item.RouteID)
+			fmt.Fprintf(w, "- %s: executable ready, dogfood needs validation\n", routeLabel)
 			continue
 		}
-		fmt.Fprintf(w, "- %s: needs setup (%s)\n", item.RouteID, shipCLIHandoffSetupCategory(item.Missing))
+		fmt.Fprintf(w, "- %s: needs setup (%s)\n", routeLabel, shipCLIHandoffSetupCategory(item.Missing))
 	}
+}
+
+func formatCLIHandoffRouteLabel(routeID string, releaseClaimed bool) string {
+	if releaseClaimed {
+		return routeID + " (claimed)"
+	}
+	return routeID
 }
 
 func shipCLIHandoffSetupCategory(missing []string) string {
