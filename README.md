@@ -170,6 +170,7 @@ When you need to steer the route directly, keep it explicit and reversible:
 jini route list
 jini route help
 jini route dogfood
+jini route validate codex --real-cli --checks all
 jini route set azure-code
 jini route auto
 ```
@@ -183,6 +184,9 @@ Gemini CLI, Aider, OpenCode, provider routes, or local SLM routes.
 Use `jini route dogfood` before release validation to see which installed CLI
 routes still need real auth, approval, output-shape, and receipt-privacy
 evidence in `.jini/cli-dogfood.json`.
+After a real installed CLI smoke succeeds, use
+`jini route validate <route> --real-cli --checks all` to record that evidence
+without hand-editing JSON.
 
 For multi-step work, Jini now plans quietly before drafting. The user sees the
 result through better structure and clearer `Doing now` / `Next` state, not
@@ -267,6 +271,7 @@ For setup or troubleshooting:
 ```bash
 jini route help
 jini route dogfood
+jini route validate codex --real-cli --checks all
 jini doctor
 ```
 
@@ -274,7 +279,8 @@ Route help shows what to install or which env vars to set. The doctor tells you
 what Jini will use, what `auto` resolved to, what is missing, and never prints
 API keys, AWS secret keys, profile values, or model IDs.
 Route dogfood shows the Wave 1 CLI validation checklist and a copyable evidence
-template without marking any route validated automatically.
+template without marking any route validated automatically. Route validate
+records evidence only after you explicitly confirm a real installed CLI smoke.
 
 For multimodal work, doctor also shows the separate learning buckets Jini keeps
 for screenshot work, scanned PDF/document work, and audio/transcript work.

@@ -424,7 +424,7 @@ func buildRouteDogfoodGuide() routeDogfoodGuideReport {
 }
 
 func loadShipCLIHandoffDogfoodEvidence() shipCLIHandoffDogfoodEvidenceLoad {
-	path := filepath.Join(sessionStateRoot(), "cli-dogfood.json")
+	path := cliHandoffDogfoodEvidencePath()
 	load := shipCLIHandoffDogfoodEvidenceLoad{
 		Path:   path,
 		Routes: map[string]shipCLIHandoffDogfoodRouteProof{},
@@ -462,6 +462,37 @@ func loadShipCLIHandoffDogfoodEvidence() shipCLIHandoffDogfoodEvidenceLoad {
 	}
 	load.Routes = out
 	return load
+}
+
+func cliHandoffDogfoodEvidencePath() string {
+	return filepath.Join(sessionStateRoot(), "cli-dogfood.json")
+}
+
+func saveCLIHandoffDogfoodEvidence(routeID string, checks []string, validatedAt string) (string, error) {
+	load := loadShipCLIHandoffDogfoodEvidence()
+	if len(load.Issues) > 0 {
+		return load.Path, fmt.Errorf("%s", strings.Join(load.Issues, "; "))
+	}
+	payload := shipCLIHandoffDogfoodEvidenceFile{
+		SchemaVersion: "0.1.0",
+		ContextType:   "JiniCLIHandoffDogfoodEvidence",
+		Routes:        load.Routes,
+	}
+	if payload.Routes == nil {
+		payload.Routes = map[string]shipCLIHandoffDogfoodRouteProof{}
+	}
+	payload.Routes[routeID] = shipCLIHandoffDogfoodRouteProof{
+		ValidatedAt: validatedAt,
+		Checks:      append([]string(nil), checks...),
+	}
+	data, err := json.MarshalIndent(payload, "", "  ")
+	if err != nil {
+		return load.Path, err
+	}
+	if err := os.MkdirAll(filepath.Dir(load.Path), 0o755); err != nil {
+		return load.Path, err
+	}
+	return load.Path, os.WriteFile(load.Path, append(data, '\n'), 0o600)
 }
 
 func dogfoodCheckCoverage(required, actual []string) (validated, missing []string) {

@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 )
 
@@ -820,6 +821,8 @@ func runRoute(args []string, stdout, stderr io.Writer) int {
 		return 0
 	case "dogfood":
 		return runRouteDogfood(args[1:], stdout, stderr)
+	case "validate":
+		return runRouteValidate(args[1:], stdout, stderr)
 	case "status":
 		renderRouteCostStatus(stdout)
 		return 0
@@ -858,6 +861,187 @@ func runRouteDogfood(args []string, stdout, stderr io.Writer) int {
 	}
 	renderRouteDogfoodGuide(stdout, report)
 	return 0
+}
+
+type routeValidateOptions struct {
+	RouteID string
+	Checks  []string
+	RealCLI bool
+	Format  string
+}
+
+type routeValidateReport struct {
+	SchemaVersion  string   `json:"schema_version"`
+	ResultType     string   `json:"result_type"`
+	Status         string   `json:"status"`
+	RouteID        string   `json:"route_id"`
+	EvidenceFile   string   `json:"evidence_file,omitempty"`
+	ValidatedAt    string   `json:"validated_at,omitempty"`
+	Checks         []string `json:"checks,omitempty"`
+	RequiredChecks []string `json:"required_checks"`
+	Next           []string `json:"next"`
+}
+
+func runRouteValidate(args []string, stdout, stderr io.Writer) int {
+	opts, message, ok := parseRouteValidateArgs(args)
+	if !ok {
+		fmt.Fprintln(stderr, message)
+		fmt.Fprintln(stderr, "Try `jini route validate codex --real-cli --checks all`.")
+		return 1
+	}
+	descriptor, found := cliHandoffDescriptorForMode(opts.RouteID)
+	if !found {
+		fmt.Fprintf(stderr, "Unknown CLI handoff route %q.\n", opts.RouteID)
+		fmt.Fprintf(stderr, "Valid routes: %s\n", strings.Join(cliHandoffRouteIDs(), ", "))
+		return 1
+	}
+	_, missing := resolveCLIHandoffCommand(descriptor)
+	if len(missing) > 0 {
+		fmt.Fprintf(stderr, "Route not ready: %s (%s).\n", opts.RouteID, shipCLIHandoffSetupCategory(missing))
+		fmt.Fprintln(stderr, "Run `jini route dogfood` for setup fixes.")
+		return 1
+	}
+	if !opts.RealCLI {
+		fmt.Fprintln(stderr, "Refusing to write dogfood evidence without `--real-cli`.")
+		fmt.Fprintln(stderr, "Use it only after the real installed CLI completed the harmless validation prompt.")
+		return 1
+	}
+	requiredChecks := requiredCLIHandoffDogfoodChecks()
+	validatedChecks, missingChecks := dogfoodCheckCoverage(requiredChecks, opts.Checks)
+	if len(missingChecks) > 0 {
+		fmt.Fprintf(stderr, "Missing required validation checks: %s.\n", strings.Join(missingChecks, ", "))
+		fmt.Fprintln(stderr, "Use `--checks all` only after auth, approvals, output shape, and route receipt privacy were verified.")
+		return 1
+	}
+	validatedAt := time.Now().UTC().Format(time.RFC3339)
+	evidencePath, err := saveCLIHandoffDogfoodEvidence(opts.RouteID, validatedChecks, validatedAt)
+	if err != nil {
+		fmt.Fprintf(stderr, "Could not write CLI dogfood evidence: %v\n", err)
+		return 1
+	}
+	report := routeValidateReport{
+		SchemaVersion:  "0.1.0",
+		ResultType:     "JiniRouteValidate",
+		Status:         "validated",
+		RouteID:        opts.RouteID,
+		EvidenceFile:   evidencePath,
+		ValidatedAt:    validatedAt,
+		Checks:         validatedChecks,
+		RequiredChecks: requiredChecks,
+		Next:           []string{"Run `jini check ship --format json`."},
+	}
+	if opts.Format == "json" {
+		encoder := json.NewEncoder(stdout)
+		encoder.SetIndent("", "  ")
+		encoder.SetEscapeHTML(false)
+		if err := encoder.Encode(report); err != nil {
+			fmt.Fprintf(stderr, "Could not render route validation report: %v\n", err)
+			return 1
+		}
+		return 0
+	}
+	fmt.Fprintln(stdout, "Route dogfood evidence saved.")
+	fmt.Fprintf(stdout, "- route: %s\n", opts.RouteID)
+	fmt.Fprintf(stdout, "- checks: %s\n", strings.Join(validatedChecks, ", "))
+	fmt.Fprintln(stdout, "- evidence: .jini/cli-dogfood.json")
+	fmt.Fprintln(stdout, "Next: jini check ship --format json")
+	return 0
+}
+
+func parseRouteValidateArgs(args []string) (routeValidateOptions, string, bool) {
+	var opts routeValidateOptions
+	if len(args) == 0 {
+		return opts, "Choose a CLI handoff route to validate.", false
+	}
+	routeID := normalizeCLIHandoffRouteID(args[0])
+	if routeID == "" {
+		return opts, "Choose a valid CLI handoff route to validate.", false
+	}
+	opts.RouteID = routeID
+	for i := 1; i < len(args); i++ {
+		arg := strings.TrimSpace(args[i])
+		switch {
+		case arg == "--real-cli":
+			opts.RealCLI = true
+		case arg == "--format" && i+1 < len(args):
+			opts.Format = normalizeName(args[i+1])
+			if opts.Format != "json" && opts.Format != "text" {
+				return opts, "Unsupported route validate format.", false
+			}
+			i++
+		case strings.HasPrefix(arg, "--format="):
+			opts.Format = normalizeName(strings.TrimPrefix(arg, "--format="))
+			if opts.Format != "json" && opts.Format != "text" {
+				return opts, "Unsupported route validate format.", false
+			}
+		case arg == "--checks" && i+1 < len(args):
+			checks, issue := parseRouteValidateChecks(args[i+1])
+			if issue != "" {
+				return opts, issue, false
+			}
+			opts.Checks = append(opts.Checks, checks...)
+			i++
+		case strings.HasPrefix(arg, "--checks="):
+			checks, issue := parseRouteValidateChecks(strings.TrimPrefix(arg, "--checks="))
+			if issue != "" {
+				return opts, issue, false
+			}
+			opts.Checks = append(opts.Checks, checks...)
+		case arg == "--check" && i+1 < len(args):
+			checks, issue := parseRouteValidateChecks(args[i+1])
+			if issue != "" {
+				return opts, issue, false
+			}
+			opts.Checks = append(opts.Checks, checks...)
+			i++
+		case strings.HasPrefix(arg, "--check="):
+			checks, issue := parseRouteValidateChecks(strings.TrimPrefix(arg, "--check="))
+			if issue != "" {
+				return opts, issue, false
+			}
+			opts.Checks = append(opts.Checks, checks...)
+		default:
+			return opts, "Unsupported route validate option: " + arg, false
+		}
+	}
+	return opts, "", true
+}
+
+func parseRouteValidateChecks(raw string) ([]string, string) {
+	var checks []string
+	for _, token := range strings.FieldsFunc(raw, func(r rune) bool {
+		return r == ',' || r == ';' || r == '\n' || r == '\t'
+	}) {
+		rawToken := strings.TrimSpace(token)
+		token = normalizeRouteValidateCheck(token)
+		if token == "" {
+			return nil, "Unknown validation check: " + rawToken + ". Valid checks: auth, approvals, output-shape, route-receipt-privacy, all."
+		}
+		if token == "all" {
+			return requiredCLIHandoffDogfoodChecks(), ""
+		}
+		checks = append(checks, token)
+	}
+	return checks, ""
+}
+
+func normalizeRouteValidateCheck(value string) string {
+	normalized := strings.ToLower(strings.TrimSpace(value))
+	normalized = strings.ReplaceAll(normalized, "_", "-")
+	switch normalized {
+	case "all":
+		return "all"
+	case "auth":
+		return "auth"
+	case "approvals", "approval":
+		return "approvals"
+	case "output-shape", "output shape", "output":
+		return "output shape"
+	case "route-receipt-privacy", "route receipt privacy", "receipt-privacy", "privacy":
+		return "route receipt privacy"
+	default:
+		return ""
+	}
 }
 
 func saveAutoRoute(stdout, stderr io.Writer) int {
@@ -973,7 +1157,7 @@ func renderRouteSetupHelp(w io.Writer) {
 	fmt.Fprintln(w, "1. Run `jini route list`.")
 	fmt.Fprintln(w, "2. Run `jini doctor`.")
 	fmt.Fprintln(w, "3. Run `jini route set codex` or `jini route set claude-code`.")
-	fmt.Fprintln(w, "4. Run `jini route dogfood` before release validation.")
+	fmt.Fprintln(w, "4. Run `jini route dogfood`, then `jini route validate codex --real-cli --checks all` after a real CLI smoke.")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Azure OpenAI API: set `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, and `AZURE_OPENAI_DEPLOYMENT`; then `jini route set azure-openai`.")
 	fmt.Fprintln(w, "Bedrock API: set `AWS_REGION` plus `AWS_PROFILE` or `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`; then `jini route set bedrock-sonnet`.")

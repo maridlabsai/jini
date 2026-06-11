@@ -1451,7 +1451,7 @@ func TestRouteCommandShowsSetupHelp(t *testing.T) {
 			"1. Run `jini route list`.",
 			"2. Run `jini doctor`.",
 			"3. Run `jini route set codex` or `jini route set claude-code`.",
-			"4. Run `jini route dogfood` before release validation.",
+			"4. Run `jini route dogfood`, then `jini route validate codex --real-cli --checks all` after a real CLI smoke.",
 			"Azure OpenAI API: set `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, and `AZURE_OPENAI_DEPLOYMENT`; then `jini route set azure-openai`.",
 			"Bedrock API: set `AWS_REGION` plus `AWS_PROFILE` or `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`; then `jini route set bedrock-sonnet`.",
 			"Local/offline model: run a local OpenAI-compatible server, then `jini route set local-slm` or `jini route auto`.",
@@ -1568,6 +1568,122 @@ func TestRouteDogfoodShowsWave1ValidationGuide(t *testing.T) {
 	}
 	if strings.Contains(stdout.String(), fakeCodex) || strings.Contains(stdout.String(), `"executable"`) || strings.Contains(stdout.String(), "args_template") {
 		t.Fatalf("route dogfood JSON must not leak executable paths or command templates, got:\n%s", stdout.String())
+	}
+}
+
+func TestRouteValidateWritesDogfoodEvidence(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	fakeBin := t.TempDir()
+	fakeCodex := writeFakeExecutable(t, fakeBin, "codex", "printf 'fake codex\\n'\n")
+	t.Setenv("JINI_CODEX_CLI", fakeCodex)
+	t.Setenv("JINI_CLAUDE_CODE_CLI", filepath.Join(fakeBin, "missing-claude"))
+	t.Setenv("JINI_GEMINI_CLI", filepath.Join(fakeBin, "missing-gemini"))
+	t.Setenv("JINI_AIDER_CLI", filepath.Join(fakeBin, "missing-aider"))
+	t.Setenv("JINI_OPENCODE_CLI", filepath.Join(fakeBin, "missing-opencode"))
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"route", "validate", "codex", "--real-cli", "--checks", "all"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected route validate to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	out := stdout.String()
+	for _, want := range []string{
+		"Route dogfood evidence saved.",
+		"- route: codex",
+		"- checks: auth, approvals, output shape, route receipt privacy",
+		"Next: jini check ship --format json",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected route validate output to contain %q, got:\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, fakeCodex) {
+		t.Fatalf("route validate text must not leak executable path %q, got:\n%s", fakeCodex, out)
+	}
+
+	data, err := os.ReadFile(filepath.Join(stateDir, "cli-dogfood.json"))
+	if err != nil {
+		t.Fatalf("expected route validate to write evidence: %v", err)
+	}
+	var evidence struct {
+		SchemaVersion string `json:"schema_version"`
+		ContextType   string `json:"context_type"`
+		Routes        map[string]struct {
+			ValidatedAt string   `json:"validated_at"`
+			Checks      []string `json:"checks"`
+		} `json:"routes"`
+	}
+	if err := json.Unmarshal(data, &evidence); err != nil {
+		t.Fatalf("decode evidence: %v\n%s", err, string(data))
+	}
+	codex := evidence.Routes["codex"]
+	if evidence.SchemaVersion != "0.1.0" || evidence.ContextType != "JiniCLIHandoffDogfoodEvidence" {
+		t.Fatalf("expected current evidence envelope, got %#v", evidence)
+	}
+	if _, err := time.Parse(time.RFC3339, codex.ValidatedAt); err != nil {
+		t.Fatalf("expected RFC3339 validation time, got %q", codex.ValidatedAt)
+	}
+	for _, want := range []string{"auth", "approvals", "output shape", "route receipt privacy"} {
+		if !containsString(codex.Checks, want) {
+			t.Fatalf("expected evidence check %q, got %#v", want, codex.Checks)
+		}
+	}
+}
+
+func TestRouteValidateRefusesUnsafeEvidenceWrites(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	fakeBin := t.TempDir()
+	fakeCodex := writeFakeExecutable(t, fakeBin, "codex", "printf 'fake codex\\n'\n")
+	t.Setenv("JINI_CODEX_CLI", fakeCodex)
+	t.Setenv("JINI_CLAUDE_CODE_CLI", filepath.Join(fakeBin, "missing-claude"))
+	t.Setenv("JINI_GEMINI_CLI", filepath.Join(fakeBin, "missing-gemini"))
+	t.Setenv("JINI_AIDER_CLI", filepath.Join(fakeBin, "missing-aider"))
+	t.Setenv("JINI_OPENCODE_CLI", filepath.Join(fakeBin, "missing-opencode"))
+
+	cases := []struct {
+		name string
+		args []string
+		want string
+	}{
+		{
+			name: "missing real CLI confirmation",
+			args: []string{"route", "validate", "codex", "--checks", "all"},
+			want: "Refusing to write dogfood evidence without `--real-cli`.",
+		},
+		{
+			name: "incomplete checks",
+			args: []string{"route", "validate", "codex", "--real-cli", "--checks", "auth"},
+			want: "Missing required validation checks: approvals, output shape, route receipt privacy.",
+		},
+		{
+			name: "unknown check",
+			args: []string{"route", "validate", "codex", "--real-cli", "--checks", "auth,receipt"},
+			want: "Unknown validation check: receipt.",
+		},
+		{
+			name: "setup blocked route",
+			args: []string{"route", "validate", "gemini-cli", "--real-cli", "--checks", "all"},
+			want: "Route not ready: gemini-cli (missing executable).",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var stdout bytes.Buffer
+			exitCode := app.Run(tc.args, &stdout, &stdout)
+			if exitCode != 1 {
+				t.Fatalf("expected route validate refusal, got %d with output:\n%s", exitCode, stdout.String())
+			}
+			if !strings.Contains(stdout.String(), tc.want) {
+				t.Fatalf("expected route validate refusal %q, got:\n%s", tc.want, stdout.String())
+			}
+		})
+	}
+	if _, err := os.Stat(filepath.Join(stateDir, "cli-dogfood.json")); !os.IsNotExist(err) {
+		t.Fatalf("expected refused validations not to write evidence, stat err: %v", err)
 	}
 }
 
