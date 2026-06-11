@@ -21,7 +21,7 @@ runtime contract that tests enforce.
 | Answer simple questions compactly | simple answer classifier before work creation | simple factual question tests including typo transcript, CLI UX gate |
 | Ask intent for bare entities without artifacts | bare entity classifier before starter packs | intent-first routing fixture, CLI UX gate |
 | Route between familiar CLIs, providers, gateways, and local/offline models | adapter registry, router settings, route list/set/auto/status | route command tests, Claude/Codex use-case gate, scorecard gate |
-| Treat configured CLI routes as installed-CLI handoffs | `cli_handoff.go`, `generateWithConfiguredProviderDecision` | fake downstream CLI handoff smoke tests for Claude Code and Codex, failed-execution receipt regression, and Gatekeeper rejection fail-closed regression |
+| Treat configured CLI routes as installed-CLI handoffs | `cli_handoff.go`, `generateWithConfiguredProviderDecision` | fake downstream CLI command-shape tests for Claude Code and Codex, signed smoke evidence tests, failed-execution receipt regression, and Gatekeeper rejection fail-closed regression |
 | Keep route, token, and runtime diagnostics inspectable | `jini route`, `jini status`, `jini doctor`, route receipt state | route status/list tests, privacy-preserving CLI handoff receipt status test, publish readiness |
 | Reuse durable session context without transcript replay | saved work state, metadata-only route receipts, compact status/open/continue | saved work and route receipt tests |
 | Keep saved work hidden until explicit commands or title matching | launcher and current-work interruption handling | startup and current-work regression tests |
@@ -31,9 +31,10 @@ runtime contract that tests enforce.
 
 Residual hardening:
 
-- Wave 1 command templates use fake downstream CLIs in automated tests and now
-  expose `jini check ship --format json` setup status plus local
-  `.jini/cli-dogfood.json` validation evidence plus recent
-  `.jini/cli-smoke.json` evidence for claimed routes. Real installed CLI
-  dogfood remains required before release claims for auth, approvals,
-  output-shape differences, route receipt privacy, and smoke freshness.
+- Wave 1 command templates still use fake downstream CLIs for automated
+  command-shape coverage, but release readiness now requires signed
+  `.jini/cli-smoke.json` evidence, recent `.jini/cli-dogfood.json`
+  validation evidence, and `jini check ship --format json` setup status for
+  claimed routes. Real installed CLI dogfood remains required on tester
+  machines for auth, approvals, output-shape differences, route receipt
+  privacy, and signed smoke freshness.

@@ -269,9 +269,9 @@ func buildPublishHonestAuditClaims() []publishEvidenceClaim {
 		{
 			Claim:              "Configured CLI handoff",
 			Status:             "implemented",
-			Evidence:           "Wave 0 handoff contract, Wave 1 route registry, doctor detection, fake downstream CLI smoke tests, fail-closed missing/trust checks, route receipts, check ship setup status, .jini/cli-dogfood.json validation evidence, and .jini/cli-smoke.json freshness for claimed routes",
-			Gap:                "Each downstream CLI still needs real-world dogfood for command templates, approvals, output shape, route receipt privacy, and fresh smoke evidence.",
-			NextCut:            "Harden Wave 1 command templates against real installed CLIs without broadening the first-minute UX.",
+			Evidence:           "Wave 0 handoff contract, Wave 1 route registry, doctor detection, fake downstream CLI command-shape tests, fail-closed missing/trust checks, route receipts, check ship setup status, signed .jini/cli-smoke.json evidence, validation freshness, and .jini/cli-dogfood.json release checks",
+			Gap:                "Each downstream CLI still needs real-world dogfood for command templates, approvals, output shape, route receipt privacy, and signed smoke evidence on tester machines.",
+			NextCut:            "Dogfood Wave 1 command templates against real installed CLIs without broadening the first-minute UX.",
 			RuntimeImplemented: true,
 		},
 		{

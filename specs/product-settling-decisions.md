@@ -224,7 +224,7 @@ Installed CLI routes and routes named in `JINI_CLI_RELEASE_ROUTES` must be
 trusted and dogfooded before release claims. Missing optional CLI executables
 are setup backlog until the release claim names them. Do not publicly claim a
 CLI route until it is installed, trusted, and validated in
-`.jini/cli-dogfood.json`. Claimed CLI routes must also have recent
+`.jini/cli-dogfood.json`. Claimed CLI routes must also have recent signed
 `.jini/cli-smoke.json` evidence from `jini route smoke <route>`.
 `jini route dogfood` is the read-only guide for that evidence. It may show
 setup status, missing checks, and a copyable evidence template, but it must not
@@ -232,12 +232,13 @@ execute downstream CLIs, write `.jini/cli-dogfood.json`, or mark a route
 validated automatically.
 `jini route smoke <route>` is the harmless execution probe. It may run the real
 configured CLI and report only privacy-preserving receipt metadata; it may write
-privacy-safe `.jini/cli-smoke.json` smoke evidence, but it must not write
-validation evidence or print prompt/output bodies.
+privacy-safe signed `.jini/cli-smoke.json` smoke evidence, but it must not
+write validation evidence or print prompt/output bodies.
 `jini route validate <route> --real-cli --checks all` is the explicit evidence
-write path after a tester has run the real installed CLI and verified auth,
-approvals, output shape, and route receipt privacy. It must refuse setup-blocked
-routes and must not accept partial release evidence as a completed validation.
+write path after `jini route smoke <route>` has created recent signed smoke
+evidence and a tester has verified auth, approvals, output shape, and route
+receipt privacy. It must refuse setup-blocked routes and must not accept partial
+release evidence as a completed validation.
 
 Implementation plan:
 

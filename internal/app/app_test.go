@@ -1589,7 +1589,12 @@ func TestRouteValidateWritesDogfoodEvidence(t *testing.T) {
 	t.Setenv("JINI_OPENCODE_CLI", filepath.Join(fakeBin, "missing-opencode"))
 
 	var stdout bytes.Buffer
-	exitCode := app.Run([]string{"route", "validate", "codex", "--real-cli", "--checks", "all"}, &stdout, &stdout)
+	exitCode := app.Run([]string{"route", "smoke", "codex"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected route smoke prerequisite to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	stdout.Reset()
+	exitCode = app.Run([]string{"route", "validate", "codex", "--real-cli", "--checks", "all"}, &stdout, &stdout)
 	if exitCode != 0 {
 		t.Fatalf("expected route validate to succeed, got %d with output:\n%s", exitCode, stdout.String())
 	}
@@ -1634,6 +1639,32 @@ func TestRouteValidateWritesDogfoodEvidence(t *testing.T) {
 		if !containsString(codex.Checks, want) {
 			t.Fatalf("expected evidence check %q, got %#v", want, codex.Checks)
 		}
+	}
+}
+
+func TestRouteValidateRequiresRecentSignedSmokeEvidence(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	fakeBin := t.TempDir()
+	fakeCodex := writeFakeExecutable(t, fakeBin, "codex", "printf 'fake codex\\n'\n")
+	t.Setenv("JINI_CODEX_CLI", fakeCodex)
+	t.Setenv("JINI_CLAUDE_CODE_CLI", filepath.Join(fakeBin, "missing-claude"))
+	t.Setenv("JINI_GEMINI_CLI", filepath.Join(fakeBin, "missing-gemini"))
+	t.Setenv("JINI_AIDER_CLI", filepath.Join(fakeBin, "missing-aider"))
+	t.Setenv("JINI_OPENCODE_CLI", filepath.Join(fakeBin, "missing-opencode"))
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"route", "validate", "codex", "--real-cli", "--checks", "all"}, &stdout, &stdout)
+	if exitCode != 1 {
+		t.Fatalf("expected route validate to require signed smoke evidence, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	out := stdout.String()
+	if !strings.Contains(out, "Run `jini route smoke codex` before writing dogfood evidence.") {
+		t.Fatalf("expected signed smoke prerequisite, got:\n%s", out)
+	}
+	if _, err := os.Stat(filepath.Join(stateDir, "cli-dogfood.json")); !os.IsNotExist(err) {
+		t.Fatalf("route validate must not write dogfood evidence without signed smoke, stat err: %v", err)
 	}
 }
 
@@ -1687,6 +1718,7 @@ func TestRouteSmokeRunsReadyCLIHandoffWithoutLeakingBodies(t *testing.T) {
 			PromptChars int    `json:"prompt_chars"`
 			StdoutChars int    `json:"stdout_chars"`
 			StderrChars int    `json:"stderr_chars"`
+			Signature   string `json:"signature"`
 		} `json:"routes"`
 	}
 	if err := json.Unmarshal(data, &smokeEvidence); err != nil {
@@ -1701,6 +1733,12 @@ func TestRouteSmokeRunsReadyCLIHandoffWithoutLeakingBodies(t *testing.T) {
 	}
 	if codexSmoke.ExitStatus != 0 || codexSmoke.PromptChars == 0 || codexSmoke.StdoutChars != 20 || codexSmoke.StderrChars != 0 {
 		t.Fatalf("expected privacy-safe smoke counts, got %#v", codexSmoke)
+	}
+	if !strings.HasPrefix(codexSmoke.Signature, "hmac-sha256:") {
+		t.Fatalf("expected signed smoke evidence, got %#v", codexSmoke)
+	}
+	if _, err := os.Stat(filepath.Join(stateDir, "cli-smoke.key")); err != nil {
+		t.Fatalf("expected local smoke signing key to be created: %v", err)
 	}
 	if strings.Contains(string(data), fakeCodex) || strings.Contains(string(data), "Reply with exactly") || strings.Contains(string(data), "jini route smoke ok") {
 		t.Fatalf("smoke evidence must not leak executable, prompt, or output bodies, got:\n%s", string(data))

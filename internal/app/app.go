@@ -924,7 +924,7 @@ func runRouteSmoke(args []string, stdout, stderr io.Writer) int {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
-	_, receipt, err := runCLIHandoff(ctx, opts.RouteID, "Reply with exactly: jini route smoke ok")
+	_, receipt, err := runCLIHandoff(ctx, opts.RouteID, routeSmokePrompt)
 	if err != nil {
 		fmt.Fprintf(stderr, "Route smoke failed: %v\n", err)
 		return 1
@@ -1024,6 +1024,13 @@ func runRouteValidate(args []string, stdout, stderr io.Writer) int {
 	if len(missingChecks) > 0 {
 		fmt.Fprintf(stderr, "Missing required validation checks: %s.\n", strings.Join(missingChecks, ", "))
 		fmt.Fprintln(stderr, "Use `--checks all` only after auth, approvals, output shape, and route receipt privacy were verified.")
+		return 1
+	}
+	smokeLoad := loadCLIHandoffSmokeEvidence()
+	smokeProof := smokeLoad.Routes[opts.RouteID]
+	if smokeIssue := cliHandoffRecentSmokeIssue(opts.RouteID, smokeProof, time.Now().UTC()); smokeIssue != "" {
+		fmt.Fprintf(stderr, "Run `jini route smoke %s` before writing dogfood evidence.\n", opts.RouteID)
+		fmt.Fprintf(stderr, "Smoke prerequisite: %s.\n", smokeIssue)
 		return 1
 	}
 	validatedAt := time.Now().UTC().Format(time.RFC3339)
