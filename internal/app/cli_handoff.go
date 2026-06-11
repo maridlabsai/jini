@@ -33,8 +33,8 @@ type cliHandoffReceipt struct {
 	ContextType  string   `json:"context_type"`
 	Mode         string   `json:"mode"`
 	Label        string   `json:"label"`
-	Executable   string   `json:"executable"`
-	ArgsTemplate []string `json:"args_template"`
+	Executable   string   `json:"-"`
+	ArgsTemplate []string `json:"-"`
 	CWD          string   `json:"cwd"`
 	ExitStatus   int      `json:"exit_status"`
 	DurationMS   int64    `json:"duration_ms"`

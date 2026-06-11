@@ -489,8 +489,8 @@ func TestStatusShowsPrivacyPreservingCLIHandoffReceipt(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Last CLI handoff",
-		"Claude Code CLI handoff via /tmp/fake-claude",
-		"Args: --print {{prompt}}",
+		"Claude Code CLI handoff",
+		"Status: completed",
 		"Exit 0 in 42ms; prompt 79 chars, stdout 18 chars, stderr 0 chars.",
 		"Completed: 2026-06-08T22:11:00Z",
 	} {
@@ -499,6 +499,10 @@ func TestStatusShowsPrivacyPreservingCLIHandoffReceipt(t *testing.T) {
 		}
 	}
 	for _, unwanted := range []string{
+		"/tmp/fake-claude",
+		"Args:",
+		"--print",
+		"{{prompt}}",
 		"Summarize the private launch notes",
 		"fake claude draft",
 	} {
@@ -1857,8 +1861,7 @@ func TestRouteCommandShowsSelectedCLIWithoutExecutingIt(t *testing.T) {
 	for _, want := range []string{
 		"Route and cost",
 		"Current route: Claude Code CLI handoff. Readiness: ok.",
-		"CLI handoff: " + fakeCLI,
-		"Args: --print {{prompt}}",
+		"CLI handoff: configured",
 		"Provider alias: disabled; Jini invokes the CLI subprocess only when running work.",
 	} {
 		if !strings.Contains(out, want) {
@@ -1867,6 +1870,15 @@ func TestRouteCommandShowsSelectedCLIWithoutExecutingIt(t *testing.T) {
 	}
 	if _, err := os.Stat(markerPath); !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("route status must not execute the configured CLI; marker stat err: %v", err)
+	}
+	for _, unwanted := range []string{
+		fakeCLI,
+		"Args:",
+		"{{prompt}}",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("route status must not leak CLI runtime detail %q, got:\n%s", unwanted, out)
+		}
 	}
 	if got := nonEmptyLineCount(out); got > 9 {
 		t.Fatalf("expected CLI route status to stay compact, got %d non-empty lines:\n%s", got, out)
@@ -1888,13 +1900,22 @@ func TestRouteCommandShowsMissingCLIAsHandoffSetupProblem(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"Current route: Aider CLI handoff. Readiness: needs setup.",
-		"CLI handoff: aider",
-		"Args: --message {{prompt}}",
-		"Setup: Aider CLI handoff requires an installed CLI executable: aider.",
+		"CLI handoff: needs setup",
+		"Setup: missing executable",
 		"Provider alias: disabled; Jini invokes the CLI subprocess only when running work.",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected route output to contain %q, got:\n%s", want, out)
+		}
+	}
+	for _, unwanted := range []string{
+		"Args:",
+		"--message",
+		"{{prompt}}",
+		"requires an installed CLI executable",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("missing CLI route status must not leak CLI runtime detail %q, got:\n%s", unwanted, out)
 		}
 	}
 	if strings.Contains(out, "API route") {

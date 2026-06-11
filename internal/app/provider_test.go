@@ -270,10 +270,6 @@ func TestMaybeWriteProviderFirstDraftPersistsPrivacyPreservingCLIHandoffReceipt(
 		`"context_type": "JiniCLIHandoffReceipt"`,
 		`"mode": "claude-code"`,
 		`"label": "Claude Code CLI handoff"`,
-		`"executable": "` + fakeCLI + `"`,
-		`"args_template": [`,
-		`"--print"`,
-		`"{{prompt}}"`,
 		`"exit_status": 0`,
 		`"cwd": "`,
 		`"duration_ms":`,
@@ -286,6 +282,11 @@ func TestMaybeWriteProviderFirstDraftPersistsPrivacyPreservingCLIHandoffReceipt(
 		}
 	}
 	for _, unwanted := range []string{
+		fakeCLI,
+		`"executable"`,
+		`"args_template"`,
+		`"--print"`,
+		`"{{prompt}}"`,
 		source,
 		"fake claude draft",
 	} {
@@ -301,7 +302,7 @@ func TestRunInteractiveKeepsCurrentWorkAfterFailedCLIHandoff(t *testing.T) {
 	t.Setenv("JINI_TOOL", "claude-code")
 	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
 	binDir := t.TempDir()
-	writeProviderFakeExecutable(t, binDir, "claude", strings.Join([]string{
+	fakeCLI := writeProviderFakeExecutable(t, binDir, "claude", strings.Join([]string{
 		"printf 'partial stdout\\n'",
 		"printf 'downstream secret stderr\\n' >&2",
 		"exit 7",
@@ -338,6 +339,9 @@ func TestRunInteractiveKeepsCurrentWorkAfterFailedCLIHandoff(t *testing.T) {
 		}
 	}
 	for _, unwanted := range []string{
+		fakeCLI,
+		"Args:",
+		"{{prompt}}",
 		"partial stdout",
 		"downstream secret stderr",
 	} {
@@ -364,6 +368,9 @@ func TestRunInteractiveKeepsCurrentWorkAfterFailedCLIHandoff(t *testing.T) {
 		}
 	}
 	for _, unwanted := range []string{
+		fakeCLI,
+		"Args:",
+		"{{prompt}}",
 		"partial stdout",
 		"downstream secret stderr",
 	} {

@@ -3370,28 +3370,15 @@ func renderRouteCostStatus(w io.Writer) {
 }
 
 func renderCLIHandoffRouteInspection(w io.Writer, provider providerConfig) {
-	executable := providerRouteSettingValue(provider.Settings, "CLI_EXECUTABLE")
-	args := providerRouteSettingValue(provider.Settings, "CLI_ARGS")
-	if executable != "" {
-		fmt.Fprintf(w, "CLI handoff: %s\n", executable)
-	}
-	if args != "" {
-		fmt.Fprintf(w, "Args: %s\n", args)
-	}
+	status := "configured"
 	if strings.TrimSpace(provider.Status) != "" && provider.Status != "ok" && len(provider.Missing) > 0 {
-		fmt.Fprintf(w, "Setup: %s\n", provider.Missing[0])
+		status = "needs setup"
+	}
+	fmt.Fprintf(w, "CLI handoff: %s\n", status)
+	if status == "needs setup" {
+		fmt.Fprintf(w, "Setup: %s\n", shipCLIHandoffSetupCategory(provider.Missing))
 	}
 	fmt.Fprintln(w, "Provider alias: disabled; Jini invokes the CLI subprocess only when running work.")
-}
-
-func providerRouteSettingValue(settings []string, name string) string {
-	prefix := strings.TrimSpace(name) + ": "
-	for _, setting := range settings {
-		if strings.HasPrefix(setting, prefix) {
-			return strings.TrimSpace(strings.TrimPrefix(setting, prefix))
-		}
-	}
-	return ""
 }
 
 func formatCLIHandoffReceiptSummary(receipt *cliHandoffReceipt) []string {
@@ -3400,16 +3387,12 @@ func formatCLIHandoffReceiptSummary(receipt *cliHandoffReceipt) []string {
 	}
 	lines := []string{}
 	label := firstNonEmpty(strings.TrimSpace(receipt.Label), strings.TrimSpace(receipt.Mode), "CLI handoff")
-	executable := firstNonEmpty(strings.TrimSpace(receipt.Executable), "unknown executable")
-	lines = append(lines, fmt.Sprintf("%s via %s", label, executable))
+	lines = append(lines, label)
 	status := "completed"
 	if receipt.ExitStatus != 0 {
 		status = "failed"
 	}
 	lines = append(lines, "Status: "+status)
-	if len(receipt.ArgsTemplate) > 0 {
-		lines = append(lines, "Args: "+formatCLIHandoffArgs(receipt.ArgsTemplate))
-	}
 	lines = append(lines, fmt.Sprintf(
 		"Exit %d in %dms; prompt %d chars, stdout %d chars, stderr %d chars.",
 		receipt.ExitStatus,
