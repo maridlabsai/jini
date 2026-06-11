@@ -53,6 +53,27 @@ type shipCLIHandoffDogfoodEvidenceFile struct {
 	Routes        map[string]shipCLIHandoffDogfoodRouteProof `json:"routes"`
 }
 
+type routeDogfoodGuideReport struct {
+	SchemaVersion    string                            `json:"schema_version"`
+	ResultType       string                            `json:"result_type"`
+	EvidenceFile     string                            `json:"evidence_file"`
+	RequiredChecks   []string                          `json:"required_checks"`
+	Routes           []routeDogfoodGuideRoute          `json:"routes"`
+	EvidenceTemplate shipCLIHandoffDogfoodEvidenceFile `json:"evidence_template"`
+	Next             []string                          `json:"next"`
+}
+
+type routeDogfoodGuideRoute struct {
+	RouteID         string   `json:"route_id"`
+	Label           string   `json:"label"`
+	SetupStatus     string   `json:"setup_status"`
+	DogfoodStatus   string   `json:"dogfood_status"`
+	SetupCategory   string   `json:"setup_category,omitempty"`
+	ValidatedChecks []string `json:"validated_checks,omitempty"`
+	MissingChecks   []string `json:"missing_checks,omitempty"`
+	LastValidatedAt string   `json:"last_validated_at,omitempty"`
+}
+
 type shipCLIHandoffDogfoodRouteProof struct {
 	ValidatedAt string   `json:"validated_at"`
 	Checks      []string `json:"checks"`
@@ -178,12 +199,7 @@ func buildShipCLIHandoffDogfood() []shipCLIHandoffDogfood {
 		if len(args) == 0 {
 			args = descriptor.DefaultArgs
 		}
-		requiredChecks := []string{
-			"auth",
-			"approvals",
-			"output shape",
-			"route receipt privacy",
-		}
+		requiredChecks := requiredCLIHandoffDogfoodChecks()
 		setupStatus := status
 		dogfoodStatus := "setup-blocked"
 		var validatedChecks []string
@@ -218,6 +234,64 @@ func buildShipCLIHandoffDogfood() []shipCLIHandoffDogfood {
 		})
 	}
 	return out
+}
+
+func requiredCLIHandoffDogfoodChecks() []string {
+	return []string{
+		"auth",
+		"approvals",
+		"output shape",
+		"route receipt privacy",
+	}
+}
+
+func buildRouteDogfoodGuide() routeDogfoodGuideReport {
+	dogfoodRows := buildShipCLIHandoffDogfood()
+	requiredChecks := requiredCLIHandoffDogfoodChecks()
+	templateRoutes := map[string]shipCLIHandoffDogfoodRouteProof{}
+	routes := make([]routeDogfoodGuideRoute, 0, len(dogfoodRows))
+	for _, route := range dogfoodRows {
+		if route.SetupStatus != "ready" {
+			routes = append(routes, routeDogfoodGuideRoute{
+				RouteID:       route.RouteID,
+				Label:         route.Label,
+				SetupStatus:   route.SetupStatus,
+				DogfoodStatus: route.DogfoodStatus,
+				SetupCategory: shipCLIHandoffSetupCategory(route.Missing),
+			})
+			continue
+		}
+		templateRoutes[route.RouteID] = shipCLIHandoffDogfoodRouteProof{
+			ValidatedAt: "YYYY-MM-DDTHH:MM:SSZ",
+			Checks:      append([]string(nil), requiredChecks...),
+		}
+		routes = append(routes, routeDogfoodGuideRoute{
+			RouteID:         route.RouteID,
+			Label:           route.Label,
+			SetupStatus:     route.SetupStatus,
+			DogfoodStatus:   route.DogfoodStatus,
+			ValidatedChecks: append([]string(nil), route.ValidatedChecks...),
+			MissingChecks:   append([]string(nil), route.MissingChecks...),
+			LastValidatedAt: route.LastValidatedAt,
+		})
+	}
+	return routeDogfoodGuideReport{
+		SchemaVersion:  "0.1.0",
+		ResultType:     "JiniRouteDogfoodGuide",
+		EvidenceFile:   ".jini/cli-dogfood.json",
+		RequiredChecks: requiredChecks,
+		Routes:         routes,
+		EvidenceTemplate: shipCLIHandoffDogfoodEvidenceFile{
+			SchemaVersion: "0.1.0",
+			ContextType:   "JiniCLIHandoffDogfoodEvidence",
+			Routes:        templateRoutes,
+		},
+		Next: []string{
+			"Validate only with the real installed CLI, not a provider API alias.",
+			"Record validated checks in .jini/cli-dogfood.json.",
+			"Run `jini check ship --format json`.",
+		},
+	}
 }
 
 func loadShipCLIHandoffDogfoodEvidence() (string, map[string]shipCLIHandoffDogfoodRouteProof) {
@@ -345,6 +419,63 @@ func renderShipCheckText(w io.Writer, report shipCheckReport) {
 	fmt.Fprintln(w, "Evidence checks: auth, approvals, output shape, route receipt privacy")
 	fmt.Fprintln(w, "Run before push: bash tools/run_required_gates.sh push")
 	fmt.Fprintln(w, "Safe lane: create an isolated worktree, run gates, then push only after evidence is clean.")
+}
+
+func renderRouteDogfoodGuide(w io.Writer, report routeDogfoodGuideReport) {
+	fmt.Fprintln(w, "CLI dogfood")
+	fmt.Fprintf(w, "Evidence file: %s\n", report.EvidenceFile)
+	fmt.Fprintf(w, "Required checks: %s\n", strings.Join(report.RequiredChecks, ", "))
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Routes:")
+	for _, route := range report.Routes {
+		switch {
+		case route.DogfoodStatus == "validated":
+			fmt.Fprintf(w, "- %s: validated at %s\n", route.RouteID, firstNonEmpty(route.LastValidatedAt, "unknown time"))
+		case route.SetupStatus == "ready":
+			fmt.Fprintf(w, "- %s: ready; missing %s\n", route.RouteID, strings.Join(route.MissingChecks, ", "))
+		default:
+			fmt.Fprintf(w, "- %s: setup blocked (%s)\n", route.RouteID, firstNonEmpty(route.SetupCategory, "see doctor"))
+		}
+	}
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Template:")
+	renderRouteDogfoodEvidenceTemplate(w, report.EvidenceTemplate, report.Routes)
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Do not mark a route validated until you used the real installed CLI.")
+	fmt.Fprintln(w, "Then run `jini check ship --format json`.")
+}
+
+func renderRouteDogfoodEvidenceTemplate(w io.Writer, template shipCLIHandoffDogfoodEvidenceFile, routes []routeDogfoodGuideRoute) {
+	fmt.Fprintln(w, "{")
+	fmt.Fprintf(w, "  \"schema_version\": %q,\n", template.SchemaVersion)
+	fmt.Fprintf(w, "  \"context_type\": %q,\n", template.ContextType)
+	fmt.Fprintln(w, "  \"routes\": {")
+	readyRoutes := make([]routeDogfoodGuideRoute, 0, len(routes))
+	for _, route := range routes {
+		if route.SetupStatus == "ready" {
+			readyRoutes = append(readyRoutes, route)
+		}
+	}
+	for i, route := range readyRoutes {
+		comma := ","
+		if i == len(readyRoutes)-1 {
+			comma = ""
+		}
+		fmt.Fprintf(w, "    %q: {\n", route.RouteID)
+		fmt.Fprintln(w, "      \"validated_at\": \"YYYY-MM-DDTHH:MM:SSZ\",")
+		fmt.Fprintf(w, "      \"checks\": [%s]\n", quotedStringList(requiredCLIHandoffDogfoodChecks()))
+		fmt.Fprintf(w, "    }%s\n", comma)
+	}
+	fmt.Fprintln(w, "  }")
+	fmt.Fprintln(w, "}")
+}
+
+func quotedStringList(items []string) string {
+	quoted := make([]string, 0, len(items))
+	for _, item := range items {
+		quoted = append(quoted, strconv.Quote(item))
+	}
+	return strings.Join(quoted, ", ")
 }
 
 func renderShipCLIHandoffDogfoodText(w io.Writer, items []shipCLIHandoffDogfood) {

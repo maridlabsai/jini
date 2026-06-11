@@ -136,7 +136,7 @@ If you already have current work, use `jini status` once.</code></pre>
     </div>
     <div class="checklist-card">
       <h3><code>jini route</code></h3>
-      <p>Shows route cost and continuity. Use <code>jini route list</code>, <code>jini route set azure-code</code>, or <code>jini route auto</code> when you need explicit provider/model switching. <code>codex</code> and <code>claude-code</code> are reserved for real installed-CLI handoff.</p>
+      <p>Shows route cost and continuity. Use <code>jini route list</code>, <code>jini route set azure-code</code>, or <code>jini route auto</code> when you need explicit provider/model switching. <code>codex</code> and <code>claude-code</code> are reserved for real installed-CLI handoff. Use <code>jini route dogfood</code> before release validation to see the Wave 1 CLI evidence checklist and copyable <code>.jini/cli-dogfood.json</code> template.</p>
     </div>
     <div class="checklist-card">
       <h3><code>jini doctor</code></h3>

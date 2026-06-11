@@ -818,6 +818,8 @@ func runRoute(args []string, stdout, stderr io.Writer) int {
 	case "help", "setup", "--help", "-h":
 		renderRouteSetupHelp(stdout)
 		return 0
+	case "dogfood":
+		return runRouteDogfood(args[1:], stdout, stderr)
 	case "status":
 		renderRouteCostStatus(stdout)
 		return 0
@@ -835,6 +837,27 @@ func runRoute(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "Run `jini route list` to see available routes.")
 		return 1
 	}
+}
+
+func runRouteDogfood(args []string, stdout, stderr io.Writer) int {
+	format, ok := parseOptionalFormatArgs(args)
+	if !ok {
+		fmt.Fprintln(stderr, "Unsupported route dogfood format. Try `jini route dogfood` or `jini route dogfood --format json`.")
+		return 1
+	}
+	report := buildRouteDogfoodGuide()
+	if format == "json" {
+		encoder := json.NewEncoder(stdout)
+		encoder.SetIndent("", "  ")
+		encoder.SetEscapeHTML(false)
+		if err := encoder.Encode(report); err != nil {
+			fmt.Fprintf(stderr, "Could not render route dogfood guide: %v\n", err)
+			return 1
+		}
+		return 0
+	}
+	renderRouteDogfoodGuide(stdout, report)
+	return 0
 }
 
 func saveAutoRoute(stdout, stderr io.Writer) int {
@@ -950,6 +973,7 @@ func renderRouteSetupHelp(w io.Writer) {
 	fmt.Fprintln(w, "1. Run `jini route list`.")
 	fmt.Fprintln(w, "2. Run `jini doctor`.")
 	fmt.Fprintln(w, "3. Run `jini route set codex` or `jini route set claude-code`.")
+	fmt.Fprintln(w, "4. Run `jini route dogfood` before release validation.")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Azure OpenAI API: set `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, and `AZURE_OPENAI_DEPLOYMENT`; then `jini route set azure-openai`.")
 	fmt.Fprintln(w, "Bedrock API: set `AWS_REGION` plus `AWS_PROFILE` or `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`; then `jini route set bedrock-sonnet`.")

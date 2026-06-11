@@ -169,6 +169,7 @@ When you need to steer the route directly, keep it explicit and reversible:
 ```bash
 jini route list
 jini route help
+jini route dogfood
 jini route set azure-code
 jini route auto
 ```
@@ -179,6 +180,9 @@ reserved for real installed-CLI handoff: Jini invokes the installed CLI when it
 is present and trusted, and fails closed with setup guidance when it is not.
 Use `jini route help` when you need the env vars for Codex, Claude Code,
 Gemini CLI, Aider, OpenCode, provider routes, or local SLM routes.
+Use `jini route dogfood` before release validation to see which installed CLI
+routes still need real auth, approval, output-shape, and receipt-privacy
+evidence in `.jini/cli-dogfood.json`.
 
 For multi-step work, Jini now plans quietly before drafting. The user sees the
 result through better structure and clearer `Doing now` / `Next` state, not
@@ -262,12 +266,15 @@ For setup or troubleshooting:
 
 ```bash
 jini route help
+jini route dogfood
 jini doctor
 ```
 
 Route help shows what to install or which env vars to set. The doctor tells you
 what Jini will use, what `auto` resolved to, what is missing, and never prints
 API keys, AWS secret keys, profile values, or model IDs.
+Route dogfood shows the Wave 1 CLI validation checklist and a copyable evidence
+template without marking any route validated automatically.
 
 For multimodal work, doctor also shows the separate learning buckets Jini keeps
 for screenshot work, scanned PDF/document work, and audio/transcript work.
