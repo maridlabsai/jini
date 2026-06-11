@@ -230,6 +230,10 @@ CLI route until it is installed, trusted, and validated in
 setup status, missing checks, and a copyable evidence template, but it must not
 execute downstream CLIs, write `.jini/cli-dogfood.json`, or mark a route
 validated automatically.
+`jini route dogfood run --claimed` is the batch smoke probe for routes named in
+`JINI_CLI_RELEASE_ROUTES`. It may execute only claimed, ready downstream CLIs
+and write signed `.jini/cli-smoke.json` smoke evidence, but it must not execute
+unclaimed routes, write `.jini/cli-dogfood.json`, or mark validation complete.
 `jini route smoke <route>` is the harmless execution probe. It may run the real
 configured CLI and report only privacy-preserving receipt metadata; it may write
 privacy-safe signed `.jini/cli-smoke.json` smoke evidence, but it must not

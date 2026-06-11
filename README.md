@@ -170,6 +170,7 @@ When you need to steer the route directly, keep it explicit and reversible:
 jini route list
 jini route help
 jini route dogfood
+jini route dogfood run --claimed
 jini route smoke codex
 jini route validate codex --real-cli --checks all
 jini route set azure-code
@@ -185,6 +186,8 @@ Gemini CLI, Aider, OpenCode, provider routes, or local SLM routes.
 Use `jini route dogfood` before release validation to see which installed CLI
 routes still need real auth, approval, output-shape, and receipt-privacy
 evidence in `.jini/cli-dogfood.json`.
+Use `jini route dogfood run --claimed` to run the harmless signed smoke probe
+for every route named in `JINI_CLI_RELEASE_ROUTES`.
 After `jini route smoke <route>` writes signed smoke evidence, use
 `jini route validate <route> --real-cli --checks all` to record that evidence
 without hand-editing JSON. Claimed CLI routes must have recent signed
@@ -274,6 +277,7 @@ For setup or troubleshooting:
 ```bash
 jini route help
 jini route dogfood
+jini route dogfood run --claimed
 jini route smoke codex
 jini route validate codex --real-cli --checks all
 jini doctor
@@ -283,8 +287,9 @@ Route help shows what to install or which env vars to set. The doctor tells you
 what Jini will use, what `auto` resolved to, what is missing, and never prints
 API keys, AWS secret keys, profile values, or model IDs.
 Route dogfood shows the Wave 1 CLI validation checklist and a copyable evidence
-template without marking any route validated automatically. Route validate
-records evidence only after you explicitly confirm a real installed CLI smoke.
+template without marking any route validated automatically. Route dogfood run
+smokes only claimed routes and does not validate them. Route validate records
+evidence only after you explicitly confirm a real installed CLI smoke.
 Route smoke runs the configured CLI with a harmless prompt and reports receipt
 metadata without printing prompt or output bodies. For claimed CLI routes, that
 smoke metadata is signed locally and recorded in `.jini/cli-smoke.json` for

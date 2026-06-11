@@ -845,9 +845,12 @@ func runRoute(args []string, stdout, stderr io.Writer) int {
 }
 
 func runRouteDogfood(args []string, stdout, stderr io.Writer) int {
+	if len(args) > 0 && exactCommandToken(args[0]) == "run" {
+		return runRouteDogfoodRun(args[1:], stdout, stderr)
+	}
 	format, ok := parseOptionalFormatArgs(args)
 	if !ok {
-		fmt.Fprintln(stderr, "Unsupported route dogfood format. Try `jini route dogfood` or `jini route dogfood --format json`.")
+		fmt.Fprintln(stderr, "Unsupported route dogfood format. Try `jini route dogfood`, `jini route dogfood run --claimed`, or `jini route dogfood --format json`.")
 		return 1
 	}
 	report := buildRouteDogfoodGuide()
@@ -863,6 +866,214 @@ func runRouteDogfood(args []string, stdout, stderr io.Writer) int {
 	}
 	renderRouteDogfoodGuide(stdout, report)
 	return 0
+}
+
+type routeDogfoodRunOptions struct {
+	Claimed bool
+	Format  string
+}
+
+type routeDogfoodRunReport struct {
+	SchemaVersion string                 `json:"schema_version"`
+	ResultType    string                 `json:"result_type"`
+	Status        string                 `json:"status"`
+	Scope         string                 `json:"scope"`
+	EvidenceFile  string                 `json:"evidence_file,omitempty"`
+	ConfigIssues  []string               `json:"config_issues,omitempty"`
+	Routes        []routeDogfoodRunRoute `json:"routes"`
+	Next          []string               `json:"next"`
+}
+
+type routeDogfoodRunRoute struct {
+	RouteID       string `json:"route_id"`
+	Label         string `json:"label"`
+	Status        string `json:"status"`
+	SetupCategory string `json:"setup_category,omitempty"`
+	SmokedAt      string `json:"smoked_at,omitempty"`
+	ExitStatus    int    `json:"exit_status,omitempty"`
+	DurationMS    int64  `json:"duration_ms,omitempty"`
+	PromptChars   int    `json:"prompt_chars,omitempty"`
+	StdoutChars   int    `json:"stdout_chars,omitempty"`
+	StderrChars   int    `json:"stderr_chars,omitempty"`
+	Next          string `json:"next,omitempty"`
+}
+
+func runRouteDogfoodRun(args []string, stdout, stderr io.Writer) int {
+	opts, message, ok := parseRouteDogfoodRunArgs(args)
+	if !ok {
+		fmt.Fprintln(stderr, message)
+		fmt.Fprintln(stderr, "Try `jini route dogfood run --claimed`.")
+		return 1
+	}
+	report := buildRouteDogfoodRunReport(opts)
+	if opts.Format == "json" {
+		encoder := json.NewEncoder(stdout)
+		encoder.SetIndent("", "  ")
+		encoder.SetEscapeHTML(false)
+		if err := encoder.Encode(report); err != nil {
+			fmt.Fprintf(stderr, "Could not render route dogfood run report: %v\n", err)
+			return 1
+		}
+		if report.Status == "ok" {
+			return 0
+		}
+		return 1
+	}
+	renderRouteDogfoodRunReport(stdout, report)
+	if report.Status == "ok" {
+		return 0
+	}
+	return 1
+}
+
+func parseRouteDogfoodRunArgs(args []string) (routeDogfoodRunOptions, string, bool) {
+	var opts routeDogfoodRunOptions
+	for i := 0; i < len(args); i++ {
+		arg := strings.TrimSpace(args[i])
+		switch {
+		case arg == "--claimed":
+			opts.Claimed = true
+		case arg == "--format" && i+1 < len(args):
+			opts.Format = normalizeName(args[i+1])
+			if opts.Format != "json" && opts.Format != "text" {
+				return opts, "Unsupported route dogfood run format.", false
+			}
+			i++
+		case strings.HasPrefix(arg, "--format="):
+			opts.Format = normalizeName(strings.TrimPrefix(arg, "--format="))
+			if opts.Format != "json" && opts.Format != "text" {
+				return opts, "Unsupported route dogfood run format.", false
+			}
+		default:
+			return opts, "Unsupported route dogfood run option: " + arg, false
+		}
+	}
+	if !opts.Claimed {
+		return opts, "Choose `--claimed` so Jini only runs routes named in JINI_CLI_RELEASE_ROUTES.", false
+	}
+	return opts, "", true
+}
+
+func buildRouteDogfoodRunReport(opts routeDogfoodRunOptions) routeDogfoodRunReport {
+	scope := "claimed"
+	report := routeDogfoodRunReport{
+		SchemaVersion: "0.1.0",
+		ResultType:    "JiniRouteDogfoodRun",
+		Status:        "ok",
+		Scope:         scope,
+		Routes:        []routeDogfoodRunRoute{},
+		Next:          []string{},
+	}
+	claimConfig := parseCLIHandoffReleaseClaimConfig()
+	if len(claimConfig.Issues) > 0 {
+		report.Status = "config-error"
+		report.ConfigIssues = append([]string(nil), claimConfig.Issues...)
+		report.Next = []string{"Fix JINI_CLI_RELEASE_ROUTES, then rerun `jini route dogfood run --claimed`."}
+		return report
+	}
+	if opts.Claimed && len(claimConfig.Claims) == 0 {
+		report.Status = "no-claims"
+		report.Next = []string{"Set JINI_CLI_RELEASE_ROUTES=codex or another CLI route, then rerun `jini route dogfood run --claimed`."}
+		return report
+	}
+	report.EvidenceFile = ".jini/cli-smoke.json"
+	for _, routeID := range cliHandoffRouteIDs() {
+		if opts.Claimed && !claimConfig.Claims[routeID] {
+			continue
+		}
+		report.Routes = append(report.Routes, runRouteDogfoodSmoke(routeID))
+	}
+	status := "ok"
+	for _, route := range report.Routes {
+		if route.Status != "smoked" {
+			status = "needs-attention"
+			continue
+		}
+		report.Next = append(report.Next, route.Next)
+	}
+	report.Status = status
+	if len(report.Routes) == 0 {
+		report.Status = "no-routes"
+		report.Next = []string{"No CLI routes matched the requested scope."}
+	}
+	return report
+}
+
+func runRouteDogfoodSmoke(routeID string) routeDogfoodRunRoute {
+	descriptor, found := cliHandoffDescriptorForMode(routeID)
+	if !found {
+		return routeDogfoodRunRoute{RouteID: routeID, Status: "unknown-route"}
+	}
+	row := routeDogfoodRunRoute{
+		RouteID: routeID,
+		Label:   descriptor.Label,
+		Next:    "jini route validate " + routeID + " --real-cli --checks all",
+	}
+	if _, missing := resolveCLIHandoffCommand(descriptor); len(missing) > 0 {
+		row.Status = "setup-blocked"
+		row.SetupCategory = shipCLIHandoffSetupCategory(missing)
+		return row
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	_, receipt, err := runCLIHandoff(ctx, routeID, routeSmokePrompt)
+	if err != nil || receipt == nil {
+		row.Status = "failed"
+		return row
+	}
+	smokedAt := time.Now().UTC().Format(time.RFC3339)
+	if _, err := saveCLIHandoffSmokeEvidence(routeID, receipt, smokedAt); err != nil {
+		row.Status = "failed"
+		return row
+	}
+	row.Status = "smoked"
+	row.SmokedAt = smokedAt
+	row.ExitStatus = receipt.ExitStatus
+	row.DurationMS = receipt.DurationMS
+	row.PromptChars = receipt.PromptChars
+	row.StdoutChars = receipt.StdoutChars
+	row.StderrChars = receipt.StderrChars
+	return row
+}
+
+func renderRouteDogfoodRunReport(w io.Writer, report routeDogfoodRunReport) {
+	if report.Status == "config-error" {
+		fmt.Fprintln(w, "Invalid claimed CLI route configuration.")
+		for _, issue := range report.ConfigIssues {
+			fmt.Fprintf(w, "- %s\n", issue)
+		}
+		for _, next := range report.Next {
+			fmt.Fprintf(w, "Next: %s\n", next)
+		}
+		return
+	}
+	if report.Status == "no-claims" {
+		fmt.Fprintln(w, "No claimed CLI routes configured.")
+		for _, next := range report.Next {
+			fmt.Fprintf(w, "Next: %s\n", next)
+		}
+		return
+	}
+	if report.Status == "ok" {
+		fmt.Fprintln(w, "CLI dogfood run complete.")
+	} else {
+		fmt.Fprintln(w, "CLI dogfood run needs attention.")
+	}
+	fmt.Fprintf(w, "- scope: %s\n", report.Scope)
+	for _, route := range report.Routes {
+		switch route.Status {
+		case "smoked":
+			fmt.Fprintf(w, "- %s: smoked; stdout %d chars, stderr %d chars\n", route.RouteID, route.StdoutChars, route.StderrChars)
+		case "setup-blocked":
+			fmt.Fprintf(w, "- %s: setup blocked (%s)\n", route.RouteID, firstNonEmpty(route.SetupCategory, "see doctor"))
+		default:
+			fmt.Fprintf(w, "- %s: %s\n", route.RouteID, route.Status)
+		}
+	}
+	fmt.Fprintln(w, "- evidence: .jini/cli-smoke.json")
+	for _, next := range report.Next {
+		fmt.Fprintf(w, "Next: %s\n", next)
+	}
 }
 
 type routeValidateOptions struct {

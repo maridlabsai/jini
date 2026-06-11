@@ -1576,6 +1576,127 @@ func TestRouteDogfoodShowsWave1ValidationGuide(t *testing.T) {
 	}
 }
 
+func TestRouteDogfoodRunClaimedSmokesOnlyClaimedRoutes(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	t.Setenv("JINI_CLI_RELEASE_ROUTES", "codex")
+	fakeBin := t.TempDir()
+	fakeCodex := writeFakeExecutable(t, fakeBin, "codex", "printf 'jini route smoke ok\\n'\n")
+	unclaimedMarker := filepath.Join(t.TempDir(), "unclaimed-claude-ran")
+	t.Setenv("JINI_UNCLAIMED_MARKER", unclaimedMarker)
+	fakeClaude := writeFakeExecutable(t, fakeBin, "claude", "printf 'unclaimed claude ran\\n' > \"$JINI_UNCLAIMED_MARKER\"\nprintf 'jini route smoke ok\\n'\n")
+	t.Setenv("JINI_CODEX_CLI", fakeCodex)
+	t.Setenv("JINI_CLAUDE_CODE_CLI", fakeClaude)
+	t.Setenv("JINI_GEMINI_CLI", filepath.Join(fakeBin, "missing-gemini"))
+	t.Setenv("JINI_AIDER_CLI", filepath.Join(fakeBin, "missing-aider"))
+	t.Setenv("JINI_OPENCODE_CLI", filepath.Join(fakeBin, "missing-opencode"))
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"route", "dogfood", "run", "--claimed"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected claimed dogfood run to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	out := stdout.String()
+	for _, want := range []string{
+		"CLI dogfood run complete.",
+		"- scope: claimed",
+		"- codex: smoked; stdout 20 chars, stderr 0 chars",
+		"- evidence: .jini/cli-smoke.json",
+		"Next: jini route validate codex --real-cli --checks all",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected dogfood run output to contain %q, got:\n%s", want, out)
+		}
+	}
+	for _, unwanted := range []string{fakeCodex, fakeClaude, "Reply with exactly", "jini route smoke ok", "unclaimed claude ran"} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("dogfood run output must not leak or run unclaimed detail %q, got:\n%s", unwanted, out)
+		}
+	}
+	if _, err := os.Stat(unclaimedMarker); !os.IsNotExist(err) {
+		t.Fatalf("dogfood run must not execute unclaimed ready routes, marker stat err: %v", err)
+	}
+	data, err := os.ReadFile(filepath.Join(stateDir, "cli-smoke.json"))
+	if err != nil {
+		t.Fatalf("expected dogfood run to write smoke evidence: %v", err)
+	}
+	if !strings.Contains(string(data), `"codex"`) || strings.Contains(string(data), `"claude-code"`) || !strings.Contains(string(data), `"signature": "hmac-sha256:`) {
+		t.Fatalf("expected signed codex-only smoke evidence, got:\n%s", string(data))
+	}
+	if strings.Contains(string(data), fakeCodex) || strings.Contains(string(data), "Reply with exactly") || strings.Contains(string(data), "jini route smoke ok") {
+		t.Fatalf("dogfood run smoke evidence must stay privacy-safe, got:\n%s", string(data))
+	}
+
+	stdout.Reset()
+	exitCode = app.Run([]string{"route", "dogfood", "run", "--claimed", "--format", "json"}, &stdout, &stdout)
+	if exitCode != 0 {
+		t.Fatalf("expected claimed dogfood JSON run to succeed, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	var payload map[string]any
+	if err := json.Unmarshal(stdout.Bytes(), &payload); err != nil {
+		t.Fatalf("decode dogfood run JSON: %v\n%s", err, stdout.String())
+	}
+	if payload["result_type"] != "JiniRouteDogfoodRun" || payload["status"] != "ok" || payload["scope"] != "claimed" {
+		t.Fatalf("expected dogfood run JSON envelope, got %#v", payload)
+	}
+	if strings.Contains(stdout.String(), fakeCodex) || strings.Contains(stdout.String(), fakeClaude) || strings.Contains(stdout.String(), "Reply with exactly") || strings.Contains(stdout.String(), "jini route smoke ok") {
+		t.Fatalf("dogfood run JSON must not leak CLI details, got:\n%s", stdout.String())
+	}
+}
+
+func TestRouteDogfoodRunClaimedRequiresClaimedRoutes(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	fakeBin := t.TempDir()
+	marker := filepath.Join(t.TempDir(), "codex-ran")
+	t.Setenv("JINI_CLAIMLESS_MARKER", marker)
+	fakeCodex := writeFakeExecutable(t, fakeBin, "codex", "printf 'ran\\n' > \"$JINI_CLAIMLESS_MARKER\"\nprintf 'jini route smoke ok\\n'\n")
+	t.Setenv("JINI_CODEX_CLI", fakeCodex)
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"route", "dogfood", "run", "--claimed"}, &stdout, &stdout)
+	if exitCode != 1 {
+		t.Fatalf("expected claimed dogfood run without claims to fail, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "No claimed CLI routes configured.") {
+		t.Fatalf("expected missing claim guidance, got:\n%s", stdout.String())
+	}
+	if _, err := os.Stat(marker); !os.IsNotExist(err) {
+		t.Fatalf("dogfood run must not execute routes without release claims, marker stat err: %v", err)
+	}
+}
+
+func TestRouteDogfoodRunClaimedRejectsInvalidClaimConfig(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("JINI_STATE_DIR", stateDir)
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	t.Setenv("JINI_CLI_RELEASE_ROUTES", "gemini")
+	fakeBin := t.TempDir()
+	marker := filepath.Join(t.TempDir(), "codex-ran")
+	t.Setenv("JINI_INVALID_CLAIM_MARKER", marker)
+	fakeCodex := writeFakeExecutable(t, fakeBin, "codex", "printf 'ran\\n' > \"$JINI_INVALID_CLAIM_MARKER\"\nprintf 'jini route smoke ok\\n'\n")
+	t.Setenv("JINI_CODEX_CLI", fakeCodex)
+
+	var stdout bytes.Buffer
+	exitCode := app.Run([]string{"route", "dogfood", "run", "--claimed"}, &stdout, &stdout)
+	if exitCode != 1 {
+		t.Fatalf("expected invalid claimed dogfood run config to fail, got %d with output:\n%s", exitCode, stdout.String())
+	}
+	for _, want := range []string{
+		"Invalid claimed CLI route configuration.",
+		"unknown CLI release claim route: gemini",
+	} {
+		if !strings.Contains(stdout.String(), want) {
+			t.Fatalf("expected invalid claim output to contain %q, got:\n%s", want, stdout.String())
+		}
+	}
+	if _, err := os.Stat(marker); !os.IsNotExist(err) {
+		t.Fatalf("dogfood run must not execute routes with invalid claim config, marker stat err: %v", err)
+	}
+}
+
 func TestRouteValidateWritesDogfoodEvidence(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("JINI_STATE_DIR", stateDir)
