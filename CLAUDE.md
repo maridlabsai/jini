@@ -42,6 +42,10 @@ Use project agents under `.claude/agents/` when the work benefits from a focused
 - `jini-route-runtime-reviewer`: offline/online routing, local model fallback, provider/tool selection.
 - `jini-prd-drift-reviewer`: PRD alignment, stale requirement removal, competitor-scorecard consistency.
 - `jini-release-gate-reviewer`: install, signing/notarization readiness, docs, website, public release assets.
+- `jini-security-boundary-reviewer`: secrets, public repo IP leakage, sandbox/permission safety.
+- `jini-llm-behavior-investigator`: prompt/routing regressions and wrong intent classification.
+- `jini-terminal-shell-reviewer`: CLI terminal ergonomics, ANSI output, command shape, and macOS shell behavior.
+- `jini-test-evidence-reviewer`: alpha evidence, transcript proof, and unsupported release-readiness claims.
 
 ## Claude Code Skills
 
@@ -51,3 +55,18 @@ Use project skills under `.claude/skills/` for repeatable work:
 - `reviewer`: adversarial review of current work before continuing.
 - `research`: frame missing facts and evidence needed for a decision.
 - `prd-drift`: compare implementation or docs against canonical PRD and remove stale requirements.
+- `commit-gate`: run the required Jini commit gate sequence and report evidence.
+- `security-scan`: scan for public-repo leakage, secrets, and unsafe release posture.
+- `llm-behavior`: investigate prompt, intent, routing, and response-shape regressions.
+- `test-evidence`: require concrete transcript, gate, or visual evidence before release claims.
+- `terminal-shell`: review CLI/app terminal behavior against Claude Code/Codex expectations.
+
+## Slash Commands
+
+Use project slash commands under `.claude/commands/` for fast repeated workflows:
+
+- `/gates`: run the public commit gate.
+- `/review`: review the current diff against product, code, and release risks.
+- `/route-audit`: inspect routing/offline/provider behavior.
+- `/prd-drift`: compare work against canonical PRD and scorecards.
+- `/alpha-smoke`: run the alpha-tester transcript/readiness check.
