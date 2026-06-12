@@ -130,6 +130,27 @@ If you need the public command list, use `jini commands`. If you maintain
 routes, bundles, or release plumbing, use `jini admin help`. Those paths exist
 to support the product, not replace the normal `jini` front door.
 
+## Developer Workflow With Claude Code
+
+This repo also ships repo-local Claude Code assets for contributors. They live
+in `CLAUDE.md` and `.claude/`, and they are development helpers, not public Jini
+shell commands.
+
+Use them when you are changing Jini itself:
+
+- `/gates`: run the required public commit gate.
+- `/review`: review the current diff for release, product, test, and security
+  risk.
+- `/route-audit`: inspect routing, offline fallback, provider selection, and
+  CLI handoff behavior.
+- `/prd-drift`: check changed work against the canonical product direction.
+- `/alpha-smoke`: verify that alpha-user prompts still produce compact,
+  competitor-grade CLI output.
+
+Keep the split strict: users should learn `jini`; contributors may use Claude
+Code slash commands to keep implementation, docs, and gates aligned. The public
+website version lives at [docs/contributing.md](docs/contributing.md).
+
 The public support surface outside the front door should stay short:
 
 - `jini status`

@@ -1,6 +1,6 @@
 # Product Settling Decisions
 
-Updated: 2026-06-10
+Updated: 2026-06-12
 
 This document records the hard product decisions that reduce ambiguity for GTM,
 engineering, docs, and tiering.
@@ -541,3 +541,21 @@ For `v0.1.2`, the release-facing first-minute story is:
 Do not publish `jini>` live-shell examples, repo-aware startup coaching, or
 future prompt behavior in README or website pages until that behavior is
 implemented and release-smoked from the public installer.
+
+## Contributor Workflow Copy Decision
+
+Repo-local Claude Code assets may be documented for contributors in README and
+website contributor pages, but they are not customer-facing Jini CLI commands.
+
+Rules:
+
+- Public runtime docs still teach `jini` first and keep support commands narrow.
+- Claude Code slash commands belong in contributor docs, review notes, and
+  repo-local workflow files.
+- Contributor workflow copy must say these commands are development helpers,
+  not public shell vocabulary.
+- Commercial Claude Code workflow copy must stay tied to private paid-surface
+  development and must not imply that paid-only agent/skills OS capabilities are
+  part of the free tier.
+- Landing-page and commercial-buyer copy should stay focused on user value,
+  shipped behavior, pricing posture, and proof instead of contributor tooling.

@@ -198,5 +198,6 @@ jini</code></pre>
     <a href="{{ '/install.html' | relative_url }}">Install</a>
     <a href="{{ '/simple.html' | relative_url }}">Quickstart</a>
     <a href="{{ '/state-and-artifacts.html' | relative_url }}">Outputs</a>
+    <a href="{{ '/contributing.html' | relative_url }}">Contributing</a>
   </div>
 </div>
