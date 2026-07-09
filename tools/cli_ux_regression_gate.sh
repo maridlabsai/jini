@@ -3,7 +3,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-GO_BIN="${GO_BIN:-/Users/sharad.sharma/Developer/.local-go/bin/go}"
+GO_BIN="${GO_BIN:-$(command -v go || true)}"
 GO_CACHE_DIR="${JINI_GOCACHE:-/private/tmp/jini-go-cache}"
 GO_MOD_CACHE_DIR="${JINI_GOMODCACHE:-/private/tmp/jini-go-mod}"
 VERBOSE=0

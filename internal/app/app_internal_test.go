@@ -437,12 +437,13 @@ func TestShipCheckReadsLocalCLIHandoffDogfoodEvidence(t *testing.T) {
 	fakeBin := t.TempDir()
 	fakeCodex := writeProviderFakeExecutable(t, fakeBin, "codex", "printf 'ok\\n'")
 	stateDir := t.TempDir()
+	validatedAt := time.Now().UTC().Add(-time.Hour).Format(time.RFC3339)
 	writeTestFile(t, filepath.Join(stateDir, "cli-dogfood.json"), `{
   "schema_version": "0.1.0",
   "context_type": "JiniCLIHandoffDogfoodEvidence",
   "routes": {
     "codex": {
-      "validated_at": "2026-06-09T00:00:00Z",
+      "validated_at": "`+validatedAt+`",
       "checks": ["auth", "approvals", "output shape", "route receipt privacy"]
     }
   }
@@ -473,7 +474,7 @@ func TestShipCheckReadsLocalCLIHandoffDogfoodEvidence(t *testing.T) {
 	if codexDogfood == nil {
 		t.Fatalf("expected codex dogfood row, got %#v", report.CLIHandoffDogfood)
 	}
-	if codexDogfood.SetupStatus != "ready" || codexDogfood.DogfoodStatus != "validated" || codexDogfood.LastValidatedAt != "2026-06-09T00:00:00Z" {
+	if codexDogfood.SetupStatus != "ready" || codexDogfood.DogfoodStatus != "validated" || codexDogfood.LastValidatedAt != validatedAt {
 		t.Fatalf("expected codex dogfood evidence to validate route, got %#v", codexDogfood)
 	}
 	if len(codexDogfood.ValidatedChecks) != 4 || len(codexDogfood.MissingChecks) != 0 {
@@ -756,7 +757,7 @@ func TestShipCheckBlocksInvalidCLIHandoffDogfoodEvidenceAndClaimConfig(t *testin
   "context_type": "JiniCLIHandoffDogfoodEvidence",
   "routes": {
     "gemini": {
-      "validated_at": "2026-06-09T00:00:00Z",
+      "validated_at": "`+time.Now().UTC().Add(-time.Hour).Format(time.RFC3339)+`",
       "checks": ["auth", "approvals", "output shape", "route receipt privacy"]
     }
   }
@@ -953,7 +954,7 @@ func TestShipCheckBlocksMissingClaimedCLIHandoffRoute(t *testing.T) {
   "context_type": "JiniCLIHandoffDogfoodEvidence",
   "routes": {
     "codex": {
-      "validated_at": "2026-06-09T00:00:00Z",
+      "validated_at": "`+time.Now().UTC().Add(-time.Hour).Format(time.RFC3339)+`",
       "checks": ["auth", "approvals", "output shape", "route receipt privacy"]
     }
   }
