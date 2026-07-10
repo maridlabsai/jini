@@ -71,6 +71,7 @@ Pure routers (LiteLLM et al.) aren't agents; agent incumbents can't sell token f
 - Route truth-in-labeling: a route named `claude-code` invokes that installed CLI or fails closed with setup guidance. Provider APIs are never disguised as CLIs.
 - Escalation is transparent: when local can't clear the bar, Jini says why and what the next rung costs before spending the user's money. (Approved judgment call: the extra confirmation free users see is the point — no silent spend, ever.)
 - Throttle/quota errors on any route trigger a suggested fallback (free) or automatic re-route + resume (paid).
+- **BYO compatibility matrix (release-gated):** v1 validates against the key/subscription shapes developers actually hold — Anthropic, OpenAI, Google (Gemini), DeepSeek, Mistral, Groq API keys; OpenRouter and LiteLLM gateways; and subscription-backed CLIs (Claude Code Pro/Max, Codex/ChatGPT plans, Gemini CLI). Each supported shape has a validation fixture and a receipt-denomination rule (literal for metered keys, imputed for subscriptions, §4.5). A shape without a passing fixture is not claimed (§5).
 - **BYO setup is near-zero effort.** Adding a provider, gateway, or CLI route never requires editing a config file. `jini route add` (or the first-run prompt) accepts a pasted key, validates it with a live test call, and confirms the route is working — one paste, one confirmation, done. Jini auto-detects what's already on the machine: provider env vars (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, …), existing CLI configs (Claude Code, Codex, Gemini CLI), and gateway setups, and offers each detected credential as a ready route rather than asking the user to re-enter it. Keys are stored in the OS keychain, never in plaintext dotfiles. A failed validation states exactly what's wrong (bad key, no quota, wrong region) — never a generic error.
 
 ### 4.4 Sessions & memory
@@ -78,7 +79,8 @@ Pure routers (LiteLLM et al.) aren't agents; agent incumbents can't sell token f
 - Every task lives in a durable session: resumable after crash, throttle, reboot, or route switch without transcript replay — compact state, not chat history.
 - **Resume honesty:** same-route resume is lossless. Cross-route resume (e.g., CLI handoff → local model) is best-effort by construction — different routes carry different context fidelity — and says so: the resume receipt states exactly what carried over and what didn't. Silent context loss is a defect.
 - Route-outcome learning: Jini records which route/model succeeded/failed for which task shape on this device and feeds that into auto-routing. Fully inspectable (`jini memory`), local, exportable, deletable.
-- No personal profile building in v1.
+- **Project memory (the context engine):** per-repo, token-cheap learned context — build/test commands, conventions, architecture summaries, known pitfalls, resolved ambiguities — accumulated from sessions and injected selectively by task shape instead of re-derived by fresh reads. This is the primary §4.6 token-saving mechanism: memory substitutes for repeated discovery. Stored as plain inspectable files (`.jini/memory/`), repo-scoped, exportable, deletable.
+- No personal profile building in v1. Project memory is repo-scoped working context, not a user profile.
 
 ### 4.5 Savings ledger & shareable proof (the growth engine)
 
@@ -121,6 +123,7 @@ Every token-saving mechanism is a named, testable requirement — this is the pr
 - Skills and agents are plain, portable files (markdown + frontmatter) stored in the repo or user scope, inspectable and diffable like any other source. Jini reads the formats developers already have where practical (Claude Code-style skills/agents) rather than inventing a new one.
 - Created skills are immediately invocable in the same session; agents are dispatchable as sub-tasks with their own tool permissions, subject to the same approval matrix (§4.1) and route ladder (§4.3) — an agent run produces the same receipts as any task.
 - Skill/agent creation is free tier (§4.9). Token economy applies: invoking a skill must be cheaper than pasting its instructions inline every time — measured as the skill's token footprint versus the instruction text it replaces.
+- **Skills from repetition, proactively suggested:** Jini detects when a flow shape recurs (≥2 similar multi-step sequences in project memory) and offers one-tap crystallization into a skill — and into an agent when the recurring flow is scoped and parallelizable. Every suggestion is receipts-aware: it shows the estimated per-run token saving, so the user sees why crystallizing pays.
 - **Agents obey the token economy:** dispatch defaults to the cheapest qualifying route; fan-out beyond a single agent requires the same visible cost preview as escalation (§4.3); every agent run itemizes its tokens on the parent task's receipt. Multi-agent orchestration is not an expectation of the local device class — an agent that needs a paid route says so before spending.
 
 ## 5. Quality & evidence standards
