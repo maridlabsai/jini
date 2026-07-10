@@ -17,7 +17,7 @@ func TestResourcePolicyPrioritiesAreGated(t *testing.T) {
 		"Use local/offline routes when they meet the task quality bar.",
 		"Escalate to stronger online routes when correctness, codebase scope, or",
 		"Preserve enough session state to continue work without replaying stale chat.",
-		"Avoiding throttling is P1.",
+		"Throttle resilience is release-gated in v1.",
 		"Power awareness is P1.",
 		"throttle-aware route switching",
 		"powered-mode and low-battery routing",

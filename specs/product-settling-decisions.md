@@ -1,6 +1,6 @@
 # Product Settling Decisions
 
-Updated: 2026-06-12
+Updated: 2026-07-10
 
 This document records the hard product decisions that reduce ambiguity for GTM,
 engineering, docs, and tiering.
@@ -559,3 +559,37 @@ Rules:
   part of the free tier.
 - Landing-page and commercial-buyer copy should stay focused on user value,
   shipped behavior, pricing posture, and proof instead of contributor tooling.
+
+## PRD Rebuild Decision (2026-07-10)
+
+The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
+
+- Product identity: token-savings mastery with receipts; free to run; routes
+  everything; dollar savings is the primary receipt denomination, always shown
+  with tokens, time saved, and throttles dodged, labeled literal (metered API
+  routes) vs imputed (subscription routes, valued at API-equivalent prices).
+- Primary user: professional developer at a FAANG-class company; the quality
+  bar is first-minute indistinguishability from frontier-lab tooling; the PRD
+  reads as a commercial product contract, not research prose.
+- v1 scope is Option A (wedge first): BYO/gateway/CLI-handoff agent, sessions,
+  receipts/ledger, throttle fallback, on-the-fly skills/agents, live paywall
+  (Autopilot + Continuity, fail-closed). Local execution rides detected
+  third-party runtimes as a disclosed interim route; the first-party runtime
+  and curated permissive-license-only model matrix are v1.5.
+- On-the-fly skills/agents creation is a free-tier feature (competitive
+  parity). This narrows the earlier "agent/skills features are commercial"
+  doctrine; the commercial repo keeps the productivity-suite/OS feature set.
+  Developer/tester agent fleets remain commercial.
+- BYO compatibility matrix, repo-scoped project memory, and
+  repetition-suggested skills are v1 requirements (user-directed additions,
+  2026-07-09).
+- Savings on the face: task footer, session roll-up, startup counter, savings
+  dashboard with charts and local HTML report (user-directed, 2026-07-09).
+- The specs/ directory is swept: one canonical PRD, a small keep-set, and
+  specs/archive/ for everything superseded, per prd-rebuild-design.md §8,
+  executed as a gated sequence, never one mega-change.
+- The canonical PRD line cap rises from 170 to 400: the rebuilt PRD absorbs
+  requirements formerly spread across several specs; the cap and its intent
+  (stay reduced versus the older platform plans) remain.
+- Throttle resilience is elevated from P1 to a release-gated v1 goal (free:
+  detection, suggested fallback, resume; paid Autopilot: automatic switching).
