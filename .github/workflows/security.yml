@@ -61,7 +61,7 @@ jobs:
           fetch-depth: 0
 
       - name: Scan for leaked secrets
-        uses: trufflesecurity/trufflehog@v3.95.5
+        uses: trufflesecurity/trufflehog@v3.95.9
         with:
           version: "3.95.5"
           extra_args: --results=verified,unknown
