@@ -1,6 +1,6 @@
 # Engineering Gate Matrix
 
-Updated: 2026-06-08
+Updated: 2026-07-12
 
 This document is a specialized engineering quality-gate contract, not the
 top-precedence product and operating PRD.
@@ -112,6 +112,21 @@ Required outcome:
 - release work cannot claim competitor catch-up while the scorecard gate is
   missing required competitor or pressure-vector coverage
 
+Release bars added by the rebuilt PRD (see number-one-platform-prd.md Gates):
+
+- TTFV measured under 5 minutes on fresh macOS/Linux/Windows machines from
+  signed artifacts (model download excluded and disclosed).
+- First-task success measured in release qualification.
+- Task-success benchmark published for every recommended model, clearing its
+  device-class floor; every matrix model's license verified (permissive,
+  redistribution-safe, official-source download).
+- Savings-methodology audit passed, including literal-vs-imputed labeling and
+  pricing-table provenance.
+- Paywall fail-closed verification: no entitlement -> paid features cleanly
+  absent, free equivalents work.
+- Token-efficiency regression suite green.
+- Crash-free session rate at least 99.5% in qualification.
+
 ## Canonical Runner
 
 The checked-in runner for these tiers is:
@@ -148,6 +163,43 @@ updated in the same change.
 Focused tests are encouraged during iteration.
 
 They do not replace the required tier gates before commit, push, or release.
+
+## Absorbed Contracts
+
+These normative rules were merged here from now-archived gate docs during the
+PRD rebuild (prd-rebuild-design.md §8). They are traced to the rebuilt PRD's
+Routing And Resource Policy and Token Economy sections.
+
+### Lean platform gate (absorbed from lean-platform-gate.md)
+
+Token frugality is P0 and must be treated as a first-order gate, not a generic
+cost optimization. Required regression inputs include `token-frugality-p0`,
+`offline-online-session-stitching`, `throttle-driven-platform-switching`,
+`task-shaped-model-selection`, and `power-and-battery-aware-routing`.
+
+Reject any change that:
+
+- increases token load, transcript replay, or verbose output without measurable
+  quality, trust, or safety gain
+- removes or weakens powered-mode full power execution when local capability is
+  useful and safe
+- removes or weakens low-battery or thermal-aware execution so local routes
+  keep burning device resources when a smaller, deferred, or remote route would
+  preserve the outcome
+- splits offline and online execution into separate transcripts, task ids, or
+  route histories instead of stitching them into one session timeline
+
+### Dogfood, friction, and engineering principles (absorbed)
+
+- Persona dogfood rules (from dogfood-gates.md): `jini` must remain the normal
+  front door after install; `Auto` is explained in plain language ("Jini picks
+  for you"), not as system-state theory.
+- Friction reduction (from friction-reduction-gate.md): `jini` starts without
+  stale default work output; help shows examples and setup guidance; standard
+  one-word commands are never shadowed by taught multiword vocabulary.
+- Engineering principles (from engineering-principles.md): SOLID/OOP discipline
+  and the reject conditions for over-engineered abstractions remain the code
+  review baseline for Go work in this repo.
 
 ## Promotion Candidates
 

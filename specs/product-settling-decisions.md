@@ -610,3 +610,7 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   editorial layout, shimmer skeletons) land in
   specs/roadmap-app-ux-guardrails.md as roadmap-stage, activating only when
   the GUI surface enters scope via a decision-record update.
+- Gate matrix retraced to the rebuilt PRD (release bars added) and absorbs the
+  gate-doc merge group (lean-platform-gate, dogfood-gates,
+  friction-reduction-gate, engineering-principles) into an Absorbed Contracts
+  section; those four sources move to specs/archive/ in the sweep.
