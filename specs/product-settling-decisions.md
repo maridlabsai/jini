@@ -604,3 +604,9 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   surface, designed output typography, opt-in notifications, anonymous-by-
   default onboarding, and release-gated accessibility (NO_COLOR/--plain,
   no color-only meaning).
+- UX addendum applies to BOTH surfaces (user decision, 2026-07-12): the
+  CLI-idiomatic translation lands in the v1 PRD terminal experience bar; the
+  literal native-GUI guardrails (Live Activities, haptics, Material You,
+  editorial layout, shimmer skeletons) land in
+  specs/roadmap-app-ux-guardrails.md as roadmap-stage, activating only when
+  the GUI surface enters scope via a decision-record update.

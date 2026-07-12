@@ -343,7 +343,8 @@ release-asset install, and CLI UX, PRD drift, and scorecard gates in commit gate
 P1 next: throttle-aware route switching, powered-mode and low-battery routing,
 offline local-model quality regression harness, cross-surface session handoff,
 first-party runtime and curated model matrix (v1.5),
-macOS app HLD/LLD for a Codex desktop-caliber session and artifact surface, and
+macOS app HLD/LLD for a Codex desktop-caliber session and artifact surface
+(GUI UX guardrails in [roadmap-app-ux-guardrails.md](./roadmap-app-ux-guardrails.md)), and
 clearer CLI/local runtime diagnostics.
 
 Deferred until decision-record update: Windows/mobile apps, richer commercial
