@@ -593,3 +593,7 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   (stay reduced versus the older platform plans) remain.
 - Throttle resilience is elevated from P1 to a release-gated v1 goal (free:
   detection, suggested fallback, resume; paid Autopilot: automatic switching).
+- Drift-gate protected set repointed to the post-rebuild keep-set (PRD,
+  rebuild design, architecture blueprint, settling decisions, rewrite
+  contract, gate matrix, routing policy, model matrix, repo boundary,
+  canonical names, implementation trace, README).
