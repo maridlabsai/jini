@@ -597,3 +597,10 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   rebuild design, architecture blueprint, settling decisions, rewrite
   contract, gate matrix, routing policy, model matrix, repo boundary,
   canonical names, implementation trace, README).
+- Terminal experience bar added to the UX contract (user-directed UX
+  addendum, 2026-07-11, translated from mobile idiom to CLI idiom):
+  terminal-idiomatic rendering with graceful capability fallback, sub-100ms
+  first paint with narrated progress instead of spinners, state-adaptive
+  surface, designed output typography, opt-in notifications, anonymous-by-
+  default onboarding, and release-gated accessibility (NO_COLOR/--plain,
+  no color-only meaning).

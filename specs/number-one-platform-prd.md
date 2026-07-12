@@ -137,6 +137,30 @@ Bare `jini` is a task prompt, not a dashboard.
 - no visible agent-role theater in the free tier
 - no hard-coded entity-to-template routing
 
+Terminal experience bar (Editor's-Choice guardrails, CLI-idiomatic):
+
+- Terminal-idiomatic, never a generic wrapper: 24-bit color with graceful
+  256/16/NO_COLOR fallback, dark/light terminal detection, correct resize
+  handling, standard keybindings, shell completions (zsh/bash/fish), man page.
+- Perceived performance is a feature: first paint under 100ms, stream results
+  as they arrive, and never a bare spinner — long operations narrate what is
+  happening ("validating anthropic key, one test call") with polished
+  progress states.
+- State-adaptive surface: the interface morphs by work state — idle (compact
+  prompt), executing (dense progress with route status), completed (receipt
+  with savings footer), throttled (fallback suggestion first), resuming
+  (compact resume card with fidelity disclosure).
+- Output typography is designed: disciplined ANSI hierarchy, semantic color
+  that never carries meaning alone, purposeful whitespace; the savings
+  dashboard renders magazine-quality inside a terminal.
+- Opt-in system notifications for long-task completion and throttle events;
+  strict bell discipline.
+- Anonymous by default: no account, signup, or tier selection before first
+  value; an account exists only for Continuity sync.
+- Accessibility is release-gated: NO_COLOR and --plain modes are first-class,
+  output survives screen readers and copy-paste, and every layout respects
+  the user's terminal width and font scaling.
+
 ## Routing And Resource Policy
 
 Token frugality is P0. Jini must spend context only when it improves the result.

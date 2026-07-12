@@ -8,6 +8,7 @@ Global invariants binding every contract below:
 - Truth-in-labeling for routes (§4.3). Fail closed with exact guidance, never generic errors (§4.1, §4.3).
 - Paid features fail closed; a manual free equivalent is always constructible in the same code path (§4.9).
 - Savings are typed literal or imputed; the label survives every rendering (§4.5, §5).
+- Terminal experience bar (PRD UX contract): state-adaptive surface, sub-100ms first paint, narrated progress instead of spinners, semantic-but-never-color-only output, NO_COLOR/--plain first-class. Every INJECTION PROMPT block below implicitly requires: exact output layout for each state (idle/executing/completed/throttled/resuming), the state transitions between them, and accessibility assertions (a golden-transcript test per state in --plain mode).
 
 ---
 
