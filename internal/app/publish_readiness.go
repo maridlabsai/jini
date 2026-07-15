@@ -235,8 +235,8 @@ func buildPublishHonestAuditSection(root string) publishReadinessSection {
 			},
 		},
 		{
-			checkPath: "specs/lean-platform-gate.md#command-surface-discipline",
-			filePath:  "specs/lean-platform-gate.md",
+			checkPath: "specs/engineering-gate-matrix.md#command-surface-discipline",
+			filePath:  "specs/engineering-gate-matrix.md",
 			fragments: []string{
 				"### 3. Command-Surface Discipline",
 				"The free tier must not include a skills-based OS productivity suite.",

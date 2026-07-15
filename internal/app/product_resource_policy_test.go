@@ -29,7 +29,7 @@ func TestResourcePolicyPrioritiesAreGated(t *testing.T) {
 		}
 	}
 
-	leanGate := readResourcePolicyFile(t, root, "specs/lean-platform-gate.md")
+	leanGate := readResourcePolicyFile(t, root, "specs/engineering-gate-matrix.md")
 	for _, want := range []string{
 		"Token frugality is P0 and must be treated as a first-order gate",
 		"- `token-frugality-p0`",

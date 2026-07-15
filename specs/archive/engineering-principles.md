@@ -1,5 +1,9 @@
 # Engineering Principles
 
+> **SUPERSEDED (2026-07-07).** Archived by the PRD rebuild; no longer a requirement source.
+> Replaced by: [engineering-gate-matrix.md](../engineering-gate-matrix.md) §Absorbed Contracts.
+> Rationale: `specs/prd-rebuild-design.md` §8. Do not cite this file in new work.
+
 Jini should not rely on taste alone for implementation quality. Development
 should follow explicit engineering rules that keep the product dependable,
 cost-effective, and frictionless as the codebase grows.

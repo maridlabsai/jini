@@ -1896,7 +1896,7 @@ func TestPublishReadinessTextIncludesGuardrailCheckDetails(t *testing.T) {
 		"  HONEST-AUDIT ok",
 		"    OK specs/honest-system-audit.md#current-implementation-reality",
 		"    OK specs/skills-and-delegation-slice.md#tier-boundary",
-		"    OK specs/lean-platform-gate.md#command-surface-discipline",
+		"    OK specs/engineering-gate-matrix.md#command-surface-discipline",
 		"    CLAIM P0 competitor watching STATUS partial RUNTIME true",
 		"    CLAIM Configured CLI handoff STATUS implemented RUNTIME true",
 		"    CLAIM Native Go CLI STATUS implemented RUNTIME true",
@@ -2017,7 +2017,7 @@ func TestPublishReadinessIncludesHonestAuditGuardrails(t *testing.T) {
 		"specs/honest-system-audit.md#current-implementation-reality": false,
 		"specs/honest-system-audit.md#core-feedback-accommodations":   false,
 		"specs/skills-and-delegation-slice.md#tier-boundary":          false,
-		"specs/lean-platform-gate.md#command-surface-discipline":      false,
+		"specs/engineering-gate-matrix.md#command-surface-discipline": false,
 	}
 	for _, section := range report.Sections {
 		if section.ID != "honest-audit" {

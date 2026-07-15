@@ -614,3 +614,8 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   gate-doc merge group (lean-platform-gate, dogfood-gates,
   friction-reduction-gate, engineering-principles) into an Absorbed Contracts
   section; those four sources move to specs/archive/ in the sweep.
+- Batch-1 archive completion (2026-07-15): lean-platform-gate command-surface
+  and skills-simplicity rules fully absorbed verbatim into the gate matrix
+  Absorbed Contracts; the four gate docs moved to specs/archive/ with
+  supersession banners, and their Go/tools references repointed to
+  specs/engineering-gate-matrix.md.

@@ -1,5 +1,9 @@
 # Dogfood Gates
 
+> **SUPERSEDED (2026-07-07).** Archived by the PRD rebuild; no longer a requirement source.
+> Replaced by: [engineering-gate-matrix.md](../engineering-gate-matrix.md) §Absorbed Contracts.
+> Rationale: `specs/prd-rebuild-design.md` §8. Do not cite this file in new work.
+
 Updated: 2026-05-15
 
 ## Purpose

@@ -304,7 +304,7 @@ scorecard_gates:
           ref: "go test ./internal/app -run TestResourcePolicyPrioritiesAreGated"
         - id: lean-platform-token-frugality-p0
           kind: named-proof
-          ref: "specs/lean-platform-gate.md"
+          ref: "specs/engineering-gate-matrix.md"
       gate: >
         Route decisions must show compact context reuse, transcript replay
         avoidance, cost/throttle rationale, and why a premium or high-context
@@ -1129,7 +1129,7 @@ scenarios:
       - id: publish-readiness-lean-skills-boundary-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
-        contains: "specs/lean-platform-gate.md#command-surface-discipline"
+        contains: "specs/engineering-gate-matrix.md#command-surface-discipline"
       - id: publish-readiness-honest-audit-go-cli-claim-visible
         command: ["publish-readiness", "--format", "json"]
         path: "sections"

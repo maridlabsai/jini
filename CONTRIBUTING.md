@@ -40,8 +40,9 @@ If you change docs, examples, or install metadata, make sure command names,
 bundle names, and pack names still line up.
 
 If you change install, setup, launcher copy, route selection, `provider doctor`,
-or beginner docs, also review the standing persona gate in
-[specs/dogfood-gates.md](./specs/dogfood-gates.md).
+or beginner docs, also review the standing persona gate, now absorbed into
+[specs/engineering-gate-matrix.md](./specs/engineering-gate-matrix.md)
+(§Absorbed Contracts).
 
 If you make a major product decision or push a meaningful rewrite slice, also
 review the scorecard gate in:

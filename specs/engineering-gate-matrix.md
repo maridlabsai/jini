@@ -173,9 +173,26 @@ Routing And Resource Policy and Token Economy sections.
 ### Lean platform gate (absorbed from lean-platform-gate.md)
 
 Token frugality is P0 and must be treated as a first-order gate, not a generic
-cost optimization. Required regression inputs include `token-frugality-p0`,
-`offline-online-session-stitching`, `throttle-driven-platform-switching`,
-`task-shaped-model-selection`, and `power-and-battery-aware-routing`.
+cost optimization.
+
+#### 3. Command-Surface Discipline
+
+The product must preserve `one-stable-surface`, low `command-surface-count`, and
+`no-compatibility-aliases` in the taught surface.
+
+This discipline also applies to skills and agent interactions. Specialist
+helpers must stay reachable through natural intake and progressive disclosure;
+they must not become a second command tree or visible agent control plane.
+The free tier must not include a skills-based OS productivity suite.
+
+Required regression inputs:
+
+- `token-frugality-p0`
+- `offline-online-session-stitching`
+- `throttle-driven-platform-switching`
+- `task-shaped-model-selection`
+- `power-and-battery-aware-routing`
+- `skill-agent-interaction-simplicity`
 
 Reject any change that:
 
@@ -188,6 +205,9 @@ Reject any change that:
   preserve the outcome
 - splits offline and online execution into separate transcripts, task ids, or
   route histories instead of stitching them into one session timeline
+- teaches skill or agent vocabulary as a prerequisite to normal use
+- ships developer agents, tester agents, `skills`, `delegate`, or a skills-based OS productivity suite in the free tier
+- shows agent trees, role theater, or orchestration logs by default
 
 ### Dogfood, friction, and engineering principles (absorbed)
 

@@ -1,5 +1,9 @@
 # Friction Reduction Gate
 
+> **SUPERSEDED (2026-07-07).** Archived by the PRD rebuild; no longer a requirement source.
+> Replaced by: [engineering-gate-matrix.md](../engineering-gate-matrix.md) §Absorbed Contracts.
+> Rationale: `specs/prd-rebuild-design.md` §8. Do not cite this file in new work.
+
 ## Gate Purpose
 
 This gate prevents Jini from becoming harder to use than Codex, ChatGPT, or

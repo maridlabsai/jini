@@ -61,7 +61,7 @@ func TestP1SimplicityPriorityCoversCommandsSkillsAndAgents(t *testing.T) {
 		}
 	}
 
-	leanGate := readProductSimplicityFile(t, root, "specs/lean-platform-gate.md")
+	leanGate := readProductSimplicityFile(t, root, "specs/engineering-gate-matrix.md")
 	for _, want := range []string{
 		"This discipline also applies to skills and agent interactions.",
 		"The free tier must not include a skills-based OS productivity suite.",
