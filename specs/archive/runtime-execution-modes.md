@@ -1,5 +1,9 @@
 # Jini Runtime Modes
 
+> **SUPERSEDED (2026-07-07).** Archived by the PRD rebuild; no longer a requirement source.
+> Replaced by: [execution-routing-policy.md](../execution-routing-policy.md) §Absorbed Policies.
+> Rationale: `specs/prd-rebuild-design.md` §8. Do not cite this file in new work.
+
 ## 1. Purpose
 
 This document defines how Jini executes local workflow actions in:

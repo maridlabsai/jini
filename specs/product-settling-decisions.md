@@ -619,3 +619,9 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   Absorbed Contracts; the four gate docs moved to specs/archive/ with
   supersession banners, and their Go/tools references repointed to
   specs/engineering-gate-matrix.md.
+- Batch-2 routing merge (2026-07-15): runtime-execution-modes,
+  runtime-selection-heuristics, device-capability-routing, and
+  research-informed-heuristics absorbed into execution-routing-policy.md
+  §Absorbed Policies and archived. "Local commercial SLM" phrasing dropped in
+  the absorption — local model routing is free-tier per the rebuilt PRD Tier
+  Boundary; stale model-name examples dropped.
