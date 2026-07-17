@@ -39,7 +39,7 @@ func TestOfflineRegressionGuardrailsFailWhenRequiredSpecContentIsMissing(t *test
 		"preserve route evidence shape",
 		"preserve session and artifact identity",
 	}, "\n"))
-	writeTestFile(t, filepath.Join(specDir, "adapter-benchmark-gate.md"), strings.Join([]string{
+	writeTestFile(t, filepath.Join(specDir, "golden-competitive-benchmark.yaml"), strings.Join([]string{
 		"### 4. Routing Use",
 		"repeated regression across recent samples",
 		"strong recovery after degradation",
@@ -2057,7 +2057,7 @@ func TestPublishReadinessIncludesOfflineRegressionGuardrails(t *testing.T) {
 		"specs/local-model-support-matrix.md#registry-contract":    false,
 		"specs/local-model-support-matrix.md#promotion-loop":       false,
 		"specs/local-model-support-matrix.md#future-update-policy": false,
-		"specs/adapter-benchmark-gate.md#routing-use":              false,
+		"specs/golden-competitive-benchmark.yaml#routing-use":      false,
 	}
 	for _, section := range report.Sections {
 		if section.ID != "offline-regression" {

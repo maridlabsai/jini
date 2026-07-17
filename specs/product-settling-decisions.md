@@ -634,3 +634,12 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   repointed from platform-offline-strategy.md to the matrix. Same tier
   reconciliation as batch 2: "commercially usable local SLM" reads as plain
   local SLM routing.
+- Batch-4 benchmark merge + competitor promotion (2026-07-17): Cline, Aider,
+  Roo Code, Goose, OpenCode, and Continue promoted from watchlist to the
+  golden-benchmark core set (PRD Risk Register requirement) with
+  identical-schema rationale entries and honest scenario scores; scorecard
+  minimums retuned to 13 core / 38 watchlist. adapter-benchmark-gate,
+  adapter-capability-benchmarking, and competitive-kpis absorbed into
+  golden-competitive-benchmark.yaml (absorbed_adapter_benchmark_methodology)
+  and archived; publish-readiness routing-use check and KPI test reads
+  repointed to the golden benchmark.

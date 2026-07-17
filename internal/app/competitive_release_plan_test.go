@@ -105,7 +105,7 @@ func TestCompetitiveReleasePlanIsWiredIntoReleasePlanning(t *testing.T) {
 		}
 	}
 
-	kpis := readCompetitivePlanFile(t, root, "specs/competitive-kpis.yaml")
+	kpis := readCompetitivePlanFile(t, root, "specs/golden-competitive-benchmark.yaml")
 	for _, want := range []string{
 		"GitHub Copilot coding agent",
 		"Google Jules",

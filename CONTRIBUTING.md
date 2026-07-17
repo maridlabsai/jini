@@ -47,7 +47,6 @@ or beginner docs, also review the standing persona gate, now absorbed into
 If you make a major product decision or push a meaningful rewrite slice, also
 review the scorecard gate in:
 
-- [specs/competitive-kpis.yaml](./specs/competitive-kpis.yaml)
 - [specs/golden-competitive-benchmark.yaml](./specs/golden-competitive-benchmark.yaml)
 - [specs/rewrite-score-baseline.yaml](./specs/rewrite-score-baseline.yaml)
 

@@ -507,8 +507,8 @@ func buildPublishOfflineRegressionSection(root string) publishReadinessSection {
 			},
 		},
 		{
-			checkPath: "specs/adapter-benchmark-gate.md#routing-use",
-			filePath:  "specs/adapter-benchmark-gate.md",
+			checkPath: "specs/golden-competitive-benchmark.yaml#routing-use",
+			filePath:  "specs/golden-competitive-benchmark.yaml",
 			fragments: []string{
 				"### 4. Routing Use",
 				"repeated regression across recent samples",

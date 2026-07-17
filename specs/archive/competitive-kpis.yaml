@@ -1,3 +1,6 @@
+# SUPERSEDED (2026-07-07). Archived by the PRD rebuild; no longer a requirement source.
+# Replaced by: ../golden-competitive-benchmark.yaml (watchlist + required_watchlist_competitors).
+# Rationale: specs/prd-rebuild-design.md section 8. Do not cite this file in new work.
 updated_at: "2026-06-10"
 target_score: 9.0
 core_benchmark_set:
