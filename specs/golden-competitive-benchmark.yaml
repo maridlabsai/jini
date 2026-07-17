@@ -238,7 +238,7 @@ scorecard_gates:
           ref: "go test ./internal/app -run TestPublishReadinessIncludesOfflineRegressionGuardrails"
         - id: platform-offline-strategy-future-update-policy
           kind: named-proof
-          ref: "specs/platform-offline-strategy.md"
+          ref: "specs/local-model-support-matrix.md"
       gate: >
         Offline and local-model routes must be proven by executable diagnostics
         or fail with exact setup instructions; docs may not claim fake offline
@@ -1105,7 +1105,7 @@ scenarios:
       - id: publish-readiness-offline-update-policy-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
-        contains: "specs/platform-offline-strategy.md#future-update-policy"
+        contains: "specs/local-model-support-matrix.md#future-update-policy"
       - id: publish-readiness-adapter-regression-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"

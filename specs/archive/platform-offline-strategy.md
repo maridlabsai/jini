@@ -1,5 +1,9 @@
 # Platform Offline Strategy
 
+> **SUPERSEDED (2026-07-07).** Archived by the PRD rebuild; no longer a requirement source.
+> Replaced by: [local-model-support-matrix.md](../local-model-support-matrix.md) §Absorbed Policies.
+> Rationale: `specs/prd-rebuild-design.md` §8. Do not cite this file in new work.
+
 Updated: 2026-06-05
 
 This document is a specialized platform offline strategy, not the

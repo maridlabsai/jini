@@ -12,7 +12,7 @@ Commercial-only productivity-suite work belongs in `../jini-commercial`, not thi
 - PRD trace: `specs/prd-implementation-trace.md`
 - CLI behavior contract: `specs/product-rewrite-contract.md`
 - Runtime routing: `specs/execution-routing-policy.md` (runtime modes, selection heuristics, and device-capability routing absorbed in §Absorbed Policies)
-- Offline/local model policy: `specs/platform-offline-strategy.md`, `specs/local-slm-frontline-policy.md`, `specs/local-model-support-matrix.md`
+- Offline/local model policy: `specs/local-model-support-matrix.md` (offline strategy, SLM frontline policy, and device runtime gate absorbed in §Absorbed Policies)
 - Competitive bar: `specs/golden-competitive-benchmark.yaml`, `specs/competitive-release-plan.md`
 - Gates: `specs/engineering-gate-matrix.md`, `tools/run_required_gates.sh`
 

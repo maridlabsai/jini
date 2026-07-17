@@ -72,7 +72,7 @@ func TestResourcePolicyPrioritiesAreGated(t *testing.T) {
 		}
 	}
 
-	offlineStrategy := readResourcePolicyFile(t, root, "specs/platform-offline-strategy.md")
+	offlineStrategy := readResourcePolicyFile(t, root, "specs/local-model-support-matrix.md")
 	for _, want := range []string{
 		"### Guarantee 4a: Offline And Online Toggle Seamlessly",
 		"local model work performed offline",

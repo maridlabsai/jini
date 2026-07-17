@@ -1,6 +1,10 @@
 # Jini Local Model Support Matrix
 
-Updated: 2026-06-05
+Updated: 2026-07-15
+
+Traced to number-one-platform-prd.md §Routing And Resource Policy (v1.5
+curated-matrix scope; v1 local execution rides detected third-party runtimes
+as a disclosed interim route per §Goals And Scope, Option A).
 
 ## P0 Decision
 
@@ -23,7 +27,8 @@ This document defines:
 - how Jini should watch for successor versions and promote them safely
 
 The platform-by-platform offline guarantees, sync semantics, and route policy
-live in [platform-offline-strategy.md](./platform-offline-strategy.md).
+are absorbed below in §Absorbed Policies (from the archived
+platform-offline-strategy.md).
 
 The product goal is not to chase model brands.
 
@@ -282,6 +287,18 @@ These may be tested but should not become defaults without measured uplift:
 - niche runtime-specific forks
 - model families without stable local serving paths across the supported hosts
 
+## Admission Criteria
+
+Per number-one-platform-prd.md §Goals And Scope, matrix admission is
+license-gated:
+
+- only permissively-licensed, redistribution-safe models are admitted
+- model downloads come from official sources only
+- the license is shown to the user at consent time, before download
+
+A model that fails any of these is not a candidate, regardless of benchmark
+score.
+
 ## Registry Contract
 
 Jini should maintain a versioned local model registry with fields including:
@@ -387,3 +404,159 @@ This P0 is complete only when all are true:
 - successor models can be promoted without rewriting the product contract
 - offline continuation and trust surfaces stay stable while local model picks
   evolve underneath them
+
+## Absorbed Policies
+
+These normative rules were merged here from now-archived local-execution docs
+during the PRD rebuild (prd-rebuild-design.md §8). Where a source conflicted
+with the rebuilt PRD, the PRD wins: "commercially usable local SLM" phrasing
+from the old tier doctrine is read as plain local SLM routing — local model
+routes are free-tier per the PRD Tier Boundary, with the curated matrix as
+v1.5 scope.
+
+### Local SLM frontline (absorbed from local-slm-frontline-policy.md)
+
+Default runtime order: local SLM pool first, stronger paid remote route only
+when needed. Jini should not spend frontier-model budget on work a local small
+model can complete well enough, and should treat local inference as a routed
+pool (`fast`, `workhorse`, `deep`, `multimodal`), not one fixed model.
+
+- Frontline work classes (local first attempt): intake classification, first
+  useful pass, follow-up drafting, plan/spec readiness first pass, extraction
+  from text-like inputs, summarization, gap detection, checklist shaping,
+  rewrite/cleanup without deep external reasoning.
+- Escalation work classes: deep critique, architecture review, benchmark or
+  exhaustive work, codebase-wide reasoning with stronger correctness
+  expectations, stronger tool use or provider-bound execution, unsupported
+  modality, policy-constrained cloud routing.
+- Runtime decision order: (1) can the local pool handle this well enough,
+  (2) which local profile fits, (3) use it; otherwise (4) cheapest suitable
+  stronger route, and (5) explicit deep asks prefer the best suitable route.
+- Trust readout: when local runs, the user sees `AI route`, `Model`,
+  `Local profile`, `Route policy`, and `Why this was chosen`.
+- Configuration layers: local SLM mode `off | prefer | require`; profile
+  selection `auto | fast | workhorse | deep | multimodal`; one stable local
+  transport contract; profile-to-model mapping. Users never need these terms
+  before first success.
+- Non-goals: pretending local preview is real local inference; exposing
+  model-brand debates as the normal experience; requiring a local model
+  install before Jini is useful.
+
+### Cross-platform offline strategy (absorbed from platform-offline-strategy.md)
+
+Jini behaves like one work operating system across macOS, Windows, Android,
+and iOS. Platform differences are allowed only in interaction density, local
+model capacity, offline execution depth, distribution constraints, and review
+ergonomics — never in session identity, artifact identity, route evidence,
+review/send boundary, offline debt visibility, or sync conflict rules.
+
+Guarantees every shipped surface must preserve:
+
+1. Same work object: every platform acts on the same logical session (stable
+   session id, goal, status, current artifact, ready/missing state, next
+   action, route evidence, review-safe state, approval boundary, offline and
+   sync status).
+2. Offline mode is explicit: show offline mode, available local route,
+   unavailable remote routes, work that can continue, work that is blocked,
+   and reconciliation debt.
+3. Local work does not fork the session: offline work appends events to the
+   same session timeline — no second transcript, task id, or detached
+   artifact family.
+4. Route evidence survives sync: after sync the user can inspect which device
+   acted, which route and local profile were used, what was generated
+   offline, and what was reconciled later.
+
+### Guarantee 4a: Offline And Online Toggle Seamlessly
+
+Offline and online are route states inside one session, not separate
+products. The same session timeline must stitch together:
+
+- local model work performed offline
+- queued approvals or annotations captured on mobile
+- downstream CLI work resumed online
+- managed-route recovery after throttling or provider limits
+- sync and reconciliation events after connectivity returns
+
+Cross-navigation must preserve the same current artifact, next action, route
+evidence, device capability state, battery or thermal posture, online
+capability state, configured CLI throttle state, and offline debt.
+
+Further guarantees: mobile is not desktop parity (excellent at continuation,
+review, approval, defer, capture, light transforms — not deep coding or large
+local inference); desktop (macOS/Windows) is the offline authoring host with
+deeper local profiles when the machine supports them.
+
+Route policy is unified across platforms. The route decision considers task
+shape, modality, risk, user preference, device class, local profile
+availability, local runtime health, battery and thermal envelope, offline
+state, provider availability, online CLI throttle level and quota pressure,
+downstream CLI route availability, and prior route regret.
+
+- Local-first rule: cheapest suitable local route when a local profile can
+  satisfy the task reliably at acceptable risk and no stronger route is
+  pinned.
+- Escalation rule: escalate or hand off when the local profile is
+  unavailable, local latency makes the route expensive in practice, required
+  modality is missing locally, task risk requires stronger reasoning, a
+  connector write requires online capability, or the user asks.
+- Mobile handoff rule: mobile hands off rather than overruns its role for
+  long-running generation, complex artifact edits, weak local profiles, or
+  battery/thermal/memory pressure.
+
+Sync semantics: sync events, not raw transcripts. The core sync object is the
+session envelope, event log, artifact metadata and versions, route evidence,
+offline debt, and conflict markers. Merge by session id; preserve every event
+with device id and timestamp; rebuild projection after merge; never discard
+route evidence; never silently overwrite the current artifact; require user
+review when two devices edited the same artifact version. Offline debt is
+visible whenever a connector write is queued, hosted sync is incomplete, an
+approval targets an older artifact version, route evidence is incomplete, or
+a merge conflict exists.
+
+Shipping prerequisites: desktop ships only with a shared session envelope,
+durable local artifact store, correct offline event append, inspectable route
+evidence, visible sync reconciliation, device-aware profile selection, and
+honest preview posture. Mobile ships only with shared session identity,
+offline latest-ready artifact, offline-surviving review/approval/defer/
+annotation events, visible pending sync, stale-approval detection before
+send, and obvious handoff when mobile capacity is too small.
+
+### Future Update Policy
+
+Jini improves local capability through the registry and canary loop above,
+not through platform-specific product rewrites.
+
+Future model updates should:
+
+- map to stable profile roles
+- run the same offline and continuation checks as current defaults
+- preserve route evidence shape
+- preserve session and artifact identity
+- deprecate old mappings explicitly
+
+Future app updates should keep CLI, desktop, and mobile bound to one session
+graph, make offline debt more visible, reduce handoff cost, improve local
+route selection through measured evidence, and avoid platform-specific
+session semantics.
+
+### Device runtime gate (absorbed from device-runtime-gate.md)
+
+The independent gate for device-aware local runtime routing — separate from
+publish readiness because capability routing can drift without breaking the
+main product surface. Categories, each of which must be proven:
+
+1. Capability probe: OS, OS version, CPU architecture, memory, accelerator,
+   and local runtime class detection all exist in code.
+2. Versioned cache: repo-local device profile path; Jini version, capability
+   registry version, and capture timestamp recorded; freshness/re-probe
+   logic; profile invalidates on OS/runtime/endpoint drift, not only time.
+3. Routing use: device class reaches route features; route scoring includes a
+   device capability bias; profile availability can downgrade or block
+   expensive local routes and reflects backend readiness, not only hardware.
+4. Transparency: provider doctor exposes device class, accelerator class, and
+   local runtime class.
+5. Tests: deterministic device-class override path; device-aware route
+   selection tests; device-aware provider doctor tests.
+
+Gate command: `jini validate-device-runtime-gate --format json`. The gate
+fails if any category fails.

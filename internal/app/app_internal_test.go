@@ -34,8 +34,6 @@ func TestOfflineRegressionGuardrailsFailWhenRequiredSpecContentIsMissing(t *test
 		"## Registry Contract",
 		"`profile_role`",
 		"`status`",
-	}, "\n"))
-	writeTestFile(t, filepath.Join(specDir, "platform-offline-strategy.md"), strings.Join([]string{
 		"## Future Update Policy",
 		"Future model updates should:",
 		"preserve route evidence shape",
@@ -2056,10 +2054,10 @@ func TestPublishReadinessIncludesOfflineRegressionGuardrails(t *testing.T) {
 		t.Fatalf("decode publish-readiness JSON: %v\n%s", err, stdout.String())
 	}
 	required := map[string]bool{
-		"specs/local-model-support-matrix.md#registry-contract":   false,
-		"specs/local-model-support-matrix.md#promotion-loop":      false,
-		"specs/platform-offline-strategy.md#future-update-policy": false,
-		"specs/adapter-benchmark-gate.md#routing-use":             false,
+		"specs/local-model-support-matrix.md#registry-contract":    false,
+		"specs/local-model-support-matrix.md#promotion-loop":       false,
+		"specs/local-model-support-matrix.md#future-update-policy": false,
+		"specs/adapter-benchmark-gate.md#routing-use":              false,
 	}
 	for _, section := range report.Sections {
 		if section.ID != "offline-regression" {

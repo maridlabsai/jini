@@ -625,3 +625,12 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   §Absorbed Policies and archived. "Local commercial SLM" phrasing dropped in
   the absorption — local model routing is free-tier per the rebuilt PRD Tier
   Boundary; stale model-name examples dropped.
+- Batch-3 local-execution merge (2026-07-15): platform-offline-strategy,
+  local-slm-frontline-policy, and device-runtime-gate absorbed into
+  local-model-support-matrix.md §Absorbed Policies and archived; the matrix
+  gains a license-gated Admission Criteria section (permissive-license-only,
+  official-source downloads, license shown at consent) per the rebuilt PRD.
+  Publish-readiness, resource-policy tests, and benchmark named-proof refs
+  repointed from platform-offline-strategy.md to the matrix. Same tier
+  reconciliation as batch 2: "commercially usable local SLM" reads as plain
+  local SLM routing.

@@ -151,7 +151,7 @@ func buildPublishDocsSection(root string) publishReadinessSection {
 		"docs/install.md",
 		"docs/cli.md",
 		"specs/app-platform-shipping-playbook.md",
-		"specs/platform-offline-strategy.md",
+		"specs/local-model-support-matrix.md",
 		"specs/lean-platform-doctrine.md",
 		"specs/public-repo-boundary.md",
 		"distribution/install-manifest.yaml",
@@ -497,8 +497,8 @@ func buildPublishOfflineRegressionSection(root string) publishReadinessSection {
 			},
 		},
 		{
-			checkPath: "specs/platform-offline-strategy.md#future-update-policy",
-			filePath:  "specs/platform-offline-strategy.md",
+			checkPath: "specs/local-model-support-matrix.md#future-update-policy",
+			filePath:  "specs/local-model-support-matrix.md",
 			fragments: []string{
 				"## Future Update Policy",
 				"Future model updates should:",

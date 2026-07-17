@@ -33,7 +33,7 @@ The merge-time guardrails for this contract live in:
 - [product-consensus-prd-and-plan.md](./product-consensus-prd-and-plan.md)
 - [full-product-prd.md](./full-product-prd.md)
 - [full-product-prd-execution-plan.md](./full-product-prd-execution-plan.md)
-- [local-slm-frontline-policy.md](./local-slm-frontline-policy.md)
+- [local-model-support-matrix.md](./local-model-support-matrix.md) (local SLM frontline policy absorbed in §Absorbed Policies)
 - [conversation-and-artifact-ux.md](./conversation-and-artifact-ux.md)
 - [adaptive-response-rendering-framework.md](./adaptive-response-rendering-framework.md)
 - [adaptive-response-rendering-framework-review.md](./adaptive-response-rendering-framework-review.md)
