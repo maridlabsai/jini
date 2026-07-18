@@ -616,7 +616,7 @@ func TestPublishReadinessJSONIsNativeGoAndReportsMigrationComplete(t *testing.T)
 			continue
 		}
 		for _, check := range section.Checks {
-			if check.Path == "specs/app-platform-shipping-playbook.md" {
+			if check.Path == "specs/archive/app-platform-shipping-playbook.md" {
 				foundAppShippingGate = true
 				if !check.Exists || check.Status != "ok" {
 					t.Fatalf("expected app platform shipping playbook gate to pass, got: %#v", check)

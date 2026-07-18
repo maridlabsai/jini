@@ -1,5 +1,9 @@
 # App Platform Shipping Playbook
 
+> **SUPERSEDED (2026-07-07).** Archived by the PRD rebuild; no longer a requirement source.
+> Replaced by: [engineering-gate-matrix.md](../engineering-gate-matrix.md) release tier; app-shipping detail parks with the roadmap-stage app docs.
+> Rationale: `specs/prd-rebuild-design.md` §8. Do not cite this file in new work.
+
 Updated: 2026-06-06
 
 This document compresses current platform research into the shipping rules for

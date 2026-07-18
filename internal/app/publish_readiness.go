@@ -150,7 +150,7 @@ func buildPublishDocsSection(root string) publishReadinessSection {
 		"docs/index.md",
 		"docs/install.md",
 		"docs/cli.md",
-		"specs/app-platform-shipping-playbook.md",
+		"specs/archive/app-platform-shipping-playbook.md",
 		"specs/local-model-support-matrix.md",
 		"specs/lean-platform-doctrine.md",
 		"specs/public-repo-boundary.md",
@@ -377,8 +377,8 @@ func buildPublishAppPlatformSection(root string) publishReadinessSection {
 
 	required := []publishFragmentRequirement{
 		{
-			checkPath: "specs/app-platform-shipping-playbook.md#default-stack-decision",
-			filePath:  "specs/app-platform-shipping-playbook.md",
+			checkPath: "specs/archive/app-platform-shipping-playbook.md#default-stack-decision",
+			filePath:  "specs/archive/app-platform-shipping-playbook.md",
 			fragments: []string{
 				"## Default Stack Decision",
 				"Next.js App Router",
@@ -387,8 +387,8 @@ func buildPublishAppPlatformSection(root string) publishReadinessSection {
 			},
 		},
 		{
-			checkPath: "specs/app-platform-shipping-playbook.md#security-baseline",
-			filePath:  "specs/app-platform-shipping-playbook.md",
+			checkPath: "specs/archive/app-platform-shipping-playbook.md#security-baseline",
+			filePath:  "specs/archive/app-platform-shipping-playbook.md",
 			fragments: []string{
 				"## Security Baseline",
 				"OWASP MASVS",
@@ -398,8 +398,8 @@ func buildPublishAppPlatformSection(root string) publishReadinessSection {
 			},
 		},
 		{
-			checkPath: "specs/app-platform-shipping-playbook.md#performance-and-optimization-baseline",
-			filePath:  "specs/app-platform-shipping-playbook.md",
+			checkPath: "specs/archive/app-platform-shipping-playbook.md#performance-and-optimization-baseline",
+			filePath:  "specs/archive/app-platform-shipping-playbook.md",
 			fragments: []string{
 				"## Performance And Optimization Baseline",
 				"Core Web Vitals",
@@ -408,8 +408,8 @@ func buildPublishAppPlatformSection(root string) publishReadinessSection {
 			},
 		},
 		{
-			checkPath: "specs/app-platform-shipping-playbook.md#logging-diagnostics-and-observability",
-			filePath:  "specs/app-platform-shipping-playbook.md",
+			checkPath: "specs/archive/app-platform-shipping-playbook.md#logging-diagnostics-and-observability",
+			filePath:  "specs/archive/app-platform-shipping-playbook.md",
 			fragments: []string{
 				"## Logging, Diagnostics, And Observability",
 				"`session_id`",
@@ -419,8 +419,8 @@ func buildPublishAppPlatformSection(root string) publishReadinessSection {
 			},
 		},
 		{
-			checkPath: "specs/app-platform-shipping-playbook.md#update-and-release-policy",
-			filePath:  "specs/app-platform-shipping-playbook.md",
+			checkPath: "specs/archive/app-platform-shipping-playbook.md#update-and-release-policy",
+			filePath:  "specs/archive/app-platform-shipping-playbook.md",
 			fragments: []string{
 				"## Update And Release Policy",
 				"Signed updates are mandatory",
@@ -429,8 +429,8 @@ func buildPublishAppPlatformSection(root string) publishReadinessSection {
 			},
 		},
 		{
-			checkPath: "specs/app-platform-shipping-playbook.md#app-shipping-gates",
-			filePath:  "specs/app-platform-shipping-playbook.md",
+			checkPath: "specs/archive/app-platform-shipping-playbook.md#app-shipping-gates",
+			filePath:  "specs/archive/app-platform-shipping-playbook.md",
 			fragments: []string{
 				"## App Shipping Gates",
 				"security and privacy gate",
@@ -439,8 +439,8 @@ func buildPublishAppPlatformSection(root string) publishReadinessSection {
 			},
 		},
 		{
-			checkPath: "specs/app-platform-shipping-playbook.md#source-backed-inputs",
-			filePath:  "specs/app-platform-shipping-playbook.md",
+			checkPath: "specs/archive/app-platform-shipping-playbook.md#source-backed-inputs",
+			filePath:  "specs/archive/app-platform-shipping-playbook.md",
 			fragments: []string{
 				"## Source-Backed Inputs",
 				"developer.apple.com",

@@ -74,7 +74,7 @@ func TestPublishReadinessTextRendersMissingFragments(t *testing.T) {
 			ID:     "app-platform",
 			Status: "needs-attention",
 			Checks: []publishReadinessCheck{{
-				Path:             "specs/app-platform-shipping-playbook.md#source-backed-inputs",
+				Path:             "specs/archive/app-platform-shipping-playbook.md#source-backed-inputs",
 				Exists:           true,
 				Status:           "incomplete",
 				MissingFragments: []string{"OpenTelemetry"},
@@ -84,7 +84,7 @@ func TestPublishReadinessTextRendersMissingFragments(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"    INCOMPLETE specs/app-platform-shipping-playbook.md#source-backed-inputs",
+		"    INCOMPLETE specs/archive/app-platform-shipping-playbook.md#source-backed-inputs",
 		"      MISSING OpenTelemetry",
 	} {
 		if !strings.Contains(out, want) {
@@ -98,7 +98,7 @@ func TestPublishReadinessJSONRendersMissingFragments(t *testing.T) {
 		ID:     "app-platform",
 		Status: "needs-attention",
 		Checks: []publishReadinessCheck{{
-			Path:             "specs/app-platform-shipping-playbook.md#source-backed-inputs",
+			Path:             "specs/archive/app-platform-shipping-playbook.md#source-backed-inputs",
 			Exists:           true,
 			Status:           "incomplete",
 			MissingFragments: []string{"OpenTelemetry"},
@@ -1899,7 +1899,7 @@ func TestPublishReadinessTextIncludesGuardrailCheckDetails(t *testing.T) {
 		"    CLAIM Configured CLI handoff STATUS implemented RUNTIME true",
 		"    CLAIM Native Go CLI STATUS implemented RUNTIME true",
 		"  APP-PLATFORM ok",
-		"    OK specs/app-platform-shipping-playbook.md#source-backed-inputs",
+		"    OK specs/archive/app-platform-shipping-playbook.md#source-backed-inputs",
 		"  OFFLINE-REGRESSION ok",
 		"    OK specs/local-model-support-matrix.md#promotion-loop",
 		"  COMPETITIVE-PRESSURE ok",
@@ -2096,13 +2096,13 @@ func TestPublishReadinessIncludesAppPlatformShippingGuardrails(t *testing.T) {
 		t.Fatalf("decode publish-readiness JSON: %v\n%s", err, stdout.String())
 	}
 	required := map[string]bool{
-		"specs/app-platform-shipping-playbook.md#default-stack-decision":                false,
-		"specs/app-platform-shipping-playbook.md#security-baseline":                     false,
-		"specs/app-platform-shipping-playbook.md#performance-and-optimization-baseline": false,
-		"specs/app-platform-shipping-playbook.md#logging-diagnostics-and-observability": false,
-		"specs/app-platform-shipping-playbook.md#update-and-release-policy":             false,
-		"specs/app-platform-shipping-playbook.md#app-shipping-gates":                    false,
-		"specs/app-platform-shipping-playbook.md#source-backed-inputs":                  false,
+		"specs/archive/app-platform-shipping-playbook.md#default-stack-decision":                false,
+		"specs/archive/app-platform-shipping-playbook.md#security-baseline":                     false,
+		"specs/archive/app-platform-shipping-playbook.md#performance-and-optimization-baseline": false,
+		"specs/archive/app-platform-shipping-playbook.md#logging-diagnostics-and-observability": false,
+		"specs/archive/app-platform-shipping-playbook.md#update-and-release-policy":             false,
+		"specs/archive/app-platform-shipping-playbook.md#app-shipping-gates":                    false,
+		"specs/archive/app-platform-shipping-playbook.md#source-backed-inputs":                  false,
 	}
 	for _, section := range report.Sections {
 		if section.ID != "app-platform" {

@@ -699,3 +699,9 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   free capability is degraded to force upgrades; the upgrade trigger stays
   the honest one — pay when route management interrupts you more often than
   the subscription costs.
+- Batch-6a shipping-playbook archive (2026-07-18): app-platform-shipping-
+  playbook archived. Plan deviation, recorded: instead of absorbing its app-
+  shipping fragment checks into the gate matrix, all 27 references repoint
+  to the archive path per the existence-pin rule — the checks validate
+  frozen app-shipping doctrine for surfaces that are roadmap-stage, while
+  live release bars already sit in the gate matrix release tier.
