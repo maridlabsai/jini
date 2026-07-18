@@ -654,3 +654,13 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   rides the OpenAI-compatible client shape; Grok models additionally remain
   reachable via the OpenRouter/LiteLLM gateway rungs. Per the matrix honesty
   rule, the shape is not claimed until its validation fixture passes.
+- Execution modes ratified (user directive, 2026-07-18): autonomous behavior
+  maps to an `Auto` setting which is the default; the alternative is `Ask`
+  (approval before side effects and throttled-work resume, mapping to the
+  supervised runtime mode). The user can switch between modes at any time,
+  including mid-session, without losing session state. Auto never waives
+  destructive-action confirmation or the escalation cost quote. Naming
+  checked against Kiro (Autopilot/Supervised toggle, switchable anytime):
+  "Autopilot" was rejected because it is Jini's paid SKU name, and
+  "Supervised/Consent" rejected as system-state jargon; `Auto`/`Ask` keeps
+  the established plain-language vocabulary.

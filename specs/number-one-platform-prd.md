@@ -144,6 +144,17 @@ Bare `jini` is a task prompt, not a dashboard.
 - no visible agent-role theater in the free tier
 - no hard-coded entity-to-template routing
 
+Execution modes — `Auto` and `Ask` (plain-language binary toggle, Kiro-checked):
+
+- `Auto` (default), "Jini picks for you": autonomous routing, safe direct
+  actions, and throttle hold/self-resume without prompting. Never waives the
+  escalation rule — destructive actions and above-rung spending still confirm.
+- `Ask`: Jini asks first — before side effects and before resuming throttled
+  work; maps to the supervised runtime mode in the execution policy.
+- Switchable at any time, mid-session included, with one obvious action;
+  switching never loses session state and never adds a second taught
+  command tree.
+
 Terminal experience bar (Editor's-Choice guardrails, CLI-idiomatic):
 
 - Terminal-idiomatic, never a generic wrapper: 24-bit color with graceful
