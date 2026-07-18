@@ -705,3 +705,8 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   to the archive path per the existence-pin rule — the checks validate
   frozen app-shipping doctrine for surfaces that are roadmap-stage, while
   live release bars already sit in the gate matrix release tier.
+- Batch-6b deviation (2026-07-18): competitive-release-plan.md is KEPT in
+  specs/, not archived. The plan's runtime-reference rule applies: it is the
+  live watch-packet source for internal/app/competitor_watch.go and the PRD
+  cites it inline as the P0 competitor-watch loop. A trace note to the PRD
+  was added instead; all existing references stay valid unchanged.

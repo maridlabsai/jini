@@ -1,6 +1,11 @@
 # Competitive Release Plan
 
-Updated: 2026-06-06
+Updated: 2026-07-18
+
+Traced to number-one-platform-prd.md §Market And Learning Guards (P0
+competitor-watch loop source) and §Risk Register. Kept live in specs/ during
+the PRD-rebuild sweep because runtime code (`internal/app/competitor_watch.go`)
+reads it as the watch-packet source.
 
 This document converts current competitor pressure into release-plan decisions.
 
