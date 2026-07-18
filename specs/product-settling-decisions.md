@@ -643,3 +643,14 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   golden-competitive-benchmark.yaml (absorbed_adapter_benchmark_methodology)
   and archived; publish-readiness routing-use check and KPI test reads
   repointed to the golden benchmark.
+- Autonomous throttle survival elevated to the number one P0 requirement
+  (user directive, 2026-07-18): Jini must detect throttling, hold the
+  session, and resume on its own with no human babysitting. Tier split
+  ratified: free tier self-resumes on the same route when capacity returns
+  and names fallbacks; paid Autopilot performs fallback route switching and
+  resume automatically. An agent that stops and waits for a person when
+  throttled is a release-blocking defect.
+- BYO matrix adds xAI (Grok) direct keys (user directive, 2026-07-18):
+  rides the OpenAI-compatible client shape; Grok models additionally remain
+  reachable via the OpenRouter/LiteLLM gateway rungs. Per the matrix honesty
+  rule, the shape is not claimed until its validation fixture passes.

@@ -90,6 +90,13 @@ in service of finishing work.
 
 ## P0 Outcome Requirements
 
+- Number one requirement — autonomous throttle survival: when any route is
+  throttled or quota-limited, Jini detects it, holds the session, and resumes
+  work on its own without a human babysitting the terminal. The free tier
+  self-resumes on the same route the moment capacity returns and names viable
+  fallbacks; paid Autopilot additionally switches to a fallback route mid-task
+  and resumes there automatically. An agent that stops and waits for a person
+  when throttled is a release-blocking defect.
 - Start from a natural task in the current directory.
 - Edit local files directly when the ask is clear and safe.
 - Fail closed with exact ambiguity when a file or code task is unclear.
@@ -177,7 +184,7 @@ Routing requirements:
 - Escalation is transparent: when a cheaper rung cannot clear the bar, Jini
   says why and what the next rung costs before spending money.
 - BYO compatibility matrix, release-gated: Anthropic, OpenAI, Google, DeepSeek,
-  Mistral, and Groq keys; OpenRouter and LiteLLM gateways; subscription-backed
+  Mistral, Groq, and xAI (Grok) keys; OpenRouter and LiteLLM gateways; subscription-backed
   CLIs (Claude Code, Codex/ChatGPT plans, Gemini CLI). Each shape has a
   validation fixture and a receipt-denomination rule; a shape without a
   passing fixture is not claimed.
@@ -186,8 +193,11 @@ Routing requirements:
   bad key, no quota, wrong region, network — never a generic error.
 
 Throttle resilience is release-gated in v1. Detect configured CLI/provider
-pressure, suggest viable fallbacks with clean session resume in the free tier;
-paid Autopilot performs the switching and resume automatically.
+pressure autonomously — no human babysitting. The free tier holds the
+throttled session, self-resumes on the same route when capacity returns, and
+suggests viable fallbacks with clean session resume; paid Autopilot performs
+the fallback switching and resume automatically. This is the product's number
+one requirement (see P0 Outcome Requirements).
 
 Power awareness is P1. In powered mode, Jini can choose higher-throughput local
 or online routes. In low-battery mode, Jini should avoid wasteful local model
