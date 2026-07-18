@@ -1,5 +1,9 @@
 # Jini Memory
 
+> **SUPERSEDED (2026-07-07).** Archived by the PRD rebuild; no longer a requirement source.
+> Replaced by: [number-one-platform-prd.md](../number-one-platform-prd.md) §Sessions, Memory, And Context.
+> Rationale: `specs/prd-rebuild-design.md` §8. Do not cite this file in new work.
+
 ## 1. Purpose
 
 Jini uses a lightweight Memory layer so work compounds across sessions without

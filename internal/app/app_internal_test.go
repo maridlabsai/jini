@@ -1907,7 +1907,7 @@ func TestPublishReadinessTextIncludesGuardrailCheckDetails(t *testing.T) {
 		"    OK specs/number-one-platform-prd.md#market-and-learning-guards",
 		"  PRODUCTIVITY-LEARNING ok",
 		"    OK specs/number-one-platform-prd.md#market-and-learning-guards",
-		"    OK specs/learning-system.md#user-context-productivity-learning",
+		"    OK specs/archive/learning-system.md#user-context-productivity-learning",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected publish-readiness text to contain %q, got:\n%s", want, out)
@@ -2183,8 +2183,8 @@ func TestPublishReadinessIncludesProductivityLearningGuardrails(t *testing.T) {
 		t.Fatalf("decode publish-readiness JSON: %v\n%s", err, stdout.String())
 	}
 	required := map[string]bool{
-		"specs/number-one-platform-prd.md#market-and-learning-guards": false,
-		"specs/learning-system.md#user-context-productivity-learning": false,
+		"specs/number-one-platform-prd.md#market-and-learning-guards":         false,
+		"specs/archive/learning-system.md#user-context-productivity-learning": false,
 	}
 	for _, section := range report.Sections {
 		if section.ID != "productivity-learning" {

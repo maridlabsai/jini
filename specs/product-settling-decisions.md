@@ -664,3 +664,12 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   "Autopilot" was rejected because it is Jini's paid SKU name, and
   "Supervised/Consent" rejected as system-state jargon; `Auto`/`Ask` keeps
   the established plain-language vocabulary.
+- Batch-5 sessions/surfaces archive (2026-07-18): memory-system,
+  learning-system, install-packaging, and client-surfaces-and-free-tier
+  archived; their requirements already live in the rebuilt PRD (§Sessions,
+  Memory, And Context; §Market And Learning Guards; install P0; §Tier
+  Boundary). Historical pinned-detail checks (learning-system fragment
+  check, install existence pin, tier-policy string pins) repointed to the
+  archive paths per the existence-pin rule — content is unchanged there and
+  the live requirement is separately asserted against the PRD, which stays
+  inside its 400-line budget.

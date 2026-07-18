@@ -1320,7 +1320,7 @@ scenarios:
       - id: publish-readiness-user-context-productivity-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
-        contains: "specs/learning-system.md#user-context-productivity-learning"
+        contains: "specs/archive/learning-system.md#user-context-productivity-learning"
       - id: publish-readiness-pack-count
         command: ["publish-readiness", "--format", "json"]
         path: "pack_count"

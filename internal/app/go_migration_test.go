@@ -67,7 +67,7 @@ func TestOfficialGoOnlySurfacesDoNotAdvertiseUnsupportedCommands(t *testing.T) {
 		"specs/cli-replacement-score-plan.md",
 		"specs/cross-surface-session-system-and-dev-design.md",
 		"specs/docs-homepage-rewrite-plan.md",
-		"specs/install-packaging.md",
+		"specs/archive/install-packaging.md",
 		"specs/personal-os.md",
 	}
 	for _, pattern := range []string{

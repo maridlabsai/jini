@@ -38,7 +38,7 @@ The merge-time guardrails for this contract live in:
 - [adaptive-response-rendering-framework.md](./adaptive-response-rendering-framework.md)
 - [adaptive-response-rendering-framework-review.md](./adaptive-response-rendering-framework-review.md)
 - [adaptive-response-rendering-framework-gate.md](./adaptive-response-rendering-framework-gate.md)
-- [client-surfaces-and-free-tier.md](./client-surfaces-and-free-tier.md)
+- [number-one-platform-prd.md](./number-one-platform-prd.md) §Tier Boundary (client surfaces and free tier superseded)
 - [workstream-technical-framework.md](./workstream-technical-framework.md)
 - [workstream-technical-framework-review.md](./workstream-technical-framework-review.md)
 - [workstream-technical-framework-gate.md](./workstream-technical-framework-gate.md)

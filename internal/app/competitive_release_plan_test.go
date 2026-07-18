@@ -128,7 +128,7 @@ func TestCompetitiveReleasePlanIsWiredIntoReleasePlanning(t *testing.T) {
 		}
 	}
 
-	learning := readCompetitivePlanFile(t, root, "specs/learning-system.md")
+	learning := readCompetitivePlanFile(t, root, "specs/archive/learning-system.md")
 	for _, want := range []string{
 		"## 2a. User Context Productivity Learning",
 		"User productivity learning is a P0 product requirement.",

@@ -616,8 +616,8 @@ func buildPublishProductivityLearningSection(root string) publishReadinessSectio
 			},
 		},
 		{
-			checkPath: "specs/learning-system.md#user-context-productivity-learning",
-			filePath:  "specs/learning-system.md",
+			checkPath: "specs/archive/learning-system.md#user-context-productivity-learning",
+			filePath:  "specs/archive/learning-system.md",
 			fragments: []string{
 				"## 2a. User Context Productivity Learning",
 				"User productivity learning is a P0 product requirement.",

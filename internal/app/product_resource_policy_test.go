@@ -45,7 +45,7 @@ func TestResourcePolicyPrioritiesAreGated(t *testing.T) {
 		}
 	}
 
-	tierPolicy := readResourcePolicyFile(t, root, "specs/client-surfaces-and-free-tier.md")
+	tierPolicy := readResourcePolicyFile(t, root, "specs/archive/client-surfaces-and-free-tier.md")
 	for _, want := range []string{
 		"- free must be structurally token-frugal by default",
 		"- free must show enough token-saving and context-reuse evidence",
