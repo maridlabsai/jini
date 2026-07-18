@@ -681,3 +681,21 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   savings dashboard). Added the missing "Private and secure" platform
   quality: local-first data, keychain-only keys, anonymous by default,
   opt-in-only telemetry, zero private data on share/export surfaces.
+- User preference envelope ratified (user directives, 2026-07-18), recorded
+  in execution-routing-policy.md: Auto mode performs task-shaped dynamic
+  model selection by work kind (coding/planning/testing/research — already a
+  required regression input), but strictly inside user-declared constraints:
+  never/prefer/pin per model or route (optionally scoped by work kind), a
+  fastest-vs-best speed bias, persistence as plain reviewable files, edits
+  via direct file edit, natural language, or route set/pin, and revocable
+  implicit override learning per cohort. Explicit constraints always beat
+  the scorer — a user who never wants a given model never gets it.
+- Sharp free/paid divide ratified (user directive, 2026-07-18): the free
+  tier's job is virality — a complete, autonomous, never-crippled wedge with
+  shareable savings receipts as the growth loop; the subscription's job is
+  revenue — Autopilot (never wait out a throttle) and Continuity
+  (cross-device resume) plus governance and intelligence feeds. The divide
+  stays sharp: no paid capability leaks into free as a growth hack, and no
+  free capability is degraded to force upgrades; the upgrade trigger stays
+  the honest one — pay when route management interrupts you more often than
+  the subscription costs.

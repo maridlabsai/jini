@@ -218,6 +218,24 @@ default front line; escalate visibly when local quality risk is too high. For
 coding work, add continuity bias, route-switch cost, quota headroom, and
 iteration economics so Jini does not churn routes that are still good enough.
 
+User preference envelope (ratified 2026-07-18): `Auto` optimizes strictly
+inside user-declared constraints, which always win over the scorer.
+
+- Per model or route, the user can declare `never`, `prefer`, or `pin`,
+  optionally scoped by work kind (coding, planning, testing, research). A
+  denied model is never selected, even when it scores best; the decision
+  readout names the substitute and the preference that forced it.
+- A speed bias (`fastest` vs `best`) is a first-class preference: `fastest`
+  weights latency and throughput above marginal quality within the quality
+  floor; it never overrides safety or the escalation cost quote.
+- Preferences persist as plain reviewable files — no hidden state — editable
+  three ways: direct file edit, natural language in-session ("never use
+  fable-5", "stop avoiding fable-5"), or the existing route list/set/pin
+  surface. No second taught command tree.
+- Implicit override learning stays on: repeated manual switches away from a
+  model in a work-kind cohort bias Auto for that cohort, and the learned bias
+  is shown and revocable like any explicit preference.
+
 Effort levels are `low`, `medium`, `high`, `extra high`: normal work ->
 `medium`; quick asks -> `low`; deeper/rigorous asks -> `high`; benchmark,
 architecture, root-cause, release-readiness, or exhaustive asks ->
