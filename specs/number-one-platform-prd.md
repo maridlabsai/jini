@@ -310,6 +310,9 @@ Commercial-grade platform requirements, release-gated:
 - Reliable: crash-safe atomic session checkpointing; crash-free session rate
   of at least 99.5% in release qualification; graceful degradation is a
   tested path.
+- Private and secure: local-first session data, keys only in the OS keychain,
+  anonymous by default, no telemetry without opt-in; share and export
+  surfaces carry zero private data by construction.
 - Scalable: monorepo-class repositories with sub-second context selection;
   thousands of sessions in the store without degradation.
 - Requirement language in this document is contractual: "must" with a gate

@@ -673,3 +673,11 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   archive paths per the existence-pin rule — content is unchanged there and
   the live requirement is separately asserted against the PRD, which stays
   inside its 400-line budget.
+- Paramount qualities confirmed and privacy/security made explicit (user
+  directive, 2026-07-18): simplicity, ease of use, privacy, security,
+  accessibility, and reliability are paramount; always-visible savings in
+  hours saved, throttling avoided, and dollars saved was verified already
+  contractual (receipt denominations + footer/roll-up/startup counter +
+  savings dashboard). Added the missing "Private and secure" platform
+  quality: local-first data, keychain-only keys, anonymous by default,
+  opt-in-only telemetry, zero private data on share/export surfaces.
