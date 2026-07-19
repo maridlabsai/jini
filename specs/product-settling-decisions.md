@@ -760,3 +760,11 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   skills/agents boundary sentence (PRD Skills And Agents); final straggler
   check fixed the last old-path citations (competitive-kpis link, HLD/LLD/
   launcher/development-plan pointers now marked archived).
+- Remote Ask-mode approvals ratified as paid Continuity capability (user
+  directive, 2026-07-18): when the user is away from the desk in Ask mode,
+  they can enable mobile notifications and receive each approval prompt
+  live with the same options and selections as the terminal, answerable
+  remotely. Paid because it rides Continuity's cross-device relay and
+  account sync; the free tier keeps local opt-in notifications and can
+  always answer at the terminal. Free stays autonomous at the desk; paid
+  adds control from anywhere.

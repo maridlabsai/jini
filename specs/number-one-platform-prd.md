@@ -332,7 +332,9 @@ throttle recovery, governed approvals, team policy, audit, and automation
 loops. Commercial value must be materially higher than the free surfaces:
 managed route/throttle policy (Autopilot: predictive throttle avoidance,
 throttle-aware route switching, auto-resume, savings optimization), governed
-skills/delegation, cross-device and offline-online continuation (Continuity),
+skills/delegation, cross-device and offline-online continuation with remote
+Ask-mode approvals — live, actionable mobile notifications carrying the same
+options as the terminal prompt, answered from anywhere (Continuity),
 refreshed pricing and route-benchmark intelligence feeds, team audit, and
 automation loops. Both flagship paid features fail closed without entitlement;
 manual free equivalents always exist. The honest upgrade trigger: pay when
