@@ -412,12 +412,12 @@ Jini delivery uses one active chain:
 - macOS app UX design: `specs/archive/macos-app-ux-design.md`
 - macOS app HLD: `specs/archive/macos-app-hld.md`
 - macOS app LLD: `specs/archive/macos-app-lld.md`
-- HLD: `specs/number-one-platform-hld.md`
-- LLD: `specs/number-one-platform-lld.md`
+- HLD (archived): `specs/archive/number-one-platform-hld.md`
+- LLD (archived): `specs/archive/number-one-platform-lld.md`
 - streamline redline: `specs/archive/product-streamline-redline.md`
 - internal operating model: `specs/archive/agentic-development-operating-model.md`
-- front-door dev design: `specs/launcher-intake-design.md`
-- implementation plan: `specs/number-one-development-plan.md`
+- front-door dev design (archived): `specs/archive/launcher-intake-design.md`
+- implementation plan (archived): `specs/archive/number-one-development-plan.md`
 
 macOS app design review feedback is active scope only where it hardens the
 existing macOS PRD/HLD/LLD chain: transient simple answers, session identity
@@ -755,3 +755,8 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   prove each. Plan deviation recorded: the backlog renders as a list, not a
   table, because the scorecard trace parser counts any three-cell table row
   as an implemented P0 row.
+- Sweep close-out (2026-07-18): CLAUDE.md canonical files updated to the
+  post-rebuild keep-set with the archive rule and the free-tier
+  skills/agents boundary sentence (PRD Skills And Agents); final straggler
+  check fixed the last old-path citations (competitive-kpis link, HLD/LLD/
+  launcher/development-plan pointers now marked archived).

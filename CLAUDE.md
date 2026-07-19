@@ -9,6 +9,7 @@ Commercial-only productivity-suite work belongs in `../jini-commercial`, not thi
 ## Canonical Files
 
 - Product contract: `specs/number-one-platform-prd.md`
+- Decision record: `specs/product-settling-decisions.md`; rebuild rationale: `specs/prd-rebuild-design.md`
 - PRD trace: `specs/prd-implementation-trace.md`
 - CLI behavior contract: `specs/product-rewrite-contract.md`
 - Runtime routing: `specs/execution-routing-policy.md` (runtime modes, selection heuristics, and device-capability routing absorbed in §Absorbed Policies)
@@ -16,13 +17,16 @@ Commercial-only productivity-suite work belongs in `../jini-commercial`, not thi
 - Competitive bar: `specs/golden-competitive-benchmark.yaml`, `specs/competitive-release-plan.md`
 - Gates: `specs/engineering-gate-matrix.md`, `tools/run_required_gates.sh`
 
+Superseded specs live in `specs/archive/` with banners naming their
+replacement. Do not cite archived files in new work.
+
 ## Non-Negotiables
 
 - Keep shell output precise and Claude/Codex-like. Simple questions should get simple answers.
 - Do not reintroduce Start/Keep, work snapshots, generic drafts, or verbose safety blocks for trivial prompts.
 - Treat token frugality as P0. Avoid unnecessary file reads, generated artifacts, and long responses.
 - Prefer the shared route engine for CLI and app behavior. Do not hard-code prompt classes as one-off fixes.
-- Preserve the free/commercial boundary. Free tier may route configured tools and local models; commercial agent/skills OS productivity features stay private.
+- Preserve the free/commercial boundary. Free tier may route configured tools and local models, and includes on-the-fly creation of coding-focused skills and agents (PRD §Skills And Agents); the commercial repo keeps the productivity-suite/OS feature set.
 - Before claiming release readiness, run the required gates and inspect the changed UX path directly.
 
 ## Development Workflow

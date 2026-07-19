@@ -48,7 +48,7 @@ usable, trustworthy result.
 
 Major product decisions under this contract must clear the scorecard gate in:
 
-- [competitive-kpis.yaml](./competitive-kpis.yaml)
+- [competitive-kpis.yaml](./archive/competitive-kpis.yaml)
 - [golden-competitive-benchmark.yaml](./golden-competitive-benchmark.yaml)
 - [rewrite-score-baseline.yaml](./archive/rewrite-score-baseline.yaml)
 
