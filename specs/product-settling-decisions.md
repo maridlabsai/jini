@@ -408,10 +408,10 @@ quality risk.
 Jini delivery uses one active chain:
 
 - PRD: `specs/number-one-platform-prd.md`
-- macOS app PRD: `specs/macos-app-prd.md`
-- macOS app UX design: `specs/macos-app-ux-design.md`
-- macOS app HLD: `specs/macos-app-hld.md`
-- macOS app LLD: `specs/macos-app-lld.md`
+- macOS app PRD: `specs/archive/macos-app-prd.md`
+- macOS app UX design: `specs/archive/macos-app-ux-design.md`
+- macOS app HLD: `specs/archive/macos-app-hld.md`
+- macOS app LLD: `specs/archive/macos-app-lld.md`
 - HLD: `specs/number-one-platform-hld.md`
 - LLD: `specs/number-one-platform-lld.md`
 - streamline redline: `specs/archive/product-streamline-redline.md`
@@ -742,3 +742,9 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   with banners to PRD Goals And Scope non-goals; publish-readiness
   existence entry, migration-test pin, positioning-test reads/pins, and
   keep-set doc links repoint to archive paths.
+- Batch-8 roadmap-park + protocol-core archive (2026-07-18): the four macOS
+  app docs (PRD/HLD/LLD/UX) parked in specs/archive/ with roadmap-stage
+  banners — content remains the starting point when the desktop roadmap item
+  activates; test reads and settling-doc pointers repoint to archive paths.
+  protocol-core.md archived (zero remaining references) with banner to PRD
+  P0 Outcome Requirements.

@@ -74,10 +74,10 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"macOS app PRD, UX design, HLD, and LLD for a Codex desktop-caliber surface",
 		"The macOS app may proceed only as a focused desktop surface",
 		"Focused implementation is the development philosophy.",
-		"macOS app PRD: `specs/macos-app-prd.md`",
-		"macOS app UX design: `specs/macos-app-ux-design.md`",
-		"macOS app HLD: `specs/macos-app-hld.md`",
-		"macOS app LLD: `specs/macos-app-lld.md`",
+		"macOS app PRD: `specs/archive/macos-app-prd.md`",
+		"macOS app UX design: `specs/archive/macos-app-ux-design.md`",
+		"macOS app HLD: `specs/archive/macos-app-hld.md`",
+		"macOS app LLD: `specs/archive/macos-app-lld.md`",
 		"smallest change that advances the active CLI wedge",
 		"No drift without explicit agreement.",
 		"Older broad PRDs, research notes, and platform plans are background only.",
@@ -273,7 +273,7 @@ func TestFocusedDeliveryChainGatesPRDDesignAndImplementation(t *testing.T) {
 func TestMacOSAppPRDPinsCodexParityWithoutProductDrift(t *testing.T) {
 	root := repoRootForMigrationTest(t)
 
-	prd := readProductPositioningFile(t, root, "specs/macos-app-prd.md")
+	prd := readProductPositioningFile(t, root, "specs/archive/macos-app-prd.md")
 	for _, want := range []string{
 		"This is a specialized PRD for the Jini macOS app.",
 		"Build a macOS app at the Codex desktop-caliber UX bar",
@@ -323,7 +323,7 @@ func TestMacOSAppPRDPinsCodexParityWithoutProductDrift(t *testing.T) {
 func TestMacOSAppUXDesignPinsFirstMinuteDesktopContract(t *testing.T) {
 	root := repoRootForMigrationTest(t)
 
-	ux := readProductPositioningFile(t, root, "specs/macos-app-ux-design.md")
+	ux := readProductPositioningFile(t, root, "specs/archive/macos-app-ux-design.md")
 	for _, want := range []string{
 		"This is the active UX design for the Jini macOS app.",
 		"same session model as the CLI",
@@ -372,7 +372,7 @@ func TestMacOSAppUXDesignPinsFirstMinuteDesktopContract(t *testing.T) {
 func TestMacOSAppHLDDefinesGoCoreTauriShellBoundary(t *testing.T) {
 	root := repoRootForMigrationTest(t)
 
-	hld := readProductPositioningFile(t, root, "specs/macos-app-hld.md")
+	hld := readProductPositioningFile(t, root, "specs/archive/macos-app-hld.md")
 	for _, want := range []string{
 		"This high-level design translates",
 		"This HLD covers the macOS app only.",
@@ -418,7 +418,7 @@ func TestMacOSAppHLDDefinesGoCoreTauriShellBoundary(t *testing.T) {
 func TestMacOSAppLLDDefinesExecutableContracts(t *testing.T) {
 	root := repoRootForMigrationTest(t)
 
-	lld := readProductPositioningFile(t, root, "specs/macos-app-lld.md")
+	lld := readProductPositioningFile(t, root, "specs/archive/macos-app-lld.md")
 	for _, want := range []string{
 		"This low-level design defines the executable contracts for the Jini macOS app.",
 		"Go owns product logic.",

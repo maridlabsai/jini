@@ -1,5 +1,9 @@
 # macOS App UX Design
 
+> **ROADMAP-STAGE (parked 2026-07-07).** Archived by the PRD rebuild.
+> Replaced by: [number-one-platform-prd.md](../number-one-platform-prd.md) §Roadmap — parked until the desktop-app roadmap item activates; content remains the starting point.
+> Rationale: `specs/prd-rebuild-design.md` §8.
+
 Updated: 2026-06-09
 
 This is the active UX design for the Jini macOS app. It implements
