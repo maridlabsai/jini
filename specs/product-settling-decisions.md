@@ -109,7 +109,7 @@ flows, agent-role UX, or roadmap expansion, this charter wins until a newer
 explicit product decision changes it.
 
 The streamline-or-rewrite boundary lives in
-[product-streamline-redline.md](./product-streamline-redline.md). Current work
+[product-streamline-redline.md](./archive/product-streamline-redline.md). Current work
 continues only while the Go kernel can preserve the familiar first-minute
 transcript through clear shell, intent, action, state, and gate boundaries.
 
@@ -414,7 +414,7 @@ Jini delivery uses one active chain:
 - macOS app LLD: `specs/macos-app-lld.md`
 - HLD: `specs/number-one-platform-hld.md`
 - LLD: `specs/number-one-platform-lld.md`
-- streamline redline: `specs/product-streamline-redline.md`
+- streamline redline: `specs/archive/product-streamline-redline.md`
 - internal operating model: `specs/agentic-development-operating-model.md`
 - front-door dev design: `specs/launcher-intake-design.md`
 - implementation plan: `specs/number-one-development-plan.md`
@@ -727,3 +727,9 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   banners to the canonical PRD; seven pinned references repoint to archive
   paths. The PRD delivery chain now cites the architecture blueprint and
   specs/archive/ for prior generations, freeing line budget.
+- Batch-7b plans/audits/reviews archive (2026-07-18): jini-next-initiative-
+  plan, cli-replacement-score-plan, docs-homepage-rewrite-plan,
+  product-streamline-redline, rewrite-guardrails, rewrite-score-baseline,
+  delight-gap-closure, friction-reduction-research, and product-review-roles
+  archived with banners to PRD Platform Qualities/Gates; five pinned
+  references and the keep-set doc links repoint to archive paths.

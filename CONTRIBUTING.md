@@ -48,7 +48,7 @@ If you make a major product decision or push a meaningful rewrite slice, also
 review the scorecard gate in:
 
 - [specs/golden-competitive-benchmark.yaml](./specs/golden-competitive-benchmark.yaml)
-- [specs/rewrite-score-baseline.yaml](./specs/rewrite-score-baseline.yaml)
+- [specs/archive/rewrite-score-baseline.yaml](./specs/archive/rewrite-score-baseline.yaml)
 
 Use those files before deciding and before pushing. The rewrite does not pass
 just because the change feels simpler locally. It must still preserve or

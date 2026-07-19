@@ -1,3 +1,5 @@
+# SUPERSEDED (2026-07-07). Archived by the PRD rebuild; no longer a requirement source.
+# Replaced by: ../number-one-platform-prd.md (Platform Qualities, Gates). Rationale: specs/prd-rebuild-design.md section 8.
 schema_version: "0.1.0"
 baseline_type: "rewrite-score-floor"
 updated_at: "2026-05-28"

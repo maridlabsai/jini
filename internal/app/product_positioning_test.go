@@ -27,7 +27,7 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"Do not claim support for a framework, model, or CLI unless Jini can detect it",
 		"The customer-value gate is required on every commit.",
 		"Claude Code and Codex first-minute parity is the highest-precedence",
-		"[product-streamline-redline.md](./product-streamline-redline.md)",
+		"[product-streamline-redline.md](./archive/product-streamline-redline.md)",
 		"continues only while the Go kernel can preserve",
 		"[agentic-development-operating-model.md](./agentic-development-operating-model.md)",
 		"mandatory for non-trivial Jini engineering cuts",
@@ -484,7 +484,7 @@ func TestMacOSAppLLDDefinesExecutableContracts(t *testing.T) {
 func TestProductStreamlineRedlineDefinesRewriteTriggers(t *testing.T) {
 	root := repoRootForMigrationTest(t)
 
-	redline := readProductPositioningFile(t, root, "specs/product-streamline-redline.md")
+	redline := readProductPositioningFile(t, root, "specs/archive/product-streamline-redline.md")
 	for _, want := range []string{
 		"Current competitor research supports one clear product shape:",
 		"OpenAI Codex CLI is a local terminal coding agent",

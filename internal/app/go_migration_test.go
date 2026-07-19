@@ -64,9 +64,9 @@ func TestOfficialGoOnlySurfacesDoNotAdvertiseUnsupportedCommands(t *testing.T) {
 		"docs/index.md",
 		"docs/install.md",
 		"docs/simple.md",
-		"specs/cli-replacement-score-plan.md",
+		"specs/archive/cli-replacement-score-plan.md",
 		"specs/archive/cross-surface-session-system-and-dev-design.md",
-		"specs/docs-homepage-rewrite-plan.md",
+		"specs/archive/docs-homepage-rewrite-plan.md",
 		"specs/archive/install-packaging.md",
 		"specs/personal-os.md",
 	}
@@ -170,8 +170,8 @@ func TestPublicPlanningSpecsDoNotPromoteOperatorOnlyCommands(t *testing.T) {
 		"docs/cli.md",
 		"docs/install.md",
 		"docs/simple.md",
-		"specs/cli-replacement-score-plan.md",
-		"specs/docs-homepage-rewrite-plan.md",
+		"specs/archive/cli-replacement-score-plan.md",
+		"specs/archive/docs-homepage-rewrite-plan.md",
 	}
 	operatorOnlyCommands := []string{
 		"jini check",

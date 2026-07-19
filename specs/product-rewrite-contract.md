@@ -26,9 +26,9 @@ fail-closed setup guidance, and no broad OS or agent-suite claim.
 
 The merge-time guardrails for this contract live in:
 
-- [rewrite-guardrails.md](./rewrite-guardrails.md)
-- [rewrite-score-baseline.yaml](./rewrite-score-baseline.yaml)
-- [product-review-roles.md](./product-review-roles.md)
+- [rewrite-guardrails.md](./archive/rewrite-guardrails.md)
+- [rewrite-score-baseline.yaml](./archive/rewrite-score-baseline.yaml)
+- [product-review-roles.md](./archive/product-review-roles.md)
 - [number-one-platform-prd.md](./number-one-platform-prd.md)
 - prior PRD generations (product-consensus-prd-and-plan, full-product-prd,
   full-product-prd-execution-plan) — superseded, in [specs/archive/](./archive/)
@@ -50,7 +50,7 @@ Major product decisions under this contract must clear the scorecard gate in:
 
 - [competitive-kpis.yaml](./competitive-kpis.yaml)
 - [golden-competitive-benchmark.yaml](./golden-competitive-benchmark.yaml)
-- [rewrite-score-baseline.yaml](./rewrite-score-baseline.yaml)
+- [rewrite-score-baseline.yaml](./archive/rewrite-score-baseline.yaml)
 
 No major UX, routing, artifact, or command-surface decision is considered done
 until it has been checked against those score sources.
