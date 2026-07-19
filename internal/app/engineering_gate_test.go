@@ -187,7 +187,7 @@ func TestRequiredOutcomeGatesDeclareProofReferences(t *testing.T) {
 			"kind: named-proof",
 			`ref: "specs/execution-routing-policy.md"`,
 			"id: skills-and-delegation-sub-agent-boundary",
-			`ref: "specs/skills-and-delegation-slice.md"`,
+			`ref: "specs/archive/skills-and-delegation-slice.md"`,
 		},
 		"customer-value-viability-fixture": {
 			"id: product-viability-customer-value",

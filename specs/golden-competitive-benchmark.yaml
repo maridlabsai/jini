@@ -278,7 +278,7 @@ scorecard_gates:
           ref: "go test ./internal/app -run TestP1SimplicityPriorityCoversCommandsSkillsAndAgents"
         - id: skills-and-delegation-tier-boundary
           kind: named-proof
-          ref: "specs/skills-and-delegation-slice.md"
+          ref: "specs/archive/skills-and-delegation-slice.md"
       gate: >
         Free tier must preserve useful local/BYO routing while commercial-only
         skills, agent fleets, managed throttle recovery, and team automation
@@ -320,7 +320,7 @@ scorecard_gates:
           ref: "specs/execution-routing-policy.md"
         - id: skills-and-delegation-sub-agent-boundary
           kind: named-proof
-          ref: "specs/skills-and-delegation-slice.md"
+          ref: "specs/archive/skills-and-delegation-slice.md"
       gate: >
         Sub-agent divide-and-conquer is required for non-trivial work only when
         execution routing, skill/delegation boundaries, lead integration,
@@ -1252,7 +1252,7 @@ scenarios:
       - id: publish-readiness-skills-boundary-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
-        contains: "specs/skills-and-delegation-slice.md#tier-boundary"
+        contains: "specs/archive/skills-and-delegation-slice.md#tier-boundary"
       - id: publish-readiness-lean-skills-boundary-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"

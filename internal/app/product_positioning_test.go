@@ -550,7 +550,7 @@ func TestAgenticDevelopmentOperatingModelPinsInternalDivideAndConquer(t *testing
 		}
 	}
 
-	delegationSlice := readProductPositioningFile(t, root, "specs/skills-and-delegation-slice.md")
+	delegationSlice := readProductPositioningFile(t, root, "specs/archive/skills-and-delegation-slice.md")
 	for _, want := range []string{
 		"coordinator-owned process is mandatory for non-trivial engineering cuts",
 		"is not a public UX promise",

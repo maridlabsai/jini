@@ -714,3 +714,8 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   PRD Platform Qualities/Gates; its nine references (publish-readiness
   fragment checks, test pins, benchmark guardrails) repoint to the archive
   path per the existence-pin rule.
+- Batch-6d skills-slice archive (2026-07-18): skills-and-delegation-slice
+  archived with banner to PRD Skills And Agents + Tier Boundary (which own
+  the free on-the-fly skills/agents scope and the commercial-suite
+  boundary); its ten references repoint to the archive path per the
+  existence-pin rule.

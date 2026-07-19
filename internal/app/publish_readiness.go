@@ -224,8 +224,8 @@ func buildPublishHonestAuditSection(root string) publishReadinessSection {
 			},
 		},
 		{
-			checkPath: "specs/skills-and-delegation-slice.md#tier-boundary",
-			filePath:  "specs/skills-and-delegation-slice.md",
+			checkPath: "specs/archive/skills-and-delegation-slice.md#tier-boundary",
+			filePath:  "specs/archive/skills-and-delegation-slice.md",
 			fragments: []string{
 				"## Purpose",
 				"This public spec is a boundary handoff",
