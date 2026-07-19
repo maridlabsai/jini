@@ -1240,15 +1240,15 @@ scenarios:
       - id: publish-readiness-honest-audit-reality-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
-        contains: "specs/honest-system-audit.md#current-implementation-reality"
+        contains: "specs/archive/honest-system-audit.md#current-implementation-reality"
       - id: publish-readiness-honest-audit-feedback-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
-        contains: "specs/honest-system-audit.md#core-feedback-accommodations"
+        contains: "specs/archive/honest-system-audit.md#core-feedback-accommodations"
       - id: publish-readiness-honest-audit-evidence-contract-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
-        contains: "specs/honest-system-audit.md#machine-readable-evidence-contract"
+        contains: "specs/archive/honest-system-audit.md#machine-readable-evidence-contract"
       - id: publish-readiness-skills-boundary-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"

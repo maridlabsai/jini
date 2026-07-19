@@ -1892,7 +1892,7 @@ func TestPublishReadinessTextIncludesGuardrailCheckDetails(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"  HONEST-AUDIT ok",
-		"    OK specs/honest-system-audit.md#current-implementation-reality",
+		"    OK specs/archive/honest-system-audit.md#current-implementation-reality",
 		"    OK specs/skills-and-delegation-slice.md#tier-boundary",
 		"    OK specs/engineering-gate-matrix.md#command-surface-discipline",
 		"    CLAIM P0 competitor watching STATUS partial RUNTIME true",
@@ -2012,10 +2012,10 @@ func TestPublishReadinessIncludesHonestAuditGuardrails(t *testing.T) {
 		t.Fatalf("decode publish-readiness JSON: %v\n%s", err, stdout.String())
 	}
 	required := map[string]bool{
-		"specs/honest-system-audit.md#current-implementation-reality": false,
-		"specs/honest-system-audit.md#core-feedback-accommodations":   false,
-		"specs/skills-and-delegation-slice.md#tier-boundary":          false,
-		"specs/engineering-gate-matrix.md#command-surface-discipline": false,
+		"specs/archive/honest-system-audit.md#current-implementation-reality": false,
+		"specs/archive/honest-system-audit.md#core-feedback-accommodations":   false,
+		"specs/skills-and-delegation-slice.md#tier-boundary":                  false,
+		"specs/engineering-gate-matrix.md#command-surface-discipline":         false,
 	}
 	for _, section := range report.Sections {
 		if section.ID != "honest-audit" {

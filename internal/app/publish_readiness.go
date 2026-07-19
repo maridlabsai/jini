@@ -194,8 +194,8 @@ func buildPublishHonestAuditSection(root string) publishReadinessSection {
 
 	required := []publishFragmentRequirement{
 		{
-			checkPath: "specs/honest-system-audit.md#current-implementation-reality",
-			filePath:  "specs/honest-system-audit.md",
+			checkPath: "specs/archive/honest-system-audit.md#current-implementation-reality",
+			filePath:  "specs/archive/honest-system-audit.md",
 			fragments: []string{
 				"## Current Implementation Reality",
 				"Guarded is not implemented.",
@@ -205,8 +205,8 @@ func buildPublishHonestAuditSection(root string) publishReadinessSection {
 			},
 		},
 		{
-			checkPath: "specs/honest-system-audit.md#core-feedback-accommodations",
-			filePath:  "specs/honest-system-audit.md",
+			checkPath: "specs/archive/honest-system-audit.md#core-feedback-accommodations",
+			filePath:  "specs/archive/honest-system-audit.md",
 			fragments: []string{
 				"## Core Feedback Accommodations",
 				"claim, status, evidence, and next cut",
@@ -214,8 +214,8 @@ func buildPublishHonestAuditSection(root string) publishReadinessSection {
 			},
 		},
 		{
-			checkPath: "specs/honest-system-audit.md#machine-readable-evidence-contract",
-			filePath:  "specs/honest-system-audit.md",
+			checkPath: "specs/archive/honest-system-audit.md#machine-readable-evidence-contract",
+			filePath:  "specs/archive/honest-system-audit.md",
 			fragments: []string{
 				"## Machine-Readable Evidence Contract",
 				"`claim`",

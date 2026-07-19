@@ -710,3 +710,7 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   live watch-packet source for internal/app/competitor_watch.go and the PRD
   cites it inline as the P0 competitor-watch loop. A trace note to the PRD
   was added instead; all existing references stay valid unchanged.
+- Batch-6c honest-system-audit archive (2026-07-18): archived with banner to
+  PRD Platform Qualities/Gates; its nine references (publish-readiness
+  fragment checks, test pins, benchmark guardrails) repoint to the archive
+  path per the existence-pin rule.

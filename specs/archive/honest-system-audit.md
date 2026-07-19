@@ -1,5 +1,9 @@
 # Honest System Audit
 
+> **SUPERSEDED (2026-07-07).** Archived by the PRD rebuild; no longer a requirement source.
+> Replaced by: [number-one-platform-prd.md](../number-one-platform-prd.md) §Platform Qualities (contractual requirement language, evidence rules) and §Gates.
+> Rationale: `specs/prd-rebuild-design.md` §8. Do not cite this file in new work.
+
 Updated: 2026-06-07
 
 This audit keeps product language honest. It separates implemented behavior
