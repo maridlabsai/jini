@@ -748,3 +748,10 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   activates; test reads and settling-doc pointers repoint to archive paths.
   protocol-core.md archived (zero remaining references) with banner to PRD
   P0 Outcome Requirements.
+- Trace regenerated against the rebuilt PRD (2026-07-18): thirteen
+  implemented P0 rows carried forward with their existing proofs; a new
+  Not-Yet-Implemented v1 backlog section lists the rebuilt PRD's unbuilt
+  requirements (led by autonomous throttle survival) with the gate that will
+  prove each. Plan deviation recorded: the backlog renders as a list, not a
+  table, because the scorecard trace parser counts any three-cell table row
+  as an implemented P0 row.
