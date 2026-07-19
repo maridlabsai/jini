@@ -7,11 +7,9 @@ decisions are recorded in [product-settling-decisions.md](./product-settling-dec
 If this document conflicts with exploratory specs, demo docs, or older PRDs, this document
 and [product-settling-decisions.md](./product-settling-decisions.md) win.
 
-Delivery chain: this PRD defines what matters; [number-one-platform-hld.md](./number-one-platform-hld.md) defines architecture
-boundaries; [number-one-platform-lld.md](./number-one-platform-lld.md) defines runtime contracts;
-[launcher-intake-design.md](./launcher-intake-design.md) and [number-one-development-plan.md](./number-one-development-plan.md) define execution;
-[macOS app planning](./macos-app-prd.md) is a focused P1 desktop surface over the same session model;
+Delivery chain: this PRD defines what matters;
 [jini-architecture-blueprint.md](./jini-architecture-blueprint.md) carries the v1 engineering contracts;
+prior HLD/LLD/plan generations are superseded in [specs/archive/](./archive/);
 drift requires [product-settling-decisions.md](./product-settling-decisions.md).
 
 ## Product Thesis

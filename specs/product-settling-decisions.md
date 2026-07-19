@@ -719,3 +719,11 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   the free on-the-fly skills/agents scope and the commercial-suite
   boundary); its ten references repoint to the archive path per the
   existence-pin rule.
+- Batch-7a prior-PRD-generation archive (2026-07-18): full-product-prd,
+  full-product-prd-execution-plan, product-consensus-prd-and-plan,
+  cross-surface-session-platform-prd, cross-surface-session-system-and-dev-
+  design, number-one-development-plan, number-one-platform-hld,
+  number-one-platform-lld, and number-one-product-research archived with
+  banners to the canonical PRD; seven pinned references repoint to archive
+  paths. The PRD delivery chain now cites the architecture blueprint and
+  specs/archive/ for prior generations, freeing line budget.

@@ -86,7 +86,7 @@ func TestResourcePolicyPrioritiesAreGated(t *testing.T) {
 		}
 	}
 
-	crossSurfacePRD := readResourcePolicyFile(t, root, "specs/cross-surface-session-platform-prd.md")
+	crossSurfacePRD := readResourcePolicyFile(t, root, "specs/archive/cross-surface-session-platform-prd.md")
 	for _, want := range []string{
 		"Offline and online are route states, not separate work modes.",
 		"cross-navigate between offline and online routes without restarting",

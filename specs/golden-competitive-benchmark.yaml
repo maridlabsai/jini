@@ -291,7 +291,7 @@ scorecard_gates:
           ref: "go test ./internal/app -run TestResourcePolicyPrioritiesAreGated"
         - id: cross-surface-session-platform-prd
           kind: named-proof
-          ref: "specs/cross-surface-session-platform-prd.md"
+          ref: "specs/archive/cross-surface-session-platform-prd.md"
       gate: >
         The same work item must preserve identity, route state, artifacts,
         approvals, and next action across CLI, desktop, mobile, and browser

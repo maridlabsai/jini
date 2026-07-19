@@ -65,7 +65,7 @@ func TestOfficialGoOnlySurfacesDoNotAdvertiseUnsupportedCommands(t *testing.T) {
 		"docs/install.md",
 		"docs/simple.md",
 		"specs/cli-replacement-score-plan.md",
-		"specs/cross-surface-session-system-and-dev-design.md",
+		"specs/archive/cross-surface-session-system-and-dev-design.md",
 		"specs/docs-homepage-rewrite-plan.md",
 		"specs/archive/install-packaging.md",
 		"specs/personal-os.md",

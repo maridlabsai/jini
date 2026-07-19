@@ -102,11 +102,8 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"Treat configured CLI routes as real installed-CLI handoffs",
 		"provider API routes separately from CLI handoff routes.",
 		"Bare `jini` is a task prompt, not a dashboard.",
-		"[number-one-platform-hld.md](./number-one-platform-hld.md)",
-		"[number-one-platform-lld.md](./number-one-platform-lld.md)",
-		"[launcher-intake-design.md](./launcher-intake-design.md)",
-		"[number-one-development-plan.md](./number-one-development-plan.md)",
-		"[macOS app planning](./macos-app-prd.md)",
+		"[jini-architecture-blueprint.md](./jini-architecture-blueprint.md)",
+		"prior HLD/LLD/plan generations are superseded in [specs/archive/](./archive/)",
 		"macOS app HLD/LLD for a Codex desktop-caliber session and artifact surface",
 		"No release ships unless competitor-parity golden transcript gates",
 		"Token frugality is P0.",
@@ -190,7 +187,7 @@ func TestProductViabilityGatePinsCustomerValueAndAntiAmateurBoundary(t *testing.
 func TestFocusedDeliveryChainGatesPRDDesignAndImplementation(t *testing.T) {
 	root := repoRootForMigrationTest(t)
 
-	hld := readProductPositioningFile(t, root, "specs/number-one-platform-hld.md")
+	hld := readProductPositioningFile(t, root, "specs/archive/number-one-platform-hld.md")
 	for _, want := range []string{
 		"This high-level design translates",
 		"Jini does not ship an iteration unless the competitor-parity transcript gates",
@@ -204,7 +201,7 @@ func TestFocusedDeliveryChainGatesPRDDesignAndImplementation(t *testing.T) {
 		}
 	}
 
-	lld := readProductPositioningFile(t, root, "specs/number-one-platform-lld.md")
+	lld := readProductPositioningFile(t, root, "specs/archive/number-one-platform-lld.md")
 	for _, want := range []string{
 		"This low-level design defines the executable contracts",
 		"Simple factual questions must not print `Result ready.`, `Task Snapshot`,",
@@ -240,7 +237,7 @@ func TestFocusedDeliveryChainGatesPRDDesignAndImplementation(t *testing.T) {
 		}
 	}
 
-	developmentPlan := readProductPositioningFile(t, root, "specs/number-one-development-plan.md")
+	developmentPlan := readProductPositioningFile(t, root, "specs/archive/number-one-development-plan.md")
 	for _, want := range []string{
 		"This is the active implementation plan. It is intentionally narrow.",
 		"The development philosophy is focused implementation: ship the smallest",

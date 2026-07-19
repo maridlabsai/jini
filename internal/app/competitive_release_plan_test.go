@@ -77,7 +77,7 @@ func TestCompetitiveReleasePlanIsWiredIntoReleasePlanning(t *testing.T) {
 		}
 	}
 
-	developmentPlan := readCompetitivePlanFile(t, root, "specs/number-one-development-plan.md")
+	developmentPlan := readCompetitivePlanFile(t, root, "specs/archive/number-one-development-plan.md")
 	if !strings.Contains(developmentPlan, "competitive-release-plan.md") {
 		t.Fatalf("development plan must reference the competitive release plan")
 	}

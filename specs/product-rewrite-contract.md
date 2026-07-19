@@ -30,9 +30,8 @@ The merge-time guardrails for this contract live in:
 - [rewrite-score-baseline.yaml](./rewrite-score-baseline.yaml)
 - [product-review-roles.md](./product-review-roles.md)
 - [number-one-platform-prd.md](./number-one-platform-prd.md)
-- [product-consensus-prd-and-plan.md](./product-consensus-prd-and-plan.md)
-- [full-product-prd.md](./full-product-prd.md)
-- [full-product-prd-execution-plan.md](./full-product-prd-execution-plan.md)
+- prior PRD generations (product-consensus-prd-and-plan, full-product-prd,
+  full-product-prd-execution-plan) — superseded, in [specs/archive/](./archive/)
 - [local-model-support-matrix.md](./local-model-support-matrix.md) (local SLM frontline policy absorbed in §Absorbed Policies)
 - [conversation-and-artifact-ux.md](./conversation-and-artifact-ux.md)
 - [adaptive-response-rendering-framework.md](./adaptive-response-rendering-framework.md)
