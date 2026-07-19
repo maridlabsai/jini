@@ -152,7 +152,7 @@ func buildPublishDocsSection(root string) publishReadinessSection {
 		"docs/cli.md",
 		"specs/archive/app-platform-shipping-playbook.md",
 		"specs/local-model-support-matrix.md",
-		"specs/lean-platform-doctrine.md",
+		"specs/archive/lean-platform-doctrine.md",
 		"specs/public-repo-boundary.md",
 		"distribution/install-manifest.yaml",
 	}

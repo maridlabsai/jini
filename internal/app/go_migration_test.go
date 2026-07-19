@@ -68,7 +68,7 @@ func TestOfficialGoOnlySurfacesDoNotAdvertiseUnsupportedCommands(t *testing.T) {
 		"specs/archive/cross-surface-session-system-and-dev-design.md",
 		"specs/archive/docs-homepage-rewrite-plan.md",
 		"specs/archive/install-packaging.md",
-		"specs/personal-os.md",
+		"specs/archive/personal-os.md",
 	}
 	for _, pattern := range []string{
 		"distribution/targets/*/README.md",

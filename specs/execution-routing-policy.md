@@ -9,7 +9,7 @@ The canonical product and operating PRD lives in
 [number-one-platform-prd.md](./number-one-platform-prd.md).
 
 Internal engineering delegation is governed by
-[agentic-development-operating-model.md](./agentic-development-operating-model.md).
+[agentic-development-operating-model.md](./archive/agentic-development-operating-model.md).
 This execution policy may choose cheap, standard, or deep work classes, but it
 does not create public `delegate` commands or expose coordinator/sub-agent
 trees in the default CLI.

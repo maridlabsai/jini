@@ -114,7 +114,7 @@ continues only while the Go kernel can preserve the familiar first-minute
 transcript through clear shell, intent, action, state, and gate boundaries.
 
 The internal engineering operating model lives in
-[agentic-development-operating-model.md](./agentic-development-operating-model.md).
+[agentic-development-operating-model.md](./archive/agentic-development-operating-model.md).
 It is mandatory for non-trivial Jini engineering cuts, but it is
 a coordinator-owned process. It must not become public UX, free-tier command
 grammar, or a visible agent-role layer.
@@ -415,7 +415,7 @@ Jini delivery uses one active chain:
 - HLD: `specs/number-one-platform-hld.md`
 - LLD: `specs/number-one-platform-lld.md`
 - streamline redline: `specs/archive/product-streamline-redline.md`
-- internal operating model: `specs/agentic-development-operating-model.md`
+- internal operating model: `specs/archive/agentic-development-operating-model.md`
 - front-door dev design: `specs/launcher-intake-design.md`
 - implementation plan: `specs/number-one-development-plan.md`
 
@@ -733,3 +733,12 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   delight-gap-closure, friction-reduction-research, and product-review-roles
   archived with banners to PRD Platform Qualities/Gates; five pinned
   references and the keep-set doc links repoint to archive paths.
+- Batch-7c out-of-scope framework archive (2026-07-18): twenty
+  framework/ontology/surface docs (travel, workstream, adaptive-rendering
+  triples; personal-os; work-ontology; work-state-machine;
+  operating-profiles; conversation-and-artifact-ux; artifact-schemas;
+  atlassian-target-binding; extension-rules; launcher-intake-design;
+  agentic-development-operating-model; lean-platform-doctrine) archived
+  with banners to PRD Goals And Scope non-goals; publish-readiness
+  existence entry, migration-test pin, positioning-test reads/pins, and
+  keep-set doc links repoint to archive paths.

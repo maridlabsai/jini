@@ -29,7 +29,7 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"Claude Code and Codex first-minute parity is the highest-precedence",
 		"[product-streamline-redline.md](./archive/product-streamline-redline.md)",
 		"continues only while the Go kernel can preserve",
-		"[agentic-development-operating-model.md](./agentic-development-operating-model.md)",
+		"[agentic-development-operating-model.md](./archive/agentic-development-operating-model.md)",
 		"mandatory for non-trivial Jini engineering cuts",
 		"coordinator-owned process",
 		"must not become public UX, free-tier command",
@@ -215,7 +215,7 @@ func TestFocusedDeliveryChainGatesPRDDesignAndImplementation(t *testing.T) {
 		}
 	}
 
-	launcherDesign := readProductPositioningFile(t, root, "specs/launcher-intake-design.md")
+	launcherDesign := readProductPositioningFile(t, root, "specs/archive/launcher-intake-design.md")
 	for _, want := range []string{
 		"This is the active dev design for the CLI front door.",
 		"Bare `jini` renders the same task prompt with or without saved work.",
@@ -511,7 +511,7 @@ func TestProductStreamlineRedlineDefinesRewriteTriggers(t *testing.T) {
 func TestAgenticDevelopmentOperatingModelPinsInternalDivideAndConquer(t *testing.T) {
 	root := repoRootForMigrationTest(t)
 
-	operatingModel := readProductPositioningFile(t, root, "specs/agentic-development-operating-model.md")
+	operatingModel := readProductPositioningFile(t, root, "specs/archive/agentic-development-operating-model.md")
 	for _, want := range []string{
 		"internal engineering operating model, not a public product surface",
 		"Use divide-and-conquer sub-agents by default for non-trivial Jini engineering",

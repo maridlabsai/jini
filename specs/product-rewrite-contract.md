@@ -33,14 +33,14 @@ The merge-time guardrails for this contract live in:
 - prior PRD generations (product-consensus-prd-and-plan, full-product-prd,
   full-product-prd-execution-plan) — superseded, in [specs/archive/](./archive/)
 - [local-model-support-matrix.md](./local-model-support-matrix.md) (local SLM frontline policy absorbed in §Absorbed Policies)
-- [conversation-and-artifact-ux.md](./conversation-and-artifact-ux.md)
-- [adaptive-response-rendering-framework.md](./adaptive-response-rendering-framework.md)
-- [adaptive-response-rendering-framework-review.md](./adaptive-response-rendering-framework-review.md)
-- [adaptive-response-rendering-framework-gate.md](./adaptive-response-rendering-framework-gate.md)
+- [conversation-and-artifact-ux.md](./archive/conversation-and-artifact-ux.md)
+- [adaptive-response-rendering-framework.md](./archive/adaptive-response-rendering-framework.md)
+- [adaptive-response-rendering-framework-review.md](./archive/adaptive-response-rendering-framework-review.md)
+- [adaptive-response-rendering-framework-gate.md](./archive/adaptive-response-rendering-framework-gate.md)
 - [number-one-platform-prd.md](./number-one-platform-prd.md) §Tier Boundary (client surfaces and free tier superseded)
-- [workstream-technical-framework.md](./workstream-technical-framework.md)
-- [workstream-technical-framework-review.md](./workstream-technical-framework-review.md)
-- [workstream-technical-framework-gate.md](./workstream-technical-framework-gate.md)
+- [workstream-technical-framework.md](./archive/workstream-technical-framework.md)
+- [workstream-technical-framework-review.md](./archive/workstream-technical-framework-review.md)
+- [workstream-technical-framework-gate.md](./archive/workstream-technical-framework-gate.md)
 - [public-repo-boundary.md](./public-repo-boundary.md)
 
 The rewrite goal is to make Jini the easiest way to turn messy AI work into a
