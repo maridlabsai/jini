@@ -305,7 +305,8 @@ func runCLIHandoff(ctx context.Context, mode, prompt string) (string, *cliHandof
 		if ctxErr := ctx.Err(); ctxErr != nil {
 			return "", receipt, ctxErr
 		}
-		return "", receipt, cliHandoffExecutionError(descriptor.Label, err, receipt)
+		sanitized := cliHandoffExecutionError(descriptor.Label, err, receipt)
+		return "", receipt, classifyCLIThrottleOutput(descriptor.Label, stdout.String(), stderr.String(), sanitized)
 	}
 	receipt := buildCLIHandoffReceipt(command, prompt, stdout.String(), stderr.String(), cmd.ProcessState, time.Since(startedAt))
 	return strings.TrimSpace(stdout.String()), receipt, nil

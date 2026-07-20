@@ -125,13 +125,21 @@ func generateWithConfiguredProviderDecision(ctx context.Context, request provide
 		if prompt == "" {
 			prompt = providerUserPrompt(request)
 		}
-		text, receipt, err := runCLIHandoff(ctx, decision.ToolMode, prompt)
+		var receipt *cliHandoffReceipt
+		text, survival, err := runWithThrottleSurvival(ctx, cliHandoffLabel(decision.ToolMode), throttleFallbackHint(request, decision), func() (string, error) {
+			attemptText, attemptReceipt, attemptErr := runCLIHandoff(ctx, decision.ToolMode, prompt)
+			if attemptReceipt != nil {
+				receipt = attemptReceipt
+			}
+			return attemptText, attemptErr
+		})
 		if receipt != nil {
 			decision.CLIHandoffReceipt = receipt
 		}
 		if err != nil {
 			return "", true, decision, err
 		}
+		decision.Reason = appendThrottleSurvivalReason(decision.Reason, survival)
 		return text, true, decision, nil
 	}
 	if provider.ID == "local-preview" {
@@ -143,7 +151,12 @@ func generateWithConfiguredProviderDecision(ctx context.Context, request provide
 
 	systemPrompt := providerSystemPrompt()
 	userPrompt := providerUserPrompt(request)
-	text, err := generateProviderText(ctx, provider, request, systemPrompt, userPrompt)
+	routeLabel := firstNonEmpty(decision.ToolLabel, provider.Label, provider.ID)
+	text, survival, err := runWithThrottleSurvival(ctx, routeLabel, throttleFallbackHint(request, decision), func() (string, error) {
+		attemptText, attemptErr := generateProviderText(ctx, provider, request, systemPrompt, userPrompt)
+		return attemptText, classifyThrottleError(routeLabel, attemptErr)
+	})
+	decision.Reason = appendThrottleSurvivalReason(decision.Reason, survival)
 	if err != nil {
 		if fallbackDecision, ok := offlineFailoverDecisionForProviderError(request, decision, err); ok {
 			if fallbackDecision.Provider.ID == "local-preview" {

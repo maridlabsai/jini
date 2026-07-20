@@ -612,7 +612,7 @@ func TestPRDImplementationTraceCoversP0Requirements(t *testing.T) {
 		"[number-one-platform-hld.md](./archive/number-one-platform-hld.md)",
 		"[number-one-platform-lld.md](./archive/number-one-platform-lld.md)",
 		"## Not Yet Implemented (v1 backlog)",
-		"Autonomous throttle survival, the number one P0",
+		"Autonomous throttle survival — free-tier core",
 		"Start from a natural task in the current directory",
 		"Edit local files directly when clear and safe",
 		"Fail closed with exact ambiguity",

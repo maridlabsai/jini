@@ -768,3 +768,12 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   account sync; the free tier keeps local opt-in notifications and can
   always answer at the terminal. Free stays autonomous at the desk; paid
   adds control from anywhere.
+- Throttle-survival free-tier core implemented (2026-07-19): detection
+  classifiers (provider error text; raw CLI output before privacy
+  sanitization), same-route hold-and-self-resume loop with advertised
+  Retry-After honoring and backoff, hold narration, receipt reason
+  annotation, and exhaustion guidance naming `jini continue` and a viable
+  fallback. Proven by unit suite plus a live transcript with a throttling
+  fake downstream CLI. Trace row added (14 implemented P0 rows); remaining
+  slices (Autopilot switching, Ask-mode resume approval, ledger counter)
+  stay in the backlog.

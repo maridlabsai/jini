@@ -1243,8 +1243,8 @@ func TestScorecardGatePassesAndExposesCompetitorPressure(t *testing.T) {
 	if report.PRDImplementation.SourcePath != "specs/prd-implementation-trace.md" {
 		t.Fatalf("expected PRD implementation trace source, got %#v", report.PRDImplementation)
 	}
-	if report.PRDImplementation.TotalRequirements != 13 || report.PRDImplementation.ImplementedRequirements != 13 || report.PRDImplementation.CompletionPercent != 100 {
-		t.Fatalf("expected P0 PRD implementation completion to be 13/13 = 100%%, got %#v", report.PRDImplementation)
+	if report.PRDImplementation.TotalRequirements != 14 || report.PRDImplementation.ImplementedRequirements != 14 || report.PRDImplementation.CompletionPercent != 100 {
+		t.Fatalf("expected P0 PRD implementation completion to be 14/14 = 100%%, got %#v", report.PRDImplementation)
 	}
 	if report.PRDImplementation.Status != "ok" {
 		t.Fatalf("expected PRD implementation status ok, got %#v", report.PRDImplementation)
@@ -1854,7 +1854,7 @@ func TestScorecardGateTextShowsCommitGatePressure(t *testing.T) {
 	for _, want := range []string{
 		"STATUS ok",
 		"PRD IMPLEMENTATION",
-		"  OK 13/13 P0 requirements implemented (100%)",
+		"  OK 14/14 P0 requirements implemented (100%)",
 		"  SOURCE specs/prd-implementation-trace.md",
 		"  RESIDUAL_HARDENING 1",
 		"    RESIDUAL Wave 1 command templates still use fake downstream CLIs for automated command-shape coverage, but release readiness now requires signed `.jini/cli-smoke.json` evidence, recent `.jini/cli-dogfood.json` validation evidence, and `jini check ship --format json` setup status for claimed routes. Real installed CLI dogfood remains required on tester machines for auth, approvals, output-shape differences, route receipt privacy, and signed smoke freshness.",

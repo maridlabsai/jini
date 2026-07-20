@@ -31,6 +31,7 @@ states the outcome and the gates below prove it.
 | Install from release assets without source builds | `install.sh`, release manifest, publish checks | install tests and release gate |
 | Preserve customer-value viability and anti-amateur scope | `tools/customer_value_gate.sh`, product settling decisions, competitive benchmark outcome gate | `TestProductViabilityGatePinsCustomerValueAndAntiAmateurBoundary`, customer value gate, scorecard gate |
 | Block regressions before commit and push | `tools/run_required_gates.sh`, scorecard PRD completion summary | commit/push/release gate tests, Claude/Codex use-case gate, scorecard PRD implementation completion tests |
+| Autonomous throttle survival — free-tier core: detect throttle on any route, hold the session, self-resume the same route, name a viable fallback | `throttle_survival.go` (`runWithThrottleSurvival`, throttle classifiers, Retry-After honoring, narration, receipt reason), wired into provider and CLI-handoff paths in `provider.go`/`cli_handoff.go` | `TestRunWithThrottleSurvival*`, `TestIsThrottleSignal*`, `TestClassifyCLIThrottleOutput*`; live transcript: fake throttling downstream CLI, hold narrated, advertised wait honored, same-route resume, work saved |
 
 ## Not Yet Implemented (v1 backlog)
 
@@ -41,10 +42,12 @@ PRD section and the gate that will eventually prove it. (Rendered as a list,
 not a table: the scorecard trace parser counts any three-cell table row as an
 implemented P0 row.)
 
-- Autonomous throttle survival, the number one P0 (§P0 Outcome Requirements,
-  §Routing And Resource Policy): detect throttle, hold session, self-resume
-  same-route free / auto-switch paid. Future proof: throttle-resilience
-  release gate with transcript evidence.
+- Autonomous throttle survival, remaining slices (§P0 Outcome Requirements,
+  §Routing And Resource Policy): the free-tier same-route core is implemented
+  (see Implemented table); still unbuilt are paid Autopilot mid-task route
+  switching, Ask-mode approval before throttled-work resume, and the
+  throttle-dodge counter feeding the savings ledger. Future proof:
+  throttle-resilience release gate.
 - Savings ledger and receipts (§Savings Ledger And Receipts): per-task
   receipt, session roll-up, startup counter, `jini savings` dashboard.
   Future proof: savings-methodology audit gate (literal-vs-imputed labels).
