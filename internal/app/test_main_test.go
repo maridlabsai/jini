@@ -2,8 +2,23 @@ package app
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 )
+
+// cliHandoffExecutableEnvVars lists the CLI handoff executable overrides that
+// TestMain pins to a missing path so the suite stays hermetic: without this,
+// a developer machine with a real signed `claude` (or other) CLI installed
+// would let auto-routing hand test prompts to the real, billed CLI. Tests that
+// exercise handoffs point these at fake executables (the writeFakeExecutable /
+// writeProviderFakeExecutable helpers do this automatically).
+var cliHandoffExecutableEnvVars = []string{
+	"JINI_CODEX_CLI",
+	"JINI_CLAUDE_CODE_CLI",
+	"JINI_GEMINI_CLI",
+	"JINI_AIDER_CLI",
+	"JINI_OPENCODE_CLI",
+}
 
 func TestMain(m *testing.M) {
 	stateDir, err := os.MkdirTemp("", "jini-app-test-state-")
@@ -13,6 +28,16 @@ func TestMain(m *testing.M) {
 	previous, hadPrevious := os.LookupEnv("JINI_STATE_DIR")
 	if err := os.Setenv("JINI_STATE_DIR", stateDir); err != nil {
 		panic(err)
+	}
+	// Pinned unconditionally: honoring a pre-existing export would leave the
+	// hole this closes, since a developer shell that exports JINI_CLAUDE_CODE_CLI
+	// would let auto-routing hand test prompts to the real, billed CLI.
+	// Individual tests still override per-test via t.Setenv.
+	missingCLI := filepath.Join(stateDir, "missing-cli-handoff-executable")
+	for _, env := range cliHandoffExecutableEnvVars {
+		if err := os.Setenv(env, missingCLI); err != nil {
+			panic(err)
+		}
 	}
 	code := m.Run()
 	if hadPrevious {

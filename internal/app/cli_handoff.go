@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -277,11 +278,51 @@ func defaultCLIHandoffTrustIssue(path string) string {
 	if runtime.GOOS != "darwin" || strings.TrimSpace(configValue("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK")) != "" {
 		return ""
 	}
-	cmd := exec.Command("spctl", "-a", "-q", "-t", "execute", path)
-	if err := cmd.Run(); err != nil {
-		return "macOS Gatekeeper rejected CLI executable: " + path + "."
+	resolved := path
+	if target, err := filepath.EvalSymlinks(path); err == nil {
+		resolved = target
 	}
-	return ""
+	return darwinCLIHandoffTrustIssue(
+		resolved,
+		func(candidate string) bool {
+			return exec.Command("xattr", "-p", "com.apple.quarantine", candidate).Run() == nil
+		},
+		func(candidate string) bool {
+			// "anchor apple generic" requires the signature to chain to an
+			// Apple root, which covers both Developer ID and Apple system
+			// binaries while rejecting ad-hoc signatures. A bare
+			// `codesign --verify --strict` is NOT sufficient here: it accepts
+			// ad-hoc signatures, and the arm64 linker ad-hoc signs every
+			// native binary automatically, so any downloaded arm64 binary
+			// would pass by construction.
+			return exec.Command("codesign", "--verify", "--strict", "-R=anchor apple generic", candidate).Run() == nil
+		},
+	)
+}
+
+// darwinCLIHandoffTrustIssue decides trust for a resolved CLI executable on
+// macOS. `spctl -a -t execute` is intentionally not used: it rejects every
+// standalone CLI binary ("valid but does not seem to be an app"), including
+// legitimately signed ones. The security intent is narrower: never silently
+// execute a downstream binary that arrived through a quarantining download
+// path without an identified-developer signature.
+//   - Not quarantined: trusted. It did not arrive through a quarantining
+//     download (locally built, or installed by a tool such as npm or a curl
+//     installer). Note this is the only branch that can trust an ad-hoc
+//     signature, which is what every locally built arm64 binary carries.
+//   - Quarantined and identity-signed (signature chains to an Apple root —
+//     Developer ID or Apple system): trusted.
+//   - Quarantined otherwise (unsigned, broken, or merely ad-hoc signed):
+//     untrusted, fail closed with an actionable message.
+func darwinCLIHandoffTrustIssue(resolvedPath string, quarantined, identitySigned func(string) bool) string {
+	if !quarantined(resolvedPath) {
+		return ""
+	}
+	if identitySigned(resolvedPath) {
+		return ""
+	}
+	return "macOS Gatekeeper rejected CLI executable: " + resolvedPath +
+		" (quarantined download without an identified developer signature). Verify the download source, then clear it with `xattr -d com.apple.quarantine " + resolvedPath + "` or reinstall from a trusted source."
 }
 
 func runCLIHandoff(ctx context.Context, mode, prompt string) (string, *cliHandoffReceipt, error) {

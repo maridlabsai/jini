@@ -2242,6 +2242,19 @@ func writeFakeExecutable(t *testing.T, dir, name, body string) string {
 	if err := os.WriteFile(path, []byte(content), 0o755); err != nil {
 		t.Fatalf("write fake executable %s: %v", name, err)
 	}
+	// TestMain pins the CLI handoff executable env vars to a missing path so
+	// tests never invoke a real installed CLI. Point the matching env var at
+	// this fake so default-name lookups resolve to it; tests that set the env
+	// var explicitly afterwards still win.
+	if env, ok := map[string]string{
+		"codex":    "JINI_CODEX_CLI",
+		"claude":   "JINI_CLAUDE_CODE_CLI",
+		"gemini":   "JINI_GEMINI_CLI",
+		"aider":    "JINI_AIDER_CLI",
+		"opencode": "JINI_OPENCODE_CLI",
+	}[name]; ok {
+		t.Setenv(env, path)
+	}
 	return path
 }
 

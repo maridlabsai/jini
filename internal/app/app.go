@@ -2012,7 +2012,9 @@ func runDirectTaskArgsIntake(args []string, stdout, stderr io.Writer) int {
 		Title:  deriveStarterTitle(envelope.Choice.DefaultName, source, envelope.Choice.PackID),
 		Source: source,
 	}
-	_ = detectRouteForRequest(request)
+	if decision := detectRouteForRequest(request); decision.Active && cliHandoffMode(decision.ToolMode) {
+		return runDirectCLIHandoffAnswer(request, decision, stdout, stderr)
+	}
 
 	summary, err := bootstrapStarterWork(envelope.Choice, source, "quick", inputItems)
 	if err != nil {
@@ -2029,6 +2031,25 @@ func runDirectTaskArgsIntake(args []string, stdout, stderr io.Writer) int {
 		return 0
 	}
 	renderDirectTaskStarted(stdout, summary, source)
+	return 0
+}
+
+// runDirectCLIHandoffAnswer hands a direct prompt to the routed installed CLI
+// via the shared route engine and prints the CLI's answer plainly, without the
+// saved-draft workflow. It fires for any route decision that resolves to a CLI
+// handoff, so the behavior follows routing policy rather than prompt class.
+func runDirectCLIHandoffAnswer(request providerGenerationRequest, decision routeDecision, stdout, stderr io.Writer) int {
+	text, _, _, err := generateWithConfiguredProviderDecision(context.Background(), request, decision)
+	if err != nil {
+		fmt.Fprintln(stderr, err.Error())
+		return 1
+	}
+	text = strings.TrimSpace(text)
+	if text == "" {
+		fmt.Fprintf(stdout, "%s completed with no output.\n", cliHandoffLabel(decision.ToolMode))
+		return 0
+	}
+	fmt.Fprintln(stdout, text)
 	return 0
 }
 
