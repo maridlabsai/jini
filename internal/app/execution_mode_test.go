@@ -2,6 +2,7 @@ package app
 
 import (
 	"bytes"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -126,5 +127,70 @@ func TestSaveExecutionModeRejectsInvalid(t *testing.T) {
 	withExecutionModeHome(t)
 	if err := saveExecutionMode("banana"); err == nil {
 		t.Fatal("expected error for invalid mode")
+	}
+}
+
+func TestRunModeBarePrintsEffectiveModeAndHint(t *testing.T) {
+	withExecutionModeHome(t)
+	var out bytes.Buffer
+	if code := runMode(nil, &out, io.Discard); code != 0 {
+		t.Fatalf("exit %d", code)
+	}
+	got := out.String()
+	if !strings.Contains(got, "Auto — Jini picks for you and keeps going.") {
+		t.Fatalf("missing auto copy: %q", got)
+	}
+	if !strings.Contains(got, "Switch with `jini mode ask`.") {
+		t.Fatalf("missing switch hint: %q", got)
+	}
+}
+
+func TestRunModeSwitchToAsk(t *testing.T) {
+	withExecutionModeHome(t)
+	var out bytes.Buffer
+	if code := runMode([]string{"ask"}, &out, io.Discard); code != 0 {
+		t.Fatalf("exit %d", code)
+	}
+	if !strings.Contains(out.String(), "Ask — Jini checks with you before side effects and before resuming throttled work.") {
+		t.Fatalf("missing ask copy: %q", out.String())
+	}
+	if mode := effectiveExecutionMode(); mode != "ask" {
+		t.Fatalf("mode not persisted, got %q", mode)
+	}
+}
+
+func TestRunModeBareNamesEnvOverride(t *testing.T) {
+	withExecutionModeHome(t)
+	if err := saveExecutionMode("auto"); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("JINI_MODE", "ask")
+	var out bytes.Buffer
+	runMode(nil, &out, io.Discard)
+	if !strings.Contains(out.String(), "(from JINI_MODE; saved setting is Auto)") {
+		t.Fatalf("env override not named: %q", out.String())
+	}
+}
+
+func TestRunModeInvalidArg(t *testing.T) {
+	withExecutionModeHome(t)
+	var errOut bytes.Buffer
+	if code := runMode([]string{"banana"}, io.Discard, &errOut); code != 1 {
+		t.Fatalf("expected exit 1, got %d", code)
+	}
+	if !strings.Contains(errOut.String(), "Unknown mode \"banana\". Use `jini mode auto` or `jini mode ask`.") {
+		t.Fatalf("wrong rejection copy: %q", errOut.String())
+	}
+}
+
+func TestModeIsARoutedTopLevelCommand(t *testing.T) {
+	if canonicalTopLevelCommand("mode") != "mode" {
+		t.Fatal("mode not a canonical top-level command")
+	}
+	if err := validateNativeArgs([]string{"mode", "ask"}); err != nil {
+		t.Fatalf("mode ask must validate: %v", err)
+	}
+	if err := validateNativeArgs([]string{"mode", "banana"}); err != nil {
+		t.Fatalf("mode banana must pass validation so runMode's friendly error is reachable: %v", err)
 	}
 }

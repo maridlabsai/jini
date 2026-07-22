@@ -120,3 +120,50 @@ func saveExecutionMode(mode string) error {
 	}
 	return os.Rename(tmpName, path)
 }
+
+func executionModeDisplayLine(mode string) string {
+	if mode == executionModeAsk {
+		return "Ask — Jini checks with you before side effects and before resuming throttled work."
+	}
+	return "Auto — Jini picks for you and keeps going."
+}
+
+func runMode(args []string, stdout, stderr io.Writer) int {
+	if len(args) == 0 {
+		mode := effectiveExecutionMode()
+		line := executionModeDisplayLine(mode)
+		if env := strings.TrimSpace(os.Getenv("JINI_MODE")); env != "" {
+			saved := executionModeAuto
+			if path, err := executionModePath(); err == nil {
+				if data, readErr := os.ReadFile(path); readErr == nil {
+					var payload savedExecutionMode
+					if json.Unmarshal(data, &payload) == nil && strings.EqualFold(payload.Mode, executionModeAsk) {
+						saved = executionModeAsk
+					}
+				}
+			}
+			line = strings.TrimSuffix(line, ".") + fmt.Sprintf(" (from JINI_MODE; saved setting is %s).", titleCase(saved))
+		}
+		fmt.Fprintln(stdout, line)
+		if mode == executionModeAsk {
+			fmt.Fprintln(stdout, "Switch with `jini mode auto`.")
+		} else {
+			fmt.Fprintln(stdout, "Switch with `jini mode ask`.")
+		}
+		return 0
+	}
+	requested := strings.ToLower(strings.TrimSpace(args[0]))
+	if requested != executionModeAuto && requested != executionModeAsk {
+		fmt.Fprintf(stderr, "Unknown mode %q. Use `jini mode auto` or `jini mode ask`.\n", args[0])
+		return 1
+	}
+	if err := saveExecutionMode(requested); err != nil {
+		fmt.Fprintln(stderr, err.Error())
+		return 1
+	}
+	fmt.Fprintln(stdout, executionModeDisplayLine(requested))
+	if strings.TrimSpace(os.Getenv("JINI_MODE")) != "" {
+		fmt.Fprintln(stdout, "Note: JINI_MODE is set and still wins in this shell.")
+	}
+	return 0
+}
