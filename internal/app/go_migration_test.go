@@ -97,6 +97,7 @@ func TestOfficialGoOnlySurfacesDoNotAdvertiseUnsupportedCommands(t *testing.T) {
 		"help":              true,
 		"init":              true,
 		"memory":            true,
+		"mode":              true,
 		"new":               true,
 		"observe":           true,
 		"open":              true,

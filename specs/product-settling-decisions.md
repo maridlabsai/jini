@@ -777,3 +777,14 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   fake downstream CLI. Trace row added (14 implemented P0 rows); remaining
   slices (Autopilot switching, Ask-mode resume approval, ledger counter)
   stay in the backlog.
+- `jini mode` joins the taught command surface (2026-07-21): the Auto/Ask
+  execution mode (PRD Execution Modes) ships as top-level
+  `jini mode [auto|ask]` — one command, no aliases, no subtree — and the
+  allowed-command map in `internal/app/go_migration_test.go` gains `mode` as
+  a deliberate surface addition. Command-surface discipline
+  (`specs/engineering-gate-matrix.md` Command-Surface Discipline) was weighed
+  against it: a mode toggle is the PRD's own "one obvious action" for the
+  setting, and burying it in `jini admin` would make the fail-closed
+  supervision promise undiscoverable. Bare `jini mode` reports the effective
+  mode and names `JINI_MODE` when the env override differs from the saved
+  setting. See `specs/auto-ask-execution-mode-design.md`.
