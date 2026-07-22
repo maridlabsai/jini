@@ -413,6 +413,8 @@ func safelyRunInteractive(stderr io.Writer, fn func() int) (exitCode int) {
 }
 
 func runLauncher(stdin io.Reader, stdout, stderr io.Writer) int {
+	// The launcher's Scanner owns stdin, so Ask mode cannot prompt here.
+	configureThrottleApproverForEntry(false)
 	current, err := loadCurrentWork()
 	if err != nil || current == nil {
 		active, activeErr := listActiveWorkSummaries(nil)
@@ -1984,11 +1986,14 @@ func workingWithLabel(provider providerConfig) string {
 }
 
 func runNewWorkIntake(stdin io.Reader, stdout, stderr io.Writer) int {
+	configureThrottleApproverForEntry(false)
 	session := bufio.NewScanner(stdin)
 	return runNewWorkIntakeWithScanner(session, stdout, stderr)
 }
 
 func runDirectTaskArgsIntake(args []string, stdout, stderr io.Writer) int {
+	// One-shot path: jini owns stdin, so Ask mode can prompt for resume.
+	configureThrottleApproverForEntry(true)
 	source := strings.TrimSpace(strings.Join(args, " "))
 	if source == "" {
 		fmt.Fprintln(stderr, "I need one line of source context to start this work.")

@@ -1,6 +1,7 @@
 package app
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
@@ -384,4 +385,71 @@ func sleepWithContext(ctx context.Context, wait time.Duration) error {
 	case <-timer.C:
 		return nil
 	}
+}
+
+// cliPromptApprover puts the resume decision to a human at the terminal. It is
+// installed only where jini owns stdin; see configureThrottleApproverForEntry.
+type cliPromptApprover struct{}
+
+var (
+	throttlePromptInput  io.Reader = os.Stdin
+	throttlePromptOutput io.Writer = os.Stderr
+	throttlePromptIsTTY  func() bool = func() bool {
+		info, err := os.Stdin.Stat()
+		if err != nil {
+			return false
+		}
+		return info.Mode()&os.ModeCharDevice != 0
+	}
+)
+
+func (cliPromptApprover) Approve(ctx context.Context, req throttleApprovalRequest) (throttleApprovalDecision, error) {
+	if throttlePromptIsTTY == nil || !throttlePromptIsTTY() {
+		return approvalDeclined, nil
+	}
+	fmt.Fprintf(throttlePromptOutput, "%s is throttled (retry in %s). Resume automatically when capacity returns? [y/N] ", req.Label, req.Wait)
+	type answer struct {
+		line string
+		err  error
+	}
+	answers := make(chan answer, 1)
+	go func() {
+		// The first line wins: a stray buffered newline reads as an empty line
+		// and declines — it must never auto-approve. This goroutine leaks if
+		// ctx cancels while blocked on stdin; accepted for a one-shot process.
+		reader := bufio.NewReader(throttlePromptInput)
+		line, err := reader.ReadString('\n')
+		answers <- answer{line: line, err: err}
+	}()
+	select {
+	case <-ctx.Done():
+		return approvalDeclined, ctx.Err()
+	case got := <-answers:
+		if got.err != nil && strings.TrimSpace(got.line) == "" {
+			return approvalDeclined, nil
+		}
+		switch strings.ToLower(strings.TrimSpace(got.line)) {
+		case "y", "yes":
+			return approvalGranted, nil
+		default:
+			return approvalDeclined, nil
+		}
+	}
+}
+
+// configureThrottleApproverForEntry sets the process-level approver at a
+// dispatch branch. oneShot must be true ONLY where jini owns stdin (the
+// direct-task and standalone-question one-shot paths) — never for the
+// interactive launcher (its Scanner owns stdin) or the sidecar (stdin is a
+// protocol pipe).
+func configureThrottleApproverForEntry(oneShot bool) {
+	if effectiveExecutionMode() != executionModeAsk {
+		throttleApproverForProcess = autoApprover{}
+		return
+	}
+	if oneShot {
+		throttleApproverForProcess = cliPromptApprover{}
+		return
+	}
+	throttleApproverForProcess = failClosedApprover{}
 }

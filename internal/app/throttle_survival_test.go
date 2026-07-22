@@ -373,3 +373,94 @@ func TestRunWithThrottleSurvivalPerAttemptTimeout(t *testing.T) {
 		t.Fatalf("expected deadline exceeded passthrough (non-throttle, no hold), got %v", err)
 	}
 }
+
+func withPromptIO(t *testing.T, input string) *bytes.Buffer {
+	t.Helper()
+	oldIn, oldOut, oldTTY := throttlePromptInput, throttlePromptOutput, throttlePromptIsTTY
+	out := &bytes.Buffer{}
+	throttlePromptInput = strings.NewReader(input)
+	throttlePromptOutput = out
+	throttlePromptIsTTY = func() bool { return true }
+	t.Cleanup(func() {
+		throttlePromptInput, throttlePromptOutput, throttlePromptIsTTY = oldIn, oldOut, oldTTY
+	})
+	return out
+}
+
+type blockingReader struct{}
+
+func (blockingReader) Read([]byte) (int, error) { select {} }
+
+func TestCLIPromptApproverExplicitYesGrants(t *testing.T) {
+	out := withPromptIO(t, "y\n")
+	decision, err := cliPromptApprover{}.Approve(context.Background(), throttleApprovalRequest{Label: "Claude API route", Wait: 20 * time.Second})
+	if err != nil || decision != approvalGranted {
+		t.Fatalf("decision=%v err=%v", decision, err)
+	}
+	if !strings.Contains(out.String(), "Resume automatically when capacity returns? [y/N]") {
+		t.Fatalf("prompt copy wrong: %q", out.String())
+	}
+}
+
+func TestCLIPromptApproverBareEnterDeclines(t *testing.T) {
+	withPromptIO(t, "\n")
+	decision, err := cliPromptApprover{}.Approve(context.Background(), throttleApprovalRequest{Label: "route"})
+	if err != nil || decision != approvalDeclined {
+		t.Fatalf("bare Enter must decline: decision=%v err=%v", decision, err)
+	}
+}
+
+func TestCLIPromptApproverBufferedNewlineThenYesDeclinesOnFirstLine(t *testing.T) {
+	withPromptIO(t, "\ny\n")
+	decision, _ := cliPromptApprover{}.Approve(context.Background(), throttleApprovalRequest{Label: "route"})
+	if decision != approvalDeclined {
+		t.Fatal("stray newline auto-approved")
+	}
+}
+
+func TestCLIPromptApproverNoTTYDeclinesWithoutPrompting(t *testing.T) {
+	out := withPromptIO(t, "y\n")
+	throttlePromptIsTTY = func() bool { return false }
+	decision, err := cliPromptApprover{}.Approve(context.Background(), throttleApprovalRequest{Label: "route"})
+	if err != nil || decision != approvalDeclined {
+		t.Fatalf("no-TTY must decline: %v %v", decision, err)
+	}
+	if out.Len() != 0 {
+		t.Fatalf("must not prompt without a TTY: %q", out.String())
+	}
+}
+
+func TestCLIPromptApproverCtxCancelDeclines(t *testing.T) {
+	withPromptIO(t, "")
+	throttlePromptInput = blockingReader{}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	_, err := cliPromptApprover{}.Approve(ctx, throttleApprovalRequest{Label: "route"})
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected ctx cancellation, got %v", err)
+	}
+}
+
+func TestConfigureThrottleApproverForEntry(t *testing.T) {
+	withExecutionModeHome(t)
+	oldApprover := throttleApproverForProcess
+	defer func() { throttleApproverForProcess = oldApprover }()
+	if err := saveExecutionMode("ask"); err != nil {
+		t.Fatal(err)
+	}
+	configureThrottleApproverForEntry(true)
+	if _, ok := throttleApproverForProcess.(cliPromptApprover); !ok {
+		t.Fatalf("one-shot ask must get cliPromptApprover, got %T", throttleApproverForProcess)
+	}
+	configureThrottleApproverForEntry(false)
+	if _, ok := throttleApproverForProcess.(failClosedApprover); !ok {
+		t.Fatalf("launcher ask must get failClosedApprover, got %T", throttleApproverForProcess)
+	}
+	if err := saveExecutionMode("auto"); err != nil {
+		t.Fatal(err)
+	}
+	configureThrottleApproverForEntry(true)
+	if _, ok := throttleApproverForProcess.(autoApprover); !ok {
+		t.Fatalf("auto must keep autoApprover, got %T", throttleApproverForProcess)
+	}
+}
