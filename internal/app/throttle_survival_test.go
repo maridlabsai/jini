@@ -87,7 +87,7 @@ func TestRunWithThrottleSurvivalHoldsAndResumesSameRoute(t *testing.T) {
 	narration, sleeps := withThrottleTestHarness(t)
 
 	attempts := 0
-	text, report, err := runWithThrottleSurvival(context.Background(), "claude-code", func() string { return "local-slm" }, func() (string, error) {
+	text, report, err := runWithThrottleSurvival(context.Background(), "claude-code", func() string { return "local-slm" }, throttleSurvivalOptions{approver: autoApprover{}}, func() (string, error) {
 		attempts++
 		if attempts <= 2 {
 			return "", &throttledRouteError{label: "claude-code", underlying: errors.New("status 429")}
@@ -136,7 +136,7 @@ func TestRunWithThrottleSurvivalHonorsAdvertisedRetryAfter(t *testing.T) {
 	_, sleeps := withThrottleTestHarness(t)
 
 	attempts := 0
-	_, _, err := runWithThrottleSurvival(context.Background(), "anthropic", nil, func() (string, error) {
+	_, _, err := runWithThrottleSurvival(context.Background(), "anthropic", nil, throttleSurvivalOptions{approver: autoApprover{}}, func() (string, error) {
 		attempts++
 		if attempts == 1 {
 			return "", &throttledRouteError{label: "anthropic", retryAfter: 33 * time.Second, underlying: errors.New("rate limit")}
@@ -155,7 +155,7 @@ func TestRunWithThrottleSurvivalNeverWaitsOnNonThrottleErrors(t *testing.T) {
 	_, sleeps := withThrottleTestHarness(t)
 
 	attempts := 0
-	_, _, err := runWithThrottleSurvival(context.Background(), "codex", nil, func() (string, error) {
+	_, _, err := runWithThrottleSurvival(context.Background(), "codex", nil, throttleSurvivalOptions{approver: autoApprover{}}, func() (string, error) {
 		attempts++
 		return "", errors.New("invalid api key")
 	})
@@ -171,7 +171,7 @@ func TestRunWithThrottleSurvivalExhaustionNamesRecoveryAndFallback(t *testing.T)
 	_, sleeps := withThrottleTestHarness(t)
 
 	attempts := 0
-	_, report, err := runWithThrottleSurvival(context.Background(), "claude-code", func() string { return "local-slm" }, func() (string, error) {
+	_, report, err := runWithThrottleSurvival(context.Background(), "claude-code", func() string { return "local-slm" }, throttleSurvivalOptions{approver: autoApprover{}}, func() (string, error) {
 		attempts++
 		return "", &throttledRouteError{label: "claude-code", underlying: errors.New("usage limit reached")}
 	})
@@ -201,7 +201,7 @@ func TestRunWithThrottleSurvivalStopsWhenContextCancelled(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	attempts := 0
-	_, _, err := runWithThrottleSurvival(ctx, "anthropic", nil, func() (string, error) {
+	_, _, err := runWithThrottleSurvival(ctx, "anthropic", nil, throttleSurvivalOptions{approver: autoApprover{}}, func() (string, error) {
 		attempts++
 		cancel()
 		return "", &throttledRouteError{label: "anthropic", underlying: errors.New("rate limit")}
@@ -248,5 +248,128 @@ func TestClassifyCLIThrottleOutputDetectsFromRawOutputOnly(t *testing.T) {
 	plain := classifyCLIThrottleOutput("Claude Code", "", "boom", sanitized)
 	if errors.As(plain, &throttled) {
 		t.Fatalf("expected non-throttle output to pass through sanitized, got %v", plain)
+	}
+}
+
+type recordingApprover struct {
+	calls    int
+	decision throttleApprovalDecision
+	lastReq  throttleApprovalRequest
+}
+
+func (a *recordingApprover) Approve(_ context.Context, req throttleApprovalRequest) (throttleApprovalDecision, error) {
+	a.calls++
+	a.lastReq = req
+	return a.decision, nil
+}
+
+func TestRunWithThrottleSurvivalAutoApproverNeverConsultedOutput(t *testing.T) {
+	var narration bytes.Buffer
+	oldNarration := throttleNarration
+	throttleNarration = &narration
+	defer func() { throttleNarration = oldNarration }()
+	oldSleep := throttleSleep
+	throttleSleep = func(context.Context, time.Duration) error { return nil }
+	defer func() { throttleSleep = oldSleep }()
+
+	attempts := 0
+	text, report, err := runWithThrottleSurvival(context.Background(), "Claude API route", nil, throttleSurvivalOptions{approver: autoApprover{}}, func() (string, error) {
+		attempts++
+		if attempts == 1 {
+			return "", &throttledRouteError{label: "Claude API route", underlying: errors.New("status 429")}
+		}
+		return "done", nil
+	})
+	if err != nil || text != "done" || report.Holds != 1 {
+		t.Fatalf("text=%q holds=%d err=%v", text, report.Holds, err)
+	}
+	if !strings.Contains(narration.String(), "Holding the session; resuming automatically") {
+		t.Fatalf("auto path narration changed: %q", narration.String())
+	}
+}
+
+func TestRunWithThrottleSurvivalApproverConsultedOncePerCall(t *testing.T) {
+	oldSleep := throttleSleep
+	throttleSleep = func(context.Context, time.Duration) error { return nil }
+	defer func() { throttleSleep = oldSleep }()
+	approver := &recordingApprover{decision: approvalGranted}
+	attempts := 0
+	_, _, err := runWithThrottleSurvival(context.Background(), "route", nil, throttleSurvivalOptions{approver: approver, taskTitle: "fix the parser"}, func() (string, error) {
+		attempts++
+		if attempts <= 3 {
+			return "", &throttledRouteError{label: "route", underlying: errors.New("rate limit")}
+		}
+		return "ok", nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if approver.calls != 1 {
+		t.Fatalf("approver consulted %d times, want 1", approver.calls)
+	}
+	if approver.lastReq.TaskTitle != "fix the parser" || approver.lastReq.Hold != 1 {
+		t.Fatalf("bad request: %+v", approver.lastReq)
+	}
+}
+
+func TestRunWithThrottleSurvivalDeclineReturnsTypedError(t *testing.T) {
+	approver := &recordingApprover{decision: approvalDeclined}
+	_, report, err := runWithThrottleSurvival(context.Background(), "route", func() string { return "local-fast" }, throttleSurvivalOptions{approver: approver}, func() (string, error) {
+		return "", &throttledRouteError{label: "route", underlying: errors.New("rate limit")}
+	})
+	var declined *throttleDeclinedError
+	if !errors.As(err, &declined) {
+		t.Fatalf("expected throttleDeclinedError, got %v", err)
+	}
+	if report.Holds != 0 {
+		t.Fatalf("declined call must not hold, got %d", report.Holds)
+	}
+	if !strings.Contains(err.Error(), "jini route set local-fast") {
+		t.Fatalf("declined error must name fallback: %v", err)
+	}
+}
+
+func TestRunWithThrottleSurvivalFailClosedApproverNeverPrompts(t *testing.T) {
+	_, _, err := runWithThrottleSurvival(context.Background(), "route", nil, throttleSurvivalOptions{approver: failClosedApprover{}}, func() (string, error) {
+		return "", &throttledRouteError{label: "route", underlying: errors.New("status 429")}
+	})
+	var declined *throttleDeclinedError
+	if !errors.As(err, &declined) {
+		t.Fatalf("expected declined, got %v", err)
+	}
+}
+
+func TestRunWithThrottleSurvivalCustomHoldLadder(t *testing.T) {
+	oldSleep := throttleSleep
+	var waits []time.Duration
+	throttleSleep = func(_ context.Context, wait time.Duration) error {
+		waits = append(waits, wait)
+		return nil
+	}
+	defer func() { throttleSleep = oldSleep }()
+	attempts := 0
+	_, _, err := runWithThrottleSurvival(context.Background(), "route", nil, throttleSurvivalOptions{approver: autoApprover{}, holdWaits: []time.Duration{20 * time.Second}}, func() (string, error) {
+		attempts++
+		return "", &throttledRouteError{label: "route", underlying: errors.New("rate limit")}
+	})
+	if err == nil {
+		t.Fatal("expected exhaustion")
+	}
+	if len(waits) != 1 || waits[0] != 20*time.Second {
+		t.Fatalf("single-hold ladder not honored: %v", waits)
+	}
+	if attempts != 2 {
+		t.Fatalf("expected 2 attempts (1 + 1 hold), got %d", attempts)
+	}
+}
+
+func TestRunWithThrottleSurvivalPerAttemptTimeout(t *testing.T) {
+	_, _, err := runWithThrottleSurvival(context.Background(), "route", nil, throttleSurvivalOptions{approver: autoApprover{}, attemptTimeout: 10 * time.Millisecond}, func() (string, error) {
+		ctx := throttleAttemptContext()
+		<-ctx.Done()
+		return "", ctx.Err()
+	})
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("expected deadline exceeded passthrough (non-throttle, no hold), got %v", err)
 	}
 }

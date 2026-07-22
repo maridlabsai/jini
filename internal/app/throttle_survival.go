@@ -157,12 +157,97 @@ func throttleFallbackHint(request providerGenerationRequest, decision routeDecis
 	}
 }
 
+// throttleApprovalRequest describes one pending resume so an approver can put
+// the decision to whoever is supervising the session.
+type throttleApprovalRequest struct {
+	Label        string
+	Wait         time.Duration
+	FallbackHint string
+	Hold         int
+	TaskTitle    string
+}
+
+type throttleApprovalDecision int
+
+const (
+	approvalGranted throttleApprovalDecision = iota
+	approvalDeclined
+)
+
+// throttleApprover decides whether a throttled route may hold and resume.
+// Ask mode swaps in a prompting approver; paid Autopilot and remote mobile
+// approvals are further implementations of this same seam.
+type throttleApprover interface {
+	Approve(ctx context.Context, req throttleApprovalRequest) (throttleApprovalDecision, error)
+}
+
+// autoApprover is the free-tier Auto-mode default: resume without asking.
+type autoApprover struct{}
+
+// failClosedApprover declines rather than assuming autonomy. Mode parsing
+// degrades to this so an unreadable setting costs supervision, not safety.
+type failClosedApprover struct{}
+
+func (autoApprover) Approve(context.Context, throttleApprovalRequest) (throttleApprovalDecision, error) {
+	return approvalGranted, nil
+}
+
+func (failClosedApprover) Approve(context.Context, throttleApprovalRequest) (throttleApprovalDecision, error) {
+	return approvalDeclined, nil
+}
+
+var throttleApproverForProcess throttleApprover = autoApprover{}
+
+type throttleSurvivalOptions struct {
+	approver       throttleApprover // nil = throttleApproverForProcess
+	attemptTimeout time.Duration    // 0 = no per-attempt timeout
+	holdWaits      []time.Duration  // nil = throttleHoldWaits
+	taskTitle      string
+}
+
+// throttleDeclinedError reports that a resume was offered and refused. It is
+// distinct from exhaustion: nothing was held, and the work is parked.
+type throttleDeclinedError struct {
+	label        string
+	fallbackHint string
+	underlying   error
+}
+
+func (e *throttleDeclinedError) Error() string {
+	guidance := "The session is saved; `jini continue` resumes it."
+	if e.fallbackHint != "" {
+		guidance = fmt.Sprintf("The session is saved; `jini continue` resumes it, or switch with `jini route set %s`.", e.fallbackHint)
+	}
+	return fmt.Sprintf("%s resume was not approved. %s Underlying: %v", e.label, guidance, e.underlying)
+}
+
+func (e *throttleDeclinedError) Unwrap() error { return e.underlying }
+
+// currentAttemptContext exposes the per-attempt context to the attempt closure
+// without changing its signature. One survival call runs its attempts on a
+// single goroutine by construction, so this is set for the duration of one
+// attempt only.
+var currentAttemptContext context.Context = context.Background()
+
+func throttleAttemptContext() context.Context { return currentAttemptContext }
+
 // runWithThrottleSurvival runs attempt, and on throttle errors holds the
 // session and retries the same route automatically. It never waits on
 // non-throttle errors. fallbackHint is evaluated lazily on the first hold and
-// names a viable fallback route for narration and the exhaustion error.
-func runWithThrottleSurvival(ctx context.Context, label string, fallbackHint func() string, attempt func() (string, error)) (string, throttleSurvivalReport, error) {
+// names a viable fallback route for narration and the exhaustion error. The
+// approver is consulted once per call, before the first hold: Auto grants
+// silently, so its narration and timing are byte-identical to the pre-seam
+// behavior.
+func runWithThrottleSurvival(ctx context.Context, label string, fallbackHint func() string, opts throttleSurvivalOptions, attempt func() (string, error)) (string, throttleSurvivalReport, error) {
 	report := throttleSurvivalReport{}
+	approver := opts.approver
+	if approver == nil {
+		approver = throttleApproverForProcess
+	}
+	holdWaits := opts.holdWaits
+	if holdWaits == nil {
+		holdWaits = throttleHoldWaits
+	}
 	var lastErr error
 	hint := ""
 	hintResolved := false
@@ -175,8 +260,20 @@ func runWithThrottleSurvival(ctx context.Context, label string, fallbackHint fun
 		}
 		return hint
 	}
-	for hold := 0; hold <= len(throttleHoldWaits); hold++ {
-		text, err := attempt()
+	runAttempt := func() (string, error) {
+		if opts.attemptTimeout > 0 {
+			attemptCtx, cancel := context.WithTimeout(ctx, opts.attemptTimeout)
+			defer cancel()
+			currentAttemptContext = attemptCtx
+		} else {
+			currentAttemptContext = ctx
+		}
+		defer func() { currentAttemptContext = context.Background() }()
+		return attempt()
+	}
+	approved := false
+	for hold := 0; hold <= len(holdWaits); hold++ {
+		text, err := runAttempt()
 		if err == nil {
 			return text, report, nil
 		}
@@ -185,17 +282,33 @@ func runWithThrottleSurvival(ctx context.Context, label string, fallbackHint fun
 			return "", report, err
 		}
 		lastErr = err
-		if hold == len(throttleHoldWaits) {
+		if hold == len(holdWaits) {
 			break
 		}
-		wait := throttleHoldWaits[hold]
+		wait := holdWaits[hold]
 		if throttled.retryAfter > 0 {
 			wait = throttled.retryAfter
 			if wait > throttleRetryAfterCap {
 				wait = throttleRetryAfterCap
 			}
 		}
-		narrateThrottleHold(label, resolveHint(), wait, hold+1, len(throttleHoldWaits))
+		if !approved {
+			decision, approveErr := approver.Approve(ctx, throttleApprovalRequest{
+				Label:        label,
+				Wait:         wait,
+				FallbackHint: resolveHint(),
+				Hold:         hold + 1,
+				TaskTitle:    opts.taskTitle,
+			})
+			if approveErr != nil {
+				return "", report, approveErr
+			}
+			if decision != approvalGranted {
+				return "", report, &throttleDeclinedError{label: label, fallbackHint: resolveHint(), underlying: lastErr}
+			}
+			approved = true
+		}
+		narrateThrottleHold(label, resolveHint(), wait, hold+1, len(holdWaits))
 		if sleepErr := throttleSleep(ctx, wait); sleepErr != nil {
 			return "", report, sleepErr
 		}

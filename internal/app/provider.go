@@ -126,8 +126,8 @@ func generateWithConfiguredProviderDecision(ctx context.Context, request provide
 			prompt = providerUserPrompt(request)
 		}
 		var receipt *cliHandoffReceipt
-		text, survival, err := runWithThrottleSurvival(ctx, cliHandoffLabel(decision.ToolMode), throttleFallbackHint(request, decision), func() (string, error) {
-			attemptText, attemptReceipt, attemptErr := runCLIHandoff(ctx, decision.ToolMode, prompt)
+		text, survival, err := runWithThrottleSurvival(ctx, cliHandoffLabel(decision.ToolMode), throttleFallbackHint(request, decision), throttleSurvivalOptions{taskTitle: request.Title}, func() (string, error) {
+			attemptText, attemptReceipt, attemptErr := runCLIHandoff(throttleAttemptContext(), decision.ToolMode, prompt)
 			if attemptReceipt != nil {
 				receipt = attemptReceipt
 			}
@@ -152,8 +152,8 @@ func generateWithConfiguredProviderDecision(ctx context.Context, request provide
 	systemPrompt := providerSystemPrompt()
 	userPrompt := providerUserPrompt(request)
 	routeLabel := firstNonEmpty(decision.ToolLabel, provider.Label, provider.ID)
-	text, survival, err := runWithThrottleSurvival(ctx, routeLabel, throttleFallbackHint(request, decision), func() (string, error) {
-		attemptText, attemptErr := generateProviderText(ctx, provider, request, systemPrompt, userPrompt)
+	text, survival, err := runWithThrottleSurvival(ctx, routeLabel, throttleFallbackHint(request, decision), throttleSurvivalOptions{taskTitle: request.Title}, func() (string, error) {
+		attemptText, attemptErr := generateProviderText(throttleAttemptContext(), provider, request, systemPrompt, userPrompt)
 		return attemptText, classifyThrottleError(routeLabel, attemptErr)
 	})
 	decision.Reason = appendThrottleSurvivalReason(decision.Reason, survival)
