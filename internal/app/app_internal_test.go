@@ -1243,16 +1243,16 @@ func TestScorecardGatePassesAndExposesCompetitorPressure(t *testing.T) {
 	if report.PRDImplementation.SourcePath != "specs/prd-implementation-trace.md" {
 		t.Fatalf("expected PRD implementation trace source, got %#v", report.PRDImplementation)
 	}
-	if report.PRDImplementation.TotalRequirements != 14 || report.PRDImplementation.ImplementedRequirements != 14 || report.PRDImplementation.CompletionPercent != 100 {
-		t.Fatalf("expected P0 PRD implementation completion to be 14/14 = 100%%, got %#v", report.PRDImplementation)
+	if report.PRDImplementation.TotalRequirements != 15 || report.PRDImplementation.ImplementedRequirements != 15 || report.PRDImplementation.CompletionPercent != 100 {
+		t.Fatalf("expected P0 PRD implementation completion to be 15/15 = 100%%, got %#v", report.PRDImplementation)
 	}
 	if report.PRDImplementation.Status != "ok" {
 		t.Fatalf("expected PRD implementation status ok, got %#v", report.PRDImplementation)
 	}
-	if report.PRDImplementation.ResidualHardeningCount != 1 {
+	if report.PRDImplementation.ResidualHardeningCount != 2 {
 		t.Fatalf("expected residual hardening count to stay visible, got %#v", report.PRDImplementation)
 	}
-	if len(report.PRDImplementation.ResidualHardening) != 1 {
+	if len(report.PRDImplementation.ResidualHardening) != 2 {
 		t.Fatalf("expected residual hardening details to stay machine-readable, got %#v", report.PRDImplementation)
 	}
 	for _, want := range []string{
@@ -1854,9 +1854,9 @@ func TestScorecardGateTextShowsCommitGatePressure(t *testing.T) {
 	for _, want := range []string{
 		"STATUS ok",
 		"PRD IMPLEMENTATION",
-		"  OK 14/14 P0 requirements implemented (100%)",
+		"  OK 15/15 P0 requirements implemented (100%)",
 		"  SOURCE specs/prd-implementation-trace.md",
-		"  RESIDUAL_HARDENING 1",
+		"  RESIDUAL_HARDENING 2",
 		"    RESIDUAL Wave 1 command templates still use fake downstream CLIs for automated command-shape coverage, but release readiness now requires signed `.jini/cli-smoke.json` evidence, recent `.jini/cli-dogfood.json` validation evidence, and `jini check ship --format json` setup status for claimed routes. Real installed CLI dogfood remains required on tester machines for auth, approvals, output-shape differences, route receipt privacy, and signed smoke freshness.",
 		"COMPETITORS",
 		"  OK github-copilot-coding-agent",

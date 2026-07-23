@@ -32,6 +32,7 @@ states the outcome and the gates below prove it.
 | Preserve customer-value viability and anti-amateur scope | `tools/customer_value_gate.sh`, product settling decisions, competitive benchmark outcome gate | `TestProductViabilityGatePinsCustomerValueAndAntiAmateurBoundary`, customer value gate, scorecard gate |
 | Block regressions before commit and push | `tools/run_required_gates.sh`, scorecard PRD completion summary | commit/push/release gate tests, Claude/Codex use-case gate, scorecard PRD implementation completion tests |
 | Autonomous throttle survival — free-tier core: detect throttle on any route, hold the session, self-resume the same route, name a viable fallback | `throttle_survival.go` (`runWithThrottleSurvival`, throttle classifiers, Retry-After honoring, narration, receipt reason), wired into provider and CLI-handoff paths in `provider.go`/`cli_handoff.go` | `TestRunWithThrottleSurvival*`, `TestIsThrottleSignal*`, `TestClassifyCLIThrottleOutput*`; live transcript: fake throttling downstream CLI, hold narrated, advertised wait honored, same-route resume, work saved |
+| `Auto`/`Ask` execution mode, switchable mid-session, plus Ask-mode approval before throttled-work resume with fail-closed parking | `execution_mode.go` (fail-closed setting, `runMode`), `throttle_survival.go` approver seam (`throttleApprover`, `autoApprover`/`failClosedApprover`/`cliPromptApprover`, `configureThrottleApproverForEntry`), `throttle_park.go` (resumable park), `jini continue` park-resume in `app.go` | `TestRunMode*`, `TestModeIsARoutedTopLevelCommand`, `TestConfigureThrottleApproverForEntry`, `TestCLIPromptApprover*`, `TestRunWithThrottleSurvivalDeclineReturnsTypedError`/`*FailClosedApprover*`, `TestThrottlePark*`, `TestRunContinueResumesPark`, `TestStandaloneThrottleFamilyErrorPassesThrough`; live transcript: Ask decline parks + `jini continue` resumes, Auto silent hold honors advertised 2s wait then resumes same route |
 
 ## Not Yet Implemented (v1 backlog)
 
@@ -43,11 +44,11 @@ not a table: the scorecard trace parser counts any three-cell table row as an
 implemented P0 row.)
 
 - Autonomous throttle survival, remaining slices (§P0 Outcome Requirements,
-  §Routing And Resource Policy): the free-tier same-route core is implemented
-  (see Implemented table); still unbuilt are paid Autopilot mid-task route
-  switching, Ask-mode approval before throttled-work resume, and the
-  throttle-dodge counter feeding the savings ledger. Future proof:
-  throttle-resilience release gate.
+  §Routing And Resource Policy): the free-tier same-route core and the
+  Ask-mode resume approval are implemented (see Implemented table); still
+  unbuilt are paid Autopilot mid-task route switching and the throttle-dodge
+  counter feeding the savings ledger. Future proof: throttle-resilience
+  release gate.
 - Savings ledger and receipts (§Savings Ledger And Receipts): per-task
   receipt, session roll-up, startup counter, `jini savings` dashboard.
   Future proof: savings-methodology audit gate (literal-vs-imputed labels).
@@ -55,8 +56,6 @@ implemented P0 row.)
   token-efficiency regression gate in the release tier.
 - On-the-fly skills and agents as plain reviewable files (§Skills And
   Agents). Future proof: skills/agents creation fixture in the CLI UX gate.
-- `Auto`/`Ask` execution mode surface, switchable mid-session (§UX
-  Contract). Future proof: mode-switch fixture preserving session state.
 - User preference envelope — never/prefer/pin per model/route, speed bias,
   plain-file persistence (execution-routing-policy §Absorbed Policies).
   Future proof: preference-constraint routing tests.
@@ -81,3 +80,9 @@ Residual hardening:
   claimed routes. Real installed CLI dogfood remains required on tester
   machines for auth, approvals, output-shape differences, route receipt
   privacy, and signed smoke freshness.
+- Selective-consistency and refinement drafts
+  (`generateConsistencyDraft`/refine paths in `provider.go`) still call the
+  providers directly, bypassing `runWithThrottleSurvival`. A throttle during
+  a draft fails that draft rather than holding; the primary answer is
+  unaffected. Future proof: route these auxiliary drafts through the survival
+  wrapper (with a draft-scoped hold budget) or drop them under throttle.

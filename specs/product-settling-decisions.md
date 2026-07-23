@@ -777,6 +777,17 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   fake downstream CLI. Trace row added (14 implemented P0 rows); remaining
   slices (Autopilot switching, Ask-mode resume approval, ledger counter)
   stay in the backlog.
+- Auto/Ask execution mode + Ask-mode resume approval implemented and traced
+  (2026-07-22): the Auto/Ask surface (`execution_mode.go`, `jini mode`), the
+  throttle-survival approver seam with fail-closed parking
+  (`throttle_survival.go`, `throttle_park.go`), and `jini continue`
+  park-resume moved from the trace backlog to Implemented, proven by unit
+  suites plus a live transcript (Ask decline parks then `jini continue`
+  resumes; Auto silent-holds the advertised 2s wait then resumes the same
+  route). Remaining throttle slices stay in the backlog: paid Autopilot
+  mid-task route switching and the throttle-dodge savings counter. New
+  residual-hardening item recorded: selective-consistency and refinement
+  drafts still bypass `runWithThrottleSurvival`.
 - `jini mode` joins the taught command surface (2026-07-21): the Auto/Ask
   execution mode (PRD Execution Modes) ships as top-level
   `jini mode [auto|ask]` — one command, no aliases, no subtree — and the
