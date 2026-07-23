@@ -2518,6 +2518,7 @@ func bootstrapStarterWork(choice starterChoice, source, detail string, inputItem
 }
 
 func saveCurrentWork(current *currentWork) error {
+	clearThrottlePark() // new work supersedes any stale parked resume
 	if err := os.MkdirAll(sessionStateRoot(), 0o755); err != nil {
 		return err
 	}
@@ -3177,6 +3178,14 @@ func runOpen(args []string, stdout, stderr io.Writer) int {
 }
 
 func runContinue(stdout, stderr io.Writer) int {
+	if park := loadThrottlePark(); park != nil {
+		fmt.Fprintln(stdout, throttleParkResumeLine(park))
+		code := runDirectTaskArgsIntake([]string{park.Prompt}, stdout, stderr)
+		if code == 0 {
+			clearThrottlePark()
+		}
+		return code
+	}
 	summary, err := resolveSummary(nil)
 	if err != nil {
 		fmt.Fprintf(stderr, "%v\n", err)

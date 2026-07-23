@@ -32,9 +32,13 @@ func maybeHandleStandaloneQuestion(raw string, stdout io.Writer) bool {
 		Choice: starterChoice{PackID: "general-work", ChoiceLabel: "Question", DefaultName: "Question", State: "answered"},
 		Title:  compactTurnTitle(raw),
 		Source: raw,
+		// The deadline now budgets each attempt (throttleSurvivalOptions)
+		// rather than the whole call, which would otherwise expire mid-hold
+		// and kill the advertised throttle survival.
+		Standalone: true,
 	}
 	decision := detectRouteForRequest(request)
-	ctx, cancel := context.WithTimeout(context.Background(), standaloneQuestionTimeout())
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	text, used, _, err := generateWithConfiguredProviderDecision(ctx, request, decision)
 	if err == nil && used && strings.TrimSpace(text) != "" {
@@ -46,6 +50,11 @@ func maybeHandleStandaloneQuestion(raw string, stdout io.Writer) bool {
 }
 
 func standaloneQuestionSetupMessage(decision routeDecision, err error) string {
+	// Throttle-family errors already name `jini continue` and a fallback
+	// route; the generic setup copy would throw that guidance away.
+	if err != nil && isThrottleFamilyError(err) {
+		return err.Error()
+	}
 	if errors.Is(err, context.DeadlineExceeded) {
 		return "Route timed out. Run `jini route help` to connect a faster route or local model."
 	}

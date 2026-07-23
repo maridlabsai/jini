@@ -33,6 +33,9 @@ type providerGenerationRequest struct {
 	Choice starterChoice
 	Title  string
 	Source string
+	// Standalone marks the one-shot question path, which answers under a
+	// short deadline and therefore holds at most once.
+	Standalone bool
 }
 
 type providerDoctorField struct {
@@ -117,6 +120,34 @@ func generateWithConfiguredProvider(ctx context.Context, request providerGenerat
 
 func generateWithConfiguredProviderDecision(ctx context.Context, request providerGenerationRequest, decision routeDecision) (string, bool, routeDecision, error) {
 	provider := providerForDecision(request, decision)
+	opts := throttleSurvivalOptions{taskTitle: request.Title}
+	if request.Standalone {
+		// The standalone answer owes the user a reply inside its deadline, so
+		// budget each attempt and offer a single hold rather than the full
+		// 20/40/80 ladder.
+		opts.attemptTimeout = standaloneQuestionTimeout()
+		opts.holdWaits = []time.Duration{20 * time.Second}
+	}
+	// Ask mode parks the prompt before the route can be throttled, so a
+	// declined resume (or a Ctrl-C during one) still leaves `jini continue`
+	// something true to resume.
+	askMode := effectiveExecutionMode() == executionModeAsk
+	parkPrompt := strings.TrimSpace(request.Source)
+	parking := askMode && parkPrompt != ""
+	finishPark := func(err error) {
+		if !parking {
+			return
+		}
+		if err == nil {
+			clearThrottlePark()
+			return
+		}
+		if isThrottleFamilyError(err) {
+			updateThrottleParkError(err.Error(), "")
+			return
+		}
+		clearThrottlePark() // non-throttle error: nothing to resume
+	}
 	if cliHandoffMode(decision.ToolMode) {
 		if provider.Status != "ok" {
 			return "", true, decision, cliHandoffSetupError(provider)
@@ -125,8 +156,11 @@ func generateWithConfiguredProviderDecision(ctx context.Context, request provide
 		if prompt == "" {
 			prompt = providerUserPrompt(request)
 		}
+		if parking {
+			_ = writeThrottlePark(parkPrompt, cliHandoffLabel(decision.ToolMode))
+		}
 		var receipt *cliHandoffReceipt
-		text, survival, err := runWithThrottleSurvival(ctx, cliHandoffLabel(decision.ToolMode), throttleFallbackHint(request, decision), throttleSurvivalOptions{taskTitle: request.Title}, func() (string, error) {
+		text, survival, err := runWithThrottleSurvival(ctx, cliHandoffLabel(decision.ToolMode), throttleFallbackHint(request, decision), opts, func() (string, error) {
 			attemptText, attemptReceipt, attemptErr := runCLIHandoff(throttleAttemptContext(), decision.ToolMode, prompt)
 			if attemptReceipt != nil {
 				receipt = attemptReceipt
@@ -136,6 +170,7 @@ func generateWithConfiguredProviderDecision(ctx context.Context, request provide
 		if receipt != nil {
 			decision.CLIHandoffReceipt = receipt
 		}
+		finishPark(err)
 		if err != nil {
 			return "", true, decision, err
 		}
@@ -152,7 +187,10 @@ func generateWithConfiguredProviderDecision(ctx context.Context, request provide
 	systemPrompt := providerSystemPrompt()
 	userPrompt := providerUserPrompt(request)
 	routeLabel := firstNonEmpty(decision.ToolLabel, provider.Label, provider.ID)
-	text, survival, err := runWithThrottleSurvival(ctx, routeLabel, throttleFallbackHint(request, decision), throttleSurvivalOptions{taskTitle: request.Title}, func() (string, error) {
+	if parking {
+		_ = writeThrottlePark(parkPrompt, routeLabel)
+	}
+	text, survival, err := runWithThrottleSurvival(ctx, routeLabel, throttleFallbackHint(request, decision), opts, func() (string, error) {
 		attemptText, attemptErr := generateProviderText(throttleAttemptContext(), provider, request, systemPrompt, userPrompt)
 		return attemptText, classifyThrottleError(routeLabel, attemptErr)
 	})
@@ -160,15 +198,20 @@ func generateWithConfiguredProviderDecision(ctx context.Context, request provide
 	if err != nil {
 		if fallbackDecision, ok := offlineFailoverDecisionForProviderError(request, decision, err); ok {
 			if fallbackDecision.Provider.ID == "local-preview" {
+				finishPark(nil)
 				return "", false, fallbackDecision, nil
 			}
 			fallbackText, fallbackErr := generateProviderText(ctx, fallbackDecision.Provider, request, systemPrompt, userPrompt)
 			if fallbackErr == nil {
+				// Answered on the fallback route: nothing left to resume.
+				finishPark(nil)
 				return fallbackText, true, fallbackDecision, nil
 			}
 		}
+		finishPark(err)
 		return "", true, decision, err
 	}
+	finishPark(nil)
 	consistencyUsed := false
 	if shouldCheck, reason := shouldRunSelectiveConsistencyCheck(request, decision); shouldCheck {
 		if alternate, consistencyErr := generateConsistencyDraft(ctx, provider, request, reason); consistencyErr == nil && strings.TrimSpace(alternate) != "" {

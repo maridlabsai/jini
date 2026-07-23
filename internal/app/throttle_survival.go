@@ -338,6 +338,29 @@ func narrateThrottleHold(label, fallbackHint string, wait time.Duration, attempt
 	)
 }
 
+// throttleExhaustedError is typed so callers can tell throttle-family failures
+// (park the work, it is resumable) from ordinary route errors.
+type throttleExhaustedError struct {
+	message    string
+	underlying error
+}
+
+func (e *throttleExhaustedError) Error() string { return e.message }
+func (e *throttleExhaustedError) Unwrap() error { return e.underlying }
+
+func isThrottleExhaustionError(err error) bool {
+	var exhausted *throttleExhaustedError
+	return errors.As(err, &exhausted)
+}
+
+// isThrottleFamilyError reports whether the work behind err is resumable:
+// still throttled, declined by the approver, or out of automatic holds.
+func isThrottleFamilyError(err error) bool {
+	var throttled *throttledRouteError
+	var declined *throttleDeclinedError
+	return errors.As(err, &throttled) || errors.As(err, &declined) || isThrottleExhaustionError(err)
+}
+
 func throttleExhaustionError(label, fallbackHint string, report throttleSurvivalReport, lastErr error) error {
 	guidance := "The session is saved; `jini continue` resumes it."
 	if fallbackHint != "" {
@@ -346,14 +369,17 @@ func throttleExhaustionError(label, fallbackHint string, report throttleSurvival
 			fallbackHint,
 		)
 	}
-	return fmt.Errorf(
-		"%s is still throttled after %d automatic resume attempts (held %s total). %s Underlying: %v",
-		label,
-		report.Holds+1,
-		report.TotalHeld,
-		guidance,
-		lastErr,
-	)
+	return &throttleExhaustedError{
+		message: fmt.Sprintf(
+			"%s is still throttled after %d automatic resume attempts (held %s total). %s Underlying: %v",
+			label,
+			report.Holds+1,
+			report.TotalHeld,
+			guidance,
+			lastErr,
+		),
+		underlying: lastErr,
+	}
 }
 
 // appendThrottleSurvivalReason records autonomous survival on the route
