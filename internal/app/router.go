@@ -55,6 +55,7 @@ type routeDecision struct {
 	VerificationLevel   string
 	VerificationReason  string
 	CLIHandoffReceipt   *cliHandoffReceipt
+	SavingsEntry        *savingsEntry
 }
 
 type autoModePolicy struct {

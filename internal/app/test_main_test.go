@@ -29,6 +29,11 @@ func TestMain(m *testing.M) {
 	if err := os.Setenv("JINI_STATE_DIR", stateDir); err != nil {
 		panic(err)
 	}
+	// Pin the global ~/.jini home to the temp dir so side-effecting writes —
+	// the savings ledger written by any successful work task, and mode.json —
+	// never touch the developer's real home. Tests that need specific home
+	// behavior still override executionModeHomeDir per-test.
+	executionModeHomeDir = func() (string, error) { return stateDir, nil }
 	// Pinned unconditionally: honoring a pre-existing export would leave the
 	// hole this closes, since a developer shell that exports JINI_CLAUDE_CODE_CLI
 	// would let auto-routing hand test prompts to the real, billed CLI.

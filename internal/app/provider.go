@@ -175,6 +175,11 @@ func generateWithConfiguredProviderDecision(ctx context.Context, request provide
 			return "", true, decision, err
 		}
 		decision.Reason = appendThrottleSurvivalReason(decision.Reason, survival)
+		inChars, outChars := len(prompt), len(text)
+		if receipt != nil {
+			inChars, outChars = receipt.PromptChars, receipt.StdoutChars
+		}
+		decision = recordSavingsOnDecision(decision, provider, inChars, outChars, request)
 		return text, true, decision, nil
 	}
 	if provider.ID == "local-preview" {
@@ -203,8 +208,10 @@ func generateWithConfiguredProviderDecision(ctx context.Context, request provide
 			}
 			fallbackText, fallbackErr := generateProviderText(ctx, fallbackDecision.Provider, request, systemPrompt, userPrompt)
 			if fallbackErr == nil {
-				// Answered on the fallback route: nothing left to resume.
+				// Answered on the fallback route: nothing left to resume, and
+				// the entry records the route that actually answered.
 				finishPark(nil)
+				fallbackDecision = recordSavingsOnDecision(fallbackDecision, fallbackDecision.Provider, len(systemPrompt)+len(userPrompt), len(fallbackText), request)
 				return fallbackText, true, fallbackDecision, nil
 			}
 		}
@@ -227,6 +234,7 @@ func generateWithConfiguredProviderDecision(ctx context.Context, request provide
 		}
 	}
 	decision = actualizeVerificationDecision(request, decision, consistencyUsed, refinedUsed)
+	decision = recordSavingsOnDecision(decision, provider, len(systemPrompt)+len(userPrompt), len(text), request)
 	return text, true, decision, nil
 }
 
