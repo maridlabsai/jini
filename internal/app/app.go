@@ -415,6 +415,8 @@ func safelyRunInteractive(stderr io.Writer, fn func() int) (exitCode int) {
 func runLauncher(stdin io.Reader, stdout, stderr io.Writer) int {
 	// The launcher's Scanner owns stdin, so Ask mode cannot prompt here.
 	configureThrottleApproverForEntry(false)
+	// One-line all-time savings counter at startup; silent when nothing saved.
+	renderSavingsStartupCounter(stdout)
 	current, err := loadCurrentWork()
 	if err != nil || current == nil {
 		active, activeErr := listActiveWorkSummaries(nil)
@@ -2053,7 +2055,7 @@ func runDirectTaskArgsIntake(args []string, stdout, stderr io.Writer) int {
 // saved-draft workflow. It fires for any route decision that resolves to a CLI
 // handoff, so the behavior follows routing policy rather than prompt class.
 func runDirectCLIHandoffAnswer(request providerGenerationRequest, decision routeDecision, stdout, stderr io.Writer) int {
-	text, _, _, err := generateWithConfiguredProviderDecision(context.Background(), request, decision)
+	text, _, answered, err := generateWithConfiguredProviderDecision(context.Background(), request, decision)
 	if err != nil {
 		fmt.Fprintln(stderr, err.Error())
 		return 1
@@ -2064,6 +2066,7 @@ func runDirectCLIHandoffAnswer(request providerGenerationRequest, decision route
 		return 0
 	}
 	fmt.Fprintln(stdout, text)
+	renderSavingsFooter(stdout, answered.SavingsEntry)
 	return 0
 }
 
