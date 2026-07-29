@@ -777,6 +777,15 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   fake downstream CLI. Trace row added (14 implemented P0 rows); remaining
   slices (Autopilot switching, Ask-mode resume approval, ledger counter)
   stay in the backlog.
+- `jini savings` joins the taught command surface (2026-07-25): the savings
+  ledger MVP (PRD §Savings Ledger And Receipts) ships its dashboard as
+  top-level `jini savings` (text default, `--format json`) — one command, no
+  subtree. Command-surface discipline was weighed and the command kept: the
+  PRD names `jini savings` as the growth engine's face, and the running
+  counter/footer point users to it. Every figure is imputed-and-labeled with
+  the USD source carried alongside the OS-localized amount; the basis line
+  discloses the char÷token divisor, price date, and FX rate + date. See
+  `specs/savings-ledger-mvp-design.md`.
 - Auto/Ask execution mode + Ask-mode resume approval implemented and traced
   (2026-07-22): the Auto/Ask surface (`execution_mode.go`, `jini mode`), the
   throttle-survival approver seam with fail-closed parking

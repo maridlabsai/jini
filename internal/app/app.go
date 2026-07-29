@@ -135,6 +135,8 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 			return runMemory(args[1:], stdout, stderr)
 		case "mode":
 			return runMode(args[1:], stdout, stderr)
+		case "savings":
+			return runSavings(args[1:], stdout, stderr)
 		case "permissions":
 			renderSafePermissionsStatus(stdout)
 			return 0
@@ -266,6 +268,10 @@ func validateNativeArgs(args []string) error {
 		if len(args) <= 2 {
 			return nil
 		}
+	case "savings":
+		// Permissive: runSavings validates its own flags and prints friendly
+		// errors (mirrors route/doctor arg handling).
+		return nil
 	case "route":
 		return nil
 	case "admin":
@@ -3600,7 +3606,7 @@ func renderPublicCommandInventory(w io.Writer) {
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Essential commands:")
 	fmt.Fprintln(w, "- `jini status`, `jini continue`, `jini open`")
-	fmt.Fprintln(w, "- `jini route`, `jini doctor`, `jini mode`")
+	fmt.Fprintln(w, "- `jini route`, `jini doctor`, `jini mode`, `jini savings`")
 	fmt.Fprintln(w, "- `jini memory inspect`, `jini memory off`, `jini memory forget`")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Setup:")
@@ -5437,7 +5443,7 @@ func canonicalTopLevelCommand(value string) string {
 	switch exactCommandToken(value) {
 	case "help", "--help", "-h":
 		return "help"
-	case "commands", "admin", "check", "status", "continue", "doctor", "provider", "route", "memory", "mode", "permissions", "init", "new", "observe", "open", "run", "publish-readiness", "scorecard-gate":
+	case "commands", "admin", "check", "status", "continue", "doctor", "provider", "route", "memory", "mode", "savings", "permissions", "init", "new", "observe", "open", "run", "publish-readiness", "scorecard-gate":
 		return exactCommandToken(value)
 	default:
 		return ""

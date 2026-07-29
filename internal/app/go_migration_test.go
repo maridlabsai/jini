@@ -107,6 +107,7 @@ func TestOfficialGoOnlySurfacesDoNotAdvertiseUnsupportedCommands(t *testing.T) {
 		"review":            true,
 		"route":             true,
 		"run":               true,
+		"savings":           true,
 		"scorecard-gate":    true,
 		"status":            true,
 	}
