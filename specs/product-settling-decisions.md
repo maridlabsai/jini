@@ -777,6 +777,17 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   fake downstream CLI. Trace row added (14 implemented P0 rows); remaining
   slices (Autopilot switching, Ask-mode resume approval, ledger counter)
   stay in the backlog.
+- Savings ledger MVP implemented and traced (2026-07-29): per-task
+  imputed-and-labeled dollar receipts on the answering route, work-task
+  footer, all-time startup counter, and `jini savings` text/JSON — all
+  dollar-primary and localized to the OS currency, with USD always carried as
+  the source of truth and a disclosed estimation basis (chars÷4, dated price
+  table, dated FX). Moved trace backlog→Implemented (P0 15→16). Honesty is
+  gated by `TestHonesty_*` (imputed-only, metered-is-not-a-saving, localized
+  figure always carries USD, sub-unit amounts never contradict). Deferred
+  slices stay in the backlog: `--report` HTML, `--share` card, ANSI charts,
+  and real metered-usage capture (the seam for literal rows). See
+  `specs/savings-ledger-mvp-design.md`.
 - `jini savings` joins the taught command surface (2026-07-25): the savings
   ledger MVP (PRD §Savings Ledger And Receipts) ships its dashboard as
   top-level `jini savings` (text default, `--format json`) — one command, no

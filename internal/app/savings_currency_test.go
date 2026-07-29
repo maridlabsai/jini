@@ -112,3 +112,16 @@ func TestFormatMoneyWesternGroupingAndDecimals(t *testing.T) {
 		t.Fatalf("zero-decimal currency wrong: %q", got)
 	}
 }
+
+func TestFormatMoneySubUnitWidensPrecision(t *testing.T) {
+	// A real but tiny amount must not render as "$0.00".
+	if got := formatMoney("USD", 0.000915); got != "$0.001" {
+		t.Fatalf("sub-cent USD should widen precision, got %q", got)
+	}
+	if got := formatMoney("USD", 0.0); got != "$0.00" {
+		t.Fatalf("zero stays $0.00, got %q", got)
+	}
+	if got := formatMoney("USD", 12.5); got != "$12.50" {
+		t.Fatalf("normal amounts unaffected, got %q", got)
+	}
+}

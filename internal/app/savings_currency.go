@@ -138,7 +138,13 @@ func formatMoney(currency string, amount float64) string {
 	if neg {
 		amount = -amount
 	}
-	s := strconv.FormatFloat(amount, 'f', f.Decimals, 64)
+	// Widen precision for sub-unit amounts so a real but tiny saving never
+	// renders as a contradictory "0.00" beside a non-zero localized figure.
+	decimals := f.Decimals
+	for amount > 0 && decimals < 8 && isZeroMoneyString(strconv.FormatFloat(amount, 'f', decimals, 64)) {
+		decimals++
+	}
+	s := strconv.FormatFloat(amount, 'f', decimals, 64)
 	intPart, fracPart := s, ""
 	if dot := strings.IndexByte(s, '.'); dot >= 0 {
 		intPart, fracPart = s[:dot], s[dot:]
@@ -148,6 +154,17 @@ func formatMoney(currency string, amount float64) string {
 		out = "-" + out
 	}
 	return out
+}
+
+// isZeroMoneyString reports whether a formatted number is all zeros (e.g.
+// "0", "0.00") — i.e. it would display as nothing meaningful.
+func isZeroMoneyString(s string) bool {
+	for _, r := range s {
+		if r >= '1' && r <= '9' {
+			return false
+		}
+	}
+	return true
 }
 
 func groupDigits(intPart string, indian bool) string {

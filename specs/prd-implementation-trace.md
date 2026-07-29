@@ -33,6 +33,7 @@ states the outcome and the gates below prove it.
 | Block regressions before commit and push | `tools/run_required_gates.sh`, scorecard PRD completion summary | commit/push/release gate tests, Claude/Codex use-case gate, scorecard PRD implementation completion tests |
 | Autonomous throttle survival — free-tier core: detect throttle on any route, hold the session, self-resume the same route, name a viable fallback | `throttle_survival.go` (`runWithThrottleSurvival`, throttle classifiers, Retry-After honoring, narration, receipt reason), wired into provider and CLI-handoff paths in `provider.go`/`cli_handoff.go` | `TestRunWithThrottleSurvival*`, `TestIsThrottleSignal*`, `TestClassifyCLIThrottleOutput*`; live transcript: fake throttling downstream CLI, hold narrated, advertised wait honored, same-route resume, work saved |
 | `Auto`/`Ask` execution mode, switchable mid-session, plus Ask-mode approval before throttled-work resume with fail-closed parking | `execution_mode.go` (fail-closed setting, `runMode`), `throttle_survival.go` approver seam (`throttleApprover`, `autoApprover`/`failClosedApprover`/`cliPromptApprover`, `configureThrottleApproverForEntry`), `throttle_park.go` (resumable park), `jini continue` park-resume in `app.go` | `TestRunMode*`, `TestModeIsARoutedTopLevelCommand`, `TestConfigureThrottleApproverForEntry`, `TestCLIPromptApprover*`, `TestRunWithThrottleSurvivalDeclineReturnsTypedError`/`*FailClosedApprover*`, `TestThrottlePark*`, `TestRunContinueResumesPark`, `TestStandaloneThrottleFamilyErrorPassesThrough`; live transcript: Ask decline parks + `jini continue` resumes, Auto silent hold honors advertised 2s wait then resumes same route |
+| Savings ledger MVP — dollar-primary, OS-currency-localized, imputed-and-labeled per-task receipts with a running counter and dashboard | `savings_pricing.go` (dated price table), `savings_currency.go` (OS-currency detection, dated FX, formatting), `savings_ledger.go` (global ledger, folding integrity invariant), `savings_receipt.go` (compute + one-entry-per-task wiring), `savings_render.go` (footer + startup counter), `savings_command.go` (`jini savings` text/JSON) | `TestBaselineForRoute`, `TestSavingsUSD*`, `TestDetectDisplayCurrency*`, `TestLocalize*`, `TestFormatMoney*`, `TestSavingsLedger*` (round-trip, folding invariant, tampered→nil), `TestComputeTaskSavings*`, `TestRecordSavings*`, `TestSavingsFooter*`, `TestSavingsStartupCounter*`, `TestRunSavings*`, `TestHonesty_*`; live transcript: work task footer `₹0.04 (US$0.0005)`, `jini savings` totals + disclosure, JSON report |
 
 ## Not Yet Implemented (v1 backlog)
 
@@ -49,9 +50,14 @@ implemented P0 row.)
   unbuilt are paid Autopilot mid-task route switching and the throttle-dodge
   counter feeding the savings ledger. Future proof: throttle-resilience
   release gate.
-- Savings ledger and receipts (§Savings Ledger And Receipts): per-task
-  receipt, session roll-up, startup counter, `jini savings` dashboard.
-  Future proof: savings-methodology audit gate (literal-vs-imputed labels).
+- Savings ledger and receipts, remaining slices (§Savings Ledger And
+  Receipts): the MVP core is implemented (see Implemented table) — per-task
+  imputed receipt, work-task footer, startup counter, and `jini savings`
+  text/JSON, all dollar-primary with OS-currency localization and a disclosed
+  estimation basis. Still unbuilt: `jini savings --report` HTML export,
+  `--share` card, ANSI trend charts, and real metered-usage capture (the seam
+  for literal rows). Future proof: those surfaces plus a literal-capture
+  fixture.
 - Token-economy regression suite (§Token Economy). Future proof:
   token-efficiency regression gate in the release tier.
 - On-the-fly skills and agents as plain reviewable files (§Skills And
