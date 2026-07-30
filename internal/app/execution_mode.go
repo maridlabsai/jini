@@ -153,6 +153,12 @@ func runMode(args []string, stdout, stderr io.Writer) int {
 		return 0
 	}
 	requested := strings.ToLower(strings.TrimSpace(args[0]))
+	if requested == "autopilot" || requested == "managed-throttle-recovery" {
+		// Paid Autopilot ships from the Jini commercial repo; this public build
+		// only fails closed and names the free equivalent.
+		renderFeatureAccessDenied(stderr, featureAccessForID("commercial-autopilot"))
+		return 1
+	}
 	if requested != executionModeAuto && requested != executionModeAsk {
 		fmt.Fprintf(stderr, "Unknown mode %q. Use `jini mode auto` or `jini mode ask`.\n", args[0])
 		return 1

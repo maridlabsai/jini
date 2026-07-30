@@ -194,3 +194,43 @@ func TestModeIsARoutedTopLevelCommand(t *testing.T) {
 		t.Fatalf("mode banana must pass validation so runMode's friendly error is reachable: %v", err)
 	}
 }
+
+func TestRunModeAutopilotFailsClosedOnFreeTier(t *testing.T) {
+	withExecutionModeHome(t)
+	t.Setenv("JINI_TIER", "free")
+	var errOut bytes.Buffer
+	if code := runMode([]string{"autopilot"}, io.Discard, &errOut); code != 1 {
+		t.Fatalf("autopilot must fail closed (exit 1), got %d", code)
+	}
+	got := errOut.String()
+	if !strings.Contains(got, "requires a Jini subscription") {
+		t.Fatalf("free tier must name the subscription requirement: %q", got)
+	}
+	if !strings.Contains(got, "jini route set") {
+		t.Fatalf("must name the free manual equivalent: %q", got)
+	}
+	if effectiveExecutionMode() != executionModeAuto {
+		t.Fatal("autopilot must not be persisted as the mode")
+	}
+}
+
+func TestRunModeAutopilotCommercialNotImplementedHere(t *testing.T) {
+	withExecutionModeHome(t)
+	t.Setenv("JINI_TIER", "commercial")
+	var errOut bytes.Buffer
+	if code := runMode([]string{"autopilot"}, io.Discard, &errOut); code != 1 {
+		t.Fatalf("exit %d", code)
+	}
+	if !strings.Contains(errOut.String(), "commercial repo") {
+		t.Fatalf("commercial tier must point to the commercial repo, not enable it here: %q", errOut.String())
+	}
+}
+
+func TestFeatureAccessAutopilotNeverAllowedInPublicBuild(t *testing.T) {
+	for _, tier := range []string{"free", "commercial"} {
+		t.Setenv("JINI_TIER", tier)
+		if featureAccessForID("commercial-autopilot").Allowed {
+			t.Fatalf("autopilot must never be Allowed in the public build (tier=%s)", tier)
+		}
+	}
+}

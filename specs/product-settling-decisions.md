@@ -777,6 +777,23 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   fake downstream CLI. Trace row added (14 implemented P0 rows); remaining
   slices (Autopilot switching, Ask-mode resume approval, ledger counter)
   stay in the backlog.
+- Paid Autopilot lives in the commercial repo; public repo keeps only the
+  fail-closed gate and the free equivalent (2026-07-30): per PRD §Tier
+  Boundary (Autopilot = predictive throttle avoidance, throttle-aware route
+  switching, auto-resume, savings optimization; "managed throttle recovery"
+  excluded from free; "SKUs live in the commercial repo") and CLAUDE.md
+  (commercial feature set → `../jini-commercial`). This public repo therefore
+  does NOT implement Autopilot switching. Its responsibilities are: (1) a
+  fail-closed entitlement gate that refuses Autopilot and names the free
+  equivalent, reached via `jini mode autopilot`; (2) the free manual
+  equivalent, already shipped — Auto mode's same-route hold/self-resume
+  (throttle survival), the typed decline that names a fallback, and manual
+  `jini route set <route>`; (3) the public ledger dodge-counter seam
+  (`ThrottleDodged`/`Dodges`), already built and part of the free "full ledger
+  with shareable receipts", which stays 0 until a paid dodge occurs. The
+  dogfood loop is proven on-machine as of this date (real `claude-code` smoke
+  + validate; `jini check ship` ok; push gate green) — evidence is per-machine
+  (`.jini/` gitignored). See `specs/savings-ledger-mvp-design.md`.
 - Savings ledger MVP implemented and traced (2026-07-29): per-task
   imputed-and-labeled dollar receipts on the answering route, work-task
   footer, all-time startup counter, and `jini savings` text/JSON — all
