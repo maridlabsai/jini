@@ -469,6 +469,13 @@ func (cliPromptApprover) Approve(ctx context.Context, req throttleApprovalReques
 // interactive launcher (its Scanner owns stdin) or the sidecar (stdin is a
 // protocol pipe).
 func configureThrottleApproverForEntry(oneShot bool) {
+	// Paid Autopilot, when registered by a commercial build and entitled,
+	// owns the throttle decision. A pure public build never registers one, so
+	// this branch is inert and the free path below is unchanged.
+	if approver, ok := entitledAutopilotApprover(); ok {
+		throttleApproverForProcess = approver
+		return
+	}
 	if effectiveExecutionMode() != executionModeAsk {
 		throttleApproverForProcess = autoApprover{}
 		return
