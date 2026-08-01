@@ -43,7 +43,7 @@ func TestComputeTaskSavingsMeteredEarnsNothing(t *testing.T) {
 
 func TestRecordSavingsStandaloneWritesNothing(t *testing.T) {
 	withSavingsHome(t)
-	decision := recordSavingsOnDecision(subscriptionDecision(), providerConfig{}, 4000, 4000, providerGenerationRequest{Standalone: true, Source: "what is 2+2?"})
+	decision := recordSavingsOnDecision(subscriptionDecision(), providerConfig{}, 4000, 4000, providerGenerationRequest{Standalone: true, Source: "what is 2+2?"}, throttleSurvivalReport{})
 	if decision.SavingsEntry != nil {
 		t.Fatal("simple question must stay clean — no entry")
 	}
@@ -54,7 +54,7 @@ func TestRecordSavingsStandaloneWritesNothing(t *testing.T) {
 
 func TestRecordSavingsWritesExactlyOneEntry(t *testing.T) {
 	withSavingsHome(t)
-	decision := recordSavingsOnDecision(subscriptionDecision(), providerConfig{}, 4000, 4000, providerGenerationRequest{Title: "work task"})
+	decision := recordSavingsOnDecision(subscriptionDecision(), providerConfig{}, 4000, 4000, providerGenerationRequest{Title: "work task"}, throttleSurvivalReport{})
 	if decision.SavingsEntry == nil {
 		t.Fatal("work task on subscription route must attach an entry")
 	}

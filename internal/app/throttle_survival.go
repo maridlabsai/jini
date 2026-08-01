@@ -140,8 +140,37 @@ func classifyCLIThrottleOutput(label, stdout, stderr string, sanitized error) er
 }
 
 type throttleSurvivalReport struct {
-	Holds     int
-	TotalHeld time.Duration
+	Holds      int
+	TotalHeld  time.Duration
+	Dodged     bool   // resumed on a fallback route without waiting out the reset
+	SwitchedTo string // route the work was switched to on a dodge
+}
+
+// throttleResolution is the richer decision a route-switching approver returns:
+// grant/decline plus an optional fallback route to dodge to. Free approvers
+// only ever produce {decision} with no switch.
+type throttleResolution struct {
+	decision      throttleApprovalDecision
+	switchToRoute string
+	dodged        bool
+}
+
+// throttleRouteSwitcher is the optional richer seam. An approver that
+// implements it (only the paid autopilotApprover does) can ask the survival
+// loop to switch routes; approvers that don't are consulted via Approve and
+// can only hold or decline.
+type throttleRouteSwitcher interface {
+	ResolveThrottle(ctx context.Context, req throttleApprovalRequest) (throttleResolution, error)
+}
+
+// resolveThrottle consults the switcher seam when available, else the plain
+// grant/deny approver — keeping the free path unchanged.
+func resolveThrottle(ctx context.Context, approver throttleApprover, req throttleApprovalRequest) (throttleResolution, error) {
+	if switcher, ok := approver.(throttleRouteSwitcher); ok {
+		return switcher.ResolveThrottle(ctx, req)
+	}
+	decision, err := approver.Approve(ctx, req)
+	return throttleResolution{decision: decision}, err
 }
 
 // throttleFallbackHint names one viable fallback route for narration and
@@ -204,6 +233,12 @@ type throttleSurvivalOptions struct {
 	attemptTimeout time.Duration    // 0 = no per-attempt timeout
 	holdWaits      []time.Duration  // nil = throttleHoldWaits
 	taskTitle      string
+	// switchAttempt, when set, re-attempts the work on a named fallback route.
+	// It is invoked only when a route-switching approver (paid Autopilot) asks
+	// to switch; a pure public build never sets a switching approver, so this
+	// is never called there. A nil switchAttempt makes a switch request degrade
+	// to holding the original route.
+	switchAttempt func(ctx context.Context, routeLabel string) (string, error)
 }
 
 // throttleDeclinedError reports that a resume was offered and refused. It is
@@ -294,7 +329,7 @@ func runWithThrottleSurvival(ctx context.Context, label string, fallbackHint fun
 			}
 		}
 		if !approved {
-			decision, approveErr := approver.Approve(ctx, throttleApprovalRequest{
+			resolution, approveErr := resolveThrottle(ctx, approver, throttleApprovalRequest{
 				Label:        label,
 				Wait:         wait,
 				FallbackHint: resolveHint(),
@@ -304,8 +339,18 @@ func runWithThrottleSurvival(ctx context.Context, label string, fallbackHint fun
 			if approveErr != nil {
 				return "", report, approveErr
 			}
-			if decision != approvalGranted {
+			if resolution.decision != approvalGranted {
 				return "", report, &throttleDeclinedError{label: label, fallbackHint: resolveHint(), underlying: lastErr}
+			}
+			// Throttle-aware switch (paid Autopilot): resume on a fallback route
+			// instead of waiting out the reset. On success it's a dodge; on
+			// failure fall through to holding the original route.
+			if resolution.switchToRoute != "" && opts.switchAttempt != nil {
+				if switchText, switchErr := opts.switchAttempt(ctx, resolution.switchToRoute); switchErr == nil {
+					report.SwitchedTo = resolution.switchToRoute
+					report.Dodged = resolution.dodged
+					return switchText, report, nil
+				}
 			}
 			approved = true
 		}

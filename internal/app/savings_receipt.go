@@ -6,10 +6,35 @@ package app
 // paid for is not a saving and writes no entry (baselineForRoute → not ok).
 
 import (
+	"context"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
+
+// attemptOnRoute runs a single-shot generation on a named fallback route mode,
+// used by the throttle-survival switch executor (paid Autopilot). It does NOT
+// wrap itself in another survival loop — one attempt, no recursion. Returns an
+// error the survival loop treats as "switch failed, hold the original route".
+func attemptOnRoute(ctx context.Context, mode string, request providerGenerationRequest) (string, error) {
+	mode = strings.TrimSpace(mode)
+	if mode == "" {
+		return "", fmt.Errorf("no switch route")
+	}
+	if cliHandoffMode(mode) {
+		prompt := firstNonEmpty(strings.TrimSpace(request.Source), providerUserPrompt(request))
+		text, _, err := runCLIHandoff(ctx, mode, prompt)
+		return text, err
+	}
+	fallback := enrichRouteDecisionForRequest(request, detectRouteForToolMode(mode, true))
+	provider := providerForDecision(request, fallback)
+	if provider.ID == "local-preview" || provider.Status != "ok" {
+		return "", fmt.Errorf("switch route %q not ready", mode)
+	}
+	return generateProviderText(ctx, provider, request, providerSystemPrompt(), providerUserPrompt(request))
+}
 
 // routeClassForDecision classifies the route that answered the task.
 func routeClassForDecision(decision routeDecision, provider providerConfig) string {
@@ -67,13 +92,21 @@ func computeTaskSavings(decision routeDecision, provider providerConfig, inChars
 // recordSavingsOnDecision computes, persists (best-effort), and attaches the
 // savings entry. Simple questions stay clean — no entry, no footer. Persistence
 // failures never block a task. Called exactly once, at a task's success return.
-func recordSavingsOnDecision(decision routeDecision, provider providerConfig, inChars, outChars int, request providerGenerationRequest) routeDecision {
+// When survival records a throttle dodge (paid Autopilot switched routes), the
+// entry is flagged dodged and attributed to the route that actually answered.
+func recordSavingsOnDecision(decision routeDecision, provider providerConfig, inChars, outChars int, request providerGenerationRequest, survival throttleSurvivalReport) routeDecision {
 	if request.Standalone {
 		return decision
 	}
 	entry := computeTaskSavings(decision, provider, inChars, outChars, request)
 	if entry == nil {
 		return decision
+	}
+	if survival.Dodged {
+		entry.ThrottleDodged = true
+		if survival.SwitchedTo != "" {
+			entry.RouteLabel = survival.SwitchedTo
+		}
 	}
 	_ = appendSavingsEntry(*entry)
 	decision.SavingsEntry = entry

@@ -120,7 +120,9 @@ func generateWithConfiguredProvider(ctx context.Context, request providerGenerat
 
 func generateWithConfiguredProviderDecision(ctx context.Context, request providerGenerationRequest, decision routeDecision) (string, bool, routeDecision, error) {
 	provider := providerForDecision(request, decision)
-	opts := throttleSurvivalOptions{taskTitle: request.Title}
+	opts := throttleSurvivalOptions{taskTitle: request.Title, switchAttempt: func(switchCtx context.Context, mode string) (string, error) {
+		return attemptOnRoute(switchCtx, mode, request)
+	}}
 	if request.Standalone {
 		// The standalone answer owes the user a reply inside its deadline, so
 		// budget each attempt and offer a single hold rather than the full
@@ -179,7 +181,7 @@ func generateWithConfiguredProviderDecision(ctx context.Context, request provide
 		if receipt != nil {
 			inChars, outChars = receipt.PromptChars, receipt.StdoutChars
 		}
-		decision = recordSavingsOnDecision(decision, provider, inChars, outChars, request)
+		decision = recordSavingsOnDecision(decision, provider, inChars, outChars, request, survival)
 		return text, true, decision, nil
 	}
 	if provider.ID == "local-preview" {
@@ -211,7 +213,7 @@ func generateWithConfiguredProviderDecision(ctx context.Context, request provide
 				// Answered on the fallback route: nothing left to resume, and
 				// the entry records the route that actually answered.
 				finishPark(nil)
-				fallbackDecision = recordSavingsOnDecision(fallbackDecision, fallbackDecision.Provider, len(systemPrompt)+len(userPrompt), len(fallbackText), request)
+				fallbackDecision = recordSavingsOnDecision(fallbackDecision, fallbackDecision.Provider, len(systemPrompt)+len(userPrompt), len(fallbackText), request, throttleSurvivalReport{})
 				return fallbackText, true, fallbackDecision, nil
 			}
 		}
@@ -234,7 +236,7 @@ func generateWithConfiguredProviderDecision(ctx context.Context, request provide
 		}
 	}
 	decision = actualizeVerificationDecision(request, decision, consistencyUsed, refinedUsed)
-	decision = recordSavingsOnDecision(decision, provider, len(systemPrompt)+len(userPrompt), len(text), request)
+	decision = recordSavingsOnDecision(decision, provider, len(systemPrompt)+len(userPrompt), len(text), request, survival)
 	return text, true, decision, nil
 }
 

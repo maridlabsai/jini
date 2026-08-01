@@ -68,12 +68,32 @@ when a strategy is registered AND `currentSubscriptionTier() == "commercial"`.
 - Internal bridge: `autopilotApprover` adapts a `Strategy` to the throttle
   approver seam; consulted in `configureThrottleApproverForEntry`.
 
-## Known gaps (extend when the commercial repo starts)
+## Switch-and-record mechanism (scaffolded)
 
-- The current seam expresses Hold vs Decline. **Route-switching mechanics**
-  (actually re-attempting on a different route mid-survival) and **dodge
-  recording** into the ledger's `ThrottleDodged`/`Dodges` are not yet wired
-  through the survival loop — the `Decision.Dodged` field exists in the
-  contract but the public loop does not yet act on a switch. Add a
-  switch-and-record mechanism to `runWithThrottleSurvival` (behind the same
-  registered-strategy seam) as the first commercial-integration task.
+The public loop now implements throttle-aware switching behind the seam, so the
+commercial side is a pure policy drop-in:
+
+- `autopilot.Decision.SwitchToRoute` names a fallback route; `Dodged` marks a
+  dodge for the ledger.
+- Internal: `autopilotApprover.ResolveThrottle` carries the switch target into
+  `runWithThrottleSurvival`, which — on a granted switch — calls
+  `throttleSurvivalOptions.switchAttempt` once, and on success returns the
+  fallback answer WITHOUT waiting out the reset (a dodge), recording
+  `report.Dodged`/`SwitchedTo`. A failed switch falls back to holding the
+  original route. `recordSavingsOnDecision` flags the ledger entry
+  `ThrottleDodged` and re-attributes it to the switched route.
+- The switch executor `attemptOnRoute` re-routes via the proven
+  `detectRouteForToolMode`/`enrichRouteDecisionForRequest` path (CLI handoff or
+  provider), single-shot, no recursion.
+- A pure public build registers no strategy, so `switchAttempt` is never
+  invoked and the free hold/self-resume path is byte-identical (verified by the
+  unchanged `TestRunWithThrottleSurvival*` suite).
+
+## Remaining for the commercial repo
+
+- The paid **policy** itself: predictive avoidance, which route to switch to
+  and when, savings optimization — implemented as `autopilot.Strategy` in
+  `../jini-commercial`.
+- Refinement: dodge route/class attribution currently reuses the switch target
+  label; the commercial integration can enrich pricing for the actual answering
+  model if it differs.

@@ -40,6 +40,13 @@ const (
 // Decision is a strategy's answer for one throttle event.
 type Decision struct {
 	Action Action
+	// SwitchToRoute, when non-empty and Action is Hold, asks the runtime to
+	// resume on this fallback route instead of waiting out the throttled one
+	// (throttle-aware switching). The runtime re-attempts on it once; if that
+	// attempt fails or no switch executor is wired, it falls back to holding
+	// the original route. FallbackHint on the event names a route the runtime
+	// already resolved as viable.
+	SwitchToRoute string
 	// Dodged marks a throttle DODGE — work continued without waiting out the
 	// reset — for the savings ledger's dodge counter. Only meaningful for
 	// paid switching; the free runtime never sets it.
