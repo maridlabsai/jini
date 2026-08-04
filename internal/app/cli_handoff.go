@@ -22,6 +22,12 @@ type cliHandoffDescriptor struct {
 	ExecutableEnv     string
 	ArgsEnv           string
 	DefaultArgs       []string
+	// Verified permission-posture args (specs/handoff-posture-design.md).
+	// Empty means the route is not verified for that posture and stays
+	// plan-only. Appended before the {{prompt}} arg, and only when the user
+	// has not overridden ArgsEnv.
+	SemiArgs       []string // acceptEdits: applies edits, no commands
+	AutonomousArgs []string // full: applies edits and runs commands
 }
 
 type cliHandoffCommand struct {
@@ -66,6 +72,11 @@ func cliHandoffDescriptorForMode(mode string) (cliHandoffDescriptor, bool) {
 			ExecutableEnv:     "JINI_CLAUDE_CODE_CLI",
 			ArgsEnv:           "JINI_CLAUDE_CODE_ARGS",
 			DefaultArgs:       []string{"--print", "{{prompt}}"},
+			// Verified empirically 2026-07-31: acceptEdits applies edits with
+			// no command execution; --dangerously-skip-permissions applies
+			// edits and runs commands.
+			SemiArgs:       []string{"--permission-mode", "acceptEdits"},
+			AutonomousArgs: []string{"--dangerously-skip-permissions"},
 		}, true
 	case "gemini-cli":
 		return cliHandoffDescriptor{
@@ -181,6 +192,11 @@ func resolveCLIHandoffCommand(descriptor cliHandoffDescriptor) (cliHandoffComman
 			}
 		}
 		args = parsedArgs
+	} else {
+		// Default-args path only: fold in the resolved permission posture.
+		// An explicit ArgsEnv override (handled above) means the user owns the
+		// args and posture is a no-op.
+		args = applyPostureArgs(descriptor, resolveHandoffPosture(descriptor))
 	}
 	command := cliHandoffCommand{
 		Descriptor: descriptor,
