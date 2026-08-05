@@ -2066,6 +2066,16 @@ func runDirectTaskArgsIntake(args []string, stdout, stderr io.Writer) int {
 // saved-draft workflow. It fires for any route decision that resolves to a CLI
 // handoff, so the behavior follows routing policy rather than prompt class.
 func runDirectCLIHandoffAnswer(request providerGenerationRequest, decision routeDecision, stdout, stderr io.Writer) int {
+	descriptor, isHandoff := cliHandoffDescriptorForMode(decision.ToolMode)
+	if isHandoff {
+		if cwd, err := os.Getwd(); err == nil {
+			// Disclose a non-plan posture BEFORE handing off, so autonomy is
+			// never silent (only fires when the user opted into trust).
+			if line := postureDisclosureLine(resolveHandoffPostureForDir(descriptor, cwd), cliHandoffLabel(decision.ToolMode), resolveTrustDir(cwd)); line != "" {
+				fmt.Fprintln(stdout, line)
+			}
+		}
+	}
 	text, _, answered, err := generateWithConfiguredProviderDecision(context.Background(), request, decision)
 	if err != nil {
 		fmt.Fprintln(stderr, err.Error())
@@ -2078,6 +2088,13 @@ func runDirectCLIHandoffAnswer(request providerGenerationRequest, decision route
 	}
 	fmt.Fprintln(stdout, text)
 	renderSavingsFooter(stdout, answered.SavingsEntry)
+	if isHandoff {
+		if cwd, err := os.Getwd(); err == nil {
+			if hint := postureDegradedHintForDir(descriptor, cliHandoffLabel(decision.ToolMode), cwd); hint != "" {
+				fmt.Fprintln(stdout, hint)
+			}
+		}
+	}
 	return 0
 }
 

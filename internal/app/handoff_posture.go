@@ -8,6 +8,7 @@ package app
 // it degrades DOWN when a route lacks verified args, never up.
 
 import (
+	"fmt"
 	"os"
 	"strings"
 )
@@ -78,6 +79,38 @@ func resolveHandoffPosture(descriptor cliHandoffDescriptor) handoffPosture {
 		return posturePlan
 	}
 	return resolveHandoffPostureForDir(descriptor, cwd)
+}
+
+// postureDisclosureLine is the one-line, neutral, route-specific disclosure
+// printed before a non-plan hand-off so autonomy is never silent. Empty for
+// plan.
+func postureDisclosureLine(posture handoffPosture, routeLabel, dir string) string {
+	switch posture {
+	case postureSemi:
+		return fmt.Sprintf("Auto mode: applying edits in %s via %s (semi; no commands run).", dir, routeLabel)
+	case postureAutonomous:
+		return fmt.Sprintf("Auto mode: applying edits and running commands in %s via %s (autonomous).", dir, routeLabel)
+	default:
+		return ""
+	}
+}
+
+// postureDegradedHintForDir returns a hint when a directory is trusted at a
+// level the route cannot honor (so it ran plan) — so a "nothing happened"
+// outcome after an explicit trust grant is never a silent mystery. Empty
+// otherwise. Not shown for untrusted dirs (no per-task nagging).
+func postureDegradedHintForDir(descriptor cliHandoffDescriptor, routeLabel, dir string) string {
+	if effectiveExecutionMode() != executionModeAuto {
+		return ""
+	}
+	level, ok := trustedLevelForDir(dir)
+	if !ok {
+		return ""
+	}
+	if resolveHandoffPostureForDir(descriptor, dir) != posturePlan {
+		return ""
+	}
+	return fmt.Sprintf("Plan-only — %s doesn't support %s hand-off yet.", routeLabel, level)
 }
 
 // applyPostureArgs inserts the descriptor's posture args immediately before the
