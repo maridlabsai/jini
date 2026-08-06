@@ -777,6 +777,24 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   fake downstream CLI. Trace row added (14 implemented P0 rows); remaining
   slices (Autopilot switching, Ask-mode resume approval, ledger counter)
   stay in the backlog.
+- Hand-off permission posture with directory-trust consent (2026-08-04):
+  execution mode now maps to the downstream CLI's permission mode for
+  CLI-handoff routes. Three postures — plan (default, today's behavior), semi
+  (`acceptEdits`: applies edits, no commands), autonomous (full edit+verify).
+  Escalation requires Auto mode AND an explicit per-directory trust grant AND a
+  route with verified args (claude-code today; others plan-only). `jini trust`
+  / `jini trust --autonomous` obtain INFORMED EXPLICIT CONSENT: neutral,
+  factual, route-agnostic copy stating exactly what the level does and its
+  scope (no fear framing), `[y/N]` default No, no-TTY records nothing. Grants
+  persist to `~/.jini/trusted-dirs.json` (level + granted_at + acknowledged),
+  are symlink-resolved and per-exact-directory, and are revocable
+  (`jini trust remove`). A non-plan hand-off prints a neutral route-specific
+  disclosure so autonomy is never silent; NO generic per-task nudge in
+  untrusted dirs (that would be the verbose safety block the product forbids).
+  Fail-safe: no trust configured = plan everywhere = byte-identical to today.
+  Free-tier, local/serverless (zero inference cost), and orthogonal to paid
+  Autopilot. Native CLI-less autonomy remains a separate paid capability. See
+  `specs/handoff-posture-design.md`.
 - Paid Autopilot lives in the commercial repo; public repo keeps only the
   fail-closed gate and the free equivalent (2026-07-30): per PRD §Tier
   Boundary (Autopilot = predictive throttle avoidance, throttle-aware route
