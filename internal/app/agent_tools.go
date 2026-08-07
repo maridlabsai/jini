@@ -6,12 +6,17 @@ package app
 // loop can do. All paths are confined to the working directory.
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 )
+
+var agentCommandTimeout = 120 * time.Second
 
 type agentTool struct {
 	Name        string
@@ -207,10 +212,47 @@ func readOnlyTools() []agentTool {
 	return []agentTool{toolReadFile(), toolListDir(), toolSearch()}
 }
 
+// toolRunCommand runs a shell command in the working directory. Min posture is
+// autonomous — the same level the user consented to with `jini trust
+// --autonomous` ("apply edits and run commands"). The command can do anything
+// the user's shell can; that IS the consented capability. Output is fed back
+// so the loop can self-verify (edit → run tests → fix).
+func toolRunCommand() agentTool {
+	return agentTool{
+		Name:        "run_command",
+		MinPosture:  postureAutonomous,
+		Description: "run_command — run a shell command in the working directory (e.g. run tests). arg: command",
+		Run: func(workDir string, args map[string]string) (string, error) {
+			cmdStr := strings.TrimSpace(args["command"])
+			if cmdStr == "" {
+				return "", fmt.Errorf("empty command")
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), agentCommandTimeout)
+			defer cancel()
+			cmd := exec.CommandContext(ctx, "sh", "-c", cmdStr)
+			cmd.Dir = workDir
+			out, err := cmd.CombinedOutput()
+			result := string(out)
+			if len(result) > agentMaxReadBytes {
+				result = result[:agentMaxReadBytes] + "\n... (truncated)"
+			}
+			if err != nil {
+				// Feed failures back as observations (not hard errors) so the
+				// model can react and fix.
+				return fmt.Sprintf("command exited with error: %v\n%s", err, result), nil
+			}
+			if strings.TrimSpace(result) == "" {
+				return "(command produced no output)", nil
+			}
+			return result, nil
+		},
+	}
+}
+
 // allAgentTools is the full toolset; the loop offers only those the posture
-// permits. run_command (autonomous) is added in P3.
+// permits (read=plan, edit=semi, run=autonomous).
 func allAgentTools() []agentTool {
-	return append(readOnlyTools(), toolEditFile())
+	return append(readOnlyTools(), toolEditFile(), toolRunCommand())
 }
 
 // toolsForPosture returns the tools available at a posture (min posture <= p).
