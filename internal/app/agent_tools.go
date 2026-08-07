@@ -174,9 +174,43 @@ func toolSearch() agentTool {
 	}
 }
 
+// toolEditFile writes a file's full new contents (body in a fenced block).
+// Whole-file write is the most reliable edit primitive for weak local models;
+// a surgical search/replace variant can come later.
+func toolEditFile() agentTool {
+	return agentTool{
+		Name:        "edit_file",
+		MinPosture:  postureSemi,
+		Description: "edit_file — write a file's full new contents. arg: path; put the new contents in a ``` fenced block",
+		Run: func(workDir string, args map[string]string) (string, error) {
+			path, err := confinePath(workDir, args["path"])
+			if err != nil {
+				return "", err
+			}
+			body, ok := args["body"]
+			if !ok {
+				return "", fmt.Errorf("edit_file needs the new contents in a ``` fenced block")
+			}
+			if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+				return "", err
+			}
+			if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
+				return "", err
+			}
+			return fmt.Sprintf("wrote %d bytes to %s", len(body), strings.TrimSpace(args["path"])), nil
+		},
+	}
+}
+
 // readOnlyTools is the plan-posture toolset (available in any posture).
 func readOnlyTools() []agentTool {
 	return []agentTool{toolReadFile(), toolListDir(), toolSearch()}
+}
+
+// allAgentTools is the full toolset; the loop offers only those the posture
+// permits. run_command (autonomous) is added in P3.
+func allAgentTools() []agentTool {
+	return append(readOnlyTools(), toolEditFile())
 }
 
 // toolsForPosture returns the tools available at a posture (min posture <= p).

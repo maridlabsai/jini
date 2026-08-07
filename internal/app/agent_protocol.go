@@ -26,6 +26,7 @@ func agentSystemPrompt(task string, tools []agentTool) string {
 		b.WriteString("- " + t.Description + "\n")
 	}
 	b.WriteString("- finish — end the task. arg: summary\n\n")
+	b.WriteString("For actions that need file contents, put the contents in a ``` fenced block after the args.\n")
 	b.WriteString("Emit ONE action per reply and nothing else. After each action you will receive an OBSERVATION. ")
 	b.WriteString("When the task is done, use finish.\n\nTASK: ")
 	b.WriteString(task)
@@ -51,7 +52,23 @@ func parseAction(reply string) (agentAction, bool) {
 		return agentAction{}, false
 	}
 	args := map[string]string{}
+	inBody := false
+	var body []string
 	for _, line := range lines[actionIdx+1:] {
+		if strings.HasPrefix(strings.TrimSpace(line), "```") {
+			if !inBody {
+				inBody = true
+				continue
+			}
+			// closing fence
+			args["body"] = strings.Join(body, "\n")
+			inBody = false
+			continue
+		}
+		if inBody {
+			body = append(body, line)
+			continue
+		}
 		trimmed := strings.TrimSpace(line)
 		if trimmed == "" {
 			continue
@@ -61,6 +78,10 @@ func parseAction(reply string) (agentAction, bool) {
 			continue
 		}
 		args[strings.TrimSpace(key)] = strings.TrimSpace(value)
+	}
+	// Unclosed fence: still capture what we have so a truncated reply is usable.
+	if inBody && len(body) > 0 {
+		args["body"] = strings.Join(body, "\n")
 	}
 	return agentAction{Tool: tool, Args: args}, true
 }
