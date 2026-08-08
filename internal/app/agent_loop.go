@@ -18,11 +18,10 @@ const (
 
 type agentModelFunc func(ctx context.Context, systemPrompt, userPrompt string) (string, error)
 
-// decisionRecorder is the seam the Pro decision-tree recorder plugs into
-// (fleshed out in P4). nil = no-op. Declared here so the loop calls it from
-// day one (specs/decision-tree-backtrack-design.md).
+// decisionRecorder is the seam the Pro decision-tree recorder plugs into (via
+// the public agentloop package, bridged in agent_seam.go). nil = no-op.
 type decisionRecorder interface {
-	RecordStep(tool string, args map[string]string, observation string)
+	RecordStep(index int, tool string, args map[string]string, observation string)
 }
 
 type agentLoopOptions struct {
@@ -65,6 +64,7 @@ func runAgentLoop(ctx context.Context, task string, opts agentLoopOptions) (stri
 		byName[t.Name] = t
 	}
 	report := agentReport{Posture: opts.posture}
+	recorder := effectiveDecisionRecorder(opts.recorder)
 	system := agentSystemPrompt(task, offered)
 	var transcript strings.Builder
 	repairs := 0
@@ -89,10 +89,10 @@ func runAgentLoop(ctx context.Context, task string, opts agentLoopOptions) (stri
 			report.Finished = true
 			return strings.TrimSpace(action.Args["summary"]), report, nil
 		}
-		observation := runAgentTool(byName, opts, action)
+		observation := runAgentTool(byName, opts, action, step)
 		report.Steps = append(report.Steps, agentStep{Tool: action.Tool, Args: action.Args, Observation: observation})
-		if opts.recorder != nil {
-			opts.recorder.RecordStep(action.Tool, action.Args, observation)
+		if recorder != nil {
+			recorder.RecordStep(len(report.Steps)-1, action.Tool, action.Args, observation)
 		}
 		fmt.Fprintf(&transcript, "ACTION: %s\nOBSERVATION: %s\n", action.Tool, observation)
 	}
@@ -102,11 +102,14 @@ func runAgentLoop(ctx context.Context, task string, opts agentLoopOptions) (stri
 // runAgentTool executes a parsed action, returning an observation. A tool the
 // posture does not permit (or an unknown tool) yields an observation rather
 // than an error, so the model can recover.
-func runAgentTool(byName map[string]agentTool, opts agentLoopOptions, action agentAction) string {
+func runAgentTool(byName map[string]agentTool, opts agentLoopOptions, action agentAction, step int) string {
 	tool, ok := byName[action.Tool]
 	if !ok {
 		return fmt.Sprintf("unknown or unavailable tool %q at the current permission level", action.Tool)
 	}
+	// Snapshot before a write step so the Pro backtrack can rewind to it
+	// (no-op unless a checkpointer is registered).
+	checkpointBeforeWrite(tool, fmt.Sprintf("before %s (step %d)", tool.Name, step+1))
 	out, err := tool.Run(opts.workDir, action.Args)
 	if err != nil {
 		return "error: " + err.Error()
