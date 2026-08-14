@@ -2039,8 +2039,15 @@ func runDirectTaskArgsIntake(args []string, stdout, stderr io.Writer) int {
 		Title:  deriveStarterTitle(envelope.Choice.DefaultName, source, envelope.Choice.PackID),
 		Source: source,
 	}
-	if decision := detectRouteForRequest(request); decision.Active && cliHandoffMode(decision.ToolMode) {
+	decision := detectRouteForRequest(request)
+	if decision.Active && cliHandoffMode(decision.ToolMode) {
 		return runDirectCLIHandoffAnswer(request, decision, stdout, stderr)
+	}
+	// Native agentic loop: only engages on a trusted dir in Auto mode with a
+	// usable non-handoff model (posture semi/autonomous). Untrusted/Ask —
+	// the default — falls through to today's saved-draft path unchanged.
+	if code, ok := maybeRunNativeLoop(request, decision, stdout, stderr); ok {
+		return code
 	}
 
 	summary, err := bootstrapStarterWork(envelope.Choice, source, "quick", inputItems)
