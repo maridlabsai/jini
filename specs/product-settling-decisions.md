@@ -795,6 +795,24 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   Free-tier, local/serverless (zero inference cost), and orthogonal to paid
   Autopilot. Native CLI-less autonomy remains a separate paid capability. See
   `specs/handoff-posture-design.md`.
+- Native in-process agentic loop, governed by the same posture gate
+  (2026-08-14): Jini can now do bounded multi-step WORK itself — read/edit/run
+  over a text (ReAct-style) tool protocol reusing `generateProviderText` — when
+  no downstream CLI is routed. It is NOT a new P0: it extends the Auto/Ask
+  execution-mode row (posture is how Auto acts autonomously; the loop is that
+  same policy applied to Jini's own tools instead of a CLI's), so P0 count stays
+  16/16. It engages ONLY when `maybeRunNativeLoop` sees Auto mode + an explicit
+  per-directory trust grant (posture semi/autonomous via `resolveNativeLoopPosture`)
+  AND a usable non-handoff model (not `local-preview`, `Status == "ok"`); tools
+  are filtered by posture (semi = read+edit, autonomous = read+edit+run), so the
+  same `jini trust` consent bounds it. Fail-safe: plan/untrusted/Ask — the
+  default — returns `ok=false` and the existing saved-draft path runs
+  byte-identically (verified: full suite green, all existing tests run plan). A
+  non-plan run prints the same neutral posture disclosure; a run records savings
+  once like any work task. Decision-tree recording + git checkpointing before
+  write steps are wired through the public `agentloop` seam (no-op in the pure
+  public build; the Pro backtrack implementation registers them from the
+  commercial repo). See `specs/native-agentic-loop-design.md`.
 - Paid Autopilot lives in the commercial repo; public repo keeps only the
   fail-closed gate and the free equivalent (2026-07-30): per PRD §Tier
   Boundary (Autopilot = predictive throttle avoidance, throttle-aware route
