@@ -47,6 +47,32 @@ func maturityCorpus() []corpusCase {
 	}
 }
 
+func TestMaturityCorpus_ToneAndReadability(t *testing.T) {
+	t.Setenv("JINI_PROVIDER", "local-preview")
+	full := auditOptions{} // tone + readability enabled
+
+	for _, tc := range maturityCorpus() {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Setenv("JINI_STATE_DIR", t.TempDir())
+			t.Chdir(t.TempDir())
+
+			var stdout, stderr bytes.Buffer
+			RunInteractive(tc.args, strings.NewReader(""), &stdout, &stderr)
+			combined := stdout.String() + "\n" + stderr.String()
+
+			var soft []outputIssue
+			for _, is := range auditUserFacingOutput(combined, full) {
+				if is.Kind == issueFearOrHype || is.Kind == issueOverlongLine {
+					soft = append(soft, is)
+				}
+			}
+			if len(soft) != 0 {
+				t.Fatalf("tone/readability issue for %q:\n%+v\noutput=%q", tc.name, soft, combined)
+			}
+		})
+	}
+}
+
 func TestMaturityCorpus_HardInvariants(t *testing.T) {
 	t.Setenv("JINI_PROVIDER", "local-preview")
 	hard := auditOptions{SkipTone: true, SkipReadab: true}

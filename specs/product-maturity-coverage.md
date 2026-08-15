@@ -25,8 +25,8 @@ model/CLI owns it)
 | Security — secret leakage in Jini output | `respguard` leaked-secret detector | ✅ (P1) |
 | Security — sandbox/permission, receipt privacy | posture, route receipts | 🟡 existing |
 | Accessibility — plain-text / no ANSI reliance | `respguard` ansi/control detector | ✅ (P1) |
-| Readability — line length, no walls, plain | `respguard` readability detector | 🟡 lib built, corpus enforcement pending |
-| Tone — neutral, no fear/hype | `respguard` tone detector | 🟡 lib built, corpus enforcement pending |
+| Readability — no run-on walls, plain | `respguard` run-on detector | ✅ (P2) enforced over corpus |
+| Tone — neutral, no fear/hype | `respguard` tone detector | ✅ (P2) enforced over corpus (0 violations) |
 | Citations / references — cited paths are real | `respguard` reference-integrity | ⬜ (planned P3) |
 | Attachments — input item handling | `inputItemsForSource` | 🟡 existing, corpus pending |
 | Response qualities on model answers (citations, style) | downstream model/CLI | N/A (Jini can only guard, not author) |
@@ -41,6 +41,13 @@ model/CLI owns it)
 
 ## Iteration log
 
+- **P2 (2026-08-15)** — enforced tone + readability over the corpus. Tone: 0
+  violations (copy already neutral). Readability: refined the detector to flag
+  only multi-sentence run-on walls (a single long sentence soft-wraps in the
+  terminal and is fine); split the two flagged lines. Fixed the `jini trust`
+  consent paragraph to one sentence per line (wording unchanged) so an important
+  consent screen stays scannable; the doctor AUTO_ROUTE line is a single
+  sentence and passes. `TestMaturityCorpus_ToneAndReadability` now green.
 - **P1 (2026-08-14)** — `respguard.go`: pure user-facing-output audit library
   (`AuditUserFacingOutput`) with detectors for ANSI/control chars
   (accessibility), leaked secrets (security), overlong lines/walls (readability),

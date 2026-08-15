@@ -161,16 +161,20 @@ func removeTrustGrant(dir string) (bool, error) {
 // Route-agnostic: a grant is per-directory and Auto may select different
 // hand-off CLIs there. No caps emphasis, no threat lists.
 func trustRepercussions(level string) string {
+	// One sentence per line so an important consent screen stays scannable
+	// (no multi-sentence run-on wall); wording is unchanged.
 	if level == trustLevelAutonomous {
 		return "In this directory, Auto mode lets the coding CLI it hands off to " +
 			"(such as Claude Code or Codex) apply file edits and run commands without " +
-			"asking first. This applies only here and only in Auto mode; Ask mode and " +
-			"other directories are unchanged. Use it where you're comfortable with " +
-			"unattended edits and commands."
+			"asking first.\n" +
+			"This applies only here and only in Auto mode; Ask mode and " +
+			"other directories are unchanged.\n" +
+			"Use it where you're comfortable with unattended edits and commands."
 	}
 	return "In this directory, Auto mode lets the coding CLI it hands off to " +
-		"(such as Claude Code or Codex) apply file edits without asking first. It " +
-		"won't run commands. This applies only here and only in Auto mode; Ask mode " +
+		"(such as Claude Code or Codex) apply file edits without asking first.\n" +
+		"It won't run commands.\n" +
+		"This applies only here and only in Auto mode; Ask mode " +
 		"and other directories are unchanged."
 }
 

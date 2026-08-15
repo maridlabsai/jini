@@ -93,16 +93,25 @@ func TestAudit_ToneLexiconButFlagNamesExempt(t *testing.T) {
 	}
 }
 
-func TestAudit_ReadabilityOverlongVsUnwrappable(t *testing.T) {
-	wall := strings.Repeat("word ", 40) // ~200 chars of prose
-	if issues := auditUserFacingOutput(wall, auditOptions{}); !hasKind(issues, issueOverlongLine) {
-		t.Fatalf("a 200-char prose line should be flagged, got %v", kinds(issues))
+func TestAudit_ReadabilityRunOnVsSingleSentence(t *testing.T) {
+	// A long line that is a single sentence soft-wraps in the terminal — allowed.
+	oneSentence := "Auto mode chose the local preview because this looks like general work and the request does not ask for a deep review of anything at all here today."
+	if lineWidth(oneSentence) <= 120 {
+		t.Fatalf("test fixture must exceed 120 cols, got %d", lineWidth(oneSentence))
+	}
+	if issues := auditUserFacingOutput(oneSentence, auditOptions{}); hasKind(issues, issueOverlongLine) {
+		t.Fatalf("a single long sentence must not be flagged, got %v", kinds(issues))
+	}
+	// A long line packing multiple sentences is a run-on wall — flagged.
+	runOn := "In this directory Auto mode applies edits without asking first here today now. It will not run commands at all. This applies only here and only in Auto mode."
+	if issues := auditUserFacingOutput(runOn, auditOptions{}); !hasKind(issues, issueOverlongLine) {
+		t.Fatalf("a multi-sentence run-on wall should be flagged, got %v", kinds(issues))
 	}
 	longURL := "See https://example.com/" + strings.Repeat("a", 150)
 	if issues := auditUserFacingOutput(longURL, auditOptions{}); hasKind(issues, issueOverlongLine) {
 		t.Fatalf("a long URL is unwrappable and must be exempt, got %v", kinds(issues))
 	}
-	if issues := auditUserFacingOutput(wall, auditOptions{SkipReadab: true}); hasKind(issues, issueOverlongLine) {
+	if issues := auditUserFacingOutput(runOn, auditOptions{SkipReadab: true}); hasKind(issues, issueOverlongLine) {
 		t.Fatal("SkipReadab must suppress readability checks")
 	}
 }

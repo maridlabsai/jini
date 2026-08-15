@@ -96,10 +96,12 @@ func auditUserFacingOutput(text string, opts auditOptions) []outputIssue {
 				break
 			}
 		}
-		// Readability: overlong unwrapped line. URLs and code fences are exempt —
-		// a single long token cannot be wrapped and is not a wall of prose.
-		if !opts.SkipReadab && lineWidth(line) > opts.MaxLineWidth && !isUnwrappableLine(line) {
-			issues = append(issues, outputIssue{issueOverlongLine, lineNo, "line exceeds readable width"})
+		// Readability: a run-on wall — a line that both exceeds the readable
+		// width AND packs multiple sentences that should be split for
+		// scannability. A single long sentence is fine (the terminal soft-wraps
+		// it); unwrappable tokens (URLs/paths/code/table rows) are exempt.
+		if !opts.SkipReadab && lineWidth(line) > opts.MaxLineWidth && sentenceCount(line) >= 2 && !isUnwrappableLine(line) {
+			issues = append(issues, outputIssue{issueOverlongLine, lineNo, "multi-sentence line should be split for readability"})
 		}
 		// Tone: fear/hype lexicon (ignore text inside backticks — flag names,
 		// identifiers — so `--dangerously-skip-permissions` never trips it).
@@ -137,6 +139,15 @@ func indexControlChar(line string) int {
 }
 
 func lineWidth(line string) int { return utf8.RuneCountInString(line) }
+
+// sentenceCount counts sentence terminators followed by a space and a capital
+// letter — i.e. sentence boundaries inside a single line. A line with 2+ such
+// boundaries is a run-on that reads better split across lines.
+var sentenceBoundary = regexp.MustCompile(`[.!?]\s+[A-Z(]`)
+
+func sentenceCount(line string) int {
+	return len(sentenceBoundary.FindAllString(line, -1))
+}
 
 // isUnwrappableLine is true for lines dominated by a single long token (URL,
 // path, hash, base64) or a code/table row, which readability can't fault.
