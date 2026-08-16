@@ -2027,6 +2027,21 @@ func runDirectTaskArgsIntake(args []string, stdout, stderr io.Writer) int {
 	if maybeHandleAmbiguousBareEntity(source, stdout) {
 		return 0
 	}
+	// Attachment intake: validate any `@path` references up front and fail
+	// closed on a missing one, so the user gets an exact message instead of an
+	// opaque downstream error. Resolved attachments are acknowledged; the
+	// prompt (with its `@refs`) is forwarded verbatim so a routed CLI reads them
+	// natively, while local/provider routes inline text content below.
+	attachCwd, _ := os.Getwd()
+	attachments, missingAttachments := resolveAttachments(source, attachCwd)
+	if len(missingAttachments) > 0 {
+		fmt.Fprintln(stderr, missingAttachmentError(missingAttachments))
+		return 1
+	}
+	if line := attachmentAckLine(attachments); line != "" {
+		fmt.Fprintln(stdout, line)
+	}
+
 	envelope := classifyWorkEnvelope(starterChoice{}, source)
 	inputItems, normalizedSource := inputItemsForSource(source)
 	if strings.TrimSpace(normalizedSource) != "" {
@@ -2041,7 +2056,18 @@ func runDirectTaskArgsIntake(args []string, stdout, stderr io.Writer) int {
 	}
 	decision := detectRouteForRequest(request)
 	if decision.Active && cliHandoffMode(decision.ToolMode) {
+		// Hand-off targets (Claude Code, Codex) read `@path` references — including
+		// images — natively, so forward the prompt unchanged.
 		return runDirectCLIHandoffAnswer(request, decision, stdout, stderr)
+	}
+	// Local/provider routes have no native file access: inline text attachments
+	// so the model still sees them, and note any image/audio that a non-handoff
+	// route cannot read.
+	if len(attachments) > 0 {
+		request.Source = inlineTextAttachments(request.Source, attachments)
+		if hasImageAttachment(attachments) {
+			fmt.Fprintln(stdout, "Note: this route can't read image or audio attachments; route to Claude Code or Codex for those.")
+		}
 	}
 	// Native agentic loop: only engages on a trusted dir in Auto mode with a
 	// usable non-handoff model (posture semi/autonomous). Untrusted/Ask —

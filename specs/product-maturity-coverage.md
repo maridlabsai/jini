@@ -27,8 +27,8 @@ model/CLI owns it)
 | Accessibility — plain-text / no ANSI reliance | `respguard` ansi/control detector | ✅ (P1) |
 | Readability — no run-on walls, plain | `respguard` run-on detector | ✅ (P2) enforced over corpus |
 | Tone — neutral, no fear/hype | `respguard` tone detector | ✅ (P2) enforced over corpus (0 violations) |
-| Citations / references — cited paths are real | `respguard` reference-integrity | ⬜ (planned P3) |
-| Attachments — input item handling | `inputItemsForSource` | 🟡 existing, corpus pending |
+| Citations / references — cited paths are real | `respguard` reference-integrity | ⬜ (planned) |
+| Attachments — prompt + `@file` intake | `attachments.go` (validate/forward/inline) | ✅ (P3) |
 | Response qualities on model answers (citations, style) | downstream model/CLI | N/A (Jini can only guard, not author) |
 
 ## Loop protocol (per pass)
@@ -41,6 +41,16 @@ model/CLI owns it)
 
 ## Iteration log
 
+- **P3 (2026-08-15)** — attachments intake (`attachments.go`): a prompt can now
+  carry `@file`/`@image` references alongside text. Jini validates them up front
+  and **fails closed** with an exact message on a missing path; acknowledges
+  resolved attachments compactly; **forwards** the prompt verbatim so Claude Code
+  / Codex read `@path` (incl. images) natively; and **inlines text** file content
+  (capped) for local/provider routes, noting honestly when an image/audio can't
+  be read by a non-handoff route. Limits (P0 frugality): ≤10 attachments,
+  ≤64KB/file, ≤192KB total inline. Social handles (`@alice`) are not mistaken for
+  files. Native/provider models: text attachments yes (inlined); image/audio not
+  yet wired to provider payloads (staged) — route to a hand-off CLI for those.
 - **P2 (2026-08-15)** — enforced tone + readability over the corpus. Tone: 0
   violations (copy already neutral). Readability: refined the detector to flag
   only multi-sentence run-on walls (a single long sentence soft-wraps in the
