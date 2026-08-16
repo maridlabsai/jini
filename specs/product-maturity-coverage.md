@@ -19,9 +19,9 @@ model/CLI owns it)
 
 | Dimension | Jini surface | Status |
 | --- | --- | --- |
-| Domains (code/prose/data/devops/math/…) | intent routing + response shape | 🟡 partial corpus |
-| Task complexity (simple→multi-step) | simple-answer / work / native-loop | 🟡 |
-| Request kinds (question/edit/ambiguous/attachment) | classifiers, inputItems | 🟡 |
+| Domains (code/prose/data/devops/math/sql/regex/git/k8s/…) | intent routing + response shape | ✅ (P4) 23-case corpus |
+| Task complexity (simple→multi-step) | simple-answer / work / native-loop | ✅ (P4) trivial-compact + multi-step cases |
+| Request kinds (question/edit/ambiguous/attachment) | classifiers, inputItems | ✅ (P3/P4) |
 | Security — secret leakage in Jini output | `respguard` leaked-secret detector | ✅ (P1) |
 | Security — sandbox/permission, receipt privacy | posture, route receipts | 🟡 existing |
 | Accessibility — plain-text / no ANSI reliance | `respguard` ansi/control detector | ✅ (P1) |
@@ -41,6 +41,13 @@ model/CLI owns it)
 
 ## Iteration log
 
+- **P4 (2026-08-15)** — deepened the intent/domain corpus to 23 cases
+  (sql/regex/git/shell/docker/k8s/security/translate/explain/compare/debug/
+  multi-step) and added response-shape parity for `intent-first-cli-parity`:
+  `TestMaturityCorpus_TrivialPromptsAreCompact` asserts trivial prompts answer in
+  one compact line with no work-draft ceremony. Fixed a real parity gap it
+  surfaced — word-form arithmetic ("17 times 23", "2 plus 2", "divided by") now
+  answers offline like a familiar CLI instead of falling through to "no route".
 - **P3 (2026-08-15)** — attachments intake (`attachments.go`): a prompt can now
   carry `@file`/`@image` references alongside text. Jini validates them up front
   and **fails closed** with an exact message on a missing path; acknowledges

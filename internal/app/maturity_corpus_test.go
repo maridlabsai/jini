@@ -35,15 +35,72 @@ func maturityCorpus() []corpusCase {
 		cmd("trust", "trust"),
 		// Request kinds × domains × complexity (direct-task intake).
 		prompt("simple-factual", "what is the capital of France?"),
-		prompt("math", "what is 17 times 23?"),
+		prompt("math-symbol", "what is 17 * 23?"),
+		prompt("math-word", "what is 17 times 23"),
 		prompt("typo-simple", "waht is 2 plus 2"),
 		prompt("prose", "write a haiku about autumn leaves"),
 		prompt("code-work", "refactor the database connection pool for reuse"),
+		prompt("sql", "write a sql query for the top 10 customers by revenue"),
+		prompt("regex", "write a regex to match an email address"),
+		prompt("git", "how do I undo the last commit"),
+		prompt("shell", "find all files larger than 100mb here"),
+		prompt("docker", "write a dockerfile for a go service"),
+		prompt("k8s", "create a kubernetes deployment for nginx"),
+		prompt("security", "how do I store api keys safely"),
+		prompt("translate", "translate good morning to japanese"),
+		prompt("explain", "explain what a mutex is"),
+		prompt("compare", "compare rest and grpc"),
+		prompt("debug", "why might a go program deadlock"),
 		prompt("data", "summarize the columns in a sales csv"),
 		prompt("devops", "set up a github actions workflow for go tests"),
+		prompt("multi-step", "add a parser test, run it, and fix any failure"),
 		prompt("ambiguous-entity", "React"),
 		prompt("file-edit-intent", "add a line saying hello to notes.txt"),
 		prompt("unicode-nonenglish", "¿cuál es la capital de España?"),
+	}
+}
+
+// trivialPrompts resolve locally to a compact answer and must never carry
+// work-draft ceremony — the intent-first-cli-parity bar (PRD non-negotiable).
+func trivialPrompts() []corpusCase {
+	p := func(name, s string) corpusCase { return corpusCase{name, strings.Fields(s)} }
+	return []corpusCase{
+		p("plus", "what is 2 plus 2"),
+		p("times-word", "what is 17 times 23"),
+		p("divide-word", "what is 100 divided by 4"),
+		p("minus-word", "what is 10 minus 4"),
+		p("symbol", "what is 8 * 9"),
+		p("capital", "what is the capital of France?"),
+	}
+}
+
+var ceremonyMarkers = []string{
+	"Saved a restorable version", "Versions", "Undo",
+	"Start/Keep", "snapshot", "Saved draft", "draft saved",
+}
+
+func TestMaturityCorpus_TrivialPromptsAreCompact(t *testing.T) {
+	t.Setenv("JINI_PROVIDER", "local-preview")
+	for _, tc := range trivialPrompts() {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Setenv("JINI_STATE_DIR", t.TempDir())
+			t.Chdir(t.TempDir())
+
+			var stdout, stderr bytes.Buffer
+			if code := RunInteractive(tc.args, strings.NewReader(""), &stdout, &stderr); code != 0 {
+				t.Fatalf("trivial prompt should answer cleanly, code=%d err=%q", code, stderr.String())
+			}
+			out := strings.TrimSpace(stdout.String())
+			lines := strings.Split(out, "\n")
+			if len(lines) != 1 {
+				t.Fatalf("trivial answer must be one compact line, got %d:\n%q", len(lines), out)
+			}
+			for _, m := range ceremonyMarkers {
+				if strings.Contains(stdout.String(), m) {
+					t.Fatalf("trivial prompt %q leaked ceremony marker %q", tc.name, m)
+				}
+			}
+		})
 	}
 }
 

@@ -124,6 +124,18 @@ func simpleArithmeticExpression(raw string) string {
 	expression = strings.TrimSpace(strings.TrimSuffix(expression, "?"))
 	expression = strings.ReplaceAll(expression, "×", "x")
 	expression = strings.ReplaceAll(expression, "÷", "/")
+	// Word operators so "17 times 23" / "2 plus 2" answer like a familiar CLI,
+	// offline. Multi-word forms first. Padded so the arithmetic pattern's
+	// optional spacing still matches.
+	for _, sub := range []struct{ from, to string }{
+		{" multiplied by ", " x "},
+		{" divided by ", " / "},
+		{" plus ", " + "},
+		{" minus ", " - "},
+		{" times ", " x "},
+	} {
+		expression = strings.ReplaceAll(expression, sub.from, sub.to)
+	}
 	for _, prefix := range []string{
 		"what is ",
 		"what's ",
