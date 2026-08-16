@@ -73,6 +73,36 @@ func standaloneQuestionTimeout() time.Duration {
 	return 10 * time.Second
 }
 
+// cliHandoffAttemptTimeout is the per-attempt budget for a standalone question
+// answered by a CLI hand-off. A hand-off spawns a subprocess (e.g.
+// `claude --print`) that legitimately runs far longer than a local model, so
+// the short local budget would kill it mid-flight (the jini-through-jini track
+// must stay unblocked). Override with JINI_CLI_HANDOFF_TIMEOUT.
+func cliHandoffAttemptTimeout() time.Duration {
+	if raw := strings.TrimSpace(os.Getenv("JINI_CLI_HANDOFF_TIMEOUT")); raw != "" {
+		if parsed, err := time.ParseDuration(raw); err == nil && parsed > 0 {
+			return parsed
+		}
+	}
+	return 3 * time.Minute
+}
+
+// standaloneAttemptTimeout picks the per-attempt budget for the standalone
+// question path. An explicit JINI_STANDALONE_QUESTION_TIMEOUT wins for any
+// route (so a caller can still bound a slow CLI); otherwise a CLI hand-off gets
+// the generous subprocess budget and a local/provider route the short default.
+func standaloneAttemptTimeout(decision routeDecision) time.Duration {
+	if raw := strings.TrimSpace(os.Getenv("JINI_STANDALONE_QUESTION_TIMEOUT")); raw != "" {
+		if parsed, err := time.ParseDuration(raw); err == nil && parsed > 0 {
+			return parsed
+		}
+	}
+	if cliHandoffMode(decision.ToolMode) {
+		return cliHandoffAttemptTimeout()
+	}
+	return 10 * time.Second
+}
+
 func maybeHandleAmbiguousBareEntity(raw string, stdout io.Writer) bool {
 	subject, ok := ambiguousBareEntitySubject(raw)
 	if !ok {

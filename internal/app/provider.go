@@ -126,8 +126,9 @@ func generateWithConfiguredProviderDecision(ctx context.Context, request provide
 	if request.Standalone {
 		// The standalone answer owes the user a reply inside its deadline, so
 		// budget each attempt and offer a single hold rather than the full
-		// 20/40/80 ladder.
-		opts.attemptTimeout = standaloneQuestionTimeout()
+		// 20/40/80 ladder. A CLI hand-off gets a generous budget (its
+		// subprocess is legitimately slower than a local model).
+		opts.attemptTimeout = standaloneAttemptTimeout(decision)
 		opts.holdWaits = []time.Duration{20 * time.Second}
 	}
 	// Ask mode parks the prompt before the route can be throttled, so a

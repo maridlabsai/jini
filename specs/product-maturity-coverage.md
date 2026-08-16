@@ -39,6 +39,21 @@ model/CLI owns it)
 4. Premortem + adversarial review; run `tools/run_required_gates.sh commit`.
 5. Commit one slice; update this matrix + the iteration log.
 
+## jini-through-jini (dogfood) track
+
+Commitment: further Jini development runs *through* Jini, proxying to an
+installed Claude Code under the hood. This track must stay unblocked at all
+times. Setup: `jini mode auto`, route `claude-code` (auto-detected ok), and — for
+autonomous edits — `jini trust --autonomous` in the repo (interactive-terminal
+consent only, by fail-safe design; a non-TTY grants nothing).
+
+- **D1 (2026-08-16)** — proved jini→claude proxy end-to-end (jini handed a repo
+  question to claude, which read the file and answered). Fixed the blocker it
+  surfaced: the standalone-question path capped every attempt at 10s, killing a
+  `claude --print` subprocess mid-flight. Now CLI hand-offs get a generous
+  per-attempt budget (`cliHandoffAttemptTimeout`, 3m default, override-able); an
+  explicit `JINI_STANDALONE_QUESTION_TIMEOUT` still wins for any route.
+
 ## Iteration log
 
 - **P4 (2026-08-15)** — deepened the intent/domain corpus to 23 cases
