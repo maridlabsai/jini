@@ -69,10 +69,11 @@ func maybeRunNativeLoop(request providerGenerationRequest, decision routeDecisio
 
 	model := newNativeLoopModel(provider, request)
 	result, report, runErr := runAgentLoop(context.Background(), request.Source, agentLoopOptions{
-		posture: posture,
-		tools:   allAgentTools(),
-		workDir: workDir,
-		model:   model,
+		posture:  posture,
+		tools:    allAgentTools(),
+		workDir:  workDir,
+		model:    model,
+		progress: stdout, // surface each action as it runs (execution evidence)
 	})
 	if runErr != nil {
 		fmt.Fprintln(stderr, runErr.Error())

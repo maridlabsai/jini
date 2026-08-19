@@ -8,6 +8,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"io"
 	"strings"
 )
 
@@ -32,6 +33,7 @@ type agentLoopOptions struct {
 	maxSteps   int
 	maxRepairs int
 	recorder   decisionRecorder // nil = no-op (seam for Pro; wired in P4)
+	progress   io.Writer        // nil = silent; else one evidence line per action
 }
 
 type agentStep struct {
@@ -94,9 +96,49 @@ func runAgentLoop(ctx context.Context, task string, opts agentLoopOptions) (stri
 		if recorder != nil {
 			recorder.RecordStep(len(report.Steps)-1, action.Tool, action.Args, observation)
 		}
+		// Evidence: surface each action so autonomous execution is never hidden
+		// (visible permissions/progress — the sandbox-execution competitive bar).
+		if opts.progress != nil {
+			fmt.Fprintln(opts.progress, agentStepLine(action, observation))
+		}
 		fmt.Fprintf(&transcript, "ACTION: %s\nOBSERVATION: %s\n", action.Tool, observation)
 	}
 	return "Reached the step limit before finishing.", report, nil
+}
+
+// agentStepLine renders one compact evidence line for an executed action. It
+// names the action and its target (not the file contents), and marks a failed
+// command, so a watching user sees exactly what the loop did.
+func agentStepLine(action agentAction, observation string) string {
+	failed := strings.HasPrefix(observation, "error:")
+	switch action.Tool {
+	case "read_file":
+		return "· read " + action.Args["path"]
+	case "list_dir":
+		return "· listed " + firstNonEmpty(action.Args["path"], ".")
+	case "search":
+		return fmt.Sprintf("· searched %q", action.Args["query"])
+	case "edit_file":
+		return "· edited " + action.Args["path"]
+	case "run_command":
+		status := "ok"
+		if failed {
+			status = "failed"
+		}
+		return fmt.Sprintf("· ran: %s — %s", compactCommand(action.Args["command"]), status)
+	default:
+		return "· " + action.Tool
+	}
+}
+
+// compactCommand trims a command to a single readable line for evidence output.
+func compactCommand(cmd string) string {
+	cmd = strings.TrimSpace(strings.ReplaceAll(cmd, "\n", " "))
+	const max = 80
+	if len(cmd) > max {
+		return cmd[:max] + "…"
+	}
+	return cmd
 }
 
 // runAgentTool executes a parsed action, returning an observation. A tool the

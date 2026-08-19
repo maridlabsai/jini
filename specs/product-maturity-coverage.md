@@ -23,7 +23,7 @@ model/CLI owns it)
 | Task complexity (simple→multi-step) | simple-answer / work / native-loop | ✅ (P4) trivial-compact + multi-step cases |
 | Request kinds (question/edit/ambiguous/attachment) | classifiers, inputItems | ✅ (P3/P4) |
 | Security — secret leakage in Jini output | `respguard` leaked-secret detector | ✅ (P1) |
-| Security — sandbox/permission, receipt privacy | posture, route receipts | 🟡 existing |
+| Security — sandbox/permission, receipt privacy | posture, route receipts, loop step evidence | ✅ (P5) native-loop actions visible |
 | Accessibility — plain-text / no ANSI reliance | `respguard` ansi/control detector | ✅ (P1) |
 | Readability — no run-on walls, plain | `respguard` run-on detector | ✅ (P2) enforced over corpus |
 | Tone — neutral, no fear/hype | `respguard` tone detector | ✅ (P2) enforced over corpus (0 violations) |
@@ -56,6 +56,13 @@ consent only, by fail-safe design; a non-TTY grants nothing).
 
 ## Iteration log
 
+- **P5 (2026-08-17)** — permissioned-sandbox execution evidence (competitive
+  vector #2): the native loop now emits a compact line per action as it runs
+  (`· read x`, `· edited y`, `· ran: <cmd> — ok/failed`) via an optional
+  `progress` writer, wired to stdout in `maybeRunNativeLoop`. Autonomous
+  execution is no longer hidden behind a final-result-only view — visible
+  permissions/progress, matching Claude Code / Codex. Names targets and command
+  outcomes, never file contents. nil progress stays a silent no-op.
 - **P4 (2026-08-15)** — deepened the intent/domain corpus to 23 cases
   (sql/regex/git/shell/docker/k8s/security/translate/explain/compare/debug/
   multi-step) and added response-shape parity for `intent-first-cli-parity`:
