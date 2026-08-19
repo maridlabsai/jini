@@ -11,11 +11,65 @@ package app
 // specs/product-maturity-coverage.md.
 
 import (
+	"encoding/base64"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 )
+
+// maxImageAttachmentB bounds a single image sent to a vision model (provider
+// limits are ~5MB/image); oversize images are skipped rather than rejected.
+const maxImageAttachmentB = 5 * 1024 * 1024
+
+// imageMediaType maps an image extension to its MIME type, or "" if unsupported.
+func imageMediaType(path string) string {
+	switch strings.ToLower(filepath.Ext(path)) {
+	case ".png":
+		return "image/png"
+	case ".jpg", ".jpeg":
+		return "image/jpeg"
+	case ".gif":
+		return "image/gif"
+	case ".webp":
+		return "image/webp"
+	default:
+		return "" // heic and others aren't accepted by the vision APIs
+	}
+}
+
+// routeSupportsVision reports whether a provider can accept image content. Only
+// the hosted Claude route is wired today; local/preview stay text-only.
+func routeSupportsVision(provider providerConfig) bool {
+	return provider.ID == "anthropic"
+}
+
+// anthropicUserContent builds the Anthropic message content blocks: the text
+// prompt followed by a base64 image block per readable, supported, in-budget
+// image. With no usable images it returns a single text block — byte-identical
+// to the prior text-only payload.
+func anthropicUserContent(userPrompt string, images []attachmentRef) []map[string]any {
+	content := []map[string]any{{"type": "text", "text": userPrompt}}
+	for _, img := range images {
+		media := imageMediaType(img.Path)
+		if media == "" {
+			continue
+		}
+		data, err := os.ReadFile(img.Path)
+		if err != nil || len(data) == 0 || len(data) > maxImageAttachmentB {
+			continue
+		}
+		content = append(content, map[string]any{
+			"type": "image",
+			"source": map[string]any{
+				"type":       "base64",
+				"media_type": media,
+				"data":       base64.StdEncoding.EncodeToString(data),
+			},
+		})
+	}
+	return content
+}
 
 // Attachment limits keep token cost bounded (P0 frugality) and prevent abuse.
 const (
@@ -151,8 +205,8 @@ func attachmentAckLine(found []attachmentRef) string {
 	return "Attached: " + strings.Join(parts, ", ")
 }
 
-// hasImageAttachment reports whether any resolved attachment is an image, so a
-// non-handoff route can note honestly that it won't read the pixels.
+// hasImageAttachment reports whether any resolved attachment is an image or
+// audio, so a non-handoff route can note honestly that it won't read the pixels.
 func hasImageAttachment(found []attachmentRef) bool {
 	for _, a := range found {
 		if a.Kind == "image" || a.Kind == "audio" {
@@ -160,4 +214,15 @@ func hasImageAttachment(found []attachmentRef) bool {
 		}
 	}
 	return false
+}
+
+// imageAttachments returns only the image-kind attachments (for vision routes).
+func imageAttachments(found []attachmentRef) []attachmentRef {
+	var out []attachmentRef
+	for _, a := range found {
+		if a.Kind == "image" {
+			out = append(out, a)
+		}
+	}
+	return out
 }

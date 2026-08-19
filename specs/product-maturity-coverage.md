@@ -29,6 +29,7 @@ model/CLI owns it)
 | Tone — neutral, no fear/hype | `respguard` tone detector | ✅ (P2) enforced over corpus (0 violations) |
 | Citations / references — cited paths are real | `respguard` broken-reference detector | ✅ (P7) enforced over corpus |
 | Attachments — prompt + `@file` intake | `attachments.go` (validate/forward/inline) | ✅ (P3) |
+| Attachments — images to native/provider model | `anthropicUserContent` base64 blocks | ✅ (P8) Anthropic vision; others staged |
 | Response qualities on model answers (citations, style) | downstream model/CLI | N/A (Jini can only guard, not author) |
 
 ## Loop protocol (per pass)
@@ -56,6 +57,14 @@ consent only, by fail-safe design; a non-TTY grants nothing).
 
 ## Iteration log
 
+- **P8 (2026-08-19)** — native multimodal (competitive priority #5, closes the
+  P3 image gap): `anthropicUserContent` builds base64 image content blocks for a
+  vision-capable route, so an image `@attachment` reaches a native/provider model
+  (BYO Claude) — not only hand-off CLIs. `providerGenerationRequest.Images`
+  carries resolved images; the intake attaches them when `routeSupportsVision`
+  (Anthropic today; local/preview/bedrock/azure stay the honest can't-read note).
+  Fail-safe: no/unsupported/oversize/unreadable images → single text block,
+  byte-identical to the prior payload. Per-image cap 5MB; png/jpeg/gif/webp.
 - **P7 (2026-08-18)** — reference/citation integrity (last named dimension):
   `brokenPathReferences` flags a file Jini *claims* to have acted on ("Updated
   X", "wrote N bytes to X", "· edited X") that doesn't exist under the cwd —

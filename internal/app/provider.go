@@ -36,6 +36,9 @@ type providerGenerationRequest struct {
 	// Standalone marks the one-shot question path, which answers under a
 	// short deadline and therefore holds at most once.
 	Standalone bool
+	// Images carries resolved image attachments for a vision-capable route to
+	// send as multimodal content. Empty for text-only requests (the default).
+	Images []attachmentRef
 }
 
 type providerDoctorField struct {
@@ -327,10 +330,8 @@ func generateWithAnthropic(ctx context.Context, request providerGenerationReques
 		"max_tokens": 1600,
 		"messages": []map[string]any{
 			{
-				"role": "user",
-				"content": []map[string]string{
-					{"type": "text", "text": userPrompt},
-				},
+				"role":    "user",
+				"content": anthropicUserContent(userPrompt, request.Images),
 			},
 		},
 	}

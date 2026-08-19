@@ -2061,12 +2061,16 @@ func runDirectTaskArgsIntake(args []string, stdout, stderr io.Writer) int {
 		return runDirectCLIHandoffAnswer(request, decision, stdout, stderr)
 	}
 	// Local/provider routes have no native file access: inline text attachments
-	// so the model still sees them, and note any image/audio that a non-handoff
-	// route cannot read.
+	// so the model still sees them. Images go as multimodal content on a
+	// vision-capable route; otherwise note honestly that they can't be read.
 	if len(attachments) > 0 {
 		request.Source = inlineTextAttachments(request.Source, attachments)
 		if hasImageAttachment(attachments) {
-			fmt.Fprintln(stdout, "Note: this route can't read image or audio attachments; route to Claude Code or Codex for those.")
+			if routeSupportsVision(providerForDecision(request, decision)) {
+				request.Images = imageAttachments(attachments)
+			} else {
+				fmt.Fprintln(stdout, "Note: this route can't read image or audio attachments; route to Claude Code or Codex for those.")
+			}
 		}
 	}
 	// Native agentic loop: only engages on a trusted dir in Auto mode with a
