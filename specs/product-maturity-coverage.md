@@ -27,7 +27,7 @@ model/CLI owns it)
 | Accessibility — plain-text / no ANSI reliance | `respguard` ansi/control detector | ✅ (P1) |
 | Readability — no run-on walls, plain | `respguard` run-on detector | ✅ (P2) enforced over corpus |
 | Tone — neutral, no fear/hype | `respguard` tone detector | ✅ (P2) enforced over corpus (0 violations) |
-| Citations / references — cited paths are real | `respguard` reference-integrity | ⬜ (planned) |
+| Citations / references — cited paths are real | `respguard` broken-reference detector | ✅ (P7) enforced over corpus |
 | Attachments — prompt + `@file` intake | `attachments.go` (validate/forward/inline) | ✅ (P3) |
 | Response qualities on model answers (citations, style) | downstream model/CLI | N/A (Jini can only guard, not author) |
 
@@ -56,6 +56,13 @@ consent only, by fail-safe design; a non-TTY grants nothing).
 
 ## Iteration log
 
+- **P7 (2026-08-18)** — reference/citation integrity (last named dimension):
+  `brokenPathReferences` flags a file Jini *claims* to have acted on ("Updated
+  X", "wrote N bytes to X", "· edited X") that doesn't exist under the cwd —
+  applied only to explicit file-claim phrases, never model-answer prose, so
+  there are no false positives on placeholders/flags/URLs/mentions. Enforced
+  across the corpus (Jini's edit-intent path correctly creates the file it
+  cites) and unit-tested for conservatism.
 - **P6 (2026-08-18)** — token-frugality regression suite (competitive vector
   #4, PRD P0): `TestMaturityCorpus_TokenFrugality` budgets trivial answers to
   ≤40 chars and forbids replaying the question (transcript-replay avoidance), and

@@ -12,6 +12,8 @@ package app
 // copy — flag names in backticks, technical terms, and placeholders are exempt.
 
 import (
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"unicode"
@@ -21,11 +23,12 @@ import (
 type outputIssueKind string
 
 const (
-	issueANSIEscape   outputIssueKind = "ansi-escape"   // accessibility: breaks plain-text/screen readers
-	issueControlChar  outputIssueKind = "control-char"  // accessibility: non-printable leaks
-	issueLeakedSecret outputIssueKind = "leaked-secret" // security: token/key echoed back
-	issueOverlongLine outputIssueKind = "overlong-line" // readability: unwrapped wall
-	issueFearOrHype   outputIssueKind = "tone"          // tone: fear-mongering or marketing hype
+	issueANSIEscape      outputIssueKind = "ansi-escape"      // accessibility: breaks plain-text/screen readers
+	issueControlChar     outputIssueKind = "control-char"     // accessibility: non-printable leaks
+	issueLeakedSecret    outputIssueKind = "leaked-secret"    // security: token/key echoed back
+	issueOverlongLine    outputIssueKind = "overlong-line"    // readability: unwrapped wall
+	issueFearOrHype      outputIssueKind = "tone"             // tone: fear-mongering or marketing hype
+	issueBrokenReference outputIssueKind = "broken-reference" // citation: a file Jini names does not exist
 )
 
 // outputIssue is one detected problem, 1-indexed line.
@@ -190,6 +193,50 @@ func stripInlineCode(line string) string {
 		}
 	}
 	return b.String()
+}
+
+// fileClaimPattern captures a path from phrases where Jini asserts it acted on
+// a specific file ("Updated X", "Added a line to X", "wrote N bytes to X",
+// "· edited X"). Only these claim shapes are checked — never arbitrary prose —
+// so a reference is flagged solely when Jini vouches for a file that isn't there.
+var fileClaimPattern = regexp.MustCompile(`(?:Updated|Edited|edited|Created|Wrote|wrote(?: \d+ bytes)?|Added(?: a)? line to|Appended to|Saved to)(?:\s+to)?\s+(\S+)`)
+
+// concretePathRef is true for a token that denotes a specific file (extension or
+// separator), excluding placeholders/URLs/globs, so example or hypothetical
+// mentions are not mistaken for a broken citation.
+func concretePathRef(token string) bool {
+	token = strings.Trim(token, "`\"'.,;:)")
+	if token == "" || strings.ContainsAny(token, "<>*?") {
+		return false
+	}
+	if strings.HasPrefix(token, "http://") || strings.HasPrefix(token, "https://") {
+		return false
+	}
+	return strings.ContainsAny(token, "/\\") || strings.Contains(token, ".")
+}
+
+// brokenPathReferences flags files Jini claims to have acted on that do not
+// exist under baseDir — a citation/reference-integrity guard over Jini's OWN
+// output (not model answer prose). Conservative by construction: only explicit
+// file-claim phrases are inspected.
+func brokenPathReferences(text, baseDir string) []outputIssue {
+	var issues []outputIssue
+	for i, line := range strings.Split(text, "\n") {
+		for _, m := range fileClaimPattern.FindAllStringSubmatch(line, -1) {
+			raw := strings.Trim(m[1], "`\"'.,;:)")
+			if !concretePathRef(raw) {
+				continue
+			}
+			path := raw
+			if !filepath.IsAbs(path) {
+				path = filepath.Join(baseDir, raw)
+			}
+			if _, err := os.Stat(path); err != nil {
+				issues = append(issues, outputIssue{issueBrokenReference, i + 1, "names a file that does not exist: " + raw})
+			}
+		}
+	}
+	return issues
 }
 
 // maskSecret shows only a short prefix so the detector's own message never

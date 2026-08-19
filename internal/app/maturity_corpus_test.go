@@ -10,6 +10,7 @@ package app
 
 import (
 	"bytes"
+	"os"
 	"strings"
 	"testing"
 )
@@ -189,6 +190,11 @@ func TestMaturityCorpus_HardInvariants(t *testing.T) {
 			issues := auditUserFacingOutput(combined, hard)
 			if hasSecurityOrAccessibilityIssue(issues) {
 				t.Fatalf("hard invariant violated for %q:\nissues=%+v\noutput=%q", tc.name, issues, combined)
+			}
+			// Reference integrity: any file Jini claims to have touched must exist.
+			cwd, _ := os.Getwd()
+			if refs := brokenPathReferences(combined, cwd); len(refs) != 0 {
+				t.Fatalf("broken file reference for %q:\n%+v\noutput=%q", tc.name, refs, combined)
 			}
 		})
 	}
