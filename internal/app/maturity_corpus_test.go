@@ -130,6 +130,49 @@ func TestMaturityCorpus_ToneAndReadability(t *testing.T) {
 	}
 }
 
+// Token-frugality budgets (chars as a token proxy). Tight where competitors are
+// compact (trivial answers); a generous global ceiling catches runaway bloat.
+const (
+	trivialAnswerCharBudget = 40
+	corpusOutputCharCeiling = 4000
+)
+
+func TestMaturityCorpus_TokenFrugality(t *testing.T) {
+	t.Setenv("JINI_PROVIDER", "local-preview")
+
+	// Trivial answers stay tiny and never replay the question (transcript-replay
+	// avoidance) — the token-frugality-p0 competitive bar.
+	for _, tc := range trivialPrompts() {
+		t.Run("trivial/"+tc.name, func(t *testing.T) {
+			t.Setenv("JINI_STATE_DIR", t.TempDir())
+			t.Chdir(t.TempDir())
+			var out, errBuf bytes.Buffer
+			RunInteractive(tc.args, strings.NewReader(""), &out, &errBuf)
+			answer := strings.TrimSpace(out.String())
+			if len(answer) > trivialAnswerCharBudget {
+				t.Fatalf("trivial answer over budget (%d > %d): %q", len(answer), trivialAnswerCharBudget, answer)
+			}
+			if strings.Contains(strings.ToLower(answer), "what is") {
+				t.Fatalf("trivial answer replays the question: %q", answer)
+			}
+		})
+	}
+
+	// No corpus case may produce a runaway wall of output.
+	for _, tc := range maturityCorpus() {
+		t.Run("ceiling/"+tc.name, func(t *testing.T) {
+			t.Setenv("JINI_STATE_DIR", t.TempDir())
+			t.Chdir(t.TempDir())
+			var out, errBuf bytes.Buffer
+			RunInteractive(tc.args, strings.NewReader(""), &out, &errBuf)
+			total := out.Len() + errBuf.Len()
+			if total > corpusOutputCharCeiling {
+				t.Fatalf("output for %q bloated to %d chars (ceiling %d)", tc.name, total, corpusOutputCharCeiling)
+			}
+		})
+	}
+}
+
 func TestMaturityCorpus_HardInvariants(t *testing.T) {
 	t.Setenv("JINI_PROVIDER", "local-preview")
 	hard := auditOptions{SkipTone: true, SkipReadab: true}

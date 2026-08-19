@@ -56,6 +56,12 @@ consent only, by fail-safe design; a non-TTY grants nothing).
 
 ## Iteration log
 
+- **P6 (2026-08-18)** — token-frugality regression suite (competitive vector
+  #4, PRD P0): `TestMaturityCorpus_TokenFrugality` budgets trivial answers to
+  ≤40 chars and forbids replaying the question (transcript-replay avoidance), and
+  caps every corpus case at a 4000-char anti-bloat ceiling. Baselines are tiny
+  today (trivial 3–7 chars, work drafts ~150, help 443, doctor 655), so the
+  suite locks frugality against regression rather than chasing a fix.
 - **P5 (2026-08-17)** — permissioned-sandbox execution evidence (competitive
   vector #2): the native loop now emits a compact line per action as it runs
   (`· read x`, `· edited y`, `· ran: <cmd> — ok/failed`) via an optional
