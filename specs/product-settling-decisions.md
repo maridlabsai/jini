@@ -795,6 +795,14 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   Free-tier, local/serverless (zero inference cost), and orthogonal to paid
   Autopilot. Native CLI-less autonomy remains a separate paid capability. See
   `specs/handoff-posture-design.md`.
+- Non-interactive trust consent via `--yes` (2026-08-20): `jini trust
+  --autonomous --yes` (and `--semi --yes`) grants without a TTY, for scripted/
+  headless/CI dogfood setup where an interactive prompt is impossible (e.g. the
+  jini-through-jini track). Consent stays informed and explicit: the full
+  neutral repercussions disclosure is still printed, and the user must pass the
+  `--yes` flag deliberately (standard `apt -y`/`npm --yes` pattern). The
+  fail-safe for BARE `jini trust` is unchanged — no TTY and no `--yes` records
+  nothing. Unblocks the dogfood commitment without weakening the consent model.
 - Native in-process agentic loop, governed by the same posture gate
   (2026-08-14): Jini can now do bounded multi-step WORK itself — read/edit/run
   over a text (ReAct-style) tool protocol reusing `generateProviderText` — when

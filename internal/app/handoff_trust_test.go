@@ -97,6 +97,27 @@ func TestRunTrustNoTTYRecordsNothing(t *testing.T) {
 	}
 }
 
+func TestRunTrustYesGrantsNonInteractively(t *testing.T) {
+	withExecutionModeHome(t)
+	// No TTY at all — --yes must still grant, having shown the disclosure.
+	throttlePromptIsTTY = func() bool { return false }
+	var out, errOut bytes.Buffer
+	if code := runTrust([]string{"--autonomous", "--yes"}, &out, &errOut); code != 0 {
+		t.Fatalf("--yes must grant without a TTY, got code=%d err=%q", code, errOut.String())
+	}
+	if !strings.Contains(out.String(), "apply file edits and run commands") {
+		t.Fatalf("disclosure must still be shown with --yes: %q", out.String())
+	}
+	if !strings.Contains(out.String(), "confirmed with --yes") {
+		t.Fatalf("expected confirmation line, got %q", out.String())
+	}
+	cwd, _ := os.Getwd()
+	if level, ok := trustedLevelForDir(cwd); !ok || level != trustLevelAutonomous {
+		t.Fatalf("--yes must record an autonomous grant, got level=%q ok=%v", level, ok)
+	}
+	t.Cleanup(func() { removeTrustGrant(cwd) })
+}
+
 func TestRunTrustAutonomousShowsCommandsCopy(t *testing.T) {
 	withExecutionModeHome(t)
 	withPromptIO(t, "n\n")

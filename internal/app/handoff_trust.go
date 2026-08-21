@@ -200,14 +200,17 @@ func runTrust(args []string, stdout, stderr io.Writer) int {
 	}
 
 	level := trustLevelSemi
+	assumeYes := false
 	for _, arg := range args {
 		switch exactCommandToken(arg) {
 		case "--autonomous", "autonomous":
 			level = trustLevelAutonomous
 		case "--semi", "semi":
 			level = trustLevelSemi
+		case "--yes", "-y":
+			assumeYes = true
 		default:
-			fmt.Fprintf(stderr, "Unknown argument %q. Use `jini trust`, `jini trust --autonomous`, `jini trust list`, or `jini trust remove`.\n", arg)
+			fmt.Fprintf(stderr, "Unknown argument %q. Use `jini trust`, `jini trust --autonomous`, `jini trust --yes`, `jini trust list`, or `jini trust remove`.\n", arg)
 			return 1
 		}
 	}
@@ -219,8 +222,18 @@ func runTrust(args []string, stdout, stderr io.Writer) int {
 	}
 
 	fmt.Fprintln(stdout, trustRepercussions(level))
+	// --yes is explicit consent for non-interactive/scripted setup (CI, headless
+	// dogfood): the disclosure above is still shown, so consent stays informed.
+	if assumeYes {
+		if err := saveTrustGrant(cwd, level, trustAcknowledgement(level)); err != nil {
+			fmt.Fprintln(stderr, err.Error())
+			return 1
+		}
+		fmt.Fprintf(stdout, "Trusted %s for %s hand-off (confirmed with --yes). Remove with `jini trust remove`.\n", resolveTrustDir(cwd), level)
+		return 0
+	}
 	if throttlePromptIsTTY == nil || !throttlePromptIsTTY() {
-		fmt.Fprintln(stderr, "Trust needs an interactive terminal; nothing changed.")
+		fmt.Fprintln(stderr, "Trust needs an interactive terminal, or pass --yes to confirm non-interactively; nothing changed.")
 		return 1
 	}
 	fmt.Fprintf(stdout, "Trust this directory for %s hand-off? [y/N] ", level)
