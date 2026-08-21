@@ -32,6 +32,27 @@ model/CLI owns it)
 | Attachments — images to native/provider model | `anthropicUserContent` base64 blocks | ✅ (P8) Anthropic vision; others staged |
 | Response qualities on model answers (citations, style) | downstream model/CLI | N/A (Jini can only guard, not author) |
 
+## Functional harness (always-on health)
+
+A single scenario table (`selfCheckScenarios` in `internal/app/selfcheck.go`) is
+the source of truth for "is Jini functional across all scenarios". It backs two
+surfaces that never drift:
+
+- **`jini check functional`** — a runtime product capability: drives Jini's core
+  scenarios end-to-end, offline (local-preview) and hermetically (each scenario
+  in a throwaway cwd/home, no workspace side effects), and prints `ok/FAIL` per
+  scenario with an `N/N passed` summary. A user — or Jini itself in a dogfood
+  loop — can confirm health at any time, no network.
+- **`TestFunctionalHarness`** — the same scenarios in-process as a Go test.
+- **`tools/functional_smoke.sh`** — runs the harness (core tier) and, with
+  `--live`, the real installed-CLI route smoke/dogfood that the push gate needs.
+
+Scenarios covered: arithmetic (symbol + word), capital, ambiguous entity,
+offline standalone question, work-task draft, direct file edit (+ side-effect
+check), attachment present/missing, help, doctor, route list/status, savings,
+trust list, unknown-command error, unicode. Add a scenario in one place
+(`selfCheckScenarios`) and both surfaces pick it up.
+
 ## Loop protocol (per pass)
 
 1. Pick the highest-value ⬜/🟡 cell.

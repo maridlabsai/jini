@@ -3128,6 +3128,9 @@ func runCheck(args []string, stdout, stderr io.Writer) int {
 	if len(args) > 0 && exactCommandToken(args[0]) == "competitor-watch" {
 		return runCompetitorWatchCheck(args[1:], stdout, stderr)
 	}
+	if len(args) > 0 && exactCommandToken(args[0]) == "functional" {
+		return runFunctionalSelfCheck(stdout, stderr)
+	}
 	summary, err := resolveSummary(args)
 	if err != nil {
 		fmt.Fprintf(stderr, "%v\n", err)
