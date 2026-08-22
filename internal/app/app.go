@@ -3683,6 +3683,7 @@ func renderAdminCommandInventory(w io.Writer) {
 	fmt.Fprintln(w, "- jini provider doctor")
 	fmt.Fprintln(w, "- jini check ship")
 	fmt.Fprintln(w, "- jini check competitor-watch")
+	fmt.Fprintln(w, "- jini check functional")
 	fmt.Fprintln(w, "- jini observe status")
 	fmt.Fprintln(w, "- jini observe add <path>")
 	fmt.Fprintln(w, "- jini open <artifact>")

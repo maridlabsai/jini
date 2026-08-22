@@ -1104,6 +1104,7 @@ func TestAdminHelpAliasShowsAdminInventory(t *testing.T) {
 				"jini provider doctor",
 				"jini observe status",
 				"jini check ship",
+				"jini check functional",
 				"jini open <artifact>",
 				"Admin commands stay intentionally narrow.",
 				"jini publish-readiness",
