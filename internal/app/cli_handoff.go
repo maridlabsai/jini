@@ -22,11 +22,13 @@ type cliHandoffDescriptor struct {
 	ExecutableEnv     string
 	ArgsEnv           string
 	DefaultArgs       []string
-	// Verified permission-posture args (specs/handoff-posture-design.md).
-	// Empty means the route is not verified for that posture and stays
-	// plan-only. Appended before the {{prompt}} arg, and only when the user
-	// has not overridden ArgsEnv.
-	SemiArgs       []string // acceptEdits: applies edits, no commands
+	// Verified permission-posture args (specs/handoff-posture-design.md,
+	// specs/cli-handoff-compatibility-premortem.md). Substituted for the
+	// {{posture}} token in DefaultArgs (dropped when empty), and only when the
+	// user has not overridden ArgsEnv. Empty Semi/Autonomous means the route is
+	// not verified for that posture and degrades to plan.
+	PlanArgs       []string // read-only enforcement (e.g. aider --dry-run); empty = default is already read-only
+	SemiArgs       []string // acceptEdits: applies edits, no arbitrary commands
 	AutonomousArgs []string // full: applies edits and runs commands
 }
 
@@ -62,7 +64,10 @@ func cliHandoffDescriptorForMode(mode string) (cliHandoffDescriptor, bool) {
 			DefaultExecutable: "codex",
 			ExecutableEnv:     "JINI_CODEX_CLI",
 			ArgsEnv:           "JINI_CODEX_ARGS",
-			DefaultArgs:       []string{"exec", "{{prompt}}"},
+			DefaultArgs:       []string{"exec", "{{posture}}", "{{prompt}}"},
+			// doc-verified 2026-08, pending empirical --help: `codex exec`
+			// defaults to a read-only sandbox; bypass gives edits+commands.
+			AutonomousArgs: []string{"--dangerously-bypass-approvals-and-sandbox"},
 		}, true
 	case "claude-code":
 		return cliHandoffDescriptor{
@@ -71,7 +76,7 @@ func cliHandoffDescriptorForMode(mode string) (cliHandoffDescriptor, bool) {
 			DefaultExecutable: "claude",
 			ExecutableEnv:     "JINI_CLAUDE_CODE_CLI",
 			ArgsEnv:           "JINI_CLAUDE_CODE_ARGS",
-			DefaultArgs:       []string{"--print", "{{prompt}}"},
+			DefaultArgs:       []string{"--print", "{{posture}}", "{{prompt}}"},
 			// Verified empirically 2026-07-31: acceptEdits applies edits with
 			// no command execution; --dangerously-skip-permissions applies
 			// edits and runs commands.
@@ -85,7 +90,11 @@ func cliHandoffDescriptorForMode(mode string) (cliHandoffDescriptor, bool) {
 			DefaultExecutable: "gemini",
 			ExecutableEnv:     "JINI_GEMINI_CLI",
 			ArgsEnv:           "JINI_GEMINI_ARGS",
-			DefaultArgs:       []string{"-p", "{{prompt}}"},
+			DefaultArgs:       []string{"{{posture}}", "-p", "{{prompt}}"},
+			// doc-verified 2026-08, pending empirical --help: auto_edit
+			// auto-approves edit tools only; --yolo auto-approves everything.
+			SemiArgs:       []string{"--approval-mode", "auto_edit"},
+			AutonomousArgs: []string{"--yolo"},
 		}, true
 	case "aider":
 		return cliHandoffDescriptor{
@@ -94,7 +103,14 @@ func cliHandoffDescriptorForMode(mode string) (cliHandoffDescriptor, bool) {
 			DefaultExecutable: "aider",
 			ExecutableEnv:     "JINI_AIDER_CLI",
 			ArgsEnv:           "JINI_AIDER_ARGS",
-			DefaultArgs:       []string{"--message", "{{prompt}}"},
+			DefaultArgs:       []string{"{{posture}}", "--message", "{{prompt}}"},
+			// doc-verified 2026-08, pending empirical --help: aider --message
+			// APPLIES EDITS + AUTO-COMMITS by default, so plan must force
+			// --dry-run (read-only). --yes-always auto-confirms; aider runs no
+			// arbitrary shell, so semi and autonomous are the same for it.
+			PlanArgs:       []string{"--dry-run"},
+			SemiArgs:       []string{"--yes-always"},
+			AutonomousArgs: []string{"--yes-always"},
 		}, true
 	case "opencode":
 		return cliHandoffDescriptor{
@@ -103,7 +119,10 @@ func cliHandoffDescriptorForMode(mode string) (cliHandoffDescriptor, bool) {
 			DefaultExecutable: "opencode",
 			ExecutableEnv:     "JINI_OPENCODE_CLI",
 			ArgsEnv:           "JINI_OPENCODE_ARGS",
-			DefaultArgs:       []string{"run", "{{prompt}}"},
+			DefaultArgs:       []string{"run", "{{posture}}", "{{prompt}}"},
+			// doc-verified 2026-08, pending empirical --help: `run` defaults to
+			// ask-on-edit (read-only non-interactively); --auto auto-approves.
+			AutonomousArgs: []string{"--auto"},
 		}, true
 	default:
 		return cliHandoffDescriptor{}, false

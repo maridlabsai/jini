@@ -10,7 +10,6 @@ package app
 import (
 	"fmt"
 	"os"
-	"strings"
 )
 
 type handoffPosture int
@@ -40,7 +39,7 @@ func postureArgs(descriptor cliHandoffDescriptor, posture handoffPosture) []stri
 	case postureSemi:
 		return descriptor.SemiArgs
 	default:
-		return nil
+		return descriptor.PlanArgs // read-only enforcement (may be empty)
 	}
 }
 
@@ -113,25 +112,33 @@ func postureDegradedHintForDir(descriptor cliHandoffDescriptor, routeLabel, dir 
 	return fmt.Sprintf("Plan-only — %s doesn't support %s hand-off yet.", routeLabel, level)
 }
 
-// applyPostureArgs inserts the descriptor's posture args immediately before the
-// first {{prompt}} placeholder in its default args (falling back to append
-// before the last arg). plan returns the default args unchanged.
+// applyPostureArgs substitutes the descriptor's posture args for the
+// "{{posture}}" token in its default args (the token is dropped when the posture
+// has no args). Each CLI places the token where its flags legally sit, so this
+// is correct whether {{prompt}} is positional (claude/codex/opencode) or a flag
+// value (gemini -p, aider --message). Descriptors without a {{posture}} token
+// fall back to appending the args (legacy shape).
 func applyPostureArgs(descriptor cliHandoffDescriptor, posture handoffPosture) []string {
 	extra := postureArgs(descriptor, posture)
-	if len(extra) == 0 {
-		return descriptor.DefaultArgs
-	}
 	out := make([]string, 0, len(descriptor.DefaultArgs)+len(extra))
-	inserted := false
+	substituted := false
 	for _, arg := range descriptor.DefaultArgs {
-		if !inserted && strings.Contains(arg, "{{prompt}}") {
-			out = append(out, extra...)
-			inserted = true
+		if arg == "{{posture}}" {
+			out = append(out, extra...) // may be empty → token dropped
+			substituted = true
+			continue
 		}
 		out = append(out, arg)
 	}
-	if !inserted {
-		out = append(out, extra...)
+	if !substituted && len(extra) > 0 {
+		// Legacy descriptor without a {{posture}} slot: insert before the final
+		// arg (the prompt), guarding against an empty arg list.
+		if len(out) == 0 {
+			return append([]string{}, extra...)
+		}
+		last := out[len(out)-1]
+		out = append(out[:len(out)-1], extra...)
+		out = append(out, last)
 	}
 	return out
 }
