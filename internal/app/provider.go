@@ -378,6 +378,21 @@ func generateWithAnthropic(ctx context.Context, request providerGenerationReques
 	return strings.Join(parts, "\n\n"), nil
 }
 
+// openaiChatMessages builds the system+user messages for an OpenAI-format chat
+// endpoint. When the request carries images and the route is vision-capable, the
+// user content is the multimodal array; otherwise it is the plain string
+// (byte-identical to the prior text-only payload).
+func openaiChatMessages(providerID string, request providerGenerationRequest, systemPrompt, userPrompt string) []map[string]any {
+	user := map[string]any{"role": "user", "content": userPrompt}
+	if len(request.Images) > 0 && routeSupportsVision(providerConfig{ID: providerID}) {
+		user["content"] = openaiVisionContent(userPrompt, request.Images)
+	}
+	return []map[string]any{
+		{"role": "system", "content": systemPrompt},
+		user,
+	}
+}
+
 func generateWithAzureOpenAI(ctx context.Context, request providerGenerationRequest, systemPrompt, userPrompt string) (string, error) {
 	endpoint := strings.TrimRight(configValue("AZURE_OPENAI_ENDPOINT"), "/")
 	deployment := configValue("AZURE_OPENAI_DEPLOYMENT")
@@ -393,10 +408,7 @@ func generateWithAzureOpenAI(ctx context.Context, request providerGenerationRequ
 	parsed.RawQuery = query.Encode()
 
 	payload := map[string]any{
-		"messages": []map[string]string{
-			{"role": "system", "content": systemPrompt},
-			{"role": "user", "content": userPrompt},
-		},
+		"messages":    openaiChatMessages("azure-openai", request, systemPrompt, userPrompt),
 		"temperature": 0.2,
 		"max_tokens":  1600,
 	}
@@ -530,11 +542,8 @@ func generateWithLocalSLM(ctx context.Context, request providerGenerationRequest
 		target += "/chat/completions"
 	}
 	payload := map[string]any{
-		"model": modelID,
-		"messages": []map[string]string{
-			{"role": "system", "content": systemPrompt},
-			{"role": "user", "content": userPrompt},
-		},
+		"model":       modelID,
+		"messages":    openaiChatMessages("local-slm", request, systemPrompt, userPrompt),
 		"temperature": 0.2,
 		"max_tokens":  1600,
 	}

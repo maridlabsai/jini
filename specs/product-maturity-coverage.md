@@ -29,7 +29,7 @@ model/CLI owns it)
 | Tone — neutral, no fear/hype | `respguard` tone detector | ✅ (P2) enforced over corpus (0 violations) |
 | Citations / references — cited paths are real | `respguard` broken-reference detector | ✅ (P7) enforced over corpus |
 | Attachments — prompt + `@file` intake | `attachments.go` (validate/forward/inline) | ✅ (P3) |
-| Attachments — images to native/provider model | `anthropicUserContent` base64 blocks | ✅ (P8) Anthropic vision; others staged |
+| Attachments — images to native/provider model | Anthropic + OpenAI (azure/local) vision builders | ✅ Anthropic (P8) + azure-openai/local-slm (OpenAI image_url); bedrock Converse deferred |
 | Response qualities on model answers (citations, style) | downstream model/CLI | N/A (Jini can only guard, not author) |
 
 ## Functional harness (always-on health)

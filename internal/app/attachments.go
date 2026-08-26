@@ -38,10 +38,17 @@ func imageMediaType(path string) string {
 	}
 }
 
-// routeSupportsVision reports whether a provider can accept image content. Only
-// the hosted Claude route is wired today; local/preview stay text-only.
+// routeSupportsVision reports whether a provider can accept image content.
+// anthropic uses Anthropic image blocks; azure-openai and local-slm use the
+// OpenAI image_url format. (bedrock's Converse image format differs — TODO.)
+// For azure/local the underlying model must itself be vision-capable; if not,
+// the endpoint errors visibly rather than Jini silently dropping the image.
 func routeSupportsVision(provider providerConfig) bool {
-	return provider.ID == "anthropic"
+	switch provider.ID {
+	case "anthropic", "azure-openai", "local-slm":
+		return true
+	}
+	return false
 }
 
 // anthropicUserContent builds the Anthropic message content blocks: the text
@@ -66,6 +73,29 @@ func anthropicUserContent(userPrompt string, images []attachmentRef) []map[strin
 				"media_type": media,
 				"data":       base64.StdEncoding.EncodeToString(data),
 			},
+		})
+	}
+	return content
+}
+
+// openaiVisionContent builds OpenAI-format message content (azure-openai,
+// local-slm): a text block followed by an image_url block per readable,
+// supported, in-budget image, each a base64 data URI. With no usable images it
+// returns a single text block — byte-identical to the prior text-only payload.
+func openaiVisionContent(userPrompt string, images []attachmentRef) []map[string]any {
+	content := []map[string]any{{"type": "text", "text": userPrompt}}
+	for _, img := range images {
+		media := imageMediaType(img.Path)
+		if media == "" {
+			continue
+		}
+		data, err := os.ReadFile(img.Path)
+		if err != nil || len(data) == 0 || len(data) > maxImageAttachmentB {
+			continue
+		}
+		content = append(content, map[string]any{
+			"type":      "image_url",
+			"image_url": map[string]any{"url": "data:" + media + ";base64," + base64.StdEncoding.EncodeToString(data)},
 		})
 	}
 	return content
