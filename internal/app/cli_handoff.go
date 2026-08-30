@@ -30,6 +30,11 @@ type cliHandoffDescriptor struct {
 	PlanArgs       []string // read-only enforcement (e.g. aider --dry-run); empty = default is already read-only
 	SemiArgs       []string // acceptEdits: applies edits, no arbitrary commands
 	AutonomousArgs []string // full: applies edits and runs commands
+	// PostureVerified is true only when the posture args were confirmed
+	// empirically (behavioral plan=read-only / semi=edits / autonomous=commands),
+	// not merely doc-verified. Unverified escalation-capable routes are surfaced
+	// as "experimental" so posture is never release-claimed on docs alone.
+	PostureVerified bool
 }
 
 type cliHandoffCommand struct {
@@ -80,8 +85,9 @@ func cliHandoffDescriptorForMode(mode string) (cliHandoffDescriptor, bool) {
 			// Verified empirically 2026-07-31: acceptEdits applies edits with
 			// no command execution; --dangerously-skip-permissions applies
 			// edits and runs commands.
-			SemiArgs:       []string{"--permission-mode", "acceptEdits"},
-			AutonomousArgs: []string{"--dangerously-skip-permissions"},
+			SemiArgs:        []string{"--permission-mode", "acceptEdits"},
+			AutonomousArgs:  []string{"--dangerously-skip-permissions"},
+			PostureVerified: true, // behavioral proof 2026-07-31 + real dogfood
 		}, true
 	case "gemini-cli":
 		return cliHandoffDescriptor{

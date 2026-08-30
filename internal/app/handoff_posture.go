@@ -32,6 +32,24 @@ func (p handoffPosture) String() string {
 }
 
 // postureArgs returns the descriptor args for a posture (nil for plan).
+// handoffPostureLabel describes a route's posture-verification status for
+// `jini route list`: empty for a non-hand-off or plan-only route (nothing to
+// verify), "posture verified" when the escalation args were behaviorally
+// confirmed, else "posture experimental (doc-verified)".
+func handoffPostureLabel(mode string) string {
+	d, ok := cliHandoffDescriptorForMode(mode)
+	if !ok {
+		return ""
+	}
+	if len(d.SemiArgs) == 0 && len(d.AutonomousArgs) == 0 {
+		return ""
+	}
+	if d.PostureVerified {
+		return "posture verified"
+	}
+	return "posture experimental (doc-verified)"
+}
+
 func postureArgs(descriptor cliHandoffDescriptor, posture handoffPosture) []string {
 	switch posture {
 	case postureAutonomous:

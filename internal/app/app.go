@@ -1510,7 +1510,11 @@ func renderRouteList(w io.Writer) {
 		if detail := routeTargetReadinessDetail(target); detail != "" {
 			readiness = strings.TrimSpace(readiness + ": " + detail)
 		}
-		details := strings.Trim(strings.Join([]string{locality, cost, readiness}, ", "), ", ")
+		parts := []string{locality, cost, readiness}
+		if label := handoffPostureLabel(target.ID); label != "" {
+			parts = append(parts, label)
+		}
+		details := strings.Trim(strings.Join(parts, ", "), ", ")
 		if details != "" {
 			details = " (" + details + ")"
 		}
