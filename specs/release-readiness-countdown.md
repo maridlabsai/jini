@@ -16,7 +16,7 @@ bands. Update as gates flip.
 | 4 | Functional harness + `jini check functional` self-check | ✅ | 17/17 offline |
 | 5 | Maturity guardrails (security/accessibility/readability/tone/citations) | ✅ | respguard + corpus |
 | 6 | Attachments incl. multimodal (Anthropic + OpenAI vision) | ✅ | bedrock Converse deferred (non-blocker) |
-| 7 | Hand-off CLI compatibility | 🟡→ | claude empirically verified (`posture verified` in `jini route list`); codex/gemini/aider/opencode now labeled **`posture experimental (doc-verified)`** so unverified posture is never release-claimed. To flip them to verified: a behavioral posture-validation harness (plan=no-writes / semi=edits-only / autonomous=commands) run with each CLI installed, version-pinned in `.jini/cli-dogfood.json` |
+| 7 | Hand-off CLI compatibility | 🟡→ | claude empirically verified (`posture verified`); others labeled **`posture experimental (doc-verified)`** so unverified posture is never release-claimed. **Behavioral posture harness built** (`jini route validate <route> --posture`): runs plan/semi/autonomous in a scratch dir and proves plan=read-only (live-confirmed on claude) + escalations apply edits; fake-CLI tested (catches a plan-write or a no-op escalation). Remaining to fully close: run it per real CLI on install (codex/gemini/aider/opencode) and record version-pinned evidence |
 | 8 | **Packaging: signed/notarized asset + `install.sh` on a clean machine** | ⬜ | macos_bundle_hygiene gate exists; need a real signed release + fresh-install smoke on macOS |
 | 9 | **BYO credential validation + Grok fixtures** (typed errors, keychain) | ⬜ | PRD v1 backlog |
 | 10 | **Cross-platform TTFV < 5 min + first-task success (macOS/Linux/Win)** + public quickstart docs | ⬜ | needs multi-OS run + alpha docs |

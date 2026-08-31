@@ -1119,6 +1119,7 @@ type routeValidateOptions struct {
 	RouteID string
 	Checks  []string
 	RealCLI bool
+	Posture bool
 	Format  string
 }
 
@@ -1264,6 +1265,9 @@ func runRouteValidate(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "Run `jini route dogfood` for setup fixes.")
 		return 1
 	}
+	if opts.Posture {
+		return runRoutePostureValidation(descriptor, stdout, stderr)
+	}
 	if !opts.RealCLI {
 		fmt.Fprintln(stderr, "Refusing to write dogfood evidence without `--real-cli`.")
 		fmt.Fprintln(stderr, "Use it only after the real installed CLI completed the harmless validation prompt.")
@@ -1318,6 +1322,38 @@ func runRouteValidate(args []string, stdout, stderr io.Writer) int {
 	return 0
 }
 
+// runRoutePostureValidation runs the behavioral posture harness against the
+// installed CLI and reports whether plan is read-only and each claimed
+// escalation posture applies edits. Exit 1 if posture does not behave as
+// claimed (so it can gate marking a route verified).
+func runRoutePostureValidation(descriptor cliHandoffDescriptor, stdout, stderr io.Writer) int {
+	probes, verified, issues := validateRoutePosture(context.Background(), descriptor)
+	fmt.Fprintf(stdout, "Posture validation: %s\n", descriptor.Label)
+	for _, p := range probes {
+		fmt.Fprintf(stdout, "- %s: edited=%t command=%t\n", postureName(p.Posture), p.Edited, p.CommandRan)
+	}
+	if verified {
+		fmt.Fprintln(stdout, "Result: verified — plan is read-only and claimed escalations apply edits.")
+		return 0
+	}
+	for _, issue := range issues {
+		fmt.Fprintln(stdout, "Issue: "+issue)
+	}
+	fmt.Fprintln(stderr, "Result: not verified — posture does not behave as claimed.")
+	return 1
+}
+
+func postureName(p handoffPosture) string {
+	switch p {
+	case postureSemi:
+		return "semi"
+	case postureAutonomous:
+		return "autonomous"
+	default:
+		return "plan"
+	}
+}
+
 func parseRouteValidateArgs(args []string) (routeValidateOptions, string, bool) {
 	var opts routeValidateOptions
 	if len(args) == 0 {
@@ -1333,6 +1369,8 @@ func parseRouteValidateArgs(args []string) (routeValidateOptions, string, bool) 
 		switch {
 		case arg == "--real-cli":
 			opts.RealCLI = true
+		case arg == "--posture":
+			opts.Posture = true
 		case arg == "--format" && i+1 < len(args):
 			opts.Format = normalizeName(args[i+1])
 			if opts.Format != "json" && opts.Format != "text" {
