@@ -299,6 +299,9 @@ func generateProviderText(ctx context.Context, provider providerConfig, request 
 	case "local-slm":
 		return generateWithLocalSLM(ctx, request, systemPrompt, userPrompt)
 	default:
+		if shape, ok := byoShapes[provider.ID]; ok && shape.routable() {
+			return generateWithOpenAICompatible(ctx, shape, request, systemPrompt, userPrompt)
+		}
 		return "", providerSetupError(provider)
 	}
 }
@@ -353,8 +356,8 @@ func generateWithAnthropic(ctx context.Context, request providerGenerationReques
 		return "", fmt.Errorf("Claude API request failed. Check network access and API key")
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return "", fmt.Errorf("Claude API request failed with HTTP %d. Run `jini doctor` and check the model choice", resp.StatusCode)
+	if err := classifyProviderHTTPError("Claude API", "ANTHROPIC_API_KEY", resp.StatusCode); err != nil {
+		return "", err
 	}
 
 	var decoded struct {
@@ -429,8 +432,8 @@ func generateWithAzureOpenAI(ctx context.Context, request providerGenerationRequ
 		return "", fmt.Errorf("Azure OpenAI request failed. Check network access, endpoint, and deployment")
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return "", fmt.Errorf("Azure OpenAI request failed with HTTP %d. Run `jini doctor` and check the deployment", resp.StatusCode)
+	if err := classifyProviderHTTPError("Azure OpenAI", "AZURE_OPENAI_API_KEY", resp.StatusCode); err != nil {
+		return "", err
 	}
 
 	var decoded struct {
@@ -499,8 +502,8 @@ func generateWithBedrock(ctx context.Context, request providerGenerationRequest,
 		return "", fmt.Errorf("Amazon Bedrock request failed. Check network access, region, and model access")
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return "", fmt.Errorf("Amazon Bedrock request failed with HTTP %d. Run `jini doctor` and check model access", resp.StatusCode)
+	if err := classifyProviderHTTPError("Amazon Bedrock", "AWS credentials (AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY)", resp.StatusCode); err != nil {
+		return "", err
 	}
 
 	var decoded struct {
@@ -591,6 +594,61 @@ func generateWithLocalSLM(ctx context.Context, request providerGenerationRequest
 	return text, nil
 }
 
+// generateWithOpenAICompatible serves any OpenAI-compatible BYO chat provider
+// (OpenAI, xAI/Grok, Groq, DeepSeek, Mistral) from the shared shape registry.
+// One code path, bearer auth, and a default model so a pasted key works with no
+// further setup. Non-2xx responses reuse the typed credential taxonomy.
+func generateWithOpenAICompatible(ctx context.Context, shape byoShape, request providerGenerationRequest, systemPrompt, userPrompt string) (string, error) {
+	key := strings.TrimSpace(configValue(shape.KeyEnv))
+	if key == "" {
+		return "", providerSetupError(providerConfig{Missing: []string{shape.KeyEnv}})
+	}
+	base := firstNonEmpty(configValue(shape.baseEnv), shape.defaultBase)
+	model := firstNonEmpty(configValue(shape.modelEnv), shape.defaultModel)
+	target := strings.TrimRight(base, "/") + shape.chatPath
+
+	payload := map[string]any{
+		"model":       model,
+		"messages":    openaiChatMessages(shape.ID, request, systemPrompt, userPrompt),
+		"temperature": 0.2,
+		"max_tokens":  1600,
+	}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return "", err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, target, bytes.NewReader(body))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+key)
+
+	resp, err := providerHTTPClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("%s request failed. Check network access and %s", shape.Label, shape.KeyEnv)
+	}
+	defer resp.Body.Close()
+	if err := classifyProviderHTTPError(shape.Label, shape.KeyEnv, resp.StatusCode); err != nil {
+		return "", err
+	}
+
+	var decoded struct {
+		Choices []struct {
+			Message struct {
+				Content string `json:"content"`
+			} `json:"message"`
+		} `json:"choices"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&decoded); err != nil {
+		return "", fmt.Errorf("%s returned a response Jini could not read", shape.Label)
+	}
+	if len(decoded.Choices) == 0 || strings.TrimSpace(decoded.Choices[0].Message.Content) == "" {
+		return "", fmt.Errorf("%s returned an empty draft", shape.Label)
+	}
+	return strings.TrimSpace(decoded.Choices[0].Message.Content), nil
+}
+
 func suppressLocalCohortTelemetry(ctx context.Context) bool {
 	value, _ := ctx.Value(suppressLocalCohortTelemetryKey).(bool)
 	return value
@@ -646,6 +704,9 @@ func configuredProviderMode() string {
 	case "claude", "claude api", "anthropic", "anthropic api":
 		return "anthropic"
 	default:
+		if id, ok := byoShapeAliases[raw]; ok {
+			return id
+		}
 		return raw
 	}
 }
@@ -654,6 +715,11 @@ func detectAutoProvider() providerConfig {
 	if forced := forcedAutoProviderMode(); forced != "" {
 		return withAutoProviderSetting(detectProviderForMode(forced))
 	}
+	// Note: OpenAI-compatible BYO shapes (openai/xai/groq/deepseek/mistral) are
+	// deliberately NOT auto-adopted here. An ambient OPENAI_API_KEY is common and
+	// auto-routing to a paid provider on its mere presence would spend the user's
+	// money by surprise (P0 frugality). They route only on explicit selection
+	// (JINI_PROVIDER=grok or `jini route set xai`).
 	for _, mode := range []string{"local-slm", "anthropic", "azure-openai", "bedrock"} {
 		candidate := detectProviderForMode(mode)
 		if candidate.Status == "ok" {
@@ -679,11 +745,14 @@ func detectProviderForMode(mode string) providerConfig {
 	case "local-preview":
 		return detectLocalPreviewProvider()
 	default:
+		if shape, ok := byoShapes[mode]; ok && shape.routable() {
+			return detectOpenAICompatibleProvider(shape)
+		}
 		return providerConfig{
 			ID:      mode,
 			Label:   titleCase(mode),
 			Status:  "needs setup",
-			Missing: []string{"Supported JINI_PROVIDER value: auto, claude, azure-openai, bedrock, local-slm, or local-preview"},
+			Missing: []string{"Supported JINI_PROVIDER value: auto, claude, azure-openai, bedrock, local-slm, local-preview, openai, xai (grok), groq, deepseek, or mistral"},
 		}
 	}
 }

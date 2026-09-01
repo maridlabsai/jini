@@ -306,6 +306,10 @@ func validateNativeArgs(args []string) error {
 		if len(providerArgs) == 1 && isAdminHelpAlias(providerArgs[0]) {
 			return nil
 		}
+		if len(providerArgs) > 0 && exactCommandToken(providerArgs[0]) == "validate" {
+			// runProvider validates the optional shape argument itself.
+			return nil
+		}
 		if len(providerArgs) > 0 && exactCommandToken(providerArgs[0]) == "doctor" {
 			providerArgs = providerArgs[1:]
 		}
@@ -808,6 +812,9 @@ func runProvider(args []string, stdout, stderr io.Writer) int {
 		renderAdminCommandInventory(stdout)
 		return 0
 	}
+	if len(args) > 0 && exactCommandToken(args[0]) == "validate" {
+		return runProviderValidate(args[1:], stdout, stderr)
+	}
 	if len(args) > 0 && exactCommandToken(args[0]) == "doctor" {
 		args = args[1:]
 	}
@@ -844,6 +851,60 @@ func runProvider(args []string, stdout, stderr io.Writer) int {
 		return 0
 	}
 	return 1
+}
+
+// runProviderValidate implements `jini provider validate [shape]`: it makes one
+// live, read-only call per BYO credential and reports a typed result. With no
+// argument it validates every configured shape; with a shape name it validates
+// just that one (and reports when its credential is missing).
+func runProviderValidate(args []string, stdout, stderr io.Writer) int {
+	specific := len(args) > 0 && strings.TrimSpace(args[0]) != "" && !strings.HasPrefix(strings.TrimSpace(args[0]), "-")
+
+	var shapes []byoShape
+	if specific {
+		shape, ok := resolveBYOShape(args[0])
+		if !ok {
+			fmt.Fprintf(stderr, "Unknown provider shape %q. Known: %s\n", args[0], strings.Join(sortedBYOShapeIDs(), ", "))
+			return 1
+		}
+		shapes = []byoShape{shape}
+	} else {
+		for _, id := range sortedBYOShapeIDs() {
+			shapes = append(shapes, byoShapes[id])
+		}
+	}
+
+	client := byoValidationClient()
+	ctx := context.Background()
+	anyConfigured := false
+	anyFailed := false
+	for _, shape := range shapes {
+		result := validateBYOCredential(ctx, shape, client)
+		if !result.Configured && !specific {
+			// In matrix mode, stay quiet about shapes the user hasn't set up.
+			continue
+		}
+		mark := "–"
+		switch {
+		case result.Configured && result.OK:
+			mark = "ok  "
+			anyConfigured = true
+		case result.Configured:
+			mark = "FAIL"
+			anyConfigured = true
+			anyFailed = true
+		}
+		fmt.Fprintf(stdout, "%s %s\n", mark, result.Message)
+	}
+
+	if !specific && !anyConfigured {
+		fmt.Fprintln(stdout, "No BYO provider credentials configured. Set one (e.g. XAI_API_KEY for Grok) then rerun `jini provider validate`.")
+		return 0
+	}
+	if anyFailed {
+		return 1
+	}
+	return 0
 }
 
 func runRoute(args []string, stdout, stderr io.Writer) int {
