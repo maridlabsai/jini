@@ -44,6 +44,10 @@ func TestMain(m *testing.M) {
 			panic(err)
 		}
 	}
+	// Hermeticity: never let the suite touch the developer's real OS keychain
+	// (slow subprocess per call, and it could mutate/prompt). Tests that exercise
+	// the secret store inject a fake via withFakeSecretStore.
+	providerSecretStore = unavailableSecretStore{}
 	code := m.Run()
 	if hadPrevious {
 		_ = os.Setenv("JINI_STATE_DIR", previous)
