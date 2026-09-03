@@ -38,6 +38,11 @@ func maybeHandleStandaloneQuestion(raw string, stdout io.Writer) bool {
 		Standalone: true,
 	}
 	decision := detectRouteForRequest(request)
+	// Quote a metered route's cost before spending the user's money (PRD:
+	// quote the next rung's cost before escalation). Handoff/local/free = empty.
+	if line := escalationCostQuoteLine(decision, request.Title, request.Source); line != "" {
+		fmt.Fprintln(stdout, line)
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	text, used, _, err := generateWithConfiguredProviderDecision(ctx, request, decision)

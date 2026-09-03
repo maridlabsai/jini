@@ -2158,6 +2158,11 @@ func runDirectTaskArgsIntake(args []string, stdout, stderr io.Writer) int {
 		Source: source,
 	}
 	decision := detectRouteForRequest(request)
+	// Quote a metered route's cost before spending — covers the native-loop and
+	// provider paths below (handoff/local/free tiers return empty).
+	if line := escalationCostQuoteLine(decision, request.Title, request.Source); line != "" {
+		fmt.Fprintln(stdout, line)
+	}
 	if decision.Active && cliHandoffMode(decision.ToolMode) {
 		// Hand-off targets (Claude Code, Codex) read `@path` references — including
 		// images — natively, so forward the prompt unchanged.
