@@ -193,6 +193,64 @@ detect_release_asset() {
   printf 'jini-%s-%s.tar.gz\n' "${os_name}" "${arch_name}"
 }
 
+sha256_of() {
+  local file="$1"
+  if command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "${file}" | awk '{print $1}'
+  elif command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "${file}" | awk '{print $1}'
+  else
+    return 1
+  fi
+}
+
+# verify_release_checksum fails (non-zero) only on a real mismatch — a tampered
+# or corrupted asset must never install. A missing published checksum (older
+# release) or no sha tool is recorded but not treated as failure.
+verify_release_checksum() {
+  local archive_path="$1"
+  local asset="$2"
+  local sums_path="${TEMP_ROOT}/${asset}.sha256"
+  if ! curl -fsSL "${RELEASE_BASE_URL}/${asset}.sha256" -o "${sums_path}" >/dev/null 2>&1; then
+    RELEASE_VALIDATION="no-checksum-published"
+    return 0
+  fi
+  local expected actual
+  expected="$(awk '{print $1}' "${sums_path}" | head -n1)"
+  actual="$(sha256_of "${archive_path}")" || { RELEASE_VALIDATION="no-sha-tool"; return 0; }
+  if [[ -z "${expected}" || "${expected}" != "${actual}" ]]; then
+    RELEASE_VALIDATION="checksum-mismatch"
+    return 1
+  fi
+  RELEASE_VALIDATION="checksum-verified"
+  return 0
+}
+
+# verify_macos_signature enforces an Apple-anchored Developer ID signature on
+# macOS. A signed-but-not-Apple-anchored binary (ad-hoc/self-signed/tampered) is
+# rejected. An entirely unsigned binary is allowed during the pre-signing
+# transition unless JINI_REQUIRE_SIGNED=1. codesign with an explicit requirement
+# is used because bare `codesign --verify` accepts ad-hoc signatures.
+verify_macos_signature() {
+  local binary_path="$1"
+  [[ "$(uname -s)" == "Darwin" ]] || return 0
+  command -v codesign >/dev/null 2>&1 || return 0
+  if ! codesign -dv "${binary_path}" >/dev/null 2>&1; then
+    if [[ "${JINI_REQUIRE_SIGNED:-0}" == "1" ]]; then
+      RELEASE_VALIDATION="unsigned-binary-rejected"
+      return 1
+    fi
+    RELEASE_VALIDATION="${RELEASE_VALIDATION}+unsigned-allowed"
+    return 0
+  fi
+  if ! codesign --verify --strict -R="anchor apple generic" "${binary_path}" >/dev/null 2>&1; then
+    RELEASE_VALIDATION="signature-not-apple-anchored"
+    return 1
+  fi
+  RELEASE_VALIDATION="${RELEASE_VALIDATION}+signature-verified"
+  return 0
+}
+
 try_install_prebuilt_release() {
   local asset=""
   local archive_path=""
@@ -208,12 +266,14 @@ try_install_prebuilt_release() {
   if ! curl -fsSL "${RELEASE_BASE_URL}/${asset}" -o "${archive_path}" >/dev/null 2>&1; then
     return 1
   fi
+  verify_release_checksum "${archive_path}" "${asset}" || return 1
   mkdir -p "${unpack_dir}"
   if ! tar -xzf "${archive_path}" -C "${unpack_dir}" >/dev/null 2>&1; then
     return 1
   fi
   binary_path="${unpack_dir}/${PROGRAM_NAME}"
   [[ -f "${binary_path}" ]] || return 1
+  verify_macos_signature "${binary_path}" || return 1
   mv "${binary_path}" "${TARGET_BINARY}"
   chmod 0755 "${TARGET_BINARY}"
 }
