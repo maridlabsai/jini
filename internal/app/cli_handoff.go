@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -56,6 +57,16 @@ type cliHandoffReceipt struct {
 	StdoutChars  int      `json:"stdout_chars"`
 	StderrChars  int      `json:"stderr_chars"`
 	CompletedAt  string   `json:"completed_at,omitempty"`
+	// SideEffects lists working-tree paths the handoff changed, captured by
+	// diffing `git status` before and after the run. Paths only: never file
+	// contents and never command output. Empty when the working directory is
+	// not a git work tree, because then Jini cannot honestly track changes.
+	SideEffects []string `json:"side_effects,omitempty"`
+	// SideEffectCount is the true number of changed paths even when
+	// SideEffects is truncated, so the receipt never understates the blast
+	// radius.
+	SideEffectCount int    `json:"side_effect_count,omitempty"`
+	RollbackHint    string `json:"rollback_hint,omitempty"`
 }
 
 var cliHandoffTrustIssueForPath = defaultCLIHandoffTrustIssue
@@ -381,9 +392,11 @@ func runCLIHandoff(ctx context.Context, mode, prompt string) (string, *cliHandof
 	var stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
+	before, tracked := cliHandoffWorkTreeStatus()
 	startedAt := time.Now()
 	if err := cmd.Run(); err != nil {
 		receipt := buildCLIHandoffReceipt(command, prompt, stdout.String(), stderr.String(), cmd.ProcessState, time.Since(startedAt))
+		annotateCLIHandoffSideEffects(receipt, before, tracked)
 		if ctxErr := ctx.Err(); ctxErr != nil {
 			return "", receipt, ctxErr
 		}
@@ -391,7 +404,126 @@ func runCLIHandoff(ctx context.Context, mode, prompt string) (string, *cliHandof
 		return "", receipt, classifyCLIThrottleOutput(descriptor.Label, stdout.String(), stderr.String(), sanitized)
 	}
 	receipt := buildCLIHandoffReceipt(command, prompt, stdout.String(), stderr.String(), cmd.ProcessState, time.Since(startedAt))
+	annotateCLIHandoffSideEffects(receipt, before, tracked)
 	return strings.TrimSpace(stdout.String()), receipt, nil
+}
+
+// cliHandoffSideEffectLimit caps how many paths a receipt carries. The honest
+// total stays in SideEffectCount.
+const cliHandoffSideEffectLimit = 12
+
+// cliHandoffRollbackListLimit caps how many paths the rollback hint names
+// inline before it falls back to a count.
+const cliHandoffRollbackListLimit = 6
+
+// cliHandoffWorkTreeStatus snapshots the working tree as path -> two-letter
+// porcelain status. The second return is false when the current directory is
+// not a git work tree (or git is unavailable), which means Jini cannot track
+// what the handoff changed and must say nothing rather than guess.
+func cliHandoffWorkTreeStatus() (map[string]string, bool) {
+	if out, ok := runGitOutput("rev-parse", "--is-inside-work-tree"); !ok || strings.TrimSpace(out) != "true" {
+		return nil, false
+	}
+	out, ok := runGitOutput("status", "--porcelain", "-uall", "-z")
+	if !ok {
+		return nil, false
+	}
+	entries := map[string]string{}
+	// -z output is NUL-terminated and never quotes paths, so paths with
+	// spaces or non-ASCII survive intact. Rename/copy entries emit the
+	// original path as an extra field that we skip.
+	fields := strings.Split(out, "\x00")
+	for i := 0; i < len(fields); i++ {
+		raw := fields[i]
+		if len(raw) < 4 {
+			continue
+		}
+		state := raw[:2]
+		path := raw[3:]
+		if state[0] == 'R' || state[0] == 'C' {
+			i++
+		}
+		if path == "" {
+			continue
+		}
+		entries[path] = state
+	}
+	return entries, true
+}
+
+// annotateCLIHandoffSideEffects records the paths whose working-tree status
+// changed while the handoff ran, plus a non-destructive rollback hint.
+func annotateCLIHandoffSideEffects(receipt *cliHandoffReceipt, before map[string]string, tracked bool) {
+	if receipt == nil || !tracked {
+		return
+	}
+	after, ok := cliHandoffWorkTreeStatus()
+	if !ok {
+		return
+	}
+	annotateCLIHandoffSideEffectsFor(receipt, before, after)
+}
+
+// annotateCLIHandoffSideEffectsFor is the pure half of the annotation: it takes
+// the before/after status snapshots and fills in the receipt fields.
+func annotateCLIHandoffSideEffectsFor(receipt *cliHandoffReceipt, before, after map[string]string) {
+	changed := changedWorkTreePaths(before, after)
+	if len(changed) == 0 {
+		return
+	}
+	receipt.SideEffectCount = len(changed)
+	if len(changed) > cliHandoffSideEffectLimit {
+		changed = changed[:cliHandoffSideEffectLimit]
+	}
+	receipt.SideEffects = changed
+	receipt.RollbackHint = cliHandoffRollbackHint(changed, after)
+}
+
+// changedWorkTreePaths returns the paths that are dirty after the run and were
+// either clean before it or carried a different status.
+func changedWorkTreePaths(before, after map[string]string) []string {
+	paths := make([]string, 0, len(after))
+	for path, state := range after {
+		if prior, seen := before[path]; seen && prior == state {
+			continue
+		}
+		paths = append(paths, path)
+	}
+	sort.Strings(paths)
+	return paths
+}
+
+// cliHandoffRollbackHint describes how to undo the listed paths. It is
+// advisory only: it never deletes anything and never runs a command.
+func cliHandoffRollbackHint(paths []string, after map[string]string) string {
+	if len(paths) == 0 {
+		return ""
+	}
+	trackedPaths := make([]string, 0, len(paths))
+	newPaths := make([]string, 0, len(paths))
+	for _, path := range paths {
+		if after[path] == "??" {
+			newPaths = append(newPaths, path)
+			continue
+		}
+		trackedPaths = append(trackedPaths, path)
+	}
+	parts := []string{"Review: git diff"}
+	if len(trackedPaths) > 0 {
+		if len(trackedPaths) <= cliHandoffRollbackListLimit {
+			parts = append(parts, "revert tracked files with: git restore "+formatCLIHandoffArgs(trackedPaths))
+		} else {
+			parts = append(parts, fmt.Sprintf("revert the %d tracked files above with: git restore <files>", len(trackedPaths)))
+		}
+	}
+	if len(newPaths) > 0 {
+		if len(newPaths) <= cliHandoffRollbackListLimit {
+			parts = append(parts, "new files must be removed manually: "+formatCLIHandoffArgs(newPaths))
+		} else {
+			parts = append(parts, fmt.Sprintf("%d new files must be removed manually", len(newPaths)))
+		}
+	}
+	return strings.Join(parts, "; ")
 }
 
 func cliHandoffExecutionError(label string, err error, receipt *cliHandoffReceipt) error {

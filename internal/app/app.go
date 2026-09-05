@@ -3878,7 +3878,36 @@ func formatCLIHandoffReceiptSummary(receipt *cliHandoffReceipt) []string {
 	if strings.TrimSpace(receipt.CompletedAt) != "" {
 		lines = append(lines, "Completed: "+strings.TrimSpace(receipt.CompletedAt))
 	}
+	// Side effects and rollback are only shown when the run actually changed
+	// the working tree. Silence here means "nothing changed, or not a git work
+	// tree" - never a claim that nothing happened.
+	if len(receipt.SideEffects) > 0 {
+		lines = append(lines, formatCLIHandoffSideEffectLine(receipt))
+		if hint := strings.TrimSpace(receipt.RollbackHint); hint != "" {
+			lines = append(lines, "Rollback: "+hint)
+		}
+	}
 	return lines
+}
+
+// cliHandoffSideEffectDisplayLimit caps how many paths the one-line summary
+// names; the count stays honest.
+const cliHandoffSideEffectDisplayLimit = 6
+
+func formatCLIHandoffSideEffectLine(receipt *cliHandoffReceipt) string {
+	total := receipt.SideEffectCount
+	if total < len(receipt.SideEffects) {
+		total = len(receipt.SideEffects)
+	}
+	shown := receipt.SideEffects
+	if len(shown) > cliHandoffSideEffectDisplayLimit {
+		shown = shown[:cliHandoffSideEffectDisplayLimit]
+	}
+	listed := strings.Join(shown, ", ")
+	if remaining := total - len(shown); remaining > 0 {
+		listed += fmt.Sprintf(", +%d more", remaining)
+	}
+	return fmt.Sprintf("Side effects: %d (%s)", total, listed)
 }
 
 func renderCLIHandoffReceiptSummary(w io.Writer, lines []string) {
