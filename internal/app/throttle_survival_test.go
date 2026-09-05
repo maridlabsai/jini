@@ -83,6 +83,30 @@ func TestThrottleRetryAfterParsesAdvertisedWaits(t *testing.T) {
 	}
 }
 
+// A throttle with no configured fallback must not just wait silently — it must
+// tell the user how to become resilient, or "keeps work moving" is unmet for a
+// single-provider setup.
+func TestThrottleHoldWithoutFallbackNudgesSetup(t *testing.T) {
+	narration, _ := withThrottleTestHarness(t)
+	attempts := 0
+	_, _, err := runWithThrottleSurvival(context.Background(), "claude-code", func() string { return "" }, throttleSurvivalOptions{approver: autoApprover{}}, func() (string, error) {
+		attempts++
+		if attempts == 1 {
+			return "", &throttledRouteError{label: "claude-code", underlying: errors.New("status 429")}
+		}
+		return "ok", nil
+	})
+	if err != nil {
+		t.Fatalf("expected resume, got %v", err)
+	}
+	out := narration.String()
+	for _, want := range []string{"No fallback route is configured", "jini route help"} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected no-fallback setup nudge %q; got:\n%s", want, out)
+		}
+	}
+}
+
 func TestRunWithThrottleSurvivalHoldsAndResumesSameRoute(t *testing.T) {
 	narration, sleeps := withThrottleTestHarness(t)
 

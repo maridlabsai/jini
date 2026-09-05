@@ -371,6 +371,11 @@ func narrateThrottleHold(label, fallbackHint string, wait time.Duration, attempt
 	suffix := ""
 	if fallbackHint != "" {
 		suffix = fmt.Sprintf(" Fallback available: %s.", fallbackHint)
+	} else if attempt == 1 {
+		// No route to switch to: holding is the only free move. Say so once, and
+		// point at how to become resilient — a single-provider setup that can only
+		// wait is the opposite of "keeps work moving".
+		suffix = " No fallback route is configured — add a free local model or a BYO key with `jini route help` so Jini can switch instead of waiting next time."
 	}
 	fmt.Fprintf(
 		throttleNarration,
@@ -407,7 +412,7 @@ func isThrottleFamilyError(err error) bool {
 }
 
 func throttleExhaustionError(label, fallbackHint string, report throttleSurvivalReport, lastErr error) error {
-	guidance := "The session is saved; `jini continue` resumes it."
+	guidance := "The session is saved; `jini continue` resumes it. Connect a fallback route (`jini route help`) — a free local model or a BYO key — so Jini can switch through limits instead of waiting."
 	if fallbackHint != "" {
 		guidance = fmt.Sprintf(
 			"The session is saved; `jini continue` resumes it, or switch with `jini route set %s`.",
