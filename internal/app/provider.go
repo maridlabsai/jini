@@ -225,15 +225,19 @@ func generateWithConfiguredProviderDecision(ctx context.Context, request provide
 		return "", true, decision, err
 	}
 	finishPark(nil)
+	// Auxiliary quality drafts are DROPPED when the primary answer already had to
+	// survive a throttle: firing more calls at a pressured provider risks
+	// re-throttling for a non-essential refinement. The primary answer stands.
+	throttled := survival.Holds > 0 || survival.Dodged
 	consistencyUsed := false
-	if shouldCheck, reason := shouldRunSelectiveConsistencyCheck(request, decision); shouldCheck {
+	if shouldCheck, reason := shouldRunSelectiveConsistencyCheck(request, decision); shouldCheck && !throttled {
 		if alternate, consistencyErr := generateConsistencyDraft(ctx, provider, request, reason); consistencyErr == nil && strings.TrimSpace(alternate) != "" {
 			text = selectConsistencyWinner(request, decision, text, alternate)
 			consistencyUsed = true
 		}
 	}
 	refinedUsed := false
-	if shouldRefine, reason := shouldRunSelectiveRefine(request, decision); shouldRefine {
+	if shouldRefine, reason := shouldRunSelectiveRefine(request, decision); shouldRefine && !throttled {
 		if refined, refineErr := generateRefinedDraft(ctx, provider, request, text, reason); refineErr == nil && strings.TrimSpace(refined) != "" {
 			text = refined
 			refinedUsed = true
