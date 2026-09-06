@@ -1,6 +1,6 @@
 # PRD Implementation Trace
 
-Updated: 2026-07-18
+Updated: 2026-09-06
 
 This file maps the canonical P0 requirements in
 [number-one-platform-prd.md](./number-one-platform-prd.md) to implementation
@@ -61,21 +61,41 @@ implemented P0 row.)
 - Token-economy regression suite (§Token Economy). Future proof:
   token-efficiency regression gate in the release tier.
 - On-the-fly skills and agents as plain reviewable files (§Skills And
-  Agents). Future proof: skills/agents creation fixture in the CLI UX gate.
+  Agents). **Creation implemented** 2026-09-06 (`jini skill new` / `jini agent
+  new` scaffold secret-scrubbed markdown+frontmatter under `.jini/skills|agents`;
+  free-tier gate fix so the commercial policy no longer blocks it — commit
+  09a638f, `skill_agent.go`). Remaining: in-session invocation runtime and
+  proactive skill-from-repetition suggestion. Future proof: skills/agents
+  creation fixture in the CLI UX gate.
 - User preference envelope — never/prefer/pin per model/route, speed bias,
   plain-file persistence (execution-routing-policy §Absorbed Policies).
   Future proof: preference-constraint routing tests.
 - BYO credential validation with typed errors and OS keychain storage,
-  including the xAI (Grok) shape (§Routing And Resource Policy). Future
-  proof: per-shape validation fixtures; a shape without a passing fixture is
-  not claimed.
+  including the xAI (Grok) shape (§Routing And Resource Policy). **Implemented**
+  2026-09 (typed credential taxonomy in `credential_errors.go`; `jini provider
+  validate` one-live-call check; OpenAI-compatible routing for openai / xai
+  (grok) / groq / deepseek / mistral from one `byoShape` registry; macOS
+  keychain storage in `secret_store.go` — commits 931c007, b411769). Per-shape
+  fixtures pass — a shape without a passing fixture is not claimed. Remaining:
+  Linux/Windows secret backends and per-shape receipt-denomination pricing.
 - Paywall entitlements failing closed with manual free equivalents (§Tier
   Boundary). Future proof: paywall fail-closed test.
 - Escalation cost quote before spending on a stronger rung (§P0 Outcome
-  Requirements). Future proof: escalation-quote fixture.
+  Requirements). **Implemented** 2026-09 (`escalation_quote.go` quotes a
+  premium/standard route's posted rate + per-task estimate before spend, emitted
+  on both direct-answer route sites — commit cb6b446). Future proof:
+  escalation-quote fixture.
+- Repo-scoped project context — read AGENTS.md/CLAUDE.md as the context engine
+  (§Sessions). **Implemented** 2026-09-05 (`repo_context.go` reads AGENTS.md +
+  CLAUDE.md from cwd + git root, injected into non-handoff system prompts;
+  handoffs read them natively — commit 9ad3166). Remaining: retire/repurpose the
+  user-context `jini memory` store (PRD forbids profile-building in v1).
 - TTFV under five minutes on all three OSes and first-task success
-  benchmarks (§Goals And Scope, §Gates). Future proof: TTFV measurement and
-  first-task success release bars in the gate matrix.
+  benchmarks (§Goals And Scope, §Gates). **Partial** 2026-09: jini
+  cross-compiles clean for windows/amd64+arm64, linux/arm64, darwin, and CI adds
+  a windows-latest build+smoke beside the macOS/Linux installer smokes (commit
+  818b5f5). Remaining: measured TTFV on fresh macOS/Linux/Windows. Future proof:
+  TTFV measurement and first-task success release bars in the gate matrix.
 
 Residual hardening:
 
@@ -86,9 +106,10 @@ Residual hardening:
   claimed routes. Real installed CLI dogfood remains required on tester
   machines for auth, approvals, output-shape differences, route receipt
   privacy, and signed smoke freshness.
-- Selective-consistency and refinement drafts
-  (`generateConsistencyDraft`/refine paths in `provider.go`) still call the
-  providers directly, bypassing `runWithThrottleSurvival`. A throttle during
-  a draft fails that draft rather than holding; the primary answer is
-  unaffected. Future proof: route these auxiliary drafts through the survival
-  wrapper (with a draft-scoped hold budget) or drop them under throttle.
+- [RESOLVED 2026-09-05, commit acf1e01] Selective-consistency and refinement
+  drafts (`generateConsistencyDraft`/refine paths in `provider.go`) called the
+  providers directly, outside `runWithThrottleSurvival`. Now the drafts are
+  DROPPED when the primary answer already had to survive a throttle
+  (`survival.Holds > 0 || survival.Dodged`), so auxiliary calls never hammer a
+  pressured provider; the receipt honestly reports the reduced verification.
+  (Chose the "drop under throttle" option over a draft-scoped hold budget.)

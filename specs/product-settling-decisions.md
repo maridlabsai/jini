@@ -880,3 +880,20 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   supervision promise undiscoverable. Bare `jini mode` reports the effective
   mode and names `JINI_MODE` when the env override differs from the saved
   setting. See `specs/auto-ask-execution-mode-design.md`.
+- PRD implementation trace refreshed to current reality (2026-09-06): several
+  requirements the trace still listed as unbuilt shipped this cycle and are now
+  annotated in the backlog with commits — BYO credential validation + typed
+  error taxonomy + OpenAI-compatible routing (incl. xAI/Grok) + macOS keychain
+  (931c007, b411769); escalation cost quote before spend (cb6b446); repo-scoped
+  context via AGENTS.md/CLAUDE.md reader (9ad3166); on-the-fly skill/agent
+  creation as free-tier reviewable files, unblocking an over-broad commercial
+  gate (09a638f); and a partial TTFV/cross-platform step (818b5f5, build+CI
+  only). The resolved residual-hardening item (auxiliary drafts dropped under
+  throttle, acf1e01) is marked [RESOLVED]. Annotations stayed in the backlog
+  LIST, not the scorecard-counted Implemented table, so the trace's P0 count is
+  unchanged; promoting these rows to the table is a separate, deliberate step
+  once each names a pinned release gate. Also on the free-tier receipt/
+  resilience front this cycle: side effects + rollback path on the handoff
+  receipt surfaced on the direct-answer flow (256fb7e, b628b76) and an active
+  no-fallback throttle setup nudge (7fa70ba), and cross-route resume now
+  discloses what carried over (effcf70).
