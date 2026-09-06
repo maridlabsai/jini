@@ -23,8 +23,15 @@ type ThrottleEvent struct {
 	RouteLabel   string
 	Wait         time.Duration
 	FallbackHint string // a viable fallback route the runtime already resolved, if any
-	Hold         int    // 1-based index of this hold within the survival loop
-	TaskTitle    string
+	// ReadyFallbacks is the ranked list of routes the runtime resolved as ready
+	// to answer right now (configured BYO providers that differ from the
+	// throttled route, then the local floor). A ladder strategy switches to the
+	// first suitable one; empty means nothing is ready and the strategy should
+	// Hold. The runtime executes the chosen route once and falls back to holding
+	// if that attempt fails.
+	ReadyFallbacks []string
+	Hold           int // 1-based index of this hold within the survival loop
+	TaskTitle      string
 }
 
 // Action is what the runtime should do about a throttle.

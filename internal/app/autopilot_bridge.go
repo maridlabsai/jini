@@ -15,11 +15,12 @@ type autopilotApprover struct{ strategy autopilot.Strategy }
 
 func (a autopilotApprover) Approve(ctx context.Context, req throttleApprovalRequest) (throttleApprovalDecision, error) {
 	decision, err := a.strategy.OnThrottle(ctx, autopilot.ThrottleEvent{
-		RouteLabel:   req.Label,
-		Wait:         req.Wait,
-		FallbackHint: req.FallbackHint,
-		Hold:         req.Hold,
-		TaskTitle:    req.TaskTitle,
+		RouteLabel:     req.Label,
+		Wait:           req.Wait,
+		FallbackHint:   req.FallbackHint,
+		ReadyFallbacks: req.ReadyFallbacks,
+		Hold:           req.Hold,
+		TaskTitle:      req.TaskTitle,
 	})
 	if err != nil {
 		return approvalDeclined, err
@@ -35,11 +36,12 @@ func (a autopilotApprover) Approve(ctx context.Context, req throttleApprovalRequ
 // path cannot express.
 func (a autopilotApprover) ResolveThrottle(ctx context.Context, req throttleApprovalRequest) (throttleResolution, error) {
 	decision, err := a.strategy.OnThrottle(ctx, autopilot.ThrottleEvent{
-		RouteLabel:   req.Label,
-		Wait:         req.Wait,
-		FallbackHint: req.FallbackHint,
-		Hold:         req.Hold,
-		TaskTitle:    req.TaskTitle,
+		RouteLabel:     req.Label,
+		Wait:           req.Wait,
+		FallbackHint:   req.FallbackHint,
+		ReadyFallbacks: req.ReadyFallbacks,
+		Hold:           req.Hold,
+		TaskTitle:      req.TaskTitle,
 	})
 	if err != nil {
 		return throttleResolution{decision: approvalDeclined}, err

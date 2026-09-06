@@ -125,6 +125,8 @@ func generateWithConfiguredProviderDecision(ctx context.Context, request provide
 	provider := providerForDecision(request, decision)
 	opts := throttleSurvivalOptions{taskTitle: request.Title, switchAttempt: func(switchCtx context.Context, mode string) (string, error) {
 		return attemptOnRoute(switchCtx, mode, request)
+	}, readyFallbacks: func() []string {
+		return readyThrottleFallbackModes(request, decision.ToolMode)
 	}}
 	if request.Standalone {
 		// The standalone answer owes the user a reply inside its deadline, so

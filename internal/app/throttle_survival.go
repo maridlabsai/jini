@@ -178,6 +178,12 @@ func resolveThrottle(ctx context.Context, approver throttleApprover, req throttl
 // throttle actually happens — so normal requests never pay the probe.
 func throttleFallbackHint(request providerGenerationRequest, decision routeDecision) func() string {
 	return func() string {
+		// Prefer a ready, different-provider route (Groq/DeepSeek/… or the local
+		// floor) — the ladder resolves online BYO routes the offline-only check
+		// used to miss. Fall back to the offline route for back-compat.
+		if ready := readyThrottleFallbackModes(request, decision.ToolMode); len(ready) > 0 {
+			return ready[0]
+		}
 		availability := detectRuntimeAvailability(request)
 		mode := strings.TrimSpace(availability.OfflineRouteMode)
 		if mode == "" || mode == decision.ToolMode || mode == "local-preview" {
@@ -190,11 +196,12 @@ func throttleFallbackHint(request providerGenerationRequest, decision routeDecis
 // throttleApprovalRequest describes one pending resume so an approver can put
 // the decision to whoever is supervising the session.
 type throttleApprovalRequest struct {
-	Label        string
-	Wait         time.Duration
-	FallbackHint string
-	Hold         int
-	TaskTitle    string
+	Label          string
+	Wait           time.Duration
+	FallbackHint   string
+	ReadyFallbacks []string // ranked ready fallback routes (paid ladder)
+	Hold           int
+	TaskTitle      string
 }
 
 type throttleApprovalDecision int
@@ -233,6 +240,10 @@ type throttleSurvivalOptions struct {
 	attemptTimeout time.Duration    // 0 = no per-attempt timeout
 	holdWaits      []time.Duration  // nil = throttleHoldWaits
 	taskTitle      string
+	// readyFallbacks, when set, lazily resolves the ranked ready fallback routes
+	// (Groq/DeepSeek/local floor) the strategy may switch to. Resolved once, on
+	// the first hold, so normal requests never pay the probe.
+	readyFallbacks func() []string
 	// switchAttempt, when set, re-attempts the work on a named fallback route.
 	// It is invoked only when a route-switching approver (paid Autopilot) asks
 	// to switch; a pure public build never sets a switching approver, so this
@@ -296,6 +307,17 @@ func runWithThrottleSurvival(ctx context.Context, label string, fallbackHint fun
 		}
 		return hint
 	}
+	var ready []string
+	readyResolved := false
+	resolveReady := func() []string {
+		if !readyResolved {
+			readyResolved = true
+			if opts.readyFallbacks != nil {
+				ready = opts.readyFallbacks()
+			}
+		}
+		return ready
+	}
 	runAttempt := func() (string, error) {
 		if opts.attemptTimeout > 0 {
 			attemptCtx, cancel := context.WithTimeout(ctx, opts.attemptTimeout)
@@ -330,11 +352,12 @@ func runWithThrottleSurvival(ctx context.Context, label string, fallbackHint fun
 		}
 		if !approved {
 			resolution, approveErr := resolveThrottle(ctx, approver, throttleApprovalRequest{
-				Label:        label,
-				Wait:         wait,
-				FallbackHint: resolveHint(),
-				Hold:         hold + 1,
-				TaskTitle:    opts.taskTitle,
+				Label:          label,
+				Wait:           wait,
+				FallbackHint:   resolveHint(),
+				ReadyFallbacks: resolveReady(),
+				Hold:           hold + 1,
+				TaskTitle:      opts.taskTitle,
 			})
 			if approveErr != nil {
 				return "", report, approveErr
@@ -468,8 +491,8 @@ func sleepWithContext(ctx context.Context, wait time.Duration) error {
 type cliPromptApprover struct{}
 
 var (
-	throttlePromptInput  io.Reader = os.Stdin
-	throttlePromptOutput io.Writer = os.Stderr
+	throttlePromptInput  io.Reader   = os.Stdin
+	throttlePromptOutput io.Writer   = os.Stderr
 	throttlePromptIsTTY  func() bool = func() bool {
 		info, err := os.Stdin.Stat()
 		if err != nil {
