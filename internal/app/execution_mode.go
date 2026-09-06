@@ -24,8 +24,22 @@ const (
 
 var (
 	executionModeWarnings io.Writer = os.Stderr
-	executionModeHomeDir            = os.UserHomeDir
+	// executionModeHomeDir resolves the home that holds GLOBAL per-user Jini
+	// state (~/.jini/mode.json, trusted-dirs.json, savings-ledger.json). It
+	// honors JINI_HOME so a dogfood or test run can redirect all of that to a
+	// sandbox instead of polluting the real ledger/trust; without the override
+	// it is the OS home. (Repo-scoped state uses sessionStateRoot/JINI_STATE_DIR
+	// separately.) Overridable as a var so TestMain can pin it.
+	executionModeHomeDir = jiniHomeDir
 )
+
+// jiniHomeDir returns JINI_HOME when set (sandbox override), else the OS home.
+func jiniHomeDir() (string, error) {
+	if override := strings.TrimSpace(os.Getenv("JINI_HOME")); override != "" {
+		return override, nil
+	}
+	return os.UserHomeDir()
+}
 
 type savedExecutionMode struct {
 	SchemaVersion string `json:"schema_version"`
