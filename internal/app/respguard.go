@@ -239,6 +239,18 @@ func brokenPathReferences(text, baseDir string) []outputIssue {
 	return issues
 }
 
+// firstLeakedSecret returns a masked preview of the first credential-shaped
+// token in content, or "" if none. Reuses the output-guard secret patterns so
+// creation-time scrubbing (e.g. `jini skill new`) matches the response guard.
+func firstLeakedSecret(content string) string {
+	for _, pat := range secretPatterns {
+		if m := pat.FindString(content); m != "" {
+			return maskSecret(m)
+		}
+	}
+	return ""
+}
+
 // maskSecret shows only a short prefix so the detector's own message never
 // reprints the full credential.
 func maskSecret(s string) string {

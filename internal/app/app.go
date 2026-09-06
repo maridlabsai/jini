@@ -89,9 +89,11 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 		if isHiddenAppSidecarServeCommand(args) {
 			return runAppSidecarServe(stdin, stdout, stderr)
 		}
-		if access, ok := commercialOnlyCommandAccess(args[0]); ok {
-			renderFeatureAccessDenied(stderr, access)
-			return 1
+		if !isFreeSkillOrAgentCreation(args) {
+			if access, ok := commercialOnlyCommandAccess(args[0]); ok {
+				renderFeatureAccessDenied(stderr, access)
+				return 1
+			}
 		}
 		if canonicalTopLevelCommand(args[0]) == "" {
 			if shouldRunDirectTaskArgs(args) {
@@ -133,6 +135,10 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 			return runRoute(args[1:], stdout, stderr)
 		case "memory":
 			return runMemory(args[1:], stdout, stderr)
+		case "skill":
+			return runSkill(args[1:], stdout, stderr)
+		case "agent":
+			return runAgent(args[1:], stdout, stderr)
 		case "mode":
 			return runMode(args[1:], stdout, stderr)
 		case "savings":
@@ -276,6 +282,9 @@ func validateNativeArgs(args []string) error {
 		return nil
 	case "trust":
 		// Permissive: runTrust validates its own args/subcommands.
+		return nil
+	case "skill", "agent":
+		// Permissive: runSkill/runAgent validate their own args/subcommands.
 		return nil
 	case "route":
 		return nil
@@ -5658,7 +5667,7 @@ func canonicalTopLevelCommand(value string) string {
 	switch exactCommandToken(value) {
 	case "help", "--help", "-h":
 		return "help"
-	case "commands", "admin", "check", "status", "continue", "doctor", "provider", "route", "memory", "mode", "savings", "trust", "permissions", "init", "new", "observe", "open", "run", "publish-readiness", "scorecard-gate":
+	case "commands", "admin", "check", "status", "continue", "doctor", "provider", "route", "memory", "skill", "agent", "mode", "savings", "trust", "permissions", "init", "new", "observe", "open", "run", "publish-readiness", "scorecard-gate":
 		return exactCommandToken(value)
 	default:
 		return ""
