@@ -2233,6 +2233,11 @@ func runDirectCLIHandoffAnswer(request providerGenerationRequest, decision route
 	}
 	fmt.Fprintln(stdout, text)
 	renderSavingsFooter(stdout, answered.SavingsEntry)
+	// Surface what the handoff changed and how to undo it — on the common
+	// direct-answer path, not just the saved-work thread summary.
+	for _, line := range cliHandoffSideEffectLines(answered.CLIHandoffReceipt) {
+		fmt.Fprintln(stdout, line)
+	}
 	if isHandoff {
 		if cwd, err := os.Getwd(); err == nil {
 			if hint := postureDegradedHintForDir(descriptor, cliHandoffLabel(decision.ToolMode), cwd); hint != "" {
@@ -3881,11 +3886,21 @@ func formatCLIHandoffReceiptSummary(receipt *cliHandoffReceipt) []string {
 	// Side effects and rollback are only shown when the run actually changed
 	// the working tree. Silence here means "nothing changed, or not a git work
 	// tree" - never a claim that nothing happened.
-	if len(receipt.SideEffects) > 0 {
-		lines = append(lines, formatCLIHandoffSideEffectLine(receipt))
-		if hint := strings.TrimSpace(receipt.RollbackHint); hint != "" {
-			lines = append(lines, "Rollback: "+hint)
-		}
+	lines = append(lines, cliHandoffSideEffectLines(receipt)...)
+	return lines
+}
+
+// cliHandoffSideEffectLines returns the "Side effects" + "Rollback" lines for a
+// receipt, or nil when the run changed nothing (or the CWD was not a git work
+// tree). Shared by the full receipt summary and the direct-answer flow so the
+// actionable "what changed / how to undo" shows on the common path too.
+func cliHandoffSideEffectLines(receipt *cliHandoffReceipt) []string {
+	if receipt == nil || len(receipt.SideEffects) == 0 {
+		return nil
+	}
+	lines := []string{formatCLIHandoffSideEffectLine(receipt)}
+	if hint := strings.TrimSpace(receipt.RollbackHint); hint != "" {
+		lines = append(lines, "Rollback: "+hint)
 	}
 	return lines
 }

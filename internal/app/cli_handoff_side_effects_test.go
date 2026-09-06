@@ -191,3 +191,31 @@ func containsLineWithPrefix(lines []string, prefix string) bool {
 	}
 	return false
 }
+
+// The direct-answer path (the common `jini "<task>"` flow) must SURFACE the
+// side effects and rollback hint, not just record them on a receipt that only
+// the saved-work thread summary renders. Guards against the "inert receipt"
+// regression.
+func TestDirectHandoffSurfacesSideEffectsOnMainFlow(t *testing.T) {
+	t.Setenv("JINI_STATE_DIR", t.TempDir())
+	t.Setenv("JINI_TOOL", "claude-code")
+	t.Setenv("JINI_CLI_HANDOFF_SKIP_TRUST_CHECK", "1")
+	initSideEffectGitRepo(t)
+	writeProviderFakeExecutable(t, t.TempDir(), "claude", strings.Join([]string{
+		`printf 'edited\n' >> tracked.txt`,
+		`printf 'brand new\n' > created.txt`,
+		`echo done`,
+	}, "\n"))
+
+	var stdout, stderr bytes.Buffer
+	code := runDirectTaskArgsIntake([]string{"append a line to tracked.txt and create created.txt"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("direct handoff exit %d; stderr:\n%s", code, stderr.String())
+	}
+	out := stdout.String()
+	for _, want := range []string{"Side effects:", "created.txt", "tracked.txt", "Rollback:", "git restore"} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("main-flow output missing %q; got:\n%s", want, out)
+		}
+	}
+}
