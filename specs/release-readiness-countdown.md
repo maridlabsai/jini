@@ -33,13 +33,13 @@ experimental in release notes, or when those CLIs are installed for a real
 
 ## Commercial tier — follows the free release
 
-**Countdown: 0 of 5 gates green (starts after free ships).** Larger scope: a new
-repo, billing, and managed infra.
+**Countdown: 1 of 5 gates green; gate 2 substantially built (pulled forward for
+dev-velocity/throttle relief).** Larger scope: billing and managed infra remain.
 
 | # | Release gate | Status | What's left |
 | --- | --- | --- | --- |
-| 1 | `../jini-commercial` repo bootstrap (separate Go module on the public seams: autopilot/, runner/, agentloop/) | ⬜ | does not exist yet |
-| 2 | Paid Autopilot policy (predictive throttle avoidance, route switching, savings optimization) | ⬜ | public keeps only the fail-closed gate + free equivalent |
+| 1 | `../jini-commercial` repo bootstrap (separate Go module on the public seams: autopilot/, runner/, agentloop/) | ✅ | **bootstrapped** — separate module + `cmd/jini-pro` builds against the public `autopilot`/`runner` seams via a local replace; cannot import `internal/` (boundary enforced by the module graph) |
+| 2 | Paid Autopilot policy (predictive throttle avoidance, route switching, savings optimization) | 🟡→ | **route-switching ladder built** (`ladder/` implements `autopilot.Strategy`: on throttle, switch to the highest-ranked ready fallback from `ThrottleEvent.ReadyFallbacks`, mark a dodge; hold when none). Public side surfaces ready BYO/local fallback routes to the strategy. Mechanism unit+integration proven across both modules. Remaining: predictive avoidance + savings optimization, and a live throttle→switch capture |
 | 3 | Plus/Pro entitlements + billing (annual-first to dodge the Stripe floor; Plus serverless) | ⬜ | paywall wiring; prices stay out of the public repo |
 | 4 | Managed native loop (Plus), Continuity (Pro), decision-tree backtrack (Pro) | ⬜ | Pro backtrack depends on the shipped agentloop recorder/checkpointer seams |
 | 5 | Pricing finalized (Free / Plus $2.99 / Pro $5.99) + customer-facing messaging | ⬜ | kept simple; commercial-repo only |
