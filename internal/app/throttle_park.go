@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -117,4 +118,22 @@ func throttleParkResumeLine(park *throttlePark) string {
 		}
 	}
 	return fmt.Sprintf("Resuming: %s", excerpt)
+}
+
+// crossRouteResumeDisclosure states what a resume carries over when the route
+// changed since the work was parked. PRD §Routing: same-route resume is lossless
+// (say nothing); cross-route resume is best-effort and must say so — silent
+// context loss is a defect. Returns "" for a same-route (or unknown) resume.
+func crossRouteResumeDisclosure(park *throttlePark) string {
+	if park == nil || strings.TrimSpace(park.RouteLabel) == "" {
+		return ""
+	}
+	current := strings.TrimSpace(detectRoute().ToolLabel)
+	if current == "" || current == strings.TrimSpace(park.RouteLabel) {
+		return ""
+	}
+	return fmt.Sprintf(
+		"Cross-route resume: parked on %s, now on %s. Your task carries over; the previous route's in-progress reasoning does not (best-effort).",
+		strings.TrimSpace(park.RouteLabel), current,
+	)
 }

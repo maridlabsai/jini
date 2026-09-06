@@ -103,3 +103,22 @@ func TestSaveCurrentWorkClearsStalePark(t *testing.T) {
 		t.Fatal("stale park survived new work")
 	}
 }
+
+func TestCrossRouteResumeDisclosure(t *testing.T) {
+	// Same route (or unknown) => lossless => no disclosure.
+	if got := crossRouteResumeDisclosure(nil); got != "" {
+		t.Fatalf("nil park should disclose nothing, got %q", got)
+	}
+	if got := crossRouteResumeDisclosure(&throttlePark{RouteLabel: ""}); got != "" {
+		t.Fatalf("empty route label should disclose nothing, got %q", got)
+	}
+	// Different route => disclose what carried over and what did not.
+	current := detectRoute().ToolLabel
+	if strings.TrimSpace(current) == "" {
+		t.Skip("no current route label to compare against")
+	}
+	got := crossRouteResumeDisclosure(&throttlePark{RouteLabel: "Some Other Route XYZ"})
+	if !strings.Contains(got, "Cross-route resume") || !strings.Contains(got, "carries over") {
+		t.Fatalf("cross-route resume must disclose carry-over; got %q", got)
+	}
+}

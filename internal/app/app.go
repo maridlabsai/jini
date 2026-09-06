@@ -3373,6 +3373,9 @@ func runOpen(args []string, stdout, stderr io.Writer) int {
 func runContinue(stdout, stderr io.Writer) int {
 	if park := loadThrottlePark(); park != nil {
 		fmt.Fprintln(stdout, throttleParkResumeLine(park))
+		if line := crossRouteResumeDisclosure(park); line != "" {
+			fmt.Fprintln(stdout, line)
+		}
 		code := runDirectTaskArgsIntake([]string{park.Prompt}, stdout, stderr)
 		if code == 0 {
 			clearThrottlePark()
