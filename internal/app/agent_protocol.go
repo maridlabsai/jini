@@ -28,7 +28,12 @@ func agentSystemPrompt(task string, tools []agentTool) string {
 	b.WriteString("- finish — end the task. arg: summary\n\n")
 	b.WriteString("For actions that need file contents, put the contents in a ``` fenced block after the args.\n")
 	b.WriteString("Emit ONE action per reply and nothing else. After each action you will receive an OBSERVATION. ")
-	b.WriteString("When the task is done, use finish.\n\nTASK: ")
+	b.WriteString("When the task is done, use finish.\n\n")
+	// Repo-scoped conventions the loop must honor (AGENTS.md/CLAUDE.md).
+	if ctx := repoContextForCwd(); ctx != "" {
+		b.WriteString(ctx + "\n\n")
+	}
+	b.WriteString("TASK: ")
 	b.WriteString(task)
 	return b.String()
 }

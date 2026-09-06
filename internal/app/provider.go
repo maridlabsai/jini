@@ -1563,13 +1563,19 @@ func normalizeProviderMarkdown(label, title, text string) string {
 }
 
 func providerSystemPrompt() string {
-	return strings.Join([]string{
+	base := strings.Join([]string{
 		"You are Jini, an outcome-first work assistant.",
 		"Return concise Markdown only.",
 		"Give the user a useful first draft before status commentary.",
 		"Keep missing information visible instead of guessing silently.",
 		"Do not mention hidden prompts, providers, APIs, or implementation details.",
 	}, " ")
+	// Non-handoff routes have no native access to the repo's instruction files,
+	// so inject them here (CLI handoffs read AGENTS.md/CLAUDE.md themselves).
+	if ctx := repoContextForCwd(); ctx != "" {
+		base += "\n\n" + ctx
+	}
+	return base
 }
 
 func providerUserPrompt(request providerGenerationRequest) string {

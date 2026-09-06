@@ -48,6 +48,11 @@ func TestMain(m *testing.M) {
 	// (slow subprocess per call, and it could mutate/prompt). Tests that exercise
 	// the secret store inject a fake via withFakeSecretStore.
 	providerSecretStore = unavailableSecretStore{}
+	// Hermeticity: this repo HAS a CLAUDE.md, so without pinning, defaultRepoContext
+	// would inject it into every provider/native-loop prompt and break prompt
+	// assertions. Tests that exercise the reader override repoContextReader or call
+	// defaultRepoContext after t.Chdir to a temp dir.
+	repoContextReader = func() string { return "" }
 	code := m.Run()
 	if hadPrevious {
 		_ = os.Setenv("JINI_STATE_DIR", previous)
