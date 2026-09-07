@@ -126,6 +126,16 @@ func adapterRegistry() map[string]adapterDescriptor {
 			SupportsEffort:    true,
 			SupportsAutoRoute: false,
 		},
+		"cerebras": {
+			ID:                "cerebras",
+			Label:             "Cerebras (Llama)",
+			ProviderMode:      "cerebras",
+			CostTier:          "byo",
+			Locality:          "remote",
+			Modalities:        []string{"text", "code"},
+			SupportsEffort:    true,
+			SupportsAutoRoute: false,
+		},
 		"deepseek": {
 			ID:                "deepseek",
 			Label:             "DeepSeek",

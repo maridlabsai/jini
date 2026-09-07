@@ -95,6 +95,12 @@ var byoShapes = map[string]byoShape{
 		buildRequest: bearerModelsRequest("/openai/v1/models"),
 		chatPath:     "/openai/v1/chat/completions", modelEnv: "GROQ_MODEL", defaultModel: "llama-3.3-70b-versatile",
 	},
+	"cerebras": {
+		ID: "cerebras", Label: "Cerebras", KeyEnv: "CEREBRAS_API_KEY",
+		baseEnv: "CEREBRAS_BASE_URL", defaultBase: "https://api.cerebras.ai",
+		buildRequest: bearerModelsRequest("/v1/models"),
+		chatPath:     "/v1/chat/completions", modelEnv: "CEREBRAS_MODEL", defaultModel: "llama-3.3-70b",
+	},
 	"deepseek": {
 		ID: "deepseek", Label: "DeepSeek", KeyEnv: "DEEPSEEK_API_KEY",
 		baseEnv: "DEEPSEEK_BASE_URL", defaultBase: "https://api.deepseek.com",
@@ -115,6 +121,7 @@ var byoShapeAliases = map[string]string{
 	"openai": "openai", "gpt": "openai",
 	"xai": "xai", "grok": "xai", "x ai": "xai", // normalizeName turns "x.ai"/"x-ai" into "x ai"
 	"groq":     "groq",
+	"cerebras": "cerebras",
 	"deepseek": "deepseek",
 	"mistral":  "mistral",
 }

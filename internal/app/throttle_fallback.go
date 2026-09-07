@@ -14,7 +14,9 @@ import "strings"
 // suggest switching to the route that is currently limited.
 
 // byoFallbackPreference ranks BYO routes for the ladder (stable, deterministic).
-var byoFallbackPreference = []string{"groq", "deepseek", "xai", "mistral", "openai"}
+// Cerebras first — fastest free inference (~2,600 tok/s) and a large daily
+// ceiling — then Groq, then the rest.
+var byoFallbackPreference = []string{"cerebras", "groq", "deepseek", "xai", "mistral", "openai"}
 
 // readyThrottleFallbackModes returns ranked route modes that are ready to answer
 // and differ from throttledMode. Cheap enough to call lazily on a throttle only.

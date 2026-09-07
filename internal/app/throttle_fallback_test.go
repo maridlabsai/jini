@@ -33,3 +33,13 @@ func TestReadyThrottleFallbackEmptyWithoutKeys(t *testing.T) {
 		}
 	}
 }
+
+// Cerebras is the top free rung when configured (fastest inference).
+func TestCerebrasRanksFirstInLadder(t *testing.T) {
+	t.Setenv("CEREBRAS_API_KEY", "test-key")
+	t.Setenv("GROQ_API_KEY", "test-key")
+	got := readyThrottleFallbackModes(providerGenerationRequest{}, "claude-code")
+	if len(got) < 2 || got[0] != "cerebras" || got[1] != "groq" {
+		t.Fatalf("expected [cerebras groq ...] order, got %v", got)
+	}
+}
