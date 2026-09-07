@@ -42,6 +42,9 @@ type byoShape struct {
 	chatPath     string // e.g. "/v1/chat/completions"
 	modelEnv     string // e.g. "XAI_MODEL"
 	defaultModel string // used when modelEnv is unset — keeps setup to just a key
+	// privacyNote, when set, is surfaced on validation and gates the shape out of
+	// the automatic throttle ladder (e.g. Gemini's free tier trains on prompts).
+	privacyNote string
 }
 
 // routable reports whether the shape can serve generations (not validate-only).
@@ -113,6 +116,30 @@ var byoShapes = map[string]byoShape{
 		buildRequest: bearerModelsRequest("/v1/models"),
 		chatPath:     "/v1/chat/completions", modelEnv: "MISTRAL_MODEL", defaultModel: "mistral-large-latest",
 	},
+	// Google Gemini via its OpenAI-compatible endpoint. Bearer auth; a bad key
+	// returns HTTP 400 "Please pass a valid API key" (not 401). Its huge 1M-token
+	// context makes it the right rung for large-context work. privacyNote is set
+	// because the FREE tier trains on prompts — see geminiFallbackAllowed / the
+	// validate disclosure, which keep it out of the automatic throttle ladder
+	// unless the user opts in.
+	// Named gemini-api (not "gemini") so it doesn't collide with the gemini-cli
+	// handoff route — mirrors the claude-code / claude-api split.
+	"gemini-api": {
+		ID: "gemini-api", Label: "Google Gemini (API)", KeyEnv: "GEMINI_API_KEY",
+		baseEnv: "GEMINI_BASE_URL", defaultBase: "https://generativelanguage.googleapis.com/v1beta/openai",
+		buildRequest: bearerModelsRequest("/models"),
+		chatPath:     "/chat/completions", modelEnv: "GEMINI_MODEL", defaultModel: "gemini-2.5-flash",
+		privacyNote: "Gemini's free tier trains on your prompts — don't send secrets or proprietary code. Set JINI_GEMINI_ALLOW_TRAINING=1 to allow it as an automatic throttle fallback.",
+	},
+}
+
+// geminiTrainingOptIn is the env flag by which a user accepts that Gemini's free
+// tier trains on prompts, allowing it into the automatic throttle fallback
+// ladder. Without it, Gemini stays manual-select only.
+const geminiTrainingOptIn = "JINI_GEMINI_ALLOW_TRAINING"
+
+func geminiFallbackAllowed() bool {
+	return strings.TrimSpace(configValue(geminiTrainingOptIn)) != ""
 }
 
 // byoShapeAliases maps user-facing names to a canonical shape id.
@@ -124,6 +151,8 @@ var byoShapeAliases = map[string]string{
 	"cerebras": "cerebras",
 	"deepseek": "deepseek",
 	"mistral":  "mistral",
+	"gemini": "gemini-api", "gemini api": "gemini-api", "geminiapi": "gemini-api",
+	"google gemini": "gemini-api", "google ai": "gemini-api",
 }
 
 func resolveBYOShape(name string) (byoShape, bool) {

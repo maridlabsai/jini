@@ -43,3 +43,42 @@ func TestCerebrasRanksFirstInLadder(t *testing.T) {
 		t.Fatalf("expected [cerebras groq ...] order, got %v", got)
 	}
 }
+
+// Gemini trains on free-tier prompts, so it must NOT enter the automatic ladder
+// without an explicit opt-in — but is always available for manual selection.
+func TestGeminiGatedFromAutoLadderWithoutOptIn(t *testing.T) {
+	t.Setenv("GEMINI_API_KEY", "test-key")
+	t.Setenv("JINI_GEMINI_ALLOW_TRAINING", "") // not opted in
+
+	got := readyThrottleFallbackModes(providerGenerationRequest{}, "claude-code")
+	for _, m := range got {
+		if m == "gemini-api" {
+			t.Fatalf("gemini must be excluded from the auto ladder without opt-in: %v", got)
+		}
+	}
+
+	t.Setenv("JINI_GEMINI_ALLOW_TRAINING", "1") // opted in
+	got = readyThrottleFallbackModes(providerGenerationRequest{}, "claude-code")
+	found := false
+	for _, m := range got {
+		if m == "gemini-api" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("gemini must join the ladder once opted in: %v", got)
+	}
+}
+
+// The byo Gemini API route must not collide with the gemini-cli handoff route.
+func TestGeminiRouteNamesDoNotCollide(t *testing.T) {
+	if got := normalizeToolMode("gemini"); got != "gemini-cli" {
+		t.Fatalf("bare gemini must stay the CLI handoff, got %q", got)
+	}
+	if got := normalizeToolMode("gemini-api"); got != "gemini-api" {
+		t.Fatalf("gemini-api must resolve to the API route, got %q", got)
+	}
+	if got := normalizeToolMode("gemini api"); got != "gemini-api" {
+		t.Fatalf("gemini api must resolve to the API route, got %q", got)
+	}
+}

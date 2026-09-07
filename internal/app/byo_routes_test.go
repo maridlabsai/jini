@@ -7,7 +7,7 @@ import "testing"
 // a stray OPENAI_API_KEY must not silently start spending).
 func TestBYOProvidersAreManualRoutes(t *testing.T) {
 	reg := adapterRegistry()
-	for _, id := range []string{"groq", "cerebras", "deepseek", "xai", "mistral", "openai"} {
+	for _, id := range []string{"groq", "cerebras", "deepseek", "xai", "mistral", "openai", "gemini-api"} {
 		d, ok := reg[id]
 		if !ok {
 			t.Fatalf("BYO route %q missing from adapter registry", id)

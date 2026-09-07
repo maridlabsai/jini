@@ -33,6 +33,14 @@ func readyThrottleFallbackModes(request providerGenerationRequest, throttledMode
 		}
 	}
 
+	// Gemini is a huge-context cloud rung, but its free tier trains on prompts —
+	// so it joins the AUTOMATIC ladder only when the user opts in. Manual
+	// `route set gemini` is always available; this gate is about not silently
+	// sending code to a training endpoint on a throttle.
+	if geminiFallbackAllowed() && "gemini-api" != throttled && detectProviderForMode("gemini-api").Status == "ok" {
+		modes = append(modes, "gemini-api")
+	}
+
 	// Local model as the floor — it physically cannot rate-limit (your hardware).
 	availability := detectRuntimeAvailability(request)
 	local := strings.TrimSpace(availability.OfflineRouteMode)

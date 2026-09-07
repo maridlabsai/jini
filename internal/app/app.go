@@ -904,6 +904,11 @@ func runProviderValidate(args []string, stdout, stderr io.Writer) int {
 			anyFailed = true
 		}
 		fmt.Fprintf(stdout, "%s %s\n", mark, result.Message)
+		// Surface a shape's privacy note (e.g. Gemini trains on free-tier prompts)
+		// whenever it's configured, so the tradeoff is never silent.
+		if result.Configured && strings.TrimSpace(shape.privacyNote) != "" {
+			fmt.Fprintf(stdout, "   ⚠ %s\n", shape.privacyNote)
+		}
 	}
 
 	if !specific && !anyConfigured {

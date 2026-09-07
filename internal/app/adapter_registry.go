@@ -176,6 +176,16 @@ func adapterRegistry() map[string]adapterDescriptor {
 			SupportsEffort:    true,
 			SupportsAutoRoute: false,
 		},
+		"gemini-api": {
+			ID:                "gemini-api",
+			Label:             "Google Gemini (API)",
+			ProviderMode:      "gemini-api",
+			CostTier:          "byo",
+			Locality:          "remote",
+			Modalities:        []string{"text", "code", "image"},
+			SupportsEffort:    true,
+			SupportsAutoRoute: false,
+		},
 		"local-fast": {
 			ID:                 "local-fast",
 			Label:              "Local SLM fast",
