@@ -137,6 +137,8 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 			return runRoute(args[1:], stdout, stderr)
 		case "memory":
 			return runMemory(args[1:], stdout, stderr)
+		case "models":
+			return runModels(args[1:], stdout, stderr)
 		case "skill":
 			return runSkill(args[1:], stdout, stderr)
 		case "agent":
@@ -287,6 +289,9 @@ func validateNativeArgs(args []string) error {
 		return nil
 	case "skill", "agent":
 		// Permissive: runSkill/runAgent validate their own args/subcommands.
+		return nil
+	case "models":
+		// Permissive: runModels validates its optional provider argument.
 		return nil
 	case "route":
 		return nil
@@ -5679,7 +5684,7 @@ func canonicalTopLevelCommand(value string) string {
 		return "help"
 	case "version", "--version", "-v":
 		return "version"
-	case "commands", "admin", "check", "status", "continue", "doctor", "provider", "route", "memory", "skill", "agent", "mode", "savings", "trust", "permissions", "init", "new", "observe", "open", "run", "publish-readiness", "scorecard-gate":
+	case "commands", "admin", "check", "status", "continue", "doctor", "provider", "route", "memory", "models", "skill", "agent", "mode", "savings", "trust", "permissions", "init", "new", "observe", "open", "run", "publish-readiness", "scorecard-gate":
 		return exactCommandToken(value)
 	default:
 		return ""
