@@ -14,7 +14,8 @@ INSTALL_DIR="${JINI_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
 SOURCE_DIR="${JINI_SOURCE_DIR:-}"
 REPO_URL="${JINI_INSTALL_REPO:-$DEFAULT_REPO_URL}"
 REPO_REF="${JINI_INSTALL_REF:-$DEFAULT_REPO_REF}"
-RELEASE_BASE_URL="${JINI_RELEASE_BASE_URL:-$DEFAULT_RELEASE_BASE_URL}"
+RELEASE_BASE_URL="${JINI_RELEASE_BASE_URL:-}"
+INSTALL_CHANNEL="${JINI_INSTALL_CHANNEL:-stable}"
 GO_BIN="${JINI_GO_BIN:-}"
 FORCE_INSTALL=0
 COPY_BINARY=0
@@ -37,6 +38,9 @@ Options:
   --source-dir PATH    Local Jini source directory to build from.
   --repo-url URL       Git repository to clone when no local source is provided.
   --repo-ref REF       Git ref to clone when no local source is provided. Default: main
+  --channel CHAN       Release channel: stable (default), beta, or nightly.
+  --beta               Shorthand for --channel beta.
+  --nightly            Shorthand for --channel nightly.
   --copy               Copy the binary into bin-dir instead of symlinking.
   --force              Replace an existing install.
   --help               Show this help text.
@@ -88,6 +92,19 @@ while [[ $# -gt 0 ]]; do
       REPO_REF="$2"
       shift 2
       ;;
+    --channel)
+      [[ $# -ge 2 ]] || fail "--channel needs a value (stable, beta, or nightly)"
+      INSTALL_CHANNEL="$2"
+      shift 2
+      ;;
+    --beta)
+      INSTALL_CHANNEL="beta"
+      shift
+      ;;
+    --nightly)
+      INSTALL_CHANNEL="nightly"
+      shift
+      ;;
     --copy)
       COPY_BINARY=1
       shift
@@ -105,6 +122,21 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+# Resolve the release source from the channel (unless explicitly overridden).
+# Beta and nightly are moving pre-release tags the CI pipeline force-updates;
+# stable is GitHub's latest non-prerelease.
+case "${INSTALL_CHANNEL}" in
+  stable | beta | nightly) ;;
+  *) fail "unknown channel: ${INSTALL_CHANNEL} (use stable, beta, or nightly)" ;;
+esac
+if [[ -z "${RELEASE_BASE_URL}" ]]; then
+  case "${INSTALL_CHANNEL}" in
+    stable) RELEASE_BASE_URL="https://github.com/maridlabsai/jini/releases/latest/download" ;;
+    beta) RELEASE_BASE_URL="https://github.com/maridlabsai/jini/releases/download/beta" ;;
+    nightly) RELEASE_BASE_URL="https://github.com/maridlabsai/jini/releases/download/nightly" ;;
+  esac
+fi
 
 script_dir=""
 script_source="${BASH_SOURCE[0]-}"
@@ -387,6 +419,7 @@ install_mode=${INSTALL_MODE}
 install_detail=${INSTALL_DETAIL}
 source_reason=${SOURCE_REASON}
 release_validation=${RELEASE_VALIDATION}
+channel=${INSTALL_CHANNEL}
 EOF
 
 "${COMMAND_PATH}" commands >/dev/null

@@ -112,6 +112,8 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 		}
 
 		switch canonicalTopLevelCommand(args[0]) {
+		case "version":
+			return runVersion(stdout)
 		case "help":
 			if len(args) == 1 {
 				return runHelp([]string{"--all"}, stdout, stderr)
@@ -255,7 +257,7 @@ func validateNativeArgs(args []string) error {
 		if len(args) == 2 && canonicalHelpTopic(args[1]) != "" {
 			return nil
 		}
-	case "commands", "init", "new", "permissions", "status", "continue":
+	case "commands", "init", "new", "permissions", "status", "continue", "version":
 		if len(args) == 1 {
 			return nil
 		}
@@ -5675,6 +5677,8 @@ func canonicalTopLevelCommand(value string) string {
 	switch exactCommandToken(value) {
 	case "help", "--help", "-h":
 		return "help"
+	case "version", "--version", "-v":
+		return "version"
 	case "commands", "admin", "check", "status", "continue", "doctor", "provider", "route", "memory", "skill", "agent", "mode", "savings", "trust", "permissions", "init", "new", "observe", "open", "run", "publish-readiness", "scorecard-gate":
 		return exactCommandToken(value)
 	default:
