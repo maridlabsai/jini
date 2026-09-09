@@ -53,6 +53,10 @@ func TestMain(m *testing.M) {
 	// assertions. Tests that exercise the reader override repoContextReader or call
 	// defaultRepoContext after t.Chdir to a temp dir.
 	repoContextReader = func() string { return "" }
+	// Hermeticity: the suite must not read a real on-disk provider catalog, which
+	// would make the provider set depend on the developer's machine. Tests that
+	// exercise the catalog override providerCatalogLoader.
+	providerCatalogLoader = func() []catalogProviderEntry { return nil }
 	code := m.Run()
 	if hadPrevious {
 		_ = os.Setenv("JINI_STATE_DIR", previous)

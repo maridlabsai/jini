@@ -305,7 +305,7 @@ func generateProviderText(ctx context.Context, provider providerConfig, request 
 	case "local-slm":
 		return generateWithLocalSLM(ctx, request, systemPrompt, userPrompt)
 	default:
-		if shape, ok := byoShapes[provider.ID]; ok && shape.routable() {
+		if shape, ok := byoShapeByID(provider.ID); ok && shape.routable() {
 			return generateWithOpenAICompatible(ctx, shape, request, systemPrompt, userPrompt)
 		}
 		return "", providerSetupError(provider)
@@ -751,7 +751,7 @@ func detectProviderForMode(mode string) providerConfig {
 	case "local-preview":
 		return detectLocalPreviewProvider()
 	default:
-		if shape, ok := byoShapes[mode]; ok && shape.routable() {
+		if shape, ok := byoShapeByID(mode); ok && shape.routable() {
 			return detectOpenAICompatibleProvider(shape)
 		}
 		return providerConfig{

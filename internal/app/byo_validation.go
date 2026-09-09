@@ -156,17 +156,17 @@ var byoShapeAliases = map[string]string{
 }
 
 func resolveBYOShape(name string) (byoShape, bool) {
-	id, ok := byoShapeAliases[normalizeName(name)]
+	id, ok := byoAliasRegistry()[normalizeName(name)]
 	if !ok {
 		return byoShape{}, false
 	}
-	shape, ok := byoShapes[id]
-	return shape, ok
+	return byoShapeByID(id)
 }
 
 func sortedBYOShapeIDs() []string {
-	ids := make([]string, 0, len(byoShapes))
-	for id := range byoShapes {
+	registry := byoShapeRegistry()
+	ids := make([]string, 0, len(registry))
+	for id := range registry {
 		ids = append(ids, id)
 	}
 	sort.Strings(ids)

@@ -68,7 +68,9 @@ func runModels(args []string, stdout, stderr io.Writer) int {
 		shapes = []byoShape{shape}
 	} else {
 		for _, id := range sortedBYOShapeIDs() {
-			shapes = append(shapes, byoShapes[id])
+			if s, ok := byoShapeByID(id); ok {
+				shapes = append(shapes, s)
+			}
 		}
 	}
 
