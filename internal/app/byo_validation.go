@@ -96,7 +96,7 @@ var byoShapes = map[string]byoShape{
 		ID: "groq", Label: "Groq", KeyEnv: "GROQ_API_KEY",
 		baseEnv: "GROQ_BASE_URL", defaultBase: "https://api.groq.com",
 		buildRequest: bearerModelsRequest("/openai/v1/models"),
-		chatPath:     "/openai/v1/chat/completions", modelEnv: "GROQ_MODEL", defaultModel: "llama-3.3-70b-versatile",
+		chatPath:     "/openai/v1/chat/completions", modelEnv: "GROQ_MODEL", defaultModel: "openai/gpt-oss-120b",
 	},
 	"cerebras": {
 		ID: "cerebras", Label: "Cerebras", KeyEnv: "CEREBRAS_API_KEY",

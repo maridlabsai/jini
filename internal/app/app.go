@@ -310,6 +310,10 @@ func validateNativeArgs(args []string) error {
 				return nil
 			}
 		}
+		if len(args) >= 2 && exactCommandToken(args[1]) == "model" {
+			// runModelCheck validates its route argument.
+			return nil
+		}
 		if len(args) == 1 || (len(args) == 2 && !strings.HasPrefix(strings.TrimSpace(args[1]), "-")) {
 			return nil
 		}
@@ -3264,6 +3268,9 @@ func runCheck(args []string, stdout, stderr io.Writer) int {
 	}
 	if len(args) > 0 && exactCommandToken(args[0]) == "functional" {
 		return runFunctionalSelfCheck(stdout, stderr)
+	}
+	if len(args) > 0 && exactCommandToken(args[0]) == "model" {
+		return runModelCheck(strings.Join(args[1:], " "), stdout, stderr)
 	}
 	summary, err := resolveSummary(args)
 	if err != nil {
