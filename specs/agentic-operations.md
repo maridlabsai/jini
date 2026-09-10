@@ -29,7 +29,8 @@ direction, a design) or an **input automation cannot create** — escalated.
 | **Deployments** | GitHub Releases (assets + checksums); website via GitHub Pages on push | ✅ releases · ⛳ Pages needs the domain (escalated) |
 | **Model/provider onboarding** | `jini models` (discovery) → `jini check model` (auto quality gate) → `providers.json` catalog → `catalog-auto-merge.yml` (schema + live gate → auto-merge) | ✅ live |
 | **Design** | Occasional, agent-assisted (artifact-design); not a recurring load | judgment |
-| **Marketing** | Viral loops built into the product (shareable receipts, throttle demo, OSS); competitive-intel + feature-ask signal on a schedule | ⏳ signal loop |
+| **Marketing** | Viral loops built into the product (shareable receipts, throttle demo, OSS); competitive-intel on a schedule | ⏳ intel loop |
+| **Feedback / roadmap** | `jini feedback [bug\|ask]` files to GitHub (👍 = upvote); `triage-digest.yml` ranks by reactions weekly into one living issue; priority call is human | ✅ live |
 | **Payments** | Stripe checkout → webhook → entitlement flips `JINI_SUBSCRIPTION_TIER=commercial` (seam exists in `../jini-commercial`) | ⛳ needs Stripe (escalated) |
 | **Security** | `security.yml` scanners; Dependabot for dependency CVEs; `security-scan` skill | ✅ scanners · ⏳ Dependabot |
 | **Community** | Gate-enforced PRs; `catalog-auto-merge.yml`; "no fixture, not claimed"; protected core behind the PRD-drift gate | ✅ live |
@@ -63,5 +64,6 @@ directions, not doing toil.
   validate, and can auto-merge on green).
 - **Signed remote catalog fetch** — makes community providers instant (today
   they ship in the next release via the embedded catalog).
-- **Competitive-intel / feature-ask digest** — scheduled summary of GitHub
-  reactions + competitor-forum pain points, feeding the roadmap.
+- **Competitive-intel digest** — scheduled summary of competitor-forum pain
+  points (r/kiroIDE, Cursor/Windsurf), feeding the roadmap. (The GitHub feature-
+  ask side is already covered by `triage-digest.yml`.)
