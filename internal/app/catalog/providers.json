@@ -1,0 +1,5 @@
+{
+  "schema_version": "0.1.0",
+  "_comment": "Community provider catalog — OpenAI-compatible BYO providers, gate-validated and auto-merged. See README.md. Each entry: id, label, key_env required; chat_path + model_env + default_model make it routable; models_path defaults to /models; default_base is the API root.",
+  "providers": []
+}

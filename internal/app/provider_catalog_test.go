@@ -73,3 +73,25 @@ func TestCatalogProviderValidates(t *testing.T) {
 		t.Fatalf("unconfigured catalog provider should report not-configured: %+v", res)
 	}
 }
+
+// The embedded community catalog must always be well-formed — this is the schema
+// gate a catalog PR passes through the normal test suite. Every entry, overlaid,
+// must yield a usable shape (id + key env + a buildable request).
+func TestEmbeddedCatalogWellFormed(t *testing.T) {
+	for i, e := range embeddedCatalogEntries() {
+		if e.ID == "" {
+			t.Errorf("entry %d: missing id", i)
+		}
+		if e.KeyEnv == "" {
+			t.Errorf("entry %q: missing key_env", e.ID)
+		}
+		shape := e.overlay(byoShape{})
+		req, err := shape.buildRequest(nil, shape.defaultBase, "k")
+		if err != nil || req == nil || req.URL == nil || req.URL.Host == "" {
+			t.Errorf("entry %q: builds an invalid request (err=%v)", e.ID, err)
+		}
+		if shape.Label == "" {
+			t.Errorf("entry %q: missing label", e.ID)
+		}
+	}
+}

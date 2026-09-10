@@ -1,11 +1,29 @@
 package app
 
 import (
+	_ "embed"
 	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
 )
+
+// embeddedCatalogJSON is the community provider catalog shipped in the binary —
+// gate-validated and auto-merged (see internal/app/catalog/). New community
+// providers reach users in the next release; a signed remote fetch (later) makes
+// it instant. It overlays the built-in shapes and is itself overlaid by the
+// user's local providers.json.
+//
+//go:embed catalog/providers.json
+var embeddedCatalogJSON []byte
+
+func embeddedCatalogEntries() []catalogProviderEntry {
+	var file providerCatalogFile
+	if err := json.Unmarshal(embeddedCatalogJSON, &file); err != nil {
+		return nil
+	}
+	return file.Providers
+}
 
 // Data-driven provider catalog — onboard a NEW OpenAI-compatible provider (or fix
 // a stale field on a built-in one, like a deprecated default model) WITHOUT a
@@ -89,11 +107,18 @@ func (e catalogProviderEntry) overlay(shape byoShape) byoShape {
 // with any catalog entries. Rebuilt per call (cheap; not a hot path) so a
 // dropped-in catalog takes effect without a restart.
 func byoShapeRegistry() map[string]byoShape {
-	reg := make(map[string]byoShape, len(byoShapes)+4)
+	reg := make(map[string]byoShape, len(byoShapes)+8)
 	for id, shape := range byoShapes {
 		reg[id] = shape
 	}
-	for _, entry := range providerCatalogLoader() {
+	// Precedence: built-in < embedded community catalog < user-local providers.json.
+	applyCatalogEntries(reg, embeddedCatalogEntries())
+	applyCatalogEntries(reg, providerCatalogLoader())
+	return reg
+}
+
+func applyCatalogEntries(reg map[string]byoShape, entries []catalogProviderEntry) {
+	for _, entry := range entries {
 		id := strings.TrimSpace(entry.ID)
 		if id == "" {
 			continue
@@ -105,7 +130,6 @@ func byoShapeRegistry() map[string]byoShape {
 		}
 		reg[id] = merged
 	}
-	return reg
 }
 
 // byoAliasRegistry merges the built-in aliases with an identity alias for every
