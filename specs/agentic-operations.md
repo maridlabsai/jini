@@ -23,7 +23,7 @@ direction, a design) or an **input automation cannot create** — escalated.
 | Aspect | How it's carried | State |
 | --- | --- | --- |
 | **Development** | Dogfood loop (`JINI_HOME=$HOME/.jini-dogfood jini "<task>"` = jini-pro) + the commit gate + pre-commit review/premortem | ✅ live |
-| **Validation** | `tools/run_required_gates.sh` on every commit/PR (build/test/lint/PRD-drift/scorecard); `jini check model` for model quality; scheduled health run for drift | ✅ gates · ⏳ scheduled health |
+| **Validation** | `tools/run_required_gates.sh` on every commit/PR (build/test/lint/PRD-drift/scorecard); `jini check model` for model quality; `health.yml` re-runs both on a daily cron and opens an issue on drift | ✅ live |
 | **Builds** | `ci-installer.yml` (mac/linux + windows); `release.yml` cross-compile matrix, ldflags version/channel stamp | ✅ live |
 | **Updates / releases** | `release.yml` (tag→stable, `-beta.N`→beta, main→nightly); `jini version` / `jini update`; install.sh `--channel` | ✅ code · ⛳ signed assets need the cert (escalated) |
 | **Deployments** | GitHub Releases (assets + checksums); website via GitHub Pages on push | ✅ releases · ⛳ Pages needs the domain (escalated) |
@@ -32,7 +32,7 @@ direction, a design) or an **input automation cannot create** — escalated.
 | **Marketing** | Viral loops built into the product (shareable receipts, throttle demo, OSS); competitive-intel on a schedule | ⏳ intel loop |
 | **Feedback / roadmap** | `jini feedback [bug\|ask]` files to GitHub (👍 = upvote); `triage-digest.yml` ranks by reactions weekly into one living issue; priority call is human | ✅ live |
 | **Payments** | Stripe checkout → webhook → entitlement flips `JINI_SUBSCRIPTION_TIER=commercial` (seam exists in `../jini-commercial`) | ⛳ needs Stripe (escalated) |
-| **Security** | `security.yml` scanners; Dependabot for dependency CVEs; `security-scan` skill | ✅ scanners · ⏳ Dependabot |
+| **Security** | `security.yml` (CodeQL SAST, govulncheck, OSV-Scanner, TruffleHog, scheduled + on PR); `dependabot.yml` (gomod + actions, weekly); `security-scan` skill | ✅ live |
 | **Community** | Gate-enforced PRs; `catalog-auto-merge.yml`; "no fixture, not claimed"; protected core behind the PRD-drift gate | ✅ live |
 
 Legend: ✅ automated · ⏳ automatable next (no new human input) · ⛳ blocked on an
@@ -55,15 +55,16 @@ Once those land, the loop is closed: the product builds, validates, ships,
 updates, onboards models/providers, and bills — with the developer approving
 directions, not doing toil.
 
-## What's left to build (automatable, no new human input)
+## What's left to build
 
-- **Scheduled health workflow** — cron that re-runs the gates + `jini check
-  model` (when keys exist) + a dependency/CVE audit, opening an issue on drift
-  (catches the world changing under a static repo, e.g. a deprecated default).
-- **Dependabot config** — automated dependency-update PRs (which the gates then
-  validate, and can auto-merge on green).
-- **Signed remote catalog fetch** — makes community providers instant (today
-  they ship in the next release via the embedded catalog).
-- **Competitive-intel digest** — scheduled summary of competitor-forum pain
-  points (r/kiroIDE, Cursor/Windsurf), feeding the roadmap. (The GitHub feature-
-  ask side is already covered by `triage-digest.yml`.)
+- **Signed remote catalog fetch** (blocked on signing) — makes community
+  providers instant instead of shipping in the next release via the embedded
+  catalog. Depends on the release-signing key/cert (escalated), so it is not
+  purely automatable yet.
+- **Competitive-intel digest** (automatable, lower priority) — scheduled summary
+  of competitor-forum pain points (r/kiroIDE, Cursor/Windsurf) feeding the
+  roadmap. Fragile to build reliably (scraping); deferred. The GitHub feature-ask
+  side is already covered by `triage-digest.yml`.
+
+The scheduled health workflow, Dependabot, and the dependency/CVE audit that this
+section used to list are **done** — see the Validation and Security rows above.
