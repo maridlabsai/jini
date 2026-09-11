@@ -29,7 +29,7 @@ direction, a design) or an **input automation cannot create** — escalated.
 | **Deployments** | GitHub Releases (assets + checksums); website via GitHub Pages on push | ✅ releases · ⛳ Pages needs the domain (escalated) |
 | **Model/provider onboarding** | `jini models` (discovery) → `jini check model` (auto quality gate) → `providers.json` catalog → `catalog-auto-merge.yml` (schema + live gate → auto-merge) | ✅ live |
 | **Design** | Occasional, agent-assisted (artifact-design); not a recurring load | judgment |
-| **Marketing** | Viral loops built into the product (shareable receipts, throttle demo, OSS); competitive-intel on a schedule | ⏳ intel loop |
+| **Marketing** | Viral loops built into the product (shareable receipts, throttle demo, OSS); `competitive-intel.yml` scans HN + competitor GitHub issues + Reddit weekly into one living issue, feeding roadmap + messaging | ✅ live |
 | **Feedback / roadmap** | `jini feedback [bug\|ask]` files to GitHub (👍 = upvote); `triage-digest.yml` ranks by reactions weekly into one living issue; priority call is human | ✅ live |
 | **Payments** | Stripe checkout → webhook → entitlement flips `JINI_SUBSCRIPTION_TIER=commercial` (seam exists in `../jini-commercial`) | ⛳ needs Stripe (escalated) |
 | **Security** | `security.yml` (CodeQL SAST, govulncheck, OSV-Scanner, TruffleHog, scheduled + on PR); `dependabot.yml` (gomod + actions, weekly); `security-scan` skill | ✅ live |
@@ -61,10 +61,8 @@ directions, not doing toil.
   providers instant instead of shipping in the next release via the embedded
   catalog. Depends on the release-signing key/cert (escalated), so it is not
   purely automatable yet.
-- **Competitive-intel digest** (automatable, lower priority) — scheduled summary
-  of competitor-forum pain points (r/kiroIDE, Cursor/Windsurf) feeding the
-  roadmap. Fragile to build reliably (scraping); deferred. The GitHub feature-ask
-  side is already covered by `triage-digest.yml`.
 
-The scheduled health workflow, Dependabot, and the dependency/CVE audit that this
-section used to list are **done** — see the Validation and Security rows above.
+The scheduled health workflow, Dependabot, the dependency/CVE audit, and the
+competitive-intel digest that this section used to list are **done** — see the
+Validation, Security, and Marketing rows above. The last remaining automatable
+item is the signed remote catalog fetch, which is gated on the release cert.
