@@ -73,7 +73,11 @@ jobs:
           shasum -a 256 "${asset}" > "${asset}.sha256"
 
       - name: Verify the built binary reports its channel
-        if: matrix.goos == 'linux'
+        # Only run the built binary on a host that can execute it. The matrix runs
+        # on ubuntu-latest (amd64), so a linux/arm64 binary would fail with
+        # "Exec format error". The channel ldflag stamp is arch-independent, so
+        # verifying the native amd64 build covers the release path.
+        if: matrix.goos == 'linux' && matrix.goarch == 'amd64'
         shell: bash
         run: |
           out="jini"
