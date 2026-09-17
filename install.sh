@@ -259,27 +259,27 @@ verify_release_checksum() {
 }
 
 # verify_macos_signature enforces an Apple-anchored Developer ID signature on
-# macOS. A signed-but-not-Apple-anchored binary (ad-hoc/self-signed/tampered) is
-# rejected. An entirely unsigned binary is allowed during the pre-signing
-# transition unless JINI_REQUIRE_SIGNED=1. codesign with an explicit requirement
-# is used because bare `codesign --verify` accepts ad-hoc signatures.
+# macOS. The gold path is an Apple-anchored signature, verified with an explicit
+# requirement because bare `codesign --verify` accepts ad-hoc signatures. Anything
+# else — entirely unsigned OR merely ad-hoc signed — is allowed through the
+# pre-signing transition and rejected only when JINI_REQUIRE_SIGNED=1. The ad-hoc
+# case is not an edge case: the macOS arm64 linker ad-hoc signs every native
+# binary, so our own unsigned release binaries land here until a Developer ID cert
+# exists. Integrity during the transition is still guaranteed by the checksum
+# verification that runs before this.
 verify_macos_signature() {
   local binary_path="$1"
   [[ "$(uname -s)" == "Darwin" ]] || return 0
   command -v codesign >/dev/null 2>&1 || return 0
-  if ! codesign -dv "${binary_path}" >/dev/null 2>&1; then
-    if [[ "${JINI_REQUIRE_SIGNED:-0}" == "1" ]]; then
-      RELEASE_VALIDATION="unsigned-binary-rejected"
-      return 1
-    fi
-    RELEASE_VALIDATION="${RELEASE_VALIDATION}+unsigned-allowed"
+  if codesign --verify --strict -R="anchor apple generic" "${binary_path}" >/dev/null 2>&1; then
+    RELEASE_VALIDATION="${RELEASE_VALIDATION}+signature-verified"
     return 0
   fi
-  if ! codesign --verify --strict -R="anchor apple generic" "${binary_path}" >/dev/null 2>&1; then
-    RELEASE_VALIDATION="signature-not-apple-anchored"
+  if [[ "${JINI_REQUIRE_SIGNED:-0}" == "1" ]]; then
+    RELEASE_VALIDATION="signature-not-apple-anchored-rejected"
     return 1
   fi
-  RELEASE_VALIDATION="${RELEASE_VALIDATION}+signature-verified"
+  RELEASE_VALIDATION="${RELEASE_VALIDATION}+unsigned-or-adhoc-allowed"
   return 0
 }
 
