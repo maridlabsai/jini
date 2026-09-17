@@ -1,8 +1,8 @@
 schema_version: "0.1.0"
 benchmark_id: jini-product-golden-benchmark
 label: Jini Golden Product Benchmark
-updated_at: "2026-06-10"
-last_verified_at: "2026-06-10"
+updated_at: "2026-07-17"
+last_verified_at: "2026-07-17"
 purpose: >
   Validate Jini against a rerunnable golden dataset and compare it against the
   major product, harness, coding-agent, and UX competitors using weighted
@@ -16,11 +16,15 @@ comparison_model:
     - Hermes
     - AgentField
     - AI Hero
+    - Cline
+    - Aider
+    - Roo Code
+    - Goose
+    - OpenCode
+    - Continue
   watchlist:
     - Spec Kit
     - Windsurf
-    - Cline
-    - Aider
     - Matt Pocock Skills Installer
     - GitHub Copilot coding agent
     - Google Jules
@@ -28,14 +32,11 @@ comparison_model:
     - Cursor
     - JetBrains Junie
     - Zed Agent Panel
-    - Continue
-    - Roo Code
     - OpenHands
     - Roomote
     - Devin
     - Factory Droids
     - Replit Agent
-    - Goose
     - Lovable
     - Bolt.new
     - Vercel v0
@@ -52,7 +53,6 @@ comparison_model:
     - Genspark Super Agent
     - Lindy
     - Zapier Agents
-    - OpenCode
     - Sourcegraph Amp
     - Tabnine Agent
     - Qodo Merge
@@ -67,8 +67,8 @@ comparison_model:
     but they do not require scenario coverage inside the golden benchmark.
 scorecard_gates:
   commit_gate_command: ["scorecard-gate", "--format", "json"]
-  minimum_core_competitors: 7
-  minimum_watchlist_competitors: 40
+  minimum_core_competitors: 13
+  minimum_watchlist_competitors: 38
   minimum_scenarios: 8
   required_watchlist_competitors:
     - claude-code
@@ -238,7 +238,7 @@ scorecard_gates:
           ref: "go test ./internal/app -run TestPublishReadinessIncludesOfflineRegressionGuardrails"
         - id: platform-offline-strategy-future-update-policy
           kind: named-proof
-          ref: "specs/platform-offline-strategy.md"
+          ref: "specs/local-model-support-matrix.md"
       gate: >
         Offline and local-model routes must be proven by executable diagnostics
         or fail with exact setup instructions; docs may not claim fake offline
@@ -278,7 +278,7 @@ scorecard_gates:
           ref: "go test ./internal/app -run TestP1SimplicityPriorityCoversCommandsSkillsAndAgents"
         - id: skills-and-delegation-tier-boundary
           kind: named-proof
-          ref: "specs/skills-and-delegation-slice.md"
+          ref: "specs/archive/skills-and-delegation-slice.md"
       gate: >
         Free tier must preserve useful local/BYO routing while commercial-only
         skills, agent fleets, managed throttle recovery, and team automation
@@ -291,7 +291,7 @@ scorecard_gates:
           ref: "go test ./internal/app -run TestResourcePolicyPrioritiesAreGated"
         - id: cross-surface-session-platform-prd
           kind: named-proof
-          ref: "specs/cross-surface-session-platform-prd.md"
+          ref: "specs/archive/cross-surface-session-platform-prd.md"
       gate: >
         The same work item must preserve identity, route state, artifacts,
         approvals, and next action across CLI, desktop, mobile, and browser
@@ -304,7 +304,7 @@ scorecard_gates:
           ref: "go test ./internal/app -run TestResourcePolicyPrioritiesAreGated"
         - id: lean-platform-token-frugality-p0
           kind: named-proof
-          ref: "specs/lean-platform-gate.md"
+          ref: "specs/engineering-gate-matrix.md"
       gate: >
         Route decisions must show compact context reuse, transcript replay
         avoidance, cost/throttle rationale, and why a premium or high-context
@@ -320,7 +320,7 @@ scorecard_gates:
           ref: "specs/execution-routing-policy.md"
         - id: skills-and-delegation-sub-agent-boundary
           kind: named-proof
-          ref: "specs/skills-and-delegation-slice.md"
+          ref: "specs/archive/skills-and-delegation-slice.md"
       gate: >
         Sub-agent divide-and-conquer is required for non-trivial work only when
         execution routing, skill/delegation boundaries, lead integration,
@@ -375,6 +375,37 @@ methodology:
     - Adoption-heavy scenarios intentionally use tougher competitor baselines than architecture scenarios.
     - Overall score is less important than track-level honesty; use `adoption-truth` as the harsher read.
     - Prefer checks that penalize product theory leakage, extra control decisions, and weak cheap-default behavior.
+  absorbed_adapter_benchmark_methodology: |
+    Absorbed from the archived adapter-benchmark-gate.md and
+    adapter-capability-benchmarking.md during the PRD rebuild
+    (prd-rebuild-design.md section 8). Normative adapter benchmarking rules:
+
+    Benchmark capture: for benchmarkable local adapters, run a small real
+    request and measure success/failure, cold and warm latency, output token
+    throughput, basic compliance, and structured-output repeatability;
+    persist benchmark history per adapter and per request cohort; mark
+    adapters ok, degraded, failed, or not configured; warm stale capability
+    reports in the background during interactive startup.
+
+    ### 4. Routing Use
+    Route scoring includes measured benchmark bias: measured failures can
+    suppress a local route and measured success can improve it; weak
+    throughput, heavy cold-start cost, or unstable structured output reduce
+    a local route; repeated regression across recent samples counts more
+    than one noisy sample; stale regressions decay;
+    strong recovery after degradation restores route score faster, weighted
+    by current work shape
+    and narrowed by artifact family or cohort; direct cohort evidence from
+    real local completions outranks discounted transferred evidence;
+    explicit, graded, passive edit-distance, section-aware, semantic, and
+    downstream-adoption feedback bias matching cohorts without spilling into
+    unrelated ones.
+
+    Transparency: provider doctor exposes benchmark summary lines; benchmark
+    capture and benchmark-based routing tests exist. Independent validator:
+    jini validate-adapter-benchmark-gate --format json. The archived
+    competitive-kpis.yaml watchlist is superseded by the watchlist and
+    required_watchlist_competitors sets in this file.
   interpretation_warning: >
     A green benchmark does not prove Jini is currently better than Claude,
     Codex, ChatGPT, or other competitors in real usage. It proves only that
@@ -454,6 +485,66 @@ competitors:
       - Teaches visible tool calls, arguments, results, and sources
       - Human approval before sensitive real-world action
       - Simple agent creation and voice-first daily task capture
+  - id: cline
+    label: Cline
+    rationale: Strongest benchmark for free/BYO-key agent adoption inside the editor with plan/act discipline.
+    source_urls:
+      - https://github.com/cline/cline
+      - https://cline.bot
+    validated_strengths:
+      - BYO-key and local-model routing with per-request cost visibility
+      - Plan/Act mode split with human approval on file and command actions
+      - MCP marketplace extensibility with large community adoption
+  - id: aider
+    label: Aider
+    rationale: Strongest benchmark for token-frugal CLI pair programming and git-native workflow.
+    source_urls:
+      - https://github.com/Aider-AI/aider
+      - https://aider.chat
+    validated_strengths:
+      - Repo-map context compression keeps token spend low by default
+      - Auto-commit-per-change git discipline with clean undo
+      - Works with nearly any provider or local model from one CLI
+  - id: roo-code
+    label: Roo Code
+    rationale: Strongest benchmark for configurable multi-mode agent orchestration in the editor.
+    source_urls:
+      - https://github.com/RooCodeInc/Roo-Code
+      - https://roocode.com
+    validated_strengths:
+      - Custom modes and orchestrator delegation for power users
+      - Checkpoint/rollback safety on agent edits
+      - Deep MCP and per-mode model routing configuration
+  - id: goose
+    label: Goose
+    rationale: Strongest benchmark for open, MCP-first extensible agents spanning CLI and desktop.
+    source_urls:
+      - https://github.com/block/goose
+      - https://block.github.io/goose/
+    validated_strengths:
+      - Extension-first architecture built natively on MCP
+      - Recipes for repeatable, shareable agent workflows
+      - Provider-agnostic including fully local execution
+  - id: opencode
+    label: OpenCode
+    rationale: Strongest benchmark for terminal-native open-source agent UX with provider-agnostic routing.
+    source_urls:
+      - https://github.com/sst/opencode
+      - https://opencode.ai
+    validated_strengths:
+      - Polished TUI first-run with LSP-aware code context
+      - Client/server split enables remote and headless driving
+      - Provider-agnostic across hosted and local models
+  - id: continue
+    label: Continue
+    rationale: Strongest benchmark for config-driven IDE assistance and shareable building blocks.
+    source_urls:
+      - https://github.com/continuedev/continue
+      - https://continue.dev
+    validated_strengths:
+      - Hub of shareable models, rules, and prompt blocks
+      - Autocomplete plus chat plus agent in one open extension
+      - Fine-grained config for routing cheap vs strong models
 scenarios:
   - id: install-trust
     label: Beginner install trust path
@@ -473,6 +564,12 @@ scenarios:
       hermes: 7.2
       agentfield: 7.0
       ai-hero: 8.4
+      cline: 8.3
+      aider: 7.8
+      roo-code: 7.9
+      goose: 7.6
+      opencode: 7.8
+      continue: 8.0
     setup:
       - id: install-starter-kit
         backlog_command:
@@ -530,6 +627,12 @@ scenarios:
       hermes: 7.1
       agentfield: 7.5
       ai-hero: 7.7
+      cline: 7.4
+      aider: 8.2
+      roo-code: 7.3
+      goose: 7.0
+      opencode: 7.5
+      continue: 7.4
     setup:
       - id: compile-research-pack
         backlog_command:
@@ -662,6 +765,12 @@ scenarios:
       hermes: 7.4
       agentfield: 8.6
       ai-hero: 5.8
+      cline: 7.2
+      aider: 7.6
+      roo-code: 7.0
+      goose: 7.8
+      opencode: 7.7
+      continue: 7.1
     checks:
       - id: adapter-conformance-clean
         backlog_command: ["adapter-conformance", "--format", "json"]
@@ -699,6 +808,12 @@ scenarios:
       hermes: 7.6
       agentfield: 8.7
       ai-hero: 7.1
+      cline: 7.3
+      aider: 7.0
+      roo-code: 7.4
+      goose: 7.2
+      opencode: 7.0
+      continue: 6.9
     setup:
       - id: compile-research-pack
         backlog_command:
@@ -996,6 +1111,12 @@ scenarios:
       hermes: 8.3
       agentfield: 7.4
       ai-hero: 8.9
+      cline: 8.5
+      aider: 8.0
+      roo-code: 7.8
+      goose: 7.7
+      opencode: 8.0
+      continue: 7.9
     checks:
       - id: friction-reduction-section-present
         backlog_command: ["publish-readiness", "--format", "json"]
@@ -1033,6 +1154,12 @@ scenarios:
       hermes: 7.1
       agentfield: 7.9
       ai-hero: 6.9
+      cline: 6.8
+      aider: 6.9
+      roo-code: 6.9
+      goose: 6.7
+      opencode: 6.5
+      continue: 6.4
     checks:
       - id: publish-readiness-status-ok
         command: ["publish-readiness", "--format", "json"]
@@ -1069,31 +1196,31 @@ scenarios:
       - id: publish-readiness-app-platform-stack-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
-        contains: "specs/app-platform-shipping-playbook.md#default-stack-decision"
+        contains: "specs/archive/app-platform-shipping-playbook.md#default-stack-decision"
       - id: publish-readiness-app-platform-security-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
-        contains: "specs/app-platform-shipping-playbook.md#security-baseline"
+        contains: "specs/archive/app-platform-shipping-playbook.md#security-baseline"
       - id: publish-readiness-app-platform-performance-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
-        contains: "specs/app-platform-shipping-playbook.md#performance-and-optimization-baseline"
+        contains: "specs/archive/app-platform-shipping-playbook.md#performance-and-optimization-baseline"
       - id: publish-readiness-app-platform-observability-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
-        contains: "specs/app-platform-shipping-playbook.md#logging-diagnostics-and-observability"
+        contains: "specs/archive/app-platform-shipping-playbook.md#logging-diagnostics-and-observability"
       - id: publish-readiness-app-platform-update-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
-        contains: "specs/app-platform-shipping-playbook.md#update-and-release-policy"
+        contains: "specs/archive/app-platform-shipping-playbook.md#update-and-release-policy"
       - id: publish-readiness-app-platform-release-gates-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
-        contains: "specs/app-platform-shipping-playbook.md#app-shipping-gates"
+        contains: "specs/archive/app-platform-shipping-playbook.md#app-shipping-gates"
       - id: publish-readiness-app-platform-sources-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
-        contains: "specs/app-platform-shipping-playbook.md#source-backed-inputs"
+        contains: "specs/archive/app-platform-shipping-playbook.md#source-backed-inputs"
       - id: publish-readiness-local-model-registry-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
@@ -1105,31 +1232,31 @@ scenarios:
       - id: publish-readiness-offline-update-policy-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
-        contains: "specs/platform-offline-strategy.md#future-update-policy"
+        contains: "specs/local-model-support-matrix.md#future-update-policy"
       - id: publish-readiness-adapter-regression-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
-        contains: "specs/adapter-benchmark-gate.md#routing-use"
+        contains: "specs/golden-competitive-benchmark.yaml#routing-use"
       - id: publish-readiness-honest-audit-reality-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
-        contains: "specs/honest-system-audit.md#current-implementation-reality"
+        contains: "specs/archive/honest-system-audit.md#current-implementation-reality"
       - id: publish-readiness-honest-audit-feedback-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
-        contains: "specs/honest-system-audit.md#core-feedback-accommodations"
+        contains: "specs/archive/honest-system-audit.md#core-feedback-accommodations"
       - id: publish-readiness-honest-audit-evidence-contract-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
-        contains: "specs/honest-system-audit.md#machine-readable-evidence-contract"
+        contains: "specs/archive/honest-system-audit.md#machine-readable-evidence-contract"
       - id: publish-readiness-skills-boundary-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
-        contains: "specs/skills-and-delegation-slice.md#tier-boundary"
+        contains: "specs/archive/skills-and-delegation-slice.md#tier-boundary"
       - id: publish-readiness-lean-skills-boundary-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
-        contains: "specs/lean-platform-gate.md#command-surface-discipline"
+        contains: "specs/engineering-gate-matrix.md#command-surface-discipline"
       - id: publish-readiness-honest-audit-go-cli-claim-visible
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
@@ -1193,7 +1320,7 @@ scenarios:
       - id: publish-readiness-user-context-productivity-guardrail
         command: ["publish-readiness", "--format", "json"]
         path: "sections"
-        contains: "specs/learning-system.md#user-context-productivity-learning"
+        contains: "specs/archive/learning-system.md#user-context-productivity-learning"
       - id: publish-readiness-pack-count
         command: ["publish-readiness", "--format", "json"]
         path: "pack_count"
@@ -1228,6 +1355,12 @@ scenarios:
       hermes: 8.9
       agentfield: 8.8
       ai-hero: 7.2
+      cline: 7.6
+      aider: 7.2
+      roo-code: 7.9
+      goose: 7.8
+      opencode: 7.4
+      continue: 7.3
     setup:
       - id: bootstrap-home
         backlog_command: ["bootstrap-home", "{scenario_root}/home", "--owner-name", "Golden User"]
@@ -1270,6 +1403,12 @@ scenarios:
       hermes: 7.8
       agentfield: 7.7
       ai-hero: 7.4
+      cline: 6.8
+      aider: 6.6
+      roo-code: 7.0
+      goose: 6.9
+      opencode: 6.5
+      continue: 7.0
     checks:
       - id: framework-review-prefers-subtractive-experiment
         backlog_command: ["review-framework", "--format", "json", "--limit", "3"]

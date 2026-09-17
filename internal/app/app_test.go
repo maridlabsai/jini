@@ -616,7 +616,7 @@ func TestPublishReadinessJSONIsNativeGoAndReportsMigrationComplete(t *testing.T)
 			continue
 		}
 		for _, check := range section.Checks {
-			if check.Path == "specs/app-platform-shipping-playbook.md" {
+			if check.Path == "specs/archive/app-platform-shipping-playbook.md" {
 				foundAppShippingGate = true
 				if !check.Exists || check.Status != "ok" {
 					t.Fatalf("expected app platform shipping playbook gate to pass, got: %#v", check)
@@ -1104,6 +1104,7 @@ func TestAdminHelpAliasShowsAdminInventory(t *testing.T) {
 				"jini provider doctor",
 				"jini observe status",
 				"jini check ship",
+				"jini check functional",
 				"jini open <artifact>",
 				"Admin commands stay intentionally narrow.",
 				"jini publish-readiness",
@@ -1418,11 +1419,11 @@ func TestRouteCommandListsAvailableRoutes(t *testing.T) {
 		"Current: auto",
 		"Available",
 		"auto",
-		"- codex: Codex CLI handoff (cli, external, ok)",
-		"- claude-code: Claude Code CLI handoff (cli, external, needs setup: missing executable)",
-		"- gemini-cli: Gemini CLI handoff (cli, external, needs setup: missing executable)",
-		"- aider: Aider CLI handoff (cli, external, needs setup: missing executable)",
-		"- opencode: OpenCode CLI handoff (cli, external, needs setup: missing executable)",
+		"- codex: Codex CLI handoff (cli, external, ok, posture experimental (doc-verified))",
+		"- claude-code: Claude Code CLI handoff (cli, external, needs setup: missing executable, posture verified)",
+		"- gemini-cli: Gemini CLI handoff (cli, external, needs setup: missing executable, posture experimental (doc-verified))",
+		"- aider: Aider CLI handoff (cli, external, needs setup: missing executable, posture experimental (doc-verified))",
+		"- opencode: OpenCode CLI handoff (cli, external, needs setup: missing executable, posture experimental (doc-verified))",
 		"claude-api",
 		"- azure-code: Azure code route (remote, standard, needs setup)",
 		"- local-preview: Local preview (local, free, ok)",
@@ -2241,6 +2242,19 @@ func writeFakeExecutable(t *testing.T, dir, name, body string) string {
 	content := "#!/bin/sh\nset -eu\n" + body
 	if err := os.WriteFile(path, []byte(content), 0o755); err != nil {
 		t.Fatalf("write fake executable %s: %v", name, err)
+	}
+	// TestMain pins the CLI handoff executable env vars to a missing path so
+	// tests never invoke a real installed CLI. Point the matching env var at
+	// this fake so default-name lookups resolve to it; tests that set the env
+	// var explicitly afterwards still win.
+	if env, ok := map[string]string{
+		"codex":    "JINI_CODEX_CLI",
+		"claude":   "JINI_CLAUDE_CODE_CLI",
+		"gemini":   "JINI_GEMINI_CLI",
+		"aider":    "JINI_AIDER_CLI",
+		"opencode": "JINI_OPENCODE_CLI",
+	}[name]; ok {
+		t.Setenv(env, path)
 	}
 	return path
 }

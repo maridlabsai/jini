@@ -20,7 +20,49 @@ type repoReviewSnapshot struct {
 
 func isRepoReviewDirectTask(source string) bool {
 	normalized := normalizeName(source)
-	return strings.Contains(normalized, "review") && containsAny(normalized, []string{"repo", "repository", "branch"})
+	if !strings.Contains(normalized, "review") || !containsAny(normalized, []string{"repo", "repository", "branch"}) {
+		return false
+	}
+	// A read-only repo-review snapshot is the wrong home for a build task that
+	// merely mentions reviewing a repo/branch (e.g. "review the repo and fix the
+	// failing build"). Capturing it here would silently no-op the requested
+	// change. When a code-mutation verb is present, fall through to normal
+	// routing so the task can hand off and actually do the work.
+	if promptRequestsCodeMutation(normalized) {
+		return false
+	}
+	return true
+}
+
+// promptRequestsCodeMutation reports whether an already-normalized prompt asks
+// for a code change (as opposed to a read-only review). Verbs are matched as
+// whole words; the set is deliberately narrow — verbs that essentially never
+// appear in a pure "please review" request — so genuine review prompts
+// ("review this repo for uncommitted changes") are never diverted.
+func promptRequestsCodeMutation(normalized string) bool {
+	padded := " " + normalized + " "
+	for _, verb := range []string{
+		"fix", "fixes", "fixing",
+		"implement", "implements", "implementing",
+		"refactor", "refactors", "refactoring",
+		"rewrite", "rewrites", "rewriting",
+		"patch", "patches", "patching",
+		"migrate", "migrates", "migrating",
+		"rename", "renames", "renaming",
+		"add", "adds", "adding",
+		"create", "creates", "creating",
+		"build", "builds", "building",
+		"resolve", "resolves", "resolving",
+		"debug", "debugs", "debugging",
+		"delete", "deletes", "deleting",
+		"remove", "removes", "removing",
+		"change", "changing",
+	} {
+		if strings.Contains(padded, " "+verb+" ") {
+			return true
+		}
+	}
+	return false
 }
 
 func renderRepoReviewDirectTaskStarted(w io.Writer, source string, snapshot repoReviewSnapshot) {

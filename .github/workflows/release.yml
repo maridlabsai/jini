@@ -1,0 +1,134 @@
+name: Release
+
+# Publishes channel builds:
+#   - a semver tag  vX.Y.Z          -> STABLE  GitHub Release
+#   - a semver tag  vX.Y.Z-beta.N   -> BETA    (pre-release) + moving `beta` tag
+#   - a push to main                -> NIGHTLY (pre-release) moving `nightly` tag
+#
+# Each build stamps the version + channel into the binary via -ldflags and ships
+# a tar.gz + .sha256 per OS/arch. macOS signing/notarization is a separate step
+# (tools/release_macos.sh) run with the Developer ID secrets; this workflow
+# produces the unsigned matrix and the checksums install.sh verifies.
+
+on:
+  push:
+    tags:
+      - "v*"
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.goos }}/${{ matrix.goarch }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { goos: darwin, goarch: arm64 }
+          - { goos: darwin, goarch: amd64 }
+          - { goos: linux, goarch: arm64 }
+          - { goos: linux, goarch: amd64 }
+          - { goos: windows, goarch: amd64 }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Resolve version and channel
+        id: meta
+        shell: bash
+        run: |
+          ref="${GITHUB_REF#refs/*/}"
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            version="${ref#v}"
+            if [[ "${version}" == *-beta* ]]; then channel="beta"; else channel="stable"; fi
+          else
+            version="0.0.0-nightly.$(date -u +%Y%m%d).$(git rev-parse --short HEAD)"
+            channel="nightly"
+          fi
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+          echo "channel=${channel}" >> "${GITHUB_OUTPUT}"
+
+      - name: Build ${{ matrix.goos }}/${{ matrix.goarch }}
+        shell: bash
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: "0"
+        run: |
+          ldflags="-s -w \
+            -X github.com/maridlabsai/jini/internal/app.buildVersion=${{ steps.meta.outputs.version }} \
+            -X github.com/maridlabsai/jini/internal/app.buildChannel=${{ steps.meta.outputs.channel }}"
+          out="jini"
+          [[ "${GOOS}" == "windows" ]] && out="jini.exe"
+          go build -trimpath -ldflags "${ldflags}" -o "${out}" ./cmd/jini
+          asset="jini-${GOOS}-${GOARCH}.tar.gz"
+          tar -czf "${asset}" "${out}"
+          shasum -a 256 "${asset}" > "${asset}.sha256"
+
+      - name: Verify the built binary reports its channel
+        if: matrix.goos == 'linux'
+        shell: bash
+        run: |
+          out="jini"
+          got="$(./${out} version)"
+          echo "${got}"
+          echo "${got}" | grep -q "(${{ steps.meta.outputs.channel }})"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jini-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: |
+            jini-*.tar.gz
+            jini-*.tar.gz.sha256
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Resolve channel
+        id: meta
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            tag="${GITHUB_REF#refs/tags/}"
+            if [[ "${tag}" == *-beta* ]]; then channel="beta"; else channel="stable"; fi
+          else
+            channel="nightly"; tag="nightly"
+          fi
+          echo "channel=${channel}" >> "${GITHUB_OUTPUT}"
+          echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
+
+      - name: Move the channel tag (beta / nightly)
+        if: steps.meta.outputs.channel != 'stable'
+        shell: bash
+        run: |
+          git tag -f "${{ steps.meta.outputs.channel }}"
+          git push -f origin "${{ steps.meta.outputs.channel }}"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.channel == 'stable' && steps.meta.outputs.tag || steps.meta.outputs.channel }}
+          prerelease: ${{ steps.meta.outputs.channel != 'stable' }}
+          files: |
+            dist/jini-*.tar.gz
+            dist/jini-*.tar.gz.sha256
+          body: |
+            Channel: **${{ steps.meta.outputs.channel }}**
+
+            Install: `curl -fsSL https://raw.githubusercontent.com/maridlabsai/jini/main/install.sh | sh${{ steps.meta.outputs.channel != 'stable' && format(' -s -- --{0}', steps.meta.outputs.channel) || '' }}`
+
+            Every asset ships a `.sha256`; install.sh verifies the checksum (and a Developer ID signature on macOS) before installing.

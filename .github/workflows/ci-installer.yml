@@ -80,3 +80,21 @@ jobs:
           "${tmp}/bin/jini" commands >/dev/null
           grep -q '^install_mode=release-binary$' "${tmp}/install/install-receipt.txt"
           grep -q "^version=$(tr -d '[:space:]' < VERSION)$" "${tmp}/install/install-receipt.txt"
+
+  windows-build:
+    name: windows-latest (build + smoke)
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build jini
+        run: go build -o jini.exe ./cmd/jini
+
+      - name: Command inventory runs
+        run: ./jini.exe commands

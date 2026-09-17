@@ -1,17 +1,20 @@
 # PRD Implementation Trace
 
-Updated: 2026-06-08
+Updated: 2026-09-06
 
 This file maps the canonical P0 requirements in
 [number-one-platform-prd.md](./number-one-platform-prd.md) to implementation
 surfaces and gates. If a requirement cannot name code and a gate, it is not
 implementation-aligned.
 
-The trace must stay aligned with
-[number-one-platform-hld.md](./number-one-platform-hld.md) and
-[number-one-platform-lld.md](./number-one-platform-lld.md). The PRD states the
-outcome, the HLD states the architecture boundary, and the LLD states the
-runtime contract that tests enforce.
+Architecture background lives in the archived
+[number-one-platform-hld.md](./archive/number-one-platform-hld.md) and
+[number-one-platform-lld.md](./archive/number-one-platform-lld.md); the live
+engineering contracts are in
+[jini-architecture-blueprint.md](./jini-architecture-blueprint.md). The PRD
+states the outcome and the gates below prove it.
+
+## Implemented
 
 | P0 requirement | Runtime surface | Proof |
 | --- | --- | --- |
@@ -28,6 +31,71 @@ runtime contract that tests enforce.
 | Install from release assets without source builds | `install.sh`, release manifest, publish checks | install tests and release gate |
 | Preserve customer-value viability and anti-amateur scope | `tools/customer_value_gate.sh`, product settling decisions, competitive benchmark outcome gate | `TestProductViabilityGatePinsCustomerValueAndAntiAmateurBoundary`, customer value gate, scorecard gate |
 | Block regressions before commit and push | `tools/run_required_gates.sh`, scorecard PRD completion summary | commit/push/release gate tests, Claude/Codex use-case gate, scorecard PRD implementation completion tests |
+| Autonomous throttle survival — free-tier core: detect throttle on any route, hold the session, self-resume the same route, name a viable fallback | `throttle_survival.go` (`runWithThrottleSurvival`, throttle classifiers, Retry-After honoring, narration, receipt reason), wired into provider and CLI-handoff paths in `provider.go`/`cli_handoff.go` | `TestRunWithThrottleSurvival*`, `TestIsThrottleSignal*`, `TestClassifyCLIThrottleOutput*`; live transcript: fake throttling downstream CLI, hold narrated, advertised wait honored, same-route resume, work saved |
+| `Auto`/`Ask` execution mode, switchable mid-session, plus Ask-mode approval before throttled-work resume with fail-closed parking, and directory-trust-gated permission posture (Auto → plan/semi/autonomous by explicit consent) governing both CLI hand-off and Jini's own native in-process agentic loop | `execution_mode.go` (fail-closed setting, `runMode`), `throttle_survival.go` approver seam (`throttleApprover`, `autoApprover`/`failClosedApprover`/`cliPromptApprover`, `configureThrottleApproverForEntry`), `throttle_park.go` (resumable park), `jini continue` park-resume in `app.go`; `handoff_trust.go` (`jini trust` informed-consent + `~/.jini/trusted-dirs.json`), `handoff_posture.go` (resolver + disclosure/degraded-hint), per-descriptor `SemiArgs`/`AutonomousArgs` in `cli_handoff.go`; native loop under the same posture gate — `agent_entry.go` (`resolveNativeLoopPosture`, `maybeRunNativeLoop` wired into `runDirectTaskArgsIntake`), `agent_loop.go`/`agent_tools.go`/`agent_protocol.go` (bounded posture-gated read/edit/run loop), `agent_seam.go` + public `agentloop` package (recorder/checkpointer seams) | `TestRunMode*`, `TestConfigureThrottleApproverForEntry`, `TestCLIPromptApprover*`, `TestRunWithThrottleSurvivalDeclineReturnsTypedError`/`*FailClosedApprover*`, `TestThrottlePark*`, `TestRunContinueResumesPark`, `TestStandaloneThrottleFamilyErrorPassesThrough`; `TestTrust*`/`TestRunTrust*`, `TestPosture_*` (truth table incl. degrade-down + override-wins), `TestPostureDisclosureLine`, `TestPostureDegradedHint*`; native loop: `TestResolveNativeLoopPosture`, `TestMaybeRunNativeLoop*` (untrusted/local-preview fall through byte-identically, trusted+usable model runs), `TestRunAgentLoop*`, `TestAgentTool*`, `TestParseAction*`, `TestRegisteredRecorderReceivesSteps`/`TestCheckpointerCalledBeforeWriteStepsOnly`; live transcript: Ask decline parks + `jini continue` resumes; Auto silent hold honors advertised 2s wait; hand-off ceiling experiment showed acceptEdits/skip-permissions map to semi/autonomous |
+| Savings ledger MVP — dollar-primary, OS-currency-localized, imputed-and-labeled per-task receipts with a running counter and dashboard | `savings_pricing.go` (dated price table), `savings_currency.go` (OS-currency detection, dated FX, formatting), `savings_ledger.go` (global ledger, folding integrity invariant), `savings_receipt.go` (compute + one-entry-per-task wiring), `savings_render.go` (footer + startup counter), `savings_command.go` (`jini savings` text/JSON) | `TestBaselineForRoute`, `TestSavingsUSD*`, `TestDetectDisplayCurrency*`, `TestLocalize*`, `TestFormatMoney*`, `TestSavingsLedger*` (round-trip, folding invariant, tampered→nil), `TestComputeTaskSavings*`, `TestRecordSavings*`, `TestSavingsFooter*`, `TestSavingsStartupCounter*`, `TestRunSavings*`, `TestHonesty_*`; live transcript: work task footer `₹0.04 (US$0.0005)`, `jini savings` totals + disclosure, JSON report |
+
+## Not Yet Implemented (v1 backlog)
+
+These rebuilt-PRD requirements have no runtime surface today. Per this
+trace's own rule they are explicitly not implementation-aligned yet — this
+list is the input to the implementation phase, not a claim. Each names the
+PRD section and the gate that will eventually prove it. (Rendered as a list,
+not a table: the scorecard trace parser counts any three-cell table row as an
+implemented P0 row.)
+
+- Autonomous throttle survival, remaining slices (§P0 Outcome Requirements,
+  §Routing And Resource Policy): the free-tier same-route core and the
+  Ask-mode resume approval are implemented (see Implemented table); still
+  unbuilt are paid Autopilot mid-task route switching and the throttle-dodge
+  counter feeding the savings ledger. Future proof: throttle-resilience
+  release gate.
+- Savings ledger and receipts, remaining slices (§Savings Ledger And
+  Receipts): the MVP core is implemented (see Implemented table) — per-task
+  imputed receipt, work-task footer, startup counter, and `jini savings`
+  text/JSON, all dollar-primary with OS-currency localization and a disclosed
+  estimation basis. Still unbuilt: `jini savings --report` HTML export,
+  `--share` card, ANSI trend charts, and real metered-usage capture (the seam
+  for literal rows). Future proof: those surfaces plus a literal-capture
+  fixture.
+- Token-economy regression suite (§Token Economy). Future proof:
+  token-efficiency regression gate in the release tier.
+- On-the-fly skills and agents as plain reviewable files (§Skills And
+  Agents). **Creation implemented** 2026-09-06 (`jini skill new` / `jini agent
+  new` scaffold secret-scrubbed markdown+frontmatter under `.jini/skills|agents`;
+  free-tier gate fix so the commercial policy no longer blocks it — commit
+  09a638f, `skill_agent.go`). Remaining: in-session invocation runtime and
+  proactive skill-from-repetition suggestion. Future proof: skills/agents
+  creation fixture in the CLI UX gate.
+- User preference envelope — never/prefer/pin per model/route, speed bias,
+  plain-file persistence (execution-routing-policy §Absorbed Policies).
+  Future proof: preference-constraint routing tests.
+- BYO credential validation with typed errors and OS keychain storage,
+  including the xAI (Grok) shape (§Routing And Resource Policy). **Implemented**
+  2026-09 (typed credential taxonomy in `credential_errors.go`; `jini provider
+  validate` one-live-call check; OpenAI-compatible routing for openai / xai
+  (grok) / groq / deepseek / mistral from one `byoShape` registry; macOS
+  keychain storage in `secret_store.go` — commits 931c007, b411769). Per-shape
+  fixtures pass — a shape without a passing fixture is not claimed. Remaining:
+  Linux/Windows secret backends and per-shape receipt-denomination pricing.
+- Paywall entitlements failing closed with manual free equivalents (§Tier
+  Boundary). Future proof: paywall fail-closed test.
+- Escalation cost quote before spending on a stronger rung (§P0 Outcome
+  Requirements). **Implemented** 2026-09 (`escalation_quote.go` quotes a
+  premium/standard route's posted rate + per-task estimate before spend, emitted
+  on both direct-answer route sites — commit cb6b446). Future proof:
+  escalation-quote fixture.
+- Repo-scoped project context — read AGENTS.md/CLAUDE.md as the context engine
+  (§Sessions). **Implemented** 2026-09-05 (`repo_context.go` reads AGENTS.md +
+  CLAUDE.md from cwd + git root, injected into non-handoff system prompts;
+  handoffs read them natively — commit 9ad3166). Remaining: retire/repurpose the
+  user-context `jini memory` store (PRD forbids profile-building in v1).
+- TTFV under five minutes on all three OSes and first-task success
+  benchmarks (§Goals And Scope, §Gates). **Partial** 2026-09: jini
+  cross-compiles clean for windows/amd64+arm64, linux/arm64, darwin, and CI adds
+  a windows-latest build+smoke beside the macOS/Linux installer smokes (commit
+  818b5f5). Remaining: measured TTFV on fresh macOS/Linux/Windows. Future proof:
+  TTFV measurement and first-task success release bars in the gate matrix.
 
 Residual hardening:
 
@@ -38,3 +106,10 @@ Residual hardening:
   claimed routes. Real installed CLI dogfood remains required on tester
   machines for auth, approvals, output-shape differences, route receipt
   privacy, and signed smoke freshness.
+- [RESOLVED 2026-09-05, commit acf1e01] Selective-consistency and refinement
+  drafts (`generateConsistencyDraft`/refine paths in `provider.go`) called the
+  providers directly, outside `runWithThrottleSurvival`. Now the drafts are
+  DROPPED when the primary answer already had to survive a throttle
+  (`survival.Holds > 0 || survival.Dodged`), so auxiliary calls never hammer a
+  pressured provider; the receipt honestly reports the reduced verification.
+  (Chose the "drop under throttle" option over a draft-scoped hold budget.)

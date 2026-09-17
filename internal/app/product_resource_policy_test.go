@@ -17,7 +17,7 @@ func TestResourcePolicyPrioritiesAreGated(t *testing.T) {
 		"Use local/offline routes when they meet the task quality bar.",
 		"Escalate to stronger online routes when correctness, codebase scope, or",
 		"Preserve enough session state to continue work without replaying stale chat.",
-		"Avoiding throttling is P1.",
+		"Throttle resilience is release-gated in v1.",
 		"Power awareness is P1.",
 		"throttle-aware route switching",
 		"powered-mode and low-battery routing",
@@ -29,7 +29,7 @@ func TestResourcePolicyPrioritiesAreGated(t *testing.T) {
 		}
 	}
 
-	leanGate := readResourcePolicyFile(t, root, "specs/lean-platform-gate.md")
+	leanGate := readResourcePolicyFile(t, root, "specs/engineering-gate-matrix.md")
 	for _, want := range []string{
 		"Token frugality is P0 and must be treated as a first-order gate",
 		"- `token-frugality-p0`",
@@ -45,7 +45,7 @@ func TestResourcePolicyPrioritiesAreGated(t *testing.T) {
 		}
 	}
 
-	tierPolicy := readResourcePolicyFile(t, root, "specs/client-surfaces-and-free-tier.md")
+	tierPolicy := readResourcePolicyFile(t, root, "specs/archive/client-surfaces-and-free-tier.md")
 	for _, want := range []string{
 		"- free must be structurally token-frugal by default",
 		"- free must show enough token-saving and context-reuse evidence",
@@ -72,7 +72,7 @@ func TestResourcePolicyPrioritiesAreGated(t *testing.T) {
 		}
 	}
 
-	offlineStrategy := readResourcePolicyFile(t, root, "specs/platform-offline-strategy.md")
+	offlineStrategy := readResourcePolicyFile(t, root, "specs/local-model-support-matrix.md")
 	for _, want := range []string{
 		"### Guarantee 4a: Offline And Online Toggle Seamlessly",
 		"local model work performed offline",
@@ -86,7 +86,7 @@ func TestResourcePolicyPrioritiesAreGated(t *testing.T) {
 		}
 	}
 
-	crossSurfacePRD := readResourcePolicyFile(t, root, "specs/cross-surface-session-platform-prd.md")
+	crossSurfacePRD := readResourcePolicyFile(t, root, "specs/archive/cross-surface-session-platform-prd.md")
 	for _, want := range []string{
 		"Offline and online are route states, not separate work modes.",
 		"cross-navigate between offline and online routes without restarting",

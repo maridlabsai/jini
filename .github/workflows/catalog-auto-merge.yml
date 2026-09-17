@@ -1,0 +1,91 @@
+name: Catalog Auto-Merge
+
+# Automated, quality-gated onboarding for community-contributed BYO providers.
+# A PR that adds/edits internal/app/catalog/providers.json is:
+#   1. schema-gated (the Go suite validates every entry) + build/test — always,
+#      no secrets;
+#   2. live-gated per newly-added provider IF a matching <ID>_API_KEY secret
+#      exists: `jini provider validate` + `jini check model` must pass;
+#   3. auto-merged ONLY when the schema passes AND every new provider was
+#      live-verified. A new provider with no key is never auto-merged — it's
+#      labelled for a maintainer to add the key (escalation), so an unverified
+#      model can never slip in.
+#
+# Repo prerequisites (one-time, maintainer): enable "Allow auto-merge" in repo
+# settings, and set branch protection so these checks are the merge requirement.
+
+on:
+  pull_request:
+    paths:
+      - "internal/app/catalog/providers.json"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Schema gate (catalog + shapes well-formed) and build/test
+        run: |
+          go build ./...
+          go test ./internal/app -run 'TestEmbeddedCatalog|TestBYOShapes|TestCatalog|TestBYOProvidersAreManualRoutes' -count=1
+
+      - name: Newly-added provider ids
+        id: added
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          git show "${base}:internal/app/catalog/providers.json" 2>/dev/null > base.json || echo '{"providers":[]}' > base.json
+          jq -r '[.providers[].id]' base.json > base_ids.json
+          jq -r '[.providers[].id]' internal/app/catalog/providers.json > head_ids.json
+          added="$(jq -rn --slurpfile b base_ids.json --slurpfile h head_ids.json '$h[0] - $b[0] | .[]')"
+          echo "added ids: ${added:-<none>}"
+          printf '%s\n' "${added}" | jq -R -s -c 'split("\n") | map(select(length>0))' > added.json
+          echo "list=$(cat added.json)" >> "${GITHUB_OUTPUT}"
+
+      - name: Live quality gate per new provider (when a key is present)
+        id: live
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+        run: |
+          go build -o jini ./cmd/jini
+          eligible=1
+          for id in $(echo '${{ steps.added.outputs.list }}' | jq -r '.[]'); do
+            keyname="$(echo "${id}" | tr 'a-z-' 'A-Z_')_API_KEY"
+            key="$(echo "${SECRETS_JSON}" | jq -r --arg k "${keyname}" '.[$k] // empty')"
+            if [ -z "${key}" ]; then
+              echo "::warning::${id}: no ${keyname} secret — cannot live-verify; holding for a maintainer key."
+              eligible=0
+              continue
+            fi
+            echo "Live-verifying ${id} …"
+            if ! env "${keyname}=${key}" ./jini provider validate "${id}"; then eligible=0; echo "::error::${id}: credential validation failed"; fi
+            if ! env "${keyname}=${key}" ./jini check model "${id}"; then eligible=0; echo "::error::${id}: quality gate (jini check model) failed"; fi
+          done
+          # No new providers (edit-only / override PR) is fine to auto-merge on schema alone.
+          echo "eligible=${eligible}" >> "${GITHUB_OUTPUT}"
+
+      - name: Auto-merge when fully verified
+        if: steps.live.outputs.eligible == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr merge "${{ github.event.pull_request.number }}" --auto --squash
+          echo "Auto-merge enabled: schema + live quality gate green."
+
+      - name: Hold for maintainer when a key is missing
+        if: steps.live.outputs.eligible != '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr edit "${{ github.event.pull_request.number }}" --add-label "needs-maintainer-key" || true
+          gh pr comment "${{ github.event.pull_request.number }}" --body "Schema passed. A newly-added provider could not be live-verified because its \`<ID>_API_KEY\` secret is not configured. A maintainer: add the secret so \`jini check model\` can run, then re-run this workflow to auto-merge. No provider is auto-merged without passing the automated quality gate."

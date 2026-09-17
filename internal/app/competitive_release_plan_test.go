@@ -77,7 +77,7 @@ func TestCompetitiveReleasePlanIsWiredIntoReleasePlanning(t *testing.T) {
 		}
 	}
 
-	developmentPlan := readCompetitivePlanFile(t, root, "specs/number-one-development-plan.md")
+	developmentPlan := readCompetitivePlanFile(t, root, "specs/archive/number-one-development-plan.md")
 	if !strings.Contains(developmentPlan, "competitive-release-plan.md") {
 		t.Fatalf("development plan must reference the competitive release plan")
 	}
@@ -105,7 +105,7 @@ func TestCompetitiveReleasePlanIsWiredIntoReleasePlanning(t *testing.T) {
 		}
 	}
 
-	kpis := readCompetitivePlanFile(t, root, "specs/competitive-kpis.yaml")
+	kpis := readCompetitivePlanFile(t, root, "specs/golden-competitive-benchmark.yaml")
 	for _, want := range []string{
 		"GitHub Copilot coding agent",
 		"Google Jules",
@@ -128,7 +128,7 @@ func TestCompetitiveReleasePlanIsWiredIntoReleasePlanning(t *testing.T) {
 		}
 	}
 
-	learning := readCompetitivePlanFile(t, root, "specs/learning-system.md")
+	learning := readCompetitivePlanFile(t, root, "specs/archive/learning-system.md")
 	for _, want := range []string{
 		"## 2a. User Context Productivity Learning",
 		"User productivity learning is a P0 product requirement.",

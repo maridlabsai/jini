@@ -1,0 +1,110 @@
+# Number One Platform HLD
+
+> **SUPERSEDED (2026-07-07).** Archived by the PRD rebuild; no longer a requirement source.
+> Replaced by: [number-one-platform-prd.md](../number-one-platform-prd.md).
+> Rationale: `specs/prd-rebuild-design.md` §8. Do not cite this file in new work.
+
+Updated: 2026-06-10
+
+This high-level design translates
+[number-one-platform-prd.md](./number-one-platform-prd.md) into architecture
+boundaries. It is subordinate to the PRD and
+[product-settling-decisions.md](./product-settling-decisions.md).
+
+## Release Quality Bar
+
+Jini does not ship an iteration unless the competitor-parity transcript gates
+are green for the first-minute use cases users compare against Claude Code,
+Codex, ChatGPT, and Gemini CLI:
+
+- simple factual question returns a compact answer
+- clear local file edit changes the file or fails closed with exact ambiguity
+- configured CLI route invokes the real installed CLI or fails closed
+- saved work stays passive until explicitly requested
+- route and token diagnostics remain inspectable without startup ceremony
+- side-effect approvals are enforced before irreversible, external, or paid
+  managed actions
+
+The streamline-or-rewrite decision is governed by
+[product-streamline-redline.md](./product-streamline-redline.md). If shell,
+intent, action, state, and gate boundaries cannot preserve those transcripts
+through localized changes, feature work stops and the kernel rewrite starts.
+
+Non-trivial engineering cuts are governed by
+[agentic-development-operating-model.md](./agentic-development-operating-model.md):
+coordinator-owned sub-agent splits, disjoint scopes, independent review, and
+named evidence are required. This is an internal architecture practice, not a
+runtime UX layer.
+
+## Architecture Boundaries
+
+Jini is five runtime layers:
+
+- CLI shell: owns prompt rendering, command dispatch, and user-visible receipts.
+- Intent boundary: classifies direct answers, file edits, route controls, saved
+  work controls, and work creation before any artifact is created.
+- Action boundary: performs local file edits, route handoffs, provider/local
+  calls, or fail-closed prompts.
+- State boundary: persists work state, route receipts, and artifacts only after
+  there is real work to preserve.
+- Gate boundary: blocks commits, pushes, and releases when golden transcripts,
+  PRD drift, scorecard, security, or ship checks fail.
+
+The current release is CLI-first. Desktop, mobile, team policy, commercial
+automation, and broad agent-suite surfaces remain outside the shipped claim
+until the PRD changes and equivalent gates exist.
+
+## Dynamic Platform Boundaries
+
+Dynamic behavior belongs behind the small CLI front door:
+
+- Routing is registry-backed. Adapter, provider, local runtime, installed CLI,
+  capability, and health records decide what can run; entity names must not
+  map directly to hard-coded demo templates.
+- Degradation is explicit. If a preferred route or feature is unavailable, Jini
+  chooses a safe configured alternative or fails closed with setup guidance.
+- Commercial feature boundaries fail closed in the public CLI. When managed
+  paid capabilities are implemented, they require entitlement before automation
+  starts.
+- User and work context learning is bounded to route choice, repeated
+  preferences, and resumable work. It is not a hidden OS memory layer.
+
+## Request Flow
+
+Every interactive turn follows one path:
+
+1. Parse explicit commands and slash-command errors.
+2. Handle safe direct actions and direct answers before current-work rendering.
+3. Resolve current-work commands only when the input asks about current work.
+4. Route or execute task intent.
+5. Create durable work or artifacts only for real work that benefits from reuse.
+
+Simple questions must stop at step 2. They must not enter work creation,
+artifact rendering, route ceremony, or saved-work overview.
+
+## State Model
+
+Saved work is passive context. It helps `status`, `continue`, `open`, natural
+title matching, and route continuation. It is not the default frame for new or
+unrelated input.
+
+The state boundary may persist:
+
+- `current-work.json` for active durable work
+- work-thread metadata and artifacts for reusable outputs
+- route receipts for handoffs and diagnostics
+- dogfood evidence for release validation
+
+The state boundary must not persist simple factual questions or bare-entity
+clarifications as work units.
+
+## Non-Goals
+
+The near-term architecture does not include:
+
+- a new conversation grammar
+- a visible agent-role tree in the free CLI
+- public controls for internal engineering sub-agents
+- broad desktop/mobile app surfaces
+- generic vertical-template routing from entities or questions
+- provider API aliases marketed as CLI handoffs

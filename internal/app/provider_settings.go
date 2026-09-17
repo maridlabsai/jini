@@ -47,6 +47,17 @@ func saveProviderSettings(values map[string]string) error {
 		if key == "" {
 			continue
 		}
+		// Secrets go to the OS keychain when one is available; they are never
+		// written to (and are scrubbed from) the plaintext dotfile.
+		if isSecretConfigKey(key) && providerSecretStore.available() {
+			if value == "" {
+				_ = providerSecretStore.delete(key)
+			} else if err := providerSecretStore.set(key, value); err != nil {
+				return err
+			}
+			delete(current, key)
+			continue
+		}
 		if value == "" {
 			delete(current, key)
 			continue
@@ -70,6 +81,15 @@ func saveProviderSettings(values map[string]string) error {
 func configValue(name string) string {
 	if value := strings.TrimSpace(os.Getenv(name)); value != "" {
 		return value
+	}
+	// Prefer the OS keychain for secrets, then fall back to the dotfile for
+	// back-compat. A legacy plaintext secret keeps working and migrates into the
+	// keychain (out of plaintext) the next time it is saved — no write side
+	// effects on a read.
+	if isSecretConfigKey(name) && providerSecretStore.available() {
+		if value, ok := providerSecretStore.get(name); ok {
+			return strings.TrimSpace(value)
+		}
 	}
 	return strings.TrimSpace(loadSavedProviderSettings()[name])
 }

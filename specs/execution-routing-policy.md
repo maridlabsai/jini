@@ -1,5 +1,7 @@
 # Jini Execution Policy
 
+Traced to number-one-platform-prd.md §Routing And Resource Policy.
+
 This document is a specialized execution-routing policy, not the
 top-precedence product and operating PRD.
 
@@ -7,7 +9,7 @@ The canonical product and operating PRD lives in
 [number-one-platform-prd.md](./number-one-platform-prd.md).
 
 Internal engineering delegation is governed by
-[agentic-development-operating-model.md](./agentic-development-operating-model.md).
+[agentic-development-operating-model.md](./archive/agentic-development-operating-model.md).
 This execution policy may choose cheap, standard, or deep work classes, but it
 does not create public `delegate` commands or expose coordinator/sub-agent
 trees in the default CLI.
@@ -164,3 +166,144 @@ Jini currently exposes this policy through:
 
 When learning is enabled, the policy may also be represented as a local
 learning artifact for offline review and bounded routing updates.
+
+## Absorbed Policies
+
+These normative rules were merged here from now-archived routing docs during
+the PRD rebuild (prd-rebuild-design.md §8). Where a source conflicted with the
+rebuilt PRD, the PRD wins: "local commercial SLM" phrasing from the old tier
+doctrine is dropped — local model routing is a free-tier disclosed route per
+the PRD's Tier Boundary and Option A scope. Stale model-name examples were
+dropped; model choice follows the chosen route.
+
+### Runtime modes (absorbed from runtime-execution-modes.md)
+
+Jini executes local workflow actions in `supervised` or `autonomous` mode.
+
+- `supervised`: outputs are inspectable before state changes; local exports may
+  run with `write` consent; publish plans may be staged with `publish` consent;
+  state transitions are planned but not auto-executed.
+- `autonomous`: additionally, one legal linear state transition may run when
+  `command` consent exists and all guard conditions pass. Autonomous mode MUST
+  stop when a required consent category is missing, a guarded transition is
+  blocked, or a step would require human-authored semantic input not present in
+  canonical artifacts.
+
+First-time consent persists by action category — `write` (deterministic local
+file outputs), `command` (deterministic workflow progression; does not waive
+lifecycle guards), `publish` (staging external publish plans; serialized
+publish rules remain binding) — at `runtime/consent.json`, with the most
+recent run report at `runtime/last-run.json`.
+
+Runtime modes MUST NOT: bypass required evidence or approval, skip guarded
+transitions, silently escalate execution class, burst publish actions in
+parallel, or replace missing human input with invented semantic content.
+
+### Selection heuristics (absorbed from runtime-selection-heuristics.md)
+
+Tool, model, effort, and local-vs-remote choice are first-class runtime
+decisions on every request, decided in this order:
+
+1. classify the work type
+2. classify the required depth
+3. decide whether the local SLM pool can handle it well enough
+4. if local is suitable, choose the local profile
+5. choose the cheapest suitable tool route by default
+6. choose the model for that route
+7. choose the effort level for that specific request
+8. show the decision and save it with the work
+
+Tool rule: cheapest suitable route by default; a capable local SLM is the
+default front line; escalate visibly when local quality risk is too high. For
+coding work, add continuity bias, route-switch cost, quota headroom, and
+iteration economics so Jini does not churn routes that are still good enough.
+
+User preference envelope (ratified 2026-07-18): `Auto` optimizes strictly
+inside user-declared constraints, which always win over the scorer.
+
+- Per model or route, the user can declare `never`, `prefer`, or `pin`,
+  optionally scoped by work kind (coding, planning, testing, research). A
+  denied model is never selected, even when it scores best; the decision
+  readout names the substitute and the preference that forced it.
+- A speed bias (`fastest` vs `best`) is a first-class preference: `fastest`
+  weights latency and throughput above marginal quality within the quality
+  floor; it never overrides safety or the escalation cost quote.
+- Preferences persist as plain reviewable files — no hidden state — editable
+  three ways: direct file edit, natural language in-session ("never use
+  fable-5", "stop avoiding fable-5"), or the existing route list/set/pin
+  surface. No second taught command tree.
+- Implicit override learning stays on: repeated manual switches away from a
+  model in a work-kind cohort bias Auto for that cohort, and the learned bias
+  is shown and revocable like any explicit preference.
+
+Effort levels are `low`, `medium`, `high`, `extra high`: normal work ->
+`medium`; quick asks -> `low`; deeper/rigorous asks -> `high`; benchmark,
+architecture, root-cause, release-readiness, or exhaustive asks ->
+`extra high`.
+
+Visibility and persistence: keep the chosen tool, model, effort, local
+profile, and reasons visible; persist tool label, model label, effort level,
+and selection reasons with the work item so later screens stay honest and
+routes do not drift silently. Coding persistence also supports route
+continuity, remembered override tendencies by cohort, and explicit
+route-switch reasons.
+
+### Device capability routing (absorbed from device-capability-routing.md)
+
+Local routing must consider task shape, device hardware, OS and OS version,
+installed local runtime stack, and measured local reliability together —
+task-only routing is not enough.
+
+- Probe and persist a versioned repo-local device profile (OS, OS version,
+  architecture, CPU count, memory, accelerator class, runtime class, derived
+  device class, profile availability, endpoint signature, Jini version,
+  registry version, timestamp).
+- Device classes: `mobile-small`, `tiny`, `laptop-light`, `laptop-pro`,
+  `workstation`, `gpu-heavy` (`laptop-strong` remains an alias for
+  `laptop-pro`). Mobile devices stay in the `mobile-small` envelope and do not
+  expose workhorse, deep, or multimodal desktop-local profiles.
+- Local profiles `local-fast`, `local-workhorse`, `local-deep`,
+  `local-multimodal` resolve to `available`/`limited`/`unavailable` as the
+  intersection of hardware potential, runtime presence, and configuration.
+- Re-probe when the cached profile is stale or when the Jini version,
+  capability registry, OS, architecture, runtime, endpoint, or profile mapping
+  changes — Jini rides newly unlocked capabilities instead of freezing to the
+  first install state.
+- Trust: when local SLM is active, the user can see device class, accelerator
+  class, runtime class, profile, model, and why.
+- Cost: cheapest suitable route first, but "cheapest suitable" must be
+  device-aware — an unusably slow or unstable local route is not cheap in
+  productivity terms.
+
+### Research-informed heuristics (absorbed from research-informed-heuristics.md)
+
+Selective adoption of agent-pattern research (ReAct, Self-Refine, Reflexion,
+Plan-and-Solve, Self-Consistency, Toolformer):
+
+- Hidden plan-first for clearly multi-step work; the user sees progress and
+  outcomes, never a visible planner mode or `Thought/Act/Observe` traces.
+- Selective refinement: default path is single-pass plus light structure; add
+  one focused refine pass only when the route scorer predicts material
+  benefit; cap refinement depth tightly.
+- Selective consistency checks only for high-risk work (architecture choices,
+  benchmark claims, release-readiness judgments, conflicting evidence, low
+  confidence on a deep request) — off by default; never for everyday work. In
+  the current implementation this is a second independent draft, not a
+  multi-agent debate. Multimodal judging is subtype-aware (PDF/scan,
+  screenshot/image, audio/transcript) for verification rubric, route choice,
+  and local benchmark memory alike.
+- Connector-aware and cohort-aware route learning: connectors are part of the
+  route scorer; remember route quality by cohort, profile, and connector
+  context; track accepted/edited/replaced/shared/exported outcomes; decay
+  stale evidence; promote recovered routes faster on strong new evidence.
+- Verification is adaptive by effort level: `low` single pass; `medium` single
+  pass plus structure; `high` one refine pass or a stronger route;
+  `extra high` selective multi-sample verification and/or stronger route.
+- Do NOT adopt: default visible chain-of-thought traces, always-on multi-agent
+  debate, always-on self-critique, expensive majority-vote reasoning for
+  everyday work, or mode sprawl in the user-facing command surface.
+- A heuristic change fails gate review if it adds cost without measurable
+  acceptance gain, adds visible complexity to the normal flow, adds route
+  jargon to the beginner surface, increases verification depth for low-risk
+  work, or weakens the local-first cheap-path principle without strong
+  evidence.

@@ -14,7 +14,8 @@ INSTALL_DIR="${JINI_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
 SOURCE_DIR="${JINI_SOURCE_DIR:-}"
 REPO_URL="${JINI_INSTALL_REPO:-$DEFAULT_REPO_URL}"
 REPO_REF="${JINI_INSTALL_REF:-$DEFAULT_REPO_REF}"
-RELEASE_BASE_URL="${JINI_RELEASE_BASE_URL:-$DEFAULT_RELEASE_BASE_URL}"
+RELEASE_BASE_URL="${JINI_RELEASE_BASE_URL:-}"
+INSTALL_CHANNEL="${JINI_INSTALL_CHANNEL:-stable}"
 GO_BIN="${JINI_GO_BIN:-}"
 FORCE_INSTALL=0
 COPY_BINARY=0
@@ -37,6 +38,9 @@ Options:
   --source-dir PATH    Local Jini source directory to build from.
   --repo-url URL       Git repository to clone when no local source is provided.
   --repo-ref REF       Git ref to clone when no local source is provided. Default: main
+  --channel CHAN       Release channel: stable (default), beta, or nightly.
+  --beta               Shorthand for --channel beta.
+  --nightly            Shorthand for --channel nightly.
   --copy               Copy the binary into bin-dir instead of symlinking.
   --force              Replace an existing install.
   --help               Show this help text.
@@ -88,6 +92,19 @@ while [[ $# -gt 0 ]]; do
       REPO_REF="$2"
       shift 2
       ;;
+    --channel)
+      [[ $# -ge 2 ]] || fail "--channel needs a value (stable, beta, or nightly)"
+      INSTALL_CHANNEL="$2"
+      shift 2
+      ;;
+    --beta)
+      INSTALL_CHANNEL="beta"
+      shift
+      ;;
+    --nightly)
+      INSTALL_CHANNEL="nightly"
+      shift
+      ;;
     --copy)
       COPY_BINARY=1
       shift
@@ -105,6 +122,21 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+# Resolve the release source from the channel (unless explicitly overridden).
+# Beta and nightly are moving pre-release tags the CI pipeline force-updates;
+# stable is GitHub's latest non-prerelease.
+case "${INSTALL_CHANNEL}" in
+  stable | beta | nightly) ;;
+  *) fail "unknown channel: ${INSTALL_CHANNEL} (use stable, beta, or nightly)" ;;
+esac
+if [[ -z "${RELEASE_BASE_URL}" ]]; then
+  case "${INSTALL_CHANNEL}" in
+    stable) RELEASE_BASE_URL="https://github.com/maridlabsai/jini/releases/latest/download" ;;
+    beta) RELEASE_BASE_URL="https://github.com/maridlabsai/jini/releases/download/beta" ;;
+    nightly) RELEASE_BASE_URL="https://github.com/maridlabsai/jini/releases/download/nightly" ;;
+  esac
+fi
 
 script_dir=""
 script_source="${BASH_SOURCE[0]-}"
@@ -193,6 +225,64 @@ detect_release_asset() {
   printf 'jini-%s-%s.tar.gz\n' "${os_name}" "${arch_name}"
 }
 
+sha256_of() {
+  local file="$1"
+  if command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "${file}" | awk '{print $1}'
+  elif command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "${file}" | awk '{print $1}'
+  else
+    return 1
+  fi
+}
+
+# verify_release_checksum fails (non-zero) only on a real mismatch — a tampered
+# or corrupted asset must never install. A missing published checksum (older
+# release) or no sha tool is recorded but not treated as failure.
+verify_release_checksum() {
+  local archive_path="$1"
+  local asset="$2"
+  local sums_path="${TEMP_ROOT}/${asset}.sha256"
+  if ! curl -fsSL "${RELEASE_BASE_URL}/${asset}.sha256" -o "${sums_path}" >/dev/null 2>&1; then
+    RELEASE_VALIDATION="no-checksum-published"
+    return 0
+  fi
+  local expected actual
+  expected="$(awk '{print $1}' "${sums_path}" | head -n1)"
+  actual="$(sha256_of "${archive_path}")" || { RELEASE_VALIDATION="no-sha-tool"; return 0; }
+  if [[ -z "${expected}" || "${expected}" != "${actual}" ]]; then
+    RELEASE_VALIDATION="checksum-mismatch"
+    return 1
+  fi
+  RELEASE_VALIDATION="checksum-verified"
+  return 0
+}
+
+# verify_macos_signature enforces an Apple-anchored Developer ID signature on
+# macOS. The gold path is an Apple-anchored signature, verified with an explicit
+# requirement because bare `codesign --verify` accepts ad-hoc signatures. Anything
+# else — entirely unsigned OR merely ad-hoc signed — is allowed through the
+# pre-signing transition and rejected only when JINI_REQUIRE_SIGNED=1. The ad-hoc
+# case is not an edge case: the macOS arm64 linker ad-hoc signs every native
+# binary, so our own unsigned release binaries land here until a Developer ID cert
+# exists. Integrity during the transition is still guaranteed by the checksum
+# verification that runs before this.
+verify_macos_signature() {
+  local binary_path="$1"
+  [[ "$(uname -s)" == "Darwin" ]] || return 0
+  command -v codesign >/dev/null 2>&1 || return 0
+  if codesign --verify --strict -R="anchor apple generic" "${binary_path}" >/dev/null 2>&1; then
+    RELEASE_VALIDATION="${RELEASE_VALIDATION}+signature-verified"
+    return 0
+  fi
+  if [[ "${JINI_REQUIRE_SIGNED:-0}" == "1" ]]; then
+    RELEASE_VALIDATION="signature-not-apple-anchored-rejected"
+    return 1
+  fi
+  RELEASE_VALIDATION="${RELEASE_VALIDATION}+unsigned-or-adhoc-allowed"
+  return 0
+}
+
 try_install_prebuilt_release() {
   local asset=""
   local archive_path=""
@@ -208,12 +298,14 @@ try_install_prebuilt_release() {
   if ! curl -fsSL "${RELEASE_BASE_URL}/${asset}" -o "${archive_path}" >/dev/null 2>&1; then
     return 1
   fi
+  verify_release_checksum "${archive_path}" "${asset}" || return 1
   mkdir -p "${unpack_dir}"
   if ! tar -xzf "${archive_path}" -C "${unpack_dir}" >/dev/null 2>&1; then
     return 1
   fi
   binary_path="${unpack_dir}/${PROGRAM_NAME}"
   [[ -f "${binary_path}" ]] || return 1
+  verify_macos_signature "${binary_path}" || return 1
   mv "${binary_path}" "${TARGET_BINARY}"
   chmod 0755 "${TARGET_BINARY}"
 }
@@ -327,6 +419,7 @@ install_mode=${INSTALL_MODE}
 install_detail=${INSTALL_DETAIL}
 source_reason=${SOURCE_REASON}
 release_validation=${RELEASE_VALIDATION}
+channel=${INSTALL_CHANNEL}
 EOF
 
 "${COMMAND_PATH}" commands >/dev/null

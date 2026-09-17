@@ -150,9 +150,9 @@ func buildPublishDocsSection(root string) publishReadinessSection {
 		"docs/index.md",
 		"docs/install.md",
 		"docs/cli.md",
-		"specs/app-platform-shipping-playbook.md",
-		"specs/platform-offline-strategy.md",
-		"specs/lean-platform-doctrine.md",
+		"specs/archive/app-platform-shipping-playbook.md",
+		"specs/local-model-support-matrix.md",
+		"specs/archive/lean-platform-doctrine.md",
 		"specs/public-repo-boundary.md",
 		"distribution/install-manifest.yaml",
 	}
@@ -194,8 +194,8 @@ func buildPublishHonestAuditSection(root string) publishReadinessSection {
 
 	required := []publishFragmentRequirement{
 		{
-			checkPath: "specs/honest-system-audit.md#current-implementation-reality",
-			filePath:  "specs/honest-system-audit.md",
+			checkPath: "specs/archive/honest-system-audit.md#current-implementation-reality",
+			filePath:  "specs/archive/honest-system-audit.md",
 			fragments: []string{
 				"## Current Implementation Reality",
 				"Guarded is not implemented.",
@@ -205,8 +205,8 @@ func buildPublishHonestAuditSection(root string) publishReadinessSection {
 			},
 		},
 		{
-			checkPath: "specs/honest-system-audit.md#core-feedback-accommodations",
-			filePath:  "specs/honest-system-audit.md",
+			checkPath: "specs/archive/honest-system-audit.md#core-feedback-accommodations",
+			filePath:  "specs/archive/honest-system-audit.md",
 			fragments: []string{
 				"## Core Feedback Accommodations",
 				"claim, status, evidence, and next cut",
@@ -214,8 +214,8 @@ func buildPublishHonestAuditSection(root string) publishReadinessSection {
 			},
 		},
 		{
-			checkPath: "specs/honest-system-audit.md#machine-readable-evidence-contract",
-			filePath:  "specs/honest-system-audit.md",
+			checkPath: "specs/archive/honest-system-audit.md#machine-readable-evidence-contract",
+			filePath:  "specs/archive/honest-system-audit.md",
 			fragments: []string{
 				"## Machine-Readable Evidence Contract",
 				"`claim`",
@@ -224,8 +224,8 @@ func buildPublishHonestAuditSection(root string) publishReadinessSection {
 			},
 		},
 		{
-			checkPath: "specs/skills-and-delegation-slice.md#tier-boundary",
-			filePath:  "specs/skills-and-delegation-slice.md",
+			checkPath: "specs/archive/skills-and-delegation-slice.md#tier-boundary",
+			filePath:  "specs/archive/skills-and-delegation-slice.md",
 			fragments: []string{
 				"## Purpose",
 				"This public spec is a boundary handoff",
@@ -235,8 +235,8 @@ func buildPublishHonestAuditSection(root string) publishReadinessSection {
 			},
 		},
 		{
-			checkPath: "specs/lean-platform-gate.md#command-surface-discipline",
-			filePath:  "specs/lean-platform-gate.md",
+			checkPath: "specs/engineering-gate-matrix.md#command-surface-discipline",
+			filePath:  "specs/engineering-gate-matrix.md",
 			fragments: []string{
 				"### 3. Command-Surface Discipline",
 				"The free tier must not include a skills-based OS productivity suite.",
@@ -377,8 +377,8 @@ func buildPublishAppPlatformSection(root string) publishReadinessSection {
 
 	required := []publishFragmentRequirement{
 		{
-			checkPath: "specs/app-platform-shipping-playbook.md#default-stack-decision",
-			filePath:  "specs/app-platform-shipping-playbook.md",
+			checkPath: "specs/archive/app-platform-shipping-playbook.md#default-stack-decision",
+			filePath:  "specs/archive/app-platform-shipping-playbook.md",
 			fragments: []string{
 				"## Default Stack Decision",
 				"Next.js App Router",
@@ -387,8 +387,8 @@ func buildPublishAppPlatformSection(root string) publishReadinessSection {
 			},
 		},
 		{
-			checkPath: "specs/app-platform-shipping-playbook.md#security-baseline",
-			filePath:  "specs/app-platform-shipping-playbook.md",
+			checkPath: "specs/archive/app-platform-shipping-playbook.md#security-baseline",
+			filePath:  "specs/archive/app-platform-shipping-playbook.md",
 			fragments: []string{
 				"## Security Baseline",
 				"OWASP MASVS",
@@ -398,8 +398,8 @@ func buildPublishAppPlatformSection(root string) publishReadinessSection {
 			},
 		},
 		{
-			checkPath: "specs/app-platform-shipping-playbook.md#performance-and-optimization-baseline",
-			filePath:  "specs/app-platform-shipping-playbook.md",
+			checkPath: "specs/archive/app-platform-shipping-playbook.md#performance-and-optimization-baseline",
+			filePath:  "specs/archive/app-platform-shipping-playbook.md",
 			fragments: []string{
 				"## Performance And Optimization Baseline",
 				"Core Web Vitals",
@@ -408,8 +408,8 @@ func buildPublishAppPlatformSection(root string) publishReadinessSection {
 			},
 		},
 		{
-			checkPath: "specs/app-platform-shipping-playbook.md#logging-diagnostics-and-observability",
-			filePath:  "specs/app-platform-shipping-playbook.md",
+			checkPath: "specs/archive/app-platform-shipping-playbook.md#logging-diagnostics-and-observability",
+			filePath:  "specs/archive/app-platform-shipping-playbook.md",
 			fragments: []string{
 				"## Logging, Diagnostics, And Observability",
 				"`session_id`",
@@ -419,8 +419,8 @@ func buildPublishAppPlatformSection(root string) publishReadinessSection {
 			},
 		},
 		{
-			checkPath: "specs/app-platform-shipping-playbook.md#update-and-release-policy",
-			filePath:  "specs/app-platform-shipping-playbook.md",
+			checkPath: "specs/archive/app-platform-shipping-playbook.md#update-and-release-policy",
+			filePath:  "specs/archive/app-platform-shipping-playbook.md",
 			fragments: []string{
 				"## Update And Release Policy",
 				"Signed updates are mandatory",
@@ -429,8 +429,8 @@ func buildPublishAppPlatformSection(root string) publishReadinessSection {
 			},
 		},
 		{
-			checkPath: "specs/app-platform-shipping-playbook.md#app-shipping-gates",
-			filePath:  "specs/app-platform-shipping-playbook.md",
+			checkPath: "specs/archive/app-platform-shipping-playbook.md#app-shipping-gates",
+			filePath:  "specs/archive/app-platform-shipping-playbook.md",
 			fragments: []string{
 				"## App Shipping Gates",
 				"security and privacy gate",
@@ -439,8 +439,8 @@ func buildPublishAppPlatformSection(root string) publishReadinessSection {
 			},
 		},
 		{
-			checkPath: "specs/app-platform-shipping-playbook.md#source-backed-inputs",
-			filePath:  "specs/app-platform-shipping-playbook.md",
+			checkPath: "specs/archive/app-platform-shipping-playbook.md#source-backed-inputs",
+			filePath:  "specs/archive/app-platform-shipping-playbook.md",
 			fragments: []string{
 				"## Source-Backed Inputs",
 				"developer.apple.com",
@@ -497,8 +497,8 @@ func buildPublishOfflineRegressionSection(root string) publishReadinessSection {
 			},
 		},
 		{
-			checkPath: "specs/platform-offline-strategy.md#future-update-policy",
-			filePath:  "specs/platform-offline-strategy.md",
+			checkPath: "specs/local-model-support-matrix.md#future-update-policy",
+			filePath:  "specs/local-model-support-matrix.md",
 			fragments: []string{
 				"## Future Update Policy",
 				"Future model updates should:",
@@ -507,8 +507,8 @@ func buildPublishOfflineRegressionSection(root string) publishReadinessSection {
 			},
 		},
 		{
-			checkPath: "specs/adapter-benchmark-gate.md#routing-use",
-			filePath:  "specs/adapter-benchmark-gate.md",
+			checkPath: "specs/golden-competitive-benchmark.yaml#routing-use",
+			filePath:  "specs/golden-competitive-benchmark.yaml",
 			fragments: []string{
 				"### 4. Routing Use",
 				"repeated regression across recent samples",
@@ -616,8 +616,8 @@ func buildPublishProductivityLearningSection(root string) publishReadinessSectio
 			},
 		},
 		{
-			checkPath: "specs/learning-system.md#user-context-productivity-learning",
-			filePath:  "specs/learning-system.md",
+			checkPath: "specs/archive/learning-system.md#user-context-productivity-learning",
+			filePath:  "specs/archive/learning-system.md",
 			fragments: []string{
 				"## 2a. User Context Productivity Learning",
 				"User productivity learning is a P0 product requirement.",

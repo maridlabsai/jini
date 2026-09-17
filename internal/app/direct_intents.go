@@ -33,6 +33,11 @@ func isDirectTravelPlanPrompt(source string) bool {
 	if !clearTravelDraftPrompt(source) {
 		return false
 	}
+	// A coding task that merely mentions "plan"/"itinerary" (e.g. "plan a refactor
+	// of the itinerary module") must route to the agent, not a travel template.
+	if promptRequestsCodeArtifact(source) {
+		return false
+	}
 	return containsAny(normalized, []string{"plan a", "plan an", "first time visitor", "itinerary"})
 }
 
@@ -79,6 +84,13 @@ func isDirectFollowupEmailPrompt(source string) bool {
 		return false
 	}
 	if !containsAny(normalized, []string{"write", "draft", "compose"}) {
+		return false
+	}
+	// The deliverable must be the email itself. "write a Go function to send a
+	// follow-up email" / "implement a method that composes a summary email" are
+	// coding tasks that happen to mention email — route them to the agent, not a
+	// canned email template.
+	if promptRequestsCodeArtifact(source) {
 		return false
 	}
 	return containsAny(normalized, []string{"follow up", "followup", "standup", "summary", "summarizing", "recap"})

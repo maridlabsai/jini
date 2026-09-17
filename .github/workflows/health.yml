@@ -1,0 +1,104 @@
+name: Scheduled Health
+
+# Self-maintenance for a static repo in a moving world. Security scanning and
+# dependency CVEs are covered by security.yml + Dependabot; this covers the two
+# things nothing else re-checks on a schedule:
+#   1. the full commit gate still passes on main (catches gate/build/PRD drift);
+#   2. every provider whose <ID>_API_KEY secret is configured still passes
+#      `jini check model` (catches a model going stale/deprecated under us — the
+#      class of failure that made the Groq default 404 with no warning).
+# On failure it opens/refreshes ONE issue so the solo maintainer is pinged only
+# on drift. No new human input required; the model checks self-activate as
+# provider secrets are added, and simply skip a provider whose key is absent.
+
+on:
+  schedule:
+    - cron: "0 8 * * *" # daily 08:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  gates:
+    name: Required gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Run required gates
+        run: bash tools/run_required_gates.sh commit
+
+  model-freshness:
+    name: Model freshness
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Build jini
+        run: go build -o jini ./cmd/jini
+      - name: Check each provider whose key is configured
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+        run: |
+          set -uo pipefail
+          providers="cerebras groq gemini-api deepseek xai mistral openai"
+          checked=0
+          failed=0
+          for id in ${providers}; do
+            keyname="$(echo "${id}" | tr 'a-z-' 'A-Z_')_API_KEY"
+            key="$(echo "${SECRETS_JSON}" | jq -r --arg k "${keyname}" '.[$k] // empty')"
+            if [ -z "${key}" ]; then
+              echo "skip ${id}: no ${keyname} secret configured"
+              continue
+            fi
+            checked=$((checked + 1))
+            export "${keyname}=${key}"
+            if ./jini check model "${id}"; then
+              echo "ok ${id}"
+            else
+              echo "::error::${id} failed 'jini check model' — model may be deprecated or below the quality floor"
+              failed=1
+            fi
+          done
+          echo "providers checked=${checked} failed=${failed}"
+          if [ "${checked}" -eq 0 ]; then
+            echo "::warning::no provider keys configured — model freshness could not run (add <ID>_API_KEY secrets to activate)"
+          fi
+          [ "${failed}" -eq 0 ]
+
+  report:
+    name: Report drift
+    needs: [gates, model-freshness]
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open or refresh the health issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          title="🩺 Scheduled health check failing"
+          body="$(printf '%s\n' \
+            "The scheduled health run failed on $(date -u +%Y-%m-%d)." \
+            "" \
+            "This is drift the repo cannot see on its own — a failing commit gate, or a provider model gone stale/deprecated below the quality floor." \
+            "" \
+            "Run log: ${RUN_URL}" \
+            "" \
+            "Fix it, or escalate to sharmas@outlook.com if it needs a human input (a rotated key, a new default model).")"
+          num="$(gh issue list --repo "${REPO}" --state open --search "in:title \"${title}\"" --json number --jq '.[0].number // empty')"
+          if [ -n "${num}" ]; then
+            gh issue comment "${num}" --repo "${REPO}" --body "${body}"
+            echo "refreshed health issue #${num}"
+          else
+            gh issue create --repo "${REPO}" --title "${title}" --body "${body}" --label triage || \
+              gh issue create --repo "${REPO}" --title "${title}" --body "${body}"
+          fi

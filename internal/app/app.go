@@ -89,9 +89,11 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 		if isHiddenAppSidecarServeCommand(args) {
 			return runAppSidecarServe(stdin, stdout, stderr)
 		}
-		if access, ok := commercialOnlyCommandAccess(args[0]); ok {
-			renderFeatureAccessDenied(stderr, access)
-			return 1
+		if !isFreeSkillOrAgentCreation(args) {
+			if access, ok := commercialOnlyCommandAccess(args[0]); ok {
+				renderFeatureAccessDenied(stderr, access)
+				return 1
+			}
 		}
 		if canonicalTopLevelCommand(args[0]) == "" {
 			if shouldRunDirectTaskArgs(args) {
@@ -110,6 +112,8 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 		}
 
 		switch canonicalTopLevelCommand(args[0]) {
+		case "version":
+			return runVersion(stdout)
 		case "help":
 			if len(args) == 1 {
 				return runHelp([]string{"--all"}, stdout, stderr)
@@ -133,6 +137,22 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 			return runRoute(args[1:], stdout, stderr)
 		case "memory":
 			return runMemory(args[1:], stdout, stderr)
+		case "models":
+			return runModels(args[1:], stdout, stderr)
+		case "update":
+			return runUpdate(args[1:], stdout, stderr)
+		case "feedback":
+			return runFeedback(args[1:], stdout, stderr)
+		case "skill":
+			return runSkill(args[1:], stdout, stderr)
+		case "agent":
+			return runAgent(args[1:], stdout, stderr)
+		case "mode":
+			return runMode(args[1:], stdout, stderr)
+		case "savings":
+			return runSavings(args[1:], stdout, stderr)
+		case "trust":
+			return runTrust(args[1:], stdout, stderr)
 		case "permissions":
 			renderSafePermissionsStatus(stdout)
 			return 0
@@ -243,7 +263,7 @@ func validateNativeArgs(args []string) error {
 		if len(args) == 2 && canonicalHelpTopic(args[1]) != "" {
 			return nil
 		}
-	case "commands", "init", "new", "permissions", "status", "continue":
+	case "commands", "init", "new", "permissions", "status", "continue", "version":
 		if len(args) == 1 {
 			return nil
 		}
@@ -257,6 +277,32 @@ func validateNativeArgs(args []string) error {
 				return nil
 			}
 		}
+	case "mode":
+		// Loose on purpose: any second arg reaches runMode so its friendly
+		// `Unknown mode "x"` message is reachable instead of the generic
+		// pre-dispatch "Unsupported arguments" error.
+		if len(args) <= 2 {
+			return nil
+		}
+	case "savings":
+		// Permissive: runSavings validates its own flags and prints friendly
+		// errors (mirrors route/doctor arg handling).
+		return nil
+	case "trust":
+		// Permissive: runTrust validates its own args/subcommands.
+		return nil
+	case "skill", "agent":
+		// Permissive: runSkill/runAgent validate their own args/subcommands.
+		return nil
+	case "models":
+		// Permissive: runModels validates its optional provider argument.
+		return nil
+	case "update":
+		// Permissive: runUpdate validates its optional --channel argument.
+		return nil
+	case "feedback":
+		// Permissive: runFeedback validates its own message argument.
+		return nil
 	case "route":
 		return nil
 	case "admin":
@@ -274,6 +320,10 @@ func validateNativeArgs(args []string) error {
 				return nil
 			}
 		}
+		if len(args) >= 2 && exactCommandToken(args[1]) == "model" {
+			// runModelCheck validates its route argument.
+			return nil
+		}
 		if len(args) == 1 || (len(args) == 2 && !strings.HasPrefix(strings.TrimSpace(args[1]), "-")) {
 			return nil
 		}
@@ -284,6 +334,10 @@ func validateNativeArgs(args []string) error {
 	case "provider":
 		providerArgs := args[1:]
 		if len(providerArgs) == 1 && isAdminHelpAlias(providerArgs[0]) {
+			return nil
+		}
+		if len(providerArgs) > 0 && exactCommandToken(providerArgs[0]) == "validate" {
+			// runProvider validates the optional shape argument itself.
 			return nil
 		}
 		if len(providerArgs) > 0 && exactCommandToken(providerArgs[0]) == "doctor" {
@@ -404,6 +458,10 @@ func safelyRunInteractive(stderr io.Writer, fn func() int) (exitCode int) {
 }
 
 func runLauncher(stdin io.Reader, stdout, stderr io.Writer) int {
+	// The launcher's Scanner owns stdin, so Ask mode cannot prompt here.
+	configureThrottleApproverForEntry(false)
+	// One-line all-time savings counter at startup; silent when nothing saved.
+	renderSavingsStartupCounter(stdout)
 	current, err := loadCurrentWork()
 	if err != nil || current == nil {
 		active, activeErr := listActiveWorkSummaries(nil)
@@ -784,6 +842,9 @@ func runProvider(args []string, stdout, stderr io.Writer) int {
 		renderAdminCommandInventory(stdout)
 		return 0
 	}
+	if len(args) > 0 && exactCommandToken(args[0]) == "validate" {
+		return runProviderValidate(args[1:], stdout, stderr)
+	}
 	if len(args) > 0 && exactCommandToken(args[0]) == "doctor" {
 		args = args[1:]
 	}
@@ -820,6 +881,67 @@ func runProvider(args []string, stdout, stderr io.Writer) int {
 		return 0
 	}
 	return 1
+}
+
+// runProviderValidate implements `jini provider validate [shape]`: it makes one
+// live, read-only call per BYO credential and reports a typed result. With no
+// argument it validates every configured shape; with a shape name it validates
+// just that one (and reports when its credential is missing).
+func runProviderValidate(args []string, stdout, stderr io.Writer) int {
+	specific := len(args) > 0 && strings.TrimSpace(args[0]) != "" && !strings.HasPrefix(strings.TrimSpace(args[0]), "-")
+
+	var shapes []byoShape
+	if specific {
+		shape, ok := resolveBYOShape(args[0])
+		if !ok {
+			fmt.Fprintf(stderr, "Unknown provider shape %q. Known: %s\n", args[0], strings.Join(sortedBYOShapeIDs(), ", "))
+			return 1
+		}
+		shapes = []byoShape{shape}
+	} else {
+		for _, id := range sortedBYOShapeIDs() {
+			if s, ok := byoShapeByID(id); ok {
+				shapes = append(shapes, s)
+			}
+		}
+	}
+
+	client := byoValidationClient()
+	ctx := context.Background()
+	anyConfigured := false
+	anyFailed := false
+	for _, shape := range shapes {
+		result := validateBYOCredential(ctx, shape, client)
+		if !result.Configured && !specific {
+			// In matrix mode, stay quiet about shapes the user hasn't set up.
+			continue
+		}
+		mark := "–"
+		switch {
+		case result.Configured && result.OK:
+			mark = "ok  "
+			anyConfigured = true
+		case result.Configured:
+			mark = "FAIL"
+			anyConfigured = true
+			anyFailed = true
+		}
+		fmt.Fprintf(stdout, "%s %s\n", mark, result.Message)
+		// Surface a shape's privacy note (e.g. Gemini trains on free-tier prompts)
+		// whenever it's configured, so the tradeoff is never silent.
+		if result.Configured && strings.TrimSpace(shape.privacyNote) != "" {
+			fmt.Fprintf(stdout, "   ⚠ %s\n", shape.privacyNote)
+		}
+	}
+
+	if !specific && !anyConfigured {
+		fmt.Fprintln(stdout, "No BYO provider credentials configured. Set one (e.g. XAI_API_KEY for Grok) then rerun `jini provider validate`.")
+		return 0
+	}
+	if anyFailed {
+		return 1
+	}
+	return 0
 }
 
 func runRoute(args []string, stdout, stderr io.Writer) int {
@@ -1095,6 +1217,7 @@ type routeValidateOptions struct {
 	RouteID string
 	Checks  []string
 	RealCLI bool
+	Posture bool
 	Format  string
 }
 
@@ -1240,6 +1363,9 @@ func runRouteValidate(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "Run `jini route dogfood` for setup fixes.")
 		return 1
 	}
+	if opts.Posture {
+		return runRoutePostureValidation(descriptor, stdout, stderr)
+	}
 	if !opts.RealCLI {
 		fmt.Fprintln(stderr, "Refusing to write dogfood evidence without `--real-cli`.")
 		fmt.Fprintln(stderr, "Use it only after the real installed CLI completed the harmless validation prompt.")
@@ -1294,6 +1420,38 @@ func runRouteValidate(args []string, stdout, stderr io.Writer) int {
 	return 0
 }
 
+// runRoutePostureValidation runs the behavioral posture harness against the
+// installed CLI and reports whether plan is read-only and each claimed
+// escalation posture applies edits. Exit 1 if posture does not behave as
+// claimed (so it can gate marking a route verified).
+func runRoutePostureValidation(descriptor cliHandoffDescriptor, stdout, stderr io.Writer) int {
+	probes, verified, issues := validateRoutePosture(context.Background(), descriptor)
+	fmt.Fprintf(stdout, "Posture validation: %s\n", descriptor.Label)
+	for _, p := range probes {
+		fmt.Fprintf(stdout, "- %s: edited=%t command=%t\n", postureName(p.Posture), p.Edited, p.CommandRan)
+	}
+	if verified {
+		fmt.Fprintln(stdout, "Result: verified — plan is read-only and claimed escalations apply edits.")
+		return 0
+	}
+	for _, issue := range issues {
+		fmt.Fprintln(stdout, "Issue: "+issue)
+	}
+	fmt.Fprintln(stderr, "Result: not verified — posture does not behave as claimed.")
+	return 1
+}
+
+func postureName(p handoffPosture) string {
+	switch p {
+	case postureSemi:
+		return "semi"
+	case postureAutonomous:
+		return "autonomous"
+	default:
+		return "plan"
+	}
+}
+
 func parseRouteValidateArgs(args []string) (routeValidateOptions, string, bool) {
 	var opts routeValidateOptions
 	if len(args) == 0 {
@@ -1309,6 +1467,8 @@ func parseRouteValidateArgs(args []string) (routeValidateOptions, string, bool) 
 		switch {
 		case arg == "--real-cli":
 			opts.RealCLI = true
+		case arg == "--posture":
+			opts.Posture = true
 		case arg == "--format" && i+1 < len(args):
 			opts.Format = normalizeName(args[i+1])
 			if opts.Format != "json" && opts.Format != "text" {
@@ -1486,7 +1646,11 @@ func renderRouteList(w io.Writer) {
 		if detail := routeTargetReadinessDetail(target); detail != "" {
 			readiness = strings.TrimSpace(readiness + ": " + detail)
 		}
-		details := strings.Trim(strings.Join([]string{locality, cost, readiness}, ", "), ", ")
+		parts := []string{locality, cost, readiness}
+		if label := handoffPostureLabel(target.ID); label != "" {
+			parts = append(parts, label)
+		}
+		details := strings.Trim(strings.Join(parts, ", "), ", ")
 		if details != "" {
 			details = " (" + details + ")"
 		}
@@ -1975,11 +2139,14 @@ func workingWithLabel(provider providerConfig) string {
 }
 
 func runNewWorkIntake(stdin io.Reader, stdout, stderr io.Writer) int {
+	configureThrottleApproverForEntry(false)
 	session := bufio.NewScanner(stdin)
 	return runNewWorkIntakeWithScanner(session, stdout, stderr)
 }
 
 func runDirectTaskArgsIntake(args []string, stdout, stderr io.Writer) int {
+	// One-shot path: jini owns stdin, so Ask mode can prompt for resume.
+	configureThrottleApproverForEntry(true)
 	source := strings.TrimSpace(strings.Join(args, " "))
 	if source == "" {
 		fmt.Fprintln(stderr, "I need one line of source context to start this work.")
@@ -2000,6 +2167,21 @@ func runDirectTaskArgsIntake(args []string, stdout, stderr io.Writer) int {
 	if maybeHandleAmbiguousBareEntity(source, stdout) {
 		return 0
 	}
+	// Attachment intake: validate any `@path` references up front and fail
+	// closed on a missing one, so the user gets an exact message instead of an
+	// opaque downstream error. Resolved attachments are acknowledged; the
+	// prompt (with its `@refs`) is forwarded verbatim so a routed CLI reads them
+	// natively, while local/provider routes inline text content below.
+	attachCwd, _ := os.Getwd()
+	attachments, missingAttachments := resolveAttachments(source, attachCwd)
+	if len(missingAttachments) > 0 {
+		fmt.Fprintln(stderr, missingAttachmentError(missingAttachments))
+		return 1
+	}
+	if line := attachmentAckLine(attachments); line != "" {
+		fmt.Fprintln(stdout, line)
+	}
+
 	envelope := classifyWorkEnvelope(starterChoice{}, source)
 	inputItems, normalizedSource := inputItemsForSource(source)
 	if strings.TrimSpace(normalizedSource) != "" {
@@ -2012,7 +2194,36 @@ func runDirectTaskArgsIntake(args []string, stdout, stderr io.Writer) int {
 		Title:  deriveStarterTitle(envelope.Choice.DefaultName, source, envelope.Choice.PackID),
 		Source: source,
 	}
-	_ = detectRouteForRequest(request)
+	decision := detectRouteForRequest(request)
+	// Quote a metered route's cost before spending — covers the native-loop and
+	// provider paths below (handoff/local/free tiers return empty).
+	if line := escalationCostQuoteLine(decision, request.Title, request.Source); line != "" {
+		fmt.Fprintln(stdout, line)
+	}
+	if decision.Active && cliHandoffMode(decision.ToolMode) {
+		// Hand-off targets (Claude Code, Codex) read `@path` references — including
+		// images — natively, so forward the prompt unchanged.
+		return runDirectCLIHandoffAnswer(request, decision, stdout, stderr)
+	}
+	// Local/provider routes have no native file access: inline text attachments
+	// so the model still sees them. Images go as multimodal content on a
+	// vision-capable route; otherwise note honestly that they can't be read.
+	if len(attachments) > 0 {
+		request.Source = inlineTextAttachments(request.Source, attachments)
+		if hasImageAttachment(attachments) {
+			if routeSupportsVision(providerForDecision(request, decision)) {
+				request.Images = imageAttachments(attachments)
+			} else {
+				fmt.Fprintln(stdout, "Note: this route can't read image or audio attachments; route to Claude Code or Codex for those.")
+			}
+		}
+	}
+	// Native agentic loop: only engages on a trusted dir in Auto mode with a
+	// usable non-handoff model (posture semi/autonomous). Untrusted/Ask —
+	// the default — falls through to today's saved-draft path unchanged.
+	if code, ok := maybeRunNativeLoop(request, decision, stdout, stderr); ok {
+		return code
+	}
 
 	summary, err := bootstrapStarterWork(envelope.Choice, source, "quick", inputItems)
 	if err != nil {
@@ -2029,6 +2240,48 @@ func runDirectTaskArgsIntake(args []string, stdout, stderr io.Writer) int {
 		return 0
 	}
 	renderDirectTaskStarted(stdout, summary, source)
+	return 0
+}
+
+// runDirectCLIHandoffAnswer hands a direct prompt to the routed installed CLI
+// via the shared route engine and prints the CLI's answer plainly, without the
+// saved-draft workflow. It fires for any route decision that resolves to a CLI
+// handoff, so the behavior follows routing policy rather than prompt class.
+func runDirectCLIHandoffAnswer(request providerGenerationRequest, decision routeDecision, stdout, stderr io.Writer) int {
+	descriptor, isHandoff := cliHandoffDescriptorForMode(decision.ToolMode)
+	if isHandoff {
+		if cwd, err := os.Getwd(); err == nil {
+			// Disclose a non-plan posture BEFORE handing off, so autonomy is
+			// never silent (only fires when the user opted into trust).
+			if line := postureDisclosureLine(resolveHandoffPostureForDir(descriptor, cwd), cliHandoffLabel(decision.ToolMode), resolveTrustDir(cwd)); line != "" {
+				fmt.Fprintln(stdout, line)
+			}
+		}
+	}
+	text, _, answered, err := generateWithConfiguredProviderDecision(context.Background(), request, decision)
+	if err != nil {
+		fmt.Fprintln(stderr, err.Error())
+		return 1
+	}
+	text = strings.TrimSpace(text)
+	if text == "" {
+		fmt.Fprintf(stdout, "%s completed with no output.\n", cliHandoffLabel(decision.ToolMode))
+		return 0
+	}
+	fmt.Fprintln(stdout, text)
+	renderSavingsFooter(stdout, answered.SavingsEntry)
+	// Surface what the handoff changed and how to undo it — on the common
+	// direct-answer path, not just the saved-work thread summary.
+	for _, line := range cliHandoffSideEffectLines(answered.CLIHandoffReceipt) {
+		fmt.Fprintln(stdout, line)
+	}
+	if isHandoff {
+		if cwd, err := os.Getwd(); err == nil {
+			if hint := postureDegradedHintForDir(descriptor, cliHandoffLabel(decision.ToolMode), cwd); hint != "" {
+				fmt.Fprintln(stdout, hint)
+			}
+		}
+	}
 	return 0
 }
 
@@ -2483,6 +2736,7 @@ func bootstrapStarterWork(choice starterChoice, source, detail string, inputItem
 }
 
 func saveCurrentWork(current *currentWork) error {
+	clearThrottlePark() // new work supersedes any stale parked resume
 	if err := os.MkdirAll(sessionStateRoot(), 0o755); err != nil {
 		return err
 	}
@@ -3024,6 +3278,12 @@ func runCheck(args []string, stdout, stderr io.Writer) int {
 	if len(args) > 0 && exactCommandToken(args[0]) == "competitor-watch" {
 		return runCompetitorWatchCheck(args[1:], stdout, stderr)
 	}
+	if len(args) > 0 && exactCommandToken(args[0]) == "functional" {
+		return runFunctionalSelfCheck(stdout, stderr)
+	}
+	if len(args) > 0 && exactCommandToken(args[0]) == "model" {
+		return runModelCheck(strings.Join(args[1:], " "), stdout, stderr)
+	}
 	summary, err := resolveSummary(args)
 	if err != nil {
 		fmt.Fprintf(stderr, "%v\n", err)
@@ -3142,6 +3402,17 @@ func runOpen(args []string, stdout, stderr io.Writer) int {
 }
 
 func runContinue(stdout, stderr io.Writer) int {
+	if park := loadThrottlePark(); park != nil {
+		fmt.Fprintln(stdout, throttleParkResumeLine(park))
+		if line := crossRouteResumeDisclosure(park); line != "" {
+			fmt.Fprintln(stdout, line)
+		}
+		code := runDirectTaskArgsIntake([]string{park.Prompt}, stdout, stderr)
+		if code == 0 {
+			clearThrottlePark()
+		}
+		return code
+	}
 	summary, err := resolveSummary(nil)
 	if err != nil {
 		fmt.Fprintf(stderr, "%v\n", err)
@@ -3553,7 +3824,7 @@ func renderPublicCommandInventory(w io.Writer) {
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Essential commands:")
 	fmt.Fprintln(w, "- `jini status`, `jini continue`, `jini open`")
-	fmt.Fprintln(w, "- `jini route`, `jini doctor`")
+	fmt.Fprintln(w, "- `jini route`, `jini doctor`, `jini mode`, `jini savings`, `jini trust`")
 	fmt.Fprintln(w, "- `jini memory inspect`, `jini memory off`, `jini memory forget`")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Setup:")
@@ -3568,6 +3839,7 @@ func renderAdminCommandInventory(w io.Writer) {
 	fmt.Fprintln(w, "- jini provider doctor")
 	fmt.Fprintln(w, "- jini check ship")
 	fmt.Fprintln(w, "- jini check competitor-watch")
+	fmt.Fprintln(w, "- jini check functional")
 	fmt.Fprintln(w, "- jini observe status")
 	fmt.Fprintln(w, "- jini observe add <path>")
 	fmt.Fprintln(w, "- jini open <artifact>")
@@ -3654,7 +3926,46 @@ func formatCLIHandoffReceiptSummary(receipt *cliHandoffReceipt) []string {
 	if strings.TrimSpace(receipt.CompletedAt) != "" {
 		lines = append(lines, "Completed: "+strings.TrimSpace(receipt.CompletedAt))
 	}
+	// Side effects and rollback are only shown when the run actually changed
+	// the working tree. Silence here means "nothing changed, or not a git work
+	// tree" - never a claim that nothing happened.
+	lines = append(lines, cliHandoffSideEffectLines(receipt)...)
 	return lines
+}
+
+// cliHandoffSideEffectLines returns the "Side effects" + "Rollback" lines for a
+// receipt, or nil when the run changed nothing (or the CWD was not a git work
+// tree). Shared by the full receipt summary and the direct-answer flow so the
+// actionable "what changed / how to undo" shows on the common path too.
+func cliHandoffSideEffectLines(receipt *cliHandoffReceipt) []string {
+	if receipt == nil || len(receipt.SideEffects) == 0 {
+		return nil
+	}
+	lines := []string{formatCLIHandoffSideEffectLine(receipt)}
+	if hint := strings.TrimSpace(receipt.RollbackHint); hint != "" {
+		lines = append(lines, "Rollback: "+hint)
+	}
+	return lines
+}
+
+// cliHandoffSideEffectDisplayLimit caps how many paths the one-line summary
+// names; the count stays honest.
+const cliHandoffSideEffectDisplayLimit = 6
+
+func formatCLIHandoffSideEffectLine(receipt *cliHandoffReceipt) string {
+	total := receipt.SideEffectCount
+	if total < len(receipt.SideEffects) {
+		total = len(receipt.SideEffects)
+	}
+	shown := receipt.SideEffects
+	if len(shown) > cliHandoffSideEffectDisplayLimit {
+		shown = shown[:cliHandoffSideEffectDisplayLimit]
+	}
+	listed := strings.Join(shown, ", ")
+	if remaining := total - len(shown); remaining > 0 {
+		listed += fmt.Sprintf(", +%d more", remaining)
+	}
+	return fmt.Sprintf("Side effects: %d (%s)", total, listed)
 }
 
 func renderCLIHandoffReceiptSummary(w io.Writer, lines []string) {
@@ -5390,7 +5701,9 @@ func canonicalTopLevelCommand(value string) string {
 	switch exactCommandToken(value) {
 	case "help", "--help", "-h":
 		return "help"
-	case "commands", "admin", "check", "status", "continue", "doctor", "provider", "route", "memory", "permissions", "init", "new", "observe", "open", "run", "publish-readiness", "scorecard-gate":
+	case "version", "--version", "-v":
+		return "version"
+	case "commands", "admin", "check", "status", "continue", "doctor", "provider", "route", "memory", "models", "update", "feedback", "skill", "agent", "mode", "savings", "trust", "permissions", "init", "new", "observe", "open", "run", "publish-readiness", "scorecard-gate":
 		return exactCommandToken(value)
 	default:
 		return ""

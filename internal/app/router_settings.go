@@ -109,6 +109,8 @@ func normalizeToolMode(raw string) string {
 		return "claude-code"
 	case "gemini", "gemini cli", "geminicli":
 		return "gemini-cli"
+	case "gemini api", "geminiapi", "google gemini":
+		return "gemini-api"
 	case "aider":
 		return "aider"
 	case "opencode", "open code", "open-code":

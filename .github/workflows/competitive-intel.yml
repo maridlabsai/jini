@@ -1,0 +1,98 @@
+name: Competitive Intel Digest
+
+# Listens to where competitors' users complain — on a schedule — so Jini's wedge
+# (un-metered, no-throttle, no credit anxiety) stays sharp and both roadmap and
+# marketing hear the pain the day it's posted. Reliable sources form the backbone
+# (Hacker News Algolia API + competitor GitHub issues via the built-in token);
+# Reddit is best-effort and can never fail the run. Upserts ONE living
+# "Competitive intel digest" issue. No secrets beyond the built-in token.
+#
+# Pairs with triage-digest.yml (our OWN feedback). Where a recurring competitor
+# pain is something Jini beats, it becomes a roadmap issue AND a receipt-backed
+# marketing post — every external claim sourced to a real thread.
+
+on:
+  schedule:
+    - cron: "0 10 * * 1" # Mondays 10:00 UTC (after our own triage digest at 09:00)
+  workflow_dispatch: {}
+
+permissions:
+  issues: write
+
+jobs:
+  intel:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+    steps:
+      - name: Gather competitor pain signal
+        run: |
+          set -uo pipefail
+          UA="jini-competitive-intel (github-actions; +https://github.com/${REPO})"
+          SINCE=$(($(date +%s) - 2592000)) # last 30 days
+
+          # Hacker News — most-discussed recent stories for the competitor, top by
+          # relevance/points. Rock-solid API. The `>` in numericFilters MUST be
+          # url-encoded as %3E or the request 400s. Broad name query = high recall,
+          # never an empty section; the concrete pain is pinpointed by the GitHub
+          # issues section below.
+          hn() { # $1 = query
+            local q
+            q="$(jq -rn --arg s "$1" '$s|@uri')"
+            curl -s --max-time 25 -A "${UA}" \
+              "https://hn.algolia.com/api/v1/search?query=${q}&tags=story&numericFilters=created_at_i%3E${SINCE}" \
+              | jq -r '.hits[:5][] | "- [\(.points // 0)▲ \(.num_comments // 0)💬] [\(.title // "untitled")](https://news.ycombinator.com/item?id=\(.objectID))"' 2>/dev/null \
+              || echo "- _(HN fetch failed this run)_"
+          }
+
+          # GitHub — loudest OPEN issues on a public competitor repo, by 👍. Built-in token.
+          ghissues() { # $1 = owner/repo
+            gh api -X GET search/issues \
+              -f q="repo:$1 is:issue is:open sort:reactions-+1-desc" \
+              --jq '.items[:5][] | "- [\(.reactions.total_count)👍] [#\(.number) \(.title)](\(.html_url))"' 2>/dev/null \
+              || echo "- _(no public repo, or fetch failed)_"
+          }
+
+          # Reddit — best-effort only; a blocked CI IP must never fail the workflow.
+          reddit() { # $1 = subreddit
+            curl -s --max-time 25 -A "${UA}" \
+              "https://www.reddit.com/r/$1/top.json?t=month&limit=6" \
+              | jq -r '.data.children[]?.data | select((.score // 0) > 5) | "- [\(.score)▲] [\(.title)](https://www.reddit.com\(.permalink))"' 2>/dev/null \
+              | head -5 \
+              || echo "- _(Reddit blocked the CI IP — best effort; check manually)_"
+          }
+
+          {
+            echo "# 🔭 Competitive intel digest"
+            echo
+            echo "_Auto-generated $(date -u +'%Y-%m-%d'). Where rivals' users hurt = where Jini's message and roadmap should press. Sources are live links — verify before quoting (chain-of-evidence)._"
+            echo
+            echo "## OpenAI Codex"
+            echo "### Hacker News — most discussed (30d)"; hn "codex"; echo
+            echo "### GitHub issues (openai/codex) — loudest open, by 👍"; ghissues "openai/codex"; echo
+            echo "### r/codex (top this month)"; reddit "codex"; echo
+            echo "## AWS Kiro"
+            echo "### Hacker News — most discussed (30d)"; hn "kiro ide"; echo
+            echo "### r/kiroIDE (top this month)"; reddit "kiroIDE"; echo
+            echo "## Claude Code"
+            echo "### Hacker News — most discussed (30d)"; hn "claude code"; echo
+            echo "### GitHub issues (anthropics/claude-code) — loudest open, by 👍"; ghissues "anthropics/claude-code"; echo
+            echo "### r/ClaudeAI (top this month)"; reddit "ClaudeAI"; echo
+            echo "---"
+            echo "**Act on it:** a recurring pain Jini beats → open a roadmap issue AND draft a receipt-backed post. A pain we *don't* beat yet → prioritize. Paired with our own \`triage-digest\`."
+          } > intel.md
+          cat intel.md
+
+      - name: Upsert the single intel issue
+        run: |
+          set -euo pipefail
+          title="🔭 Competitive intel digest"
+          num="$(gh issue list --repo "${REPO}" --state open --search "in:title \"${title}\"" --json number --jq '.[0].number // empty')"
+          if [ -n "${num}" ]; then
+            gh issue edit "${num}" --repo "${REPO}" --body-file intel.md
+            echo "Updated intel issue #${num}"
+          else
+            gh issue create --repo "${REPO}" --title "${title}" --body-file intel.md --label intel || \
+              gh issue create --repo "${REPO}" --title "${title}" --body-file intel.md
+          fi

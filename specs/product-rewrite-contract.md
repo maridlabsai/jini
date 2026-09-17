@@ -26,22 +26,21 @@ fail-closed setup guidance, and no broad OS or agent-suite claim.
 
 The merge-time guardrails for this contract live in:
 
-- [rewrite-guardrails.md](./rewrite-guardrails.md)
-- [rewrite-score-baseline.yaml](./rewrite-score-baseline.yaml)
-- [product-review-roles.md](./product-review-roles.md)
+- [rewrite-guardrails.md](./archive/rewrite-guardrails.md)
+- [rewrite-score-baseline.yaml](./archive/rewrite-score-baseline.yaml)
+- [product-review-roles.md](./archive/product-review-roles.md)
 - [number-one-platform-prd.md](./number-one-platform-prd.md)
-- [product-consensus-prd-and-plan.md](./product-consensus-prd-and-plan.md)
-- [full-product-prd.md](./full-product-prd.md)
-- [full-product-prd-execution-plan.md](./full-product-prd-execution-plan.md)
-- [local-slm-frontline-policy.md](./local-slm-frontline-policy.md)
-- [conversation-and-artifact-ux.md](./conversation-and-artifact-ux.md)
-- [adaptive-response-rendering-framework.md](./adaptive-response-rendering-framework.md)
-- [adaptive-response-rendering-framework-review.md](./adaptive-response-rendering-framework-review.md)
-- [adaptive-response-rendering-framework-gate.md](./adaptive-response-rendering-framework-gate.md)
-- [client-surfaces-and-free-tier.md](./client-surfaces-and-free-tier.md)
-- [workstream-technical-framework.md](./workstream-technical-framework.md)
-- [workstream-technical-framework-review.md](./workstream-technical-framework-review.md)
-- [workstream-technical-framework-gate.md](./workstream-technical-framework-gate.md)
+- prior PRD generations (product-consensus-prd-and-plan, full-product-prd,
+  full-product-prd-execution-plan) — superseded, in [specs/archive/](./archive/)
+- [local-model-support-matrix.md](./local-model-support-matrix.md) (local SLM frontline policy absorbed in §Absorbed Policies)
+- [conversation-and-artifact-ux.md](./archive/conversation-and-artifact-ux.md)
+- [adaptive-response-rendering-framework.md](./archive/adaptive-response-rendering-framework.md)
+- [adaptive-response-rendering-framework-review.md](./archive/adaptive-response-rendering-framework-review.md)
+- [adaptive-response-rendering-framework-gate.md](./archive/adaptive-response-rendering-framework-gate.md)
+- [number-one-platform-prd.md](./number-one-platform-prd.md) §Tier Boundary (client surfaces and free tier superseded)
+- [workstream-technical-framework.md](./archive/workstream-technical-framework.md)
+- [workstream-technical-framework-review.md](./archive/workstream-technical-framework-review.md)
+- [workstream-technical-framework-gate.md](./archive/workstream-technical-framework-gate.md)
 - [public-repo-boundary.md](./public-repo-boundary.md)
 
 The rewrite goal is to make Jini the easiest way to turn messy AI work into a
@@ -49,9 +48,9 @@ usable, trustworthy result.
 
 Major product decisions under this contract must clear the scorecard gate in:
 
-- [competitive-kpis.yaml](./competitive-kpis.yaml)
+- [competitive-kpis.yaml](./archive/competitive-kpis.yaml)
 - [golden-competitive-benchmark.yaml](./golden-competitive-benchmark.yaml)
-- [rewrite-score-baseline.yaml](./rewrite-score-baseline.yaml)
+- [rewrite-score-baseline.yaml](./archive/rewrite-score-baseline.yaml)
 
 No major UX, routing, artifact, or command-surface decision is considered done
 until it has been checked against those score sources.

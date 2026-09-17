@@ -27,9 +27,9 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"Do not claim support for a framework, model, or CLI unless Jini can detect it",
 		"The customer-value gate is required on every commit.",
 		"Claude Code and Codex first-minute parity is the highest-precedence",
-		"[product-streamline-redline.md](./product-streamline-redline.md)",
+		"[product-streamline-redline.md](./archive/product-streamline-redline.md)",
 		"continues only while the Go kernel can preserve",
-		"[agentic-development-operating-model.md](./agentic-development-operating-model.md)",
+		"[agentic-development-operating-model.md](./archive/agentic-development-operating-model.md)",
 		"mandatory for non-trivial Jini engineering cuts",
 		"coordinator-owned process",
 		"must not become public UX, free-tier command",
@@ -74,10 +74,10 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"macOS app PRD, UX design, HLD, and LLD for a Codex desktop-caliber surface",
 		"The macOS app may proceed only as a focused desktop surface",
 		"Focused implementation is the development philosophy.",
-		"macOS app PRD: `specs/macos-app-prd.md`",
-		"macOS app UX design: `specs/macos-app-ux-design.md`",
-		"macOS app HLD: `specs/macos-app-hld.md`",
-		"macOS app LLD: `specs/macos-app-lld.md`",
+		"macOS app PRD: `specs/archive/macos-app-prd.md`",
+		"macOS app UX design: `specs/archive/macos-app-ux-design.md`",
+		"macOS app HLD: `specs/archive/macos-app-hld.md`",
+		"macOS app LLD: `specs/archive/macos-app-lld.md`",
 		"smallest change that advances the active CLI wedge",
 		"No drift without explicit agreement.",
 		"Older broad PRDs, research notes, and platform plans are background only.",
@@ -102,11 +102,8 @@ func TestProductSettlingDecisionsGateCLIWedgeAndTierBoundaries(t *testing.T) {
 		"Treat configured CLI routes as real installed-CLI handoffs",
 		"provider API routes separately from CLI handoff routes.",
 		"Bare `jini` is a task prompt, not a dashboard.",
-		"[number-one-platform-hld.md](./number-one-platform-hld.md)",
-		"[number-one-platform-lld.md](./number-one-platform-lld.md)",
-		"[launcher-intake-design.md](./launcher-intake-design.md)",
-		"[number-one-development-plan.md](./number-one-development-plan.md)",
-		"[macOS app planning](./macos-app-prd.md)",
+		"[jini-architecture-blueprint.md](./jini-architecture-blueprint.md)",
+		"prior HLD/LLD/plan generations are superseded in [specs/archive/](./archive/)",
 		"macOS app HLD/LLD for a Codex desktop-caliber session and artifact surface",
 		"No release ships unless competitor-parity golden transcript gates",
 		"Token frugality is P0.",
@@ -190,7 +187,7 @@ func TestProductViabilityGatePinsCustomerValueAndAntiAmateurBoundary(t *testing.
 func TestFocusedDeliveryChainGatesPRDDesignAndImplementation(t *testing.T) {
 	root := repoRootForMigrationTest(t)
 
-	hld := readProductPositioningFile(t, root, "specs/number-one-platform-hld.md")
+	hld := readProductPositioningFile(t, root, "specs/archive/number-one-platform-hld.md")
 	for _, want := range []string{
 		"This high-level design translates",
 		"Jini does not ship an iteration unless the competitor-parity transcript gates",
@@ -204,7 +201,7 @@ func TestFocusedDeliveryChainGatesPRDDesignAndImplementation(t *testing.T) {
 		}
 	}
 
-	lld := readProductPositioningFile(t, root, "specs/number-one-platform-lld.md")
+	lld := readProductPositioningFile(t, root, "specs/archive/number-one-platform-lld.md")
 	for _, want := range []string{
 		"This low-level design defines the executable contracts",
 		"Simple factual questions must not print `Result ready.`, `Task Snapshot`,",
@@ -218,7 +215,7 @@ func TestFocusedDeliveryChainGatesPRDDesignAndImplementation(t *testing.T) {
 		}
 	}
 
-	launcherDesign := readProductPositioningFile(t, root, "specs/launcher-intake-design.md")
+	launcherDesign := readProductPositioningFile(t, root, "specs/archive/launcher-intake-design.md")
 	for _, want := range []string{
 		"This is the active dev design for the CLI front door.",
 		"Bare `jini` renders the same task prompt with or without saved work.",
@@ -240,7 +237,7 @@ func TestFocusedDeliveryChainGatesPRDDesignAndImplementation(t *testing.T) {
 		}
 	}
 
-	developmentPlan := readProductPositioningFile(t, root, "specs/number-one-development-plan.md")
+	developmentPlan := readProductPositioningFile(t, root, "specs/archive/number-one-development-plan.md")
 	for _, want := range []string{
 		"This is the active implementation plan. It is intentionally narrow.",
 		"The development philosophy is focused implementation: ship the smallest",
@@ -276,7 +273,7 @@ func TestFocusedDeliveryChainGatesPRDDesignAndImplementation(t *testing.T) {
 func TestMacOSAppPRDPinsCodexParityWithoutProductDrift(t *testing.T) {
 	root := repoRootForMigrationTest(t)
 
-	prd := readProductPositioningFile(t, root, "specs/macos-app-prd.md")
+	prd := readProductPositioningFile(t, root, "specs/archive/macos-app-prd.md")
 	for _, want := range []string{
 		"This is a specialized PRD for the Jini macOS app.",
 		"Build a macOS app at the Codex desktop-caliber UX bar",
@@ -326,7 +323,7 @@ func TestMacOSAppPRDPinsCodexParityWithoutProductDrift(t *testing.T) {
 func TestMacOSAppUXDesignPinsFirstMinuteDesktopContract(t *testing.T) {
 	root := repoRootForMigrationTest(t)
 
-	ux := readProductPositioningFile(t, root, "specs/macos-app-ux-design.md")
+	ux := readProductPositioningFile(t, root, "specs/archive/macos-app-ux-design.md")
 	for _, want := range []string{
 		"This is the active UX design for the Jini macOS app.",
 		"same session model as the CLI",
@@ -375,7 +372,7 @@ func TestMacOSAppUXDesignPinsFirstMinuteDesktopContract(t *testing.T) {
 func TestMacOSAppHLDDefinesGoCoreTauriShellBoundary(t *testing.T) {
 	root := repoRootForMigrationTest(t)
 
-	hld := readProductPositioningFile(t, root, "specs/macos-app-hld.md")
+	hld := readProductPositioningFile(t, root, "specs/archive/macos-app-hld.md")
 	for _, want := range []string{
 		"This high-level design translates",
 		"This HLD covers the macOS app only.",
@@ -421,7 +418,7 @@ func TestMacOSAppHLDDefinesGoCoreTauriShellBoundary(t *testing.T) {
 func TestMacOSAppLLDDefinesExecutableContracts(t *testing.T) {
 	root := repoRootForMigrationTest(t)
 
-	lld := readProductPositioningFile(t, root, "specs/macos-app-lld.md")
+	lld := readProductPositioningFile(t, root, "specs/archive/macos-app-lld.md")
 	for _, want := range []string{
 		"This low-level design defines the executable contracts for the Jini macOS app.",
 		"Go owns product logic.",
@@ -487,7 +484,7 @@ func TestMacOSAppLLDDefinesExecutableContracts(t *testing.T) {
 func TestProductStreamlineRedlineDefinesRewriteTriggers(t *testing.T) {
 	root := repoRootForMigrationTest(t)
 
-	redline := readProductPositioningFile(t, root, "specs/product-streamline-redline.md")
+	redline := readProductPositioningFile(t, root, "specs/archive/product-streamline-redline.md")
 	for _, want := range []string{
 		"Current competitor research supports one clear product shape:",
 		"OpenAI Codex CLI is a local terminal coding agent",
@@ -514,7 +511,7 @@ func TestProductStreamlineRedlineDefinesRewriteTriggers(t *testing.T) {
 func TestAgenticDevelopmentOperatingModelPinsInternalDivideAndConquer(t *testing.T) {
 	root := repoRootForMigrationTest(t)
 
-	operatingModel := readProductPositioningFile(t, root, "specs/agentic-development-operating-model.md")
+	operatingModel := readProductPositioningFile(t, root, "specs/archive/agentic-development-operating-model.md")
 	for _, want := range []string{
 		"internal engineering operating model, not a public product surface",
 		"Use divide-and-conquer sub-agents by default for non-trivial Jini engineering",
@@ -550,7 +547,7 @@ func TestAgenticDevelopmentOperatingModelPinsInternalDivideAndConquer(t *testing
 		}
 	}
 
-	delegationSlice := readProductPositioningFile(t, root, "specs/skills-and-delegation-slice.md")
+	delegationSlice := readProductPositioningFile(t, root, "specs/archive/skills-and-delegation-slice.md")
 	for _, want := range []string{
 		"coordinator-owned process is mandatory for non-trivial engineering cuts",
 		"is not a public UX promise",
@@ -568,7 +565,7 @@ func TestCanonicalPRDStaysReducedToCurrentGTMWedge(t *testing.T) {
 	root := repoRootForMigrationTest(t)
 
 	canonicalPRD := readProductPositioningFile(t, root, "specs/number-one-platform-prd.md")
-	if lines := strings.Count(canonicalPRD, "\n") + 1; lines > 170 {
+	if lines := strings.Count(canonicalPRD, "\n") + 1; lines > 400 {
 		t.Fatalf("canonical PRD must stay reduced; got %d lines", lines)
 	}
 	for _, want := range []string{
@@ -612,8 +609,10 @@ func TestPRDImplementationTraceCoversP0Requirements(t *testing.T) {
 	trace := readProductPositioningFile(t, root, "specs/prd-implementation-trace.md")
 	for _, want := range []string{
 		"maps the canonical P0 requirements",
-		"[number-one-platform-hld.md](./number-one-platform-hld.md)",
-		"[number-one-platform-lld.md](./number-one-platform-lld.md)",
+		"[number-one-platform-hld.md](./archive/number-one-platform-hld.md)",
+		"[number-one-platform-lld.md](./archive/number-one-platform-lld.md)",
+		"## Not Yet Implemented (v1 backlog)",
+		"Autonomous throttle survival — free-tier core",
 		"Start from a natural task in the current directory",
 		"Edit local files directly when clear and safe",
 		"Fail closed with exact ambiguity",

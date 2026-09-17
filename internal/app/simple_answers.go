@@ -32,9 +32,18 @@ func maybeHandleStandaloneQuestion(raw string, stdout io.Writer) bool {
 		Choice: starterChoice{PackID: "general-work", ChoiceLabel: "Question", DefaultName: "Question", State: "answered"},
 		Title:  compactTurnTitle(raw),
 		Source: raw,
+		// The deadline now budgets each attempt (throttleSurvivalOptions)
+		// rather than the whole call, which would otherwise expire mid-hold
+		// and kill the advertised throttle survival.
+		Standalone: true,
 	}
 	decision := detectRouteForRequest(request)
-	ctx, cancel := context.WithTimeout(context.Background(), standaloneQuestionTimeout())
+	// Quote a metered route's cost before spending the user's money (PRD:
+	// quote the next rung's cost before escalation). Handoff/local/free = empty.
+	if line := escalationCostQuoteLine(decision, request.Title, request.Source); line != "" {
+		fmt.Fprintln(stdout, line)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	text, used, _, err := generateWithConfiguredProviderDecision(ctx, request, decision)
 	if err == nil && used && strings.TrimSpace(text) != "" {
@@ -46,6 +55,11 @@ func maybeHandleStandaloneQuestion(raw string, stdout io.Writer) bool {
 }
 
 func standaloneQuestionSetupMessage(decision routeDecision, err error) string {
+	// Throttle-family errors already name `jini continue` and a fallback
+	// route; the generic setup copy would throw that guidance away.
+	if err != nil && isThrottleFamilyError(err) {
+		return err.Error()
+	}
 	if errors.Is(err, context.DeadlineExceeded) {
 		return "Route timed out. Run `jini route help` to connect a faster route or local model."
 	}
@@ -60,6 +74,36 @@ func standaloneQuestionTimeout() time.Duration {
 		if parsed, err := time.ParseDuration(raw); err == nil && parsed > 0 {
 			return parsed
 		}
+	}
+	return 10 * time.Second
+}
+
+// cliHandoffAttemptTimeout is the per-attempt budget for a standalone question
+// answered by a CLI hand-off. A hand-off spawns a subprocess (e.g.
+// `claude --print`) that legitimately runs far longer than a local model, so
+// the short local budget would kill it mid-flight (the jini-through-jini track
+// must stay unblocked). Override with JINI_CLI_HANDOFF_TIMEOUT.
+func cliHandoffAttemptTimeout() time.Duration {
+	if raw := strings.TrimSpace(os.Getenv("JINI_CLI_HANDOFF_TIMEOUT")); raw != "" {
+		if parsed, err := time.ParseDuration(raw); err == nil && parsed > 0 {
+			return parsed
+		}
+	}
+	return 3 * time.Minute
+}
+
+// standaloneAttemptTimeout picks the per-attempt budget for the standalone
+// question path. An explicit JINI_STANDALONE_QUESTION_TIMEOUT wins for any
+// route (so a caller can still bound a slow CLI); otherwise a CLI hand-off gets
+// the generous subprocess budget and a local/provider route the short default.
+func standaloneAttemptTimeout(decision routeDecision) time.Duration {
+	if raw := strings.TrimSpace(os.Getenv("JINI_STANDALONE_QUESTION_TIMEOUT")); raw != "" {
+		if parsed, err := time.ParseDuration(raw); err == nil && parsed > 0 {
+			return parsed
+		}
+	}
+	if cliHandoffMode(decision.ToolMode) {
+		return cliHandoffAttemptTimeout()
 	}
 	return 10 * time.Second
 }
@@ -115,6 +159,18 @@ func simpleArithmeticExpression(raw string) string {
 	expression = strings.TrimSpace(strings.TrimSuffix(expression, "?"))
 	expression = strings.ReplaceAll(expression, "×", "x")
 	expression = strings.ReplaceAll(expression, "÷", "/")
+	// Word operators so "17 times 23" / "2 plus 2" answer like a familiar CLI,
+	// offline. Multi-word forms first. Padded so the arithmetic pattern's
+	// optional spacing still matches.
+	for _, sub := range []struct{ from, to string }{
+		{" multiplied by ", " x "},
+		{" divided by ", " / "},
+		{" plus ", " + "},
+		{" minus ", " - "},
+		{" times ", " x "},
+	} {
+		expression = strings.ReplaceAll(expression, sub.from, sub.to)
+	}
 	for _, prefix := range []string{
 		"what is ",
 		"what's ",

@@ -1,6 +1,6 @@
 # Product Settling Decisions
 
-Updated: 2026-06-12
+Updated: 2026-07-10
 
 This document records the hard product decisions that reduce ambiguity for GTM,
 engineering, docs, and tiering.
@@ -109,12 +109,12 @@ flows, agent-role UX, or roadmap expansion, this charter wins until a newer
 explicit product decision changes it.
 
 The streamline-or-rewrite boundary lives in
-[product-streamline-redline.md](./product-streamline-redline.md). Current work
+[product-streamline-redline.md](./archive/product-streamline-redline.md). Current work
 continues only while the Go kernel can preserve the familiar first-minute
 transcript through clear shell, intent, action, state, and gate boundaries.
 
 The internal engineering operating model lives in
-[agentic-development-operating-model.md](./agentic-development-operating-model.md).
+[agentic-development-operating-model.md](./archive/agentic-development-operating-model.md).
 It is mandatory for non-trivial Jini engineering cuts, but it is
 a coordinator-owned process. It must not become public UX, free-tier command
 grammar, or a visible agent-role layer.
@@ -408,16 +408,16 @@ quality risk.
 Jini delivery uses one active chain:
 
 - PRD: `specs/number-one-platform-prd.md`
-- macOS app PRD: `specs/macos-app-prd.md`
-- macOS app UX design: `specs/macos-app-ux-design.md`
-- macOS app HLD: `specs/macos-app-hld.md`
-- macOS app LLD: `specs/macos-app-lld.md`
-- HLD: `specs/number-one-platform-hld.md`
-- LLD: `specs/number-one-platform-lld.md`
-- streamline redline: `specs/product-streamline-redline.md`
-- internal operating model: `specs/agentic-development-operating-model.md`
-- front-door dev design: `specs/launcher-intake-design.md`
-- implementation plan: `specs/number-one-development-plan.md`
+- macOS app PRD: `specs/archive/macos-app-prd.md`
+- macOS app UX design: `specs/archive/macos-app-ux-design.md`
+- macOS app HLD: `specs/archive/macos-app-hld.md`
+- macOS app LLD: `specs/archive/macos-app-lld.md`
+- HLD (archived): `specs/archive/number-one-platform-hld.md`
+- LLD (archived): `specs/archive/number-one-platform-lld.md`
+- streamline redline: `specs/archive/product-streamline-redline.md`
+- internal operating model: `specs/archive/agentic-development-operating-model.md`
+- front-door dev design (archived): `specs/archive/launcher-intake-design.md`
+- implementation plan (archived): `specs/archive/number-one-development-plan.md`
 
 macOS app design review feedback is active scope only where it hardens the
 existing macOS PRD/HLD/LLD chain: transient simple answers, session identity
@@ -559,3 +559,341 @@ Rules:
   part of the free tier.
 - Landing-page and commercial-buyer copy should stay focused on user value,
   shipped behavior, pricing posture, and proof instead of contributor tooling.
+
+## PRD Rebuild Decision (2026-07-10)
+
+The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
+
+- Product identity: token-savings mastery with receipts; free to run; routes
+  everything; dollar savings is the primary receipt denomination, always shown
+  with tokens, time saved, and throttles dodged, labeled literal (metered API
+  routes) vs imputed (subscription routes, valued at API-equivalent prices).
+- Primary user: professional developer at a FAANG-class company; the quality
+  bar is first-minute indistinguishability from frontier-lab tooling; the PRD
+  reads as a commercial product contract, not research prose.
+- v1 scope is Option A (wedge first): BYO/gateway/CLI-handoff agent, sessions,
+  receipts/ledger, throttle fallback, on-the-fly skills/agents, live paywall
+  (Autopilot + Continuity, fail-closed). Local execution rides detected
+  third-party runtimes as a disclosed interim route; the first-party runtime
+  and curated permissive-license-only model matrix are v1.5.
+- On-the-fly skills/agents creation is a free-tier feature (competitive
+  parity). This narrows the earlier "agent/skills features are commercial"
+  doctrine; the commercial repo keeps the productivity-suite/OS feature set.
+  Developer/tester agent fleets remain commercial.
+- BYO compatibility matrix, repo-scoped project memory, and
+  repetition-suggested skills are v1 requirements (user-directed additions,
+  2026-07-09).
+- Savings on the face: task footer, session roll-up, startup counter, savings
+  dashboard with charts and local HTML report (user-directed, 2026-07-09).
+- The specs/ directory is swept: one canonical PRD, a small keep-set, and
+  specs/archive/ for everything superseded, per prd-rebuild-design.md §8,
+  executed as a gated sequence, never one mega-change.
+- The canonical PRD line cap rises from 170 to 400: the rebuilt PRD absorbs
+  requirements formerly spread across several specs; the cap and its intent
+  (stay reduced versus the older platform plans) remain.
+- Throttle resilience is elevated from P1 to a release-gated v1 goal (free:
+  detection, suggested fallback, resume; paid Autopilot: automatic switching).
+- Drift-gate protected set repointed to the post-rebuild keep-set (PRD,
+  rebuild design, architecture blueprint, settling decisions, rewrite
+  contract, gate matrix, routing policy, model matrix, repo boundary,
+  canonical names, implementation trace, README).
+- Terminal experience bar added to the UX contract (user-directed UX
+  addendum, 2026-07-11, translated from mobile idiom to CLI idiom):
+  terminal-idiomatic rendering with graceful capability fallback, sub-100ms
+  first paint with narrated progress instead of spinners, state-adaptive
+  surface, designed output typography, opt-in notifications, anonymous-by-
+  default onboarding, and release-gated accessibility (NO_COLOR/--plain,
+  no color-only meaning).
+- UX addendum applies to BOTH surfaces (user decision, 2026-07-12): the
+  CLI-idiomatic translation lands in the v1 PRD terminal experience bar; the
+  literal native-GUI guardrails (Live Activities, haptics, Material You,
+  editorial layout, shimmer skeletons) land in
+  specs/roadmap-app-ux-guardrails.md as roadmap-stage, activating only when
+  the GUI surface enters scope via a decision-record update.
+- Gate matrix retraced to the rebuilt PRD (release bars added) and absorbs the
+  gate-doc merge group (lean-platform-gate, dogfood-gates,
+  friction-reduction-gate, engineering-principles) into an Absorbed Contracts
+  section; those four sources move to specs/archive/ in the sweep.
+- Batch-1 archive completion (2026-07-15): lean-platform-gate command-surface
+  and skills-simplicity rules fully absorbed verbatim into the gate matrix
+  Absorbed Contracts; the four gate docs moved to specs/archive/ with
+  supersession banners, and their Go/tools references repointed to
+  specs/engineering-gate-matrix.md.
+- Batch-2 routing merge (2026-07-15): runtime-execution-modes,
+  runtime-selection-heuristics, device-capability-routing, and
+  research-informed-heuristics absorbed into execution-routing-policy.md
+  §Absorbed Policies and archived. "Local commercial SLM" phrasing dropped in
+  the absorption — local model routing is free-tier per the rebuilt PRD Tier
+  Boundary; stale model-name examples dropped.
+- Batch-3 local-execution merge (2026-07-15): platform-offline-strategy,
+  local-slm-frontline-policy, and device-runtime-gate absorbed into
+  local-model-support-matrix.md §Absorbed Policies and archived; the matrix
+  gains a license-gated Admission Criteria section (permissive-license-only,
+  official-source downloads, license shown at consent) per the rebuilt PRD.
+  Publish-readiness, resource-policy tests, and benchmark named-proof refs
+  repointed from platform-offline-strategy.md to the matrix. Same tier
+  reconciliation as batch 2: "commercially usable local SLM" reads as plain
+  local SLM routing.
+- Batch-4 benchmark merge + competitor promotion (2026-07-17): Cline, Aider,
+  Roo Code, Goose, OpenCode, and Continue promoted from watchlist to the
+  golden-benchmark core set (PRD Risk Register requirement) with
+  identical-schema rationale entries and honest scenario scores; scorecard
+  minimums retuned to 13 core / 38 watchlist. adapter-benchmark-gate,
+  adapter-capability-benchmarking, and competitive-kpis absorbed into
+  golden-competitive-benchmark.yaml (absorbed_adapter_benchmark_methodology)
+  and archived; publish-readiness routing-use check and KPI test reads
+  repointed to the golden benchmark.
+- Autonomous throttle survival elevated to the number one P0 requirement
+  (user directive, 2026-07-18): Jini must detect throttling, hold the
+  session, and resume on its own with no human babysitting. Tier split
+  ratified: free tier self-resumes on the same route when capacity returns
+  and names fallbacks; paid Autopilot performs fallback route switching and
+  resume automatically. An agent that stops and waits for a person when
+  throttled is a release-blocking defect.
+- BYO matrix adds xAI (Grok) direct keys (user directive, 2026-07-18):
+  rides the OpenAI-compatible client shape; Grok models additionally remain
+  reachable via the OpenRouter/LiteLLM gateway rungs. Per the matrix honesty
+  rule, the shape is not claimed until its validation fixture passes.
+- Execution modes ratified (user directive, 2026-07-18): autonomous behavior
+  maps to an `Auto` setting which is the default; the alternative is `Ask`
+  (approval before side effects and throttled-work resume, mapping to the
+  supervised runtime mode). The user can switch between modes at any time,
+  including mid-session, without losing session state. Auto never waives
+  destructive-action confirmation or the escalation cost quote. Naming
+  checked against Kiro (Autopilot/Supervised toggle, switchable anytime):
+  "Autopilot" was rejected because it is Jini's paid SKU name, and
+  "Supervised/Consent" rejected as system-state jargon; `Auto`/`Ask` keeps
+  the established plain-language vocabulary.
+- Batch-5 sessions/surfaces archive (2026-07-18): memory-system,
+  learning-system, install-packaging, and client-surfaces-and-free-tier
+  archived; their requirements already live in the rebuilt PRD (§Sessions,
+  Memory, And Context; §Market And Learning Guards; install P0; §Tier
+  Boundary). Historical pinned-detail checks (learning-system fragment
+  check, install existence pin, tier-policy string pins) repointed to the
+  archive paths per the existence-pin rule — content is unchanged there and
+  the live requirement is separately asserted against the PRD, which stays
+  inside its 400-line budget.
+- Paramount qualities confirmed and privacy/security made explicit (user
+  directive, 2026-07-18): simplicity, ease of use, privacy, security,
+  accessibility, and reliability are paramount; always-visible savings in
+  hours saved, throttling avoided, and dollars saved was verified already
+  contractual (receipt denominations + footer/roll-up/startup counter +
+  savings dashboard). Added the missing "Private and secure" platform
+  quality: local-first data, keychain-only keys, anonymous by default,
+  opt-in-only telemetry, zero private data on share/export surfaces.
+- User preference envelope ratified (user directives, 2026-07-18), recorded
+  in execution-routing-policy.md: Auto mode performs task-shaped dynamic
+  model selection by work kind (coding/planning/testing/research — already a
+  required regression input), but strictly inside user-declared constraints:
+  never/prefer/pin per model or route (optionally scoped by work kind), a
+  fastest-vs-best speed bias, persistence as plain reviewable files, edits
+  via direct file edit, natural language, or route set/pin, and revocable
+  implicit override learning per cohort. Explicit constraints always beat
+  the scorer — a user who never wants a given model never gets it.
+- Sharp free/paid divide ratified (user directive, 2026-07-18): the free
+  tier's job is virality — a complete, autonomous, never-crippled wedge with
+  shareable savings receipts as the growth loop; the subscription's job is
+  revenue — Autopilot (never wait out a throttle) and Continuity
+  (cross-device resume) plus governance and intelligence feeds. The divide
+  stays sharp: no paid capability leaks into free as a growth hack, and no
+  free capability is degraded to force upgrades; the upgrade trigger stays
+  the honest one — pay when route management interrupts you more often than
+  the subscription costs.
+- Batch-6a shipping-playbook archive (2026-07-18): app-platform-shipping-
+  playbook archived. Plan deviation, recorded: instead of absorbing its app-
+  shipping fragment checks into the gate matrix, all 27 references repoint
+  to the archive path per the existence-pin rule — the checks validate
+  frozen app-shipping doctrine for surfaces that are roadmap-stage, while
+  live release bars already sit in the gate matrix release tier.
+- Batch-6b deviation (2026-07-18): competitive-release-plan.md is KEPT in
+  specs/, not archived. The plan's runtime-reference rule applies: it is the
+  live watch-packet source for internal/app/competitor_watch.go and the PRD
+  cites it inline as the P0 competitor-watch loop. A trace note to the PRD
+  was added instead; all existing references stay valid unchanged.
+- Batch-6c honest-system-audit archive (2026-07-18): archived with banner to
+  PRD Platform Qualities/Gates; its nine references (publish-readiness
+  fragment checks, test pins, benchmark guardrails) repoint to the archive
+  path per the existence-pin rule.
+- Batch-6d skills-slice archive (2026-07-18): skills-and-delegation-slice
+  archived with banner to PRD Skills And Agents + Tier Boundary (which own
+  the free on-the-fly skills/agents scope and the commercial-suite
+  boundary); its ten references repoint to the archive path per the
+  existence-pin rule.
+- Batch-7a prior-PRD-generation archive (2026-07-18): full-product-prd,
+  full-product-prd-execution-plan, product-consensus-prd-and-plan,
+  cross-surface-session-platform-prd, cross-surface-session-system-and-dev-
+  design, number-one-development-plan, number-one-platform-hld,
+  number-one-platform-lld, and number-one-product-research archived with
+  banners to the canonical PRD; seven pinned references repoint to archive
+  paths. The PRD delivery chain now cites the architecture blueprint and
+  specs/archive/ for prior generations, freeing line budget.
+- Batch-7b plans/audits/reviews archive (2026-07-18): jini-next-initiative-
+  plan, cli-replacement-score-plan, docs-homepage-rewrite-plan,
+  product-streamline-redline, rewrite-guardrails, rewrite-score-baseline,
+  delight-gap-closure, friction-reduction-research, and product-review-roles
+  archived with banners to PRD Platform Qualities/Gates; five pinned
+  references and the keep-set doc links repoint to archive paths.
+- Batch-7c out-of-scope framework archive (2026-07-18): twenty
+  framework/ontology/surface docs (travel, workstream, adaptive-rendering
+  triples; personal-os; work-ontology; work-state-machine;
+  operating-profiles; conversation-and-artifact-ux; artifact-schemas;
+  atlassian-target-binding; extension-rules; launcher-intake-design;
+  agentic-development-operating-model; lean-platform-doctrine) archived
+  with banners to PRD Goals And Scope non-goals; publish-readiness
+  existence entry, migration-test pin, positioning-test reads/pins, and
+  keep-set doc links repoint to archive paths.
+- Batch-8 roadmap-park + protocol-core archive (2026-07-18): the four macOS
+  app docs (PRD/HLD/LLD/UX) parked in specs/archive/ with roadmap-stage
+  banners — content remains the starting point when the desktop roadmap item
+  activates; test reads and settling-doc pointers repoint to archive paths.
+  protocol-core.md archived (zero remaining references) with banner to PRD
+  P0 Outcome Requirements.
+- Trace regenerated against the rebuilt PRD (2026-07-18): thirteen
+  implemented P0 rows carried forward with their existing proofs; a new
+  Not-Yet-Implemented v1 backlog section lists the rebuilt PRD's unbuilt
+  requirements (led by autonomous throttle survival) with the gate that will
+  prove each. Plan deviation recorded: the backlog renders as a list, not a
+  table, because the scorecard trace parser counts any three-cell table row
+  as an implemented P0 row.
+- Sweep close-out (2026-07-18): CLAUDE.md canonical files updated to the
+  post-rebuild keep-set with the archive rule and the free-tier
+  skills/agents boundary sentence (PRD Skills And Agents); final straggler
+  check fixed the last old-path citations (competitive-kpis link, HLD/LLD/
+  launcher/development-plan pointers now marked archived).
+- Remote Ask-mode approvals ratified as paid Continuity capability (user
+  directive, 2026-07-18): when the user is away from the desk in Ask mode,
+  they can enable mobile notifications and receive each approval prompt
+  live with the same options and selections as the terminal, answerable
+  remotely. Paid because it rides Continuity's cross-device relay and
+  account sync; the free tier keeps local opt-in notifications and can
+  always answer at the terminal. Free stays autonomous at the desk; paid
+  adds control from anywhere.
+- Throttle-survival free-tier core implemented (2026-07-19): detection
+  classifiers (provider error text; raw CLI output before privacy
+  sanitization), same-route hold-and-self-resume loop with advertised
+  Retry-After honoring and backoff, hold narration, receipt reason
+  annotation, and exhaustion guidance naming `jini continue` and a viable
+  fallback. Proven by unit suite plus a live transcript with a throttling
+  fake downstream CLI. Trace row added (14 implemented P0 rows); remaining
+  slices (Autopilot switching, Ask-mode resume approval, ledger counter)
+  stay in the backlog.
+- Hand-off permission posture with directory-trust consent (2026-08-04):
+  execution mode now maps to the downstream CLI's permission mode for
+  CLI-handoff routes. Three postures — plan (default, today's behavior), semi
+  (`acceptEdits`: applies edits, no commands), autonomous (full edit+verify).
+  Escalation requires Auto mode AND an explicit per-directory trust grant AND a
+  route with verified args (claude-code today; others plan-only). `jini trust`
+  / `jini trust --autonomous` obtain INFORMED EXPLICIT CONSENT: neutral,
+  factual, route-agnostic copy stating exactly what the level does and its
+  scope (no fear framing), `[y/N]` default No, no-TTY records nothing. Grants
+  persist to `~/.jini/trusted-dirs.json` (level + granted_at + acknowledged),
+  are symlink-resolved and per-exact-directory, and are revocable
+  (`jini trust remove`). A non-plan hand-off prints a neutral route-specific
+  disclosure so autonomy is never silent; NO generic per-task nudge in
+  untrusted dirs (that would be the verbose safety block the product forbids).
+  Fail-safe: no trust configured = plan everywhere = byte-identical to today.
+  Free-tier, local/serverless (zero inference cost), and orthogonal to paid
+  Autopilot. Native CLI-less autonomy remains a separate paid capability. See
+  `specs/handoff-posture-design.md`.
+- Non-interactive trust consent via `--yes` (2026-08-20): `jini trust
+  --autonomous --yes` (and `--semi --yes`) grants without a TTY, for scripted/
+  headless/CI dogfood setup where an interactive prompt is impossible (e.g. the
+  jini-through-jini track). Consent stays informed and explicit: the full
+  neutral repercussions disclosure is still printed, and the user must pass the
+  `--yes` flag deliberately (standard `apt -y`/`npm --yes` pattern). The
+  fail-safe for BARE `jini trust` is unchanged — no TTY and no `--yes` records
+  nothing. Unblocks the dogfood commitment without weakening the consent model.
+- Native in-process agentic loop, governed by the same posture gate
+  (2026-08-14): Jini can now do bounded multi-step WORK itself — read/edit/run
+  over a text (ReAct-style) tool protocol reusing `generateProviderText` — when
+  no downstream CLI is routed. It is NOT a new P0: it extends the Auto/Ask
+  execution-mode row (posture is how Auto acts autonomously; the loop is that
+  same policy applied to Jini's own tools instead of a CLI's), so P0 count stays
+  16/16. It engages ONLY when `maybeRunNativeLoop` sees Auto mode + an explicit
+  per-directory trust grant (posture semi/autonomous via `resolveNativeLoopPosture`)
+  AND a usable non-handoff model (not `local-preview`, `Status == "ok"`); tools
+  are filtered by posture (semi = read+edit, autonomous = read+edit+run), so the
+  same `jini trust` consent bounds it. Fail-safe: plan/untrusted/Ask — the
+  default — returns `ok=false` and the existing saved-draft path runs
+  byte-identically (verified: full suite green, all existing tests run plan). A
+  non-plan run prints the same neutral posture disclosure; a run records savings
+  once like any work task. Decision-tree recording + git checkpointing before
+  write steps are wired through the public `agentloop` seam (no-op in the pure
+  public build; the Pro backtrack implementation registers them from the
+  commercial repo). See `specs/native-agentic-loop-design.md`.
+- Paid Autopilot lives in the commercial repo; public repo keeps only the
+  fail-closed gate and the free equivalent (2026-07-30): per PRD §Tier
+  Boundary (Autopilot = predictive throttle avoidance, throttle-aware route
+  switching, auto-resume, savings optimization; "managed throttle recovery"
+  excluded from free; "SKUs live in the commercial repo") and CLAUDE.md
+  (commercial feature set → `../jini-commercial`). This public repo therefore
+  does NOT implement Autopilot switching. Its responsibilities are: (1) a
+  fail-closed entitlement gate that refuses Autopilot and names the free
+  equivalent, reached via `jini mode autopilot`; (2) the free manual
+  equivalent, already shipped — Auto mode's same-route hold/self-resume
+  (throttle survival), the typed decline that names a fallback, and manual
+  `jini route set <route>`; (3) the public ledger dodge-counter seam
+  (`ThrottleDodged`/`Dodges`), already built and part of the free "full ledger
+  with shareable receipts", which stays 0 until a paid dodge occurs. The
+  dogfood loop is proven on-machine as of this date (real `claude-code` smoke
+  + validate; `jini check ship` ok; push gate green) — evidence is per-machine
+  (`.jini/` gitignored). See `specs/savings-ledger-mvp-design.md`.
+- Savings ledger MVP implemented and traced (2026-07-29): per-task
+  imputed-and-labeled dollar receipts on the answering route, work-task
+  footer, all-time startup counter, and `jini savings` text/JSON — all
+  dollar-primary and localized to the OS currency, with USD always carried as
+  the source of truth and a disclosed estimation basis (chars÷4, dated price
+  table, dated FX). Moved trace backlog→Implemented (P0 15→16). Honesty is
+  gated by `TestHonesty_*` (imputed-only, metered-is-not-a-saving, localized
+  figure always carries USD, sub-unit amounts never contradict). Deferred
+  slices stay in the backlog: `--report` HTML, `--share` card, ANSI charts,
+  and real metered-usage capture (the seam for literal rows). See
+  `specs/savings-ledger-mvp-design.md`.
+- `jini savings` joins the taught command surface (2026-07-25): the savings
+  ledger MVP (PRD §Savings Ledger And Receipts) ships its dashboard as
+  top-level `jini savings` (text default, `--format json`) — one command, no
+  subtree. Command-surface discipline was weighed and the command kept: the
+  PRD names `jini savings` as the growth engine's face, and the running
+  counter/footer point users to it. Every figure is imputed-and-labeled with
+  the USD source carried alongside the OS-localized amount; the basis line
+  discloses the char÷token divisor, price date, and FX rate + date. See
+  `specs/savings-ledger-mvp-design.md`.
+- Auto/Ask execution mode + Ask-mode resume approval implemented and traced
+  (2026-07-22): the Auto/Ask surface (`execution_mode.go`, `jini mode`), the
+  throttle-survival approver seam with fail-closed parking
+  (`throttle_survival.go`, `throttle_park.go`), and `jini continue`
+  park-resume moved from the trace backlog to Implemented, proven by unit
+  suites plus a live transcript (Ask decline parks then `jini continue`
+  resumes; Auto silent-holds the advertised 2s wait then resumes the same
+  route). Remaining throttle slices stay in the backlog: paid Autopilot
+  mid-task route switching and the throttle-dodge savings counter. New
+  residual-hardening item recorded: selective-consistency and refinement
+  drafts still bypass `runWithThrottleSurvival`.
+- `jini mode` joins the taught command surface (2026-07-21): the Auto/Ask
+  execution mode (PRD Execution Modes) ships as top-level
+  `jini mode [auto|ask]` — one command, no aliases, no subtree — and the
+  allowed-command map in `internal/app/go_migration_test.go` gains `mode` as
+  a deliberate surface addition. Command-surface discipline
+  (`specs/engineering-gate-matrix.md` Command-Surface Discipline) was weighed
+  against it: a mode toggle is the PRD's own "one obvious action" for the
+  setting, and burying it in `jini admin` would make the fail-closed
+  supervision promise undiscoverable. Bare `jini mode` reports the effective
+  mode and names `JINI_MODE` when the env override differs from the saved
+  setting. See `specs/auto-ask-execution-mode-design.md`.
+- PRD implementation trace refreshed to current reality (2026-09-06): several
+  requirements the trace still listed as unbuilt shipped this cycle and are now
+  annotated in the backlog with commits — BYO credential validation + typed
+  error taxonomy + OpenAI-compatible routing (incl. xAI/Grok) + macOS keychain
+  (931c007, b411769); escalation cost quote before spend (cb6b446); repo-scoped
+  context via AGENTS.md/CLAUDE.md reader (9ad3166); on-the-fly skill/agent
+  creation as free-tier reviewable files, unblocking an over-broad commercial
+  gate (09a638f); and a partial TTFV/cross-platform step (818b5f5, build+CI
+  only). The resolved residual-hardening item (auxiliary drafts dropped under
+  throttle, acf1e01) is marked [RESOLVED]. Annotations stayed in the backlog
+  LIST, not the scorecard-counted Implemented table, so the trace's P0 count is
+  unchanged; promoting these rows to the table is a separate, deliberate step
+  once each names a pinned release gate. Also on the free-tier receipt/
+  resilience front this cycle: side effects + rollback path on the handoff
+  receipt surfaced on the direct-answer flow (256fb7e, b628b76) and an active
+  no-fallback throttle setup nudge (7fa70ba), and cross-route resume now
+  discloses what carried over (effcf70).

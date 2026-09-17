@@ -34,14 +34,12 @@ func TestOfflineRegressionGuardrailsFailWhenRequiredSpecContentIsMissing(t *test
 		"## Registry Contract",
 		"`profile_role`",
 		"`status`",
-	}, "\n"))
-	writeTestFile(t, filepath.Join(specDir, "platform-offline-strategy.md"), strings.Join([]string{
 		"## Future Update Policy",
 		"Future model updates should:",
 		"preserve route evidence shape",
 		"preserve session and artifact identity",
 	}, "\n"))
-	writeTestFile(t, filepath.Join(specDir, "adapter-benchmark-gate.md"), strings.Join([]string{
+	writeTestFile(t, filepath.Join(specDir, "golden-competitive-benchmark.yaml"), strings.Join([]string{
 		"### 4. Routing Use",
 		"repeated regression across recent samples",
 		"strong recovery after degradation",
@@ -76,7 +74,7 @@ func TestPublishReadinessTextRendersMissingFragments(t *testing.T) {
 			ID:     "app-platform",
 			Status: "needs-attention",
 			Checks: []publishReadinessCheck{{
-				Path:             "specs/app-platform-shipping-playbook.md#source-backed-inputs",
+				Path:             "specs/archive/app-platform-shipping-playbook.md#source-backed-inputs",
 				Exists:           true,
 				Status:           "incomplete",
 				MissingFragments: []string{"OpenTelemetry"},
@@ -86,7 +84,7 @@ func TestPublishReadinessTextRendersMissingFragments(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"    INCOMPLETE specs/app-platform-shipping-playbook.md#source-backed-inputs",
+		"    INCOMPLETE specs/archive/app-platform-shipping-playbook.md#source-backed-inputs",
 		"      MISSING OpenTelemetry",
 	} {
 		if !strings.Contains(out, want) {
@@ -100,7 +98,7 @@ func TestPublishReadinessJSONRendersMissingFragments(t *testing.T) {
 		ID:     "app-platform",
 		Status: "needs-attention",
 		Checks: []publishReadinessCheck{{
-			Path:             "specs/app-platform-shipping-playbook.md#source-backed-inputs",
+			Path:             "specs/archive/app-platform-shipping-playbook.md#source-backed-inputs",
 			Exists:           true,
 			Status:           "incomplete",
 			MissingFragments: []string{"OpenTelemetry"},
@@ -437,12 +435,13 @@ func TestShipCheckReadsLocalCLIHandoffDogfoodEvidence(t *testing.T) {
 	fakeBin := t.TempDir()
 	fakeCodex := writeProviderFakeExecutable(t, fakeBin, "codex", "printf 'ok\\n'")
 	stateDir := t.TempDir()
+	validatedAt := time.Now().UTC().Add(-time.Hour).Format(time.RFC3339)
 	writeTestFile(t, filepath.Join(stateDir, "cli-dogfood.json"), `{
   "schema_version": "0.1.0",
   "context_type": "JiniCLIHandoffDogfoodEvidence",
   "routes": {
     "codex": {
-      "validated_at": "2026-06-09T00:00:00Z",
+      "validated_at": "`+validatedAt+`",
       "checks": ["auth", "approvals", "output shape", "route receipt privacy"]
     }
   }
@@ -473,7 +472,7 @@ func TestShipCheckReadsLocalCLIHandoffDogfoodEvidence(t *testing.T) {
 	if codexDogfood == nil {
 		t.Fatalf("expected codex dogfood row, got %#v", report.CLIHandoffDogfood)
 	}
-	if codexDogfood.SetupStatus != "ready" || codexDogfood.DogfoodStatus != "validated" || codexDogfood.LastValidatedAt != "2026-06-09T00:00:00Z" {
+	if codexDogfood.SetupStatus != "ready" || codexDogfood.DogfoodStatus != "validated" || codexDogfood.LastValidatedAt != validatedAt {
 		t.Fatalf("expected codex dogfood evidence to validate route, got %#v", codexDogfood)
 	}
 	if len(codexDogfood.ValidatedChecks) != 4 || len(codexDogfood.MissingChecks) != 0 {
@@ -756,7 +755,7 @@ func TestShipCheckBlocksInvalidCLIHandoffDogfoodEvidenceAndClaimConfig(t *testin
   "context_type": "JiniCLIHandoffDogfoodEvidence",
   "routes": {
     "gemini": {
-      "validated_at": "2026-06-09T00:00:00Z",
+      "validated_at": "`+time.Now().UTC().Add(-time.Hour).Format(time.RFC3339)+`",
       "checks": ["auth", "approvals", "output shape", "route receipt privacy"]
     }
   }
@@ -953,7 +952,7 @@ func TestShipCheckBlocksMissingClaimedCLIHandoffRoute(t *testing.T) {
   "context_type": "JiniCLIHandoffDogfoodEvidence",
   "routes": {
     "codex": {
-      "validated_at": "2026-06-09T00:00:00Z",
+      "validated_at": "`+time.Now().UTC().Add(-time.Hour).Format(time.RFC3339)+`",
       "checks": ["auth", "approvals", "output shape", "route receipt privacy"]
     }
   }
@@ -1244,16 +1243,16 @@ func TestScorecardGatePassesAndExposesCompetitorPressure(t *testing.T) {
 	if report.PRDImplementation.SourcePath != "specs/prd-implementation-trace.md" {
 		t.Fatalf("expected PRD implementation trace source, got %#v", report.PRDImplementation)
 	}
-	if report.PRDImplementation.TotalRequirements != 13 || report.PRDImplementation.ImplementedRequirements != 13 || report.PRDImplementation.CompletionPercent != 100 {
-		t.Fatalf("expected P0 PRD implementation completion to be 13/13 = 100%%, got %#v", report.PRDImplementation)
+	if report.PRDImplementation.TotalRequirements != 16 || report.PRDImplementation.ImplementedRequirements != 16 || report.PRDImplementation.CompletionPercent != 100 {
+		t.Fatalf("expected P0 PRD implementation completion to be 16/16 = 100%%, got %#v", report.PRDImplementation)
 	}
 	if report.PRDImplementation.Status != "ok" {
 		t.Fatalf("expected PRD implementation status ok, got %#v", report.PRDImplementation)
 	}
-	if report.PRDImplementation.ResidualHardeningCount != 1 {
+	if report.PRDImplementation.ResidualHardeningCount != 2 {
 		t.Fatalf("expected residual hardening count to stay visible, got %#v", report.PRDImplementation)
 	}
-	if len(report.PRDImplementation.ResidualHardening) != 1 {
+	if len(report.PRDImplementation.ResidualHardening) != 2 {
 		t.Fatalf("expected residual hardening details to stay machine-readable, got %#v", report.PRDImplementation)
 	}
 	for _, want := range []string{
@@ -1855,9 +1854,9 @@ func TestScorecardGateTextShowsCommitGatePressure(t *testing.T) {
 	for _, want := range []string{
 		"STATUS ok",
 		"PRD IMPLEMENTATION",
-		"  OK 13/13 P0 requirements implemented (100%)",
+		"  OK 16/16 P0 requirements implemented (100%)",
 		"  SOURCE specs/prd-implementation-trace.md",
-		"  RESIDUAL_HARDENING 1",
+		"  RESIDUAL_HARDENING 2",
 		"    RESIDUAL Wave 1 command templates still use fake downstream CLIs for automated command-shape coverage, but release readiness now requires signed `.jini/cli-smoke.json` evidence, recent `.jini/cli-dogfood.json` validation evidence, and `jini check ship --format json` setup status for claimed routes. Real installed CLI dogfood remains required on tester machines for auth, approvals, output-shape differences, route receipt privacy, and signed smoke freshness.",
 		"COMPETITORS",
 		"  OK github-copilot-coding-agent",
@@ -1893,14 +1892,14 @@ func TestPublishReadinessTextIncludesGuardrailCheckDetails(t *testing.T) {
 	out := stdout.String()
 	for _, want := range []string{
 		"  HONEST-AUDIT ok",
-		"    OK specs/honest-system-audit.md#current-implementation-reality",
-		"    OK specs/skills-and-delegation-slice.md#tier-boundary",
-		"    OK specs/lean-platform-gate.md#command-surface-discipline",
+		"    OK specs/archive/honest-system-audit.md#current-implementation-reality",
+		"    OK specs/archive/skills-and-delegation-slice.md#tier-boundary",
+		"    OK specs/engineering-gate-matrix.md#command-surface-discipline",
 		"    CLAIM P0 competitor watching STATUS partial RUNTIME true",
 		"    CLAIM Configured CLI handoff STATUS implemented RUNTIME true",
 		"    CLAIM Native Go CLI STATUS implemented RUNTIME true",
 		"  APP-PLATFORM ok",
-		"    OK specs/app-platform-shipping-playbook.md#source-backed-inputs",
+		"    OK specs/archive/app-platform-shipping-playbook.md#source-backed-inputs",
 		"  OFFLINE-REGRESSION ok",
 		"    OK specs/local-model-support-matrix.md#promotion-loop",
 		"  COMPETITIVE-PRESSURE ok",
@@ -1908,7 +1907,7 @@ func TestPublishReadinessTextIncludesGuardrailCheckDetails(t *testing.T) {
 		"    OK specs/number-one-platform-prd.md#market-and-learning-guards",
 		"  PRODUCTIVITY-LEARNING ok",
 		"    OK specs/number-one-platform-prd.md#market-and-learning-guards",
-		"    OK specs/learning-system.md#user-context-productivity-learning",
+		"    OK specs/archive/learning-system.md#user-context-productivity-learning",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("expected publish-readiness text to contain %q, got:\n%s", want, out)
@@ -2013,10 +2012,10 @@ func TestPublishReadinessIncludesHonestAuditGuardrails(t *testing.T) {
 		t.Fatalf("decode publish-readiness JSON: %v\n%s", err, stdout.String())
 	}
 	required := map[string]bool{
-		"specs/honest-system-audit.md#current-implementation-reality": false,
-		"specs/honest-system-audit.md#core-feedback-accommodations":   false,
-		"specs/skills-and-delegation-slice.md#tier-boundary":          false,
-		"specs/lean-platform-gate.md#command-surface-discipline":      false,
+		"specs/archive/honest-system-audit.md#current-implementation-reality": false,
+		"specs/archive/honest-system-audit.md#core-feedback-accommodations":   false,
+		"specs/archive/skills-and-delegation-slice.md#tier-boundary":          false,
+		"specs/engineering-gate-matrix.md#command-surface-discipline":         false,
 	}
 	for _, section := range report.Sections {
 		if section.ID != "honest-audit" {
@@ -2055,10 +2054,10 @@ func TestPublishReadinessIncludesOfflineRegressionGuardrails(t *testing.T) {
 		t.Fatalf("decode publish-readiness JSON: %v\n%s", err, stdout.String())
 	}
 	required := map[string]bool{
-		"specs/local-model-support-matrix.md#registry-contract":   false,
-		"specs/local-model-support-matrix.md#promotion-loop":      false,
-		"specs/platform-offline-strategy.md#future-update-policy": false,
-		"specs/adapter-benchmark-gate.md#routing-use":             false,
+		"specs/local-model-support-matrix.md#registry-contract":    false,
+		"specs/local-model-support-matrix.md#promotion-loop":       false,
+		"specs/local-model-support-matrix.md#future-update-policy": false,
+		"specs/golden-competitive-benchmark.yaml#routing-use":      false,
 	}
 	for _, section := range report.Sections {
 		if section.ID != "offline-regression" {
@@ -2097,13 +2096,13 @@ func TestPublishReadinessIncludesAppPlatformShippingGuardrails(t *testing.T) {
 		t.Fatalf("decode publish-readiness JSON: %v\n%s", err, stdout.String())
 	}
 	required := map[string]bool{
-		"specs/app-platform-shipping-playbook.md#default-stack-decision":                false,
-		"specs/app-platform-shipping-playbook.md#security-baseline":                     false,
-		"specs/app-platform-shipping-playbook.md#performance-and-optimization-baseline": false,
-		"specs/app-platform-shipping-playbook.md#logging-diagnostics-and-observability": false,
-		"specs/app-platform-shipping-playbook.md#update-and-release-policy":             false,
-		"specs/app-platform-shipping-playbook.md#app-shipping-gates":                    false,
-		"specs/app-platform-shipping-playbook.md#source-backed-inputs":                  false,
+		"specs/archive/app-platform-shipping-playbook.md#default-stack-decision":                false,
+		"specs/archive/app-platform-shipping-playbook.md#security-baseline":                     false,
+		"specs/archive/app-platform-shipping-playbook.md#performance-and-optimization-baseline": false,
+		"specs/archive/app-platform-shipping-playbook.md#logging-diagnostics-and-observability": false,
+		"specs/archive/app-platform-shipping-playbook.md#update-and-release-policy":             false,
+		"specs/archive/app-platform-shipping-playbook.md#app-shipping-gates":                    false,
+		"specs/archive/app-platform-shipping-playbook.md#source-backed-inputs":                  false,
 	}
 	for _, section := range report.Sections {
 		if section.ID != "app-platform" {
@@ -2184,8 +2183,8 @@ func TestPublishReadinessIncludesProductivityLearningGuardrails(t *testing.T) {
 		t.Fatalf("decode publish-readiness JSON: %v\n%s", err, stdout.String())
 	}
 	required := map[string]bool{
-		"specs/number-one-platform-prd.md#market-and-learning-guards": false,
-		"specs/learning-system.md#user-context-productivity-learning": false,
+		"specs/number-one-platform-prd.md#market-and-learning-guards":         false,
+		"specs/archive/learning-system.md#user-context-productivity-learning": false,
 	}
 	for _, section := range report.Sections {
 		if section.ID != "productivity-learning" {

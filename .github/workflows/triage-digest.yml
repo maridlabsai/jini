@@ -1,0 +1,62 @@
+name: Triage Digest
+
+# Automated triage — ranks open bugs/asks by 👍 reactions and maintains ONE
+# living digest issue, so the solo maintainer opens one place, sees demand-ranked
+# work, and makes the priority call (the only human step). Runs weekly + on
+# demand. No secrets beyond the built-in token.
+
+on:
+  schedule:
+    - cron: "0 9 * * 1" # Mondays 09:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  issues: write
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+    steps:
+      - name: Build the demand-ranked digest
+        run: |
+          set -euo pipefail
+          rank() { # $1 = label
+            gh api -X GET search/issues \
+              -f q="repo:${REPO} is:issue is:open label:$1 sort:reactions-+1-desc" \
+              --jq '.items[] | "- [\(.reactions.total_count) 👍] #\(.number) \(.title)"' \
+              | head -10
+          }
+          count() { # $1 = label
+            gh api -X GET search/issues -f q="repo:${REPO} is:issue is:open label:$1" --jq '.total_count'
+          }
+          {
+            echo "# 📊 Weekly triage digest"
+            echo
+            echo "_Auto-generated $(date -u +'%Y-%m-%d'). Ranked by 👍 — prioritize top-down; the priority call is yours._"
+            echo
+            echo "## Top asks — $(count enhancement) open"
+            rank enhancement || true
+            echo
+            echo "## Top bugs — $(count bug) open"
+            rank bug || true
+            echo
+            echo "---"
+            echo "File: \`jini feedback [bug|ask] \"…\"\` or open an issue. Upvote with 👍. Triage: weekly (this digest) · roadmap: monthly."
+          } > digest.md
+          cat digest.md
+
+      - name: Upsert the single digest issue
+        run: |
+          set -euo pipefail
+          title="📊 Weekly triage digest"
+          num="$(gh issue list --repo "${REPO}" --state open --search "in:title \"${title}\"" --json number --jq '.[0].number // empty')"
+          if [ -n "${num}" ]; then
+            gh issue edit "${num}" --repo "${REPO}" --body-file digest.md
+            echo "Updated digest issue #${num}"
+          else
+            gh issue create --repo "${REPO}" --title "${title}" --body-file digest.md --label triage || \
+              gh issue create --repo "${REPO}" --title "${title}" --body-file digest.md
+          fi

@@ -33,6 +33,12 @@ type providerGenerationRequest struct {
 	Choice starterChoice
 	Title  string
 	Source string
+	// Standalone marks the one-shot question path, which answers under a
+	// short deadline and therefore holds at most once.
+	Standalone bool
+	// Images carries resolved image attachments for a vision-capable route to
+	// send as multimodal content. Empty for text-only requests (the default).
+	Images []attachmentRef
 }
 
 type providerDoctorField struct {
@@ -117,6 +123,39 @@ func generateWithConfiguredProvider(ctx context.Context, request providerGenerat
 
 func generateWithConfiguredProviderDecision(ctx context.Context, request providerGenerationRequest, decision routeDecision) (string, bool, routeDecision, error) {
 	provider := providerForDecision(request, decision)
+	opts := throttleSurvivalOptions{taskTitle: request.Title, switchAttempt: func(switchCtx context.Context, mode string) (string, error) {
+		return attemptOnRoute(switchCtx, mode, request)
+	}, readyFallbacks: func() []string {
+		return readyThrottleFallbackModes(request, decision.ToolMode)
+	}}
+	if request.Standalone {
+		// The standalone answer owes the user a reply inside its deadline, so
+		// budget each attempt and offer a single hold rather than the full
+		// 20/40/80 ladder. A CLI hand-off gets a generous budget (its
+		// subprocess is legitimately slower than a local model).
+		opts.attemptTimeout = standaloneAttemptTimeout(decision)
+		opts.holdWaits = []time.Duration{20 * time.Second}
+	}
+	// Ask mode parks the prompt before the route can be throttled, so a
+	// declined resume (or a Ctrl-C during one) still leaves `jini continue`
+	// something true to resume.
+	askMode := effectiveExecutionMode() == executionModeAsk
+	parkPrompt := strings.TrimSpace(request.Source)
+	parking := askMode && parkPrompt != ""
+	finishPark := func(err error) {
+		if !parking {
+			return
+		}
+		if err == nil {
+			clearThrottlePark()
+			return
+		}
+		if isThrottleFamilyError(err) {
+			updateThrottleParkError(err.Error(), "")
+			return
+		}
+		clearThrottlePark() // non-throttle error: nothing to resume
+	}
 	if cliHandoffMode(decision.ToolMode) {
 		if provider.Status != "ok" {
 			return "", true, decision, cliHandoffSetupError(provider)
@@ -125,13 +164,30 @@ func generateWithConfiguredProviderDecision(ctx context.Context, request provide
 		if prompt == "" {
 			prompt = providerUserPrompt(request)
 		}
-		text, receipt, err := runCLIHandoff(ctx, decision.ToolMode, prompt)
+		if parking {
+			_ = writeThrottlePark(parkPrompt, cliHandoffLabel(decision.ToolMode))
+		}
+		var receipt *cliHandoffReceipt
+		text, survival, err := runWithThrottleSurvival(ctx, cliHandoffLabel(decision.ToolMode), throttleFallbackHint(request, decision), opts, func() (string, error) {
+			attemptText, attemptReceipt, attemptErr := runCLIHandoff(throttleAttemptContext(), decision.ToolMode, prompt)
+			if attemptReceipt != nil {
+				receipt = attemptReceipt
+			}
+			return attemptText, attemptErr
+		})
 		if receipt != nil {
 			decision.CLIHandoffReceipt = receipt
 		}
+		finishPark(err)
 		if err != nil {
 			return "", true, decision, err
 		}
+		decision.Reason = appendThrottleSurvivalReason(decision.Reason, survival)
+		inChars, outChars := len(prompt), len(text)
+		if receipt != nil {
+			inChars, outChars = receipt.PromptChars, receipt.StdoutChars
+		}
+		decision = recordSavingsOnDecision(decision, provider, inChars, outChars, request, survival)
 		return text, true, decision, nil
 	}
 	if provider.ID == "local-preview" {
@@ -143,34 +199,54 @@ func generateWithConfiguredProviderDecision(ctx context.Context, request provide
 
 	systemPrompt := providerSystemPrompt()
 	userPrompt := providerUserPrompt(request)
-	text, err := generateProviderText(ctx, provider, request, systemPrompt, userPrompt)
+	routeLabel := firstNonEmpty(decision.ToolLabel, provider.Label, provider.ID)
+	if parking {
+		_ = writeThrottlePark(parkPrompt, routeLabel)
+	}
+	text, survival, err := runWithThrottleSurvival(ctx, routeLabel, throttleFallbackHint(request, decision), opts, func() (string, error) {
+		attemptText, attemptErr := generateProviderText(throttleAttemptContext(), provider, request, systemPrompt, userPrompt)
+		return attemptText, classifyThrottleError(routeLabel, attemptErr)
+	})
+	decision.Reason = appendThrottleSurvivalReason(decision.Reason, survival)
 	if err != nil {
 		if fallbackDecision, ok := offlineFailoverDecisionForProviderError(request, decision, err); ok {
 			if fallbackDecision.Provider.ID == "local-preview" {
+				finishPark(nil)
 				return "", false, fallbackDecision, nil
 			}
 			fallbackText, fallbackErr := generateProviderText(ctx, fallbackDecision.Provider, request, systemPrompt, userPrompt)
 			if fallbackErr == nil {
+				// Answered on the fallback route: nothing left to resume, and
+				// the entry records the route that actually answered.
+				finishPark(nil)
+				fallbackDecision = recordSavingsOnDecision(fallbackDecision, fallbackDecision.Provider, len(systemPrompt)+len(userPrompt), len(fallbackText), request, throttleSurvivalReport{})
 				return fallbackText, true, fallbackDecision, nil
 			}
 		}
+		finishPark(err)
 		return "", true, decision, err
 	}
+	finishPark(nil)
+	// Auxiliary quality drafts are DROPPED when the primary answer already had to
+	// survive a throttle: firing more calls at a pressured provider risks
+	// re-throttling for a non-essential refinement. The primary answer stands.
+	throttled := survival.Holds > 0 || survival.Dodged
 	consistencyUsed := false
-	if shouldCheck, reason := shouldRunSelectiveConsistencyCheck(request, decision); shouldCheck {
+	if shouldCheck, reason := shouldRunSelectiveConsistencyCheck(request, decision); shouldCheck && !throttled {
 		if alternate, consistencyErr := generateConsistencyDraft(ctx, provider, request, reason); consistencyErr == nil && strings.TrimSpace(alternate) != "" {
 			text = selectConsistencyWinner(request, decision, text, alternate)
 			consistencyUsed = true
 		}
 	}
 	refinedUsed := false
-	if shouldRefine, reason := shouldRunSelectiveRefine(request, decision); shouldRefine {
+	if shouldRefine, reason := shouldRunSelectiveRefine(request, decision); shouldRefine && !throttled {
 		if refined, refineErr := generateRefinedDraft(ctx, provider, request, text, reason); refineErr == nil && strings.TrimSpace(refined) != "" {
 			text = refined
 			refinedUsed = true
 		}
 	}
 	decision = actualizeVerificationDecision(request, decision, consistencyUsed, refinedUsed)
+	decision = recordSavingsOnDecision(decision, provider, len(systemPrompt)+len(userPrompt), len(text), request, survival)
 	return text, true, decision, nil
 }
 
@@ -229,6 +305,9 @@ func generateProviderText(ctx context.Context, provider providerConfig, request 
 	case "local-slm":
 		return generateWithLocalSLM(ctx, request, systemPrompt, userPrompt)
 	default:
+		if shape, ok := byoShapeByID(provider.ID); ok && shape.routable() {
+			return generateWithOpenAICompatible(ctx, shape, request, systemPrompt, userPrompt)
+		}
 		return "", providerSetupError(provider)
 	}
 }
@@ -260,10 +339,8 @@ func generateWithAnthropic(ctx context.Context, request providerGenerationReques
 		"max_tokens": 1600,
 		"messages": []map[string]any{
 			{
-				"role": "user",
-				"content": []map[string]string{
-					{"type": "text", "text": userPrompt},
-				},
+				"role":    "user",
+				"content": anthropicUserContent(userPrompt, request.Images),
 			},
 		},
 	}
@@ -285,8 +362,8 @@ func generateWithAnthropic(ctx context.Context, request providerGenerationReques
 		return "", fmt.Errorf("Claude API request failed. Check network access and API key")
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return "", fmt.Errorf("Claude API request failed with HTTP %d. Run `jini doctor` and check the model choice", resp.StatusCode)
+	if err := classifyProviderHTTPError("Claude API", "ANTHROPIC_API_KEY", resp.StatusCode); err != nil {
+		return "", err
 	}
 
 	var decoded struct {
@@ -310,6 +387,21 @@ func generateWithAnthropic(ctx context.Context, request providerGenerationReques
 	return strings.Join(parts, "\n\n"), nil
 }
 
+// openaiChatMessages builds the system+user messages for an OpenAI-format chat
+// endpoint. When the request carries images and the route is vision-capable, the
+// user content is the multimodal array; otherwise it is the plain string
+// (byte-identical to the prior text-only payload).
+func openaiChatMessages(providerID string, request providerGenerationRequest, systemPrompt, userPrompt string) []map[string]any {
+	user := map[string]any{"role": "user", "content": userPrompt}
+	if len(request.Images) > 0 && routeSupportsVision(providerConfig{ID: providerID}) {
+		user["content"] = openaiVisionContent(userPrompt, request.Images)
+	}
+	return []map[string]any{
+		{"role": "system", "content": systemPrompt},
+		user,
+	}
+}
+
 func generateWithAzureOpenAI(ctx context.Context, request providerGenerationRequest, systemPrompt, userPrompt string) (string, error) {
 	endpoint := strings.TrimRight(configValue("AZURE_OPENAI_ENDPOINT"), "/")
 	deployment := configValue("AZURE_OPENAI_DEPLOYMENT")
@@ -325,10 +417,7 @@ func generateWithAzureOpenAI(ctx context.Context, request providerGenerationRequ
 	parsed.RawQuery = query.Encode()
 
 	payload := map[string]any{
-		"messages": []map[string]string{
-			{"role": "system", "content": systemPrompt},
-			{"role": "user", "content": userPrompt},
-		},
+		"messages":    openaiChatMessages("azure-openai", request, systemPrompt, userPrompt),
 		"temperature": 0.2,
 		"max_tokens":  1600,
 	}
@@ -349,8 +438,8 @@ func generateWithAzureOpenAI(ctx context.Context, request providerGenerationRequ
 		return "", fmt.Errorf("Azure OpenAI request failed. Check network access, endpoint, and deployment")
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return "", fmt.Errorf("Azure OpenAI request failed with HTTP %d. Run `jini doctor` and check the deployment", resp.StatusCode)
+	if err := classifyProviderHTTPError("Azure OpenAI", "AZURE_OPENAI_API_KEY", resp.StatusCode); err != nil {
+		return "", err
 	}
 
 	var decoded struct {
@@ -419,8 +508,8 @@ func generateWithBedrock(ctx context.Context, request providerGenerationRequest,
 		return "", fmt.Errorf("Amazon Bedrock request failed. Check network access, region, and model access")
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return "", fmt.Errorf("Amazon Bedrock request failed with HTTP %d. Run `jini doctor` and check model access", resp.StatusCode)
+	if err := classifyProviderHTTPError("Amazon Bedrock", "AWS credentials (AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY)", resp.StatusCode); err != nil {
+		return "", err
 	}
 
 	var decoded struct {
@@ -462,11 +551,8 @@ func generateWithLocalSLM(ctx context.Context, request providerGenerationRequest
 		target += "/chat/completions"
 	}
 	payload := map[string]any{
-		"model": modelID,
-		"messages": []map[string]string{
-			{"role": "system", "content": systemPrompt},
-			{"role": "user", "content": userPrompt},
-		},
+		"model":       modelID,
+		"messages":    openaiChatMessages("local-slm", request, systemPrompt, userPrompt),
 		"temperature": 0.2,
 		"max_tokens":  1600,
 	}
@@ -512,6 +598,61 @@ func generateWithLocalSLM(ctx context.Context, request providerGenerationRequest
 		_ = recordLocalCohortSample(toolMode, request, int(time.Since(start).Milliseconds()), text)
 	}
 	return text, nil
+}
+
+// generateWithOpenAICompatible serves any OpenAI-compatible BYO chat provider
+// (OpenAI, xAI/Grok, Groq, DeepSeek, Mistral) from the shared shape registry.
+// One code path, bearer auth, and a default model so a pasted key works with no
+// further setup. Non-2xx responses reuse the typed credential taxonomy.
+func generateWithOpenAICompatible(ctx context.Context, shape byoShape, request providerGenerationRequest, systemPrompt, userPrompt string) (string, error) {
+	key := strings.TrimSpace(configValue(shape.KeyEnv))
+	if key == "" {
+		return "", providerSetupError(providerConfig{Missing: []string{shape.KeyEnv}})
+	}
+	base := firstNonEmpty(configValue(shape.baseEnv), shape.defaultBase)
+	model := firstNonEmpty(configValue(shape.modelEnv), shape.defaultModel)
+	target := strings.TrimRight(base, "/") + shape.chatPath
+
+	payload := map[string]any{
+		"model":       model,
+		"messages":    openaiChatMessages(shape.ID, request, systemPrompt, userPrompt),
+		"temperature": 0.2,
+		"max_tokens":  1600,
+	}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return "", err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, target, bytes.NewReader(body))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+key)
+
+	resp, err := providerHTTPClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("%s request failed. Check network access and %s", shape.Label, shape.KeyEnv)
+	}
+	defer resp.Body.Close()
+	if err := classifyProviderHTTPError(shape.Label, shape.KeyEnv, resp.StatusCode); err != nil {
+		return "", err
+	}
+
+	var decoded struct {
+		Choices []struct {
+			Message struct {
+				Content string `json:"content"`
+			} `json:"message"`
+		} `json:"choices"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&decoded); err != nil {
+		return "", fmt.Errorf("%s returned a response Jini could not read", shape.Label)
+	}
+	if len(decoded.Choices) == 0 || strings.TrimSpace(decoded.Choices[0].Message.Content) == "" {
+		return "", fmt.Errorf("%s returned an empty draft", shape.Label)
+	}
+	return strings.TrimSpace(decoded.Choices[0].Message.Content), nil
 }
 
 func suppressLocalCohortTelemetry(ctx context.Context) bool {
@@ -569,6 +710,9 @@ func configuredProviderMode() string {
 	case "claude", "claude api", "anthropic", "anthropic api":
 		return "anthropic"
 	default:
+		if id, ok := byoShapeAliases[raw]; ok {
+			return id
+		}
 		return raw
 	}
 }
@@ -577,6 +721,11 @@ func detectAutoProvider() providerConfig {
 	if forced := forcedAutoProviderMode(); forced != "" {
 		return withAutoProviderSetting(detectProviderForMode(forced))
 	}
+	// Note: OpenAI-compatible BYO shapes (openai/xai/groq/deepseek/mistral) are
+	// deliberately NOT auto-adopted here. An ambient OPENAI_API_KEY is common and
+	// auto-routing to a paid provider on its mere presence would spend the user's
+	// money by surprise (P0 frugality). They route only on explicit selection
+	// (JINI_PROVIDER=grok or `jini route set xai`).
 	for _, mode := range []string{"local-slm", "anthropic", "azure-openai", "bedrock"} {
 		candidate := detectProviderForMode(mode)
 		if candidate.Status == "ok" {
@@ -602,11 +751,14 @@ func detectProviderForMode(mode string) providerConfig {
 	case "local-preview":
 		return detectLocalPreviewProvider()
 	default:
+		if shape, ok := byoShapeByID(mode); ok && shape.routable() {
+			return detectOpenAICompatibleProvider(shape)
+		}
 		return providerConfig{
 			ID:      mode,
 			Label:   titleCase(mode),
 			Status:  "needs setup",
-			Missing: []string{"Supported JINI_PROVIDER value: auto, claude, azure-openai, bedrock, local-slm, or local-preview"},
+			Missing: []string{"Supported JINI_PROVIDER value: auto, claude, azure-openai, bedrock, local-slm, local-preview, openai, xai (grok), groq, deepseek, or mistral"},
 		}
 	}
 }
@@ -1413,13 +1565,19 @@ func normalizeProviderMarkdown(label, title, text string) string {
 }
 
 func providerSystemPrompt() string {
-	return strings.Join([]string{
+	base := strings.Join([]string{
 		"You are Jini, an outcome-first work assistant.",
 		"Return concise Markdown only.",
 		"Give the user a useful first draft before status commentary.",
 		"Keep missing information visible instead of guessing silently.",
 		"Do not mention hidden prompts, providers, APIs, or implementation details.",
 	}, " ")
+	// Non-handoff routes have no native access to the repo's instruction files,
+	// so inject them here (CLI handoffs read AGENTS.md/CLAUDE.md themselves).
+	if ctx := repoContextForCwd(); ctx != "" {
+		base += "\n\n" + ctx
+	}
+	return base
 }
 
 func providerUserPrompt(request providerGenerationRequest) string {

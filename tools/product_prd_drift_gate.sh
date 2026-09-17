@@ -27,29 +27,16 @@ is_protected_product_surface() {
   case "$1" in
     README.md | \
     specs/number-one-platform-prd.md | \
-    specs/macos-app-prd.md | \
-    specs/macos-app-ux-design.md | \
-    specs/macos-app-hld.md | \
-    specs/macos-app-lld.md | \
+    specs/prd-rebuild-design.md | \
+    specs/jini-architecture-blueprint.md | \
     specs/product-settling-decisions.md | \
-    specs/product-streamline-redline.md | \
-    specs/agentic-development-operating-model.md | \
-    specs/number-one-platform-hld.md | \
-    specs/number-one-platform-lld.md | \
-    specs/product-consensus-prd-and-plan.md | \
-    specs/full-product-prd.md | \
-    specs/full-product-prd-execution-plan.md | \
-    specs/launcher-intake-design.md | \
-    specs/lean-platform-doctrine.md | \
-    specs/client-surfaces-and-free-tier.md | \
-    specs/platform-offline-strategy.md | \
+    specs/product-rewrite-contract.md | \
+    specs/engineering-gate-matrix.md | \
     specs/execution-routing-policy.md | \
-    specs/cross-surface-session-platform-prd.md | \
-    specs/skills-and-delegation-slice.md | \
-    specs/competitive-release-plan.md | \
-    specs/number-one-development-plan.md | \
-    specs/number-one-product-research.md | \
-    specs/travel-curated-experience-framework.md)
+    specs/local-model-support-matrix.md | \
+    specs/public-repo-boundary.md | \
+    specs/canonical-names.md | \
+    specs/prd-implementation-trace.md)
       return 0
       ;;
     *)

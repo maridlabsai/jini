@@ -38,6 +38,8 @@ func isHiddenAppSidecarServeCommand(args []string) bool {
 }
 
 func runAppSidecarServe(stdin io.Reader, stdout, stderr io.Writer) int {
+	// stdin is a protocol pipe here, never a human.
+	configureThrottleApproverForEntry(false)
 	if stdin == nil {
 		fmt.Fprintln(stderr, "app sidecar requires stdin")
 		return 1

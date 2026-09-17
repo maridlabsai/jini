@@ -28,6 +28,26 @@ func featureAccessForID(featureID string) featureAccess {
 			Reason:   "Core CLI, local routes, and configured CLI handoff stay available without a Jini subscription.",
 			Fallback: "Run `jini route help` to configure local or BYO routes.",
 		}
+	case "commercial-autopilot":
+		label := commercialFeatureLabel(id)
+		if currentSubscriptionTier() != "commercial" {
+			return featureAccess{
+				ID:      id,
+				Label:   label,
+				Tier:    "commercial",
+				Allowed: false,
+				Reason:  label + " requires a Jini subscription: predictive throttle avoidance, throttle-aware route switching, auto-resume, and savings optimization.",
+				Fallback: "Free equivalent: Auto mode already holds and self-resumes on the same route when throttled; switch routes yourself with `jini route set <route>`.",
+			}
+		}
+		return featureAccess{
+			ID:       id,
+			Label:    label,
+			Tier:     "commercial",
+			Allowed:  false,
+			Reason:   label + " ships from the Jini commercial repo and is not implemented in this public CLI build.",
+			Fallback: "Free equivalent: Auto mode holds and self-resumes on throttle; switch routes with `jini route set <route>`.",
+		}
 	case "commercial-skills", "commercial-delegation", "commercial-agents", "commercial-automation":
 		label := commercialFeatureLabel(id)
 		if currentSubscriptionTier() != "commercial" {
@@ -94,6 +114,8 @@ func currentSubscriptionTier() string {
 
 func commercialFeatureLabel(featureID string) string {
 	switch featureID {
+	case "commercial-autopilot":
+		return "Autopilot (managed throttle recovery)"
 	case "commercial-skills":
 		return "Skills OS"
 	case "commercial-delegation":
