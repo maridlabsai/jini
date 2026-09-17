@@ -15,10 +15,10 @@ func TestSecurityScannersAreWiredIntoCIAndRequiredGates(t *testing.T) {
 		"github/codeql-action/init@v4",
 		"github/codeql-action/analyze@v4",
 		"golang/govulncheck-action@v1",
-		"google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.3.8",
-		"google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.3.8",
-		"trufflesecurity/trufflehog@v3.95.5",
-		`version: "3.95.5"`,
+		"google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.6.0",
+		"google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.6.0",
+		"trufflesecurity/trufflehog@v3.97.4",
+		`version: "3.97.4"`,
 		"extra_args: --results=verified,unknown",
 		"fetch-depth: 0",
 		"security-events: write",
@@ -47,9 +47,9 @@ func TestSecurityScannersAreWiredIntoCIAndRequiredGates(t *testing.T) {
 		".github/dependabot.yml",
 		"github/codeql-action/init@v4",
 		"golang/govulncheck-action@v1",
-		"google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.3.8",
-		"trufflesecurity/trufflehog@v3.95.5",
-		`version: "3.95.5"`,
+		"google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.6.0",
+		"trufflesecurity/trufflehog@v3.97.4",
+		`version: "3.97.4"`,
 	} {
 		if !strings.Contains(securityGate, want) {
 			t.Fatalf("security configuration gate must check %q", want)

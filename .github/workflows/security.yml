@@ -61,15 +61,15 @@ jobs:
           fetch-depth: 0
 
       - name: Scan for leaked secrets
-        uses: trufflesecurity/trufflehog@v3.95.5
+        uses: trufflesecurity/trufflehog@v3.97.4
         with:
-          version: "3.95.5"
+          version: "3.97.4"
           extra_args: --results=verified,unknown
 
   osv-pr:
     name: OSV-Scanner PR dependency scan
     if: github.event_name == 'pull_request'
-    uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.3.8"
+    uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.6.0"
     permissions:
       actions: read
       contents: read
@@ -82,7 +82,7 @@ jobs:
   osv-full:
     name: OSV-Scanner scheduled dependency scan
     if: github.event_name != 'pull_request'
-    uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.3.8"
+    uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.6.0"
     permissions:
       actions: read
       contents: read
