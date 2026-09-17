@@ -53,10 +53,10 @@ main() {
   require_fragment "${workflow}" "github/codeql-action/init@v4"
   require_fragment "${workflow}" "github/codeql-action/analyze@v4"
   require_fragment "${workflow}" "golang/govulncheck-action@v1"
-  require_fragment "${workflow}" "google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.3.8"
-  require_fragment "${workflow}" "google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.3.8"
-  require_fragment "${workflow}" "trufflesecurity/trufflehog@v3.95.5"
-  require_fragment "${workflow}" 'version: "3.95.5"'
+  require_fragment "${workflow}" "google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.6.0"
+  require_fragment "${workflow}" "google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.6.0"
+  require_fragment "${workflow}" "trufflesecurity/trufflehog@v3.97.4"
+  require_fragment "${workflow}" 'version: "3.97.4"'
   require_fragment "${workflow}" "extra_args: --results=verified,unknown"
   require_fragment "${workflow}" "fetch-depth: 0"
   require_fragment "${workflow}" "security-events: write"
