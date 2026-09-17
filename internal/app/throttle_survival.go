@@ -512,11 +512,16 @@ func (cliPromptApprover) Approve(ctx context.Context, req throttleApprovalReques
 		err  error
 	}
 	answers := make(chan answer, 1)
+	// Capture the input reader in this (calling) goroutine before spawning, so
+	// the leaked reader goroutine never touches the mutable throttlePromptInput
+	// global — otherwise a caller that reconfigures the global (e.g. a test's
+	// cleanup) races with the still-blocked goroutine's read.
+	in := throttlePromptInput
 	go func() {
 		// The first line wins: a stray buffered newline reads as an empty line
 		// and declines — it must never auto-approve. This goroutine leaks if
 		// ctx cancels while blocked on stdin; accepted for a one-shot process.
-		reader := bufio.NewReader(throttlePromptInput)
+		reader := bufio.NewReader(in)
 		line, err := reader.ReadString('\n')
 		answers <- answer{line: line, err: err}
 	}()
