@@ -9,3 +9,12 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+
+  # The Jekyll docs site (docs/Gemfile.lock). Dependabot resolves in the correct
+  # Linux environment, so it produces platform-correct lock updates — unlike a
+  # local `bundle update`, which locks to the developer's own platform. This is
+  # what keeps the OSV scheduled scan green (e.g. concurrent-ruby/json advisories).
+  - package-ecosystem: "bundler"
+    directory: "/docs"
+    schedule:
+      interval: "weekly"
