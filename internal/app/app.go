@@ -3950,6 +3950,9 @@ func cliHandoffSideEffectLines(receipt *cliHandoffReceipt) []string {
 	if hint := strings.TrimSpace(receipt.RollbackHint); hint != "" {
 		lines = append(lines, "Rollback: "+hint)
 	}
+	if vline := cliHandoffVerificationLine(receipt); vline != "" {
+		lines = append(lines, vline)
+	}
 	return lines
 }
 
