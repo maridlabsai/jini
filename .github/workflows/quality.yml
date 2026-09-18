@@ -1,0 +1,91 @@
+name: Quality Battery
+
+# The full quality battery on every ship — so what we ran by hand once runs
+# automatically on every update. Complements the existing build/install (ci-
+# installer.yml) and security (security.yml) workflows by adding the three things
+# they don't: the Go race detector, a coverage floor with reported measurements,
+# and the extended quality gates. Runs on every PR, every push to main, every
+# release tag, and on demand.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+env:
+  # Coverage floor for the core package. A ratchet, not a surprise: set below the
+  # current level so it blocks regressions, not normal work. Raise as coverage grows.
+  COVERAGE_FLOOR_INTERNAL_APP: "70.0"
+
+jobs:
+  race-and-coverage:
+    name: Race + coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Test with race detector + coverage
+        run: |
+          set -euo pipefail
+          CGO_ENABLED=1 go test ./... -race -count=1 \
+            -covermode=atomic -coverprofile=coverage.out -timeout 20m | tee test.out
+      - name: Measure coverage + enforce floor
+        run: |
+          set -euo pipefail
+          total="$(go tool cover -func=coverage.out | awk '/^total:/{gsub(/%/,"",$3); print $3}')"
+          go test ./internal/app/ -covermode=atomic -coverprofile=app.out >/dev/null
+          app="$(go tool cover -func=app.out | awk '/^total:/{gsub(/%/,"",$3); print $3}')"
+          floor="${COVERAGE_FLOOR_INTERNAL_APP}"
+          {
+            echo "## Coverage measurements"
+            echo ""
+            echo "| Scope | Coverage |"
+            echo "| --- | --- |"
+            echo "| all packages | ${total}% |"
+            echo "| internal/app | ${app}% (floor ${floor}%) |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "internal/app coverage=${app}% (floor ${floor}%)"
+          awk -v a="${app}" -v f="${floor}" 'BEGIN{ exit (a+0 < f+0) ? 1 : 0 }' \
+            || { echo "::error::internal/app coverage ${app}% is below floor ${floor}%"; exit 1; }
+
+  quality-gates:
+    name: Quality + PRD gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Required commit gates (build/test/lint/PRD-drift/scorecard)
+        run: bash tools/run_required_gates.sh commit
+      - name: Extended quality gates
+        run: |
+          set -euo pipefail
+          for gate in \
+            tools/security_configuration_gate.sh \
+            tools/functional_smoke.sh \
+            tools/cli_ux_regression_gate.sh \
+            tools/customer_value_gate.sh \
+            tools/claude_codex_usecase_gate.sh \
+            tools/product_prd_drift_gate.sh ; do
+            echo "== ${gate} =="
+            bash "${gate}"
+          done
+
+  macos-hygiene:
+    name: macOS bundle hygiene
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: macOS bundle hygiene gate
+        run: bash tools/macos_bundle_hygiene_gate.sh
