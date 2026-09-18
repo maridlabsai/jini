@@ -67,6 +67,12 @@ type cliHandoffReceipt struct {
 	// radius.
 	SideEffectCount int    `json:"side_effect_count,omitempty"`
 	RollbackHint    string `json:"rollback_hint,omitempty"`
+	// Verification records the objective post-task verdict (see jini verify) when
+	// JINI_VERIFY_AFTER_TASK is set and the handoff changed code and succeeded.
+	// nil when verification was not run. Phase 2b of the verification design
+	// (specs/pre-viral-readiness.md) — turns "the model said it's done" into an
+	// objectively checked "verified ✓ / UNVERIFIED".
+	Verification *verifyResult `json:"verification,omitempty"`
 }
 
 var cliHandoffTrustIssueForPath = defaultCLIHandoffTrustIssue
@@ -405,6 +411,7 @@ func runCLIHandoff(ctx context.Context, mode, prompt string) (string, *cliHandof
 	}
 	receipt := buildCLIHandoffReceipt(command, prompt, stdout.String(), stderr.String(), cmd.ProcessState, time.Since(startedAt))
 	annotateCLIHandoffSideEffects(receipt, before, tracked)
+	annotateCLIHandoffVerification(ctx, receipt)
 	return strings.TrimSpace(stdout.String()), receipt, nil
 }
 
