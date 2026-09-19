@@ -193,7 +193,8 @@ func generateWithConfiguredProviderDecision(ctx context.Context, request provide
 		// capped, and non-destructive; only a verified stronger result is adopted.
 		if ladder := verificationEscalationLadder(); len(ladder) > 0 && shouldEscalateReceipt(receipt) {
 			escalatedText := text
-			escalated, trail := runVerificationEscalation(ctx, receipt, ladder, verificationEscalationCap, func(c context.Context, route string) *cliHandoffReceipt {
+			escalationCap := escalationCapForDifficulty(estimateTaskDifficulty(prompt))
+			escalated, trail := runVerificationEscalation(ctx, receipt, ladder, escalationCap, func(c context.Context, route string) *cliHandoffReceipt {
 				rtext, r, rerr := runCLIHandoff(c, route, prompt)
 				if rerr == nil && receiptVerified(r) {
 					escalatedText = rtext
