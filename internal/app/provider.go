@@ -188,6 +188,25 @@ func generateWithConfiguredProviderDecision(ctx context.Context, request provide
 			inChars, outChars = receipt.PromptChars, receipt.StdoutChars
 		}
 		decision = recordSavingsOnDecision(decision, provider, inChars, outChars, request, survival)
+		// Phase 2c: when the change failed objective verification (Phase 2b),
+		// escalate up a user-consented ladder (JINI_VERIFY_ESCALATE_TO). Opt-in,
+		// capped, and non-destructive; only a verified stronger result is adopted.
+		if ladder := verificationEscalationLadder(); len(ladder) > 0 && shouldEscalateReceipt(receipt) {
+			escalatedText := text
+			escalated, trail := runVerificationEscalation(ctx, receipt, ladder, verificationEscalationCap, func(c context.Context, route string) *cliHandoffReceipt {
+				rtext, r, rerr := runCLIHandoff(c, route, prompt)
+				if rerr == nil && receiptVerified(r) {
+					escalatedText = rtext
+				}
+				return r
+			})
+			if escalated != nil && escalated != receipt {
+				receipt = escalated
+				decision.CLIHandoffReceipt = receipt
+				text = escalatedText
+			}
+			decision.Reason = appendVerificationEscalationReason(decision.Reason, trail)
+		}
 		return text, true, decision, nil
 	}
 	if provider.ID == "local-preview" {
