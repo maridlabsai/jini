@@ -153,6 +153,8 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 			return runSavings(args[1:], stdout, stderr)
 		case "verify":
 			return runVerify(args[1:], stdout, stderr)
+		case "bulk-read":
+			return runBulkRead(args[1:], stdout, stderr)
 		case "share":
 			return runShare(args[1:], stdout, stderr)
 		case "trust":
@@ -294,6 +296,9 @@ func validateNativeArgs(args []string) error {
 		return nil
 	case "verify":
 		// Permissive: runVerify validates its own dir/flags.
+		return nil
+	case "bulk-read":
+		// Permissive: runBulkRead validates its own files/flags.
 		return nil
 	case "share":
 		// Permissive: runShare validates its own flags.
@@ -5716,7 +5721,7 @@ func canonicalTopLevelCommand(value string) string {
 		return "help"
 	case "version", "--version", "-v":
 		return "version"
-	case "commands", "admin", "check", "status", "continue", "doctor", "provider", "route", "memory", "models", "update", "feedback", "skill", "agent", "mode", "savings", "verify", "share", "trust", "permissions", "init", "new", "observe", "open", "run", "publish-readiness", "scorecard-gate":
+	case "commands", "admin", "check", "status", "continue", "doctor", "provider", "route", "memory", "models", "update", "feedback", "skill", "agent", "mode", "savings", "verify", "bulk-read", "share", "trust", "permissions", "init", "new", "observe", "open", "run", "publish-readiness", "scorecard-gate":
 		return exactCommandToken(value)
 	default:
 		return ""
