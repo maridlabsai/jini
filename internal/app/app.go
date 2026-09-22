@@ -157,6 +157,10 @@ func RunInteractive(args []string, stdin io.Reader, stdout, stderr io.Writer) in
 			return runBulkRead(args[1:], stdout, stderr)
 		case "share":
 			return runShare(args[1:], stdout, stderr)
+		case "streak":
+			return runStreak(args[1:], stdout, stderr)
+		case "mcp":
+			return runMCP(args[1:], stdout, stderr)
 		case "trust":
 			return runTrust(args[1:], stdout, stderr)
 		case "permissions":
@@ -302,6 +306,12 @@ func validateNativeArgs(args []string) error {
 		return nil
 	case "share":
 		// Permissive: runShare validates its own flags.
+		return nil
+	case "streak":
+		// Permissive: runStreak validates its own flags.
+		return nil
+	case "mcp":
+		// Permissive: runMCP validates its own subcommand/flags.
 		return nil
 	case "trust":
 		// Permissive: runTrust validates its own args/subcommands.
@@ -5721,7 +5731,7 @@ func canonicalTopLevelCommand(value string) string {
 		return "help"
 	case "version", "--version", "-v":
 		return "version"
-	case "commands", "admin", "check", "status", "continue", "doctor", "provider", "route", "memory", "models", "update", "feedback", "skill", "agent", "mode", "savings", "verify", "bulk-read", "share", "trust", "permissions", "init", "new", "observe", "open", "run", "publish-readiness", "scorecard-gate":
+	case "commands", "admin", "check", "status", "continue", "doctor", "provider", "route", "memory", "models", "update", "feedback", "skill", "agent", "mode", "savings", "verify", "bulk-read", "share", "streak", "mcp", "trust", "permissions", "init", "new", "observe", "open", "run", "publish-readiness", "scorecard-gate":
 		return exactCommandToken(value)
 	default:
 		return ""
