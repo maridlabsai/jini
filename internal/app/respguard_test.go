@@ -23,7 +23,7 @@ func hasKind(issues []outputIssue, want outputIssueKind) bool {
 }
 
 func TestAudit_CleanCopyHasNoIssues(t *testing.T) {
-	clean := "Route set to claude-code.\nSaved ≈ US$0.01 this task · imputed · jini savings\nTry `jini doctor`."
+	clean := "Route set to claude-code.\nEstimated avoided API spend ≈ $0.01 this task (imputed) · jini savings\nTry `jini doctor`."
 	if issues := auditUserFacingOutput(clean, auditOptions{}); len(issues) != 0 {
 		t.Fatalf("clean copy should pass, got %+v", issues)
 	}

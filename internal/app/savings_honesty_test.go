@@ -38,6 +38,29 @@ func TestHonesty_LocalizedFigureAlwaysCarriesUSDSource(t *testing.T) {
 	}
 }
 
+func TestHonesty_SavingsSurfacesNeverClaimFactualSaved(t *testing.T) {
+	// JINI-R0: reachable savings surfaces must present estimated/imputed spend,
+	// never factual realized "Saved" dollars — even with an "imputed" label.
+	clearLocaleEnv(t)
+	t.Setenv("LANG", "en_US.UTF-8")
+	footer := savingsFooterLine(&savingsEntry{USDSaved: 2.0})
+	counter := savingsStartupCounterLine(&savingsLedger{Totals: savingsTotals{Tasks: 3, USDSaved: 2.0}})
+	for _, s := range []string{footer, counter} {
+		low := strings.ToLower(s)
+		if !strings.Contains(low, "$") {
+			t.Fatalf("expected a dollar figure: %q", s)
+		}
+		if !strings.Contains(low, "imputed") {
+			t.Fatalf("savings line must carry 'imputed' on the same line: %q", s)
+		}
+		for _, banned := range []string{"saved ≈", "saved you", "saved me", "total saved"} {
+			if strings.Contains(low, banned) {
+				t.Fatalf("savings surface must not present imputed dollars as money saved (%q): %q", banned, s)
+			}
+		}
+	}
+}
+
 func TestHonesty_DisclosureBasisIsAlwaysStated(t *testing.T) {
 	clearLocaleEnv(t)
 	t.Setenv("LANG", "en_IN.UTF-8")

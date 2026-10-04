@@ -71,7 +71,10 @@ type mcpServerStatus struct {
 	Name      string `json:"name"`
 	Command   string `json:"command"`
 	Transport string `json:"transport"`
-	Ready     bool   `json:"ready"`
+	// CommandFound: the command exists on PATH. This is listing metadata only — it
+	// does NOT mean Jini can invoke the server (no handshake/invocation exists yet).
+	// The JSON key is "command_found", never "ready", to avoid implying capability.
+	Ready bool `json:"command_found"`
 }
 
 // mcpServerStatuses resolves each configured server into a listing entry,
@@ -159,9 +162,12 @@ func renderMCPList(w io.Writer, statuses []mcpServerStatus) {
 		return
 	}
 	for _, s := range statuses {
-		mark := "not found"
+		// Precise wording: this command only LISTS configured servers. It never
+		// negotiates, executes, or invokes them (see JINI-R11). "command found"
+		// means the executable exists on PATH — not that Jini can use the server.
+		mark := "command not found — configuration listing only; invocation not supported"
 		if s.Ready {
-			mark = "ready"
+			mark = "command found — configuration listing only; invocation not supported"
 		}
 		fmt.Fprintf(w, "  %s — %s (%s) [%s]\n", s.Name, s.Command, s.Transport, mark)
 	}

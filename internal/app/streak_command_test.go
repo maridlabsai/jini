@@ -1,6 +1,7 @@
 package app
 
 import (
+	"bytes"
 	"strings"
 	"testing"
 )
@@ -121,5 +122,30 @@ func TestStreakLedgerEmptyGate(t *testing.T) {
 	}
 	if streakLedgerEmpty(&savingsLedger{Totals: savingsTotals{Tasks: 1}}) {
 		t.Fatalf("a single-task ledger has momentum, even at $0")
+	}
+}
+
+// JINI-R0: jini streak is deferred. Dispatch-level test — recognized (exit 1, fail
+// closed), never a prompt fall-through, and it emits no ledger totals, figures,
+// throttle claims, or share text.
+func TestStreakDispatchDeferredFailsClosed(t *testing.T) {
+	var out, errb bytes.Buffer
+	if code := Run([]string{"streak"}, &out, &errb); code != 1 {
+		t.Fatalf("jini streak must fail closed with exit 1, got %d\nstdout=%q stderr=%q", code, out.String(), errb.String())
+	}
+	combined := strings.ToLower(out.String() + errb.String())
+	for _, banned := range []string{"saved", "$", "0 walls", "walls avoided", "throttle", "milestone", "streak —"} {
+		if strings.Contains(combined, strings.ToLower(banned)) {
+			t.Fatalf("unavailable streak output must not emit %q; got:\n%s", banned, combined)
+		}
+	}
+	// No internal roadmap identifiers or recovery-program terminology in user copy.
+	for _, internal := range []string{"jini-r8", "jini-r10", "trust-first", "honest ledger", "recovery", "gamification"} {
+		if strings.Contains(combined, internal) {
+			t.Fatalf("streak copy must not leak internal term %q; got:\n%s", internal, combined)
+		}
+	}
+	if !strings.Contains(combined, "temporarily unavailable") {
+		t.Fatalf("streak must announce it is temporarily unavailable; got:\n%s", combined)
 	}
 }

@@ -47,6 +47,47 @@ func TestRunSavingsTextTotalsAndDisclosure(t *testing.T) {
 	}
 }
 
+// JINI-R0: `jini savings` text output must label every dollar figure
+// estimated/imputed on the same line, use neutral throttle wording, and never
+// present imputed dollars as money "saved".
+func TestRunSavingsTextIsQualifiedAndNeutral(t *testing.T) {
+	withSavingsHome(t)
+	clearLocaleEnv(t)
+	t.Setenv("LANG", "en_US.UTF-8")
+	if err := appendSavingsEntry(sampleEntry(1.25)); err != nil {
+		t.Fatal(err)
+	}
+	if err := appendSavingsEntry(sampleEntry(0.75)); err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if code := runSavings(nil, &out, io.Discard); code != 0 {
+		t.Fatalf("exit %d", code)
+	}
+	got := out.String()
+
+	if strings.Contains(got, "Throttles dodged") {
+		t.Fatalf("must not use 'Throttles dodged'; got:\n%s", got)
+	}
+	if !strings.Contains(got, "Throttle events recorded:") {
+		t.Fatalf("expected neutral 'Throttle events recorded:'; got:\n%s", got)
+	}
+	for _, banned := range []string{"Total saved", "Jini has saved you", "saved you", "saved me"} {
+		if strings.Contains(got, banned) {
+			t.Fatalf("must not present imputed dollars as money saved (%q); got:\n%s", banned, got)
+		}
+	}
+	for _, line := range strings.Split(got, "\n") {
+		if !strings.Contains(line, "$") {
+			continue
+		}
+		low := strings.ToLower(line)
+		if !strings.Contains(low, "imputed") && !strings.Contains(low, "estimated") {
+			t.Fatalf("dollar line not labeled estimated/imputed on the same line: %q", line)
+		}
+	}
+}
+
 func TestRunSavingsLocalizedCarriesFXAndUSD(t *testing.T) {
 	withSavingsHome(t)
 	clearLocaleEnv(t)

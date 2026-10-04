@@ -16,9 +16,9 @@ func savingsFooterLine(entry *savingsEntry) string {
 	}
 	amt := localize(entry.USDSaved)
 	if amt.Currency == "USD" {
-		return fmt.Sprintf("Saved ≈ %s this task · imputed · jini savings", amt.Local)
+		return fmt.Sprintf("Estimated avoided API spend ≈ %s this task (imputed) · jini savings", amt.Local)
 	}
-	return fmt.Sprintf("Saved ≈ %s (US%s) this task · imputed · jini savings",
+	return fmt.Sprintf("Estimated avoided API spend ≈ %s (US%s) this task (imputed) · jini savings",
 		amt.Local, formatMoney("USD", amt.USD))
 }
 
@@ -36,10 +36,10 @@ func savingsStartupCounterLine(ledger *savingsLedger) string {
 	}
 	amt := localize(ledger.Totals.USDSaved)
 	if amt.Currency == "USD" {
-		return fmt.Sprintf("Jini has saved you ≈ %s across %d tasks (imputed).",
+		return fmt.Sprintf("Estimated avoided API spend ≈ %s across %d tasks (imputed).",
 			amt.Local, ledger.Totals.Tasks)
 	}
-	return fmt.Sprintf("Jini has saved you ≈ %s (US%s) across %d tasks (imputed).",
+	return fmt.Sprintf("Estimated avoided API spend ≈ %s (US%s) across %d tasks (imputed).",
 		amt.Local, formatMoney("USD", amt.USD), ledger.Totals.Tasks)
 }
 

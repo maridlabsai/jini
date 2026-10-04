@@ -66,9 +66,11 @@ func renderSavingsText(w io.Writer, ledger *savingsLedger) {
 		return
 	}
 	total := localize(ledger.Totals.USDSaved)
-	fmt.Fprintln(w, "Jini savings — imputed")
-	fmt.Fprintf(w, "Total saved ≈ %s%s across %d tasks.\n", total.Local, usdSuffix(total), ledger.Totals.Tasks)
-	fmt.Fprintf(w, "Throttles dodged: %d\n", ledger.Totals.Dodges)
+	fmt.Fprintln(w, "Jini savings — estimated, imputed (no metered spend recorded)")
+	fmt.Fprintf(w, "Estimated avoided API spend ≈ %s%s across %d tasks (imputed).\n", total.Local, usdSuffix(total), ledger.Totals.Tasks)
+	// Neutral, observable count — a recorded throttle event does not prove a wall
+	// was avoided, so the wording claims only what the ledger observed.
+	fmt.Fprintf(w, "Throttle events recorded: %d\n", ledger.Totals.Dodges)
 
 	byClass := map[string]*savingsTotals{}
 	order := []string{}
@@ -87,7 +89,7 @@ func renderSavingsText(w io.Writer, ledger *savingsLedger) {
 		for _, class := range order {
 			t := byClass[class]
 			amt := localize(t.USDSaved)
-			fmt.Fprintf(w, "  %-13s ≈ %s%s — %d tasks\n", class, amt.Local, usdSuffix(amt), t.Tasks)
+			fmt.Fprintf(w, "  %-13s ≈ %s%s — %d tasks (imputed)\n", class, amt.Local, usdSuffix(amt), t.Tasks)
 		}
 	}
 	if ledger.Folded.Tasks > 0 {

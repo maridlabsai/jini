@@ -1,49 +1,63 @@
 # Release Readiness Countdown
 
-Evidence-based tracker of what remains before release. No fabricated dates —
-progress is measured in **release gates green / total**, with honest effort
-bands. Update as gates flip.
+Readiness is reported **only** from executed CI evidence — each claim must carry a
+commit, environment, command, exit status, and result digest. Nothing below is
+"passing" or "green" until such an artifact exists.
 
-## Free tier — the public release
+## Current readiness: UNKNOWN
 
-**Countdown: 7 of 10 release gates green. 3 to go.**
+During the trust-first recovery (JINI-R0), every prior readiness claim is treated
+as an **unverified historical snapshot**. Current release readiness is **unknown**
+and is not asserted here as a count, percentage, or date. It will be regenerated
+from executed CI evidence (commit, environment, command, exit status, result
+digest) before any gate is reported as passing.
 
-| # | Release gate | Status | Evidence / what's left |
+---
+
+## Historical snapshot — UNVERIFIED, NOT current readiness
+
+> The tables and estimates below are kept for context only. They were derived from
+> in-repo status labels and a scorecard that checks for a test *name*, not from
+> executed test artifacts. **Do not read any mark below as current truth.** Each
+> item must be regenerated from executed CI evidence before it can be reported as
+> passing. The status column is deliberately neutralized to `unverified`.
+
+### Free tier — the public release (historical snapshot)
+
+| # | Release gate | Status | Historical note (unverified) |
 | --- | --- | --- | --- |
-| 1 | Core CLI behavior (P0 requirements) | ✅ | trace 16/16 = 100% |
-| 2 | Commit gate green (build/tests/lint/drift/scorecard) | ✅ | run each commit |
-| 3 | Push gate green (publish-readiness + real CLI dogfood evidence) | ✅ | exit 0; `.jini/cli-smoke.json` + `cli-dogfood.json` for claude-code |
-| 4 | Functional harness + `jini check functional` self-check | ✅ | 17/17 offline |
-| 5 | Maturity guardrails (security/accessibility/readability/tone/citations) | ✅ | respguard + corpus |
-| 6 | Attachments incl. multimodal (Anthropic + OpenAI vision) | ✅ | bedrock Converse deferred (non-blocker) |
-| 7 | Hand-off CLI compatibility | 🟡→ | claude empirically verified (`posture verified`); others labeled **`posture experimental (doc-verified)`** so unverified posture is never release-claimed. **Behavioral posture harness built** (`jini route validate <route> --posture`): runs plan/semi/autonomous in a scratch dir and proves plan=read-only (live-confirmed on claude) + escalations apply edits; fake-CLI tested (catches a plan-write or a no-op escalation). Remaining to fully close: run it per real CLI on install (codex/gemini/aider/opencode) and record version-pinned evidence |
-| 8 | **Packaging: signed/notarized asset + `install.sh` on a clean machine** | 🟡→ | **`tools/release_macos.sh`** builds→codesigns (hardened runtime)→notarizes→packages tar.gz + `.sha256` (identity/profile from env, never in repo). **install.sh now verifies integrity**: SHA-256 checksum is enforced (tampered asset is refused — proven end-to-end locally), and macOS signature is checked with `codesign --verify -R="anchor apple generic"` (ad-hoc/self-signed rejected; unsigned allowed only pre-signing, or `JINI_REQUIRE_SIGNED=1` to enforce). CI already smokes source+release install on macOS+Linux. Remaining: run `release_macos.sh` with the real Apple Developer ID cert to produce a notarized asset and confirm Gatekeeper acceptance on a clean machine (needs the signing certificate) |
-| 9 | **BYO credential validation + Grok fixtures** (typed errors, keychain) | 🟡→ | **Typed credential taxonomy** (401 invalid / 403 forbidden / 429 rate-limited / 404 model / 5xx) wired into all remote providers, and 429 still cooperates with throttle survival. **`jini provider validate [shape]`** makes one live read-only call and reports a typed result. **OpenAI-compatible BYO family** (openai/xai(grok)/groq/deepseek/mistral) validates AND routes from one shape registry — a pasted key works with a default model (no extra config); explicit-select only (no ambient auto-adopt, frugality). Per-shape fixtures pass (a shape without a passing fixture is not claimed). **OS keychain storage** now lands secrets (`*_API_KEY`/token/secret/password) in the macOS login keychain via `security` (real set/get/delete smoke-verified), scrubbed from the plaintext dotfile; non-keychain platforms degrade honestly to the 0600 dotfile, and legacy plaintext keys migrate to the keychain on next save. Remaining: Linux/Windows secret backends and per-shape receipt-denomination pricing |
-| 10 | **Cross-platform TTFV < 5 min + first-task success (macOS/Linux/Win)** + public quickstart docs | 🟡→ | Public quickstart/install/examples docs are live (docs/index, install, simple, examples, cli). jini **cross-compiles clean** for windows/amd64+arm64, linux/arm64, darwin (verified locally); CI now adds a **windows-latest build+commands smoke** alongside the existing macOS+Linux installer smokes. Remaining: measure real TTFV < 5 min + first-task success on fresh macOS/Linux/Windows machines (needs real multi-OS runs; note the full Go suite still assumes Unix shell/exec, so Windows CI is build+smoke, not the whole suite) |
+| 1 | Core CLI behavior (P0 requirements) | unverified | snapshot label claimed trace 16/16; not backed by an executed artifact |
+| 2 | Commit gate (build/tests/lint/drift/scorecard) | unverified | intended to run each commit; needs an executed-CI digest |
+| 3 | Push gate (publish-readiness + real CLI dogfood evidence) | unverified | snapshot referenced `.jini/cli-smoke.json` + `cli-dogfood.json` for claude-code |
+| 4 | Functional harness + `jini check functional` self-check | unverified | snapshot label claimed 17/17 offline; needs an executed-CI digest |
+| 5 | Maturity guardrails (security/accessibility/readability/tone/citations) | unverified | respguard + corpus present in-repo; not independently verified here |
+| 6 | Attachments incl. multimodal (Anthropic + OpenAI vision) | unverified | bedrock Converse deferred; follow-up, not a release claim |
+| 7 | Hand-off CLI compatibility | unverified | claude-code empirically exercised (`posture verified`); other CLIs labeled `posture experimental (doc-verified)`. Behavioral posture harness (`jini route validate <route> --posture`) runs plan/semi/autonomous in a scratch dir (plan=read-only; escalations apply edits; fake-CLI tested). To regenerate: run it per real CLI on install (codex/gemini/aider/opencode) and record version-pinned executed evidence |
+| 8 | Packaging: signed/notarized asset + `install.sh` on a clean machine | unverified | `tools/release_macos.sh` builds→codesigns (hardened runtime)→notarizes→packages tar.gz + `.sha256` (identity/profile from env, never in repo). `install.sh` enforces SHA-256 and checks the macOS signature with `codesign --verify -R="anchor apple generic"`. To regenerate: run `release_macos.sh` with the real Apple Developer ID cert and confirm Gatekeeper acceptance on a clean machine (needs the signing certificate) |
+| 9 | BYO credential validation + Grok fixtures (typed errors, keychain) | unverified | typed credential taxonomy (401/403/429/404/5xx) across remote providers; `jini provider validate [shape]` makes one live read-only call; OpenAI-compatible BYO family (openai/xai(grok)/groq/deepseek/mistral) validates and routes from one shape registry; macOS login-keychain storage with 0600-dotfile fallback. To regenerate: Linux/Windows secret backends and per-shape receipt-denomination pricing |
+| 10 | Cross-platform TTFV + first-task success (macOS/Linux/Win) + public quickstart docs | unverified | public quickstart/install/examples docs live; cross-compiles for windows/amd64+arm64, linux/arm64, darwin; CI has a windows build+commands smoke alongside macOS+Linux installer smokes. To regenerate: measure real TTFV and first-task success on fresh macOS/Linux/Windows machines (needs real multi-OS runs; the full Go suite assumes Unix shell/exec, so Windows CI is build+smoke) |
 
-Non-blockers (fine to ship without, follow after): real metered-usage capture
-(savings is imputed-only today), the 2 residual-hardening items, bedrock vision.
+Follow-after items (not release claims, and not a basis for shipping): real
+metered-usage capture (savings is imputed-only today), residual hardening, bedrock
+vision. These are deferred work, not evidence that the gates above pass.
 
-**Honest estimate:** the *product code* is essentially done — gates 8–10 are
-**packaging, validation, and docs**, not feature work. Realistic band: **~1–2
-weeks**, dominated by cross-platform testing + signing/notarization pace, not
-engineering. Gate 7 can be closed instantly by labeling non-claude routes
-experimental in release notes, or when those CLIs are installed for a real
-`--help`/dogfood pass.
+The recovery gaps surfaced by the trust-first program — execution safety, durable
+continuation, default verification, honest economics — are **feature work**, not
+only packaging, and must be reflected whenever readiness is regenerated.
 
-## Commercial tier — follows the free release
+### Commercial tier — follows the free release (historical snapshot)
 
-**Countdown: 1 of 5 gates green; gate 2 substantially built (pulled forward for
-dev-velocity/throttle relief).** Larger scope: billing and managed infra remain.
+> Same caveat: unverified snapshot, not current readiness. No "N of M green" count
+> is asserted as current.
 
-| # | Release gate | Status | What's left |
+| # | Release gate | Status | Historical note (unverified) |
 | --- | --- | --- | --- |
-| 1 | `../jini-commercial` repo bootstrap (separate Go module on the public seams: autopilot/, runner/, agentloop/) | ✅ | **bootstrapped** — separate module + `cmd/jini-pro` builds against the public `autopilot`/`runner` seams via a local replace; cannot import `internal/` (boundary enforced by the module graph) |
-| 2 | Paid Autopilot policy (predictive throttle avoidance, route switching, savings optimization) | 🟡→ | **route-switching ladder built** (`ladder/` implements `autopilot.Strategy`: on throttle, switch to the highest-ranked ready fallback from `ThrottleEvent.ReadyFallbacks`, mark a dodge; hold when none). Public side surfaces ready BYO/local fallback routes to the strategy. Mechanism unit+integration proven across both modules. Remaining: predictive avoidance + savings optimization, and a live throttle→switch capture |
-| 3 | Plus/Pro entitlements + billing (annual-first to dodge the Stripe floor; Plus serverless) | ⬜ | paywall wiring; prices stay out of the public repo |
-| 4 | Managed native loop (Plus), Continuity (Pro), decision-tree backtrack (Pro) | ⬜ | Pro backtrack depends on the shipped agentloop recorder/checkpointer seams |
-| 5 | Pricing finalized (Free / Plus $2.99 / Pro $5.99) + customer-facing messaging | ⬜ | kept simple; commercial-repo only |
+| 1 | `../jini-commercial` repo bootstrap (separate Go module on the public seams: autopilot/, runner/, agentloop/) | unverified | snapshot described a separate module + `cmd/jini-pro` building against the public `autopilot`/`runner` seams via a local replace; cannot import `internal/` |
+| 2 | Paid Autopilot policy (predictive throttle avoidance, route switching, savings optimization) | unverified | snapshot described a route-switching ladder (`ladder/` implementing `autopilot.Strategy`). Remaining: predictive avoidance + savings optimization, and a live throttle→switch capture |
+| 3 | Plus/Pro entitlements + billing (annual-first; Plus serverless) | unverified | paywall wiring; prices stay out of the public repo |
+| 4 | Managed native loop (Plus), Continuity (Pro), decision-tree backtrack (Pro) | unverified | Pro backtrack depends on the agentloop recorder/checkpointer seams |
+| 5 | Pricing finalized (Free / Plus $2.99 / Pro $5.99) + customer-facing messaging | unverified | kept simple; commercial-repo only |
 
-**Honest estimate:** **weeks after** free tier — dominated by standing up the new
-repo + billing/entitlements + managed infrastructure, not by the public seams
-(already exported and tested).
+The commercial tier timing is not estimated here; it depends on standing up the
+new repo plus billing/entitlements and managed infrastructure, and is regenerated
+from executed evidence like everything else.
