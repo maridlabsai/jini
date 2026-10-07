@@ -897,3 +897,46 @@ The canonical PRD is rewritten from specs/prd-rebuild-design.md. Decisions:
   receipt surfaced on the direct-answer flow (256fb7e, b628b76) and an active
   no-fallback throttle setup nudge (7fa70ba), and cross-route resume now
   discloses what carried over (effcf70).
+
+## Trust-First Recovery — JINI-R0 Truth Reset
+
+Decision (2026-10, paired with the PRD Product Thesis edit): during the
+trust-first recovery, Jini must not present estimates, partial capabilities, or
+unverified outcomes as proven facts. Settled:
+
+- **Current promise wording:** "free with the capacity you already have." The
+  "free to run" claim is a future, explicitly v1.5-gated aspiration, never the
+  current claim. This pairs the PRD Product Thesis edit above.
+- **Savings claims:** every savings figure is imputed/estimated and is labeled so
+  on the same line as the figure (per specs/savings-ledger-mvp-design.md). No
+  shipped surface presents imputed dollars as money "saved": `jini savings` and
+  the startup counter say "Estimated avoided API spend … (imputed)" and report
+  "Throttle events recorded" (a neutral, observable count — never "Throttles
+  dodged", which would imply a wall was provably avoided). `jini share` is removed
+  from discovery and fails closed until the honest ledger (JINI-R8) and the proof
+  receipt (JINI-R10) land.
+- **Streak:** `jini streak` is deferred — task-count gamification rewards volume,
+  not verified outcomes. Removed from command discovery; direct invocation fails
+  closed. Implementation retained (not deleted) for later work.
+- **MCP:** `jini mcp` is configuration-listing only and must never imply
+  invocation support ("ready" capability wording is banned). Protocol handshake
+  and tool invocation are JINI-R11.
+- **Readiness:** no current-state "N of M gates green" or "essentially done"
+  framing unless produced from executed evidence; a test function existing is
+  not proof that the behavior passed.
+- **Enforcement (and its limits):** a scoped claim-language gate
+  (`tools/claim_language_gate.sh`, registered in `specs/engineering-gate-matrix.md`)
+  runs inside the required commit gate. It inspects exactly two surface kinds:
+  (1) public documentation — `README.md` and `docs/**/*.md` recursively — and
+  (2) the live runtime OUTPUT of `jini share`, `jini streak`, `jini mcp list`,
+  `jini savings`, and the startup savings counter, exercised against a temporary
+  Jini home (never the developer's real home or ledger). It fails closed: a build
+  failure, an unexpected exit code, missing expected output, or a scan error all
+  fail the gate. It bans, with no qualifier able to rescue them, "un-metered",
+  "walls avoided"/"N walls", "Throttles dodged", "Total saved"/"saved you $"/
+  "$N saved", and MCP "[ready]"; it requires every dollar figure on a savings
+  surface to carry "imputed"/"estimated" on the same line; and it permits "free to
+  run" only as a future/v1.5-gated aspiration. It does NOT scan specs, tests,
+  fixtures, historical/archived material, or the recovery plan, and it does not
+  police wording outside the surfaces above — so it is a guardrail against the
+  specific regressions named here, not a proof of overall honesty.

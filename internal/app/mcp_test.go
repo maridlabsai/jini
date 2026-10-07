@@ -112,11 +112,11 @@ func TestMCPListRendersReadinessAndSortsByName(t *testing.T) {
 	if ai, zi := strings.Index(got, "alpha"), strings.Index(got, "zeta"); ai < 0 || zi < 0 || ai > zi {
 		t.Fatalf("servers must be listed sorted by name; got:\n%s", got)
 	}
-	if !strings.Contains(got, "alpha — mcp-alpha (stdio) [ready]") {
-		t.Fatalf("alpha (on PATH) must be marked ready; got:\n%s", got)
+	if !strings.Contains(got, "alpha — mcp-alpha (stdio) [command found — configuration listing only; invocation not supported]") {
+		t.Fatalf("alpha (on PATH) must be marked command-found, listing-only; got:\n%s", got)
 	}
-	if !strings.Contains(got, "zeta — mcp-zeta (stdio) [not found]") {
-		t.Fatalf("zeta (not on PATH) must be marked not found; got:\n%s", got)
+	if !strings.Contains(got, "zeta — mcp-zeta (stdio) [command not found — configuration listing only; invocation not supported]") {
+		t.Fatalf("zeta (not on PATH) must be marked command-not-found, listing-only; got:\n%s", got)
 	}
 }
 
@@ -150,6 +150,28 @@ func TestMCPListJSONFormat(t *testing.T) {
 	}
 	if len(decoded.Servers) != 1 || decoded.Servers[0].Name != "files" || !decoded.Servers[0].Ready {
 		t.Fatalf("unexpected json servers: %+v", decoded.Servers)
+	}
+}
+
+// JINI-R0 (F.7): assert the RAW JSON key is "command_found" and that no "ready"
+// key leaks — checked against the emitted bytes, not a round-trip through the
+// production struct (which would hide a tag regression back to "ready").
+func TestMCPListJSONRawKeyIsCommandFoundNotReady(t *testing.T) {
+	cfg := mcpConfig{MCPServers: map[string]mcpServerConfig{
+		"files": {Command: "mcp-server-filesystem", Args: []string{"."}, Transport: "stdio"},
+	}}
+	stubMCPConfig(t, cfg, nil, "mcp-server-filesystem")
+
+	var out, errBuf bytes.Buffer
+	if code := runMCP([]string{"list", "--format", "json"}, &out, &errBuf); code != 0 {
+		t.Fatalf("exit = %d, want 0; stderr=%q", code, errBuf.String())
+	}
+	raw := out.String()
+	if !strings.Contains(raw, `"command_found"`) {
+		t.Fatalf("raw JSON must expose the \"command_found\" key; got:\n%s", raw)
+	}
+	if strings.Contains(raw, `"ready"`) {
+		t.Fatalf("raw JSON must not expose a \"ready\" key; got:\n%s", raw)
 	}
 }
 

@@ -19,8 +19,27 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 GO_BIN="${GO_BIN:-$(command -v go || true)}"
-GO_CACHE_DIR="${JINI_GOCACHE:-/private/tmp/jini-go-cache}"
-GO_MOD_CACHE_DIR="${JINI_GOMODCACHE:-/private/tmp/jini-go-mod}"
+
+# Resolve Go cache directories portably (never the macOS-only /private/tmp,
+# which fails on Linux CI). quality.yml runs this script in its own Actions step,
+# so it cannot inherit exports from run_required_gates.sh. Precedence: explicit
+# JINI_* override, else a standard GOCACHE/GOMODCACHE, else `go env`.
+resolve_go_cache_dir() { # $1=JINI override, $2=standard value, $3=go env key
+  if [[ -n "$1" ]]; then
+    printf '%s' "$1"
+  elif [[ -n "$2" ]]; then
+    printf '%s' "$2"
+  elif [[ -x "${GO_BIN}" ]]; then
+    "${GO_BIN}" env "$3" 2>/dev/null || true
+  fi
+}
+GO_CACHE_DIR="$(resolve_go_cache_dir "${JINI_GOCACHE:-}" "${GOCACHE:-}" GOCACHE)"
+GO_MOD_CACHE_DIR="$(resolve_go_cache_dir "${JINI_GOMODCACHE:-}" "${GOMODCACHE:-}" GOMODCACHE)"
+if [[ -z "${GO_CACHE_DIR}" || -z "${GO_MOD_CACHE_DIR}" ]]; then
+  printf 'Could not resolve Go cache directories (set JINI_GOCACHE/JINI_GOMODCACHE or GOCACHE/GOMODCACHE).\n' >&2
+  exit 1
+fi
+mkdir -p "${GO_CACHE_DIR}" "${GO_MOD_CACHE_DIR}"
 SMOKE_ROUTE="${JINI_SMOKE_ROUTE:-claude-code}"
 LIVE=0
 [ "${1:-}" = "--live" ] && LIVE=1

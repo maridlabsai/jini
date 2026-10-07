@@ -3,34 +3,22 @@ package app
 import (
 	"fmt"
 	"io"
-	"strings"
 )
 
-// jini share — #2 (viral loops) of specs/pre-viral-readiness.md. Renders a clean,
-// copyable "receipt" from the savings ledger so a happy user can paste their result
-// to X / a PR / Slack. Each share carries the wedge — un-metered, no throttle walls —
-// posted by a real user: the Loom-style loop where the artifact is the ad. It emits
-// aggregate totals ONLY (never a prompt, code, or route detail), so sharing is safe.
+// jini share — DISABLED during the trust-first recovery (JINI-R0). Its historical
+// receipt figures are estimated, not verified proof, so the command no longer emits
+// them. The receipt helpers below are RETAINED (not deleted) for the JINI-R8 honest
+// ledger and JINI-R10 proof-receipt work, which will replace this surface. Direct
+// invocation stays recognized so it fails closed rather than falling through to
+// prompt handling.
 
 const shareRepoURL = "github.com/maridlabsai/jini"
 
 func runShare(args []string, stdout, stderr io.Writer) int {
-	format := "text"
-	for _, a := range args {
-		switch strings.ToLower(strings.TrimSpace(a)) {
-		case "--markdown", "--md", "--format=markdown":
-			format = "markdown"
-		case "--text", "--format=text":
-			format = "text"
-		}
-	}
-	ledger := loadSavingsLedger()
-	if shareLedgerEmpty(ledger) {
-		fmt.Fprintln(stdout, "Nothing to share yet — run a few tasks through Jini, then `jini share`.")
-		return 0
-	}
-	fmt.Fprintln(stdout, shareableSavingsCard(ledger, format))
-	return 0
+	_ = args
+	fmt.Fprintln(stderr, "jini share is temporarily unavailable.")
+	fmt.Fprintln(stderr, "Past metrics are estimates, not verified proof, so Jini does not publish them yet.")
+	return 1
 }
 
 func shareLedgerEmpty(ledger *savingsLedger) bool {

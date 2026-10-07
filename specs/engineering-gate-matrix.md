@@ -42,6 +42,7 @@ Required commands:
 8. `bash tools/claude_codex_usecase_gate.sh`
 9. `bash tools/macos_bundle_hygiene_gate.sh`
 10. `jini scorecard-gate --format json`
+11. `bash tools/claim_language_gate.sh`
 
 Required outcome:
 
@@ -53,6 +54,11 @@ Required outcome:
   Dependabot cannot be removed without failing the local gate
 - protected PRD and product-positioning surfaces cannot drift unless
   `specs/product-settling-decisions.md` is updated in the same change
+- shipped user-visible surfaces (public docs + live command output) cannot make
+  unqualified claims — un-metered, current "free to run", imputed-dollars-as-
+  saved, "0 walls"/"walls avoided", or MCP "ready" invocation wording — while
+  permitting clearly qualified wording (estimated, imputed, future target, gated
+  on v1.5, configuration listing only, invocation not supported)
 - customer-value viability cannot regress into amateur platform claims,
   unsupported route claims, generic workflow scaffolds, or new vocabulary
   before value

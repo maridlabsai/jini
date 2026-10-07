@@ -14,9 +14,9 @@ drift requires [product-settling-decisions.md](./product-settling-decisions.md).
 
 ## Product Thesis
 
-Jini is the coding agent CLI that is free to run: best-in-class local models
-built in, your own keys and tools when you need more, and receipts for every
-dollar it saves you.
+Jini is the coding agent CLI that is free with the capacity you already have
+("free to run" is a future aspiration, gated on v1.5): best-in-class local models
+built in, your own keys and tools when you need more, and receipts for the spend it estimates you avoid.
 Under the hood, Jini is a CLI-first AI work router and durable session layer
 for people already using multiple coding CLIs, online models, and local models.
 
@@ -24,7 +24,7 @@ The wedge is token-savings mastery. Saving tokens is on the table at every
 company that uses AI; the tool that masters that art with receipts sells
 itself. Jini treats every token as money: route down before routing up, reuse
 before regenerate, compact before send, and prove the savings after every
-task. Three axes no incumbent follows: free to run, routes everything the user
+task. Three axes no incumbent follows: free with what you already have (free-to-run is the v1.5 target), routes everything the user
 already has, and proves its economics. Agent incumbents cannot sell token
 frugality — their business is metered tokens; pure routers are not agents.
 

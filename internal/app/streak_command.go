@@ -20,23 +20,16 @@ import (
 // gamifiable spine, mirroring how Duolingo counts days, not minutes.
 var streakTaskMilestones = []int{5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000}
 
+// runStreak is DEFERRED during the trust-first recovery (JINI-R0): task-count
+// gamification rewards volume, not verified outcomes. It fails closed and emits no
+// ledger totals, figures, throttle claims, or share text. The calculation/rendering
+// helpers below are RETAINED (not deleted) so the prototype is recoverable once
+// honest ledger semantics and verified outcomes exist (JINI-R8, JINI-R10).
 func runStreak(args []string, stdout, stderr io.Writer) int {
-	format := "text"
-	for _, a := range args {
-		switch strings.ToLower(strings.TrimSpace(a)) {
-		case "--markdown", "--md", "--format=markdown":
-			format = "markdown"
-		case "--text", "--format=text":
-			format = "text"
-		}
-	}
-	ledger := loadSavingsLedger()
-	if streakLedgerEmpty(ledger) {
-		fmt.Fprintln(stdout, "No streak yet — run a few tasks through Jini, then check `jini streak`.")
-		return 0
-	}
-	fmt.Fprintln(stdout, streakCard(ledger, format))
-	return 0
+	_ = args
+	fmt.Fprintln(stderr, "jini streak is temporarily unavailable.")
+	fmt.Fprintln(stderr, "It is paused until task outcomes can be verified rather than only counted.")
+	return 1
 }
 
 // streakLedgerEmpty gates on task count only: a user who has routed tasks has
