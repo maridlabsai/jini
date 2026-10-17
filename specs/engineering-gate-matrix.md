@@ -229,7 +229,15 @@ Reject any change that:
 
 ## Promotion Candidates
 
-No separate promotion candidates are currently listed.
+- **[PLANNED — NOT IMPLEMENTED] JINI-R1 safe-execution gate.** Contract:
+  [r1-safe-execution-contract.md](./r1-safe-execution-contract.md). When R1 lands,
+  a required commit-tier gate must enforce it with real Go test functions
+  (all modes, trust/mode-escalation denial, shell-unavailable-in-Auto, env
+  scrubbing, network denial, path adversarial cases incl. TOCTOU/symlink/hard-link/
+  worktree, atomic + multi-file rollback, timeout/child-cleanup, verification-required
+  terminal outcomes, and direct mediator-bypass tests). This row is a planning
+  marker only — it carries **no runnable command yet** and is **not** part of any
+  commit/push/release tier until the implementation and its executable gate exist.
 
 Future checks should be added here only when they are not already required by a
 commit, push, or release tier. Once promoted, remove them from this section in

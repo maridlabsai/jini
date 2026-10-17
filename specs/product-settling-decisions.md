@@ -940,3 +940,36 @@ unverified outcomes as proven facts. Settled:
   fixtures, historical/archived material, or the recovery plan, and it does not
   police wording outside the surfaces above — so it is a guardrail against the
   specific regressions named here, not a proof of overall honesty.
+
+## Recovery Priorities and JINI-R1 Safe-Execution Contract
+
+Decision (2026-10): the competitive priority order and the R1 execution-safety
+contract are settled. Full detail lives in
+[competitive-gap-priorities.md](./competitive-gap-priorities.md) and
+[r1-safe-execution-contract.md](./r1-safe-execution-contract.md); this section
+records only the normative decisions. **None of the R1 behaviors below is
+implemented yet** — they specify what R1 must build.
+
+- **Weighted priority order:** R1 (safe autonomous execution + rollback) → R2
+  (durable journal / true resume) → R3 (model/speed/Auto routing + throttle
+  failover) is mandatory and in this order. R2 builds on R1's evidence events;
+  R3 needs both. Weighting: developer impact 30%, frequency 20%, differentiation
+  20%, trust/safety 20%, leverage 10%.
+- **Four settled R1 decisions:** (1) subprocess environment is **scrubbed by
+  default** (explicit allowlist; credentials never blanket-inherited); (2)
+  **raw shell (`sh -c`) is prohibited in Auto**, and in Auto R1 supports only
+  mediated filesystem operations so **every** subprocess (structured or raw)
+  fails closed until a tested sandbox/isolation backend proves its capabilities;
+  (3) rollback uses **per-run write-set snapshots, not `git
+  stash`** (never `git reset --hard`/`git clean`); (4) a mutating task may report
+  success only with **verification evidence**, else `completed_unverified`.
+- **`JINI_MODE` cannot elevate privilege** — it may only reduce it below the
+  persisted/user-selected posture.
+- **Trust never bypasses mediation** — a `trust --autonomous` grant makes Auto
+  *eligible to request*, but every side effect still passes the mediator.
+- **Unsupported safety guarantees fail closed** — if no tested backend satisfies
+  a requested capability (sandbox, secure path primitive, platform), Auto denies
+  and offers Supervised rather than silently degrading.
+- **Minimum R4 verification is pulled into R1** only as a safety invariant
+  ("mutating success requires evidence"); deeper verification intelligence and
+  mandatory project verification remain JINI-R4.
