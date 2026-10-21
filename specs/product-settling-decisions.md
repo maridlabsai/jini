@@ -973,3 +973,46 @@ implemented yet** — they specify what R1 must build.
 - **Minimum R4 verification is pulled into R1** only as a safety invariant
   ("mutating success requires evidence"); deeper verification intelligence and
   mandatory project verification remain JINI-R4.
+
+## Frugal Control-Plane Roadmap Decisions (2026-10-21)
+
+Decision (2026-10-21, STEP 68): the frugal, local-first control-plane direction
+and the incremental customer-delivery strategy are settled. Full detail lives in
+[frugal-control-plane-roadmap.md](./frugal-control-plane-roadmap.md); this
+section records only the normative product decisions. **None of this is
+implemented yet.**
+
+- **Route > model:** the durable selection unit is an execution route (harness +
+  provider + model + location + capability + safety + privacy + network + cost +
+  quota + health + verification + proven-task-classes), not a bare model.
+- **CLI remains the authoritative first customer surface;** other surfaces come
+  later and reuse one engine/protocol.
+- **Shared portable control records come before additional surfaces:** R1A emits
+  portable operation/policy/approval/event/verification-reference/outcome
+  records; terminal output is a projection of those records. This seam is
+  designed before any status/web/desktop surface.
+- **Free-first with no silent paid escalation:** prefer local,
+  existing-subscription, and free-tier capacity; never silently escalate to a
+  paid metered route; paid escalation requires explicit informed approval; the
+  route actually used is reported honestly. Jini never guarantees third-party
+  free capacity, and open-weight never implies free-to-run.
+- **No Jini-funded inference or cloud computer in the initial product;** no
+  inference markup. Execution stays on BYOK/local/free-tier/existing-subscription
+  capacity.
+- **Pricing direction (non-binding; not an offer):** Jini Core free; Jini Router
+  a paid low-monthly subscription whose exact amount stays unset pending the
+  economics evaluation; Router Beta free during evidence collection; team and
+  enterprise pricing unset. Detail and the measurement prerequisites live in
+  [frugal-control-plane-roadmap.md](./frugal-control-plane-roadmap.md) §h.
+- **Responsive PWA before native mobile;** native mobile only if PWA evidence
+  proves a material unmet need.
+- **Thin desktop shell reuses the same core/protocol** rather than creating a
+  separate execution implementation.
+- **Remote network surface is deferred until the R1 and R2 guarantees exist;** a
+  Jini-hosted relay is outside the initial release and separately costed later.
+- **Customer increments must be vertical, measurable, and independently
+  revertible,** each with an explicit promotion criterion; no long horizontal-
+  framework phase with no customer-visible benefit.
+- **External "80%", "one-third", "3× cheaper", savings, superiority, and
+  readiness claims are prohibited until a dated, representative evaluation
+  provides the evidence** (bound by the existing claim-language discipline).
