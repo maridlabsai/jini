@@ -53,13 +53,19 @@ points to is [r1-safe-execution-contract.md](./r1-safe-execution-contract.md).
 - **Prerequisite gates:** R1 (the safety-minimum slice); R4 (depth).
 - **Status:** planned (R1 minimum; R4 depth).
 
-### 5. Fast first-task and IDE-quality feedback loop — 79/100 — JINI-R9
-- **Current Jini state:** CLI-first; no IDE-grade inline feedback.
-- **Developer consequence:** slower, less legible first-task experience vs editor-native tools.
-- **Competitor capability:** Cursor/Kiro's in-editor latency and feedback.
-- **Jini differentiation intent:** fast, legible terminal-first first-task UX; IDE bridges later.
+### 5. Control surfaces and first-task UX — 79/100 — JINI-R9
+- **Current Jini state:** CLI-first; no IDE-grade inline feedback; no local status/control surface beyond the CLI (the `jini app serve --stdio` + macOS/Tauri shell are prototypes, not shipped surfaces).
+- **Developer consequence:** slower, less legible first-task experience vs editor-native tools; no portable way to watch/approve work from another surface.
+- **Competitor capability:** Cursor/Kiro's in-editor latency and feedback; Factory's App/CLI/managed-compute surface breadth.
+- **Jini differentiation intent:** fast, legible terminal-first first-task UX plus a frugal, local-first control plane reusing one protocol across surfaces; IDE/remote bridges later. See [frugal-control-plane-roadmap.md](./frugal-control-plane-roadmap.md).
 - **Prerequisite gates:** R1–R4 (safe, verified core first).
 - **Status:** planned (R9).
+- **Decomposition (same 79 score — these are sub-items of R9, not newly ranked gaps):**
+  - **R9A** — control protocol and local status.
+  - **R9B** — responsive browser/PWA control surface.
+  - **R9C** — thin desktop shell reusing the protocol/PWA.
+  - **R9D** — native mobile only if PWA evidence proves a material unmet need.
+- **Boundary:** only the portable schema **seams** enter R1/R2 (R1A emits the records; R2 adds the durable journal); all UI and network implementation remains R9. Factory's surface breadth is a product observation and **does not reorder the top four** (R1 98 → R2 93 → R3 91 → R4-min 88); no score changes from it.
 
 ### 6. MCP / tool-ecosystem invocation — 66/100 — JINI-R11
 - **Current Jini state:** listing-only (`jini mcp list`); **invocation NOT supported** (JINI-R0 wording).

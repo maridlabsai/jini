@@ -235,9 +235,20 @@ Reject any change that:
   (all modes, trust/mode-escalation denial, shell-unavailable-in-Auto, env
   scrubbing, network denial, path adversarial cases incl. TOCTOU/symlink/hard-link/
   worktree, atomic + multi-file rollback, timeout/child-cleanup, verification-required
-  terminal outcomes, and direct mediator-bypass tests). This row is a planning
-  marker only — it carries **no runnable command yet** and is **not** part of any
-  commit/push/release tier until the implementation and its executable gate exist.
+  terminal outcomes, and direct mediator-bypass tests). When R1A lands, this gate
+  must also enforce: (a) a **portable-record schema emission / round-trip
+  acceptance** test — R1A emits stable-ID, ordered, secret-redacted,
+  schema-versioned operation/policy/approval/event/verification-reference/outcome
+  records, and the terminal view is a projection of them (seam defined in
+  [frugal-control-plane-roadmap.md](./frugal-control-plane-roadmap.md) §e (Portable R1A seam)); and
+  (b) a **safe supervised single-file vertical-slice acceptance** test (preview →
+  exact approval → snapshot → atomic write → minimum verification →
+  rollback-or-evidence → portable outcome record), the first R1A delivery. This
+  row is a planning marker only — it carries **no runnable command yet** (neither
+  the base R1 checks nor the R1A schema/vertical-slice checks above) and is
+  **not** part of any commit/push/release tier until the implementation and its
+  executable gate exist. It adds, weakens, skips, and reclassifies **no** live
+  gate.
 
 Future checks should be added here only when they are not already required by a
 commit, push, or release tier. Once promoted, remove them from this section in

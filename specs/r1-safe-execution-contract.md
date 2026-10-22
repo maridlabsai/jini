@@ -106,6 +106,21 @@ Use **per-run write-set snapshots, not `git stash`.**
 `completed_unverified`, `failed_rolled_back`, `failed_partial`,
 `recovery_required`, `cancelled_rolled_back`, `cancelled_partial`.
 
+## 8A. Portable records (R1A emission seam)
+R1A **emits portable structured records** for operations, policy decisions,
+approvals, ordered events, verification references, and terminal outcomes.
+- **Terminal output is a projection of those records**, not the only
+  representation.
+- **Stable identifiers, event ordering, secret redaction, and schema versioning
+  are required.** (Record fields and requirements: see
+  [frugal-control-plane-roadmap.md](./frugal-control-plane-roadmap.md) §e (Portable R1A seam).)
+- This is a reusable seam only. It adds **no daemon, HTTP server, remote access,
+  PWA, desktop, mobile, relay, or routing implementation** to R1A.
+- The **first R1A delivery remains the safe supervised single-file vertical
+  slice** (preview → exact approval → snapshot → atomic write → minimum
+  verification → rollback-or-evidence, emitting a portable outcome record); it is
+  not blocked on building the full mediator, a daemon, a UI, or routing.
+
 ## 9. Compatibility / fail-closed during R1 migration
 - Existing Plan/read-only behavior remains available.
 - `edit_file` and `run_command` may **not** execute in Auto until mediated.
