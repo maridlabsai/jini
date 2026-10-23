@@ -123,7 +123,7 @@ jobs:
           git push -f origin "${{ steps.meta.outputs.channel }}"
 
       - name: Publish GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.meta.outputs.channel == 'stable' && steps.meta.outputs.tag || steps.meta.outputs.channel }}
           prerelease: ${{ steps.meta.outputs.channel != 'stable' }}
